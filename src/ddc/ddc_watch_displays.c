@@ -157,7 +157,7 @@ void ddc_recheck_bus() {
          DDCA_IO_Path iopath;
          iopath.io_mode = DDCA_IO_I2C;
          iopath.path.i2c_busno = busno;
-         ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_DETACHED, NULL, iopath);
+         ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, NULL, NULL, iopath);
       }
       bs256_iter_free(iter);
       changed = true;
@@ -182,7 +182,7 @@ void ddc_recheck_bus() {
          if (IS_DBGTRC(debug, DDCA_TRC_NONE))
             i2c_dbgrpt_bus_info(new_businfo, 1);
          DBGTRC(true, DDCA_TRC_NONE, "Emitting DDCA_EVENT_BUS_ATTACHED for bus /dev/i2c-%d", iopath.path.i2c_busno);
-         ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ATTACHED, NULL, iopath);
+         ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, new_businfo->drm_connector_name, NULL, iopath);
       }
       bs256_iter_free(iter);
       changed = true;
@@ -264,15 +264,15 @@ void ddc_recheck_bus() {
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bus=%d", businfo->busno);
       if (businfo->flags & I2C_BUS_ADDR_0X50) {
          // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bus=%d, I2C_BUS_ADDR_0X50 set", businfo->busno);
-         bool is_dpms_asleep = dpms_check_drm_asleep(businfo);
+         bool is_dpms_asleep = dpms_check_drm_asleep_by_businfo(businfo);
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, is_dpms_asleep=%s, last_checked_dpms_asleep=%s",
                businfo->busno, sbool(is_dpms_asleep), sbool(businfo->last_checked_dpms_asleep));
          if (is_dpms_asleep != businfo->last_checked_dpms_asleep) {
-            Display_Ref * dref = ddc_get_dref_by_busno(businfo->busno);
+            Display_Ref * dref = ddc_get_dref_by_busno_or_connector(businfo->busno, NULL, /*ignore_invalid*/ true);
             assert(dref);
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sleep change event for dref=%p->%s", dref, dref_repr_t(dref));
             DDCA_Display_Event_Type event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
-            ddc_emit_display_detection_event(event_type, dref, dref->io_path);
+            ddc_emit_display_detection_event(event_type, dref->drm_connector, dref, dref->io_path);
             businfo->last_checked_dpms_asleep = is_dpms_asleep;
          }
       }
@@ -371,12 +371,16 @@ void ddc_hotplug_change_handler(
             g_snprintf(buf, 80, "Sys_Drm_Connector not found for connector %s", connector_name);
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
             SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+            DDCA_IO_Path path;
+            path.io_mode = DDCA_IO_I2C;
+            path.path.i2c_busno = BUSNO_NOT_SET;
+            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, connector_name, NULL, path);
          }
          else {
             DDCA_IO_Path path;
             path.io_mode = DDCA_IO_I2C;
             path.path.i2c_busno = conn->i2c_busno;
-            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_DETACHED, NULL, path);
+            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, connector_name, NULL, path);
          }
       }
    }
@@ -393,12 +397,16 @@ void ddc_hotplug_change_handler(
             g_snprintf(buf, 100, "Sys_Drm_Connector not found for connector %s", connector_name);
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
             SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+            DDCA_IO_Path path;
+            path.io_mode = DDCA_IO_I2C;
+            path.path.i2c_busno = BUSNO_NOT_SET;
+            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, connector_name, NULL, path);
          }
          else {
             DDCA_IO_Path path;
             path.io_mode = DDCA_IO_I2C;
             path.path.i2c_busno = conn->i2c_busno;
-            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ATTACHED, NULL, path);
+            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, connector_name, NULL, path);
          }
       }
    }
@@ -409,8 +417,7 @@ void ddc_hotplug_change_handler(
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays disconnected: %s", s);
       for (int ndx = 0; ndx < connectors_having_edid_removed->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_having_edid_removed, ndx);
-         Display_Ref * dref = ddc_get_display_ref_by_drm_connector(
-                                             connector_name, /* include_invalid */ false);
+         Display_Ref * dref = DDC_GET_DREF_BY_CONNECTOR(connector_name, /*ignore_invalid*/ true);
          if (!dref) {
             char buf[100];
             g_snprintf(buf, 100, "dref not found for connector %s", connector_name);
@@ -418,7 +425,9 @@ void ddc_hotplug_change_handler(
             SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
          }
          else {
-            ddc_emit_display_detection_event(DDCA_EVENT_DISCONNECTED, dref, dref->io_path);
+            dref->flags |= DREF_REMOVED;
+            dref->detail = NULL;
+            ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, dref, dref->io_path);
          }
       }
    }
@@ -429,13 +438,12 @@ void ddc_hotplug_change_handler(
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays connected: %s", s);
       for (int ndx = 0; ndx < connectors_having_edid_added->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_having_edid_added, ndx);
-         Display_Ref * dref = ddc_get_display_ref_by_drm_connector(
-                                  connector_name, /* include_invalid */ false);
+         Display_Ref * dref = DDC_GET_DREF_BY_CONNECTOR(
+                                  connector_name, /* ignore_invalid */ true);
          if (!dref) {
             // Expected since display changes detected do not presently modify
             // the list of display refs.
-            char buf[100];
-            g_snprintf(buf, 100, "dref not found for connector %s", connector_name);
+
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
             SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
 
@@ -451,11 +459,11 @@ void ddc_hotplug_change_handler(
                DDCA_IO_Path path;
                path.io_mode = DDCA_IO_I2C;
                path.path.i2c_busno = conn->i2c_busno;
-               ddc_emit_display_detection_event(DDCA_EVENT_CONNECTED, NULL, path);
+               ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, NULL, path);
             }
          }
          else {
-            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTED, dref, dref->io_path);
+            ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, dref, dref->io_path);
          }
       }
    }
@@ -474,7 +482,7 @@ void ddc_hotplug_change_handler(
 Sysfs_Connector_Names
 stabilized_connector_names(Sysfs_Connector_Names prior,
                            bool                  some_displays_disconnected) {
-   bool debug = true;
+   bool debug = false;
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_STARTING(true, DDCA_TRC_NONE,"prior:");
       dbgrpt_sysfs_connector_names(prior, 2);
@@ -488,7 +496,7 @@ stabilized_connector_names(Sysfs_Connector_Names prior,
       if (extra_stabilize_seconds > 0) {
          char * s = g_strdup_printf(
                "Delaying %d seconds to avoid a false disconnect/connect sequence...", extra_stabilize_seconds);
-         DBGTRC(true, TRACE_GROUP, "%s", s);
+         DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
          usleep(extra_stabilize_seconds * 1000000);
@@ -507,7 +515,7 @@ stabilized_connector_names(Sysfs_Connector_Names prior,
       stablect++;
    }
    if (stablect > 1) {
-      DBGTRC(true, TRACE_GROUP, "Required %d calls to get_sysfs_drm_connector_names()", stablect);
+      DBGTRC(true, TRACE_GROUP,   "Required %d extra calls to get_sysfs_drm_connector_names()", stablect+1);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to get_sysfs_drm_connector_names()", __func__, stablect-1);
    }
 
@@ -526,7 +534,7 @@ stabilized_connector_names(Sysfs_Connector_Names prior,
  */
 //static
 Sysfs_Connector_Names ddc_check_displays(Sysfs_Connector_Names prev_connector_names) {
-   bool debug = true;
+   bool debug = false;
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_STARTING(true, DDCA_TRC_NONE, "prev_connector_names:");
       dbgrpt_sysfs_connector_names(prev_connector_names, 2);
@@ -651,13 +659,14 @@ void  ddc_check_asleep(GPtrArray * active_connectors,  GPtrArray * sleepy_connec
             connector, sbool (last_checked_dpms_asleep), sbool(is_dpms_asleep));
 
       if (is_dpms_asleep != last_checked_dpms_asleep) {
-         Display_Ref * dref = ddc_get_display_ref_by_drm_connector(connector, /* include_invalid */ false);
+         Display_Ref * dref = DDC_GET_DREF_BY_CONNECTOR(connector, /* ignore_invalid */ true);
          if (!dref) {
             // emit error msgs
          }
          else {
             ddc_emit_display_detection_event(
                   (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE,
+                  connector,
                   dref,
                   dref->io_path);
          }
