@@ -381,6 +381,10 @@ char * io_mode_name(DDCA_IO_Mode val) {
 /** Thread safe function that returns a brief string representation of a #DDCA_IO_Path.
  *  The returned value is valid until the next call to this function on the current thread.
  *
+ *  \remark
+ *  A bus number of 255 represents a value that has not been set.  The string
+ *  "NOT SET" is returned.
+ *
  *  \param  dpath  pointer to ##DDCA_IO_Path
  *  \return string representation of #DDCA_IO_Path
  */
@@ -390,10 +394,13 @@ char * dpath_short_name_t(DDCA_IO_Path * dpath) {
    char * buf = get_thread_fixed_buffer(&dpath_short_name_key, 100);
    switch(dpath->io_mode) {
    case DDCA_IO_I2C:
-      snprintf(buf, 100, "bus /dev/i2c-%d", dpath->path.i2c_busno);
+      if (dpath->path.i2c_busno == 255)
+         g_strlcpy(buf, "NOT SET", 100);
+      else
+         g_snprintf(buf, 100, "bus /dev/i2c-%d", dpath->path.i2c_busno);
       break;
    case DDCA_IO_USB:
-      snprintf(buf, 100, "usb /dev/usb/hiddev%d", dpath->path.hiddev_devno);
+      g_snprintf(buf, 100, "usb /dev/usb/hiddev%d", dpath->path.hiddev_devno);
    }
    return buf;
 }
@@ -602,6 +609,7 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
 }
 
 
+#ifdef UNUSED
 bool dref_set_alive(Display_Ref * dref, bool alive) {
    assert(dref);
    bool debug = true;
@@ -618,6 +626,7 @@ bool dref_get_alive(Display_Ref * dref) {
    assert(dref);
    return dref->flags & DREF_ALIVE;;
 }
+#endif
 
 
 /** Reports the contents of a #Display_Ref in a format useful for debugging.
