@@ -115,7 +115,7 @@ ddc_validate_display_handle(Display_Handle * dh) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%p", dh);
    assert(open_displays);
 
-   DDCA_Status result = ddc_validate_display_ref(dh->dref);
+   DDCA_Status result = ddc_validate_display_ref(dh->dref, /*test_asleep*/ true);
    if (result == DDCRC_OK) {
       g_mutex_lock (&open_displays_mutex);
       if (!g_hash_table_contains(open_displays, dh) )

@@ -56,7 +56,7 @@ DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** 
    if (dref_loc)
       *dref_loc = NULL;
    Display_Ref * dref = (Display_Ref *) ddca_dref;
-   DDCA_Status result = ddc_validate_display_ref(dref);
+   DDCA_Status result = ddc_validate_display_ref(dref, true);
    if (result == DDCRC_OK && dref_loc)
       *dref_loc = dref;
    return result;
