@@ -438,7 +438,6 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    dref->io_path = io_path;
    dref->vcp_version_xdf = DDCA_VSPEC_UNQUERIED;
    dref->vcp_version_cmdline = DDCA_VSPEC_UNQUERIED;
-   dref->flags |= DREF_ALIVE;
    // Per_Display_Data * pdd = pdd_get_per_display_data(io_path, true);
    // dref->pdd = pdd;
    // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
@@ -896,7 +895,6 @@ Value_Name_Table dref_flags_table = {
       VN(DREF_OPEN),
       VN(DREF_DDC_BUSY),
       VN(DREF_REMOVED),
-      VN(DREF_ALIVE),
       VN(DREF_DPMS_SUSPEND_STANDBY_OFF),
 //    VN(CALLOPT_NONE),                // special entry
       VN_END
