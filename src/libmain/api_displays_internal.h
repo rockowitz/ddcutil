@@ -14,7 +14,7 @@
 #include "base/core.h"
 #include "base/displays.h"
 
-DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** dref_loc);
+DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, bool require_not_alseep, Display_Ref** dref_loc);
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
 DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc);
 
@@ -24,7 +24,7 @@ DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Ha
       _ddcrc = 0; \
       free_thread_error_detail(); \
       Display_Ref * dref = NULL; \
-      _ddcrc = validate_ddca_display_ref(_ddca_dref, &dref); \
+      _ddcrc = validate_ddca_display_ref(_ddca_dref, false, &dref); \
       if (_ddcrc == 0) { \
          (_action); \
       } \
