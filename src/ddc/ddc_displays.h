@@ -34,7 +34,7 @@ bool         ddc_initial_checks_by_dref(Display_Ref * dref);
 // Get Display Information
 void         ddc_add_display_ref(Display_Ref * dref);
 GPtrArray *  ddc_get_all_display_refs();  // returns GPtrArray of Display_Ref instances, including invalid displays
-GPtrArray *  ddc_get_filtered_displays(bool include_invalid_displays);
+GPtrArray *  ddc_get_filtered_display_refs(bool include_invalid_displays);
 GPtrArray *  ddc_get_bus_open_errors();
 int          ddc_get_display_count(bool include_invalid_displays);
 Display_Ref* ddc_get_display_ref_by_drm_connector(const char * connector_name, bool include_invalid);
@@ -53,11 +53,16 @@ DDCA_Status  ddc_validate_display_ref(Display_Ref * dref);
 
 // Display Status Change
 bool         ddc_add_display_by_businfo(I2C_Bus_Info * businfo);
-Display_Ref* ddc_get_dref_by_busno(int busno);
+Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connector, bool ignore_invalid);
+#define      DDC_GET_DREF_BY_BUSNO(_busno, _ignore) \
+             ddc_get_dref_by_busno_or_connector(_busno,NULL, (_ignore))
+#define      DDC_GET_DREF_BY_CONNECTOR(_connector_name, _ignore_invalid) \
+             ddc_get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
 bool         ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
 DDCA_Status  ddc_register_display_detection_callback(DDCA_Display_Status_Callback_Func func);
 DDCA_Status  ddc_unregister_display_detection_callback(DDCA_Display_Status_Callback_Func func);
 void         ddc_emit_display_detection_event(DDCA_Display_Event_Type event_type,
+                                              const char *            connector_name,
                                               Display_Ref*            dref,
                                               DDCA_IO_Path            io_path);
 const char*  ddc_display_event_type_name(DDCA_Display_Event_Type event_type);
