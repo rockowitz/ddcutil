@@ -419,7 +419,10 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
    char * buf = get_thread_fixed_buffer(&dpath_repr_key, 100);
    switch(dpath->io_mode) {
    case DDCA_IO_I2C:
-      snprintf(buf, 100, "Display_Path[/dev/i2c-%d]", dpath->path.i2c_busno);
+      if (dpath->path.i2c_busno == BUSNO_NOT_SET)
+         snprintf(buf, 100, "Display Path not set");
+      else
+         snprintf(buf, 100, "Display_Path[/dev/i2c-%d]", dpath->path.i2c_busno);
       break;
    case DDCA_IO_USB:
       snprintf(buf, 100, "Display_Path[/dev/usb/hiddev%d]", dpath->path.hiddev_devno);
