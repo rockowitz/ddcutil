@@ -789,7 +789,7 @@ ddc_get_all_display_refs() {
  *  @return **GPtrArray of #Display_Ref instances
  */
 GPtrArray *
-ddc_get_filtered_displays(bool include_invalid_displays) {
+ddc_get_filtered_display_refs(bool include_invalid_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "include_invalid_displays=%s", sbool(include_invalid_displays));
    TRACED_ASSERT(all_display_refs);
@@ -808,7 +808,7 @@ ddc_get_filtered_displays(bool include_invalid_displays) {
    return result;
 }
 
-
+#ifdef UNUSED
 Display_Ref *
 ddc_get_display_ref_by_drm_connector(
       const char * connector_name,
@@ -844,6 +844,83 @@ ddc_get_display_ref_by_drm_connector(
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s = %p", dref_repr_t(result), result);
+   return result;
+}
+#endif
+
+/** Locates the currently live Display_Ref for the specified bus.
+ *  Discarded display references, i.e. ones marked removed (flag DREF_REMOVED)
+ *  are ignored. There should be at most one non-removed Display_Ref.
+ *
+ *  @param  busno    I2C_Bus_Number
+ *  @param  connector
+ *  @param  ignore_invalid
+ *  @return  display reference, NULL if no live reference exists
+ */
+Display_Ref * ddc_get_dref_by_busno_or_connector(
+      int          busno,
+      const char * connector,
+      bool         ignore_invalid)
+{
+   ASSERT_IFF(busno >= 0, !connector);
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d, connector = %s, ignore_invalid=%s",
+                                       busno, connector, SBOOL(ignore_invalid));
+   assert(all_display_refs);
+
+   Display_Ref * result = NULL;
+   int non_removed_ct = 0;
+   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+      // If a display is repeatedly removed and added on a particular connector,
+      // there will be multiple Display_Ref records.  All but one should already
+      // be flagged DDCA_DISPLAY_REMOVED, and should not have a pointer to
+      // an I2C_Bus_Info struct.
+
+      Display_Ref * cur_dref = g_ptr_array_index(all_display_refs, ndx);
+      // DBGMSG("Checking dref %s", dref_repr_t(cur_dref));
+
+      if (ignore_invalid && cur_dref->dispno <= 0) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p dispno < 0, Ignoring",
+               dref_repr_t(cur_dref), cur_dref);
+         continue;
+      }
+
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_REMOVED=%s, dref_defail=%p",
+            sbool(cur_dref->flags&DREF_REMOVED), cur_dref->detail);
+      ASSERT_IFF(cur_dref->flags&DREF_REMOVED, !cur_dref->detail);
+
+      if (ignore_invalid && cur_dref->flags&DREF_REMOVED) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p DREF_REMOVED set, Ignoring",
+                dref_repr_t(cur_dref), cur_dref);
+         continue;
+      }
+      if (cur_dref->io_path.io_mode != DDCA_IO_I2C) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p io_mode != DDCA_IO_I2C, Ignoring",
+                dref_repr_t(cur_dref), cur_dref);
+         continue;
+      }
+
+      if (connector)   {   // consistency check
+         I2C_Bus_Info * businfo = cur_dref->detail;
+         if (businfo) {
+            assert(streq(businfo->drm_connector_name, cur_dref->drm_connector));
+         }
+         else {
+            SEVEREMSG("active display ref has no bus info");
+         }
+     }
+
+      if ( (busno >= 0 && cur_dref->io_path.path.i2c_busno == busno) ||
+           (connector  && streq(connector, cur_dref->drm_connector) ) )
+      {
+         // the match should only happen once, but count matches as check
+         non_removed_ct++;
+         result = cur_dref;
+      }
+   }
+   assert(non_removed_ct <= 1);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p= %s", result, dref_repr_t(result));
    return result;
 }
 
@@ -1565,6 +1642,7 @@ ddc_validate_display_ref(Display_Ref * dref) {
    if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
       goto bye;
    }
+
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref = %s", dref_repr_t(dref));
    if (ddc_watch_mode == Watch_Mode_Simple_Udev) {
       if (dref->drm_connector) {
@@ -1589,14 +1667,17 @@ ddc_validate_display_ref(Display_Ref * dref) {
             // need to check for dref->dispno < 0 ?
             if (dref->flags & DREF_REMOVED)
                ddcrc = DDCRC_DISCONNECTED;
-            else if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
+         // else if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
+            else if (dpms_check_drm_asleep_by_connector(dref->drm_connector)) {
                ddcrc = DDCRC_DPMS_ASLEEP;
+            }
             else
                ddcrc = DDCRC_OK;
             break;
          }
       }
    }
+
 bye:
    if (dref)
       DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p, dispno=%d", dref, dref->dispno);
@@ -1730,6 +1811,7 @@ DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Status_Callba
  */
 void ddc_emit_display_detection_event(
       DDCA_Display_Event_Type event_type,
+      const char *            connector_name,
       Display_Ref*            dref,
       DDCA_IO_Path            io_path)
 {
@@ -1751,12 +1833,16 @@ void ddc_emit_display_detection_event(
             event_type, ddc_display_event_type_name(event_type));
    }
 
-   DDCA_Display_Status_Event report;
-   report.dref = (void*) dref;
-   report.event_type = event_type;
-   report.io_path = (dref) ? dref->io_path : io_path;
-   report.unused[0] = 0;
-   report.unused[1] = 0;
+   DDCA_Display_Status_Event evt;
+   evt.dref = (void*) dref;
+   evt.event_type = event_type;
+   if (connector_name)
+      g_snprintf(evt.connector_name, sizeof(evt.connector_name), "%s", connector_name);
+   else
+      memset(evt.connector_name,0,sizeof(evt.connector_name));
+   evt.io_path = (dref) ? dref->io_path : io_path;
+   evt.unused[0] = 0;
+   evt.unused[1] = 0;
 
    // dbgrpt_display_ref((Display_Ref*) evt.dref, 4);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED = %s", sbool(dref->flags&DREF_REMOVED));
@@ -1767,8 +1853,7 @@ void ddc_emit_display_detection_event(
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
          DDCA_Display_Status_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
-         func(report);
-         free(func);
+         func(evt);
       }
    }
 
@@ -1780,12 +1865,12 @@ void ddc_emit_display_detection_event(
 const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    char * result = NULL;
    switch(event_type) {
-   case DDCA_EVENT_CONNECTED:    result = "DDCA_EVENT_CONNECTED";      break;
-   case DDCA_EVENT_DISCONNECTED: result = "DDCA_EVENT_DISCONNECTED";   break;
-   case DDCA_EVENT_DPMS_AWAKE:   result = "DDCA_EVENT_DPMS_AWAKE";     break;
-   case DDCA_EVENT_DPMS_ASLEEP:  result = "DDCA_EVENT_DPMS_ASLEEP";    break;
-   case DDCA_EVENT_CONNECTOR_ATTACHED: result = "DDCA_EVENT_BUS_ATTACHED";   break;
-   case DDCA_EVENT_CONNECTOR_DETACHED: result = "DDCA_EVENT_BUS_DETACHED";   break;
+   case DDCA_EVENT_DISPLAY_CONNECTED:    result = "DDCA_EVENT_DISPLAY_CONNECTED";    break;
+   case DDCA_EVENT_DISPLAY_DISCONNECTED: result = "DDCA_EVENT_DISPLAY_DISCONNECTED"; break;
+   case DDCA_EVENT_DPMS_AWAKE:           result = "DDCA_EVENT_DPMS_AWAKE";           break;
+   case DDCA_EVENT_DPMS_ASLEEP:          result = "DDCA_EVENT_DPMS_ASLEEP";          break;
+   case DDCA_EVENT_CONNECTOR_ADDED:      result = "DDCA_EVENT_CONNECTOR_ADDED";      break;
+   case DDCA_EVENT_CONNECTOR_REMOVED:    result = "DDCA_EVENT_CONNECTER_REMOVED";    break;
    }
    return result;
 }
@@ -1807,7 +1892,7 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
    bool ok = false;
 
-   // char * drm_connector_name = businfo->drm_connector_name;
+   char * drm_connector_name = businfo->drm_connector_name;
    // Sys_Drm_Connector * conrec = find_sys_drm_connector(-1, NULL, drm_connector_name);  // unused
 
    i2c_check_bus(businfo);   // needed?
@@ -1830,7 +1915,7 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "Display %s found on bus %d", dref_repr_t(dref), businfo->busno);
-      ddc_emit_display_detection_event(DDCA_EVENT_CONNECTED, dref, dref->io_path);
+      ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_CONNECTED, drm_connector_name, dref, dref->io_path);
       ok = true;
    }
    else {
@@ -1839,46 +1924,6 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
    
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, ok, "");
    return ok;
-}
-
-
-/** Locates the currently live Display_Ref for the specified bus.
- *  Discarded display references, i.e. ones marked removed (flag DREF_REMOVED)
- *  are ignored. There should be at most one such Display_Ref.
- *
- *  @param  busno    I2C_Bus_Number
- *  @return  display reference, NULL if no live reference exists
- */
-Display_Ref * ddc_get_dref_by_busno(int busno) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", busno);
-   assert(all_display_refs);
-
-   Display_Ref * result = NULL;
-   int non_removed_ct = 0;
-   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
-      // If a display is repeatedly removed and added on a particular connector,
-      // there will be multiple Display_Ref records.  All but one should already
-      // be flagged DDCA_DISPLAY_REMOVED, and should not have a pointer to
-      // an I2C_Bus_Info struct.
-      Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
-      // DBGMSG("Checking dref %s", dref_repr_t(dref));
-      if (dref->io_path.io_mode == DDCA_IO_I2C) {
-          if (dref->flags & DREF_REMOVED)  {
-             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref=%s@%p DREF_REMOVED set, Ignoring",
-                   dref_repr_t(dref), dref);
-             continue;
-          }
-          if (dref->io_path.path.i2c_busno == busno) {
-             result = dref;
-             non_removed_ct++;
-          }
-      }
-   }
-   assert(non_removed_ct <= 1);
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p= %s", result, dref_repr_t(result));
-   return result;
 }
 
 
@@ -1898,12 +1943,15 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    // i2c_dbgrpt_buses(/* report_all */ true, 2);
 
    bool found = false;
-   Display_Ref * dref = ddc_get_dref_by_busno(businfo->busno);
+   Display_Ref * dref = ddc_get_dref_by_busno_or_connector(businfo->busno, NULL, /*ignore_invalid*/ true);
    assert(dref);  // is failure possible?
    if (dref) {
       found = true;
       dref->flags |= DREF_REMOVED;
-      ddc_emit_display_detection_event(DDCA_EVENT_DISCONNECTED, dref, dref->io_path);
+      dref->detail = NULL;
+      ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
+                                       businfo->drm_connector_name,
+                                       dref, dref->io_path);
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
@@ -1984,7 +2032,6 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_discard_detected_displays);
    RTTI_ADD_FUNC(ddc_displays_already_detected);
    RTTI_ADD_FUNC(ddc_get_all_display_refs);
-   RTTI_ADD_FUNC(ddc_get_display_ref_by_drm_connector);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_non_async_scan);
@@ -1997,7 +2044,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_validate_display_ref);
    RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
-   RTTI_ADD_FUNC(ddc_get_dref_by_busno);
+   RTTI_ADD_FUNC(ddc_get_dref_by_busno_or_connector);
    RTTI_ADD_FUNC(ddc_emit_display_detection_event);
 }
 
