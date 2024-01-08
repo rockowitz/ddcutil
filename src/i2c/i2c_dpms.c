@@ -100,6 +100,7 @@ void dpms_check_x11_asleep() {
 }
 #endif
 
+
 bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "drm_connector_name=%s", drm_connector_name);
@@ -124,7 +125,7 @@ bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
 }
 
 
-bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
+bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    assert(businfo);
    DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d, flags: %s",
@@ -156,7 +157,7 @@ bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
 
-   bool result = dpms_check_drm_asleep((I2C_Bus_Info*) dref->detail);
+   bool result = dpms_check_drm_asleep_by_businfo((I2C_Bus_Info*) dref->detail);
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
@@ -164,7 +165,7 @@ bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
 
 
 void init_i2c_dpms() {
-   RTTI_ADD_FUNC(dpms_check_drm_asleep);
+   RTTI_ADD_FUNC(dpms_check_drm_asleep_by_businfo);
    RTTI_ADD_FUNC(dpms_check_drm_asleep_by_dref);
    RTTI_ADD_FUNC(dpms_check_drm_asleep_by_connector);
    // RTTI_ADD_FUNC(dpms_check_x11_asleep);
