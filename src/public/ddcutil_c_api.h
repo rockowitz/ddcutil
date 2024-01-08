@@ -797,7 +797,7 @@ ddca_get_display_ref(
  *  @since 2.1.0
  */
 DDCA_Status
-ddca_dref_state(DDCA_Display_Ref dref);
+ddca_validate_display_ref(DDCA_Display_Ref dref);
 
 /** Returns a string representation of a display reference
  *
