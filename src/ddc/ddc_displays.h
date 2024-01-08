@@ -49,7 +49,7 @@ DDCA_Status  ddc_enable_usb_display_detection(bool onoff);
 bool         ddc_is_usb_display_detection_enabled();
 void         dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);
 bool         ddc_is_valid_display_ref(Display_Ref * dref);
-DDCA_Status  ddc_validate_display_ref(Display_Ref * dref, bool test_asleep);
+DDCA_Status  ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep);
 
 // Display Status Change
 bool         ddc_add_display_by_businfo(I2C_Bus_Info * businfo);

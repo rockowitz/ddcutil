@@ -1631,7 +1631,7 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  @retval  DDCRC_INVALID_DISPLAY    not found
  */
 DDCA_Status
-ddc_validate_display_ref(Display_Ref * dref, bool test_asleep) {
+ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
    assert(all_display_refs);
@@ -1649,7 +1649,7 @@ ddc_validate_display_ref(Display_Ref * dref, bool test_asleep) {
          bool found_edid = RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid");
          if (!found_edid)
             ddcrc = DDCRC_DISCONNECTED;
-         else if (test_asleep && dpms_check_drm_asleep_by_dref(dref))
+         else if (require_not_asleep && dpms_check_drm_asleep_by_dref(dref))
             ddcrc = DDCRC_DPMS_ASLEEP;
          else
             ddcrc = DDCRC_OK;
