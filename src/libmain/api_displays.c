@@ -439,16 +439,17 @@ ddca_report_display_by_dref(
 
 
 DDCA_Status
-ddca_dref_state(DDCA_Display_Ref ddca_dref)
+ddca_validate_display_ref(DDCA_Display_Ref ddca_dref)
 {
    bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, "ddca_dref = %p", ddca_dref);
    assert(library_initialized);
 
-   Error_Info * errinfo = NULL;
    Display_Ref * dref = NULL;
    DDCA_Status rc = validate_ddca_display_ref(ddca_dref, &dref);
+#ifdef REDUNDANT
+   Error_Info * errinfo = NULL;
    if (rc != 0)
       errinfo = ERRINFO_NEW(rc, "");
    else {
@@ -460,13 +461,11 @@ ddca_dref_state(DDCA_Display_Ref ddca_dref)
          int d = (debug) ? 1 : -1;
         bool edid_exists = RPT_ATTR_EDID(d, NULL, "/sys/class/drm", dref->drm_connector, "edid");
         if (!edid_exists) {
-           errinfo = ERRINFO_NEW(DDCRC_DISCONNECTED,
-                    "/dev/i2c-%d", dref->io_path.path.i2c_busno);
+           errinfo = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d", dref->io_path.path.i2c_busno);
         }
         else {
            if (dpms_check_drm_asleep_by_dref(dref))
-              errinfo = ERRINFO_NEW(DDCRC_DPMS_ASLEEP,
-                    "/dev/i2c-%d", dref->io_path.path.i2c_busno);
+              errinfo = ERRINFO_NEW(DDCRC_DPMS_ASLEEP, "/dev/i2c-%d", dref->io_path.path.i2c_busno);
         }
       }
    }
@@ -474,8 +473,9 @@ ddca_dref_state(DDCA_Display_Ref ddca_dref)
    DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(errinfo);
    errinfo_free_with_report(errinfo, debug, __func__);
    save_thread_error_detail(public_error_detail);
+#endif
 
-   API_EPILOG_WO_RETURN(debug, ddcrc, "");
+   API_EPILOG_WO_RETURN(debug, rc, "");
    return rc;
 }
 
@@ -936,7 +936,7 @@ ddca_get_display_refs(
    int dref_ct = 0;
    DDCA_Status ddcrc = 0;
    ddc_ensure_displays_detected();
-   GPtrArray * filtered_displays = ddc_get_filtered_displays(include_invalid_displays);  // array of Display_Ref
+   GPtrArray * filtered_displays = ddc_get_filtered_display_refs(include_invalid_displays);  // array of Display_Ref
    DDCA_Display_Ref * result_list = calloc(filtered_displays->len + 1,sizeof(DDCA_Display_Ref));
    DDCA_Display_Ref * cur_ddca_dref = result_list;
    for (int ndx = 0; ndx < filtered_displays->len; ndx++) {
@@ -982,7 +982,7 @@ ddca_get_display_info_list2(
 
    DDCA_Status ddcrc = 0;
    ddc_ensure_displays_detected();
-   GPtrArray * filtered_displays = ddc_get_filtered_displays(include_invalid_displays);  // array of Display_Ref
+   GPtrArray * filtered_displays = ddc_get_filtered_display_refs(include_invalid_displays);  // array of Display_Ref
 
    filtered_ct = filtered_displays->len;
 
@@ -1458,5 +1458,6 @@ void init_api_displays() {
    RTTI_ADD_FUNC(ddca_register_display_status_callback);
    RTTI_ADD_FUNC(ddca_unregister_display_status_callback);
    RTTI_ADD_FUNC(validate_ddca_display_ref);
+   RTTI_ADD_FUNC(ddca_validate_display_ref);
 }
 
