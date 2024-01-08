@@ -29,7 +29,6 @@
 #define I2C_BUS_PROBED                  0x10      ///< has bus been checked?
 #define I2C_BUS_VALID_NAME_CHECKED    0x0800
 #define I2C_BUS_HAS_VALID_NAME        0x0400
-#define I2C_BUS_BUSY                  0x0200      ///< for possible future use
 #define I2C_BUS_SYSFS_EDID            0x0100
 #define I2C_BUS_DRM_CONNECTOR_CHECKED 0x8000
 #define I2C_BUS_LVDS_OR_EDP           0x4000

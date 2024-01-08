@@ -726,8 +726,8 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
 #endif
              if (rc == 0)
                 bus_info->flags |= I2C_BUS_ADDR_0X37;
-             else if (rc == -EBUSY)
-                bus_info->flags |= I2C_BUS_BUSY;
+             // else if (rc == -EBUSY)
+             //    bus_info->flags |= I2C_BUS_BUSY;
           }    // end x37 check
 
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
