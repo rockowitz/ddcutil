@@ -367,14 +367,17 @@ void ddc_hotplug_change_handler(
          char * connector_name = g_ptr_array_index(connectors_removed, ndx);
          Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
          if (!conn) {
+            // connector has already been removed
             char buf[80];
             g_snprintf(buf, 80, "Sys_Drm_Connector not found for connector %s", connector_name);
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
             SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
-            DDCA_IO_Path path;
-            path.io_mode = DDCA_IO_I2C;
-            path.path.i2c_busno = BUSNO_NOT_SET;
-            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, connector_name, NULL, path);
+
+            // connector was already removed, nothing to do
+            // DDCA_IO_Path path;
+            // path.io_mode = DDCA_IO_I2C;
+            // path.path.i2c_busno = BUSNO_NOT_SET;
+            // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, connector_name, NULL, path);
          }
          else {
             DDCA_IO_Path path;
@@ -426,7 +429,7 @@ void ddc_hotplug_change_handler(
          }
          else {
             dref->flags |= DREF_REMOVED;
-            dref->detail = NULL;
+            // dref->detail = NULL;
             ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, dref, dref->io_path);
          }
       }
