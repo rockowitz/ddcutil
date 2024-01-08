@@ -873,8 +873,8 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       // If a display is repeatedly removed and added on a particular connector,
       // there will be multiple Display_Ref records.  All but one should already
-      // be flagged DDCA_DISPLAY_REMOVED, and should not have a pointer to
-      // an I2C_Bus_Info struct.
+      // be flagged DDCA_DISPLAY_REMOVED,
+      // ?? and should not have a pointer to an I2C_Bus_Info struct.
 
       Display_Ref * cur_dref = g_ptr_array_index(all_display_refs, ndx);
       // DBGMSG("Checking dref %s", dref_repr_t(cur_dref));
@@ -887,7 +887,6 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
 
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_REMOVED=%s, dref_defail=%p",
             sbool(cur_dref->flags&DREF_REMOVED), cur_dref->detail);
-      ASSERT_IFF(cur_dref->flags&DREF_REMOVED, !cur_dref->detail);
 
       if (ignore_invalid && cur_dref->flags&DREF_REMOVED) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p DREF_REMOVED set, Ignoring",
@@ -1817,18 +1816,18 @@ void ddc_emit_display_detection_event(
 {
    bool debug = false;
    if (dref) {
-#ifdef OLD
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s",
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
             dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),
-            event_type, ddc_display_event_type_name(event_type));
-#endif
+            event_type, ddc_display_event_type_name(event_type), connector_name);
+#ifdef NEW
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
             dref, dref_repr_t(dref),
             event_type, ddc_display_event_type_name(event_type));
-
+#endif
    }
    else {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "io_path=%s, event_type=%d=%s",
+      DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, io_path=%s, event_type=%d=%s",
+            connector_name,
             dpath_repr_t(&io_path),
             event_type, ddc_display_event_type_name(event_type));
    }
@@ -1948,7 +1947,7 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    if (dref) {
       found = true;
       dref->flags |= DREF_REMOVED;
-      dref->detail = NULL;
+      // dref->detail = NULL;
       ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
                                        businfo->drm_connector_name,
                                        dref, dref->io_path);
