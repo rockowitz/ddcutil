@@ -2,7 +2,7 @@
  * Display Specification
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAYS_H_
@@ -50,6 +50,8 @@ void init_displays();
 
 
 // *** DDCA_IO_Path ***
+
+#define BUSNO_NOT_SET 255
 
 char *  io_mode_name(DDCA_IO_Mode val);
 bool    dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2);
@@ -209,9 +211,10 @@ Display_Ref * copy_display_ref(Display_Ref * dref);
 // Do two Display_Ref's identify the same device?
 bool dref_eq(Display_Ref* this, Display_Ref* that);
 
+#ifdef UNUSED
 bool dref_set_alive(Display_Ref * dref, bool alive);
 bool dref_get_alive(Display_Ref * dref);
-
+#endif
 
 // *** Display_Handle ***
 
