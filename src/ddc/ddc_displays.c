@@ -1624,12 +1624,39 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  indicating why a display ref is invalid.
  *
  *  @param   dref   display reference to validate
+ *  @param   require_not_asleep
  *  @retval  DDCRC_OK
- *  @retval  DDCRC_INTERNAL_ERROR
- *  @retval  DDCRC_DISCONNECTED
- *  @retval  DDCRC_DPMS_ASLEEP
- *  @retval  DDCRC_INVALID_DISPLAY    not found
+ *  @retval  DDCRC_ARG             dref is null or does not point to a Display_Ref
+ *  @retval  DDCRC_INTERNAL_ERROR  dref->drm_connector == NULL
+ *  @retval  DDCRC_DISCONNECTED    display has been disconnected
+ *  @retval  DDCRC_DPMS_ASLEEP     possible if require_not_asleep == true
  */
+DDCA_Status
+ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
+   assert(all_display_refs);
+   
+   int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
+   DDCA_Status ddcrc = DDCRC_OK;
+   if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0)
+         ddcrc = DDCRC_ARG;
+   else if (!dref->drm_connector) 
+      ddcrc = DDCRC_INTERNAL_ERROR;
+   else if (dref->flags & DREF_REMOVED)
+      ddcrc = DDCRC_DISCONNECTED;
+   else if (dref->dispno < 0)   // needed? 
+      ddcrc = DDCRC_ARG;
+   else if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
+      ddcrc = DDCRC_DISCONNECTED;
+   else if (require_not_asleep && dpms_check_drm_asleep_by_connector(dref->drm_connector))
+      ddcrc = DDCRC_DPMS_ASLEEP;
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
+}
+
+#ifdef OLD
 DDCA_Status
 ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
    bool debug = false;
@@ -1641,8 +1668,6 @@ ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
    if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
       goto bye;
    }
-
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref = %s", dref_repr_t(dref));
    if (ddc_watch_mode == Watch_Mode_Simple_Udev) {
       if (dref->drm_connector) {
          int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
@@ -1684,6 +1709,7 @@ bye:
       DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p", dref);
    return ddcrc;
 }
+#endif
 
 
 /** Indicates whether displays have already been detected
