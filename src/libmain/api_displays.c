@@ -441,7 +441,7 @@ ddca_report_display_by_dref(
 
 
 DDCA_Status
-ddca_validate_display_ref(DDCA_Display_Ref ddca_dref)
+ddca_validate_display_ref(DDCA_Display_Ref ddca_dref, bool require_not_asleep)
 {
    bool debug = false;
    free_thread_error_detail();
@@ -449,7 +449,7 @@ ddca_validate_display_ref(DDCA_Display_Ref ddca_dref)
    assert(library_initialized);
 
    Display_Ref * dref = NULL;
-   DDCA_Status rc = validate_ddca_display_ref(ddca_dref, /* require_not_asleep*/true, &dref);
+   DDCA_Status rc = validate_ddca_display_ref(ddca_dref, require_not_asleep, &dref);
 #ifdef REDUNDANT
    Error_Info * errinfo = NULL;
    if (rc != 0)
