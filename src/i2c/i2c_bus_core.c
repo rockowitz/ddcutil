@@ -80,6 +80,9 @@ bool all_video_drivers_implement_drm = false;
 bool force_read_edid = true;
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool cross_instance_locks_enabled = DEFAULT_ENABLE_FLOCK;
+int  flock_poll_millisec = DEFAULT_FLOCK_POLL_MILLISEC;
+int  flock_max_wait_millisec = DEFAULT_FLOCK_MAX_WAIT_MILLISEC;
+
 
 void i2c_enable_cross_instance_locks(bool yesno) {
    bool debug = false;
@@ -185,15 +188,9 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
 
    if (cross_instance_locks_enabled) {
       int operation = LOCK_EX|LOCK_NB;
-      uint64_t start_nanos = cur_realtime_nanosec();
-      uint64_t max_wait_millisec = 0;
-      uint64_t max_nanos = start_nanos;
-      int flock_poll_millisec = DEFAULT_FLOCK_POLL_MILLISEC;
-      int flock_poll_microsec = flock_poll_millisec * 1000;
-      if (callopts & CALLOPT_WAIT) {
-         max_wait_millisec = DEFAULT_FLOCK_MAX_WAIT_MILLISEC;
-      }
-      max_nanos = start_nanos + (max_wait_millisec * 1000 * 1000);
+      int poll_microsec = flock_poll_millisec * 1000;
+      uint64_t max_wait_millisec = (callopts & CALLOPT_WAIT) ? flock_max_wait_millisec : 0;
+      uint64_t max_nanos = cur_realtime_nanosec() + (max_wait_millisec * 1000 * 1000);
       Status_Errno lockrc = 0;
       int flock_call_ct = 0;
       while(true) {
@@ -240,7 +237,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
               // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Resource locked. Sleeping");
               if (flock_call_ct == 1)
                  MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE, "%s locked.  Retrying...", filename);
-              usleep(flock_poll_microsec);
+              usleep(poll_microsec);
               continue;
            }
            else {

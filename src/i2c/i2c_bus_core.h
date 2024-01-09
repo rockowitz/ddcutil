@@ -35,6 +35,8 @@ extern bool all_video_drivers_implement_drm;
 extern bool force_read_edid;
 extern int  i2c_businfo_async_threshold;
 extern bool cross_instance_locks_enabled;
+extern int  flock_poll_millisec;
+extern int  flock_max_wait_millisec;
 
 void i2c_enable_cross_instance_locks(bool yesno);
 
