@@ -863,7 +863,7 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
       bool         ignore_invalid)
 {
    ASSERT_IFF(busno >= 0, !connector);
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d, connector = %s, ignore_invalid=%s",
                                        busno, connector, SBOOL(ignore_invalid));
    assert(all_display_refs);
