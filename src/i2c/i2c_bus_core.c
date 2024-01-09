@@ -188,10 +188,10 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
       uint64_t start_nanos = cur_realtime_nanosec();
       uint64_t max_wait_millisec = 0;
       uint64_t max_nanos = start_nanos;
-      int flock_poll_millisec = FLOCK_POLL_MILLISEC;
+      int flock_poll_millisec = DEFAULT_FLOCK_POLL_MILLISEC;
       int flock_poll_microsec = flock_poll_millisec * 1000;
       if (callopts & CALLOPT_WAIT) {
-         max_wait_millisec = FLOCK_MAX_WAIT_MILLISEC;
+         max_wait_millisec = DEFAULT_FLOCK_MAX_WAIT_MILLISEC;
       }
       max_nanos = start_nanos + (max_wait_millisec * 1000 * 1000);
       Status_Errno lockrc = 0;

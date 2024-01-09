@@ -107,8 +107,8 @@
 
 #define DEFAULT_TRY_GET_EDID_FROM_SYSFS  true
 
-#define FLOCK_POLL_MILLISEC      500
-#define FLOCK_MAX_WAIT_MILLISEC 3000
+#define DEFAULT_FLOCK_POLL_MILLISEC      500
+#define DEFAULT_FLOCK_MAX_WAIT_MILLISEC 3000
 
 /** Maximum number of i2c buses this code supports */
 #define I2C_BUS_MAX 64
