@@ -969,6 +969,11 @@ parse_command(
    char *   i1_work         = NULL;
    char *   i2_work         = NULL;
    char *   i3_work         = NULL;
+   char *   i4_work         = NULL;
+   char *   i5_work         = NULL;
+   char *   i6_work         = NULL;
+   char *   i7_work         = NULL;
+   char *   i8_work         = NULL;
    char *   fl1_work        = NULL;
    char *   fl2_work        = NULL;
    char *   failsim_fn_work = NULL;
@@ -1227,6 +1232,11 @@ parse_command(
       {"i1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i1_work,         "Special integer 1", "decimal or hex number" },
       {"i2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i2_work,         "Special integer 2", "decimal or hex number" },
       {"i3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i3_work,         "Special integer 3", "decimal or hex number" },
+      {"i4",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i4_work,         "Special integer 4", "decimal or hex number" },
+      {"i5",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i5_work,         "Special integer 5", "decimal or hex number" },
+      {"i6",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i6_work,         "Special integer 6", "decimal or hex number" },
+      {"i7",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i7_work,         "Special integer 7", "decimal or hex number" },
+      {"i8",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i8_work,         "Special integer 9", "decimal or hex number" },
       {"fl1",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl1_work,        "Special floating point number 1", "floating point number" },
       {"fl2",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl2_work,        "Special floating point number 2", "floating point number" },
       {"f1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
@@ -1621,10 +1631,11 @@ parse_command(
       FREE(i2c_source_addr_work);
    }
 
+#ifdef OLD
    if (i1_work) {
       bool ok = parse_int_work(i1_work, &parsed_cmd->i1, errmsgs);
       if (ok)
-         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I1_SET;
+         parsed_cmd->flags2 = parsed_cmd->flags2 | CMD_FLAG2_I1_SET;
       parsing_ok &= ok;
       FREE(i1_work);
    }
@@ -1632,7 +1643,7 @@ parse_command(
    if (i2_work) {
       bool ok = parse_int_work(i2_work, &parsed_cmd->i2, errmsgs);
       if (ok)
-         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I2_SET;
+         parsed_cmd->flags2 = parsed_cmd->flags2 | CMD_FLAG2_I2_SET;
       parsing_ok &= ok;
       FREE(i2_work);
    }
@@ -1640,10 +1651,35 @@ parse_command(
    if (i3_work) {
       bool ok = parse_int_work(i3_work, &parsed_cmd->i3, errmsgs);
       if (ok)
-         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I3_SET;
+         parsed_cmd->flags2 = parsed_cmd->flags2 | CMD_FLAG2_I3_SET;
       parsing_ok &= ok;
       FREE(i2_work);
    }
+#endif
+
+
+#define SET_I(_n) \
+      do { \
+      if  (i ## _n ## _work) { \
+         bool ok = parse_int_work(i ## _n ## _work, &parsed_cmd->i##_n, errmsgs); \
+         if (ok) \
+             parsed_cmd->flags2 = parsed_cmd->flags2 | CMD_FLAG2_I##_n##_SET; \
+         parsing_ok &= ok; \
+         free  (i ## _n ## _work); \
+         i ## _n ## _work = NULL; \
+      } \
+   } while (0)
+
+   SET_I(1);
+   SET_I(2);
+   SET_I(3);
+   SET_I(4);
+   SET_I(5);
+   SET_I(6);
+   SET_I(7);
+   SET_I(8);
+
+#undef SET_I
 
    if (fl1_work) {
      bool ok = str_to_float(fl1_work, &parsed_cmd->fl1);

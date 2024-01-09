@@ -354,9 +354,9 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       EDID_Read_Uses_Smbus = true;
 #endif
 
-   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
+   if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
       extra_stabilize_seconds = parsed_cmd->i1;
-   if (parsed_cmd->flags & CMD_FLAG_I2_SET)
+   if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
    // if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
    //     dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->fl1);

@@ -377,25 +377,50 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
 
 
+#define RPT_IVAL(_n, _depth) \
+   do { \
+      rpt_bool("i"#_n" set",  NULL, parsed_cmd->flags2 & CMD_FLAG2_I ## _n ## _SET, _depth); \
+      if (parsed_cmd->flags2 & CMD_FLAG2_I ## _n ##_SET) {  \
+         rpt_int("i"#_n,                   NULL, parsed_cmd->i ## _n, _depth); \
+         rpt_int_as_hex("i" #_n " as hex", NULL, parsed_cmd->i ## _n, _depth); \
+      } \
+   } \
+   while(0)
+
+
+#ifdef OLD
       rpt_nl();
       rpt_label(depth, "Temporary Utility Variables");
-      rpt_bool("i1 set",           NULL, parsed_cmd->flags & CMD_FLAG_I1_SET,       d1);
-      if (parsed_cmd->flags & CMD_FLAG_I1_SET) {
+      rpt_bool("i1 set",           NULL, parsed_cmd->flags2 & CMD_FLAG2_I1_SET,       d1);
+      if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET) {
          rpt_int( "i1",             NULL, parsed_cmd->i1,                            d1);
          rpt_int_as_hex(
                   "i1 as hex",      NULL, parsed_cmd->i1,                            d1);
       }
-      rpt_bool("i2 set",           NULL, parsed_cmd->flags & CMD_FLAG_I2_SET,       d1);
-      if (parsed_cmd->flags & CMD_FLAG_I2_SET) {
+      rpt_bool("i2 set",           NULL, parsed_cmd->flags2 & CMD_FLAG2_I2_SET,       d1);
+      if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET) {
          rpt_int( "i2",             NULL, parsed_cmd->i2,                            d1);
          rpt_int_as_hex(
                   "i2 as hex",      NULL, parsed_cmd->i2,                            d1);
       }
-      if (parsed_cmd->flags & CMD_FLAG_I3_SET) {
+      rpt_bool("i3 set",           NULL, parsed_cmd->flags2 & CMD_FLAG2_I3_SET,       d1);
+      if (parsed_cmd->flags2 & CMD_FLAG2_I3_SET) {
          rpt_int( "i3",             NULL, parsed_cmd->i3,                            d1);
          rpt_int_as_hex(
                   "i3 as hex",      NULL, parsed_cmd->i3,                            d1);
       }
+#endif
+
+      RPT_IVAL(1,d1);
+      RPT_IVAL(2,d1);
+      RPT_IVAL(3,d1);
+      RPT_IVAL(4,d1);
+      RPT_IVAL(5,d1);
+      RPT_IVAL(6,d1);
+      RPT_IVAL(7,d1);
+      RPT_IVAL(8,d1);
+
+#undef RPT_IVAL
 
       rpt_bool("fl1 set",           NULL, parsed_cmd->flags & CMD_FLAG_FL1_SET,     d1);
       if (parsed_cmd->flags & CMD_FLAG_FL1_SET)

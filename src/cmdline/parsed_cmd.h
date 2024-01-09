@@ -101,12 +101,11 @@ typedef enum {
 
    CMD_FLAG_I2C_IO_FILEIO    = 0x010000000000,
    CMD_FLAG_I2C_IO_IOCTL     = 0x020000000000,
-   CMD_FLAG_I1_SET           = 0x040000000000,
-   CMD_FLAG_I2_SET           = 0x080000000000,
+
    CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER
                              = 0x100000000000,
    CMD_FLAG_DSA2             = 0x200000000000,
-   CMD_FLAG_I3_SET           = 0x400000000000,
+
    CMD_FLAG_QUICK            = 0x800000000000,
 
    CMD_FLAG_F7             = 0x01000000000000,
@@ -147,6 +146,17 @@ typedef enum {
 
 typedef enum {
    CMD_FLAG_TRY_GET_EDID_FROM_SYSFS =  0x01,
+
+   CMD_FLAG2_I1_SET           = 0x010000000000,
+   CMD_FLAG2_I2_SET           = 0x020000000000,
+   CMD_FLAG2_I3_SET           = 0x040000000000,
+   CMD_FLAG2_I4_SET           = 0x080000000000,
+   CMD_FLAG2_I5_SET           = 0x100000000000,
+   CMD_FLAG2_I6_SET           = 0x200000000000,
+   CMD_FLAG2_I7_SET           = 0x400000000000,
+   CMD_FLAG2_I8_SET           = 0x800000000000,
+
+
 } Parsed_Cmd_Flags2;
 
 #define IGNORED_VID_PID_MAX 4
@@ -233,6 +243,11 @@ struct {
    int                    i1;         // for temporary use
    int                    i2;         // for temporary use
    int                    i3;         // for temporary use
+   int                    i4;         // for temporary use
+   int                    i5;         // for temporary use
+   int                    i6;         // for temporary use
+   int                    i7;         // for temporary use
+   int                    i8;         // for temporary use
    char *                 s1;         // for temporary use
    char *                 s2;         // for temporary use
    char *                 s3;         // for temporary use
