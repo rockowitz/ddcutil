@@ -51,6 +51,12 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra seconds to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZE_SECS);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
+   rpt_vstring(depth+1, "Utility option --i3:          Unused");
+   rpt_vstring(depth+1, "Utility option --i4:          Unused");
+   rpt_vstring(depth+1, "Utility option --i5:          Unused");
+   rpt_vstring(depth+1, "Utility option --i6:          Unused");
+   rpt_vstring(depth+1, "Utility option --i7:          Unused");
+   rpt_vstring(depth+1, "Utility option --i8:          Unused");
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");
    rpt_vstring(depth+1, "Utility option --s2:          Unused");
