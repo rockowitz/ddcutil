@@ -1884,6 +1884,8 @@ void ddc_emit_display_detection_event(
          func(evt);
       }
    }
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Executed %d registered callbacks.",
+         (display_detection_callbacks) ? display_detection_callbacks->len : 0);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
          (display_detection_callbacks) ? display_detection_callbacks->len : 0);
