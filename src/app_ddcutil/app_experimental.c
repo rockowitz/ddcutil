@@ -11,6 +11,8 @@
 #include "util/string_util.h"
 #include "util/timestamp.h"
 
+#include "base/parms.h"
+
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
@@ -51,8 +53,8 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra seconds to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZE_SECS);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
-   rpt_vstring(depth+1, "Utility option --i3:          Unused");
-   rpt_vstring(depth+1, "Utility option --i4:          Unused");
+   rpt_vstring(depth+1, "Utility option --i3:          flock_poll_millisec (default = %d)", DEFAULT_FLOCK_POLL_MILLISEC);
+   rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i5:          Unused");
    rpt_vstring(depth+1, "Utility option --i6:          Unused");
    rpt_vstring(depth+1, "Utility option --i7:          Unused");
