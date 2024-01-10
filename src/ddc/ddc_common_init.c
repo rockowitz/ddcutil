@@ -358,6 +358,10 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       extra_stabilize_seconds = parsed_cmd->i1;
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
+   if (parsed_cmd->flags2 & CMD_FLAG2_I3_SET)
+        flock_poll_millisec = parsed_cmd->i3;
+   if (parsed_cmd->flags2 & CMD_FLAG2_I4_SET)
+        flock_max_wait_millisec = parsed_cmd->i4;
    // if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
    //     dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->fl1);
 }
