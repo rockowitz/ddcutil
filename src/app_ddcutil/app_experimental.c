@@ -33,14 +33,16 @@ void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
    char buf0[80];
-   snprintf(buf0, 80, "Use non-default watch mode (default = %s)", ddc_watch_mode_name(ddc_watch_mode));
+   g_snprintf(buf0, 80, "Use non-default watch mode (default = %s)", ddc_watch_mode_name(ddc_watch_mode));
+   char buf5[80];
+   g_snprintf(buf5, 80, "Use non-default value for EDID read uses I2C layer (default=%s)", SBOOL(DEFAULT_EDID_READ_USES_I2C_LAYER));
 
    rpt_label(depth, "Experimental Options:");
    REPORT_FLAG_OPTION(1,  "Suppress SE_POST_READ");
    REPORT_FLAG_OPTION(2,  "Experimental sysfs analysis");    // was Filter phantom displays
    REPORT_FLAG_OPTION(3,  "DDC Null Message never indicates invalid feature");
    REPORT_FLAG_OPTION(4,  "Read strategy tests");
-   REPORT_FLAG_OPTION(5,  "Use non-default value for EDID read uses I2C layer");
+   REPORT_FLAG_OPTION(5,  buf5);
    REPORT_FLAG_OPTION(6,  "Unused");
    REPORT_FLAG_OPTION(7,  "Disable phantom display detection");
    REPORT_FLAG_OPTION(8,  "Slow down watch display polling");
