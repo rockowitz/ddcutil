@@ -885,8 +885,9 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
          continue;
       }
 
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_REMOVED=%s, dref_defail=%p",
-            sbool(cur_dref->flags&DREF_REMOVED), cur_dref->detail);
+      I2C_Bus_Info * businfo = (I2C_Bus_Info*) cur_dref->detail;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED=%s, dref_detail=%p -> /dev/i2c-%d",
+            sbool(cur_dref->flags&DREF_REMOVED), cur_dref->detail,  businfo->busno);
 
       if (ignore_invalid && cur_dref->flags&DREF_REMOVED) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p DREF_REMOVED set, Ignoring",
@@ -1857,6 +1858,8 @@ void ddc_emit_display_detection_event(
             dpath_repr_t(&io_path),
             event_type, ddc_display_event_type_name(event_type));
    }
+   // SYSLOG2(DDCA_SYSLOG_NOTICE, "(%s) event_type=%s, connector_name=%s, dref=%s, connector_name=%s",
+   //          __func__, ddc_display_event_type_name(event_type), connector_name, dref_repr_t(dref), dpath_repr_t(&io_path));
 
    DDCA_Display_Status_Event evt;
    evt.dref = (void*) dref;
@@ -1872,8 +1875,8 @@ void ddc_emit_display_detection_event(
    // dbgrpt_display_ref((Display_Ref*) evt.dref, 4);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED = %s", sbool(dref->flags&DREF_REMOVED));
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Detection_Event(%s, dref=%s, busno=%d",
-         ddc_display_event_type_name(event_type), dref_repr_t(dref), io_path.path.i2c_busno);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Detection_Event(%s, drm_connector=%s, dref=%s, busno=%d",
+         ddc_display_event_type_name(event_type), connector_name, dref_repr_t(dref), io_path.path.i2c_busno);
 
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
@@ -1894,8 +1897,8 @@ const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    case DDCA_EVENT_DISPLAY_DISCONNECTED: result = "DDCA_EVENT_DISPLAY_DISCONNECTED"; break;
    case DDCA_EVENT_DPMS_AWAKE:           result = "DDCA_EVENT_DPMS_AWAKE";           break;
    case DDCA_EVENT_DPMS_ASLEEP:          result = "DDCA_EVENT_DPMS_ASLEEP";          break;
-   case DDCA_EVENT_CONNECTOR_ADDED:      result = "DDCA_EVENT_CONNECTOR_ADDED";      break;
-   case DDCA_EVENT_CONNECTOR_REMOVED:    result = "DDCA_EVENT_CONNECTER_REMOVED";    break;
+   case DDCA_EVENT_UNUSED1:              result = "DDCA_EVENT_UNUSED1";              break;
+   case DDCA_EVENT_UNUSED2:              result = "DDCA_EVENT_UNUSED2";              break;
    }
    return result;
 }
