@@ -1658,7 +1658,7 @@ parse_command(
 #endif
 
 
-#define SET_I(_n) \
+#define SET_CMDFLAG_I(_n) \
       do { \
       if  (i ## _n ## _work) { \
          bool ok = parse_int_work(i ## _n ## _work, &parsed_cmd->i##_n, errmsgs); \
@@ -1670,16 +1670,16 @@ parse_command(
       } \
    } while (0)
 
-   SET_I(1);
-   SET_I(2);
-   SET_I(3);
-   SET_I(4);
-   SET_I(5);
-   SET_I(6);
-   SET_I(7);
-   SET_I(8);
+   SET_CMDFLAG_I(1);
+   SET_CMDFLAG_I(2);
+   SET_CMDFLAG_I(3);
+   SET_CMDFLAG_I(4);
+   SET_CMDFLAG_I(5);
+   SET_CMDFLAG_I(6);
+   SET_CMDFLAG_I(7);
+   SET_CMDFLAG_I(8);
 
-#undef SET_I
+#undef SET_CMDFLAG_I
 
    if (fl1_work) {
      bool ok = str_to_float(fl1_work, &parsed_cmd->fl1);
