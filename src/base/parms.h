@@ -105,7 +105,8 @@
 // *** Miscellaneous
 //
 
-#define DEFAULT_TRY_GET_EDID_FROM_SYSFS  true
+// EDID in /sys can have stale data
+#define DEFAULT_TRY_GET_EDID_FROM_SYSFS  false
 
 #define DEFAULT_FLOCK_POLL_MILLISEC      500
 #define DEFAULT_FLOCK_MAX_WAIT_MILLISEC 3000
