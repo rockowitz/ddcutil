@@ -122,7 +122,7 @@ bool check_thread_or_process(pid_t id) {
 //
 //  Variant Watch_Mode_Full_Poll
 //
-
+#ifdef WATCH_MODE_FULL_POLL
 /** Primary function to check for changes in display status (disconnect, DPMS),
  *  modify internal data structures, and emit client notifications.
  */
@@ -154,10 +154,13 @@ void ddc_recheck_bus() {
          busno = bs256_iter_next(iter);
          if (busno < 0)
             break;
+#ifdef FUTURE
          DDCA_IO_Path iopath;
          iopath.io_mode = DDCA_IO_I2C;
          iopath.path.i2c_busno = busno;
-         ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, NULL, NULL, iopath);
+         // connector events not currently being reported
+         // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, NULL, NULL, iopath);
+#endif
       }
       bs256_iter_free(iter);
       changed = true;
@@ -182,7 +185,8 @@ void ddc_recheck_bus() {
          if (IS_DBGTRC(debug, DDCA_TRC_NONE))
             i2c_dbgrpt_bus_info(new_businfo, 1);
          DBGTRC(true, DDCA_TRC_NONE, "Emitting DDCA_EVENT_BUS_ATTACHED for bus /dev/i2c-%d", iopath.path.i2c_busno);
-         ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, new_businfo->drm_connector_name, NULL, iopath);
+         // connector events not currently being reported
+         // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, new_businfo->drm_connector_name, NULL, iopath);
       }
       bs256_iter_free(iter);
       changed = true;
@@ -301,6 +305,12 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
    g_thread_exit(0);
    return NULL;    // satisfy compiler check that value returned
 }
+#else
+gpointer ddc_watch_displays_using_poll(gpointer data) {
+   return NULL;
+}
+#endif
+
 
 #ifdef WHERE_DOES_THIS_GO
 // When a display is disconnected and then reconnected, a udev event for
@@ -350,6 +360,12 @@ void ddc_emit_display_hotplug_event() {
 #endif
 
 
+// Connector add or removal are not currently reported in the API
+#define DDCA_EVENT_CONNECTOR_ADDED   DDCA_EVENT_UNUSED1
+#define DDCA_EVENT_CONNECTOR_REMOVED DDCA_EVENT_UNUSED2
+
+
+
 void ddc_hotplug_change_handler(
         GPtrArray *          connectors_removed,
         GPtrArray *          connectors_added,
@@ -357,12 +373,12 @@ void ddc_hotplug_change_handler(
         GPtrArray *          connectors_having_edid_added)
 {
    bool debug = false;
-   DBGTRC_STARTING(true, TRACE_GROUP, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    if (connectors_removed && connectors_removed->len > 0) {
       char * s =  join_string_g_ptr_array_t(connectors_removed, ", ");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_removed: %s", s );
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors detached: %s", s);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "(ddc_hotplug_change_handler) DRM connectors removed: %s", s);
       for (int ndx = 0; ndx < connectors_removed->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_removed, ndx);
          Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
@@ -370,8 +386,8 @@ void ddc_hotplug_change_handler(
             // connector has already been removed
             char buf[80];
             g_snprintf(buf, 80, "Sys_Drm_Connector not found for connector %s", connector_name);
-            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
-            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", s);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
 
             // connector was already removed, nothing to do
             // DDCA_IO_Path path;
@@ -380,36 +396,45 @@ void ddc_hotplug_change_handler(
             // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, connector_name, NULL, path);
          }
          else {
+#ifdef FUTURE
             DDCA_IO_Path path;
             path.io_mode = DDCA_IO_I2C;
             path.path.i2c_busno = conn->i2c_busno;
-            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, connector_name, NULL, path);
+            // Do not emit, not useful to client
+            // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, connector_name, NULL, path);
+#endif
          }
       }
    }
 
    if (connectors_added && connectors_added->len > 0) {
       char * s =  join_string_g_ptr_array_t(connectors_added, ", ");
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DRM connectors attached: %s", s);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors added: %s", s);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DRM connectors added: %s", s);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "(%s) DRM connectors added: %s", __func__, s);
       for (int ndx = 0; ndx < connectors_added->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_added, ndx);
          Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
          if (!conn) {
             char buf[100];
             g_snprintf(buf, 100, "Sys_Drm_Connector not found for connector %s", connector_name);
-            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
-            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", s);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
+#ifdef FUTURE
             DDCA_IO_Path path;
             path.io_mode = DDCA_IO_I2C;
             path.path.i2c_busno = BUSNO_NOT_SET;
-            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, connector_name, NULL, path);
+            // Do not emit, not useful to client
+            // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, connector_name, NULL, path);
+#endif
          }
          else {
+#ifdef FUTURE
             DDCA_IO_Path path;
             path.io_mode = DDCA_IO_I2C;
             path.path.i2c_busno = conn->i2c_busno;
-            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, connector_name, NULL, path);
+            // Do not emit, not useful to client
+            // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, connector_name, NULL, path);
+#endif
          }
       }
    }
@@ -421,16 +446,34 @@ void ddc_hotplug_change_handler(
       for (int ndx = 0; ndx < connectors_having_edid_removed->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_having_edid_removed, ndx);
          Display_Ref * dref = DDC_GET_DREF_BY_CONNECTOR(connector_name, /*ignore_invalid*/ true);
-         if (!dref) {
-            char buf[100];
-            g_snprintf(buf, 100, "dref not found for connector %s", connector_name);
-            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
-            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
-         }
-         else {
+         if (dref) {
             dref->flags |= DREF_REMOVED;
             // dref->detail = NULL;
+            char buf[100];
+            g_snprintf(buf, 100, "Removing connected display, drm_connector: %s, dref %s", connector_name, dref_repr_t(dref));
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+            // SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
             ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, dref, dref->io_path);
+         }
+         else {
+            // As there's no dref, report the io path for the display
+             Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
+            if (!conn) {
+                char buf[100];
+                g_snprintf(buf, 100, "Sys_Drm_Connector not found for connector %s", connector_name);
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+                SYSLOG2(DDCA_SYSLOG_ERROR, "%s", buf);
+             }
+             else {
+                DDCA_IO_Path path;
+                path.io_mode = DDCA_IO_I2C;
+                path.path.i2c_busno = conn->i2c_busno;
+                char buf[100];
+                g_snprintf(buf, 100, "Adding connected display with bus %s, drm connector %s", dpath_repr_t(&path), connector_name);
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+                // SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
+                ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, NULL, path);
+             }
          }
       }
    }
@@ -447,25 +490,32 @@ void ddc_hotplug_change_handler(
             // Expected since display changes detected do not presently modify
             // the list of display refs.
 
-            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
-            SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
-
             // As there's no dref, report the io path for the display
             Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
             if (!conn) {
                char buf[100];
                g_snprintf(buf, 100, "Sys_Drm_Connector not found for connector %s", connector_name);
-               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
-               SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+               SYSLOG2(DDCA_SYSLOG_ERROR, "%s", buf);
             }
             else {
+               // The expected path
                DDCA_IO_Path path;
                path.io_mode = DDCA_IO_I2C;
                path.path.i2c_busno = conn->i2c_busno;
+               char buf[100];
+               g_snprintf(buf, 100, "Adding connected display with bus %s, drm connector %s", dpath_repr_t(&path), connector_name);
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+               // SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
                ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, NULL, path);
             }
          }
          else {
+            char buf[200];
+            g_snprintf(buf, 200, "dref=%s exists for newly added connector %s on /dev/i2c-%d",
+                  dref_repr_t(dref), connector_name, dref->io_path.path.i2c_busno);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, buf);
             ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, dref, dref->io_path);
          }
       }
@@ -922,7 +972,9 @@ ddc_stop_watch_displays(bool wait)
 void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
+#ifdef WATCH_USING_POLL
    RTTI_ADD_FUNC(ddc_recheck_bus);
+#endif
    RTTI_ADD_FUNC(ddc_watch_displays_using_poll);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(ddc_check_asleep);
