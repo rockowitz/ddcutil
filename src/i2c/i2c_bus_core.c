@@ -152,7 +152,8 @@ void include_open_failures_reported(int busno) {
  */
 Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, callopts=0x%02x", busno, callopts);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, callopts=0x%02x=%s",
+         busno, callopts, interpret_call_options_t(callopts));
 
    char filename[20];
    Error_Info * master_error = NULL;
@@ -191,6 +192,8 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
       int poll_microsec = flock_poll_millisec * 1000;
       uint64_t max_wait_millisec = (callopts & CALLOPT_WAIT) ? flock_max_wait_millisec : 0;
       uint64_t max_nanos = cur_realtime_nanosec() + (max_wait_millisec * 1000 * 1000);
+      DBGTRC(debug, DDCA_TRC_NONE, "flock_poll_millisec=%jd, flock_max_wait_millisec=%jd, max_wait_millisec=%jd",
+            flock_poll_millisec, flock_max_wait_millisec, max_wait_millisec);
       Status_Errno lockrc = 0;
       int flock_call_ct = 0;
       while(true) {
