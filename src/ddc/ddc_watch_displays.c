@@ -442,7 +442,7 @@ void ddc_hotplug_change_handler(
    if (connectors_having_edid_removed && connectors_having_edid_removed->len > 0) {
       char * s =  join_string_g_ptr_array_t(connectors_having_edid_removed, ", ");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_removed: %s", s);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays disconnected from DRM connector(s): %s", s);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors with newly disconnected displays: %s", s);
       for (int ndx = 0; ndx < connectors_having_edid_removed->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_having_edid_removed, ndx);
          Display_Ref * dref = DDC_GET_DREF_BY_CONNECTOR(connector_name, /*ignore_invalid*/ true);
@@ -484,7 +484,7 @@ void ddc_hotplug_change_handler(
    if (connectors_having_edid_added && connectors_having_edid_added->len > 0) {
       char * s = join_string_g_ptr_array_t(connectors_having_edid_added, ", ");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_added: %s", s);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays connected on drm connectors: %s", s);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors having newly connected displays: %s", s);
       for (int ndx = 0; ndx < connectors_having_edid_added->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_having_edid_added, ndx);
          Display_Ref * dref = DDC_GET_DREF_BY_CONNECTOR(
