@@ -122,7 +122,9 @@ bool check_thread_or_process(pid_t id) {
 //
 //  Variant Watch_Mode_Full_Poll
 //
-#ifdef WATCH_MODE_FULL_POLL
+
+// #ifdef WATCH_MODE_FULL_POLL
+
 /** Primary function to check for changes in display status (disconnect, DPMS),
  *  modify internal data structures, and emit client notifications.
  */
@@ -305,11 +307,11 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
    g_thread_exit(0);
    return NULL;    // satisfy compiler check that value returned
 }
-#else
-gpointer ddc_watch_displays_using_poll(gpointer data) {
-   return NULL;
-}
-#endif
+// #else
+// gpointer ddc_watch_displays_using_poll(gpointer data) {
+//    return NULL;
+// }
+// #endif
 
 
 #ifdef WHERE_DOES_THIS_GO
