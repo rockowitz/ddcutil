@@ -231,35 +231,6 @@ ddca_init2(const char *     libopts,
           DDCA_Init_Options opts,
           char***           infomsg_loc);
 
-/** Start the thread watching for display status changes if it
- *  is not already started.  This function exists for symmetry
- *  with #ddca_stop_watch_displays.  The thread can also be started
- *  using option --enable-watch_displays.
- *
- *  @retval DDCRC_OK
- *
- *  @since 2.1.0
- */
-DDCA_Status
-ddca_start_watch_displays();
-
-/** Terminate the thread that watches for display status changes.
- *
- *  This function is a hack.  Without it, the thread can
- *  continue running even though the application has exited.
- *
- *  @param wait  Wait for watch thread to actually terminate
- *  @retval DDCRC_OK
- *
- *  If this function is being called as part of termination
- *  by the client, there's no need to wait for the watch thread
- *  the actually finish.
- *
- *  @since 2.1.0
- */
-DDCA_Status
-ddca_stop_watch_displays(bool wait);
-
 
 //
 // Global Settings
@@ -1766,6 +1737,36 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
  */
 const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
+
+
+/** Start the thread watching for display status changes if it
+ *  is not already started.  This function exists for symmetry
+ *  with #ddca_stop_watch_displays.  The thread can also be started
+ *  using option --enable-watch_displays.
+ *
+ *  @retval DDCRC_OK
+ *
+ *  @since 2.1.0
+ */
+DDCA_Status
+ddca_start_watch_displays();
+
+/** Terminate the thread that watches for display status changes.
+ *
+ *  This function is a hack.  Without it, the thread can
+ *  continue running even though the application has exited.
+ *
+ *  @param wait  Wait for watch thread to actually terminate
+ *  @retval DDCRC_OK
+ *
+ *  If this function is being called as part of termination
+ *  by the client, there's no need to wait for the watch thread
+ *  the actually finish.
+ *
+ *  @since 2.1.0
+ */
+DDCA_Status
+ddca_stop_watch_displays(bool wait);
 
 
 
