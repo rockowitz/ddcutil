@@ -392,7 +392,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                   if (dref->flags & DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED)
                      how  = "invalid feature flag in DDC reply packet";
                   else if (dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED)
-                     how  = "returns DDC Null Message";
+                     how  = "DDC Null Message";
                   else if (dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED)
                      how = "all data bytes 0 in DDC reply packet";
                   rpt_vstring(d1, "Monitor uses %s to indicate unsupported feature.", how);
