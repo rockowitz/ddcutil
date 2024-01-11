@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.2] 2024-01-04
+## [2.1.0] 2024-01-11
 
 ### General
 
@@ -9,7 +9,10 @@
   - Skips initialization checks to confirm that DDC communication is working
     and the monitor properly uses the unsupported feature bit in Get Feature 
     Reply packets, thereby improving initialization time.
-- Option ***--min-dynamic-multiplier***  (experimental, possibly rename --dsa-floor)
+- Option ***--min-dynamic-multiplier***  (experimental)
+- Cross-instance locking (experimental). Uses flock() to coordinate I2C bus
+  access to /dev/i2c devices when multiple instances of ddcutil or libddcutil
+  are executing. Enabled by option ***--enable-cross-instance-locks***.
 
 #### Changed
 - Multiple "Options:" lines in an ini file segment are combined
@@ -19,25 +22,25 @@
 - I2C bus examination during initialization can be parallelized, improving performance
   (This is distinct from the ddc protocol checking.) This is an experimental
   feature.  It can be enabled by using a low value as an argument to option 
-  ***--i2c-bus-check-async-theshold***, e.g. ***--i2c-bus-check-async-threshold 4***.
-- ***--ddc-check-async-threshold
+  ***--i2c-bus-checks-async-min***, e.g. ***--i2c-bus-checks-async-min 4***.
 - Command detect: better msgs for laptop display
   - do not report "DDC communication failed"
   - report "Is laptop display" instead of "Is eDP device" or "Is LVDS device"
 - Better accomodate the variation in use of sysfs by different drivers
-- Deprecate vaguely named option ***--force***.  Replace its single use with  
-  option ***--permit-unknown-feature***.
 - Turned off unconditional message that reported an elusive Nvidia/i2c-dev
   driver compatibility error.  The incompatibility has been full diagnosed 
   as being caused by use of a legacy proprietary Nvidia driver. A message
   is still written to the system log.
+- Make more extensive use of the system log.
 - Options ***--enable-displays-cache***, ***--disable-displays-cache*** are marked
   hidden since displays caching is not a released feature
+- Deprecate vaguely named option ***--force***.  Replace its single use with  
+  option ***--permit-unknown-feature***.
+- Deprecate vaguely named option ***--async***. Use ***--ddc-checks-async-min***
+- Deprecate vaguely named option ***--ddc***. Use option ***--ddcdata***, which more
+  clearly indicates that it causes DDC data errors to be reported.
 - **configure** option ***--enable-asan*** causes libasan to be linked into binaries 
 - **configure** option ***--enable-x11*** is deprecated. The X11 API is no longer used.
-- Option ***--ddcdata*** is an alternative name for ***--ddc***.  ***--ddcdata*** more
-  clearly indicates that it causes DDC data errors to be reported.  Option name 
-  ***--ddc*** is deprecated. 
 
 #### Fixed
 - Better handling of DDC Null Message recognition and adjustments
@@ -47,7 +50,7 @@
 - Some USB-only code was not iftested out when **configure** option ***--disable-usb*** was set. (Issue 355)
 - Always set sleep multiplier to at least 1.0 for commands **setvcp** and **scs**. Addresses reports
   that aggressive optimization caused setvcp to fail.
-- Cross-thread locking handles situtations where a display ref does not yet exist, e.g. reading EDID
+- Cross-thread locking handles situtations where a display ref does not yet exist, e.g. reading EDID.
 - Memory leaks.
 
 ### Shared library
@@ -59,56 +62,44 @@ file is libddcutil.so.5.x.x.
 #### Added
 - Implemented display hotplug event detection
   - Requires DRM video drivers (e.g. amdgpu, i915)
-  - Can detect physical connection/disconnection, but
-    the effect of turning a monitor on or off is monitor dependant and 
+  - Can detect physical connection/disconnection and DPMS sleep status chanes,
+    but the effect of turning a monitor on or off is monitor dependant and 
     cannot reliably be detected.
+  - enabled by libddcutil option ***--enable-watch-displays***, 
+    API call **ddca_enable_start_watch_displays()**
   - API uses callbacks to report report status changes to client
-    - event type: DDCA_Display_Hotplug_Type
-    - callback function signature: DDCA_Display_Hotplug_Callback_Func
-    - ddca_register_display_hotplug_callback() 
-    - ddca_unregister_display_hotplug_callback() 
-    - new status codes possible for many current API functions: 
-      DDCRC_DISCONNECTED, DDCRC_DPMS_ASLEEP
-    - When a hotplug event is reported, the client should call 
-      ddca_redetect_monitors().
-  - DPMS sleep status (awake/asleep) is reported using a similar
-    set of API calls: 
-    - event type: DDCA_Display_Sleep_Event 
-    - callback function signature: DDCA_Display_Sleep_Event_Callback_Func
-    - ddca_register_display_sleep_event_callback() 
-    - ddca_unregister_display_sleep_event_callback()
-  - ddca_dref_state(): reports whether monitor asleep, disconnected, etc.
-  - Sleep multiplier control:
-    - ddca_enable_dynamic_sleep() 
-    - ddca_disable_dynamic_sleep() 
-    - ddca_get_current_sleep_multiplier() 
-    - ddca_set_display_sleep_multiplier() 
-  - ddca_init2() replaces ddca_init(), which is deprecated: 
-    Has additional argument for collecting informational msgs. Allows for not
-    issuing information messages regarding options assembly and parsing directly
-    from libddcutil (currently enabled by setting flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS),
-    bus instead gives client complete control as to what to do with the messages.
-  - ddca_stop_watch_displays(), ddca_start_watch_displays()
-  - Cross-instance locking (experimental). Uses flock() to coordinate I2C bus
-    access when multiple instances of libddcutil are executing. Enabled by option
-    ***--enable-cross-instance-locks***.
+  - new status codes possible for many current API functions: 
+    DDCRC_DISCONNECTED, DDCRC_DPMS_ASLEEP
+  - When a display connection event is reported, the client should call 
+    **ddca_redetect_displays()**
+  - **ddca_validate_display_ref()**: Exposes the validation that occurs on any
+      API call that has a DDCA_Display_Ref argument.  Can be used to check 
+      whether a monitor asleep, disconnected, etc.
+- Sleep multiplier control:
+  - **ddca_enable_dynamic_sleep() 
+  - **ddca_disable_dynamic_sleep() 
+  - **ddca_get_current_sleep_multiplier() 
+  - **ddca_set_display_sleep_multiplier() 
+- **ddca_init2()** replaces **ddca_init()**, which is deprecated: 
+  Has additional argument for collecting informational msgs. Allows for not
+  issuing information messages regarding the assembly of options and parsing directly
+  from libddcutil (currently enabled by setting flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS),
+  bus instead gives client complete control as to what to do with the messages.
 
 #### Changed
 - Functions that depend on initialization and that return a status code now 
   return DDCRC_UNINITIALIZED if ddca_init() failed.
-- Revert ddca_get_sleep_multiplier(), ddca_set_sleep_multiplier() to 
+- Revert **ddca_get_sleep_multiplier()**, **ddca_set_sleep_multiplier()** to 
   their pre 2.0 semantics changing the multiplier on the current thread.
   However, these functions are marked as deprecated.
-- **configure** option ***--enable-x11*** is deprecated. ddcutil no longer
-  makes any use of the X11 API. 
 
 #### Fixed
-- Argument passing on ddca_get_any_vcp_value_using_implicit_type()
-- Fixed cause of assert() failure in ddca_init() when the libopts string
-  argument has a value and the configuration file is enabled but 
-  no options are obtained from the configuation file.
-- Contents of the libopts arg were added twice to the string passed to 
-  the libddcutil parser.
+- Argument passing on **ddca_get_any_vcp_value_using_implicit_type()**
+- Fixed cause of assert() failure in **ddca_init()** when the libopts string
+  argument has a value and the configuration file is enabled but no options 
+  are obtained from the configuation file.
+- Contents of the libopts arg were added twice to the string passed to the
+  libddcutil parser.
 
 ## [2.0.0] 2023-09-25
 
@@ -236,7 +227,7 @@ Added typedef
 Added functions: 
 - ddca_init() See above.
 - ddca_register_display_detection_callback(): Registers a function 
-  of type DDCA_Display_Hotplug_Func which will be called to inform the client
+  of type DDCA_Display_Status_Func which will be called to inform the client
   of display hotplug events.
 - ddca_library_filename():  Returns the fully qualified name of the 
   shared library.
