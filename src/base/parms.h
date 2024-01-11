@@ -98,11 +98,11 @@
 #define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD CHECK_ASYNC_NEVER
 /** Parallelize DDC communication checks if three are least this number of /dev/i2c devices having an EDID */
 // on banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
-#define DEFAULT_DDC_CHECK_ASYNC_THRESHOLD 2
+#define DEFAULT_DDC_CHECK_ASYNC_THRESHOLD 3
 
 
 //
-// *** Miscellaneous
+// *** Miscellaneous:286,290
 //
 
 // EDID in /sys can have stale data
