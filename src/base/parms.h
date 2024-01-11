@@ -102,7 +102,7 @@
 
 
 //
-// *** Miscellaneous:286,290
+// *** Miscellaneous
 //
 
 // EDID in /sys can have stale data
