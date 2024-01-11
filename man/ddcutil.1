@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH ddcutil 1 "2020-05-15"
+.TH ddcutil 1 "2024-01-11"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -239,8 +239,9 @@ Report option settings in effect.
 .PP
 Options for diagnostic output
 .TQ
-.B --ddc
+.B --ddcdata
 Reports DDC protocol errors.  These may reflect I2C bus errors, or deviations by monitors from the MCCS specification.
+Formerly named \fB--ddc\fP,
 .TQ
 .BR "["--stats | --vstats | --istats"] " " [" all | errors | tries | calls | elapsed | time ]
 Report execution statistics.  \fB--vstats\fP reports statistics on a per monitor basis. 
@@ -284,16 +285,19 @@ Dynamically adjust the sleep-multiplier over multiple \fBddcutil\fP invocations,
 The default is
 .B "--enable-dynamic-sleep"
 .TQ
-.B "--enable-async-ddc-checks, --disable-async-ddc-checks"
-If there are several monitors, initial DDC checks are performed in multiple threads, improving performance.
-This option was formerly (and ambiguously) named \fB--async\fP.  The default is 
-.B "--enable-async-ddc-checks"
-.TQ
-.B "--enable-async-i2c-bus-checks, --disable-async-i2c-bus-checks"
+.B "--asyncc-i2c-bus-checks-min"
 During display detection, examine I2C buses in parallel to see if a monitor is present.
 These are low level checks that do not test DDC communication. The default is
-.B "--enable-async-i2c-bus-checks"
+.B "--async-i2c-bus-checks-async-min 99  (i.e. never)"
 .TQ
+.B "--async-ddc-checks-min"
+If there are several monitors, initial DDC checks are performed in multiple threads, improving performance.
+This option was formerly (and ambiguously) named \fB--async\fP.  The default is 
+.B "--async-ddc-checks-min 3"
+.TQ
+.B "--skip-ddc-checks"
+Assume DDC communication works and monitors properly use the invalid feature flag in a
+DDC/CI Reply packet to indicate an unsupported feature.
 .B "--lazy-sleep"
 Peform mandated sleeps before the next DDC/CI operation instead of immediately after the
 DDC/CI operation that specified a delay, marginally improving performance.
