@@ -535,7 +535,6 @@ typedef enum {
    DDCA_EVENT_DISPLAY_DISCONNECTED,
    DDCA_EVENT_UNUSED1,
    DDCA_EVENT_UNUSED2,
-
 } DDCA_Display_Event_Type;
 
 
