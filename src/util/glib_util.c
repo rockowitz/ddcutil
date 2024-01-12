@@ -253,10 +253,16 @@ gpointer g_string_copy_func(gconstpointer src, gpointer data) {
    return (gpointer) g_strdup((gchar*) src);
 }
 
+
 GPtrArray *
 gaux_deep_copy_string_array(GPtrArray * old_array) {
-   GPtrArray * result = g_ptr_array_copy(old_array, g_string_copy_func, NULL);
+   // g_ptr_array_copy() requires glib 2.62
+   //GPtrArray * result = g_ptr_array_copy(old_array, g_string_copy_func, NULL);
+   GPtrArray * result = g_ptr_array_sized_new(old_array->len);
    g_ptr_array_set_free_func(result, g_free);
+   for (int ndx = 0; ndx < old_array->len; ndx++) {
+      g_ptr_array_add(result, g_strdup(g_ptr_array_index(old_array, ndx)));
+   }
    return result;
 }
 
