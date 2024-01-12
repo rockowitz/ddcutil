@@ -1957,12 +1957,14 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
-/** Logically removes a #Display_Ref from the list of all display references.
- *  Sets the DREF_REMOVED flag and calls ddc_emit_display_detection_event()
- *  to notify any client programs that have registered for a callback.
+/** Given a #I2C_Bus_Info instance, checks if there is a currently active #Display_Ref
+ *  for that bus (i.e. one with the DREF_REMOVED flag not set).
+ *  If found, sets the DREF_REMOVED flag and calls ddc_emit_display_detection_event()
+ *  to notify any client programs that have registered for a callback that the display
+ *  has been disconnected.
  *
  *  @param  businfo
- *  @return true (assert failure if display not found)
+ *  @return true if display ref was found, false if not
  */
 bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
@@ -1974,8 +1976,8 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
 
    bool found = false;
    Display_Ref * dref = ddc_get_dref_by_busno_or_connector(businfo->busno, NULL, /*ignore_invalid*/ true);
-   assert(dref);  // is failure possible?
    if (dref) {
+      assert(!(dref->flags & DREF_REMOVED));  // it was checked in the ddc_get_dref_by_busno_or_connector() call
       found = true;
       dref->flags |= DREF_REMOVED;
       // dref->detail = NULL;
