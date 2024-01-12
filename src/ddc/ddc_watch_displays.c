@@ -253,7 +253,11 @@ void ddc_recheck_bus() {
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                "Adding businfo for newly detected /dev/i2c-%d", new_businfo->busno);
-         g_ptr_array_steal_index(new_buses, new_index);
+         // g_ptr_array_steal_index() requires glib 2.58
+         // g_ptr_array_steal_index(new_buses, new_index);
+         // should not be set, but just in case:
+         g_ptr_array_set_free_func(new_buses, NULL);
+         g_ptr_array_remove_index(new_buses, new_index);
          g_ptr_array_add(all_i2c_buses, new_businfo);
          ddc_add_display_by_businfo(new_businfo);  // performs emit
       }
