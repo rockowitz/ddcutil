@@ -7,7 +7,7 @@
  *  within the code that implements the API.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_TYPES_H_
@@ -551,10 +551,11 @@ typedef enum {
  *  for future extension without breaking the ABI.
  */
 typedef struct {
+   uint64_t                timestamp_nanos;
    DDCA_Display_Event_Type event_type;
    DDCA_IO_Path            io_path;
    char                    connector_name[32];
-   DDCA_Display_Ref *      dref;
+   DDCA_Display_Ref        dref;
    void *                  unused[2];
 } DDCA_Display_Status_Event;
 
