@@ -1565,6 +1565,9 @@ void
 ddc_redetect_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
+   bool watch_thread_running = is_watch_thread_running();
+   if (watch_thread_running) {
+      stop_watch_displays(/*wait*/ true);
    ddc_discard_detected_displays();
    if (dsa2_is_enabled())
       dsa2_save_persistent_stats();
@@ -1586,6 +1589,8 @@ ddc_redetect_displays() {
       ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
       // dbgrpt_valid_display_refs(1);
    }
+   if (watch_thread_running)
+      ddc_start_watch_displays();
    DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
                                    all_display_refs, all_display_refs->len);
 }
