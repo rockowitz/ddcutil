@@ -449,7 +449,9 @@ ddca_validate_display_ref(DDCA_Display_Ref ddca_dref, bool require_not_asleep)
    assert(library_initialized);
 
    Display_Ref * dref = NULL;
-   DDCA_Status rc = validate_ddca_display_ref(ddca_dref, require_not_asleep, &dref);
+   DDCA_Status rc = DDCRC_ARG;
+   if (ddca_dref)
+      rc = validate_ddca_display_ref(ddca_dref, require_not_asleep, &dref);
 #ifdef REDUNDANT
    Error_Info * errinfo = NULL;
    if (rc != 0)
