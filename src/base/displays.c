@@ -3,7 +3,7 @@
  * Monitor identifier, reference, handle
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -27,14 +27,13 @@
 #endif
 /** \endcond */
 
-#include "base/i2c_bus_base.h"
-#include "base/per_display_data.h"
-
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_status_codes.h"
 
 #include "core.h"
+#include "i2c_bus_base.h"
 #include "monitor_model_key.h"
+#include "per_display_data.h"
 #include "rtti.h"
 #include "vcp_version.h"
 
@@ -361,7 +360,7 @@ void dsel_free(Display_Selector * dsel) {
 // *** DDCA_IO_Mode and DDCA_IO_Path ***
 
 static char * IO_Mode_Names[] = {
-      "DDCA_IO_DEVI2C",
+      "DDCA_IO_I2C",
       "DDCA_IO_USB"
 };
 
@@ -375,6 +374,21 @@ char * io_mode_name(DDCA_IO_Mode val) {
    return (val >= 0 && val < 2)            // protect against bad arg
          ? IO_Mode_Names[val]
          : NULL;
+}
+
+
+
+/** A simple function allowing for the assignment of a value to a
+ *  #DDCA_IO_Path instance in a single line of code.
+ *
+ *  @parm   busno    I2C bus number
+ *  @return DDCA_IO_Path value
+ */
+DDCA_IO_Path i2c_io_path(int busno) {
+   DDCA_IO_Path path;
+   path.io_mode = DDCA_IO_I2C;
+   path.path.i2c_busno = busno;
+   return path;
 }
 
 

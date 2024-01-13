@@ -58,6 +58,7 @@ bool    dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2);
 char *  dpath_short_name_t(DDCA_IO_Path * dpath);
 char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
 int     dpath_hash(DDCA_IO_Path path);
+DDCA_IO_Path i2c_io_path(int busno);
 
 
 // *** Display_Identifier ***
