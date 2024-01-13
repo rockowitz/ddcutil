@@ -3,7 +3,7 @@
  *  Query /sys file system for information on I2C devices
  */
 
-// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_SYSFS_H_
@@ -50,7 +50,7 @@ typedef struct {
    char * connector;
    char * drm_connector_path;
    char * device_name;
-   int   buno;
+   int    busno;
 } I2C_Fixed_Sys_Info;
 
 void           free_i2c_sys_info(I2C_Sys_Info * info);
@@ -86,6 +86,7 @@ Sys_Drm_Connector * find_sys_drm_connector(int busno, Byte * raw_edid, const cha
 Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid);
 void                free_sys_drm_connectors();
 Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
+int                 sys_drm_get_busno_by_connector(const char * connector_name);
 
 
 // Simplified Sys_Drm_Connector for production use

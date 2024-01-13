@@ -3,7 +3,7 @@
  *  Query /sys file system for information on I2C devices
  */
 
-// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -1196,6 +1196,16 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
    return result;
 }
+
+
+int  sys_drm_get_busno_by_connector(const char * connector_name) {
+   int result = -1;
+   Sys_Drm_Connector * sdc = find_sys_drm_connector(-1, NULL, connector_name);
+   if (sdc)
+      result = sdc->i2c_busno;
+   return result;
+}
+
 
 
 /** Searches for a Sys_Drm_Connector instance by I2C bus number.
