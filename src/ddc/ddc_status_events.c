@@ -40,7 +40,7 @@ GPtrArray* display_detection_callbacks = NULL;
  *  The function must be of type DDDCA_Display_Detection_Callback_Func.
  *  It is not an error if the function is already registered.
  */
-DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Status_Callback_Func func) {
+DDCA_Status ddc_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
@@ -66,7 +66,7 @@ DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Status_Callback
  *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *                                  or not all video devices support DRM
  */
-DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Status_Callback_Func func) {
+DDCA_Status ddc_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
@@ -142,7 +142,7 @@ ddc_create_display_status_event(
 }
 
 
-void ddc_emit_display_event_record(
+void ddc_emit_display_status_record(
       DDCA_Display_Status_Event  evt)
 {
    bool debug = true;
@@ -175,7 +175,7 @@ void ddc_emit_display_event_record(
  *                                              or DDCA_EVENT_BUS_DETACHED
  *  @param  io_path     for DDCA_EVENT_BUS_ATTACHED or DDCA_EVENT_BUS_DETACHED
  */
-void ddc_emit_display_detection_event(
+void ddc_emit_display_status_event(
       DDCA_Display_Event_Type event_type,
       const char *            connector_name,
       Display_Ref*            dref,
@@ -219,7 +219,7 @@ void ddc_emit_display_detection_event(
       g_array_append_val(queue,evt);
    }
    else
-      ddc_emit_display_event_record(evt);
+      ddc_emit_display_status_record(evt);
 #ifdef OLD
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
@@ -238,8 +238,8 @@ void ddc_emit_display_detection_event(
 
 
 void init_ddc_status_events() {
-   RTTI_ADD_FUNC(ddc_emit_display_detection_event);
-   RTTI_ADD_FUNC(ddc_emit_display_event_record);
-   RTTI_ADD_FUNC(ddc_register_display_detection_callback);
-   RTTI_ADD_FUNC(ddc_unregister_display_detection_callback);
+   RTTI_ADD_FUNC(ddc_emit_display_status_event);
+   RTTI_ADD_FUNC(ddc_emit_display_status_record);
+   RTTI_ADD_FUNC(ddc_register_display_status_callback);
+   RTTI_ADD_FUNC(ddc_unregister_display_status_callback);
 }

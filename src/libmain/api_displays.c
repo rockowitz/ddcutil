@@ -32,6 +32,7 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_display_selection.h"
+#include "ddc/ddc_status_events.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_watch_displays.h"
@@ -1339,7 +1340,7 @@ ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
    DDCA_Status result = DDCRC_INVALID_OPERATION;
  #ifdef ENABLE_UDEV
     result = (i2c_all_video_devices_drm())
-                       ? ddc_register_display_detection_callback(func)
+                       ? ddc_register_display_status_callback(func)
                        : DDCRC_INVALID_OPERATION;
  #endif
 
@@ -1355,7 +1356,7 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) 
    free_thread_error_detail();
    API_PROLOGX(debug, "func=%p", func);
 
-   DDCA_Status result = ddc_unregister_display_detection_callback(func);
+   DDCA_Status result = ddc_unregister_display_status_callback(func);
 
    API_EPILOG(debug, result, "");
    return result;

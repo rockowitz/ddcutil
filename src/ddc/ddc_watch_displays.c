@@ -220,7 +220,7 @@ void ddc_recheck_bus() {
          break;
       I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
       Display_Ref * dref = ddc_remove_display_by_businfo(businfo);
-      ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
+      ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
                                       businfo->drm_connector_name,
                                       dref, dref->io_path,
                                       NULL);
@@ -254,7 +254,7 @@ void ddc_recheck_bus() {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updating businfo for /dev/i2c-%d", old_businfo->busno);
          i2c_update_bus_info(old_businfo, new_businfo);
          Display_Ref * dref = ddc_add_display_by_businfo(old_businfo);
-         ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_CONNECTED,
+         ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED,
                              old_businfo->drm_connector_name, dref, dref->io_path, NULL);
       }
       else {
@@ -267,7 +267,7 @@ void ddc_recheck_bus() {
          g_ptr_array_remove_index(new_buses, new_index);
          g_ptr_array_add(all_i2c_buses, new_businfo);
          Display_Ref * dref = ddc_add_display_by_businfo(new_businfo);
-         ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_CONNECTED,
+         ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED,
                              new_businfo->drm_connector_name, dref, dref->io_path, NULL);
 
       }
@@ -292,7 +292,7 @@ void ddc_recheck_bus() {
             assert(dref);
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sleep change event for dref=%p->%s", dref, dref_repr_t(dref));
             DDCA_Display_Event_Type event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
-            ddc_emit_display_detection_event(event_type, dref->drm_connector, dref, dref->io_path, NULL);
+            ddc_emit_display_status_event(event_type, dref->drm_connector, dref, dref->io_path, NULL);
             businfo->last_checked_dpms_asleep = is_dpms_asleep;
          }
       }
@@ -479,7 +479,7 @@ bool ddc_hotplug_change_handler(
                                             dref,
                                             dref->io_path);
 #endif
-            ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, dref, dref->io_path, events_queue);
+            ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, dref, dref->io_path, events_queue);
             event_emitted = true;
          }
          else {
@@ -500,7 +500,7 @@ bool ddc_hotplug_change_handler(
                 g_snprintf(buf, 100, "Removing connected display with bus %s, drm connector %s", dpath_repr_t(&path), connector_name);
                 DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
                 SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
-                ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, NULL, path, events_queue);
+                ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, NULL, path, events_queue);
                 event_emitted = true;
              }
          }
@@ -537,7 +537,7 @@ bool ddc_hotplug_change_handler(
                g_snprintf(buf, 100, "Adding connected display with bus %s, drm connector %s", dpath_repr_t(&path), connector_name);
                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
                SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);   // *** TEMP ***
-               ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, NULL, path, events_queue);
+               ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, NULL, path, events_queue);
                event_emitted = true;
             }
          }
@@ -547,7 +547,7 @@ bool ddc_hotplug_change_handler(
                   dref_repr_t(dref), connector_name);
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
             SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, buf);
-            ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, dref, dref->io_path, events_queue);
+            ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, dref, dref->io_path, events_queue);
             event_emitted = true;
          }
       }
@@ -791,7 +791,7 @@ void  ddc_check_asleep(GPtrArray * active_connectors,
          free(s);
          g_array_append_val(display_status_events,evt);
 #ifdef OLD
-            ddc_emit_display_detection_event(
+            ddc_emit_display_status_event(
                   (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE,
                   connector,
                   dref,
@@ -919,7 +919,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
             for (int ndx = 0; ndx < deferred_events->len; ndx++) {
                DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
                DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Emitting deferred event %s", display_status_event_repr_t(evt));
-               ddc_emit_display_event_record(evt);
+               ddc_emit_display_status_record(evt);
             }
             g_array_remove_range(deferred_events,0, deferred_events->len);
          }
