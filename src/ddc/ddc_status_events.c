@@ -7,6 +7,7 @@
 
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_c_api.h"
+#include "public/ddcutil_status_codes.h"
 
 #include "config.h"
 
@@ -18,7 +19,6 @@
 #include "i2c/i2c_sysfs.h"
 
 #include "ddc_status_events.h"
-
 
 
 // Trace class for this file
@@ -117,9 +117,6 @@ char * display_status_event_repr_t(DDCA_Display_Status_Event evt) {
 }
 
 
-
-
-
 DDCA_Display_Status_Event
 ddc_create_display_status_event(
       DDCA_Display_Event_Type event_type,
@@ -142,17 +139,16 @@ ddc_create_display_status_event(
 }
 
 
+/** Performs the actual work of executing the registered callbacks.
+ *
+ *  @param  evt
+ */
 void ddc_emit_display_status_record(
       DDCA_Display_Status_Event  evt)
 {
-   bool debug = true;
-   Display_Ref * dref = (Display_Ref*) evt.dref;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, busno=%d, event_type=%d=%s, connector_name=%s",
-               dref, dref_repr_t(dref), evt.io_path.path.i2c_busno,
-               evt.event_type, ddc_display_event_type_name(evt.event_type), evt.connector_name);
-
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Emitting DDCA_Display_Detection_Event(%s, drm_connector=%s, dref=%s, busno=%d",
-           ddc_display_event_type_name(evt.event_type), evt.connector_name, dref_repr_t(dref), evt.io_path.path.i2c_busno);
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "evt=%s", display_status_event_repr_t(evt));
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Emitting %s",  display_status_event_repr_t(evt));
 
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
@@ -160,20 +156,24 @@ void ddc_emit_display_status_record(
          func(evt);
       }
    }
+
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Executed %d registered callbacks.",
          (display_detection_callbacks) ? display_detection_callbacks->len : 0);
-
    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
          (display_detection_callbacks) ? display_detection_callbacks->len : 0);
 }
 
 
-/** Executes the registered callbacks for a display detection event.
+/** Assembles a #DDCA_Display_Status_Event record and either calls
+ *  #ddc_emit_display_status_record to emit it immediately or adds it to
+ *  to a queue of event recors
  *
  *  @param  event_type  e.g. DDCA_EVENT_CONNECTED, DDCA_EVENT_AWAKE
+ *  @param  connector_name
  *  @param  dref        display reference, NULL if DDCA_EVENT_BUS_ATTACHED
  *                                              or DDCA_EVENT_BUS_DETACHED
  *  @param  io_path     for DDCA_EVENT_BUS_ATTACHED or DDCA_EVENT_BUS_DETACHED
+ *  @param  queue       if non-null, append status event record
  */
 void ddc_emit_display_status_event(
       DDCA_Display_Event_Type event_type,
@@ -182,7 +182,7 @@ void ddc_emit_display_status_event(
       DDCA_IO_Path            io_path,
       GArray*                 queue)
 {
-   bool debug = true;
+   bool debug = false;
    if (dref) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
             dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),
@@ -199,8 +199,6 @@ void ddc_emit_display_status_event(
             dpath_repr_t(&io_path),
             event_type, ddc_display_event_type_name(event_type));
    }
-   // SYSLOG2(DDCA_SYSLOG_NOTICE, "(%s) event_type=%s, connector_name=%s, dref=%s, connector_name=%s",
-   //          __func__, ddc_display_event_type_name(event_type), connector_name, dref_repr_t(dref), dpath_repr_t(&io_path));
 
    DDCA_Display_Status_Event evt = ddc_create_display_status_event(
          event_type,
@@ -208,31 +206,14 @@ void ddc_emit_display_status_event(
          dref,
          io_path);
 
-
-   // dbgrpt_display_ref((Display_Ref*) evt.dref, 4);
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED = %s", sbool(dref->flags&DREF_REMOVED));
-
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Detection_Event(%s)",
-         display_status_event_repr(evt));
+   // SYSLOG2(DDCA_SYSLOG_NOTICE, "event: %s", display_status_event_repr(evt));
 
    if (queue) {
       g_array_append_val(queue,evt);
    }
    else
       ddc_emit_display_status_record(evt);
-#ifdef OLD
-   if (display_detection_callbacks) {
-      for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
-         DDCA_Display_Status_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
-         func(evt);
-      }
-   }
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Executed %d registered callbacks.",
-         (display_detection_callbacks) ? display_detection_callbacks->len : 0);
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
-         (display_detection_callbacks) ? display_detection_callbacks->len : 0);
-#endif
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 

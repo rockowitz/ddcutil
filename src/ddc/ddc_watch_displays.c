@@ -184,10 +184,10 @@ void ddc_recheck_bus() {
          new_businfo->flags = I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME | I2C_BUS_EXISTS;
          i2c_check_bus(new_businfo);
          g_ptr_array_add(all_i2c_buses, new_businfo);
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Added businfo for bus /dev/i2c-%d", new_businfo->busno);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Added businfo for bus /dev/i2c-%d", new_businfo->busno);
          if (IS_DBGTRC(debug, DDCA_TRC_NONE))
             i2c_dbgrpt_bus_info(new_businfo, 1);
-         DBGTRC(true, DDCA_TRC_NONE, "Emitting DDCA_EVENT_BUS_ATTACHED for bus /dev/i2c-%d", iopath.path.i2c_busno);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting DDCA_EVENT_BUS_ATTACHED for bus /dev/i2c-%d", iopath.path.i2c_busno);
          // connector events not currently being reported
          // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, new_businfo->drm_connector_name, NULL, iopath);
       }
@@ -703,7 +703,7 @@ Sysfs_Connector_Names ddc_check_displays(
    free_sysfs_connector_names_contents(prev_connector_names);
 
    if (connector_names_changed || hotplug_change_handler_emitted)
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "connector_names_changed == %s, hotplug_change_handler_emitted = %s",
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "connector_names_changed == %s, hotplug_change_handler_emitted = %s",
             sbool(connector_names_changed), sbool (hotplug_change_handler_emitted));
 
    // *connectors_changed_loc = connector_names_changed;
@@ -786,9 +786,7 @@ void  ddc_check_asleep(GPtrArray * active_connectors,
                         dref,
                         dref->io_path);
          }
-         char * s =  display_status_event_repr(evt);
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Queueing %s", s);
-         free(s);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Queueing %s", display_status_event_repr_t(evt));
          g_array_append_val(display_status_events,evt);
 #ifdef OLD
             ddc_emit_display_status_event(
@@ -915,15 +913,14 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
          usleep(sleep_secs * 1000000);
 
          if (deferred_events->len > 0) {
-            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Emitting %d deferred events", deferred_events->len);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting %d deferred events", deferred_events->len);
             for (int ndx = 0; ndx < deferred_events->len; ndx++) {
                DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
-               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Emitting deferred event %s", display_status_event_repr_t(evt));
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting deferred event %s", display_status_event_repr_t(evt));
                ddc_emit_display_status_record(evt);
             }
             g_array_remove_range(deferred_events,0, deferred_events->len);
          }
-
 
          ddc_check_asleep(current_connector_names.connectors_having_edid, sleepy_connectors, deferred_events);
 
@@ -953,7 +950,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
          dev = udev_monitor_receive_device(mon);
       }
 
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "udev event received");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "udev event received");
 
       if (debug) {
          printf("Got Device\n");
@@ -966,7 +963,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
       const char * prop_hotplug   = udev_device_get_property_value(dev, "HOTPLUG");
       const char * attr_sysname   = udev_device_get_sysname(dev);
 
-      DBGTRC_NOPREFIX(true, TRACE_GROUP,"ACTION: %s, CONNECTOR: %s, DEVNAME: %s, HOTPLUG: %s, sysname: %s",
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"ACTION: %s, CONNECTOR: %s, DEVNAME: %s, HOTPLUG: %s, sysname: %s",
             prop_action,
             prop_connector,
             prop_devname,
@@ -977,7 +974,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
 
       udev_device_unref(dev);
 
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "udev event processed");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "udev event processed");
 
       // printf("."); fflush(stdout);
    }  // while
