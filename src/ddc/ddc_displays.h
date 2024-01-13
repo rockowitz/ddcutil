@@ -3,7 +3,7 @@
  *  Access displays, whether DDC or USB
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_DISPLAYS_H_
@@ -52,20 +52,32 @@ bool         ddc_is_valid_display_ref(Display_Ref * dref);
 DDCA_Status  ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep);
 
 // Display Status Change
-bool         ddc_add_display_by_businfo(I2C_Bus_Info * businfo);
+Display_Ref* ddc_add_display_by_businfo(I2C_Bus_Info * businfo);
 Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connector, bool ignore_invalid);
 #define      DDC_GET_DREF_BY_BUSNO(_busno, _ignore) \
              ddc_get_dref_by_busno_or_connector(_busno,NULL, (_ignore))
 #define      DDC_GET_DREF_BY_CONNECTOR(_connector_name, _ignore_invalid) \
              ddc_get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
-bool         ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
+Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
+
+// Display Status Events
 DDCA_Status  ddc_register_display_detection_callback(DDCA_Display_Status_Callback_Func func);
 DDCA_Status  ddc_unregister_display_detection_callback(DDCA_Display_Status_Callback_Func func);
+const char*  ddc_display_event_type_name(DDCA_Display_Event_Type event_type);
+char *       display_status_event_repr(DDCA_Display_Status_Event evt);
+char *       display_status_event_repr_t(DDCA_Display_Status_Event evt);
+DDCA_Display_Status_Event
+             ddc_create_display_status_event(DDCA_Display_Event_Type event_type,
+                                             const char *            connector_name,
+                                             Display_Ref*            dref,
+                                             DDCA_IO_Path            io_path);
+void         ddc_emit_display_event_record(DDCA_Display_Status_Event  evt);
 void         ddc_emit_display_detection_event(DDCA_Display_Event_Type event_type,
                                               const char *            connector_name,
                                               Display_Ref*            dref,
-                                              DDCA_IO_Path            io_path);
-const char*  ddc_display_event_type_name(DDCA_Display_Event_Type event_type);
+                                              DDCA_IO_Path            io_path,
+                                              GArray*                 queue);
+
 
 #ifdef OLD
 // Report Hotplug Event (alternative, simpler)
