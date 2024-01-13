@@ -25,6 +25,7 @@ ddc_packet_io.c             \
 ddc_read_capabilities.c     \
 ddc_serialize.c             \
 ddc_services.c              \
+ddc_status_events.c         \
 ddc_strategy.c              \
 ddc_vcp.c                   \
 ddc_vcp_version.c           \

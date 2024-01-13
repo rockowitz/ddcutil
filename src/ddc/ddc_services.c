@@ -47,6 +47,7 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_serialize.h"
+#include "ddc/ddc_status_events.h"
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp.h"
 #ifdef BUILD_SHARED_LIB
@@ -215,6 +216,7 @@ void init_ddc_services() {
    init_ddc_packet_io();
    init_ddc_read_capabilities();
    init_ddc_serialize();
+   init_ddc_status_events();
    init_ddc_multi_part_io();
    init_ddc_vcp();
 // #ifdef BUILD_SHARED_LIB
