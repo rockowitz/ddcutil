@@ -60,23 +60,6 @@ Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connecto
              ddc_get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
 Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
 
-// Display Status Events
-DDCA_Status  ddc_register_display_detection_callback(DDCA_Display_Status_Callback_Func func);
-DDCA_Status  ddc_unregister_display_detection_callback(DDCA_Display_Status_Callback_Func func);
-const char*  ddc_display_event_type_name(DDCA_Display_Event_Type event_type);
-char *       display_status_event_repr(DDCA_Display_Status_Event evt);
-char *       display_status_event_repr_t(DDCA_Display_Status_Event evt);
-DDCA_Display_Status_Event
-             ddc_create_display_status_event(DDCA_Display_Event_Type event_type,
-                                             const char *            connector_name,
-                                             Display_Ref*            dref,
-                                             DDCA_IO_Path            io_path);
-void         ddc_emit_display_event_record(DDCA_Display_Status_Event  evt);
-void         ddc_emit_display_detection_event(DDCA_Display_Event_Type event_type,
-                                              const char *            connector_name,
-                                              Display_Ref*            dref,
-                                              DDCA_IO_Path            io_path,
-                                              GArray*                 queue);
 
 
 #ifdef OLD
