@@ -336,6 +336,8 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
 // received in a timely manner, clients will have to discover that a display
 // has been disconnected by failure of an API call.
 
+// No longer a problem since udev_monitor_receive_device() no longer blocks
+
 static uint64_t last_emit_millisec = 0;
 static uint64_t double_tap_millisec = 5000;
 
@@ -511,7 +513,7 @@ bool ddc_hotplug_change_handler(
    if (connectors_having_edid_added && connectors_having_edid_added->len > 0) {
       char * s = join_string_g_ptr_array_t(connectors_having_edid_added, ", ");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_added: %s", s);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors having newly connected displays: %s", s);
+      // SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors having newly connected displays: %s", s);
       for (int ndx = 0; ndx < connectors_having_edid_added->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_having_edid_added, ndx);
          Display_Ref * dref = DDC_GET_DREF_BY_CONNECTOR(
@@ -536,7 +538,7 @@ bool ddc_hotplug_change_handler(
                char buf[100];
                g_snprintf(buf, 100, "Adding connected display with bus %s, drm connector %s", dpath_repr_t(&path), connector_name);
                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
-               SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);   // *** TEMP ***
+               // SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);   // *** TEMP ***
                ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, NULL, path, events_queue);
                event_emitted = true;
             }
@@ -1059,6 +1061,7 @@ ddc_stop_watch_displays(bool wait)
 
       //  g_thread_unref(watch_thread);
       watch_thread = NULL;
+      // NEED ALSO DETECT DATA STRUCTURES IN CASE RESTARTED ?
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
    }
 
@@ -1066,6 +1069,13 @@ ddc_stop_watch_displays(bool wait)
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return ddcrc;
+}
+
+
+bool is_watch_thread_executing() {
+   g_mutex_lock(&watch_thread_mutex);
+   bool result = watch_thread;
+   g_mutex_unlock(&watch_thread_mutex);
 }
 
 
