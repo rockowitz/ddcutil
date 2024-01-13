@@ -32,6 +32,7 @@ extern int            extra_stabilize_seconds;
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
 DDCA_Status  ddc_start_watch_displays();
 DDCA_Status  ddc_stop_watch_displays(bool wait);
+bool         is_watch_thread_executing();
 void         init_ddc_watch_displays();
 
 #endif /* DDC_WATCH_DISPLAYS_H_ */
