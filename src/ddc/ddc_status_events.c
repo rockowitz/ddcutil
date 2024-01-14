@@ -112,7 +112,7 @@ char * display_status_event_repr_t(DDCA_Display_Status_Event evt) {
    static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 200);
-   g_snprintf(buf, 100, "%s", display_status_event_repr(evt));
+   g_snprintf(buf, 200, "%s", display_status_event_repr(evt));
    return buf;
 }
 
