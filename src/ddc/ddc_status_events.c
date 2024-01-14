@@ -110,7 +110,6 @@ char * display_status_event_repr(DDCA_Display_Status_Event evt) {
 
 char * display_status_event_repr_t(DDCA_Display_Status_Event evt) {
    static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
-
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 200);
    g_snprintf(buf, 200, "%s", display_status_event_repr(evt));
    return buf;
@@ -124,18 +123,18 @@ ddc_create_display_status_event(
       Display_Ref*            dref,
       DDCA_IO_Path            io_path)
 {
-      DDCA_Display_Status_Event evt;
-      evt.timestamp_nanos = elapsed_time_nanosec();
-      evt.dref = (DDCA_Display_Ref) dref;
-      evt.event_type = event_type;
-      if (connector_name)
-         g_snprintf(evt.connector_name, sizeof(evt.connector_name), "%s", connector_name);
-      else
-         memset(evt.connector_name,0,sizeof(evt.connector_name));
-      evt.io_path = (dref) ? dref->io_path : io_path;
-      evt.unused[0] = 0;
-      evt.unused[1] = 0;
-      return evt;
+   DDCA_Display_Status_Event evt;
+   evt.timestamp_nanos = elapsed_time_nanosec();
+   evt.dref = (DDCA_Display_Ref) dref;
+   evt.event_type = event_type;
+   if (connector_name)
+      g_snprintf(evt.connector_name, sizeof(evt.connector_name), "%s", connector_name);
+   else
+      memset(evt.connector_name,0,sizeof(evt.connector_name));
+   evt.io_path = (dref) ? dref->io_path : io_path;
+   evt.unused[0] = 0;
+   evt.unused[1] = 0;
+   return evt;
 }
 
 
