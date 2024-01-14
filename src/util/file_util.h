@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FILE_UTIL_H_
@@ -120,6 +120,12 @@ void filter_and_limit_g_ptr_array(
       bool        ignore_case,
       int         limit,
       bool        free_strings);
+
+void filter_and_limit_g_ptr_array2(
+      GPtrArray * line_array,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit);
 
 int read_file_with_filter(
       GPtrArray *  line_array,

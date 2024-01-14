@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define _GNU_SOURCE
@@ -23,6 +23,7 @@
 /** \endcond */
 
 #include "data_structures.h"
+#include "debug_util.h"
 #include "report_util.h"
 #include "string_util.h"
 #include "subprocess_util.h"
@@ -733,6 +734,8 @@ int read_file_with_filter(
  *  \param free_strings free strings removed from the array
  *  \remark
  *  Consider allowing filter_terms to be regular expressions.
+ *
+ *  1/2024: rare segfault seen
  */
 void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
@@ -762,7 +765,7 @@ void filter_and_limit_g_ptr_array(
    for (int ndx = (line_array->len)-1 ; ndx >= 0; ndx--) {
       char * s = g_ptr_array_index(line_array, ndx);
       assert(s);
-      // DBGMSF(debug, "s=|%s|", s);
+      // printf("s=|%s|\n", s);
       bool keep = true;
       if (filter_terms)
          keep = apply_filter_terms(s, filter_terms, ignore_case);
@@ -776,6 +779,51 @@ void filter_and_limit_g_ptr_array(
 
    // DBGMSF(debug, "Done. line_array->len=%d", line_array->len);
 }
+
+
+   void filter_and_limit_g_ptr_array2(
+         GPtrArray * line_array,
+         char **     filter_terms,
+         bool        ignore_case,
+         int         limit)
+   {
+   bool debug = false;
+   if (debug) {
+     DBG("line_array=%p, line_array->len=%d, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+              line_array, line_array->len, ntsa_length(filter_terms), sbool(ignore_case), limit);
+     // (const char **) cast to conform to strjoin() signature
+     char * s = strjoin( (const char **) filter_terms, -1, ", ");
+     DBG("Filter terms: %s", s);
+     free(s);
+   }
+
+   int max_size = line_array->len;
+   if (limit > 0)
+      max_size = limit;
+   else if (limit < 0)
+      max_size = -limit;
+   GPtrArray * new_array = g_ptr_array_sized_new(max_size);
+   g_ptr_array_set_free_func(new_array, g_free);
+   for (int ndx = 0; ndx < line_array->len; ndx++) {
+      char * s = g_ptr_array_index(line_array, ndx);
+      assert(s);
+      DBGF(debug, "s=|%s|", s);
+      bool keep = true;
+      if (filter_terms)
+         keep = apply_filter_terms(s, filter_terms, ignore_case);
+      if (keep)
+            g_ptr_array_add(new_array, g_strdup(s));
+   }
+   // g_ptr_array_remove_range(line_array, 0, line_array->len);
+   g_ptr_array_set_size(line_array, 0);
+   for (int ndx = 0; ndx < new_array->len; ndx++) {
+      g_ptr_array_add(line_array, g_ptr_array_index(new_array, ndx));
+   }
+   g_ptr_array_free(new_array, false);
+
+   DBGF(debug, "Done. line_array->len=%d", line_array->len);
+}
+
 
 
 /** Given a directory, if the directory does not already exist,
