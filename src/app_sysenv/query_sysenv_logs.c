@@ -3,7 +3,7 @@
  *  Query configuration files, logs, and output of logging commands.
  */
 
-// Copyright (C) 2017-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -105,8 +105,10 @@ static bool probe_log(
 
       DBGMSF(debug, "file_get_last_lines() returned %d", rc);
       DBGMSF(debug, "before filter, found_lines->len = %d", found_lines->len);
-      filter_and_limit_g_ptr_array(
-            found_lines, filter_terms, ignore_case, limit, /* free_strings= */ true);
+      // filter_and_limit_g_ptr_array(
+      //       found_lines, filter_terms, ignore_case, limit, /* free_strings= */ true);
+      filter_and_limit_g_ptr_array2(
+            found_lines, filter_terms, ignore_case, limit);
       DBGMSF(debug, "after filter, found_lines->len = %d", found_lines->len);
 
    }
