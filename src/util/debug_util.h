@@ -3,7 +3,7 @@
  * Functions for debugging
  */
 
-// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DEBUG_UTIL_H_
@@ -40,6 +40,9 @@ bool simple_dbgmsg(
 
 #define DBGF(debug_flag, format, ...) \
    do { if (debug_flag) simple_dbgmsg(debug_flag, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
+
+#define DBG(format, ...) \
+   simple_dbgmsg(true, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 #ifdef __cplusplus
 }    // extern "C"
