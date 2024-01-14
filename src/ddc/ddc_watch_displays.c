@@ -915,6 +915,13 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
          usleep(sleep_secs * 1000000);
 
          if (deferred_events->len > 0) {
+            if (deferred_events->len > 1) {
+               // check for cancellation events
+               for (int ndx = 0; ndx < deferred_events->len; ndx++) {
+                  DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
+                  DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Event %d in queue: %s", ndx, display_status_event_repr_t(evt));
+               }
+            }
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting %d deferred events", deferred_events->len);
             for (int ndx = 0; ndx < deferred_events->len; ndx++) {
                DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
@@ -1076,15 +1083,16 @@ bool is_watch_thread_executing() {
    g_mutex_lock(&watch_thread_mutex);
    bool result = watch_thread;
    g_mutex_unlock(&watch_thread_mutex);
+   return result;
 }
 
 
 void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
-#ifdef WATCH_USING_POLL
+// #ifdef WATCH_USING_POLL
    RTTI_ADD_FUNC(ddc_recheck_bus);
-#endif
+//  #endif
    RTTI_ADD_FUNC(ddc_watch_displays_using_poll);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(ddc_check_asleep);
