@@ -128,7 +128,6 @@ typedef enum {
 //!
 //! Gaps in values allow for further refinement
 typedef enum {
-
    DDCA_SYSLOG_NOT_SET  =   0,
    DDCA_SYSLOG_NEVER    =   1,
    DDCA_SYSLOG_ERROR    =   4,
