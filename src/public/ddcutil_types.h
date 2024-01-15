@@ -128,14 +128,15 @@ typedef enum {
 //!
 //! Gaps in values allow for further refinement
 typedef enum {
-   DDCA_SYSLOG_NOT_SET  =  -1,
-   DDCA_SYSLOG_NEVER    =   0,
-   DDCA_SYSLOG_ERROR    =   3,
-   DDCA_SYSLOG_WARNING  =   6,
-   DDCA_SYSLOG_NOTICE   =   9,
-   DDCA_SYSLOG_INFO     =  12,
-   DDCA_SYSLOG_VERBOSE  =  15,
-   DDCA_SYSLOG_DEBUG    =  18,
+
+   DDCA_SYSLOG_NOT_SET  =   0,
+   DDCA_SYSLOG_NEVER    =   1,
+   DDCA_SYSLOG_ERROR    =   4,
+   DDCA_SYSLOG_WARNING  =   7,
+   DDCA_SYSLOG_NOTICE   =  10,
+   DDCA_SYSLOG_INFO     =  13,
+   DDCA_SYSLOG_VERBOSE  =  16,
+   DDCA_SYSLOG_DEBUG    =  19,
 } DDCA_Syslog_Level;
 
 

@@ -989,7 +989,7 @@ DDCA_Syslog_Level syslog_level_name_to_value(const char * name) {
  *  @return true if msg should be written to system log, false if not
  */
 bool test_emit_syslog(DDCA_Syslog_Level msg_level) {
-   bool result =  (syslog_level != DDCA_SYSLOG_NOT_SET &&
+   bool result =  (syslog_level != DDCA_SYSLOG_NOT_SET && syslog_level != DDCA_SYSLOG_NEVER &&
          msg_level <= syslog_level);
    return result;
 }

@@ -622,7 +622,7 @@ ddci_init(const char *      libopts,
       client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
       if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
          syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;
-      if (syslog_level_arg > DDCA_SYSLOG_NEVER) {
+      if (syslog_level_arg != DDCA_SYSLOG_NEVER) {
          enable_syslog = true;
          if (!client_opened_syslog) {
          openlog("libddcutil",       // prepended to every log message
