@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.0] 2024-01-11
+## [2.1.0] 2024-01-16
 
 ### General
 
@@ -9,21 +9,23 @@
   - Skips initialization checks to confirm that DDC communication is working
     and the monitor properly uses the unsupported feature bit in Get Feature 
     Reply packets, thereby improving initialization time.
-- Option ***--min-dynamic-multiplier***  (experimental)
 - Cross-instance locking (experimental). Uses flock() to coordinate I2C bus
   access to /dev/i2c devices when multiple instances of ddcutil or libddcutil
   are executing. Enabled by option ***--enable-cross-instance-locks***.
+- Option ***--min-dynamic-multiplier***  (experimental)
 
 #### Changed
 - Multiple "Options:" lines in an ini file segment are combined
-- Options ***--verbose***, and ***--brief*** affect ***--help*** output: 
-  - Only show detailed build informmation when ***--verbose*** specified
-  - Show only the version, without prefix, if ***--brief*** specified
+- Option ***--help***: 
+  - Only show extended information when ***--verbose*** specified
+- Option ***--version***: 
+  - Show only the version, without prefix if ***--brief*** specified
+  - Include detailed build information if ***--verbose** specified 
 - I2C bus examination during initialization can be parallelized, improving performance
   (This is distinct from the ddc protocol checking.) This is an experimental
   feature.  It can be enabled by using a low value as an argument to option 
   ***--i2c-bus-checks-async-min***, e.g. ***--i2c-bus-checks-async-min 4***.
-- Command detect: better msgs for laptop display
+- Command detect: better messages when laptop display detected
   - do not report "DDC communication failed"
   - report "Is laptop display" instead of "Is eDP device" or "Is LVDS device"
 - Better accomodate the variation in use of sysfs by different drivers
@@ -33,7 +35,7 @@
   is still written to the system log.
 - Make more extensive use of the system log.
 - Options ***--enable-displays-cache***, ***--disable-displays-cache*** are marked
-  hidden since displays caching is not a released feature
+  hidden since displays caching is not a released feature.
 - Deprecate vaguely named option ***--force***.  Replace its single use with  
   option ***--permit-unknown-feature***.
 - Deprecate vaguely named option ***--async***. Use ***--ddc-checks-async-min***
@@ -57,7 +59,7 @@
 
 The shared library **libddcutil** is backwardly compatible with the one in 
 ddcutil 2.0.0. The SONAME is unchanged as libddcutil.so.5. The released library
-file is libddcutil.so.5.x.x. 
+file is libddcutil.so.5.1.0.
 
 #### Added
 - Implemented display hotplug event detection
@@ -65,26 +67,26 @@ file is libddcutil.so.5.x.x.
   - Can detect physical connection/disconnection and DPMS sleep status chanes,
     but the effect of turning a monitor on or off is monitor dependant and 
     cannot reliably be detected.
-  - enabled by libddcutil option ***--enable-watch-displays***, 
+  - Enabled by libddcutil option ***--enable-watch-displays***, or
     API call **ddca_enable_start_watch_displays()**
   - API uses callbacks to report report status changes to client
   - new status codes possible for many current API functions: 
     DDCRC_DISCONNECTED, DDCRC_DPMS_ASLEEP
   - When a display connection event is reported, the client should call 
     **ddca_redetect_displays()**
-  - **ddca_validate_display_ref()**: Exposes the validation that occurs on any
-      API call that has a DDCA_Display_Ref argument.  Can be used to check 
-      whether a monitor asleep, disconnected, etc.
-- Sleep multiplier control:
+- **ddca_validate_display_ref()**: Exposes the validation that occurs on any
+    API call that has a DDCA_Display_Ref argument.  Can be used to check 
+    whether a monitor asleep, disconnected, etc.
+- New functions for sleep multiplier control:
   - **ddca_enable_dynamic_sleep() 
   - **ddca_disable_dynamic_sleep() 
   - **ddca_get_current_sleep_multiplier() 
   - **ddca_set_display_sleep_multiplier() 
 - **ddca_init2()** replaces **ddca_init()**, which is deprecated: 
-  Has additional argument for collecting informational msgs. Allows for not
+  Has an additional argument for collecting informational msgs. Allows for not
   issuing information messages regarding the assembly of options and parsing directly
-  from libddcutil (currently enabled by setting flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS),
-  bus instead gives client complete control as to what to do with the messages.
+  from libddcutil to the terminal (now enabled by setting flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS),
+  but instead gives client complete control as to what to do with the messages.
 
 #### Changed
 - Functions that depend on initialization and that return a status code now 
@@ -304,7 +306,7 @@ Options that apply only to libddcutil (Specified in the ddcutil configuration fi
 #### Building ddcutil
 
 - configure options --enable-syslog/--disable-syslog have been eliminated.   
-  Use runtime option ***-syslog NEVER*** to disable all writes to the system log.
+  Use runtime option ***--syslog NEVER*** to disable all writes to the system log.
 - Use of shared library **libkmod** eliminated.
 - Shared library **libjansson** is now required
 
