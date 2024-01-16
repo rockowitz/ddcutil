@@ -49,7 +49,7 @@ vcp_interpret_version_feature_flags(
    else if (flags & DDCA_RW)
       rwmsg = "ReadWrite";
 
-   char * typemsg = "";
+   char * typemsg = NULL;
    // NEED TO ALSO HANDLE TABLE TYPE
    if (flags & DDCA_CONT)
       typemsg = "Continuous";
