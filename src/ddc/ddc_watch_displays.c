@@ -866,6 +866,58 @@ void dbgrpt_udev_device(struct udev_device * dev, int depth) {
 }
 
 
+void filter_sleep_events(GArray * events) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "Initial events queue length: %d", events->len);
+   assert(events);
+   int initial_ndx = 0;
+   while (initial_ndx < events->len) {
+      DDCA_Display_Status_Event evt = g_array_index(events, DDCA_Display_Status_Event, initial_ndx);
+      if (evt.event_type == DDCA_EVENT_DPMS_ASLEEP) {
+         int asleep_ndx = initial_ndx;
+         int awake_ndx = -1;
+         for (int successor_ndx = initial_ndx+1; successor_ndx < events->len; successor_ndx++) {
+             DDCA_Display_Status_Event evt2 = g_array_index(events, DDCA_Display_Status_Event, successor_ndx);
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "evt:  %s", display_status_event_repr_t(evt));
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "evt2: %s", display_status_event_repr_t(evt2));
+
+             if (evt2.event_type != DDCA_EVENT_DPMS_ASLEEP && evt2.event_type != DDCA_EVENT_DPMS_AWAKE) {
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Intervening non-sleep event");
+                // connection events intervened, can't simplify
+                break;
+             }
+             if (!streq(evt2.connector_name, evt.connector_name) ){
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Different connector");
+                // for a different connector, ignore
+                continue;
+             }
+             if (evt.event_type == DDCA_EVENT_DPMS_ASLEEP) {
+                // multiple successive awake events, need to figure out logic
+                // ignore for now
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Multiple DDCA_EVENT_DPMS_ASLEEP events");
+                break;
+             }
+             awake_ndx = successor_ndx;
+             break;
+         }
+
+         if (awake_ndx > 0) {   // impossible for it to be the first
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing events %d, %d", asleep_ndx, awake_ndx);
+            DDCA_Display_Status_Event evt_asleep = g_array_index(events, DDCA_Display_Status_Event, asleep_ndx);
+            DDCA_Display_Status_Event evt_awake  = g_array_index(events, DDCA_Display_Status_Event, awake_ndx);
+            SYSLOG2(DDCA_SYSLOG_NOTICE, "Filtered out sleep event: %s", display_status_event_repr_t(evt_asleep));
+            SYSLOG2(DDCA_SYSLOG_NOTICE, "Filtered out sleep event: %s", display_status_event_repr_t(evt_awake));
+            g_array_remove_index(events, awake_ndx);
+            g_array_remove_index(events, asleep_ndx);
+            initial_ndx = asleep_ndx - 1;
+         }
+      }
+      initial_ndx++;
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Final events queue length: %d", events->len);
+}
+
+
 gpointer ddc_watch_displays_using_udev(gpointer data) {
    bool debug = false;
    Watch_Displays_Data * wdd = data;
@@ -919,12 +971,13 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
             usleep(sleep_step_microsec);
 
          if (deferred_events->len > 0) {
-            if (deferred_events->len > 1) {
+            if (deferred_events->len > 1) {  // FUTURE ENHANCMENT, filter out meaningless events
                // check for cancellation events
                for (int ndx = 0; ndx < deferred_events->len; ndx++) {
                   DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
                   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Event %d in queue: %s", ndx, display_status_event_repr_t(evt));
                }
+               filter_sleep_events(deferred_events);
             }
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting %d deferred events", deferred_events->len);
             for (int ndx = 0; ndx < deferred_events->len; ndx++) {
@@ -1101,5 +1154,6 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_check_displays);
    RTTI_ADD_FUNC(ddc_watch_displays_using_udev);
    RTTI_ADD_FUNC(ddc_hotplug_change_handler);
+   RTTI_ADD_FUNC(filter_sleep_events);
 #endif
 }
