@@ -907,12 +907,24 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
    while (true) {
       dev = udev_monitor_receive_device(mon);
       while ( !dev ) {
-         int sleep_secs = 2;
+         int sleep_secs = 2;   // default sleep time on each loop
          if (ddc_slow_watch)
             sleep_secs *= 3;
          if (debug)
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping for %d seconds", sleep_secs);
-         usleep(sleep_secs * 1000000);
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Sleeping for %d seconds", sleep_secs);
+         const int max_sleep_microsec = sleep_secs * 1000000;
+         const int sleep_step_microsec = MIN(200000, max_sleep_microsec);     // .2 sec
+         int slept = 0;
+         for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
+            usleep(sleep_step_microsec);
+
+         if (terminate_watch_thread) {
+            DBGTRC_DONE(debug, TRACE_GROUP, "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
+            free_watch_displays_data(wdd);
+            free_sysfs_connector_names_contents(current_connector_names);
+            g_thread_exit(0);
+            assert(false);    // avoid clang warning re wdd use after free
+         }
 
          if (deferred_events->len > 0) {
             if (deferred_events->len > 1) {
@@ -932,14 +944,6 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
          }
 
          ddc_check_asleep(current_connector_names.connectors_having_edid, sleepy_connectors, deferred_events);
-
-         if (terminate_watch_thread) {
-            DBGTRC_DONE(true, TRACE_GROUP, "Terminating thread");
-            free_watch_displays_data(wdd);
-            // g_ptr_array_free(prev_displays, true);
-            g_thread_exit(0);
-            assert(false);    // avoid clang warning re wdd use after free
-         }
 
          // Doesn't work to detect client crash, main thread and process remains for some time.
          // 11/2020: is this even needed since terminate_watch_thread check added?
@@ -988,8 +992,6 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
       // printf("."); fflush(stdout);
    }  // while
 
-   free_sysfs_connector_names_contents(current_connector_names);
-
     return NULL;
 }
 #endif
@@ -998,7 +1000,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
 // Common to both variants
 //
 
-/** Starts thread that watches for addition or removal of displays.
+/** Starts thread that watches for changes in display connection status.
  *
  *  If the thread is already running, does nothing.
  *
@@ -1044,7 +1046,7 @@ ddc_start_watch_displays() {
 }
 
 
-/** Halts thread that watches for addition or removal of displays.
+/** Halts thread that watches for changes in display connection status.
  *  If **wait** is specified, does not return until the watch thread exits.
  *  Otherwise returns immediately.
  *
@@ -1068,7 +1070,6 @@ ddc_stop_watch_displays(bool wait)
 
       //  g_thread_unref(watch_thread);
       watch_thread = NULL;
-      // NEED ALSO DETECT DATA STRUCTURES IN CASE RESTARTED ?
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
    }
 
