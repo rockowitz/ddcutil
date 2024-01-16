@@ -918,14 +918,6 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
          for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
             usleep(sleep_step_microsec);
 
-         if (terminate_watch_thread) {
-            DBGTRC_DONE(debug, TRACE_GROUP, "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
-            free_watch_displays_data(wdd);
-            free_sysfs_connector_names_contents(current_connector_names);
-            g_thread_exit(0);
-            assert(false);    // avoid clang warning re wdd use after free
-         }
-
          if (deferred_events->len > 0) {
             if (deferred_events->len > 1) {
                // check for cancellation events
@@ -941,6 +933,14 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
                ddc_emit_display_status_record(evt);
             }
             g_array_remove_range(deferred_events,0, deferred_events->len);
+         }
+
+         if (terminate_watch_thread) {
+            DBGTRC_DONE(debug, TRACE_GROUP, "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
+            free_watch_displays_data(wdd);
+            free_sysfs_connector_names_contents(current_connector_names);
+            g_thread_exit(0);
+            assert(false);    // avoid clang warning re wdd use after free
          }
 
          ddc_check_asleep(current_connector_names.connectors_having_edid, sleepy_connectors, deferred_events);
