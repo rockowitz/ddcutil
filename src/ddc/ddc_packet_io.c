@@ -226,7 +226,7 @@ ddc_open_display(
             Error_Info * err2 = i2c_open_bus(dref->io_path.path.i2c_busno, callopts, &fd);
             ASSERT_IFF(err2, fd == -1);
             if (err2) {
-               err = errinfo_new_with_cause(err->status_code, err2, __func__,
+               err = errinfo_new_with_cause(err2->status_code, err2, __func__,
                                "Opening /dev/i2c-%d", dref->io_path.path.i2c_busno);
             }
          }
