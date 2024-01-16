@@ -104,7 +104,7 @@ typedef enum {
 } Edid_Read_Size_Option;
 
 static char * read_size_name(int n) {
-   char * result = "WTF";
+   char * result = NULL;
    switch (n) {
    case   0: result = "dynamic";  break;
    case 128: result = "128";      break;
