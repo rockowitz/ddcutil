@@ -169,7 +169,7 @@ void report_hid_field(Parsed_Hid_Field * hf, int depth) {
    //                 devid_usage_code_id_name(hf->usage_page, hf->usage_id));
 
 
-   char * ucode_name = "";
+   char * ucode_name = NULL;
 #ifdef OLD
    if (hf->extended_usage) {
       ucode_name = devid_usage_code_name_by_extended_id(hf->extended_usage);
