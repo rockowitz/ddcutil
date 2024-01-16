@@ -991,16 +991,11 @@ parse_command(
          {NULL},
    };
 
+#ifdef OLD
    GOptionEntry libddcutil_only_options[] = {
-         {"trcapi",     '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_api_calls,      "Trace API call", "function name"},
-         {"profile-api",'\0', 0, G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
-         {"libddcutil-trace-file",
-                     '\0', 0, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
-         {"enable-watch-displays",  '\0', 0, G_OPTION_ARG_NONE, &watch_displays_flag, "Watch for display hotplug events", "" },
-         {"disable-watch-displays", '\0', G_OPTION_FLAG_REVERSE,
-               G_OPTION_ARG_NONE, &watch_displays_flag, "Do not watch for display hotplug events", "" },
          {NULL},
    };
+#endif
 
    GOptionEntry ddcutil_only_options[] = {
          //  Monitor selection options
@@ -1061,7 +1056,9 @@ parse_command(
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed performance statistics",  "stats type"},
       {"istats",  '\0', G_OPTION_FLAG_OPTIONAL_ARG,
                                                 G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed and internal performance statistics",  "stats type"},
+      {"profile-api",'\0', 0, G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
       {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", valid_syslog_levels_string},
+
 
       // Performance
       {"enable-capabilities-cache",
@@ -1151,6 +1148,9 @@ parse_command(
                             G_OPTION_ARG_NONE,    &try_get_edid_from_sysfs,   enable_tgefs_expl, NULL},
       {"disable-try-get-edid-from-sysfs", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &try_get_edid_from_sysfs,   disable_tgefs_expl, NULL},
+      {"enable-watch-displays",  '\0', 0, G_OPTION_ARG_NONE, &watch_displays_flag, "Watch for display hotplug events", NULL },
+      {"disable-watch-displays", '\0', G_OPTION_FLAG_REVERSE,
+                                 G_OPTION_ARG_NONE, &watch_displays_flag, "Do not watch for display hotplug events", NULL },
 
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
@@ -1200,6 +1200,7 @@ parse_command(
                               G_OPTION_ARG_NONE,         &report_freed_excp_flag, "Report freed exceptions", NULL},
       {"trace",      '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes,        "Trace classes",  "trace class name" },
 //    {"trace",      '\0', 0, G_OPTION_ARG_STRING,       &tracework,            "Trace classes",  "comma separated list" },
+      {"trcapi",     '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_api_calls,      "Trace API call", "function name"},
       {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_functions,  "Trace functions","function name" },
       {"trcfrom",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,      "Trace call stack from function","function name" },
       {"trcfile",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
@@ -1216,6 +1217,7 @@ parse_command(
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
       {"trace-to-syslog-only",'\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &trace_to_syslog_only_flag,  "Direct trace output only to syslog", NULL},
+      {"libddcutil-trace-file",'\0', 0, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
       {"stats-to-syslog",'\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &stats_to_syslog_only_flag,  "Direct stats to syslog", NULL},
 
@@ -1294,9 +1296,11 @@ parse_command(
    }
    g_option_group_add_entries(all_options, common_options);
    g_option_group_add_entries(all_options, preparser_options);
+#ifdef OLD
    if (parser_mode == MODE_LIBDDCUTIL) {
       g_option_group_add_entries(all_options, libddcutil_only_options);
    }
+#endif
 #ifndef FUTURE
    g_option_group_add_entries(all_options, debug_options);
 #endif
@@ -1460,6 +1464,23 @@ parse_command(
    if (async_flag)
       EMIT_PARSER_ERROR(errmsgs, "Deprecated option ignored: --async. Use --i2c_bus_check_async_min or --ddc_check_async_min");
 
+
+#define LIBDDCUTIL_ONLY_OPTION(_name,_val) \
+   do \
+   if (_val) { \
+      EMIT_PARSER_ERROR(errmsgs, "libddcutil only option: %s", _name); \
+      parsing_ok = false; \
+   } \
+   while (0)
+
+   if (parser_mode != MODE_LIBDDCUTIL) {
+      LIBDDCUTIL_ONLY_OPTION("--trcapi",                parsed_cmd->traced_api_calls);
+      LIBDDCUTIL_ONLY_OPTION("--profile-api",           profile_api_flag);
+      LIBDDCUTIL_ONLY_OPTION("--libddcutil-trace-file", parsed_cmd->trace_destination);
+      LIBDDCUTIL_ONLY_OPTION("--enable-watch-displays", watch_displays_flag);
+   }
+
+#undef LIBDDCUTIL_ONLY_OPTION
 
 #define SET_CMDFLAG(_bit, _flag) \
    do { \
