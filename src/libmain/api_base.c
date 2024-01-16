@@ -382,7 +382,7 @@ void atexit_func() {
  *
  *  Called automatically when the shared library is loaded.
  *
- *  Registers functions in rtti table, performs additional initialization
+ *  Registers functions in RTTI table, performs additional initialization
  *  that cannot fail.
  */
 void  __attribute__ ((constructor))
@@ -394,7 +394,7 @@ _ddca_new_init(void) {
 
    DBGF(debug, "Starting. library_initialized=%s\n", sbool(library_initialized));
 
-   init_api_base();
+   init_api_base();         // registers functions in RTTI table
    init_base_services();    // initializes tracing related modules
    init_ddc_services();     // initializes i2c, usb, ddc, vcp, dynvcp
    init_api_services();     // other files in directory libmain
