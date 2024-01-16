@@ -1565,6 +1565,7 @@ void
 ddc_redetect_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
    bool watch_thread_active = is_watch_thread_executing();
    if (watch_thread_active)
       ddc_stop_watch_displays(/*wait*/ true);
@@ -1591,6 +1592,7 @@ ddc_redetect_displays() {
    }
    if (watch_thread_active)
       ddc_start_watch_displays();
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
    DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
                                    all_display_refs, all_display_refs->len);
 }
