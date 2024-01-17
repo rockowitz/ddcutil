@@ -1067,14 +1067,14 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
  */
 DDCA_Status
 ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p, event_clases=0x%02x",
                                        ddc_watch_mode_name(ddc_watch_mode),
                                        watch_thread, event_classes );
    DDCA_Status ddcrc = DDCRC_OK;
 
    g_mutex_lock(&watch_thread_mutex);
-   if (event_classes == DDCA_EVENT_CLASS_NONE) {
+   if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
       ddcrc = DDCRC_ARG;
    }
    else if (watch_thread) {
@@ -1153,17 +1153,34 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
 }
 
 
-bool is_watch_thread_executing() {
+/** If the watch thread is currently executing returns, reports the
+ *  currently active display event classes as a bit flag.
+ *
+ *  @param  classes_loc  where to return bit flag
+ *  @retval DDCRC_OK
+ *  @retval DDCRC_INVALID_OPERATION watch thread not executing
+ */
+DDCA_Status
+ddc_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
+    bool debug = false;
+    DBGTRC_STARTING(debug, TRACE_GROUP, "classes_loc = %p", classes_loc);
+   DDCA_Status ddcrc = DDCRC_INVALID_OPERATION;
+   *classes_loc = DDCA_EVENT_CLASS_NONE;
    g_mutex_lock(&watch_thread_mutex);
-   bool result = watch_thread;
+   if (watch_thread) {
+      *classes_loc = active_classes;
+      ddcrc = DDCRC_OK;
+   }
    g_mutex_unlock(&watch_thread_mutex);
-   return result;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "*classes_loc=0x%02x", *classes_loc);
+   return ddcrc;
 }
 
 
 void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
+   RTTI_ADD_FUNC(ddc_get_active_watch_classes);
 // #ifdef WATCH_USING_POLL
    RTTI_ADD_FUNC(ddc_recheck_bus);
 //  #endif
