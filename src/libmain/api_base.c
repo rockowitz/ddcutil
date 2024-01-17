@@ -677,7 +677,7 @@ ddci_init(const char *      libopts,
       }
    }
 
-   ASSERT_IFF(master_error, !parsed_cmd);   // avoid null-dereference warning
+   assert(master_error || parsed_cmd);  // avoid null-dereference warning
    DDCA_Status ddcrc = 0;
    if (master_error) {
       ddcrc = master_error->status_code;
@@ -699,8 +699,11 @@ ddci_init(const char *      libopts,
    else {
       i2c_detect_buses();
       ddc_ensure_displays_detected();
-      if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS)
+      if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS) {
          ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS);
+         SYSLOG2(DDCA_SYSLOG_NOTICE,
+               "Started watch displays for DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS");
+      }
       library_initialized = true;
       library_initialization_failed = false;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
@@ -732,7 +735,6 @@ ddca_init2(const char *     libopts,
 }
 
 
-
 DDCA_Status
 ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
@@ -742,7 +744,6 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
 }
 
 
-
 DDCA_Status
 ddca_stop_watch_displays(bool wait) {
    bool debug = false;
@@ -750,6 +751,15 @@ ddca_stop_watch_displays(bool wait) {
    DDCA_Display_Event_Class active_classes;
    DDCA_Status ddcrc = ddc_stop_watch_displays(wait, &active_classes);
    API_EPILOG(debug, ddcrc, "");
+}
+
+
+DDCA_Status
+ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
+   bool debug = false;
+   API_PROLOG(debug, "Starting classes_loc=%p", classes_loc);
+   DDCA_Status ddcrc = ddc_get_active_watch_classes(classes_loc);
+   API_EPILOG(debug, ddcrc, "*classes_loc=0x%02x", *classes_loc);
 }
 
 
@@ -1133,6 +1143,7 @@ void init_api_base() {
    RTTI_ADD_FUNC(_ddca_terminate);
    RTTI_ADD_FUNC(ddca_start_watch_displays);
    RTTI_ADD_FUNC(ddca_stop_watch_displays);
+   RTTI_ADD_FUNC(ddca_get_active_watch_classes);
 #ifdef REMOVED
    RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
    RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);
