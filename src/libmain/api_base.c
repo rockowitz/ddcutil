@@ -392,7 +392,7 @@ _ddca_new_init(void) {
    if (s && strlen(s) > 0)
       debug = true;
 
-   DBGF(debug, "Starting. library_initialized=%s\n", sbool(library_initialized));
+   DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
 
    init_api_base();         // registers functions in RTTI table
    init_base_services();    // initializes tracing related modules
