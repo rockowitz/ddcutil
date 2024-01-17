@@ -10,7 +10,7 @@
  *  - abnormal termination
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_CORE_H_
@@ -206,6 +206,19 @@ bool dbgtrc_ret_ddcrc(
         int              rc,
         char *           format,
         ...);
+
+#ifdef UNNECESSARY
+// use dbgtrc_returning_expression()
+bool dbgtrc_ret_bool(
+        DDCA_Trace_Group trace_group,
+        Dbgtrc_Options   options,
+        const char *     funcname,
+        const int        lineno,
+        const char *     fn,
+        bool             result,
+        char *           format,
+        ...);
+#endif
 
 bool dbgtrc_returning_errinfo(
         DDCA_Trace_Group trace_group,
