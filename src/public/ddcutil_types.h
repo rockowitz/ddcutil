@@ -529,12 +529,13 @@ typedef struct {
 //
 
 typedef enum {
-   DDCA_EVENT_DPMS_AWAKE,
-   DDCA_EVENT_DPMS_ASLEEP,
-   DDCA_EVENT_DISPLAY_CONNECTED,
-   DDCA_EVENT_DISPLAY_DISCONNECTED,
-   DDCA_EVENT_UNUSED1,
-   DDCA_EVENT_UNUSED2,
+// DDCA_EVENT_NONE                  =  0,
+   DDCA_EVENT_DPMS_AWAKE            =  1,
+   DDCA_EVENT_DPMS_ASLEEP           =  2,
+   DDCA_EVENT_DISPLAY_CONNECTED     =  4,
+   DDCA_EVENT_DISPLAY_DISCONNECTED  =  8,
+   DDCA_EVENT_UNUSED1               = 16,
+   DDCA_EVENT_UNUSED2               = 32,
 } DDCA_Display_Event_Type;
 
 
