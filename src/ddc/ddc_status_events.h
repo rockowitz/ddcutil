@@ -15,6 +15,7 @@
 // Display Status Events
 DDCA_Status  ddc_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
 DDCA_Status  ddc_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
+const char * ddc_display_event_class_name(DDCA_Display_Event_Class class);
 const char*  ddc_display_event_type_name(DDCA_Display_Event_Type event_type);
 char *       display_status_event_repr(DDCA_Display_Status_Event evt);
 char *       display_status_event_repr_t(DDCA_Display_Status_Event evt);

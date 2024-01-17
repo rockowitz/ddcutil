@@ -82,6 +82,18 @@ DDCA_Status ddc_unregister_display_status_callback(DDCA_Display_Status_Callback_
 }
 
 
+const char * ddc_display_event_class_name(DDCA_Display_Event_Class class) {
+   char * result = NULL;
+   switch(class) {
+   case DDCA_EVENT_CLASS_NONE:               result = "DDCA_EVENT_CLASS_NONE";               break;
+   case DDCA_EVENT_CLASS_DPMS:               result = "DDCA_EVENT_CLASS_DPMS";               break;
+   case DDCA_EVENT_CLASS_DISPLAY_CONNECTION: result = "DDCA_EVENT_CLASS_DISPLAY_CONNECTION"; break;
+   case DDCA_EVENT_CLASS_UNUSED1:            result = "DDCA_EVENT_CLASS_UNUSED1";            break;
+   }
+   return result;
+}
+
+
 const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    char * result = NULL;
    switch(event_type) {
