@@ -1723,6 +1723,19 @@ ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
 DDCA_Status
 ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
 
+/** Returns the name of a #DDCA_Display_Event_Class
+ *
+ *  @param  event_class event class id
+ *  @return             printable name
+ *
+ *  @remark
+ *  The value returned exists in an internal ddcutil table.
+ *  Caller should not free.
+ *
+ *  @since 2.1.0
+ */
+const char *
+   ddca_display_event_class_name(DDCA_Display_Event_Class event_class);
 
 /** Returns the name of a #DDCA_Display_Event_Type
  *
@@ -1737,7 +1750,6 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
  */
 const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
-
 
 /** Start the thread watching for display status changes.
  *
@@ -1765,12 +1777,23 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes);
  *
  *  If this function is being called as part of termination
  *  by the client, there's no need to wait for the watch thread
- *  the actually finish.
+ *  to actually finish.
  *
  *  @since 2.1.0
  */
 DDCA_Status
 ddca_stop_watch_displays(bool wait);
+
+/** If the watch thread is currently executing returns, reports the
+ *  currently active display event classes as a bit flag.
+ *
+ *  @param  classes_loc  where to return bit flag
+ *  @retval DDCRC_OK
+ *  @retval DDCRC_INVALID_OPERATION watch thread not executing
+ */
+DDCA_Status
+ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc);
+
 
 
 #ifdef __cplusplus
