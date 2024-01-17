@@ -63,6 +63,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
 static bool      terminate_watch_thread = false;
 static GThread * watch_thread = NULL;
+static DDCA_Display_Event_Class active_classes = DDCA_EVENT_CLASS_NONE;
 static GMutex    watch_thread_mutex;
 
 DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Simple_Udev;
@@ -81,9 +82,10 @@ const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
 
 #define WATCH_DISPLAYS_DATA_MARKER "WDDM"
 typedef struct {
-   char                   marker[4];
-   pid_t                  main_process_id;
-   pid_t                  main_thread_id;
+   char                     marker[4];
+   pid_t                    main_process_id;
+   pid_t                    main_thread_id;
+   DDCA_Display_Event_Class event_classes;
 // #ifdef OLD_HOTPLUG_VERSION
    Display_Change_Handler display_change_handler;
    Bit_Set_32             drm_card_numbers;
@@ -957,7 +959,9 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
                                           sizeof(DDCA_Display_Status_Event));
    struct udev_device * dev = NULL;
    while (true) {
-      dev = udev_monitor_receive_device(mon);
+      if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
+         dev = udev_monitor_receive_device(mon);
+      }
       while ( !dev ) {
          int sleep_secs = 2;   // default sleep time on each loop
          if (ddc_slow_watch)
@@ -996,7 +1000,8 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
             assert(false);    // avoid clang warning re wdd use after free
          }
 
-         ddc_check_asleep(current_connector_names.connectors_having_edid, sleepy_connectors, deferred_events);
+         if (wdd->event_classes & DDCA_EVENT_CLASS_DPMS)
+            ddc_check_asleep(current_connector_names.connectors_having_edid, sleepy_connectors, deferred_events);
 
          // Doesn't work to detect client crash, main thread and process remains for some time.
          // 11/2020: is this even needed since terminate_watch_thread check added?
@@ -1013,7 +1018,8 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
          }
          // #endif
 
-         dev = udev_monitor_receive_device(mon);
+         if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION)
+            dev = udev_monitor_receive_device(mon);
       }
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "udev event received");
@@ -1055,19 +1061,26 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
 
 /** Starts thread that watches for changes in display connection status.
  *
- *  If the thread is already running, does nothing.
- *
  *  \retval  DDCRC_OK
+ *  \retval  DDCRC_INVALID_OPERATION  watch thread already started
+ *  \retval  DDCRC_ARG                event_classes == DDCA_EVENT_CLASS_NONE
  */
 DDCA_Status
-ddc_start_watch_displays() {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p",
+ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p, event_clases=0x%02x",
                                        ddc_watch_mode_name(ddc_watch_mode),
-                                       watch_thread );
+                                       watch_thread, event_classes );
    DDCA_Status ddcrc = DDCRC_OK;
+
    g_mutex_lock(&watch_thread_mutex);
-   if (!watch_thread) {
+   if (event_classes == DDCA_EVENT_CLASS_NONE) {
+      ddcrc = DDCRC_ARG;
+   }
+   else if (watch_thread) {
+      ddcrc = DDCRC_INVALID_OPERATION;
+   }
+   else {
       terminate_watch_thread = false;
       Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
       memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
@@ -1079,6 +1092,7 @@ ddc_start_watch_displays() {
       data->main_process_id = getpid();
       // data->main_thread_id = syscall(SYS_gettid);
       data->main_thread_id = get_thread_id();
+      data->event_classes = event_classes;
 
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
@@ -1090,6 +1104,7 @@ ddc_start_watch_displays() {
                        ddc_watch_displays_using_poll,
 #endif
                        data);
+      active_classes = event_classes;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
    }
    g_mutex_unlock(&watch_thread_mutex);
@@ -1106,12 +1121,13 @@ ddc_start_watch_displays() {
  *  \retval  DDCRC_OK
  */
 DDCA_Status
-ddc_stop_watch_displays(bool wait)
+ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "wait=%s, watch_thread=%p", SBOOL(wait), watch_thread );
 
    DDCA_Status ddcrc = DDCRC_OK;
+   *enabled_classes_loc = DDCA_EVENT_CLASS_NONE;
    g_mutex_lock(&watch_thread_mutex);
 
    if (watch_thread) {
@@ -1123,7 +1139,11 @@ ddc_stop_watch_displays(bool wait)
 
       //  g_thread_unref(watch_thread);
       watch_thread = NULL;
+      *enabled_classes_loc = active_classes;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
+   }
+   else {
+      ddcrc = DDCRC_INVALID_OPERATION;
    }
 
    g_mutex_unlock(&watch_thread_mutex);
