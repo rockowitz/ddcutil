@@ -528,23 +528,32 @@ typedef struct {
 // For reporting display status changes to client
 //
 
+//! Type of event being reported
+//!
+//!  @since 2.1.0
 typedef enum {
-// DDCA_EVENT_NONE                  =  0,
-   DDCA_EVENT_DPMS_AWAKE            =  1,
-   DDCA_EVENT_DPMS_ASLEEP           =  2,
-   DDCA_EVENT_DISPLAY_CONNECTED     =  4,
-   DDCA_EVENT_DISPLAY_DISCONNECTED  =  8,
-   DDCA_EVENT_UNUSED1               = 16,
-   DDCA_EVENT_UNUSED2               = 32,
+   DDCA_EVENT_DPMS_AWAKE,
+   DDCA_EVENT_DPMS_ASLEEP,
+   DDCA_EVENT_DISPLAY_CONNECTED,
+   DDCA_EVENT_DISPLAY_DISCONNECTED,
+   DDCA_EVENT_UNUSED1,
+   DDCA_EVENT_UNUSED2,
 } DDCA_Display_Event_Type;
 
 
+//! Specifies groups of Display_Status_Event_Type to watch for
+//!
+//! The enum values are defined as 1,2,4 etc so that they can be or'd.
+//!
+//!  @since 2.1.0
 typedef enum {
    DDCA_EVENT_CLASS_NONE               = 0,
    DDCA_EVENT_CLASS_DPMS               = 1,
    DDCA_EVENT_CLASS_DISPLAY_CONNECTION = 2,
    DDCA_EVENT_CLASS_UNUSED1            = 4,
 } DDCA_Display_Event_Class;
+
+#define DDCA_EVENT_CLASS_ALL (DDCA_EVENT_CLASS_DPMS | DDCA_EVENT_CLASS_DISPLAY_CONNECTION)
 
 
 /** Event record passed by a display status callback function.
@@ -558,6 +567,8 @@ typedef enum {
  *  @remark
  *  The DDCA_Display_Status_Event is defined with two unused fields to allow
  *  for future extension without breaking the ABI.
+ *
+ *  @since 2.1.0
  */
 typedef struct {
    uint64_t                timestamp_nanos;
@@ -580,6 +591,8 @@ typedef struct {
  *  the heap. Callback invocation is extremely infrequent, the struct size is
  *  not large, and passing the event on the stack relieves clients of
  *  responsibility for memory management.
+ *
+ *  @since 2.1.0
  */
 typedef
 void (*DDCA_Display_Status_Callback_Func)(DDCA_Display_Status_Event event);
