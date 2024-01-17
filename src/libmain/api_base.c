@@ -498,7 +498,8 @@ _ddca_terminate(void) {
       ddc_discard_detected_displays();
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
-      ddc_stop_watch_displays(/*wait=*/ false);   // in case it was started
+      DDCA_Display_Event_Class active_classes;
+      ddc_stop_watch_displays(/*wait=*/ false, &active_classes);   // in case it was started
       terminate_ddc_services();
       terminate_base_services();
       free_regex_hash_table();
@@ -699,7 +700,7 @@ ddci_init(const char *      libopts,
       i2c_detect_buses();
       ddc_ensure_displays_detected();
       if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS)
-         ddc_start_watch_displays();
+         ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS);
       library_initialized = true;
       library_initialization_failed = false;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
@@ -733,11 +734,11 @@ ddca_init2(const char *     libopts,
 
 
 DDCA_Status
-ddca_start_watch_displays() {
+ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
    API_PROLOG(debug, "Starting");
-   ddc_start_watch_displays(false);
-   API_EPILOG(debug, DDCRC_OK, "");
+   DDCA_Status ddcrc = ddc_start_watch_displays(enabled_classes);
+   API_EPILOG(debug, ddcrc, "");
 }
 
 
@@ -746,8 +747,9 @@ DDCA_Status
 ddca_stop_watch_displays(bool wait) {
    bool debug = false;
    API_PROLOG(debug, "Starting");
-   ddc_stop_watch_displays(wait);
-   API_EPILOG(debug, DDCRC_OK, "");
+   DDCA_Display_Event_Class active_classes;
+   DDCA_Status ddcrc = ddc_stop_watch_displays(wait, &active_classes);
+   API_EPILOG(debug, ddcrc, "");
 }
 
 
