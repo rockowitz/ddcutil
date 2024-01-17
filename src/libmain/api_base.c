@@ -676,6 +676,7 @@ ddci_init(const char *      libopts,
       }
    }
 
+   ASSERT_IFF(master_error, !parsed_cmd);   // avoid null-dereference warning
    DDCA_Status ddcrc = 0;
    if (master_error) {
       ddcrc = master_error->status_code;
