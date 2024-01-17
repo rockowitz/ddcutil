@@ -50,8 +50,8 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(10, "Extended sleep for DDC Null Msg");
    REPORT_FLAG_OPTION(11, "Explore monitor state tests");
    REPORT_FLAG_OPTION(12, "Unused");
-   REPORT_FLAG_OPTION(13, "Unused");
-   REPORT_FLAG_OPTION(14, "Unused");
+   REPORT_FLAG_OPTION(13, "Command C1 only report display connection changes");
+   REPORT_FLAG_OPTION(14, "Command C1 only report display DPMS state changes");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra seconds to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZE_SECS);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
