@@ -12,7 +12,8 @@
 - Cross-instance locking (experimental). Uses flock() to coordinate I2C bus
   access to /dev/i2c devices when multiple instances of ddcutil or libddcutil
   are executing. Enabled by option ***--enable-cross-instance-locks***.
-- Option ***--min-dynamic-multiplier***  (experimental)
+- Option ***--min-dynamic-multiplier*** Specifies a floor to how low dynamic
+  sleep adjustment sets the sleep multiplier. (experimental)
 
 #### Changed
 - Multiple "Options:" lines in an ini file segment are combined
