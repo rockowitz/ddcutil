@@ -1739,17 +1739,20 @@ const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
 
 
-/** Start the thread watching for display status changes if it
- *  is not already started.  This function exists for symmetry
- *  with #ddca_stop_watch_displays.  The thread can also be started
- *  using option --enable-watch_displays.
+/** Start the thread watching for display status changes.
  *
+ *  @remark
+ *  The thread can also be started using option --enable-watch_displays.
+ *
+ *  @param  enabled_clases  event classes to watch
  *  @retval DDCRC_OK
+ *  #retval DDCRC_ARG     no event classes specified
+ *  @retval DDCRC_INVALID_OPERATION watch thread already running
  *
  *  @since 2.1.0
  */
 DDCA_Status
-ddca_start_watch_displays();
+ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes);
 
 /** Terminate the thread that watches for display status changes.
  *
@@ -1758,6 +1761,7 @@ ddca_start_watch_displays();
  *
  *  @param wait  Wait for watch thread to actually terminate
  *  @retval DDCRC_OK
+ *  @retval DDCRC_INVALID_OPERATION  watch thread not executing
  *
  *  If this function is being called as part of termination
  *  by the client, there's no need to wait for the watch thread
@@ -1767,8 +1771,6 @@ ddca_start_watch_displays();
  */
 DDCA_Status
 ddca_stop_watch_displays(bool wait);
-
-
 
 
 #ifdef __cplusplus
