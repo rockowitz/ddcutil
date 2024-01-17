@@ -1566,9 +1566,9 @@ ddc_redetect_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
-   bool watch_thread_active = is_watch_thread_executing();
    DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
-   if (watch_thread_active) {
+   DDCA_Status active_rc = ddc_get_active_watch_classes(&enabled_classes);
+   if (active_rc) {
       DDCA_Status rc = ddc_stop_watch_displays(/*wait*/ true, &enabled_classes);
       assert(rc == DDCRC_OK);
    }
@@ -1593,7 +1593,7 @@ ddc_redetect_displays() {
       ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
       // dbgrpt_valid_display_refs(1);
    }
-   if (watch_thread_active)
+   if (active_rc == DDCRC_OK)
       ddc_start_watch_displays(enabled_classes);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
    DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
