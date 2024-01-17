@@ -779,6 +779,49 @@ bool dbgtrc_ret_ddcrc(
    return msg_emitted;
 }
 
+#ifdef UNTESTED
+// unnecessary, use dbgtrc_returning_expression()
+bool dbgtrc_ret_bool(
+        DDCA_Trace_Group  trace_group,
+        Dbgtrc_Options    options,
+        const char *      funcname,
+        const int         lineno,
+        const char *      filename,
+        bool              result,
+        char *            format,
+        ...)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
+             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, result=%s, format=|%s|\n",
+                       __func__,
+                       trace_group, funcname, filename, lineno, get_thread_id(),
+                       (fout() == stdout) ? "==" : "!=",
+                       sbool(result), format);
+
+   bool msg_emitted = false;
+   bool in_callstack = check_callstack(options, funcname);
+   if ( in_callstack || is_tracing(trace_group, filename, funcname) ) {
+      char pre_prefix[60];
+      g_snprintf(pre_prefix, 60, "Done      Returning: %s. ", sbool(result));
+      if (debug)
+         printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
+
+      va_list(args);
+      va_start(args, format);
+      // arm7l, aarch64: "on  error: cannot convert to a pointer type"
+      // if (debug)
+      //    printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
+      msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
+      va_end(args);
+   }
+   if (debug)
+      printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
+   return msg_emitted;
+}
+#endif
+
 
 /** dbgtrc() variant that reports a return code of type #Error_Info in a
  *  standardized form.
