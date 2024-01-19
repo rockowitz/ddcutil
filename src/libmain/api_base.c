@@ -699,11 +699,13 @@ ddci_init(const char *      libopts,
    else {
       i2c_detect_buses();
       ddc_ensure_displays_detected();
+#ifdef OUT
       if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS) {
          ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS);
          SYSLOG2(DDCA_SYSLOG_NOTICE,
                "Started watch displays for DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS");
       }
+#endif
       library_initialized = true;
       library_initialization_failed = false;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
@@ -739,7 +741,15 @@ DDCA_Status
 ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
    API_PROLOG(debug, "Starting");
-   DDCA_Status ddcrc = ddc_start_watch_displays(enabled_classes);
+   DDCA_Status ddcrc = DDCRC_OK;
+   if (!all_video_drivers_implement_drm) {
+      ddcrc = DDCRC_INVALID_OPERATION;
+      Error_Info * err = ERRINFO_NEW(ddcrc, "Display state detection requires DRM video drivers");
+      DDCA_Error_Detail * public_error_detail =  error_info_to_ddca_detail(err);
+      ERRINFO_FREE(err);
+      save_thread_error_detail(public_error_detail);
+   }
+   ddcrc = ddc_start_watch_displays(enabled_classes);
    API_EPILOG(debug, ddcrc, "");
 }
 
