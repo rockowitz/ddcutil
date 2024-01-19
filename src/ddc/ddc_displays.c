@@ -1652,16 +1652,18 @@ ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
    DDCA_Status ddcrc = DDCRC_OK;
    if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0)
          ddcrc = DDCRC_ARG;
-   else if (!dref->drm_connector) 
-      ddcrc = DDCRC_INTERNAL_ERROR;
-   else if (dref->flags & DREF_REMOVED)
-      ddcrc = DDCRC_DISCONNECTED;
    else if (dref->dispno < 0)   // needed? 
       ddcrc = DDCRC_ARG;
-   else if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
-      ddcrc = DDCRC_DISCONNECTED;
-   else if (require_not_asleep && dpms_check_drm_asleep_by_connector(dref->drm_connector))
-      ddcrc = DDCRC_DPMS_ASLEEP;
+   else if (all_video_drivers_implement_drm) {
+      if (!dref->drm_connector)
+         ddcrc = DDCRC_INTERNAL_ERROR;
+      else if (dref->flags & DREF_REMOVED)
+         ddcrc = DDCRC_DISCONNECTED;
+      else if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
+         ddcrc = DDCRC_DISCONNECTED;
+      else if (require_not_asleep && dpms_check_drm_asleep_by_connector(dref->drm_connector))
+         ddcrc = DDCRC_DPMS_ASLEEP;
+   }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
