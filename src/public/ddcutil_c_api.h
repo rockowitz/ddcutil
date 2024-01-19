@@ -1753,13 +1753,11 @@ const char *
 
 /** Start the thread watching for display status changes.
  *
- *  @remark
- *  The thread can also be started using option --enable-watch_displays.
- *
  *  @param  enabled_clases  event classes to watch
  *  @retval DDCRC_OK
  *  #retval DDCRC_ARG     no event classes specified
  *  @retval DDCRC_INVALID_OPERATION watch thread already running
+ *  @retval DDCRC_INVALID_OPERATION not all video drivers support DRM
  *
  *  @since 2.1.0
  */
