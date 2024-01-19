@@ -1073,6 +1073,12 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
                                        watch_thread, event_classes );
    DDCA_Status ddcrc = DDCRC_OK;
 
+   if (!all_video_drivers_implement_drm) {
+      ddcrc = DDCRC_INVALID_OPERATION;
+      goto bye;
+   }
+
+
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
       ddcrc = DDCRC_ARG;
@@ -1109,6 +1115,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    }
    g_mutex_unlock(&watch_thread_mutex);
 
+bye:
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return ddcrc;
 }
