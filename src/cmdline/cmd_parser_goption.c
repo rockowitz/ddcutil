@@ -1148,9 +1148,9 @@ parse_command(
                             G_OPTION_ARG_NONE,    &try_get_edid_from_sysfs,   enable_tgefs_expl, NULL},
       {"disable-try-get-edid-from-sysfs", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &try_get_edid_from_sysfs,   disable_tgefs_expl, NULL},
-      {"enable-watch-displays",  '\0', 0, G_OPTION_ARG_NONE, &watch_displays_flag, "Watch for display hotplug events", NULL },
-      {"disable-watch-displays", '\0', G_OPTION_FLAG_REVERSE,
-                                 G_OPTION_ARG_NONE, &watch_displays_flag, "Do not watch for display hotplug events", NULL },
+//      {"enable-watch-displays",  '\0', 0, G_OPTION_ARG_NONE, &watch_displays_flag, "Watch for display hotplug events", NULL },
+//      {"disable-watch-displays", '\0', G_OPTION_FLAG_REVERSE,
+//                                G_OPTION_ARG_NONE, &watch_displays_flag, "Do not watch for display hotplug events", NULL },
 
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
@@ -1461,9 +1461,10 @@ parse_command(
    if (enable_cd_flag) {
       EMIT_PARSER_ERROR(errmsgs, "Warning: Experimental display information caching enabled");
    }
-   if (async_flag)
-      EMIT_PARSER_ERROR(errmsgs, "Deprecated option ignored: --async. Use --i2c_bus_check_async_min or --ddc_check_async_min");
-
+   if (async_flag) {
+      EMIT_PARSER_ERROR(errmsgs, "Deprecated option ignored: --async.");
+      EMIT_PARSER_ERROR(errmsgs, "Use --i2c-bus-checks-async-min (experimental) or --ddc-checks-async-min");
+   }
 
 #define LIBDDCUTIL_ONLY_OPTION(_name,_val) \
    do \
