@@ -36,6 +36,12 @@ typedef enum {
 
 extern DDCI_Api_Precondition_Failure_Mode api_failure_mode;
 
+DDCA_Status
+ddci_init(const char *      libopts,
+          DDCA_Syslog_Level syslog_level_arg,
+          DDCA_Init_Options opts,
+          char***           infomsg_loc);
+
 #define API_PRECOND(expr) \
    do { \
       if (!(expr)) { \
@@ -143,6 +149,7 @@ ddci_get_precondition_failure_mode();
 #define API_PROLOG(debug_flag, format, ...) \
    do { \
       if (!library_initialized)  { \
+         syslog(LOG_WARNING, "%s called before ddca_init2() or ddca_init()", __func__); \
          ddci_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE, NULL); \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
@@ -158,6 +165,7 @@ ddci_get_precondition_failure_mode();
       if (library_initialization_failed) \
          return DDCRC_UNINITIALIZED; \
       if (!library_initialized)  { \
+         syslog(LOG_WARNING, "%s called before ddca_init2() or ddca_init()", __func__); \
          ddci_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE, NULL); \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
