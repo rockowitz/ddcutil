@@ -660,20 +660,19 @@ ddci_init(const char *      libopts,
             *infomsg_loc = g_ptr_array_to_ntsa(infomsgs, /*duplicate=*/true);
          }
          g_ptr_array_free(infomsgs, true);
-
-         if (!master_error) {
-            if (parsed_cmd->trace_destination) {
-               DBGF(debug, "Setting library trace file: %s", parsed_cmd->trace_destination);
-               init_library_trace_file(parsed_cmd->trace_destination, enable_syslog, debug);
-            }
-            master_error = init_tracing(parsed_cmd);
-            requested_stats = parsed_cmd->stats_types;
-            ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
-            per_display_stats = parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS;
-            dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS;
-            if (!submaster_initializer(parsed_cmd))
-               master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
+      }
+      if (!master_error) {
+         if (parsed_cmd->trace_destination) {
+            DBGF(debug, "Setting library trace file: %s", parsed_cmd->trace_destination);
+            init_library_trace_file(parsed_cmd->trace_destination, enable_syslog, debug);
          }
+         master_error = init_tracing(parsed_cmd);
+         requested_stats = parsed_cmd->stats_types;
+         ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
+         per_display_stats = parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS;
+         dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS;
+         if (!submaster_initializer(parsed_cmd))
+            master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
       }
    }
 
