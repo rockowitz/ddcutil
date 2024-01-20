@@ -1568,7 +1568,7 @@ ddc_redetect_displays() {
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
    DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
    DDCA_Status active_rc = ddc_get_active_watch_classes(&enabled_classes);
-   if (active_rc) {
+   if (active_rc == DDCRC_OK) {
       DDCA_Status rc = ddc_stop_watch_displays(/*wait*/ true, &enabled_classes);
       assert(rc == DDCRC_OK);
    }
@@ -1665,7 +1665,7 @@ ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
          ddcrc = DDCRC_DPMS_ASLEEP;
    }
 
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 
