@@ -611,7 +611,6 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
            (bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) &&
            (bus_info->flags & I2C_BUS_HAS_VALID_NAME)
          );
-   assert(sys_drm_connectors);
 
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Probing");
