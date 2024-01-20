@@ -143,7 +143,7 @@ ddci_get_precondition_failure_mode();
 #define API_PROLOG(debug_flag, format, ...) \
    do { \
       if (!library_initialized)  { \
-         ddca_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE); \
+         ddci_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE, NULL); \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
@@ -158,7 +158,7 @@ ddci_get_precondition_failure_mode();
       if (library_initialization_failed) \
          return DDCRC_UNINITIALIZED; \
       if (!library_initialized)  { \
-         ddca_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE); \
+         ddci_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE, NULL); \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
