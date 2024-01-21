@@ -32,6 +32,9 @@
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/i2c_util.h"
+#ifdef USE_LIBDRM
+#include "util/libdrm_util.h"
+#endif
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/simple_ini_file.h"
@@ -934,8 +937,11 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_C1) {
       DBGMSG("Executing temporarily defined command C1");
+      bool x = all_displays_drm2();
+      DBGMSG("all_displays_drm2() returned %s", sbool(x));
       if (!all_video_drivers_implement_drm) {
-         DBGMSG("Requires DRM capable video drivers");
+         DBGMSG("Requires DRM capable video drivers. all_video_drivers_implement_drm=%s",
+               sbool(all_video_drivers_implement_drm));
          main_rc = EXIT_FAILURE;
       }
       else {
