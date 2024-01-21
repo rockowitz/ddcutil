@@ -29,6 +29,7 @@
 #define LIBDRM_UTIL_H_
 
 /** \cond */
+#include <stdbool.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 /** \endcond */
@@ -46,5 +47,7 @@ void report_drm_modeProperty(    drmModePropertyRes * p,          int depth);
 
 void summarize_drm_modeProperty(drmModePropertyRes * p, int depth);
 void report_property_value(int fd, drmModePropertyPtr prop_ptr, uint64_t prop_value, int depth) ;
+
+bool all_displays_drm2();
 
 #endif /* LIBDRM_UTIL_H_ */
