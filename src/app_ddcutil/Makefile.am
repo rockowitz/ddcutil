@@ -3,6 +3,12 @@ AM_CPPFLAGS =        \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
+if USE_LIBDRM_COND
+AM_CPPFLAGS += \
+  $(LIBDRM_CFLAGS)
+endif
+
+
 AM_CFLAGS = -Wall
 if WARNINGS_ARE_ERRORS_COND
 AM_CFLAGS += -Werror
