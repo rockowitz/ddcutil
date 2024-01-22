@@ -1106,8 +1106,7 @@ parse_command(
       {"ddc-checks-async-min",    '\0', G_OPTION_FLAG_NONE,
                                      G_OPTION_ARG_INT, &parsed_cmd->ddc_check_async_min, ddc_check_async_expl, NULL},
 
-      {"skip-ddc-checks",'\0', G_OPTION_FLAG_HIDDEN,
-                                  G_OPTION_ARG_NONE,     &skip_ddc_checks_flag,     "Skip initial DDC checks",  NULL},
+      {"skip-ddc-checks",'\0',0,G_OPTION_ARG_NONE,     &skip_ddc_checks_flag,     "Skip initial DDC checks",  NULL},
 
       {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
  //   {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
