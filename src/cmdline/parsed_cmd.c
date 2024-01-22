@@ -135,8 +135,10 @@ Parsed_Cmd *  new_parsed_cmd() {
    g_array_set_clear_func(parsed_cmd->setvcp_values, destroy_parsed_setvcp_value);
    if (DEFAULT_ENABLE_UDF)
       parsed_cmd->flags |= CMD_FLAG_ENABLE_UDF;
+#ifdef ENABLE_USB
    if (DEFAULT_ENABLE_USB)
       parsed_cmd->flags |= CMD_FLAG_ENABLE_USB;
+#endif
    if (DEFAULT_ENABLE_CACHED_CAPABILITIES)
       parsed_cmd->flags |= CMD_FLAG_ENABLE_CACHED_CAPABILITIES;
    return parsed_cmd;
@@ -248,7 +250,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
       rpt_nl();
       rpt_label(depth, "Display Selection");
+#ifdef ENABLE_USB
       rpt_bool("enable usb",        NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_USB,               d1);
+#endif
       rpt_structure_loc("pdid", parsed_cmd->pdid,                        d1);
       if (parsed_cmd->pdid)
           dbgrpt_display_identifier(parsed_cmd->pdid,                    d2);
