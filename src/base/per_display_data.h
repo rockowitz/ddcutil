@@ -56,6 +56,10 @@ typedef struct Per_Display_Data {
    DDCA_Sleep_Multiplier  initial_adjusted_sleep_multiplier;
    DDCA_Sleep_Multiplier  final_successful_adjusted_sleep_multiplier;
    DDCA_Sleep_Multiplier  most_recent_adjusted_sleep_multiplier;   // may have failed
+   DDCA_Sleep_Multiplier  min_successful_sleep_multiplier;
+   DDCA_Sleep_Multiplier  max_successful_sleep_multiplier;
+   DDCA_Sleep_Multiplier  total_successful_sleep_multiplier;
+   int                    successful_sleep_multiplier_ct;
    bool                   dsa2_enabled;
    bool                   dynamic_sleep_active;
    bool                   cur_loop_null_adjustment_occurred;

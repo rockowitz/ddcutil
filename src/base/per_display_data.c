@@ -366,6 +366,11 @@ void pdd_init_pdd(Per_Display_Data * pdd) {
       pdd->try_stats[3].retry_op = MULTI_PART_WRITE_OP;
    }
 
+   pdd->min_successful_sleep_multiplier = -1.0;
+   pdd->max_successful_sleep_multiplier = -1.0;
+   pdd->total_successful_sleep_multiplier = 0;
+   pdd->successful_sleep_multiplier_ct = 0;
+
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Device = %s, user_sleep_multiplier=%4.2f",
                       dpath_repr_t(&pdd->dpath), pdd->user_sleep_multiplier);
    if (debug)
@@ -447,13 +452,33 @@ void pdd_record_adjusted_sleep_multiplier(Per_Display_Data * pdd, bool successfu
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bus=%d, initial_adjusted_sleep_multiplier = %4.2f",
          pdd->dpath.path.i2c_busno, pdd->initial_adjusted_sleep_multiplier);
-
    DDCA_Sleep_Multiplier cur_sleep_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
+
    if (cur_sleep_multiplier >= 0) {
       if (pdd->initial_adjusted_sleep_multiplier < 0.0f)    // if not yet set
          pdd->initial_adjusted_sleep_multiplier = cur_sleep_multiplier;
-      if (successful)
+      if (successful) {
          pdd->final_successful_adjusted_sleep_multiplier = cur_sleep_multiplier;
+
+         pdd->successful_sleep_multiplier_ct ++;
+         pdd->total_successful_sleep_multiplier += cur_sleep_multiplier;
+
+         if (pdd->max_successful_sleep_multiplier < 0) {
+            pdd->max_successful_sleep_multiplier = cur_sleep_multiplier;
+         }
+         else {
+            if (cur_sleep_multiplier > pdd->max_successful_sleep_multiplier)
+               pdd->max_successful_sleep_multiplier = cur_sleep_multiplier;
+         }
+
+         if (pdd->min_successful_sleep_multiplier < 0) {
+            pdd->min_successful_sleep_multiplier = cur_sleep_multiplier;
+         }
+         else {
+            if (cur_sleep_multiplier < pdd->min_successful_sleep_multiplier)
+               pdd->min_successful_sleep_multiplier = cur_sleep_multiplier;
+         }
+      }
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "cur_sleep_multiplier=%4.2f, initial_adjusted_sleep_multiplier = %4.2f, final_successful_adjusted_sleep_multiplier=%4.2f",
@@ -485,6 +510,11 @@ void dbgrpt_per_display_data(Per_Display_Data * pdd, int depth) {
    rpt_vstring(d1, "dsa2_enabled                                             : %s", sbool(pdd->dsa2_enabled));
    rpt_vstring(d1, "dynamic_sleep_active                                     : %s", sbool(pdd->dynamic_sleep_active));
    rpt_vstring(d1, "cur_loop_null_adjustment_occurred                        : %s", sbool(pdd->cur_loop_null_adjustment_occurred));
+   rpt_vstring(d1, "successful_sleep_multiplier_ct                           : %d", pdd->successful_sleep_multiplier_ct);
+   rpt_vstring(d1, "total_successful_sleep_multiplier                        : %5.2f", pdd->total_successful_sleep_multiplier);
+   rpt_vstring(d1, "average successful sleep _multiplier                     : %3.2f", pdd->total_successful_sleep_multiplier/pdd->successful_sleep_multiplier_ct);
+   rpt_vstring(d1, "min_successful_sleep_multiplier                          : %3.2f", pdd->min_successful_sleep_multiplier);
+   rpt_vstring(d1, "max_successful_sleep_multiplier                          : %3.2f", pdd->max_successful_sleep_multiplier);
 
    // Maxtries history
    for (int retry_type = 0; retry_type < 4; retry_type++) {
@@ -706,9 +736,27 @@ void pdd_report_elapsed(Per_Display_Data * pdd, bool include_dsa_internal, int d
    else
       rpt_vstring(d1, "Final adjusted multiplier:      %7.2f",   pdd->final_successful_adjusted_sleep_multiplier);
    rpt_vstring(d1, "Total sleep time (milliseconds):  %5d",   pdd->total_sleep_time_millis);
-   // if (debug || get_output_level() >= DDCA_OL_VV) {
-   //    rpt_vstring(d1, "Internal data: (A)");
-   // }
+   rpt_nl();
+
+   char buf[20];
+ #define FVAL(_title, _val)        \
+   do { \
+      if (_val == -1.0f)    \
+         strcpy(buf, "Not set");   \
+      else                         \
+         g_snprintf(buf, 20, "%3.2f", _val); \
+      rpt_vstring(d1, _title "   %s", buf); \
+   } while (0)
+
+   rpt_vstring(d1,
+        "Successful sleep multiplier count:     %d",  pdd->successful_sleep_multiplier_ct);
+   FVAL("Minimum successful sleep multiplier:", pdd->min_successful_sleep_multiplier);
+   FVAL("Maximum successful sleep multiplier:", pdd->max_successful_sleep_multiplier);
+   double avg = (pdd->successful_sleep_multiplier_ct == 0) ? -1.0f :
+           pdd->total_successful_sleep_multiplier/ pdd->successful_sleep_multiplier_ct;
+   FVAL("Average successful sleep multiplier:", avg);
+
+#undef FVAL
    rpt_nl();
 
    if (include_dsa_internal) {
