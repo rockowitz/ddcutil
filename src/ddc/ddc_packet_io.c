@@ -182,7 +182,6 @@ ddc_open_display(
    Error_Info * err = NULL;
    int fd = -1;
   
-
    DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "driver_name: %s", dref->driver_name);
    if (dref->driver_name && !streq(dref->driver_name, "nvidia")) {
       if (dref->drm_connector && strlen(dref->drm_connector) > 0) {
