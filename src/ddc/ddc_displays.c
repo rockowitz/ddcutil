@@ -1654,7 +1654,7 @@ ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
          ddcrc = DDCRC_ARG;
    else if (dref->dispno < 0)   // needed? 
       ddcrc = DDCRC_ARG;
-   else if (all_video_drivers_implement_drm) {
+   else if (drm_enabled) {
       if (!dref->drm_connector)
          ddcrc = DDCRC_INTERNAL_ERROR;
       else if (dref->flags & DREF_REMOVED)
