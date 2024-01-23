@@ -937,8 +937,8 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_C1) {
       DBGMSG("Executing temporarily defined command C1");
-      bool x = all_displays_drm2();
-      DBGMSG("all_displays_drm2() returned %s", sbool(x));
+      // bool x = all_displays_drm2();
+      // DBGMSG("all_displays_drm2() returned %s", sbool(x));
       if (!all_video_drivers_implement_drm) {
          DBGMSG("Requires DRM capable video drivers. all_video_drivers_implement_drm=%s",
                sbool(all_video_drivers_implement_drm));
