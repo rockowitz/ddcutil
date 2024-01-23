@@ -1,6 +1,6 @@
 // api_error_info_internal.h
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_ERROR_INFO_INTERNAL_H_
@@ -10,6 +10,7 @@
 
 #include "util/error_info.h"
 
+DDCA_Error_Detail * new_ddca_error_detail(DDCA_Status ddcrc, const char * format, ...);
 DDCA_Error_Detail * error_info_to_ddca_detail(Error_Info * erec);
 DDCA_Error_Detail * dup_error_detail(DDCA_Error_Detail * old);
 void free_error_detail(DDCA_Error_Detail * ddca_erec);

@@ -42,6 +42,28 @@ free_error_detail(DDCA_Error_Detail * ddca_erec)
 }
 
 
+/** Creates a new #DDCA_Error_Detail record with a given status code and
+ *  error detail string, but no causes.
+ *
+ *  @param ddcrc  status code
+ *  @param format  format string for detail
+ *  @param ...     arguments for detail
+ *  @return new #DDCA_Error_Detail record
+ */
+DDCA_Error_Detail * new_ddca_error_detail(DDCA_Status ddcrc, const char * format, ...) {
+   DDCA_Error_Detail * errdet = calloc(1, sizeof(DDCA_Error_Detail));
+   memcpy(errdet->marker, DDCA_ERROR_DETAIL_MARKER, 4);
+   errdet->status_code = ddcrc;
+   va_list(args);
+   va_start(args, format);
+   // if (debug)
+   //    printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
+   errdet->detail = g_strdup_vprintf(format, args);
+   va_end(args);
+   return errdet;
+}
+
+
 /** Converts an internal #Error_Info instance to a publicly visible #DDCA_Error_Detail
  *
  *  @param  erec  instance to convert
