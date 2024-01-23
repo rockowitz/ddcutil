@@ -741,14 +741,16 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
    API_PROLOG(debug, "Starting");
    DDCA_Status ddcrc = DDCRC_OK;
-   if (!all_video_drivers_implement_drm) {
+   if (!drm_enabled) {
       ddcrc = DDCRC_INVALID_OPERATION;
       Error_Info * err = ERRINFO_NEW(ddcrc, "Display state detection requires DRM video drivers");
       DDCA_Error_Detail * public_error_detail =  error_info_to_ddca_detail(err);
       ERRINFO_FREE(err);
       save_thread_error_detail(public_error_detail);
    }
-   ddcrc = ddc_start_watch_displays(enabled_classes);
+   else {
+      ddcrc = ddc_start_watch_displays(enabled_classes);
+   }
    API_EPILOG(debug, ddcrc, "");
 }
 
