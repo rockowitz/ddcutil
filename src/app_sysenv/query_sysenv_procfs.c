@@ -45,12 +45,15 @@ int query_proc_modules_for_video() {
       int ndx = 0;
       for (ndx=0; ndx<garray->len; ndx++) {
          char * curline = g_ptr_array_index(garray, ndx);
-         char mod_name[32];
+         // Per Issue 354, user encountered segfault if built with
+         // -flto (Link Time Optimization).  For an unclear reason,
+         // initializing the destination string variables solves the problem.
+         char mod_name[32] = {};
          int  mod_size;
          int  mod_instance_ct;
-         char mod_dependencies[500];
-         char mod_load_state[10];     // one of: Live Loading Unloading
-         char mod_addr[30];
+         char mod_dependencies[500] = {};
+         char mod_load_state[10] = {};     // one of: Live Loading Unloading
+         char mod_addr[30] = {};
          int piece_ct = sscanf(curline, "%s %d %d %s %s %s",
                                mod_name,
                                &mod_size,
