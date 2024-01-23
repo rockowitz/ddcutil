@@ -2,7 +2,7 @@
  *
  *  I2C bus detection and inspection
  */
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_BUS_CORE_H_
@@ -32,6 +32,7 @@
 
 extern bool i2c_force_bus;
 extern bool all_video_drivers_implement_drm;
+extern bool drm_enabled;
 extern bool force_read_edid;
 extern int  i2c_businfo_async_threshold;
 extern bool cross_instance_locks_enabled;

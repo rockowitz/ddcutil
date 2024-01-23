@@ -77,6 +77,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 bool all_video_drivers_implement_drm = false;
+bool drm_enabled = false;
 bool force_read_edid = true;
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool cross_instance_locks_enabled = DEFAULT_ENABLE_FLOCK;
