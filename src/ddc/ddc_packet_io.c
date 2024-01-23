@@ -181,17 +181,21 @@ ddc_open_display(
    Display_Handle * dh = NULL;
    Error_Info * err = NULL;
    int fd = -1;
+  
 
-   if (dref->drm_connector && strlen(dref->drm_connector) > 0) {
-      char * status;
-      RPT_ATTR_TEXT(-1, &status, "/sys/class/drm", dref->drm_connector, "status");
-      if (streq(status, "disconnected"))
-         err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
-      free(status);
-      if (err)
-         goto bye;
+   DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "driver_name: %s", dref->driver_name);
+   if (dref->driver_name && !streq(dref->driver_name, "nvidia")) {
+      if (dref->drm_connector && strlen(dref->drm_connector) > 0) {
+         char * status;
+         // but Nvidia always reports "disconnected"
+         RPT_ATTR_TEXT(-1, &status, "/sys/class/drm", dref->drm_connector, "status");
+         if (streq(status, "disconnected"))
+            err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
+         free(status);
+         if (err)
+            goto bye;
+      }
    }
-
 #ifdef NO
     Display_Lock_Flags ddisp_flags = DDISP_NONE;
    if (callopts & CALLOPT_WAIT)
