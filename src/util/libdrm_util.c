@@ -760,8 +760,8 @@ bool probe_one_device_using_libdrmx(const char * devname, int depth) {
                    "drmCheckModesettingSupported() returned undocumented status code %d", rc);
          }
       }
+      close(fd);  // because O_CLOEXEC not recognized
    }
-   close(fd);  // because O_CLOEXEC not recognized
    DBGF(debug, "Done. Returning: %s", sbool(supports_drm));
    return supports_drm;
 }
