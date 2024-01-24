@@ -48,7 +48,7 @@ typedef struct {
    char *                cur_func;
    uint64_t              cur_start;
    Function_Stats_Hash * function_stats;
-   double                sleep_multiplier;
+   // double                sleep_multiplier;
 } Per_Thread_Data;
 
 bool ptd_cross_thread_operation_start();

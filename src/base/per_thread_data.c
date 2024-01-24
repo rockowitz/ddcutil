@@ -204,7 +204,7 @@ Per_Thread_Data * ptd_get_per_thread_data() {
       DBGMSF(debug, "==> Per_Thread_Data not found for thread %d", cur_thread_id);
       data = g_new0(Per_Thread_Data, 1);
       data->thread_id = cur_thread_id;
-      data->sleep_multiplier = -1.0f;
+      // data->sleep_multiplier = -1.0f;
       g_private_set(&lock_depth, GINT_TO_POINTER(0));
 #ifdef PTD
       ptd_init(data);

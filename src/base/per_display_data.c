@@ -804,7 +804,6 @@ void pdd_reset_multiplier(Per_Display_Data * pdd, DDCA_Sleep_Multiplier multipli
 /** Returns the sleep-multiplier in effect for the specified display.
  *
  *  The sleep-multiplier is, in descending order
- *  - Per thread value, set by API
  *  - Obtained from the dynamic sleep algorithm, if one is in effect
  *  - Obtained from the command line or configuration file
  *  - Default sleep-multiplier (1.0)
@@ -817,10 +816,7 @@ DDCA_Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) 
    DBGTRC_STARTING(debug, TRACE_GROUP, "pdd=%p, cur_loop_null_msg_ct=%d", pdd,pdd->cur_loop_null_msg_ct);
    float result = 1.0f;
 
-   Per_Thread_Data * ptd = ptd_get_per_thread_data();
-   if (ptd->sleep_multiplier >= 0)
-      result = ptd->sleep_multiplier;
-   else if (pdd->dynamic_sleep_active && pdd->dsa2_enabled) {
+   if (pdd->dynamic_sleep_active && pdd->dsa2_enabled) {
       result = dsa2_get_adjusted_sleep_mult(pdd->dsa2_data);
    }
    else {
