@@ -261,51 +261,32 @@ ddca_is_verify_enabled(void);
 // Performance
 //
 
-
-/** Sets an explicit sleep multiplier factor for the current thread.
- *  If set, it takes precedence over any other sleep multiplier calculation.
+/** Sets the sleep multiplier factor for the open display on current thread.
+ *
+ *  The semantics of this function has changed. Prior to release 1.5,
+ *  this function set the sleep multiplier for the current thread.
+ *  As of release 2.0, it sets the sleep multiplier for open display
+ *  (if any) on the current thread.
+ *
+ *  @param[in]  multiplier, must be >= 0 and <= 10
+ *  @return     old multiplier, -1.0f if invalid multiplier specified, or no display open
  *
  *  @deprecated
  *  This function provides backwards compatibility with applications
- *  written for libddcutil release 1.x.  Its use in new applications
- *  is discouraged.
- *
- *  @param[in]  multiplier, must be >= 0 and <= 10
- *  @return     old multiplier, -1.0f if invalid multiplier specified
- *              or multiplier was not previously set
+ *  written for libddcutil release 1.x. It should not be used in new applications.
  */
 __attribute__ ((deprecated)) double
 ddca_set_sleep_multiplier(double multiplier);
 
-
-/** Gets the explicit sleep multiplier for the current thread.
+/** Gets the sleep multiplier for the open display on the current thread
  *
- *  @deprecated
- *  This function provides backwards compatibility with applications
- *  written for libddcutil release 1.x.  It's use in new applications
- *  is discouraged.
- *
+ *  As of release 2.0, the semantics of this function changed.
  *  See #ddca_set_sleep_multiplier().
  *
- *  @return  sleep multiplier, -1.0f if not set
+ *  @return  sleep multiplier, -1.0f if no display open on current thread
  */
 __attribute__ ((deprecated)) double
 ddca_get_sleep_multiplier();
-
-
-/** Sets an explicit sleep multiplier factor for the specified display.
- *  If set, it takes precedence over any other sleep multiplier calculation,
- *  except for (deprecated) thread sleep multiplier.
- *
- *  @param[in]  dref        display reference
- *  @param[in]  multiplier  must be >= 0 and <= 10
- *  @retval     DDCRC_OK
- *  @retval     DDCRC_ARG   invalid display reference or multiplier value
- */
-DDCA_Status
-ddca_set_display_sleep_multiplier(
-      DDCA_Display_Ref       dref,
-      DDCA_Sleep_Multiplier  multiplier);
 
 
 /** Gets the current effective sleep multiplier for the specified display.
