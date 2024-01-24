@@ -300,14 +300,19 @@ Dynamically adjust the sleep-multiplier over multiple \fBddcutil\fP invocations,
 The default is
 .B "--enable-dynamic-sleep"
 .TQ
-.B "--discard-cache [capabilities|dsa|all"
-Discard cached display information and/or dynamic sleep data.
+.BI "--min-dynamic-multiplier " "decimal number"
+Modify the dynamic sleep algorithm to never adjust the sleep multiplier below this value.
+This option can help dampen swings in sleep multiplier values.
 .TQ
 .BI "--sleep-multiplier " "decimal number"
 Adjust the length of waits listed in the DDC/CI specification by this number to determine the actual 
 wait time.  Well behaved monitors work with sleep-multiplier values less than 1.0, while monitors
 with poor DDC implementations may require sleep-multiplier values greater than 1.0.  In general,
 newer option \fB--enable-dynamic-sleep\fP will provide better performance.
+.TQ
+.B "--lazy-sleep"
+Peform mandated sleeps before the next DDC/CI operation instead of immediately after the
+DDC/CI operation that specified a delay, marginally improving performance.
 .\" .TQ
 .\" .B "--i2c-bus-checks-async-min"
 .\" (experimental option) During display detection, examine I2C buses in parallel to see if a monitor is present.
@@ -322,11 +327,10 @@ This option was formerly (and ambiguously) named \fB--async\fP.  The default is
 .TQ
 .B "--skip-ddc-checks"
 Assume DDC communication works and monitors properly use the invalid feature flag in a
-DDC/CI Reply packet to indicate an unsupported feature.
+DDC/CI Reply packet to indicate an unsupported feature, improving display detection performance.
 .TQ
-.B "--lazy-sleep"
-Peform mandated sleeps before the next DDC/CI operation instead of immediately after the
-DDC/CI operation that specified a delay, marginally improving performance.
+.B "--discard-cache [capabilities|dsa|all"
+Discard cached display information and/or dynamic sleep data.
 
 .PP
 Options that modify behavior
