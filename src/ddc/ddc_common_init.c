@@ -381,7 +381,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
  */
 bool
 submaster_initializer(Parsed_Cmd * parsed_cmd) {
-   bool debug = true;
+   bool debug = false;
    bool ok = false;
    DBGMSF(debug, "Starting  parsed_cmd = %p", parsed_cmd);
 
@@ -409,14 +409,10 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
 
-   all_video_drivers_implement_drm = check_all_video_adapters_implement_drm();
 #ifdef USE_DRM
    drm_enabled = all_displays_drm2();
-   // assert(all_video_drivers_implement_drm == drm_enabled);
 #endif
-   DBGTRC(debug, DDCA_TRC_NONE, "drm_enabled = %s, all_video_drivers_implement_drm=%s",
-         sbool(drm_enabled), sbool(all_video_drivers_implement_drm));
-   // if (all_video_drivers_implement_drm)
+   // if (drm_enabled)
       get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
    DBGMSF(debug, "sys_drm_connectors = %p", sys_drm_connectors);
    subinit_i2c_bus_core();
