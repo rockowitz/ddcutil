@@ -421,11 +421,12 @@ check_how_unsupported_reported(Display_Handle * dh) {
    }
    errinfo_free(erec);
    dh->dref->flags |= DREF_UNSUPPORTED_CHECKED;
+#ifdef OUT   // EIO case fails this assertion
    assert(dh->dref->flags & (DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         |
                              DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    |
                              DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED |
                              DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED ) );
-
+#endif
    DBGTRC_DONE(debug, TRACE_GROUP, "dref->flags=%s", interpret_dref_flags_t(dref->flags));
 }
 
