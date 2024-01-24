@@ -184,6 +184,8 @@ init_tracing(Parsed_Cmd * parsed_cmd)
       result = errinfo_new_with_causes_gptr(
             -EINVAL, errinfo_accumulator, __func__, "Invalid trace option(s):");
    g_ptr_array_free(errinfo_accumulator, false);
+
+   tracing_initialized = true;
    return result;
 }
 
@@ -381,6 +383,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
  */
 bool
 submaster_initializer(Parsed_Cmd * parsed_cmd) {
+   assert(tracing_initialized);  // Full tracing services now available
    bool debug = false;
    bool ok = false;
    DBGMSF(debug, "Starting  parsed_cmd = %p", parsed_cmd);

@@ -59,6 +59,7 @@
 
 #include "base/core.h"
 
+bool tracing_initialized = false;
 
 //
 // Standard call options

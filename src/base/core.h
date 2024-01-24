@@ -56,6 +56,9 @@
 #define STATIC static
 #endif
 
+// Indicates that all tracing facilities have been configured
+extern bool tracing_initialized;
+
 
 //
 // Standard function call arguments and return values
