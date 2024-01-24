@@ -1089,7 +1089,7 @@ parse_command(
       {"dsa2",                    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"disable-dsa2",            '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
                                             G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
-      {"min-dynamic-multiplier", '\0', G_OPTION_FLAG_HIDDEN,
+      {"min-dynamic-multiplier", '\0', 0,
                                   G_OPTION_ARG_STRING,  &min_dynamic_sleep_work, "Lowest allowed dynamic sleep multiplier", "number"},
 
 #ifdef OUT
