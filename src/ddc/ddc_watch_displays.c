@@ -1068,9 +1068,9 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
 Error_Info *
 ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p, event_clases=0x%02x",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p, event_clases=0x%02x, drm_enabled=%s",
                                        ddc_watch_mode_name(ddc_watch_mode),
-                                       watch_thread, event_classes );
+                                       watch_thread, event_classes, SBOOL(drm_enabled) );
    // DDCA_Status ddcrc = DDCRC_OK;
    Error_Info * err = NULL;
 
