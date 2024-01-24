@@ -743,7 +743,8 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
 
    DDCA_Error_Detail * edet = NULL;
    if (!drm_enabled) {
-      edet = new_ddca_error_detail(DDCRC_INVALID_OPERATION, "Display state detection requires DRM video drivers");
+      edet = new_ddca_error_detail(DDCRC_INVALID_OPERATION,
+               "Display hotplug detection requires DRM enabled video drivers");
    }
    else {
       Error_Info * erec = ddc_start_watch_displays(enabled_classes);
