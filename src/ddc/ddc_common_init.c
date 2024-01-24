@@ -386,7 +386,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    assert(tracing_initialized);  // Full tracing services now available
    bool debug = false;
    bool ok = false;
-   DBGMSF(debug, "Starting  parsed_cmd = %p", parsed_cmd);
+   DBGTRC_STARTING(debug, DDCA_TRC_DDC, "parsed_cmd = %p, drm_enabled=%s", parsed_cmd, SBOOL(drm_enabled));
 
    if (!init_failsim(parsed_cmd))
       goto bye;      // main_rc == EXIT_FAILURE
@@ -395,7 +395,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // init_ddc_services();   // n. initializes start timestamp
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
-   DBGMSF(debug, "          Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
    if (parsed_cmd->edid_read_size >= 0)
       EDID_Read_Size = parsed_cmd->edid_read_size;
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO)
@@ -417,7 +417,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 #endif
    // if (drm_enabled)
       get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
-   DBGMSF(debug, "sys_drm_connectors = %p", sys_drm_connectors);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sys_drm_connectors = %p", sys_drm_connectors);
    subinit_i2c_bus_core();
 
    init_max_tries(parsed_cmd);
@@ -442,7 +442,12 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    ok = true;
 
 bye:
-   DBGMSF(debug, "Done      Returning %s", sbool(ok));
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_DDC, ok, "");
    return ok;
+}
+
+
+void init_ddc_common_init() {
+   RTTI_ADD_FUNC(submaster_initializer);
 }
 

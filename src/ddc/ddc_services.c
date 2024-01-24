@@ -37,6 +37,7 @@
 #include "usb/usb_services.h"
 #endif
 
+#include "ddc/ddc_common_init.h"
 #include "ddc/ddc_display_selection.h"
 #include "i2c/i2c_display_lock.h"
 #include "ddc/ddc_display_ref_reports.h"
@@ -207,6 +208,7 @@ void init_ddc_services() {
    init_i2c_display_lock();
 
    // ddc:
+   init_ddc_common_init();
    init_ddc_try_data();
    init_ddc_display_selection();
    init_ddc_display_ref_reports();
