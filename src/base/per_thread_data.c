@@ -183,7 +183,7 @@ static void ptd_init(Per_Thread_Data * ptd) {
  *
  *  @remark
  *  The structs are maintained centrally rather than using a thread-local pointer
- *  to a block on the heap because the of a problems when the thread is closed.
+ *  to a block on the heap because the of a problem when the thread is closed.
  *  Valgrind complains of access errors for closed threads, even though the
  *  struct is on the heap and still readable.
  */
