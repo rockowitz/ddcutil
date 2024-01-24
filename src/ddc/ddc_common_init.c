@@ -414,6 +414,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
 #ifdef USE_DRM
    drm_enabled = all_displays_drm2();
+   if (parsed_cmd->flags & CMD_FLAG_F11)
+      drm_enabled = false;
 #endif
    // if (drm_enabled)
       get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
