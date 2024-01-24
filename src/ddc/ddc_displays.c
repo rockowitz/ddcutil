@@ -1595,7 +1595,8 @@ ddc_redetect_displays() {
       // dbgrpt_valid_display_refs(1);
    }
    if (active_rc == DDCRC_OK)
-      ddc_start_watch_displays(enabled_classes);
+      (void) ddc_start_watch_displays(enabled_classes); // can never fail, cast because coverity complains
+
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
    DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
                                    all_display_refs, all_display_refs->len);
