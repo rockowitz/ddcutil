@@ -937,11 +937,8 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_C1) {
       DBGMSG("Executing temporarily defined command C1");
-      // bool x = all_displays_drm2();
-      // DBGMSG("all_displays_drm2() returned %s", sbool(x));
-      if (!all_video_drivers_implement_drm) {
-         DBGMSG("Requires DRM capable video drivers. all_video_drivers_implement_drm=%s",
-               sbool(all_video_drivers_implement_drm));
+      if (!drm_enabled) {
+         DBGMSG("Requires DRM capable video drivers.");
          main_rc = EXIT_FAILURE;
       }
       else {
@@ -951,10 +948,17 @@ main(int argc, char *argv[]) {
             event_classes = DDCA_EVENT_CLASS_DISPLAY_CONNECTION;
          if (parsed_cmd->flags&CMD_FLAG_F14)
             event_classes = DDCA_EVENT_CLASS_DPMS;
-         ddc_start_watch_displays(event_classes);
-         DBGMSG("Sleeping for 60 minutes");
-         sleep(60*60);
-      main_rc = EXIT_SUCCESS;
+         Error_Info * erec = ddc_start_watch_displays(event_classes);
+         if (erec) {
+            DBGMSG(erec->detail);
+            ERRINFO_FREE_WITH_REPORT(erec, true);
+            main_rc = EXIT_FAILURE;
+         }
+         else {
+            DBGMSG("Sleeping for 60 minutes");
+            sleep(60*60);
+            main_rc = EXIT_SUCCESS;
+         }
       }
    }
 
