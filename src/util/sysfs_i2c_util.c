@@ -263,6 +263,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
 }
 
 
+#ifdef UNUSED
 static void
 do_sysfs_drm_card_number_dir(
             const char * dirname,     // <device>/drm
@@ -304,8 +305,10 @@ get_sysfs_drm_card_numbers() {
       printf("(%s) Done.    Returning DRM card numbers: %s\n", __func__, bs32_to_string_decimal(result, "", ", "));
    return result;
  }
+#endif
 
 
+#ifdef UNUSED
 /** Returns the paths to all video devices in /sys/devices, i.e. those
  *  subdirectories (direct or indirect) having class = 0x03
  *
@@ -317,8 +320,10 @@ GPtrArray * get_video_adapter_devices() {
    g_ptr_array_set_free_func(result, g_free);
    return result;
 }
+#endif
 
 
+#ifdef WRONG
 /** Check that all video adapter devices in /sys have drivers that
  *  implement drm.
  *
@@ -334,6 +339,8 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
       (void) g_strlcpy(buf, g_ptr_array_index(adapter_devices, ndx), PATH_MAX);
       (void) g_strlcat(buf, "drm", PATH_MAX);
       DBGF(debug, "Checking directory |%s|", buf);
+      // WRONG: directory exists even if DRM enabled, need to check for
+      // cardN subdirectories
       if (!directory_exists(buf))
          result = false;
    }
@@ -357,4 +364,5 @@ bool check_all_video_adapters_implement_drm() {
    DBGF(debug, "Done.  Returning %s", sbool(all_drm));
    return all_drm;
 }
+#endif
 
