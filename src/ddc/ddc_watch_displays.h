@@ -30,7 +30,7 @@ extern bool           ddc_slow_watch;
 extern int            extra_stabilize_seconds;
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
-DDCA_Status  ddc_start_watch_displays(DDCA_Display_Event_Class event_classes);
+Error_Info * ddc_start_watch_displays(DDCA_Display_Event_Class event_classes);
 DDCA_Status  ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes);
 DDCA_Status  ddc_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc);
 bool         is_watch_thread_executing();

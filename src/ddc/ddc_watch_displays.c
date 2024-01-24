@@ -1065,26 +1065,29 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
  *  \retval  DDCRC_INVALID_OPERATION  watch thread already started
  *  \retval  DDCRC_ARG                event_classes == DDCA_EVENT_CLASS_NONE
  */
-DDCA_Status
+Error_Info *
 ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p, event_clases=0x%02x",
                                        ddc_watch_mode_name(ddc_watch_mode),
                                        watch_thread, event_classes );
-   DDCA_Status ddcrc = DDCRC_OK;
+   // DDCA_Status ddcrc = DDCRC_OK;
+   Error_Info * err = NULL;
 
-   if (!all_video_drivers_implement_drm) {
-      ddcrc = DDCRC_INVALID_OPERATION;
+   if (!drm_enabled) {
+      // ddcrc = DDCRC_INVALID_OPERATION;
+      err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
       goto bye;
    }
 
-
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
-      ddcrc = DDCRC_ARG;
+      // ddcrc = DDCRC_ARG;
+      err = ERRINFO_NEW(DDCRC_ARG, "Invalid event classes");
    }
    else if (watch_thread) {
-      ddcrc = DDCRC_INVALID_OPERATION;
+      // ddcrc = DDCRC_INVALID_OPERATION;
+      err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Watch thread already running");
    }
    else {
       terminate_watch_thread = false;
@@ -1116,8 +1119,9 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    g_mutex_unlock(&watch_thread_mutex);
 
 bye:
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
-   return ddcrc;
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "watch_thread=%p", watch_thread);
+   // DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
+   return err;
 }
 
 
