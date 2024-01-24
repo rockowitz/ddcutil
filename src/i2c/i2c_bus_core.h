@@ -31,7 +31,6 @@
 #define I2C_SLAVE_ADDR_MAX 128
 
 extern bool i2c_force_bus;
-extern bool all_video_drivers_implement_drm;
 extern bool drm_enabled;
 extern bool force_read_edid;
 extern int  i2c_businfo_async_threshold;
@@ -39,7 +38,7 @@ extern bool cross_instance_locks_enabled;
 extern int  flock_poll_millisec;
 extern int  flock_max_wait_millisec;
 
-void i2c_enable_cross_instance_locks(bool yesno);
+void             i2c_enable_cross_instance_locks(bool yesno);
 
 Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices);
 
