@@ -1026,6 +1026,48 @@ ddca_get_global_sleep_multiplier()
 #endif
 
 
+
+// for display on current thread
+double
+ddca_set_sleep_multiplier(double multiplier)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "Setting multiplier = %6.3f", multiplier);
+
+   double old_value = -1.0;
+   if (multiplier >= 0.0 && multiplier <= 10.0) {
+      Per_Thread_Data * ptd = ptd_get_per_thread_data();
+      if (ptd->cur_dh) {
+         Per_Display_Data * pdd = ptd->cur_dh->dref->pdd;
+         old_value = pdd->user_sleep_multiplier;
+         pdd_reset_multiplier(pdd, multiplier);
+      }
+   }
+
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %6.3f", old_value);
+   return old_value;
+}
+
+double
+ddca_get_sleep_multiplier()
+{
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_API, "");
+
+   Per_Thread_Data * ptd = ptd_get_per_thread_data();
+   double result =  -1.0f;
+   if (ptd->cur_dh) {
+      Per_Display_Data * pdd = ptd->cur_dh->dref->pdd;
+      result = pdd->user_sleep_multiplier;
+   }
+#ifdef TSD
+   double result = tsd_get_sleep_multiplier_factor();
+#endif
+   DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
+   return result;
+}
+
+#ifdef RELEASE_2_1_0
 double
 ddca_set_sleep_multiplier(double multiplier)
 {
@@ -1055,7 +1097,7 @@ ddca_get_sleep_multiplier()
    DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
    return result;
 }
-
+#endif
 
 #ifdef FUTURE
 
