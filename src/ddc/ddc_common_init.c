@@ -391,11 +391,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (!init_failsim(parsed_cmd))
       goto bye;      // main_rc == EXIT_FAILURE
 
-
-   // init_ddc_services();   // n. initializes start timestamp
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
    if (parsed_cmd->edid_read_size >= 0)
       EDID_Read_Size = parsed_cmd->edid_read_size;
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO)
@@ -426,14 +423,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    init_max_tries(parsed_cmd);
    enable_mock_data = parsed_cmd->flags & CMD_FLAG_MOCK;
-
-#ifdef ENABLE_USB
-#ifndef NDEBUG
-   DDCA_Status rc =
-#endif
-   ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
-   assert (rc == DDCRC_OK);
- #endif
+   (void) ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
 
    if (parsed_cmd->flags & CMD_FLAG_DISCARD_CACHES) {
       i2c_discard_caches(parsed_cmd->discarded_cache_types);
