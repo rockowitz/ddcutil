@@ -699,7 +699,7 @@ GPtrArray * get_dri_device_names_using_filesys2() {
 
 
 bool probe_one_device_using_libdrmx(const char * devname, int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting. devname = %s", devname);
 
    bool supports_drm = false;
@@ -769,7 +769,7 @@ bool probe_one_device_using_libdrmx(const char * devname, int depth) {
 
 
 bool all_displays_drm2() {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug,  "Starting");
 
    bool result = false;
