@@ -1,4 +1,5 @@
 AM_CPPFLAGS =         \
+  $(LIBDRM_CFLAGS)    \
   $(GLIB_CFLAGS)      \
   $(JANSSON_CFLAGS)   \
   -I$(top_srcdir)/src \
