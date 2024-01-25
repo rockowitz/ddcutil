@@ -2,7 +2,7 @@
  *  Initialization that must be performed very early by both ddcutil and libddcutil
  */
 
-// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Contains initialization functions extracted from main.c so they can
@@ -21,7 +21,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_i2c_util.h"
-#ifdef USE_DRM
+#ifdef USE_LIBDRM
 #include "util/libdrm_util.h"
 #endif
 
@@ -386,7 +386,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    assert(tracing_initialized);  // Full tracing services now available
    bool debug = false;
    bool ok = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_DDC, "parsed_cmd = %p, drm_enabled=%s", parsed_cmd, SBOOL(drm_enabled));
+   DBGTRC_STARTING(debug, DDCA_TRC_DDC, "parsed_cmd = %p", parsed_cmd);
 
    if (!init_failsim(parsed_cmd))
       goto bye;      // main_rc == EXIT_FAILURE
@@ -412,14 +412,16 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
 
-#ifdef USE_DRM
+#ifdef USE_LIBDRM
    drm_enabled = all_displays_drm2();
-   if (parsed_cmd->flags & CMD_FLAG_F11)
+   if (parsed_cmd->flags & CMD_FLAG_F12)
       drm_enabled = false;
+#else
+   drm_enabled = false;
 #endif
-   // if (drm_enabled)
-      get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sys_drm_connectors = %p", sys_drm_connectors);
+   get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "drm_enabled = %s, sys_drm_connectors = %p",
+         sbool(drm_enabled), sys_drm_connectors);
    subinit_i2c_bus_core();
 
    init_max_tries(parsed_cmd);
