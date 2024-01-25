@@ -1,7 +1,5 @@
 # src/Makefile.am
 
-## Process this file with automake to produce Makefile.in
-
 DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dynvcp i2c libmain  sample_clients test usb usb_util util vcp
 # contain only header files:
 EXTRA_DIST = bsd private public
@@ -229,8 +227,7 @@ libcommon_la_LIBADD += \
 #
 
 libapp_la_LIBADD = \
-app_ddcutil/libappddcutil.la \
-util/libutilaux.la
+app_ddcutil/libappddcutil.la
 
 if ENABLE_ENVCMDS_COND
 libapp_la_LIBADD  += \
