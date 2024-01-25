@@ -1,6 +1,10 @@
 AM_CPPFLAGS =        \
-  $(GLIB_CFLAGS)     \
-  $(LIBDRM_CFLAGS)
+   $(LIBDRM_CFLAGS)   \
+   $(GLIB_CFLAGS) 
+
+if USE_LIBDRM_COND
+AM_CPPFLAGS += $(LIBDRM_CFLAGS)
+endif
 
 AM_CFLAGS = $(AM_CFLAGS_STD)
 
