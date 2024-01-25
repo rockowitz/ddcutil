@@ -1,3 +1,5 @@
+# src/ddc/Makefile.am
+
 AM_CPPFLAGS =         \
   $(LIBDRM_CFLAGS)    \
   $(GLIB_CFLAGS)      \
