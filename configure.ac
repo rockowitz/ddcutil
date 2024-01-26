@@ -2,10 +2,10 @@
 # ddcutil autotools configure script 
 #
 
-# Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+# Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-dnl Generl notes:  
+dnl General notes:  
 dnl - Macro names in comments are written in lower case to avoid processing as actual macros
 
 ###
@@ -170,9 +170,8 @@ AC_SUBST([LIBTOOL_DEPS])
 # is --version-info "13:1:4", and the generated SO name looks like xxx.so.9.4.1
 
 dnl 7/29/19 first use, LT_CURRENT set to 1
-dnl temporary note: prev was 4 0 0 
 LT_CURRENT=6
-LT_REVISION=0
+LT_REVISION=1
 LT_AGE=1
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
