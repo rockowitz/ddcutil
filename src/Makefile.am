@@ -240,7 +240,7 @@ test/libtestcases.la
 endif
 
 if USE_LIBDRM_COND
-  libapp_la_LIBADD += $(LIBDRM_LIBS) 
+  libcommon_la_LIBADD += $(LIBDRM_LIBS) 
 endif
 
 
