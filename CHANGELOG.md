@@ -1,5 +1,52 @@
 # Changelog
 
+## [2.1.1] 2024-01-26
+
+### General
+
+### Added
+
+- Option ***--vstats*** reports minimum, maximum, and average successful
+  sleep multiplier
+
+### Changed
+
+- Make hidden option ***--min-dynamic-multiplier*** non-hidden
+- Revert **ddca_get/set_sleep_multiplier()** to 2.0.0 semantics
+- Allow for the fact that the proprietary Nvidia driver always reports
+  the value of /sys/class/drm/<connector name>/enabled as "disabled"
+
+### Fixed
+
+- Invalid assert when checking how monitor reports unsupported features.
+- Segfault in environment command when examining procfs if compiled using clang
+  option -flto (Issue #354)
+- Bring man page up to date (Issue #364)
+
+### Shared Library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.1.0. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.1.1.
+
+### Added
+
+### Changed
+
+- **ddca_start_watch_displays()** requires that all video drivers support DRM. 
+  If the API call fails, detailed error information is available using 
+  **ddca_get_error_detail()**.
+- Additional syslog messages
+
+### Fixed
+
+- SIGABRT in API calls that have a display reference or handle argument if 
+  **ddca_init2()** (or **ddca_init()**) had not been called.  This caused
+  KDE PowerDevil to repeatedly crash and restart. 
+- Fix the check of whether all video drivers implement DRM, required for
+  display hotplug detection to work.
+
+
 ## [2.1.0] 2024-01-16
 
 ### General
