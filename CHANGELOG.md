@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.1] 2024-01-26
+## [2.1.2] 2024-01-27
 
 ### General
 
@@ -18,7 +18,8 @@
 
 ### Fixed
 
-- Invalid assert when checking how monitor reports unsupported features.
+- Invalid assert when checking how monitor reports unsupported features. 
+  (Issue #371)
 - Segfault in environment command when examining procfs if compiled using clang
   option -flto (Issue #354)
 - Bring man page up to date (Issue #364)
@@ -44,7 +45,7 @@ file is libddcutil.so.5.1.1.
   **ddca_init2()** (or **ddca_init()**) had not been called.  This caused
   KDE PowerDevil to repeatedly crash and restart. 
 - Fix the check of whether all video drivers implement DRM, required for
-  display hotplug detection to work.
+  display hotplug detection.
 
 
 ## [2.1.0] 2024-01-16
