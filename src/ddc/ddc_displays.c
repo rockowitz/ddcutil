@@ -743,7 +743,6 @@ ddc_async_scan(GPtrArray * all_displays) {
    }
    DBGMSF(debug, "Threads joined");
    g_ptr_array_free(threads, true);
-   free(threads);   // ??
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
