@@ -882,10 +882,13 @@ ddca_get_display_info(
       DDCA_Display_Info ** dinfo_loc)
 {
    bool debug = false;
+   // causes return DDCRC_UNITIALIZED: called after explicit ddca_init()/init2() call failed
    API_PROLOGX(debug, "ddca_dref=%p", ddca_dref);
+   // causes return DDCRC_ARG if dinfo_loc == NULL
    API_PRECOND_W_EPILOG(dinfo_loc);
    DDCA_Status ddcrc = 0;
 
+   // if ddc_validate_display_ref() fails, returns its status code
    WITH_VALIDATED_DR3(
          ddca_dref, ddcrc,
          {
