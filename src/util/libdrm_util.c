@@ -759,6 +759,7 @@ bool probe_one_device_using_libdrmx(const char * devname, int depth) {
              DBGF(debug,
                    "drmCheckModesettingSupported() returned undocumented status code %d", rc);
          }
+         drmFreeDevice(&ddev);
       }
       close(fd);  // because O_CLOEXEC not recognized
    }
@@ -769,7 +770,7 @@ bool probe_one_device_using_libdrmx(const char * devname, int depth) {
 
 
 bool all_displays_drm2() {
-   bool debug = false;
+   bool debug = true;
    DBGF(debug,  "Starting");
 
    bool result = false;
