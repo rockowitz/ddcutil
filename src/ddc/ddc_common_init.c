@@ -410,7 +410,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    //    parsed_cmd->stats = true;
 
 #ifdef USE_LIBDRM
-   drm_enabled = all_displays_drm2();
+   // drm_enabled = all_displays_drm2();
+   drm_enabled = all_sysfs_i2c_info_drm(false);
    if (parsed_cmd->flags & CMD_FLAG_F12)
       drm_enabled = false;
 #else
