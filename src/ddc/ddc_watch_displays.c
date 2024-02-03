@@ -948,13 +948,13 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
    // int fd = udev_monitor_get_fd(mon);
    // set_fd_blocking(fd);
 
-  Sysfs_Connector_Names current_connector_names = get_sysfs_drm_connector_names();
-  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+   Sysfs_Connector_Names current_connector_names = get_sysfs_drm_connector_names();
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
         "Initial existing connectors: %s", join_string_g_ptr_array_t(current_connector_names.all_connectors, ", ") );
-  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
         "Initial connectors having edid: %s", join_string_g_ptr_array_t(current_connector_names.connectors_having_edid, ", ") );
 
-  GArray * deferred_events = g_array_new( false,      // zero_terminated
+   GArray * deferred_events = g_array_new( false,      // zero_terminated
                                           false,      // clear
                                           sizeof(DDCA_Display_Status_Event));
    struct udev_device * dev = NULL;
@@ -1051,7 +1051,9 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
       // printf("."); fflush(stdout);
    }  // while
 
-    return NULL;
+   udev_monitor_unref(mon);
+   g_ptr_array_free(sleepy_connectors, true);
+   return NULL;
 }
 #endif
 
