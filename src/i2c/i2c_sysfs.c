@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -41,6 +42,12 @@
 
 #include "base/i2c_bus_base.h"
 #include "i2c/i2c_sysfs.h"
+
+
+#ifdef USE_LIBDRM
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+#endif
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 
@@ -1516,6 +1523,10 @@ void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
    rpt_vstring(d1, "adapter_class:             %s", info->adapter_class);
    rpt_vstring(d1, "driver:                    %s", info->driver);
    rpt_vstring(d1, "driver_version:            %s", info->driver_version);
+#ifdef USE_LIBDRM
+   if (str_starts_with(info->adapter_class, "03"))
+   rpt_vstring(d1, "supports drm:              %s", SBOOL(info->supports_drm));
+#endif
    rpt_vstring(d1, "conflicting_driver_names:  %s",
          join_string_g_ptr_array_t(info->conflicting_driver_names, ", ") );
 }
@@ -1573,7 +1584,7 @@ void simple_one_n_nnnn(
  *  @result newly allocated #Sys_I2c_Info struct
  */
 Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
-   bool debug = false;
+   bool debug = false;;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, depth=%d", busno, depth);
 
    char bus_path[40];
@@ -1587,6 +1598,31 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
       RPT_ATTR_TEXT(             depth, &result->adapter_class,  adapter_path, "class");
       RPT_ATTR_REALPATH_BASENAME(depth, &result->driver,         adapter_path, "driver");
       RPT_ATTR_TEXT(             depth, &result->driver_version, adapter_path, "driver/module/version");
+
+#ifdef USE_LIBDRM
+      char * adapter_basename = g_path_get_basename(adapter_path);
+      char buf[20];
+      g_snprintf(buf, 20, "pci:%s", adapter_basename);
+      free(adapter_basename);
+      result->supports_drm = false;
+      int rc = drmCheckModesettingSupported(buf);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+             "drmCheckModesettingAvailable() returned %d for %s", rc, buf);
+      switch (rc) {
+      case (0):
+             result->supports_drm = true;
+             break;
+      case (-EINVAL):
+             DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "Invalid bus id (-EINVAL)");
+             break;
+      case (-ENOSYS):
+             DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "Modesetting not supported (-ENOSYS)");
+             break;
+      default:
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                "drmCheckModesettingSupported() returned undocumented status code %d", rc);
+      }
+#endif
    }
 
    result->conflicting_driver_names = g_ptr_array_new_with_free_func(g_free);
@@ -1677,6 +1713,28 @@ GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning pointer to GPtrArray=%p, containing %d records",
                                    (void*)all_i2c_info, all_i2c_info->len);
    return all_i2c_info;
+}
+
+
+bool all_sysfs_i2c_info_drm(bool rescan) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rescan=%s", SBOOL(rescan));
+   GPtrArray* all_info = get_all_sysfs_i2c_info(false, -1);
+   bool result = false;
+   if (all_info->len > 0) {
+      result = true;
+      for (int ndx = 0; ndx < all_info->len; ndx++) {
+         Sysfs_I2C_Info * info = g_ptr_array_index(all_info, ndx);
+         if (str_starts_with("03", info->adapter_class)) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "Bus %d supports drm: %s", info->busno, SBOOL(info->supports_drm));
+            if (!info->supports_drm)
+               result = false;
+         }
+      }
+   }
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   return result;
 }
 
 
