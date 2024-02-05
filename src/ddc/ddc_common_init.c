@@ -410,11 +410,15 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    //    parsed_cmd->stats = true;
 
 #ifdef USE_LIBDRM
+   rpt_nl();
    all_displays_drm2();
+   rpt_nl();
    check_all_video_adapters_implement_drm();
+   rpt_nl();
    drm_enabled = all_sysfs_i2c_info_drm(/*rescan=*/false);
    if (parsed_cmd->flags & CMD_FLAG_F12)
       drm_enabled = false;
+   rpt_nl();
 #else
    drm_enabled = false;
 #endif
