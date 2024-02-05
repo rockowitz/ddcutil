@@ -3,7 +3,7 @@
  *  For use only by other api_... files.
  */
 
-// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 #ifndef API_DISPLAYS_INTERNAL_H_
@@ -15,7 +15,9 @@
 #include "base/displays.h"
 
 DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, bool require_not_alseep, Display_Ref** dref_loc);
+#ifdef UNUSED
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
+#endif
 DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc);
 
 #define WITH_VALIDATED_DR3(_ddca_dref, _ddcrc, _action) \
