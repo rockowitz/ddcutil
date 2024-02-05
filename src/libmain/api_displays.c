@@ -66,6 +66,7 @@ DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref,
 }
 
 
+#ifdef UNUSED
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh) {
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh) {
@@ -75,6 +76,7 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh) {
    }
    return dh;
 }
+#endif
 
 
 DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc) {
