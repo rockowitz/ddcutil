@@ -427,6 +427,7 @@ void dir_foreach_set_true(const char * dirname, const char * fn, void * accumula
    bool debug = true;
    DBGF(debug, "dirname=%s, fn=%s, accumlator=%p, depth=%d", dirname, fn, accumulator, depth);
    Check_Card_Struct * accum = accumulator;
+   DBGF(debug, "Setting accumulator->has_card_connector_dir = true");
    accum->has_card_connector_dir = true;
 }
 
@@ -436,6 +437,8 @@ void do_one_card(const char * dirname, const char * fn, void* accumulator, int d
    g_snprintf(buf, sizeof(buf), "%s/%s", dirname, fn);
    DBGF("Examining dir buf=%s", buf);
    dir_foreach(buf, predicate_cardN_connector, dir_foreach_set_true, accumulator, depth);
+   Check_Card_Struct * accum = accumulator;
+   DBGF("Finishing with accumlator->has_card_connector_dir = %s", sbool(accum->has_card_connector_dir));
 }
 
 
