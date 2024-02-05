@@ -2436,6 +2436,7 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(i2c_all_video_devices_drm);
    RTTI_ADD_FUNC(get_drm_connector_name_by_busno);
    RTTI_ADD_FUNC(is_drm_display_by_busno);
+   RTTI_ADD_FUNC(all_sysfs_i2c_info_drm);
 
 // RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_busno);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
