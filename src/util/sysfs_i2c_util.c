@@ -308,43 +308,176 @@ get_sysfs_drm_card_numbers() {
 #endif
 
 
-#ifdef UNUSED
+// #ifdef UNUSED
 /** Returns the paths to all video devices in /sys/devices, i.e. those
  *  subdirectories (direct or indirect) having class = 0x03
  *
  *  @return array of directory names, caller must free
  */
 GPtrArray * get_video_adapter_devices() {
+   bool debug = true;
    char * cmd = "find /sys/devices -name class | xargs grep x03 -l | sed 's|class||'";
    GPtrArray * result = execute_shell_cmd_collect(cmd);
    g_ptr_array_set_free_func(result, g_free);
+
+   DBGF(debug, "Returning %d directories:", result->len);
+   for (int ndx = 0; ndx < result->len; ndx++)
+      rpt_vstring(2, "%s", g_ptr_array_index(result, ndx));
    return result;
 }
+// #endif
+
+
+bool not_ata(const char * simple_fn) {
+   return !str_starts_with(simple_fn, "ata");
+}
+
+bool is_pci_dir(const char * simple_fn) {
+   bool debug = true;
+   bool result = str_starts_with(simple_fn, "pci0");
+   DBGF(debug, "simple_fn = %s, returning %s", simple_fn, sbool(result));
+   return result;
+}
+
+bool predicate_starts_with_0(const char * simple_fn) {
+   bool debug = true;
+   bool result = str_starts_with(simple_fn, "0");
+   DBGF(debug, "simple_fn = %s, returning %s", simple_fn, sbool(result));
+   return result;
+}
+
+
+void find_class_dirs(const char * dirname, const char * simple_fn,  void * accumulator, int depth) {
+    bool debug = true;
+    DBGF(debug, "Starting. dirname=%s, simple_fn=%s, accumulator=%p, depth=%d",
+          dirname, simple_fn, accumulator, depth);
+    char * fullname = g_strdup_printf("%s/%s", dirname, simple_fn);
+    assert(depth < 18);
+    int d = (depth < 0) ? -1 : depth+1;
+    if (debug &&  depth < 0)
+       d = 1;
+    GPtrArray* accum = accumulator;
+    char * result = NULL;
+    bool found = RPT_ATTR_TEXT(d, &result, dirname, simple_fn, "class");
+    DBGF(debug, "found=%s", sbool(found));
+    if (found) {
+       // DBGF(debug, "result=%s", result);
+       char * subdir = g_strdup_printf("%s/%s", dirname, simple_fn);
+       DBGF(debug, "Adding: %s", subdir);
+       g_ptr_array_add(accum, (char*) subdir);
+       return;
+    }
+    DBGF(debug, "fullname=%s does not have attribute class", fullname);
+    // if (!str_starts_with(simple_fn, "ata") && !streq(simple_fn, "firmware_node")) {
+   //  if (str_starts_with(simple_fn, "0")) {
+       char path[PATH_MAX];
+       g_snprintf(path, sizeof(path), "%s/%s", dirname, simple_fn);
+       DBGF(debug, "Examining subdir %s", path);
+       dir_foreach(path, predicate_starts_with_0, find_class_dirs, accumulator, d);
+  //   }
+}
+
+
+/** Returns the paths to all video devices in /sys/devices, i.e. those
+ *  subdirectories (direct or indirect) having class = 0x03
+ *
+ *  @return array of directory names, caller must free
+ */
+GPtrArray *  get_video_adapter_devices2() {
+   bool debug = true;
+   GPtrArray * class03_dirs = g_ptr_array_new_with_free_func(g_free);
+   int d = (debug) ? 1 : -1;
+
+   dir_foreach("/sys/devices", is_pci_dir, find_class_dirs, class03_dirs, d);
+   DBGF(debug, "Before filtering: class03_dirs->len =%d", class03_dirs->len);
+   for (int ndx = 0; ndx < class03_dirs->len; ndx++)
+      rpt_vstring(2, "%s", g_ptr_array_index(class03_dirs, ndx));
+
+   for (int ndx = class03_dirs->len -1; ndx>= 0; ndx--) {
+      char * dirname =  g_ptr_array_index(class03_dirs, ndx);
+      DBGF(debug, "dirname=%s", dirname);
+      char * class = NULL;
+      RPT_ATTR_TEXT(d, &class, dirname, "class");
+      assert(class);
+      if ( !str_starts_with(class, "0x03") ) {
+         g_ptr_array_remove_index(class03_dirs, ndx);
+      }
+   }
+
+   DBGF(debug, "Returning %d directories:", class03_dirs->len);
+   for (int ndx = 0; ndx < class03_dirs->len; ndx++)
+      rpt_vstring(2, "%s", g_ptr_array_index(class03_dirs, ndx));
+
+   return class03_dirs;
+}
+
+typedef struct {
+   bool has_card_connector_dir;
+} Check_Card_Struct;
+
+#ifdef REF
+typedef void (*Dir_Foreach_Func)(
+const char *  dirname,
+const char *  fn,
+void *        accumulator,
+int           depth);
 #endif
 
+void dir_foreach_set_true(const char * dirname, const char * fn, void * accumulator, int depth) {
+   bool debug = true;
+   DBGF(debug, "dirname=%s, fn=%s, accumlator=%p, depth=%d", dirname, fn, accumulator, depth);
+   Check_Card_Struct * accum = accumulator;
+   accum->has_card_connector_dir = true;
+}
 
-#ifdef WRONG
+
+void do_one_card(const char * dirname, const char * fn, void* accumulator, int depth) {
+   char buf[PATH_MAX];
+   g_snprintf(buf, sizeof(buf), "%s/%s", dirname, fn);
+   DBGF("Examining dir buf=%s", buf);
+   dir_foreach(buf, predicate_cardN_connector, dir_foreach_set_true, accumulator, depth);
+}
+
+
+
 /** Check that all video adapter devices in /sys have drivers that
  *  implement drm.
  *
- *  @param  adapter_devices array of /sys directory names for video adapter devices
- *  @return true if all adapter video drivers implement drm
+ *  @param  adapter_devices array of /sys directory names for video adapter devices *  @return true if all adapter video drivers implement drm
  */
 bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
-   bool debug = false;
+   bool debug = true;
+   assert(adapter_devices);
+   DBGF(debug, "adapter_devices->len=%d at %p", adapter_devices->len, adapter_devices);
+   int d = (debug) ? 1 : -1;
    bool result = true;
    for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
-      char buf[PATH_MAX];
-      // (void) casts to avoid coverity warning re unused return value
-      (void) g_strlcpy(buf, g_ptr_array_index(adapter_devices, ndx), PATH_MAX);
-      (void) g_strlcat(buf, "drm", PATH_MAX);
-      DBGF(debug, "Checking directory |%s|", buf);
-      // WRONG: directory exists even if DRM enabled, need to check for
-      // cardN subdirectories
-      if (!directory_exists(buf))
+      // char * subdir_name = NULL;
+      char * adapter_dir = g_ptr_array_index(adapter_devices, ndx);
+      DBGF(debug, "Examining: %s", adapter_dir);
+      int lastpos= strlen(adapter_dir) - 1;
+      if (adapter_dir[lastpos] == '/')
+         adapter_dir[lastpos] = '\0';
+      char drm_dir[PATH_MAX];
+      g_snprintf(drm_dir, PATH_MAX, "%s/drm", adapter_dir);
+      DBGF(debug, "drm_dir=%s");
+      Check_Card_Struct *  accumulator = calloc(1, sizeof(Check_Card_Struct));
+      dir_foreach(drm_dir, predicate_cardN, do_one_card, accumulator, d);
+      bool has_card_subdir = accumulator->has_card_connector_dir;
+      free(accumulator);
+
+#ifdef WRONG
+      bool has_card_subdir = RPT_ATTR_SINGLE_SUBDIR(
+            d, &subdir_name, is_card_connector_dir, NULL, adapter_dir, "drm");
+#endif
+
+
+      DBGF(debug, "Examined.  has_card_subdir = %s", sbool(has_card_subdir));
+      if (!has_card_subdir) {
          result = false;
+         break;
+      }
    }
-   DBGF(debug, "Returning: %s", sbool(result));
    return result;
 }
 
@@ -354,15 +487,23 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
  *  @return true if all video adapters have drivers implementing drm, false if not
  */
 bool check_all_video_adapters_implement_drm() {
-   bool debug = false;
+   bool debug = true;
    DBGF(debug, "Starting");
 
-   GPtrArray * devices = get_video_adapter_devices();
+   GPtrArray * devices = NULL;
+    devices = get_video_adapter_devices();
+   // g_ptr_array_free(devices, true);
+   //   devices = get_video_adapter_devices2();   // FAILS
+
+    DBGF(debug, "%d devices at %p:", devices->len, devices);
+    for (int ndx = 0; ndx < devices->len; ndx++)
+       rpt_vstring(2, "%s", g_ptr_array_index(devices, ndx));
+
+   // bool result = false;
    bool all_drm = check_video_adapters_list_implements_drm(devices);
    g_ptr_array_free(devices, true);
 
    DBGF(debug, "Done.  Returning %s", sbool(all_drm));
    return all_drm;
 }
-#endif
 

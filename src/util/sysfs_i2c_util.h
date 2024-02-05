@@ -56,5 +56,8 @@ bool
 check_all_video_adapters_implement_drm();
 #endif
 
+
+bool check_all_video_adapters_implement_drm();
+
 #endif /* SYSFS_I2C_UTIL_H_ */
 
