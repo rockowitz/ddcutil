@@ -1647,7 +1647,7 @@ ddc_is_known_display_ref(Display_Ref * dref) {
 DDCA_Status
 ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_asleep) {
    bool debug = false;
-   DBGTRC_STARTING(true, TRACE_GROUP, "dref=%p -> %s, require_not_asleep=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s, require_not_asleep=%s",
          dref, dref_repr_t(dref), sbool(require_not_asleep));
    assert(all_display_refs);
    
