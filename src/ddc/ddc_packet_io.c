@@ -1047,6 +1047,7 @@ init_ddc_packet_io_func_name_table() {
    RTTI_ADD_FUNC(ddc_write_only);
    RTTI_ADD_FUNC(ddc_write_only_with_retry);
    RTTI_ADD_FUNC(ddc_is_valid_display_handle);
+   RTTI_ADD_FUNC(ddc_validate_display_handle);
 }
 
 
