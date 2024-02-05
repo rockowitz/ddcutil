@@ -3,7 +3,7 @@
  *  ddcutil standalone application mainline
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -166,7 +166,7 @@ report_optional_features(Parsed_Cmd * parsed_cmd, int depth) {
 static void
 report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_options, int depth)
 {
-    bool debug = false;
+    bool debug = true;
     DBGMSF(debug, "Executing...");
 
     show_ddcutil_version();
@@ -182,6 +182,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     rpt_nl();
     report_performance_options(depth);
     report_experimental_options(parsed_cmd, depth);
+    report_build_options(depth);
 
     DBGMSF(debug, "Done");
 }
