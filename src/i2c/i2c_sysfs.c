@@ -1584,7 +1584,7 @@ void simple_one_n_nnnn(
  *  @result newly allocated #Sys_I2c_Info struct
  */
 Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
-   bool debug = true;;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, depth=%d", busno, depth);
 
    char bus_path[40];
@@ -1649,6 +1649,8 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After collecting %s subdirectories: %s", bus_path,
                      join_string_g_ptr_array_t(result->conflicting_driver_names, ", "));
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", (void*) result);
+   if (debug)
+      rpt_nl();
    return result;
 }
 
