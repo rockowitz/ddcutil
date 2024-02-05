@@ -343,7 +343,7 @@ bool is_drm_dp_aux_subdir(const char * dirname, const char * fn_ignored) {
 
 // for e.g. card0-DP-1
 bool is_card_connector_dir(const char * dirname, const char * simple_fn) {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting. dirname=|%s|, simple_fn=|%s|", dirname, simple_fn);
    bool result = false;
    if (simple_fn)
