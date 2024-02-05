@@ -320,9 +320,12 @@ GPtrArray * get_video_adapter_devices() {
    GPtrArray * result = execute_shell_cmd_collect(cmd);
    g_ptr_array_set_free_func(result, g_free);
 
-   DBGF(debug, "Returning %d directories:", result->len);
-   for (int ndx = 0; ndx < result->len; ndx++)
-      rpt_vstring(2, "%s", g_ptr_array_index(result, ndx));
+   if (debug) {
+      DBG("Returning %d directories:", result->len);
+      for (int ndx = 0; ndx < result->len; ndx++)
+         rpt_vstring(2, "%s", g_ptr_array_index(result, ndx));
+   }
+
    return result;
 }
 // #endif
