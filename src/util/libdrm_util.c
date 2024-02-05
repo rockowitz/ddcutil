@@ -682,13 +682,13 @@ static char * drm_bus_type_name(uint8_t bus) {
 
 /* Filter to find driN files using scandir() in get_filenames_by_filter() */
 static int is_dri2(const struct dirent *ent) {
-   return !strncmp(ent->d_name, "card", strlen("card"));
+   return str_starts_with(ent->d_name, "card");
 }
 
 
 /* Scans /dev/dri to obtain list of device names
  *
- * Returns:   GPtrArray of device device names.
+ * Returns:   GPtrArray of device names.
  */
 GPtrArray * get_dri_device_names_using_filesys2() {
    const char *dri_paths[] = { "/dev/dri/", NULL };
@@ -699,7 +699,7 @@ GPtrArray * get_dri_device_names_using_filesys2() {
 
 
 bool probe_one_device_using_libdrmx(const char * devname, int depth) {
-   bool debug = false;
+   bool debug = true;
    DBGF(debug, "Starting. devname = %s", devname);
 
    bool supports_drm = false;
@@ -744,7 +744,7 @@ bool probe_one_device_using_libdrmx(const char * devname, int depth) {
 
          int rc = drmCheckModesettingSupported(busid2);
          DBGF(debug,
-                "drmCheckModesettingAvailable() returned %d for %s", rc, busid2);
+                "drmCheckModesettingSupported() returned %d for %s", rc, busid2);
          switch (rc) {
          case (0):
                 supports_drm = true;
