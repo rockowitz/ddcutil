@@ -101,6 +101,14 @@ void dpms_check_x11_asleep() {
 #endif
 
 
+/** Checks if a display, specified by its DRM connector name, is in a DPMS
+ *  sleep mode. The check is performed using the connector's dpms attribute.
+ *
+ *  @param  drm_connector_name
+ *  @retval true  if the dpms attribute value is other than "On"
+ *  @retval false if the dpms attribute value is "On"
+ */
+
 bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "drm_connector_name=%s", drm_connector_name);
