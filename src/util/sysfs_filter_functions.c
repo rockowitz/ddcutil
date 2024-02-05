@@ -1,6 +1,6 @@
 /** @file sysfs_filter_functions.c */
 
-// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "debug_util.h"
 #include "report_util.h"
 #include "string_util.h"
 #include "sysfs_util.h"
@@ -342,7 +343,12 @@ bool is_drm_dp_aux_subdir(const char * dirname, const char * fn_ignored) {
 
 // for e.g. card0-DP-1
 bool is_card_connector_dir(const char * dirname, const char * simple_fn) {
-   bool result = predicate_cardN_connector(simple_fn);
+   bool debug = true;
+   DBGF(debug, "Starting. dirname=|%s|, simple_fn=|%s|", dirname, simple_fn);
+   bool result = false;
+   if (simple_fn)
+      result = predicate_cardN_connector(simple_fn);
+   DBGF(debug, "Done.     Returning: %s", sbool(result));
    return result;
 }
 

@@ -261,7 +261,7 @@ get_single_subdir_name(
       Fn_Filter    filter,
       const char * val)
 {
-   // bool debug = false;
+   bool debug = false;
    int d1 = 1;
    DIR* dir2 = opendir(dirname);
    char * result = NULL;
@@ -272,7 +272,7 @@ get_single_subdir_name(
      else {
         struct dirent *dent2;
         while ((dent2 = readdir(dir2)) != NULL) {
-           // DBGMSF(debug, "%s", dent2->d_name);
+           DBGF(debug, "%s", dent2->d_name);
            if (!str_starts_with(dent2->d_name, ".")) {
               if (!filter || filter(dent2->d_name, val)) {
                  result = g_strdup(dent2->d_name);
@@ -282,7 +282,7 @@ get_single_subdir_name(
         }
         closedir(dir2);
      }
-   // DBGMSF(debug, "directory: %s, first subdir: %s", dirname, result);
+   DBGF(debug, "directory: %s, first subdir: %s", dirname, result);
    return result;
 }
 
