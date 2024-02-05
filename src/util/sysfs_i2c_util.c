@@ -460,7 +460,7 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
          adapter_dir[lastpos] = '\0';
       char drm_dir[PATH_MAX];
       g_snprintf(drm_dir, PATH_MAX, "%s/drm", adapter_dir);
-      DBGF(debug, "drm_dir=%s");
+      DBGF(debug, "drm_dir=%s", adapter_dir);
       Check_Card_Struct *  accumulator = calloc(1, sizeof(Check_Card_Struct));
       dir_foreach(drm_dir, predicate_cardN, do_one_card, accumulator, d);
       bool has_card_subdir = accumulator->has_card_connector_dir;
