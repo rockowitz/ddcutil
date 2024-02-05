@@ -1724,10 +1724,14 @@ bool all_sysfs_i2c_info_drm(bool rescan) {
    GPtrArray* all_info = get_all_sysfs_i2c_info(false, -1);
    bool result = false;
    if (all_info->len > 0) {
+
       result = true;
       for (int ndx = 0; ndx < all_info->len; ndx++) {
+
          Sysfs_I2C_Info * info = g_ptr_array_index(all_info, ndx);
-         if (str_starts_with("03", info->adapter_class)) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, adapter_class=%s, supports_drm=%s",
+               info->busno, info->adapter_class,  sbool(info->supports_drm));
+         if (str_starts_with(info->adapter_class, "0x03")) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                   "Bus %d supports drm: %s", info->busno, SBOOL(info->supports_drm));
             if (!info->supports_drm)
