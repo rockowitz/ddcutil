@@ -1719,7 +1719,7 @@ GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
 
 
 bool all_sysfs_i2c_info_drm(bool rescan) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rescan=%s", SBOOL(rescan));
    GPtrArray* all_info = get_all_sysfs_i2c_info(false, -1);
    bool result = false;
