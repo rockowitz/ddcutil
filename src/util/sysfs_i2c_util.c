@@ -315,7 +315,7 @@ get_sysfs_drm_card_numbers() {
  *  @return array of directory names, caller must free
  */
 GPtrArray * get_video_adapter_devices() {
-   bool debug = true;
+   bool debug = false;
    char * cmd = "find /sys/devices -name class | xargs grep x03 -l | sed 's|class||'";
    GPtrArray * result = execute_shell_cmd_collect(cmd);
    g_ptr_array_set_free_func(result, g_free);
@@ -328,6 +328,7 @@ GPtrArray * get_video_adapter_devices() {
 // #endif
 
 
+#ifdef INCORRECT
 bool not_ata(const char * simple_fn) {
    return !str_starts_with(simple_fn, "ata");
 }
@@ -410,6 +411,7 @@ GPtrArray *  get_video_adapter_devices2() {
 
    return class03_dirs;
 }
+#endif
 
 typedef struct {
    bool has_card_connector_dir;
@@ -423,8 +425,9 @@ void *        accumulator,
 int           depth);
 #endif
 
+
 void dir_foreach_set_true(const char * dirname, const char * fn, void * accumulator, int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "dirname=%s, fn=%s, accumlator=%p, depth=%d", dirname, fn, accumulator, depth);
    Check_Card_Struct * accum = accumulator;
    DBGF(debug, "Setting accumulator->has_card_connector_dir = true");
@@ -433,37 +436,38 @@ void dir_foreach_set_true(const char * dirname, const char * fn, void * accumula
 
 
 void do_one_card(const char * dirname, const char * fn, void* accumulator, int depth) {
+   bool debug = false;
    char buf[PATH_MAX];
    g_snprintf(buf, sizeof(buf), "%s/%s", dirname, fn);
-   DBGF("Examining dir buf=%s", buf);
+   DBGF(debug, "Examining dir buf=%s", buf);
    dir_foreach(buf, predicate_cardN_connector, dir_foreach_set_true, accumulator, depth);
    Check_Card_Struct * accum = accumulator;
-   DBGF("Finishing with accumlator->has_card_connector_dir = %s", sbool(accum->has_card_connector_dir));
+   DBGF(debug, "Finishing with accumlator->has_card_connector_dir = %s", sbool(accum->has_card_connector_dir));
 }
 
 
-
-/** Check that all video adapter devices in /sys have drivers that
- *  implement drm.
+/** Check that all devices in a list of video adapter devices have drivers that implement
+ *  drm by looking for card_connector_dirs in each adapter's drm directory.
  *
- *  @param  adapter_devices array of /sys directory names for video adapter devices *  @return true if all adapter video drivers implement drm
+ *  @param  adapter_devices array of /sys directory names for video adapter devices
+ *  @return true if all adapter video drivers implement drm
  */
 bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
-   bool debug = true;
+   bool debug = false;
    assert(adapter_devices);
-   DBGF(debug, "adapter_devices->len=%d at %p", adapter_devices->len, adapter_devices);
+   // DBGF(debug, "adapter_devices->len=%d at %p", adapter_devices->len, adapter_devices);
    int d = (debug) ? 1 : -1;
    bool result = true;
    for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
       // char * subdir_name = NULL;
       char * adapter_dir = g_ptr_array_index(adapter_devices, ndx);
-      DBGF(debug, "Examining: %s", adapter_dir);
+      // DBGF(debug, "Examining: %s", adapter_dir);
       int lastpos= strlen(adapter_dir) - 1;
       if (adapter_dir[lastpos] == '/')
          adapter_dir[lastpos] = '\0';
       char drm_dir[PATH_MAX];
       g_snprintf(drm_dir, PATH_MAX, "%s/drm", adapter_dir);
-      DBGF(debug, "drm_dir=%s", adapter_dir);
+      // DBGF(debug, "drm_dir=%s", adapter_dir);
       Check_Card_Struct *  accumulator = calloc(1, sizeof(Check_Card_Struct));
       dir_foreach(drm_dir, predicate_cardN, do_one_card, accumulator, d);
       bool has_card_subdir = accumulator->has_card_connector_dir;
@@ -475,12 +479,13 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
 #endif
 
 
-      DBGF(debug, "Examined.  has_card_subdir = %s", sbool(has_card_subdir));
+      // DBGF(debug, "Examined.  has_card_subdir = %s", sbool(has_card_subdir));
       if (!has_card_subdir) {
          result = false;
          break;
       }
    }
+   DBGF(debug, "Done.     Returning %s", sbool(result));
    return result;
 }
 
@@ -490,19 +495,18 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
  *  @return true if all video adapters have drivers implementing drm, false if not
  */
 bool check_all_video_adapters_implement_drm() {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting");
 
    GPtrArray * devices = NULL;
-    devices = get_video_adapter_devices();
+   devices = get_video_adapter_devices();
    // g_ptr_array_free(devices, true);
    //   devices = get_video_adapter_devices2();   // FAILS
 
-    DBGF(debug, "%d devices at %p:", devices->len, devices);
-    for (int ndx = 0; ndx < devices->len; ndx++)
-       rpt_vstring(2, "%s", g_ptr_array_index(devices, ndx));
+    // DBGF(debug, "%d devices at %p:", devices->len, devices);
+    // for (int ndx = 0; ndx < devices->len; ndx++)
+    //    rpt_vstring(2, "%s", g_ptr_array_index(devices, ndx));
 
-   // bool result = false;
    bool all_drm = check_video_adapters_list_implements_drm(devices);
    g_ptr_array_free(devices, true);
 
