@@ -8,7 +8,7 @@
  *  suffix (e.g. RC1) is appended to the version string.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -146,6 +146,12 @@ void report_build_options(int depth) {
    IS_SET(INCLUDE_TESTCASES);
 #else
    NOT_SET(INCLUDE_TESTCASES);
+#endif
+
+#ifdef STATIC
+   IS_SET(STATIC);
+#else
+   NOT_SET(STATIC);
 #endif
 
    rpt_nl();
