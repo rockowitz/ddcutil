@@ -1584,7 +1584,7 @@ void simple_one_n_nnnn(
  *  @result newly allocated #Sys_I2c_Info struct
  */
 Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, depth=%d", busno, depth);
 
    char bus_path[40];
@@ -1727,13 +1727,12 @@ bool all_sysfs_i2c_info_drm(bool rescan) {
 
       result = true;
       for (int ndx = 0; ndx < all_info->len; ndx++) {
-
          Sysfs_I2C_Info * info = g_ptr_array_index(all_info, ndx);
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, adapter_class=%s, supports_drm=%s",
-               info->busno, info->adapter_class,  sbool(info->supports_drm));
+         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, adapter_class=%s, supports_drm=%s",
+         //    info->busno, info->adapter_class,  sbool(info->supports_drm));
          if (str_starts_with(info->adapter_class, "0x03")) {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "Bus %d supports drm: %s", info->busno, SBOOL(info->supports_drm));
+            //  DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            //       "Bus %d supports drm: %s", info->busno, SBOOL(info->supports_drm));
             if (!info->supports_drm)
                result = false;
          }
