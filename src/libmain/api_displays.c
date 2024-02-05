@@ -53,13 +53,15 @@ static inline bool valid_display_ref(Display_Ref * dref) {
 #endif
 
 
-DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref,
-      bool require_not_asleep,
-      Display_Ref** dref_loc) {
+DDCA_Status validate_ddca_display_ref(
+      DDCA_Display_Ref ddca_dref,
+      bool             basic_only,
+      bool             require_not_asleep,
+      Display_Ref**    dref_loc) {
    if (dref_loc)
       *dref_loc = NULL;
    Display_Ref * dref = (Display_Ref *) ddca_dref;
-   DDCA_Status result = ddc_validate_display_ref(dref, require_not_asleep);
+   DDCA_Status result = ddc_validate_display_ref(dref, basic_only, require_not_asleep);
    if (result == DDCRC_OK && dref_loc)
       *dref_loc = dref;
    return result;
@@ -399,7 +401,7 @@ ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    DBGMSF(debug, "Starting.  ddca_dref = %p", ddca_dref);
    char * result = NULL;
    Display_Ref * dref = NULL;
-   validate_ddca_display_ref(ddca_dref, /* require_not_asleep */ false, &dref);
+   validate_ddca_display_ref(ddca_dref, /*basic_only*/ true, /* require_not_asleep */ false, &dref);
    if (dref) {
       result = dref_repr_t(dref);
    }
@@ -416,7 +418,7 @@ ddca_dbgrpt_display_ref(
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
    Display_Ref * dref = NULL;
-   validate_ddca_display_ref(ddca_dref, /* require_not_asleep */ false, &dref);
+   validate_ddca_display_ref(ddca_dref, /* basic_only*/ true, /* require_not_asleep */ false, &dref);
    rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
    if (dref)
       dbgrpt_display_ref(dref, depth+1);
@@ -434,7 +436,7 @@ ddca_report_display_by_dref(
    assert(library_initialized);
 
    Display_Ref * dref = NULL;
-   DDCA_Status rc = validate_ddca_display_ref(ddca_dref, /*require_not_asleep*/ false,  &dref);
+   DDCA_Status rc = validate_ddca_display_ref(ddca_dref,  /* basic_only*/ true, /*require_not_asleep*/ false,  &dref);
    if (rc == 0)
       ddc_report_display_by_dref(dref, depth);
 
@@ -454,7 +456,7 @@ ddca_validate_display_ref(DDCA_Display_Ref ddca_dref, bool require_not_asleep)
    Display_Ref * dref = NULL;
    DDCA_Status rc = DDCRC_ARG;
    if (ddca_dref)
-      rc = validate_ddca_display_ref(ddca_dref, require_not_asleep, &dref);
+      rc = validate_ddca_display_ref(ddca_dref, /* basic_only*/ false,  require_not_asleep, &dref);
 #ifdef REDUNDANT
    Error_Info * errinfo = NULL;
    if (rc != 0)
@@ -554,7 +556,7 @@ ddca_open_display3(
    *dh_loc = NULL;        // in case of error
    DDCA_Status rc = 0;
    Error_Info * err = NULL;
-   rc  = validate_ddca_display_ref(ddca_dref, /* require_not_asleep */ true, &dref);
+   rc  = validate_ddca_display_ref(ddca_dref, /* basic_only*/ false, /* require_not_asleep */ true, &dref);
    if (!rc) {
      Display_Handle* dh = NULL;
      Call_Options callopts = CALLOPT_NONE;
@@ -891,7 +893,7 @@ ddca_get_display_info(
    DDCA_Status ddcrc = 0;
 
    // if ddc_validate_display_ref() fails, returns its status code
-   WITH_VALIDATED_DR3(
+   WITH_BASIC_VALIDATED_DR3(
          ddca_dref, ddcrc,
          {
             DDCA_Display_Info * info = calloc(1, sizeof(DDCA_Display_Info));
@@ -1388,7 +1390,7 @@ ddca_set_display_sleep_multiplier(
 
     assert(library_initialized);
     Display_Ref * dref = NULL;
-    DDCA_Status rc = validate_ddca_display_ref(ddca_dref, /*require_not_asleep*/false, &dref);
+    DDCA_Status rc = validate_ddca_display_ref(ddca_dref, /* basic_only*/ true, /*require_not_asleep*/false, &dref);
     if (rc == 0)  {
        Per_Display_Data * pdd = dref->pdd;
        if (multiplier >= 0.0 && multiplier <= 10.0) {
@@ -1413,7 +1415,7 @@ ddca_get_current_display_sleep_multiplier(
 
     assert(library_initialized);
     Display_Ref * dref = NULL;
-    DDCA_Status rc = validate_ddca_display_ref(ddca_dref, false, &dref);
+    DDCA_Status rc = validate_ddca_display_ref(ddca_dref, true, false, &dref);
     if (rc == 0) {
        Per_Display_Data * pdd = dref->pdd;
        *multiplier_loc        = pdd->final_successful_adjusted_sleep_multiplier;

@@ -1645,7 +1645,7 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  @retval  DDCRC_DPMS_ASLEEP     possible if require_not_asleep == true
  */
 DDCA_Status
-ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
+ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_asleep) {
    bool debug = false;
    DBGTRC_STARTING(true, TRACE_GROUP, "dref=%p -> %s, require_not_asleep=%s",
          dref, dref_repr_t(dref), sbool(require_not_asleep));
@@ -1657,11 +1657,12 @@ ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
          ddcrc = DDCRC_ARG;
    // else if (dref->dispno < 0)   // cause of ddcui issue  #55
    //    ddcrc = DDCRC_ARG;
-   else if (drm_enabled) {
+   else if (drm_enabled && !basic_only) {
       if (!dref->drm_connector)
          ddcrc = DDCRC_INTERNAL_ERROR;
       else if (dref->flags & DREF_REMOVED)
          ddcrc = DDCRC_DISCONNECTED;
+      // wrong, bug in driver, edid persists after disconnection
       else if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
          ddcrc = DDCRC_DISCONNECTED;
       else if (require_not_asleep && dpms_check_drm_asleep_by_connector(dref->drm_connector))

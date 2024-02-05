@@ -260,7 +260,7 @@ ddca_report_parsed_capabilities_by_dref(
    Display_Ref * dref = NULL;
    // dref may be NULL, but if not it must be valid
    if (ddca_dref) {
-      ddcrc = validate_ddca_display_ref(ddca_dref, /*require_not_alseep*/ true, &dref);
+      ddcrc = validate_ddca_display_ref(ddca_dref, /*basic_only*/ true, /*require_not_alseep*/ false, &dref);
       if (ddcrc != 0) {
          goto bye;
       }

@@ -232,7 +232,7 @@ ddca_get_feature_list_by_dref(
    DDCA_Status psc = 0;
    VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
 
-   WITH_VALIDATED_DR3(
+   WITH_BASIC_VALIDATED_DR3(
          ddca_dref, psc,
          {
                DDCA_MCCS_Version_Spec vspec = // dref->vcp_version;
@@ -566,7 +566,7 @@ ddca_get_feature_metadata_by_dref(
    assert(metadata_loc);
 
    DDCA_Status psc = 0;
-   WITH_VALIDATED_DR3(
+   WITH_BASIC_VALIDATED_DR3(
          ddca_dref, psc,
          {
                DDCA_Feature_Metadata * external_metadata = NULL;
@@ -960,7 +960,7 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
    API_PROLOGX(debug, "ddca_dref=%p", ddca_dref);
 
    DDCA_Status psc = 0;
-   WITH_VALIDATED_DR3(ddca_dref, psc,
+   WITH_BASIC_VALIDATED_DR3(ddca_dref, psc,
       {
 
             Error_Info * ddc_excp = dfr_check_by_dref(dref);
