@@ -1647,15 +1647,16 @@ ddc_is_known_display_ref(Display_Ref * dref) {
 DDCA_Status
 ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
+   DBGTRC_STARTING(true, TRACE_GROUP, "dref=%p -> %s, require_not_asleep=%s",
+         dref, dref_repr_t(dref), sbool(require_not_asleep));
    assert(all_display_refs);
    
    int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
    DDCA_Status ddcrc = DDCRC_OK;
    if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0)
          ddcrc = DDCRC_ARG;
-   else if (dref->dispno < 0)   // needed? 
-      ddcrc = DDCRC_ARG;
+   // else if (dref->dispno < 0)   // cause of ddcui issue  #55
+   //    ddcrc = DDCRC_ARG;
    else if (drm_enabled) {
       if (!dref->drm_connector)
          ddcrc = DDCRC_INTERNAL_ERROR;
