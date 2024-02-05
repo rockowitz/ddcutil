@@ -1584,7 +1584,7 @@ void simple_one_n_nnnn(
  *  @result newly allocated #Sys_I2c_Info struct
  */
 Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
-   bool debug = false;;
+   bool debug = true;;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, depth=%d", busno, depth);
 
    char bus_path[40];
@@ -1607,7 +1607,7 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
       result->supports_drm = false;
       int rc = drmCheckModesettingSupported(buf);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-             "drmCheckModesettingAvailable() returned %d for %s", rc, buf);
+             "drmCheckModesettingSupported() returned %d for %s", rc, buf);
       switch (rc) {
       case (0):
              result->supports_drm = true;
