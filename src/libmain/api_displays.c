@@ -1346,7 +1346,7 @@ ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
 
    DDCA_Status result = DDCRC_INVALID_OPERATION;
  #ifdef ENABLE_UDEV
-    result = (i2c_all_video_devices_drm())
+    result = (all_sysfs_i2c_info_drm(/*rescan=*/false))
                        ? ddc_register_display_status_callback(func)
                        : DDCRC_INVALID_OPERATION;
  #endif

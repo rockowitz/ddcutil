@@ -166,7 +166,6 @@ void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
 
 
 GPtrArray * get_sys_video_devices();
-bool   i2c_all_video_devices_drm();
 
 char * get_drm_connector_name_by_busno(int busno);
 char * get_drm_connector_name_by_edid(Byte * edid_bytes);
