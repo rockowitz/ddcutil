@@ -72,7 +72,8 @@ libutil_la_SOURCES += failsim.c
 endif
 
 if USE_LIBDRM_COND
-libutil_la_SOURCES += libdrm_util.c
+libutil_la_SOURCES += libdrm_util.c \
+libutil_la_SOURCES += drm_common.c
 endif
 
 if USE_X11_COND

@@ -22,6 +22,7 @@
 #include <unistd.h>
 /** \endcond */
 
+#include "util/drm_common.h"
 #include "util/debug_util.h"
 #include "util/edid.h"
 #include "util/file_util.h"
@@ -1714,64 +1715,8 @@ GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
    return all_i2c_info;
 }
 
-/** Checks if a video adapter supports DRM, using DRM functions.
- *
- *  @param   adapter_path  fully qualified path of video adapter node in sysfs
- *  @retval  true   driver supports DRM
- *  @@retval false  driver does not support DRM, or ddcutil not built with DRM support
- */
-bool adapter_supports_drm(const char * adapter_path) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "adapter_path=%s", adapter_path);
-   bool result = false;
-#ifdef USE_LIBDRM
-      char * adapter_basename = g_path_get_basename(adapter_path);
-      char buf[20];
-      g_snprintf(buf, 20, "pci:%s", adapter_basename);
-      free(adapter_basename);
-      result = false;
-      int rc = drmCheckModesettingSupported(buf);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-             "drmCheckModesettingSupported() returned %d for %s", rc, buf);
-      switch (rc) {
-      case (0):
-             result = true;
-             break;
-      case (-EINVAL):
-             DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "Invalid bus id (-EINVAL)");
-             break;
-      case (-ENOSYS):
-             DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "Modesetting not supported (-ENOSYS)");
-             break;
-      default:
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                "drmCheckModesettingSupported() returned undocumented status code %d", rc);
-      }
-#endif
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
-   return result;
-}
-
-/** Checks if all video adapters in an array of sysfs adapter nodes
- *  support DRM
- *
- *  @oaram  adapter_paths  array of paths to adapter nodes in sysfs
- *  @return true if all adapters support DRM, false if not or the array is empty
- */
-
-bool all_video_adapters_support_drm(GPtrArray * adapter_paths) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "adapter_paths->len=%d", adapter_paths->len);
-   bool result = false;
-   if (adapter_paths && adapter_paths->len > 0) {
-      result = true;
-      for (int ndx = 0; ndx < adapter_paths->len; ndx++) {
-         result &= adapter_supports_drm(g_ptr_array_index(adapter_paths, ndx));
-      }
-   }
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
-   return result;
-}
+//
+// *** DRM Checks ***
 
 /** Uses the Sys_I2C_Info array to get a list of all video adapters
  *  and checks if each supports DRM.
@@ -1802,6 +1747,7 @@ bool all_sysfs_i2c_info_drm(bool rescan) {
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
+
 
 
 char * get_conflicting_drivers_for_bus(int busno) {
@@ -2072,39 +2018,6 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
 }
 
 
-#ifdef WRONG
-// need to look for connector subdirs on drm
-
-/** Checks if a display has a DRM driver by looking for
- *  subdirectory drm in the adapter directory.
- *
- *  Note that this test does not detect which connector
- *  is associated with the display.
- *
- *  @param busno   I2C bus number
- *  @return true/false
- */
- bool is_drm_display_by_busno(int busno) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", busno);
-   bool result = false;
-   char i2cdir[40];
-   g_snprintf(i2cdir, 40, "/sys/bus/i2c/devices/i2c-%d",busno);
-   char * real_i2cdir = NULL;
-   GET_ATTR_REALPATH(&real_i2cdir, i2cdir);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "real_i2cdir = %s", real_i2cdir);
-   assert(real_i2cdir);
-   int depth = IS_DBGTRC(debug, TRACE_GROUP) ? 1 : -1;
-   char * adapter_dir = find_adapter(real_i2cdir, depth);
-   assert(adapter_dir);
-   result = RPT_ATTR_NOTE_INDIRECT_SUBDIR(depth, NULL, adapter_dir, "drm");
-   free(real_i2cdir);
-   free(adapter_dir);
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
-   return result;
-}
-
-#endif
 
 
 #ifdef OLD
@@ -2267,7 +2180,7 @@ GPtrArray * get_sysfs_drm_displays() {
 
  /** Adds a single connector name, e.g. card0-HDMI-1, to the accumulated
   *  list of all connections, and if the connector has a valid EDID, to
-  *  the accumlated list of connectors have a valid EDID.
+  *  the accumlated list of connectors having a valid EDID.
   *
   *  @param  dirname    directory to examine, <device>/drm/cardN
   *  @param  simple_fn  filename to examine
@@ -2493,8 +2406,6 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(find_adapter);
    RTTI_ADD_FUNC(get_sys_video_devices);
    RTTI_ADD_FUNC(get_drm_connector_name_by_busno);
-   RTTI_ADD_FUNC(adapter_supports_drm);
-   RTTI_ADD_FUNC(all_video_adapters_support_drm);
    RTTI_ADD_FUNC(all_sysfs_i2c_info_drm);
 
 // RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_busno);

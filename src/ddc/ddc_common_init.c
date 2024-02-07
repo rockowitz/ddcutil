@@ -22,6 +22,7 @@
 #include "util/string_util.h"
 #include "util/sysfs_i2c_util.h"
 #ifdef USE_LIBDRM
+#include "util/drm_common.h"
 #include "util/libdrm_util.h"
 #endif
 
