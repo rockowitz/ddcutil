@@ -46,7 +46,7 @@ DDCA_Status ddc_register_display_status_callback(DDCA_Display_Status_Callback_Fu
 
    DDCA_Status result = DDCRC_INVALID_OPERATION;
 #ifdef ENABLE_UDEV
-   if (i2c_all_video_devices_drm() &&
+   if (all_sysfs_i2c_info_drm(/*rescan=*/false) &&
        generic_register_callback(&display_detection_callbacks, func) )
    {
       result = DDCRC_OK;
@@ -72,7 +72,7 @@ DDCA_Status ddc_unregister_display_status_callback(DDCA_Display_Status_Callback_
 
    DDCA_Status result = DDCRC_INVALID_OPERATION;
 #ifdef ENABLE_UDEV
-   if (i2c_all_video_devices_drm() ) {
+   if (all_sysfs_i2c_info_drm(/*rescan=*/false)) {
        result = generic_register_callback(&display_detection_callbacks, func);
    }
 #endif
