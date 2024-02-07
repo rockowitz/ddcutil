@@ -16,7 +16,7 @@ AC_PREREQ([2.69])
 
 m4_define([ddcutil_major_version], [2])
 m4_define([ddcutil_minor_version], [1])
-m4_define([ddcutil_micro_version], [2])
+m4_define([ddcutil_micro_version], [3])
 dnl ddcutil_version_suffix does not begin with hyphen, e.g. "dev", not "-dev"
 m4_define([ddcutil_version_suffix], [""])
 # m4_ifelse(ddcutil_version_suffix,[], m4_define([ddcutil_version], [a]),define([ddcutil_version],[b]))
@@ -171,7 +171,7 @@ AC_SUBST([LIBTOOL_DEPS])
 
 dnl 7/29/19 first use, LT_CURRENT set to 1
 LT_CURRENT=6
-LT_REVISION=1
+LT_REVISION=2
 LT_AGE=1
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
