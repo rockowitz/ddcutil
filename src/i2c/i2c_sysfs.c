@@ -629,40 +629,6 @@ void dbgrpt_sys_bus_i2c(int depth) {
 
 
 //
-// Sysfs_I2C_Info
-//
-
-void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
-   int d1 = depth+1;
-   rpt_structure_loc("Sysfs_I2C_Info", info, depth);
-   rpt_vstring(d1, "busno:                     %d", info->busno);
-   rpt_vstring(d1, "name:                      %s", info->name);
-   rpt_vstring(d1, "adapter_path:              %s", info->adapter_path);
-   rpt_vstring(d1, "adapter_class:             %s", info->adapter_class);
-   rpt_vstring(d1, "driver:                    %s", info->driver);
-   rpt_vstring(d1, "driver_version:            %s", info->driver_version);
-   rpt_vstring(d1, "conflicting_driver_names:  %s",
-         join_string_g_ptr_array_t(info->conflicting_driver_names, ", ") );
-#ifdef USE_LIBDRM
-   rpt_vstring(d1, "adapter supports DRM:      %s",
-         sbool(adapter_supports_drm(info->adapter_path)));
-#endif
-}
-
-
-void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth) {
-   rpt_vstring(depth, "All Sysfs_I2C_Info records");
-   if (infos && infos->len > 0) {
-      for (int ndx = 0; ndx < infos->len; ndx++)
-         dbgrpt_sysfs_i2c_info(g_ptr_array_index(infos,ndx), depth+1);
-   }
-   else
-      rpt_vstring(depth+1, "None");
-}
-
-
-
-//
 //  *** Scan /sys by drm connector - uses struct Sys_Drm_Connector ***
 //
 
@@ -1540,8 +1506,37 @@ void free_conflicting_drivers(GPtrArray* conflicts) {
 
 
 //
-// *** Collect basic /dev/i2c-N information into Sysfs_I2C_Info records ***
+// Sysfs_I2C_Info
 //
+
+void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
+   int d1 = depth+1;
+   rpt_structure_loc("Sysfs_I2C_Info", info, depth);
+   rpt_vstring(d1, "busno:                     %d", info->busno);
+   rpt_vstring(d1, "name:                      %s", info->name);
+   rpt_vstring(d1, "adapter_path:              %s", info->adapter_path);
+   rpt_vstring(d1, "adapter_class:             %s", info->adapter_class);
+   rpt_vstring(d1, "driver:                    %s", info->driver);
+   rpt_vstring(d1, "driver_version:            %s", info->driver_version);
+   rpt_vstring(d1, "conflicting_driver_names:  %s",
+         join_string_g_ptr_array_t(info->conflicting_driver_names, ", ") );
+#ifdef USE_LIBDRM
+   rpt_vstring(d1, "adapter supports DRM:      %s",
+         sbool(adapter_supports_drm(info->adapter_path)));
+#endif
+}
+
+
+void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth) {
+   rpt_vstring(depth, "All Sysfs_I2C_Info records");
+   if (infos && infos->len > 0) {
+      for (int ndx = 0; ndx < infos->len; ndx++)
+         dbgrpt_sysfs_i2c_info(g_ptr_array_index(infos,ndx), depth+1);
+   }
+   else
+      rpt_vstring(depth+1, "None");
+}
+
 
 static GPtrArray * all_i2c_info = NULL;
 
@@ -1602,7 +1597,7 @@ void simple_one_n_nnnn(
 }
 
 
-/** Returns a newly allocated #Sys_I2c_Info struct describing
+/** Returns a newly allocated #Sysfs_I2c_Info struct describing
  *  a /sys/bus/i2c/devices/i2c-N instance, and optionally reports the
  *  result of examining the instance
  *
@@ -1721,7 +1716,7 @@ GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
 
 //
 // *** DRM Checks ***
-
+//
 
 /** Uses the Sys_I2C_Info array to get a list of all video adapters
  *  and checks if each supports DRM.
@@ -1762,6 +1757,8 @@ char * get_conflicting_drivers_for_bus(int busno) {
    free_sysfs_i2c_info(info);
    return result;
 }
+
+
 
 
 #ifdef UNUSED
