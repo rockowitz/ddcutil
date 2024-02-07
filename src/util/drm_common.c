@@ -26,6 +26,7 @@
 #include "report_util.h"
 #include "string_util.h"
 #include "sysfs_filter_functions.h"
+#include "sysfs_util.h"
 
 // for all_displays_drm2():
 #include <unistd.h>  // for close()
@@ -317,6 +318,7 @@ get_sysfs_drm_card_numbers() {
  }
 #endif
 
+GPtrArray *  get_video_adapter_devices2();
 
 // #ifdef UNUSED
 /** Returns the paths to all video devices in /sys/devices, i.e. those
@@ -336,15 +338,20 @@ GPtrArray * get_video_adapter_devices() {
          rpt_vstring(2, "%s", g_ptr_array_index(result, ndx));
    }
 
+   // get_video_adapter_devices2();
+
+
    return result;
 }
 // #endif
 
 
-#ifdef INCORRECT
+// #ifdef INCORRECT
+#ifdef UNUSED
 bool not_ata(const char * simple_fn) {
    return !str_starts_with(simple_fn, "ata");
 }
+#endif
 
 bool is_pci_dir(const char * simple_fn) {
    bool debug = true;
@@ -379,16 +386,16 @@ void find_class_dirs(const char * dirname, const char * simple_fn,  void * accum
        char * subdir = g_strdup_printf("%s/%s", dirname, simple_fn);
        DBGF(debug, "Adding: %s", subdir);
        g_ptr_array_add(accum, (char*) subdir);
-       return;
     }
-    DBGF(debug, "fullname=%s does not have attribute class", fullname);
-    // if (!str_starts_with(simple_fn, "ata") && !streq(simple_fn, "firmware_node")) {
-   //  if (str_starts_with(simple_fn, "0")) {
+    else {
+       DBGF(debug, "fullname=%s does not have attribute class", fullname);
+       // if (!str_starts_with(simple_fn, "ata") && !streq(simple_fn, "firmware_node")) {
+       //  if (str_starts_with(simple_fn, "0")) {
        char path[PATH_MAX];
        g_snprintf(path, sizeof(path), "%s/%s", dirname, simple_fn);
        DBGF(debug, "Examining subdir %s", path);
        dir_foreach(path, predicate_starts_with_0, find_class_dirs, accumulator, d);
-  //   }
+    }
 }
 
 
@@ -424,7 +431,7 @@ GPtrArray *  get_video_adapter_devices2() {
 
    return class03_dirs;
 }
-#endif
+// #endif
 
 typedef struct {
    bool has_card_connector_dir;
