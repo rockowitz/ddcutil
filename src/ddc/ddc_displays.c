@@ -1596,7 +1596,7 @@ ddc_redetect_displays() {
    }
    if (active_rc == DDCRC_OK) {
       Error_Info * err = ddc_start_watch_displays(enabled_classes);
-      assert(err);    // should never fail since restarting with same enabled classes
+      assert(!err);    // should never fail since restarting with same enabled classes
    }
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
