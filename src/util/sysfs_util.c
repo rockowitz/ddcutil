@@ -3,7 +3,7 @@
   * Functions for reading /sys file system
   */
 
-// Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define _GNU_SOURCE
