@@ -411,11 +411,18 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    //    parsed_cmd->stats = true;
 
 #ifdef USE_LIBDRM
-   bool result1 = all_displays_drm2();    // in drom_common.c
+   // For each file in /dev/dri, check that DRM is supported by using the drm api
+   bool result1 = all_displays_drm_using_drm_api();          // in drm_common.c
+
+   // For each video adapter node in sysfs, check that subdirectories drm/cardN/cardN-xxx exist
    bool result2 = check_all_video_adapters_implement_drm();  // in drm_common.c
+
+   // Gets a list of video adapter paths from the Sys_I2C_Info array and checks if each
+   // supports DRM by checking that subdirectories drm/cardN/cardNxxx exist.
    bool result3 = all_sysfs_i2c_info_drm(/*rescan=*/false);  // in i2c_sysfs.c
+
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "all_displays_drm2() returned %s", sbool(result1));
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "all_displays_drm_using drm_api() returned %s", sbool(result1));
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "check_all_video_adapters_implement_drm() returned %s", sbool(result2));
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "all_sysfs_i2c_info_drm() returned %s", sbool(result3));
    }
