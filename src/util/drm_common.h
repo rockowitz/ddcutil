@@ -1,4 +1,4 @@
-/** @file / drm_common.h */
+/** @file drm_common.h */
 
 // Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
