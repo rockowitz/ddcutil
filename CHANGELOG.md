@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.1.3] 2024-02-07
+
+### Changed
+
+- Option ***--settings*** reports build options.
+
+### Fixed
+
+- Memory leaks
+
+### Shared Library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.1.0. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.1.2.
+
+### Fixed
+
+- Due to overly aggressive DDCA_Display_Ref validation, ddca_get_display_info()
+  returned status DDCRC_ARG when obtaining information about an invalid display 
+  (i.e. one for which the EDID is detected but DDC communication fails). This
+  fixes ddcui issue #55, which reported an abort if a display was invalid.
+- Checking for whether the video adapter supports DRM was consolidated.
+  This fixes a case where all displays were reported to support DRM when that
+  was not the case, causing incorrect display status change monitoring.
+  
 ## [2.1.2] 2024-01-27
 
 ### General
@@ -29,8 +55,6 @@
 The shared library **libddcutil** is backwardly compatible with the one in 
 ddcutil 2.1.0. The SONAME is unchanged as libddcutil.so.5. The released library
 file is libddcutil.so.5.1.1.
-
-### Added
 
 ### Changed
 
