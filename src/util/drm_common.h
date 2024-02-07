@@ -42,6 +42,7 @@
 
  bool check_all_video_adapters_implement_drm();
 
+ GPtrArray * get_dri_device_names_using_filesys();
 
  bool all_video_adapters_support_drm(GPtrArray * adapter_paths);
 

@@ -28,6 +28,7 @@
 #include <drm/drm_mode.h>
 #endif
 
+#include "util/drm_common.h"
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
@@ -769,7 +770,7 @@ static void probe_one_device_using_libdrm(char * devname, int depth) {
    }
 }
 
-
+#ifdef DUPLICATE
 /* Filter to find driN files using scandir() in get_filenames_by_filter() */
 static int is_dri(const struct dirent *ent) {
    return !strncmp(ent->d_name, "card", strlen("card"));
@@ -786,6 +787,7 @@ GPtrArray * get_dri_device_names_using_filesys() {
    g_ptr_array_sort(dev_names, gaux_ptr_scomp);   // needed?
    return dev_names;
 }
+#endif
 
 
 /* Main function for probing device information, particularly EDIDs,

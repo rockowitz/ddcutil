@@ -191,7 +191,7 @@
   *
   * Returns:   GPtrArray of device names.
   */
- GPtrArray * get_dri_device_names_using_filesys2() {
+ GPtrArray * get_dri_device_names_using_filesys() {
     const char *dri_paths[] = { "/dev/dri/", NULL };
     GPtrArray* dev_names = get_filenames_by_filter(dri_paths, is_dri2);
     g_ptr_array_sort(dev_names, gaux_ptr_scomp);   // needed?
@@ -256,7 +256,7 @@
     int drm_available = drmAvailable();
     // DBGF(debug, "drmAvailable() returned:  %d", drm_available);
     if (drm_available) {
-       GPtrArray * dev_names = get_dri_device_names_using_filesys2();
+       GPtrArray * dev_names = get_dri_device_names_using_filesys();
        if (dev_names->len > 0)
           result = true;
        for (int ndx = 0; ndx < dev_names->len; ndx++) {

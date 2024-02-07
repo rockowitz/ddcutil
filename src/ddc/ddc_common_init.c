@@ -411,12 +411,9 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    //    parsed_cmd->stats = true;
 
 #ifdef USE_LIBDRM
-   // rpt_nl();
-   bool result1 = all_displays_drm2();
-   // rpt_nl();
-   bool result2 = check_all_video_adapters_implement_drm();
-   // rpt_nl();
-   bool result3 = all_sysfs_i2c_info_drm(/*rescan=*/false);
+   bool result1 = all_displays_drm2();    // in drom_common.c
+   bool result2 = check_all_video_adapters_implement_drm();  // in drm_common.c
+   bool result3 = all_sysfs_i2c_info_drm(/*rescan=*/false);  // in i2c_sysfs.c
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "all_displays_drm2() returned %s", sbool(result1));
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "check_all_video_adapters_implement_drm() returned %s", sbool(result2));
