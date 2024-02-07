@@ -309,8 +309,9 @@ get_sysfs_drm_card_numbers() {
 #endif
 
 
-
-// #ifdef INCORRECT
+// Beginning of get_video_devices2() segment
+// Use C code instead of bash command to find all subdirectories
+// of /sys/devices having class x03
 
 #ifdef UNUSED
 bool not_ata(const char * simple_fn) {
@@ -394,7 +395,6 @@ GPtrArray *  get_video_adapter_devices2() {
 
    return class03_dirs;
 }
-// #endif
 
 
 /** Returns the paths to all video devices in /sys/devices, i.e. those
