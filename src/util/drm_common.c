@@ -351,7 +351,7 @@ GPtrArray *  get_video_adapter_devices2() {
    if (debug) {
       DBG("Returning %d directories:", class03_dirs->len);
       for (int ndx = 0; ndx < class03_dirs->len; ndx++)
-         rpt_vstring(2, "%s", g_ptr_array_index(class03_dirs, ndx));
+         rpt_vstring(2, "%s", (char*) g_ptr_array_index(class03_dirs, ndx));
    }
 
    return class03_dirs;
@@ -372,7 +372,7 @@ GPtrArray * get_video_adapter_devices() {
    if (debug) {
       DBG("Returning %d directories:", result->len);
       for (int ndx = 0; ndx < result->len; ndx++)
-         rpt_vstring(2, "%s", g_ptr_array_index(result, ndx));
+         rpt_vstring(2, "%s", (char*) g_ptr_array_index(result, ndx));
    }
 
    if (debug) {
@@ -380,7 +380,7 @@ GPtrArray * get_video_adapter_devices() {
       GPtrArray* devices2 = get_video_adapter_devices2();
       DBG("get_video_adapter_devices2 returned %d directories:", devices2->len);
       for (int ndx = 0; ndx < devices2->len; ndx++)
-         rpt_vstring(2, "%s", g_ptr_array_index(devices2, ndx));
+         rpt_vstring(2, "%s", (char*) g_ptr_array_index(devices2, ndx));
       g_ptr_array_free(devices2, true);
    }
 
