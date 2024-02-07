@@ -1063,9 +1063,9 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
 
 /** Starts thread that watches for changes in display connection status.
  *
- *  \retval  DDCRC_OK
- *  \retval  DDCRC_INVALID_OPERATION  watch thread already started
- *  \retval  DDCRC_ARG                event_classes == DDCA_EVENT_CLASS_NONE
+ *  \return  Error_Info struct if error:
+ *           -  DDCRC_INVALID_OPERATION  watch thread already started
+ *           -  DDCRC_ARG                event_classes == DDCA_EVENT_CLASS_NONE
  */
 Error_Info *
 ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
