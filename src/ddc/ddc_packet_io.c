@@ -95,7 +95,7 @@ bool is_ddc_null_message(Byte * packet) {
 }
 #endif
 
-
+#ifdef DEPRECATED
 bool
 ddc_is_valid_display_handle(Display_Handle * dh) {
    bool debug = false;
@@ -107,6 +107,7 @@ ddc_is_valid_display_handle(Display_Handle * dh) {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
    return result;
 }
+#endif
 
 
 DDCA_Status
@@ -1046,7 +1047,6 @@ init_ddc_packet_io_func_name_table() {
    RTTI_ADD_FUNC(ddc_write_read_with_retry);
    RTTI_ADD_FUNC(ddc_write_only);
    RTTI_ADD_FUNC(ddc_write_only_with_retry);
-   RTTI_ADD_FUNC(ddc_is_valid_display_handle);
    RTTI_ADD_FUNC(ddc_validate_display_handle);
 }
 

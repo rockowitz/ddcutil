@@ -41,7 +41,6 @@ void ddc_close_display_wo_return(
 
 void ddc_close_all_displays();
 
-bool ddc_is_valid_display_handle(Display_Handle * dh);
 DDCA_Status ddc_validate_display_handle(Display_Handle * dh);
 
 void ddc_dbgrpt_valid_display_handles(int depth);
