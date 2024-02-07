@@ -1515,7 +1515,7 @@ void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
          join_string_g_ptr_array_t(info->conflicting_driver_names, ", ") );
 #ifdef USE_LIBDRM
    rpt_vstring(d1, "adapter supports DRM:      %s",
-         sbool(adapter_supports_drm(info->adapter_path)));
+         sbool(adapter_supports_drm_using_drm_api(info->adapter_path)));
 #endif
 }
 
@@ -1735,7 +1735,7 @@ bool all_sysfs_i2c_info_drm(bool rescan) {
                g_ptr_array_add(adapter_paths, info->adapter_path);
          }
       }
-      result = all_video_adapters_support_drm(adapter_paths);
+      result = all_video_adapters_support_drm_using_drm_api(adapter_paths);
    }
    g_ptr_array_free(adapter_paths, false);
 #endif

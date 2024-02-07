@@ -120,7 +120,7 @@
   *  @retval  true   driver supports DRM
   *  @@retval false  driver does not support DRM, or ddcutil not built with DRM support
   */
- bool adapter_supports_drm(const char * adapter_path) {
+ bool adapter_supports_drm_using_drm_api(const char * adapter_path) {
     bool debug = false;
     DBGF(debug, "Starting. adapter_path=%s", adapter_path);
     bool result = false;
@@ -142,14 +142,14 @@
   *  @oaram  adapter_paths  array of paths to adapter nodes in sysfs
   *  @return true if all adapters support DRM, false if not or the array is empty
   */
- bool all_video_adapters_support_drm(GPtrArray * adapter_paths) {
+ bool all_video_adapters_support_drm_using_drm_api(GPtrArray * adapter_paths) {
     bool debug = false;
     DBGF(debug, "Starting. adapter_paths->len=%d", adapter_paths->len);
     bool result = false;
     if (adapter_paths && adapter_paths->len > 0) {
        result = true;
        for (int ndx = 0; ndx < adapter_paths->len; ndx++) {
-          result &= adapter_supports_drm(g_ptr_array_index(adapter_paths, ndx));
+          result &= adapter_supports_drm_using_drm_api(g_ptr_array_index(adapter_paths, ndx));
        }
     }
     DBGF(debug, "Done.  Returning: %s", sbool(result));
