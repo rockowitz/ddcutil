@@ -166,7 +166,7 @@ report_optional_features(Parsed_Cmd * parsed_cmd, int depth) {
 static void
 report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_options, int depth)
 {
-    bool debug = true;
+    bool debug = false;
     DBGMSF(debug, "Executing...");
 
     show_ddcutil_version();
