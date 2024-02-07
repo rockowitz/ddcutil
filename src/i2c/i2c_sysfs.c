@@ -1726,7 +1726,6 @@ bool all_sysfs_i2c_info_drm(bool rescan) {
    GPtrArray* adapter_paths = g_ptr_array_sized_new(4);
    g_ptr_array_set_free_func(adapter_paths, g_free);
    if (all_info->len > 0) {
-      result = true;
       for (int ndx = 0; ndx < all_info->len; ndx++) {
          Sysfs_I2C_Info * info = g_ptr_array_index(all_info, ndx);
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, adapter_class=%s, adapter_path=%s",
