@@ -1776,6 +1776,8 @@ bool all_video_adapters_support_drm(GPtrArray * adapter_paths) {
 /** Uses the Sys_I2C_Info array to get a list of all video adapters
  *  and checks if each supports DRM.
  *
+ *  @param rescan  always recreate the Sys_I2C_Info array
+ *  @return true if all display adapters support DRM, false if not
  */
 bool all_sysfs_i2c_info_drm(bool rescan) {
    bool debug = true;
@@ -1791,12 +1793,7 @@ bool all_sysfs_i2c_info_drm(bool rescan) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, adapter_class=%s, adapter_path=%s",
                info->busno, info->adapter_class, info->adapter_path);
          if (str_starts_with(info->adapter_class, "0x03")) {
-            char * cur_path = info->adapter_path;
-            guint found_ndx;
-            if (!g_ptr_array_find_with_equal_func(
-                  adapter_paths, cur_path, g_str_equal, &found_ndx)) {
-               g_ptr_array_add(adapter_paths, cur_path);
-            }
+               g_ptr_array_add(adapter_paths, info->adapter_path);
          }
       }
       result = all_video_adapters_support_drm(adapter_paths);
