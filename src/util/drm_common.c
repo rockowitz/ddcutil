@@ -403,7 +403,7 @@ GPtrArray *  get_video_adapter_devices2() {
  *  @return array of directory names, caller must free
  */
 GPtrArray * get_video_adapter_devices() {
-   bool debug = true;
+   bool debug = false;
    char * cmd = "find /sys/devices -name class | xargs grep x03 -l | sed 's|class||'";
    GPtrArray * result = execute_shell_cmd_collect(cmd);
    g_ptr_array_set_free_func(result, g_free);
