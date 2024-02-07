@@ -49,8 +49,6 @@
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 
-bool adapter_supports_drm(const char * adapter_path);
-
 //
 // *** Common Functions
 //
