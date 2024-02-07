@@ -47,11 +47,6 @@
 #include "i2c/i2c_sysfs.h"
 
 
-#ifdef USE_LIBDRM
-#include <xf86drm.h>
-#include <xf86drmMode.h>
-#endif
-
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 
 bool adapter_supports_drm(const char * adapter_path);
