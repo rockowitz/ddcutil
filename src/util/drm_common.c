@@ -73,72 +73,15 @@
 #endif
 
 
-// from i2c/i2c_sysfs.c
- /** Checks if a video adapter supports DRM, using DRM functions.
+ /** Checks if DRM is supported for a busid.
   *
-  *  @param   adapter_path  fully qualified path of video adapter node in sysfs
-  *  @retval  true   driver supports DRM
-  *  @@retval false  driver does not support DRM, or ddcutil not built with DRM support
-  */
- bool adapter_supports_drm(const char * adapter_path) {
-    bool debug = false;
-    DBGF(debug, "Starting. adapter_path=%s", adapter_path);
-    bool result = false;
- #ifdef USE_LIBDRM
-       char * adapter_basename = g_path_get_basename(adapter_path);
-       char buf[20];
-       g_snprintf(buf, 20, "pci:%s", adapter_basename);
-       free(adapter_basename);
-       result = false;
-       int rc = drmCheckModesettingSupported(buf);
-       DBGF(debug, "drmCheckModesettingSupported() returned %d for %s", rc, buf);
-       switch (rc) {
-       case (0):
-              result = true;
-              break;
-       case (-EINVAL):
-              DBGF(debug,  "Invalid bus id (-EINVAL)");
-              break;
-       case (-ENOSYS):
-              DBGF(debug,  "Modesetting not supported (-ENOSYS)");
-              break;
-       default:
-           DBGF(debug, "drmCheckModesettingSupported() returned undocumented status code %d", rc);
-       }
- #endif
-    DBGF(debug, "Done.    Returning: %s", sbool(result));
-    return result;
- }
-
-
- /** Checks if all video adapters in an array of sysfs adapter nodes
-  *  support DRM
+  * Takes a bus id of the form: PCI:xxxx:xx:xx:d, <drm bus type name>:domain:bus:dev.func
   *
-  *  @oaram  adapter_paths  array of paths to adapter nodes in sysfs
-  *  @return true if all adapters support DRM, false if not or the array is empty
+  * @param busid2  DRM PCI bus id
   */
- bool all_video_adapters_support_drm(GPtrArray * adapter_paths) {
+ bool check_drm_supported_using_drm_api(char * busid2) {
     bool debug = false;
-    DBGF(debug, "Starting. adapter_paths->len=%d", adapter_paths->len);
-    bool result = false;
-    if (adapter_paths && adapter_paths->len > 0) {
-       result = true;
-       for (int ndx = 0; ndx < adapter_paths->len; ndx++) {
-          result &= adapter_supports_drm(g_ptr_array_index(adapter_paths, ndx));
-       }
-    }
-    DBGF(debug, "Done.  Returning: %s", sbool(result));
-    return result;
- }
-
-
-
- // from util/libdrm_util.c
-
-
- bool libdrm_extracted_check(char * busid2) {
-    bool debug = false;
-     bool supports_drm = false;
+    bool supports_drm = false;
        // Notes from examining the code for drmCheckModesettingAvailable()
        //
        // Checks if a modesetting capable driver has been attached to the pci id
@@ -170,6 +113,51 @@
   }
 
 
+// from i2c/i2c_sysfs.c
+ /** Checks if a video adapter supports DRM, using DRM functions.
+  *
+  *  @param   adapter_path  fully qualified path of video adapter node in sysfs
+  *  @retval  true   driver supports DRM
+  *  @@retval false  driver does not support DRM, or ddcutil not built with DRM support
+  */
+ bool adapter_supports_drm(const char * adapter_path) {
+    bool debug = false;
+    DBGF(debug, "Starting. adapter_path=%s", adapter_path);
+    bool result = false;
+ #ifdef USE_LIBDRM
+       char * adapter_basename = g_path_get_basename(adapter_path);
+       char buf[20];
+       g_snprintf(buf, 20, "pci:%s", adapter_basename);
+       free(adapter_basename);
+       result = check_drm_supported_using_drm_api(buf);
+ #endif
+    DBGF(debug, "Done.    Returning: %s", sbool(result));
+    return result;
+ }
+
+
+ /** Checks if all video adapters in an array of sysfs adapter paths
+  *  support DRM
+  *
+  *  @oaram  adapter_paths  array of paths to adapter nodes in sysfs
+  *  @return true if all adapters support DRM, false if not or the array is empty
+  */
+ bool all_video_adapters_support_drm(GPtrArray * adapter_paths) {
+    bool debug = false;
+    DBGF(debug, "Starting. adapter_paths->len=%d", adapter_paths->len);
+    bool result = false;
+    if (adapter_paths && adapter_paths->len > 0) {
+       result = true;
+       for (int ndx = 0; ndx < adapter_paths->len; ndx++) {
+          result &= adapter_supports_drm(g_ptr_array_index(adapter_paths, ndx));
+       }
+    }
+    DBGF(debug, "Done.  Returning: %s", sbool(result));
+    return result;
+ }
+
+
+ // from util/libdrm_util.c
 
  static char * drm_bus_type_name(uint8_t bus) {
     char * result = NULL;
@@ -199,7 +187,7 @@
  }
 
 
- bool probe_one_device_using_libdrmx(const char * devname, int depth) {
+ bool probe_dri_device_using_drm_api(const char * devname) {
     bool debug = false;
     DBGF(debug, "Starting. devname = %s", devname);
 
@@ -233,9 +221,7 @@
                  ddev->businfo.pci->dev,
                  ddev->businfo.pci->func);
 
-          supports_drm = libdrm_extracted_check(busid2);
-
-
+          supports_drm = check_drm_supported_using_drm_api(busid2);
 
           drmFreeDevice(&ddev);
        }
@@ -246,9 +232,14 @@
  }
 
 
-
-
- bool all_displays_drm2() {
+/** Checks if all display adapters support DRM.
+ *
+ *  For each file in /dev/dri, use DRM API to ensure that
+ *  DRM is supported by using the drm api.
+ *
+ *  @return true if all adapters support DRM
+ */
+ bool all_displays_drm_using_drm_api() {
     bool debug = false;
     DBGF(debug,  "Starting");
 
@@ -261,7 +252,7 @@
           result = true;
        for (int ndx = 0; ndx < dev_names->len; ndx++) {
           char * dev_name = g_ptr_array_index(dev_names, ndx);
-          if (! probe_one_device_using_libdrmx( dev_name, 1))
+          if (! probe_dri_device_using_drm_api( dev_name))
              result = false;
        }
        g_ptr_array_free(dev_names, true);
@@ -272,7 +263,6 @@
 
 
 // from sysfs_i2c_util.c
-
 
 #ifdef UNUSED
 static void
@@ -318,16 +308,102 @@ get_sysfs_drm_card_numbers() {
  }
 #endif
 
-GPtrArray *  get_video_adapter_devices2();
 
-// #ifdef UNUSED
+
+// #ifdef INCORRECT
+
+#ifdef UNUSED
+bool not_ata(const char * simple_fn) {
+   return !str_starts_with(simple_fn, "ata");
+}
+#endif
+
+bool is_pci_dir(const char * simple_fn) {
+   bool debug = false;
+   bool result = str_starts_with(simple_fn, "pci0");
+   DBGF(debug, "simple_fn = %s, returning %s", simple_fn, sbool(result));
+   return result;
+}
+
+
+bool predicate_starts_with_0(const char * simple_fn) {
+   bool debug = false;
+   bool result = str_starts_with(simple_fn, "0");
+   DBGF(debug, "simple_fn = %s, returning %s", simple_fn, sbool(result));
+   return result;
+}
+
+
+void find_class_dirs(const char * dirname,
+                     const char * simple_fn,
+                     void *       accumulator,
+                     int          depth)
+{
+    bool debug = false;
+    DBGF(debug, "Starting. dirname=%s, simple_fn=%s, accumulator=%p, depth=%d",
+          dirname, simple_fn, accumulator, depth);
+    char * subdir = g_strdup_printf("%s/%s", dirname, simple_fn);
+    GPtrArray* accum = accumulator;
+    char * result = NULL;
+    bool found = RPT_ATTR_TEXT(-1, &result, dirname, simple_fn, "class");
+    if (found) {
+       DBGF(debug, "subdir=%s has attribute class = %s. Adding.", subdir, result);
+       g_ptr_array_add(accum, (char*) subdir);
+    }
+    else {
+       DBGF(debug, "subdir=%s does not have attribute class", subdir);
+    }
+    DBGF(debug, "Examining subdirs of %s", subdir);
+    dir_foreach(subdir, predicate_starts_with_0, find_class_dirs, accumulator, depth+1);
+}
+
+
+/** Returns the paths to all video devices in /sys/devices, i.e. those
+ *  subdirectories (direct or indirect) having class = 0x03
+ *
+ *  @return array of directory names, caller must free
+ */
+GPtrArray *  get_video_adapter_devices2() {
+   bool debug = false;
+   DBGF(debug, "Starting.");
+   GPtrArray * class03_dirs = g_ptr_array_new_with_free_func(g_free);
+   dir_foreach("/sys/devices", is_pci_dir, find_class_dirs, class03_dirs, 0);
+   if (debug) {
+      DBG("Before filtering: class03_dirs->len =%d", class03_dirs->len);
+      for (int ndx = 0; ndx < class03_dirs->len; ndx++) {
+         rpt_vstring(2, "%s", g_ptr_array_index(class03_dirs, ndx));
+      }
+   }
+   for (int ndx = class03_dirs->len -1; ndx>= 0; ndx--) {
+      char * dirname =  g_ptr_array_index(class03_dirs, ndx);
+      DBGF(debug, "dirname=%s", dirname);
+      char * class = NULL;
+      int d = (debug) ? 1 : -1;
+      RPT_ATTR_TEXT(d, &class, dirname, "class");
+      assert(class);
+      if ( !str_starts_with(class, "0x03") ) {
+         g_ptr_array_remove_index(class03_dirs, ndx);
+      }
+   }
+
+   if (debug) {
+      DBG("Returning %d directories:", class03_dirs->len);
+      for (int ndx = 0; ndx < class03_dirs->len; ndx++)
+         rpt_vstring(2, "%s", g_ptr_array_index(class03_dirs, ndx));
+   }
+
+   return class03_dirs;
+}
+// #endif
+
+
 /** Returns the paths to all video devices in /sys/devices, i.e. those
  *  subdirectories (direct or indirect) having class = 0x03
  *
  *  @return array of directory names, caller must free
  */
 GPtrArray * get_video_adapter_devices() {
-   bool debug = false;
+   bool debug = true;
    char * cmd = "find /sys/devices -name class | xargs grep x03 -l | sed 's|class||'";
    GPtrArray * result = execute_shell_cmd_collect(cmd);
    g_ptr_array_set_free_func(result, g_free);
@@ -338,100 +414,18 @@ GPtrArray * get_video_adapter_devices() {
          rpt_vstring(2, "%s", g_ptr_array_index(result, ndx));
    }
 
-   // get_video_adapter_devices2();
-
-
-   return result;
-}
-// #endif
-
-
-// #ifdef INCORRECT
-#ifdef UNUSED
-bool not_ata(const char * simple_fn) {
-   return !str_starts_with(simple_fn, "ata");
-}
-#endif
-
-bool is_pci_dir(const char * simple_fn) {
-   bool debug = true;
-   bool result = str_starts_with(simple_fn, "pci0");
-   DBGF(debug, "simple_fn = %s, returning %s", simple_fn, sbool(result));
-   return result;
-}
-
-bool predicate_starts_with_0(const char * simple_fn) {
-   bool debug = true;
-   bool result = str_starts_with(simple_fn, "0");
-   DBGF(debug, "simple_fn = %s, returning %s", simple_fn, sbool(result));
-   return result;
-}
-
-
-void find_class_dirs(const char * dirname, const char * simple_fn,  void * accumulator, int depth) {
-    bool debug = true;
-    DBGF(debug, "Starting. dirname=%s, simple_fn=%s, accumulator=%p, depth=%d",
-          dirname, simple_fn, accumulator, depth);
-    char * fullname = g_strdup_printf("%s/%s", dirname, simple_fn);
-    assert(depth < 18);
-    int d = (depth < 0) ? -1 : depth+1;
-    if (debug &&  depth < 0)
-       d = 1;
-    GPtrArray* accum = accumulator;
-    char * result = NULL;
-    bool found = RPT_ATTR_TEXT(d, &result, dirname, simple_fn, "class");
-    DBGF(debug, "found=%s", sbool(found));
-    if (found) {
-       // DBGF(debug, "result=%s", result);
-       char * subdir = g_strdup_printf("%s/%s", dirname, simple_fn);
-       DBGF(debug, "Adding: %s", subdir);
-       g_ptr_array_add(accum, (char*) subdir);
-    }
-    else {
-       DBGF(debug, "fullname=%s does not have attribute class", fullname);
-       // if (!str_starts_with(simple_fn, "ata") && !streq(simple_fn, "firmware_node")) {
-       //  if (str_starts_with(simple_fn, "0")) {
-       char path[PATH_MAX];
-       g_snprintf(path, sizeof(path), "%s/%s", dirname, simple_fn);
-       DBGF(debug, "Examining subdir %s", path);
-       dir_foreach(path, predicate_starts_with_0, find_class_dirs, accumulator, d);
-    }
-}
-
-
-/** Returns the paths to all video devices in /sys/devices, i.e. those
- *  subdirectories (direct or indirect) having class = 0x03
- *
- *  @return array of directory names, caller must free
- */
-GPtrArray *  get_video_adapter_devices2() {
-   bool debug = true;
-   GPtrArray * class03_dirs = g_ptr_array_new_with_free_func(g_free);
-   int d = (debug) ? 1 : -1;
-
-   dir_foreach("/sys/devices", is_pci_dir, find_class_dirs, class03_dirs, d);
-   DBGF(debug, "Before filtering: class03_dirs->len =%d", class03_dirs->len);
-   for (int ndx = 0; ndx < class03_dirs->len; ndx++)
-      rpt_vstring(2, "%s", g_ptr_array_index(class03_dirs, ndx));
-
-   for (int ndx = class03_dirs->len -1; ndx>= 0; ndx--) {
-      char * dirname =  g_ptr_array_index(class03_dirs, ndx);
-      DBGF(debug, "dirname=%s", dirname);
-      char * class = NULL;
-      RPT_ATTR_TEXT(d, &class, dirname, "class");
-      assert(class);
-      if ( !str_starts_with(class, "0x03") ) {
-         g_ptr_array_remove_index(class03_dirs, ndx);
-      }
+   if (debug) {
+      // For testing:
+      GPtrArray* devices2 = get_video_adapter_devices2();
+      DBG("get_video_adapter_devices2 returned %d directories:", devices2->len);
+      for (int ndx = 0; ndx < devices2->len; ndx++)
+         rpt_vstring(2, "%s", g_ptr_array_index(devices2, ndx));
+      g_ptr_array_free(devices2, true);
    }
 
-   DBGF(debug, "Returning %d directories:", class03_dirs->len);
-   for (int ndx = 0; ndx < class03_dirs->len; ndx++)
-      rpt_vstring(2, "%s", g_ptr_array_index(class03_dirs, ndx));
-
-   return class03_dirs;
+   return result;
 }
-// #endif
+
 
 typedef struct {
    bool has_card_connector_dir;
@@ -510,7 +504,8 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
 }
 
 
-/** Checks that all video adapters on the system have drivers that implement drm.
+/** Checks that all video adapters on the system have drivers that implement drm
+ *  by checking that card connector directories drm/cardN/cardN-xxx exist.
  *
  *  @return true if all video adapters have drivers implementing drm, false if not
  */
@@ -520,6 +515,7 @@ bool check_all_video_adapters_implement_drm() {
 
    GPtrArray * devices = NULL;
    devices = get_video_adapter_devices();
+
    // g_ptr_array_free(devices, true);
    //   devices = get_video_adapter_devices2();   // FAILS
 

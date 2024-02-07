@@ -1,9 +1,7 @@
-// drm_common.h
+/** @file / drm_common.h */
 
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
- 
 
 #ifndef DRM_COMMON_H_
 #define DRM_COMMON_H_
@@ -18,8 +16,8 @@
 
  bool adapter_supports_drm(const char * adapter_path);
 
- bool libdrm_extracted_check(char * busid2);
- bool all_displays_drm2();
+ bool check_drm_supported_using_drm_api(char * busid2);
+ bool all_displays_drm_using_drm_api();
 
 
 
