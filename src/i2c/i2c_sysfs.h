@@ -136,13 +136,11 @@ typedef struct {
    char * driver;
    char * driver_version;
    GPtrArray * conflicting_driver_names;
-   bool   supports_drm;
 } Sysfs_I2C_Info;
 
 GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth);
 void        dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
 char *      get_conflicting_drivers_for_bus(int busno);
-
 
 void consolidated_i2c_sysfs_report(int depth);
 

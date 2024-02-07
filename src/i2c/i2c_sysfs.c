@@ -51,6 +51,8 @@
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 
+bool adapter_supports_drm(const char * adapter_path);
+
 //
 // *** Common Functions
 //
@@ -86,6 +88,7 @@ char * find_adapter(char * path, int depth) {
    return devpath;
 }
 
+// Driver related functions
 
 /** Given the sysfs path to an adapter of some sort, returns
  *  the name of its driver.
@@ -196,6 +199,9 @@ bool fn_any(const char * filename, const char * ignore) {
 
 //
 // *** I2C_Sys_Info ***
+//
+// Detailed exploratory scan of sysfs
+// Called from query_sysenv_sysfs.c
 //
 
 void free_i2c_sys_info(I2C_Sys_Info * info) {
@@ -615,6 +621,40 @@ void dbgrpt_sys_bus_i2c(int depth) {
    rpt_label(depth, "Examining /sys/bus/i2c/devices:");
    dir_ordered_foreach("/sys/bus/i2c/devices", NULL, i2c_compare, report_one_bus_i2c, NULL, depth);
 }
+
+// *** End of I2C_Sys_Info
+
+
+//
+// Sysfs_I2C_Info
+//
+
+void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
+   int d1 = depth+1;
+   rpt_structure_loc("Sysfs_I2C_Info", info, depth);
+   rpt_vstring(d1, "busno:                     %d", info->busno);
+   rpt_vstring(d1, "name:                      %s", info->name);
+   rpt_vstring(d1, "adapter_path:              %s", info->adapter_path);
+   rpt_vstring(d1, "adapter_class:             %s", info->adapter_class);
+   rpt_vstring(d1, "driver:                    %s", info->driver);
+   rpt_vstring(d1, "driver_version:            %s", info->driver_version);
+   rpt_vstring(d1, "conflicting_driver_names:  %s",
+         join_string_g_ptr_array_t(info->conflicting_driver_names, ", ") );
+   rpt_vstring(d1, "adapter supports DRM:      %s",
+         sbool(adapter_supports_drm(info->adapter_path)));
+}
+
+
+void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth) {
+   rpt_vstring(depth, "All Sysfs_I2C_Info records");
+   if (infos && infos->len > 0) {
+      for (int ndx = 0; ndx < infos->len; ndx++)
+         dbgrpt_sysfs_i2c_info(g_ptr_array_index(infos,ndx), depth+1);
+   }
+   else
+      rpt_vstring(depth+1, "None");
+}
+
 
 
 //
@@ -1298,6 +1338,10 @@ Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name) 
    return result;
 }
 
+//
+// End of Sys_Drm_Connector section
+//
+
 
 //
 //  Scan for conflicting modules/drivers: Struct Sys_Conflicting_Driver
@@ -1485,6 +1529,10 @@ void free_conflicting_drivers(GPtrArray* conflicts) {
       g_ptr_array_free(conflicts, true);
 }
 
+//
+// End of conflicting drivers section
+//
+
 
 //
 // *** Collect basic /dev/i2c-N information into Sysfs_I2C_Info records ***
@@ -1503,32 +1551,6 @@ void free_sysfs_i2c_info(Sysfs_I2C_Info * info) {
       g_ptr_array_free(info->conflicting_driver_names, true);
       free(info);
    }
-}
-
-
-#ifdef UNUSED
-// GDestroyNotify
-void destroy_sysfs_i2c_info(void * info) {
-   free_sysfs_i2c_info( (Sysfs_I2C_Info*) info);
-}
-#endif
-
-
-void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
-   int d1 = depth+1;
-   rpt_structure_loc("Sysfs_I2C_Info", info, depth);
-   rpt_vstring(d1, "busno:                     %d", info->busno);
-   rpt_vstring(d1, "name:                      %s", info->name);
-   rpt_vstring(d1, "adapter_path:              %s", info->adapter_path);
-   rpt_vstring(d1, "adapter_class:             %s", info->adapter_class);
-   rpt_vstring(d1, "driver:                    %s", info->driver);
-   rpt_vstring(d1, "driver_version:            %s", info->driver_version);
-#ifdef USE_LIBDRM
-   if (str_starts_with(info->adapter_class, "03"))
-   rpt_vstring(d1, "supports drm:              %s", SBOOL(info->supports_drm));
-#endif
-   rpt_vstring(d1, "conflicting_driver_names:  %s",
-         join_string_g_ptr_array_t(info->conflicting_driver_names, ", ") );
 }
 
 
@@ -1598,31 +1620,6 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
       RPT_ATTR_TEXT(             depth, &result->adapter_class,  adapter_path, "class");
       RPT_ATTR_REALPATH_BASENAME(depth, &result->driver,         adapter_path, "driver");
       RPT_ATTR_TEXT(             depth, &result->driver_version, adapter_path, "driver/module/version");
-
-#ifdef USE_LIBDRM
-      char * adapter_basename = g_path_get_basename(adapter_path);
-      char buf[20];
-      g_snprintf(buf, 20, "pci:%s", adapter_basename);
-      free(adapter_basename);
-      result->supports_drm = false;
-      int rc = drmCheckModesettingSupported(buf);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-             "drmCheckModesettingSupported() returned %d for %s", rc, buf);
-      switch (rc) {
-      case (0):
-             result->supports_drm = true;
-             break;
-      case (-EINVAL):
-             DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "Invalid bus id (-EINVAL)");
-             break;
-      case (-ENOSYS):
-             DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "Modesetting not supported (-ENOSYS)");
-             break;
-      default:
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                "drmCheckModesettingSupported() returned undocumented status code %d", rc);
-      }
-#endif
    }
 
    result->conflicting_driver_names = g_ptr_array_new_with_free_func(g_free);
@@ -1717,40 +1714,96 @@ GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
    return all_i2c_info;
 }
 
-
-bool all_sysfs_i2c_info_drm(bool rescan) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rescan=%s", SBOOL(rescan));
-   GPtrArray* all_info = get_all_sysfs_i2c_info(false, -1);
+/** Checks if a video adapter supports DRM, using DRM functions.
+ *
+ *  @param   adapter_path  fully qualified path of video adapter node in sysfs
+ *  @retval  true   driver supports DRM
+ *  @@retval false  driver does not support DRM, or ddcutil not built with DRM support
+ */
+bool adapter_supports_drm(const char * adapter_path) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "adapter_path=%s", adapter_path);
    bool result = false;
-   if (all_info->len > 0) {
+#ifdef USE_LIBDRM
+      char * adapter_basename = g_path_get_basename(adapter_path);
+      char buf[20];
+      g_snprintf(buf, 20, "pci:%s", adapter_basename);
+      free(adapter_basename);
+      result = false;
+      int rc = drmCheckModesettingSupported(buf);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+             "drmCheckModesettingSupported() returned %d for %s", rc, buf);
+      switch (rc) {
+      case (0):
+             result = true;
+             break;
+      case (-EINVAL):
+             DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "Invalid bus id (-EINVAL)");
+             break;
+      case (-ENOSYS):
+             DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "Modesetting not supported (-ENOSYS)");
+             break;
+      default:
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                "drmCheckModesettingSupported() returned undocumented status code %d", rc);
+      }
+#endif
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
 
+/** Checks if all video adapters in an array of sysfs adapter nodes
+ *  support DRM
+ *
+ *  @oaram  adapter_paths  array of paths to adapter nodes in sysfs
+ *  @return true if all adapters support DRM, false if not or the array is empty
+ */
+
+bool all_video_adapters_support_drm(GPtrArray * adapter_paths) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "adapter_paths->len=%d", adapter_paths->len);
+   bool result = false;
+   if (adapter_paths && adapter_paths->len > 0) {
       result = true;
-      for (int ndx = 0; ndx < all_info->len; ndx++) {
-         Sysfs_I2C_Info * info = g_ptr_array_index(all_info, ndx);
-         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, adapter_class=%s, supports_drm=%s",
-         //    info->busno, info->adapter_class,  sbool(info->supports_drm));
-         if (str_starts_with(info->adapter_class, "0x03")) {
-            //  DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-            //       "Bus %d supports drm: %s", info->busno, SBOOL(info->supports_drm));
-            if (!info->supports_drm)
-               result = false;
-         }
+      for (int ndx = 0; ndx < adapter_paths->len; ndx++) {
+         result &= adapter_supports_drm(g_ptr_array_index(adapter_paths, ndx));
       }
    }
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
 
-
-void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth) {
-   rpt_vstring(depth, "All Sysfs_I2C_Info records");
-   if (infos && infos->len > 0) {
-      for (int ndx = 0; ndx < infos->len; ndx++)
-         dbgrpt_sysfs_i2c_info(g_ptr_array_index(infos,ndx), depth+1);
+/** Uses the Sys_I2C_Info array to get a list of all video adapters
+ *  and checks if each supports DRM.
+ *
+ */
+bool all_sysfs_i2c_info_drm(bool rescan) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rescan=%s", SBOOL(rescan));
+   GPtrArray* all_info = get_all_sysfs_i2c_info(rescan, -1);
+   bool result = false;
+   GPtrArray* adapter_paths = g_ptr_array_sized_new(4);
+   g_ptr_array_set_free_func(adapter_paths, g_free);
+   if (all_info->len > 0) {
+      result = true;
+      for (int ndx = 0; ndx < all_info->len; ndx++) {
+         Sysfs_I2C_Info * info = g_ptr_array_index(all_info, ndx);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, adapter_class=%s, adapter_path=%s",
+               info->busno, info->adapter_class, info->adapter_path);
+         if (str_starts_with(info->adapter_class, "0x03")) {
+            char * cur_path = info->adapter_path;
+            guint found_ndx;
+            if (!g_ptr_array_find_with_equal_func(
+                  adapter_paths, cur_path, g_str_equal, &found_ndx)) {
+               g_ptr_array_add(adapter_paths, cur_path);
+            }
+         }
+      }
+      result = all_video_adapters_support_drm(adapter_paths);
    }
-   else
-      rpt_vstring(depth+1, "None");
+   g_ptr_array_free(adapter_paths, false);
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   return result;
 }
 
 
@@ -1955,6 +2008,9 @@ GPtrArray * get_sys_video_devices() {
 }
 
 
+#ifdef WRONG
+// directory drm always exists, need to check if it has connector nodes
+
 /** Checks that all video devices have DRM drivers.
  *
  *  @return true/false
@@ -1979,6 +2035,7 @@ bool i2c_all_video_devices_drm() {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, all_devices_drm, "");
    return all_devices_drm;
 }
+#endif
 
 
 /** If possible, determines the drm connector for an I2C bus number.
@@ -1990,6 +2047,7 @@ bool i2c_all_video_devices_drm() {
  *  is set to DRM_CONNECTOR_NOT_FOUND.
  *
  *  @param businfo   I2C_Bus_Info record
+ *  @return pointer to Sys_Drm_Connector instance
  */
 Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    bool debug = false;
@@ -2016,6 +2074,9 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    return drm_connector;
 }
 
+
+#ifdef WRONG
+// need to look for connector subdirs on drm
 
 /** Checks if a display has a DRM driver by looking for
  *  subdirectory drm in the adapter directory.
@@ -2046,6 +2107,7 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    return result;
 }
 
+#endif
 
 
 #ifdef OLD
@@ -2433,9 +2495,9 @@ void init_i2c_sysfs() {
    // other
    RTTI_ADD_FUNC(find_adapter);
    RTTI_ADD_FUNC(get_sys_video_devices);
-   RTTI_ADD_FUNC(i2c_all_video_devices_drm);
    RTTI_ADD_FUNC(get_drm_connector_name_by_busno);
-   RTTI_ADD_FUNC(is_drm_display_by_busno);
+   RTTI_ADD_FUNC(adapter_supports_drm);
+   RTTI_ADD_FUNC(all_video_adapters_support_drm);
    RTTI_ADD_FUNC(all_sysfs_i2c_info_drm);
 
 // RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_busno);
