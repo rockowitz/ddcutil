@@ -15,12 +15,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>  // for close() used by probe_dri_device_using_drm_api
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 /** \endcond */
 
 #include "coredefs_base.h"
 #include "data_structures.h"
+#include "debug_util.h"
 #include "file_util.h"
 #include "subprocess_util.h"
 #include "report_util.h"
@@ -28,50 +30,9 @@
 #include "sysfs_filter_functions.h"
 #include "sysfs_util.h"
 
-// for all_displays_drm2():
-#include <unistd.h>  // for close()
-#include "debug_util.h"
-#include "file_util.h"
-
-
 #include "drm_common.h"
 
-
 // from i2c_sysfs.c
-#ifdef WRONG
-// need to look for connector subdirs on drm
-
-/** Checks if a display has a DRM driver by looking for
- *  subdirectory drm in the adapter directory.
- *
- *  Note that this test does not detect which connector
- *  is associated with the display.
- *
- *  @param busno   I2C bus number
- *  @return true/false
- */
- bool is_drm_display_by_busno(int busno) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", busno);
-   bool result = false;
-   char i2cdir[40];
-   g_snprintf(i2cdir, 40, "/sys/bus/i2c/devices/i2c-%d",busno);
-   char * real_i2cdir = NULL;
-   GET_ATTR_REALPATH(&real_i2cdir, i2cdir);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "real_i2cdir = %s", real_i2cdir);
-   assert(real_i2cdir);
-   int depth = IS_DBGTRC(debug, TRACE_GROUP) ? 1 : -1;
-   char * adapter_dir = find_adapter(real_i2cdir, depth);
-   assert(adapter_dir);
-   result = RPT_ATTR_NOTE_INDIRECT_SUBDIR(depth, NULL, adapter_dir, "drm");
-   free(real_i2cdir);
-   free(adapter_dir);
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
-   return result;
-}
-
-#endif
-
 
  /** Checks if DRM is supported for a busid.
   *
@@ -460,6 +421,25 @@ void do_one_card(const char * dirname, const char * fn, void* accumulator, int d
 }
 
 
+// n. could enhance to collect the card connector subdir names
+bool card_connector_subdirs_exist(const char * adapter_dir) {
+   bool debug = false;
+   DBGF(debug, "Starting. adapter_dir = %s", adapter_dir);
+   int lastpos= strlen(adapter_dir) - 1;
+   char * delim = (adapter_dir[lastpos] == '/') ? "" : "/";
+   char drm_dir[PATH_MAX];
+   g_snprintf(drm_dir, PATH_MAX, "%s%sdrm", adapter_dir,delim);
+   DBGF(debug, "drm_dir=%s", drm_dir);
+   int d = (debug) ? 1 : -1;
+   Check_Card_Struct *  accumulator = calloc(1, sizeof(Check_Card_Struct));
+   dir_foreach(drm_dir, predicate_cardN, do_one_card, accumulator, d);
+   bool has_card_subdir = accumulator->has_card_connector_dir;
+   free(accumulator);
+   DBGF(debug, "Done.    Returning %s", sbool(has_card_subdir));
+   return has_card_subdir;
+}
+
+
 /** Check that all devices in a list of video adapter devices have drivers that implement
  *  drm by looking for card_connector_dirs in each adapter's drm directory.
  *
@@ -470,29 +450,11 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
    bool debug = false;
    assert(adapter_devices);
    // DBGF(debug, "adapter_devices->len=%d at %p", adapter_devices->len, adapter_devices);
-   int d = (debug) ? 1 : -1;
    bool result = true;
    for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
       // char * subdir_name = NULL;
       char * adapter_dir = g_ptr_array_index(adapter_devices, ndx);
-      // DBGF(debug, "Examining: %s", adapter_dir);
-      int lastpos= strlen(adapter_dir) - 1;
-      if (adapter_dir[lastpos] == '/')
-         adapter_dir[lastpos] = '\0';
-      char drm_dir[PATH_MAX];
-      g_snprintf(drm_dir, PATH_MAX, "%s/drm", adapter_dir);
-      // DBGF(debug, "drm_dir=%s", adapter_dir);
-      Check_Card_Struct *  accumulator = calloc(1, sizeof(Check_Card_Struct));
-      dir_foreach(drm_dir, predicate_cardN, do_one_card, accumulator, d);
-      bool has_card_subdir = accumulator->has_card_connector_dir;
-      free(accumulator);
-
-#ifdef WRONG
-      bool has_card_subdir = RPT_ATTR_SINGLE_SUBDIR(
-            d, &subdir_name, is_card_connector_dir, NULL, adapter_dir, "drm");
-#endif
-
-
+      bool has_card_subdir = card_connector_subdirs_exist(adapter_dir);
       // DBGF(debug, "Examined.  has_card_subdir = %s", sbool(has_card_subdir));
       if (!has_card_subdir) {
          result = false;
@@ -531,6 +493,33 @@ bool check_all_video_adapters_implement_drm() {
 }
 
 
+#ifdef TO_FIX
+/** Checks if a display has a DRM driver by looking for
+ *  card connector subdirs of drm in the adapter directory.
+ *
+ *  @param busno   I2C bus number
+ *  @return true/false
+ */
+ bool is_drm_display_by_busno(int busno) {
+   bool debug = false;
+   DBGF(debug, "Starting. busno = %d", busno);
+   bool result = false;
+   char i2cdir[40];
+   g_snprintf(i2cdir, 40, "/sys/bus/i2c/devices/i2c-%d",busno);
+   char * real_i2cdir = NULL;
+   GET_ATTR_REALPATH(&real_i2cdir, i2cdir);
+   DBGF(debug, "real_i2cdir = %s", real_i2cdir);
+   assert(real_i2cdir);
+   int d = (debug)  ? 1 : -1;
+   char * adapter_dir = find_adapter(real_i2cdir, d);  // in i2c/i2c_sysfs.c, need to fix
+   assert(adapter_dir);
+   result = card_connector_subdirs_exist(adapter_dir);
+   free(real_i2cdir);
+   free(adapter_dir);
+   DBGF(debug, "Done.    Returning: %s", sbool(result));
+   return result;
+}
+#endif
 
 
 
