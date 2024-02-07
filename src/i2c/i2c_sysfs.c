@@ -1730,7 +1730,7 @@ GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
  *  @return true if all display adapters support DRM, false if not
  */
 bool all_sysfs_i2c_info_drm(bool rescan) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rescan=%s", SBOOL(rescan));
    bool result = false;
 #ifdef USE_LIBDRM

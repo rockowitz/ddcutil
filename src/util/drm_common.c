@@ -80,7 +80,7 @@
   *  @@retval false  driver does not support DRM, or ddcutil not built with DRM support
   */
  bool adapter_supports_drm(const char * adapter_path) {
-    bool debug = true;
+    bool debug = false;
     DBGF(debug, "Starting. adapter_path=%s", adapter_path);
     bool result = false;
  #ifdef USE_LIBDRM
@@ -136,7 +136,7 @@
 
 
  bool libdrm_extracted_check(char * busid2) {
-    bool debug = true;
+    bool debug = false;
      bool supports_drm = false;
        // Notes from examining the code for drmCheckModesettingAvailable()
        //
