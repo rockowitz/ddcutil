@@ -123,7 +123,7 @@ ddca_ddcutil_version(void) {
 #endif
       vspec_init = true;
    }
-   DBGMSG("Returning: %d.%d.%d", vspec.major, vspec.minor, vspec.micro);
+   // DBGMSG("Returning: %d.%d.%d", vspec.major, vspec.minor, vspec.micro);
    return vspec;
 }
 
