@@ -307,30 +307,8 @@ ddca_get_display_ref(
 }
 
 
-#ifdef REMOVED
 
-/** @deprecated use #ddca_get_display_ref()
- *  Gets a display reference for a display identifier.
- *  Normally, this is a permanently allocated #DDCA_Display_Ref
- *  created by monitor detection and does not need to be freed.
- *  Use #ddca_free_display_ref() to safely free.
- *
- *  @param[in]  did      display identifier
- *  @param[out] dref_loc where to return display reference
- *  @retval     0                     success
- *  @retval     DDCRC_ARG             did is not a valid display identifier handle
- *  @retval     DDCRC_INVALID_DISPLAY display not found
- *
- *  @ingroup api_display_spec
- */
-// __attribute__ ((deprecated ("use ddca_get_display_ref()")))
-DDCA_Status
-ddca_create_display_ref(
-      DDCA_Display_Identifier did,
-      DDCA_Display_Ref*       dref_loc);
-#endif
 
-#ifdef REMOVED
 // deprecated
 DDCA_Status
 ddca_create_display_ref(
@@ -339,7 +317,6 @@ ddca_create_display_ref(
 {
    return ddca_get_display_ref(did, dref_loc);
 }
-#endif
 
 #ifdef REMOVED
 /** @deprecated All display references are persistent
