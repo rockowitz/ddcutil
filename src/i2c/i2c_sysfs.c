@@ -236,9 +236,8 @@ read_i2cN_device_node(
    assert(info);
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "device_path=%s", device_path);
-   int d0 = depth;
-   if (debug && d0 < 0)
-      d0 = 2;
+   int d0 = (depth < 0 && IS_DBGTRC(debug, TRACE_GROUP)) ? 2 : depth;
+   assert(device_path);
 
    char * i2c_N = g_path_get_basename(device_path);
    RPT_ATTR_TEXT( d0, &info->device_name,    device_path, "name");
@@ -304,9 +303,8 @@ read_drm_dp_card_connector_node(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "connector_path=%s", connector_path);
-   int d0 = depth;
-   if (debug && d0 < 0)
-      d0 = 2;
+   int d0 = (depth < 0 && IS_DBGTRC(debug, TRACE_GROUP)) ? 2 : depth;
+   assert(connector_path);
 
    char * ddc_path_fn;
    RPT_ATTR_REALPATH(d0, &ddc_path_fn, connector_path, "ddc");
@@ -768,6 +766,8 @@ void one_drm_connector(
    int d0 = depth;
    if (depth < 0 && (IS_DBGTRC(debug, TRACE_GROUP)))
       d0 = 2;
+   assert(dirname);
+   assert(fn);
    GPtrArray * drm_displays = accumulator;
 
    Sys_Drm_Connector * cur = calloc(1, sizeof(Sys_Drm_Connector));
@@ -1055,6 +1055,8 @@ void one_drm_connector_fixedinfo(
 GPtrArray * scan_sys_drm_connectors(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "depth=%d", depth);
+   if (depth < 0 && (IS_DBGTRC(debug, TRACE_GROUP)))
+      depth = 1;
 
    GPtrArray * sys_drm_connectors = g_ptr_array_new_with_free_func(free_sys_drm_connector);
    dir_filtered_ordered_foreach(
@@ -1062,7 +1064,7 @@ GPtrArray * scan_sys_drm_connectors(int depth) {
          is_drm_connector,      // filter function
          NULL,                  // ordering function
          one_drm_connector,
-         sys_drm_connectors,         // accumulator, GPtrArray *
+         sys_drm_connectors,    // accumulator, GPtrArray *
          depth);
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "size of sys_drm_connectors: %d", sys_drm_connectors->len);
    return sys_drm_connectors;
