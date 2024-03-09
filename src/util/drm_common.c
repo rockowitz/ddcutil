@@ -84,6 +84,7 @@
  bool adapter_supports_drm_using_drm_api(const char * adapter_path) {
     bool debug = false;
     DBGF(debug, "Starting. adapter_path=%s", adapter_path);
+    assert(adapter_path);
     bool result = false;
  #ifdef USE_LIBDRM
        char * adapter_basename = g_path_get_basename(adapter_path);
