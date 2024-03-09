@@ -1639,6 +1639,7 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  indicating why a display ref is invalid.
  *
  *  @param   dref   display reference to validate
+ *  #param   basic_only
  *  @param   require_not_asleep
  *  @retval  DDCRC_OK
  *  @retval  DDCRC_ARG             dref is null or does not point to a Display_Ref
