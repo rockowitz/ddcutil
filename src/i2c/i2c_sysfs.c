@@ -1516,8 +1516,10 @@ void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
    rpt_vstring(d1, "conflicting_driver_names:  %s",
          join_string_g_ptr_array_t(info->conflicting_driver_names, ", ") );
 #ifdef USE_LIBDRM
-   rpt_vstring(d1, "adapter supports DRM:      %s",
-         sbool(adapter_supports_drm_using_drm_api(info->adapter_path)));
+   if (info->adapter_path) {
+      rpt_vstring(d1, "adapter supports DRM:      %s",
+            sbool(adapter_supports_drm_using_drm_api(info->adapter_path)));
+   }
 #endif
 }
 
