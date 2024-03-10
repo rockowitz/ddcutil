@@ -617,14 +617,11 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Probing");
       bus_info->flags |= I2C_BUS_PROBED;
       bus_info->driver = get_driver_for_busno(bus_info->busno);
-      char * connector = get_drm_connector_name_by_busno(bus_info->busno);
+      bus_info->drm_connector_name = get_drm_connector_name_by_busno(bus_info->busno);
       bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       // connector = NULL;   // *** TEST ***
-      if (connector) {
-         bus_info->drm_connector_name = connector;
+      if (bus_info->drm_connector_name) {
          bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
-         if ( is_laptop_drm_connector_name(connector))
-            bus_info->flags |= I2C_BUS_LVDS_OR_EDP;
 
          if (!force_read_edid) {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
@@ -690,17 +687,31 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
              else {
                 DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, already have EDID", bus_info->busno);
                 bus_info->flags |= I2C_BUS_ADDR_0X50;
-
-                if (!bus_info->drm_connector_name &&    // if not already checked for laptop
-                    is_laptop_parsed_edid(bus_info->edid) )
-                {
-                      bus_info->flags |= I2C_BUS_APPARENT_LAPTOP;
-                }
              }
           }
 
+          // Check if laptop
+          if (bus_info->drm_connector_name) {
+             if ( is_laptop_drm_connector_name(bus_info->drm_connector_name) ) {
+                // double check, eDP has been seen to be applied to external display, see:
+                //   ddcutil issue #384
+                //   freedesktop.org issue #10389, DRM connector for external monitor has name card1-eDP-1
+                bool b = is_laptop_parsed_edid(bus_info->edid);
+                if (b)
+                   bus_info->flags |= I2C_BUS_LVDS_OR_EDP;
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                      "connector name = %s, is_laptop_parsed_edid() returned %s",
+                      bus_info->drm_connector_name, SBOOL(b));
+             }
+          }
+          else {
+             if ( is_laptop_parsed_edid(bus_info->edid) )
+                 bus_info->flags |= I2C_BUS_APPARENT_LAPTOP;
+          }
+
+
           if (bus_info->flags & (I2C_BUS_LVDS_OR_EDP)) {
-             DBGTRC(debug, TRACE_GROUP, "Laptop display detected, not checking x37");
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Laptop display detected, not checking x37");
           }
           else {  // start, x37 check
              // The check here for slave address x37 had previously been removed.
