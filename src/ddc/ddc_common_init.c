@@ -346,6 +346,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 
    if (parsed_cmd->flags & CMD_FLAG_F5)
       EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
+   if (parsed_cmd->flags & CMD_FLAG_F6)
+      use_redetect_drm_connectors = true;
    if (parsed_cmd->flags & CMD_FLAG_F7)
       detect_phantom_displays = false;
    if (parsed_cmd->flags & CMD_FLAG_F8)
