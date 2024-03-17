@@ -325,7 +325,7 @@ typedef struct _drmModeModeInfo {
 } drmModeModeInfo, *drmModeModeInfoPtr;
 #endif
 
-void summarize_drmmModeModeInfo(drmModeModeInfo * p, int depth) {
+void summarize_drmModeModeInfo(drmModeModeInfo * p, int depth) {
     // int d1 = depth+1;
 
     rpt_vstring(depth, "mode: %s", p->name);
@@ -455,7 +455,7 @@ void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
    rpt_vstring(d1, "%-20s %p%s",  "encoders", p->encoders, buf);
 #endif
 
-   rpt_vstring(d1, "%-20s %d",  "count_encoderrs", p->count_encoders);
+   rpt_vstring(d1, "%-20s %d",  "count_encoders", p->count_encoders);
    join_ids(buf, bufsz, p->encoders, p->count_encoders);
    rpt_vstring(d1, "%-20s %p%s",  "encoders", p->encoders, buf);
 
@@ -480,7 +480,7 @@ void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
    rpt_vstring(d1, "%-20s %d",  "count_modes", p->count_modes);
    for (int ndx = 0; ndx < p->count_modes; ndx++) {
       // p->nodes is a pointer to an array of struct _drmModeModeInfo, not an array of pointers
-      summarize_drmmModeModeInfo(  p->modes+ndx, d2);
+      summarize_drmModeModeInfo(  p->modes+ndx, d2);
    }
 
    rpt_vstring(d1, "%-20s %d - %s",  "connection:", p->connection, connector_status_name(p->connection));
