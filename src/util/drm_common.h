@@ -9,12 +9,14 @@
 /** \cond */
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+#include <stdint.h>
 /** \endcond */
 
 #ifdef UNUSED
 Bit_Set_32   get_sysfs_drm_card_numbers();
 #endif
 
+const char * drm_bus_type_name(uint8_t bus);
 bool         check_drm_supported_using_drm_api(char * busid2);
 bool         adapter_supports_drm_using_drm_api(const char * adapter_path);
 bool         all_displays_drm_using_drm_api();

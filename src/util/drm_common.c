@@ -119,9 +119,7 @@
  }
 
 
- // from util/libdrm_util.c
-
- static char * drm_bus_type_name(uint8_t bus) {
+const char * drm_bus_type_name(uint8_t bus) {
     char * result = NULL;
     if (bus == DRM_BUS_PCI)
        result = "pci";
