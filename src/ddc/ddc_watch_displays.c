@@ -27,6 +27,8 @@
 
 #include "util/coredefs.h"
 #include "util/data_structures.h"
+#include "util/drm_common.h"
+#include "util/drm_connector_state.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/glib_util.h"
@@ -1042,6 +1044,8 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
             prop_hotplug,     // "1"
             attr_sysname);
 
+      if (use_redetect_drm_connectors)
+         redetect_drm_connector_states();
       current_connector_names = ddc_check_displays(current_connector_names, deferred_events);
 
       udev_device_unref(dev);
