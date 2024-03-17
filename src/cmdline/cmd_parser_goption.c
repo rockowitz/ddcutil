@@ -1541,20 +1541,7 @@ parse_command(
 #endif
    SET_CMDFLAG(CMD_FLAG_DSA2,              enable_dsa2_flag);
    SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
-   SET_CMDFLAG(CMD_FLAG_F1,                f1_flag);
-   SET_CMDFLAG(CMD_FLAG_F2,                f2_flag);
-   SET_CMDFLAG(CMD_FLAG_F3,                f3_flag);
-   SET_CMDFLAG(CMD_FLAG_F4,                f4_flag);
-   SET_CMDFLAG(CMD_FLAG_F5,                f5_flag);
-   SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
-   SET_CMDFLAG(CMD_FLAG_F7,                f7_flag);
-   SET_CMDFLAG(CMD_FLAG_F8,                f8_flag);
-   SET_CMDFLAG(CMD_FLAG_F9,                f9_flag);
-   SET_CMDFLAG(CMD_FLAG_F10,               f10_flag);
-   SET_CMDFLAG(CMD_FLAG_F11,               f11_flag);
-   SET_CMDFLAG(CMD_FLAG_F12,               f12_flag);
-   SET_CMDFLAG(CMD_FLAG_F13,               f13_flag);
-   SET_CMDFLAG(CMD_FLAG_F14,               f14_flag);
+
    SET_CMDFLAG(CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS,    watch_displays_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
@@ -1576,6 +1563,22 @@ parse_command(
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_DISPLAYS, enable_cd_flag);
 // #endif
 
+   SET_CMDFLAG(CMD_FLAG2_F1,                f1_flag);
+   SET_CMDFLAG(CMD_FLAG2_F2,                f2_flag);
+   SET_CMDFLAG(CMD_FLAG2_F3,                f3_flag);
+   SET_CMDFLAG(CMD_FLAG2_F4,                f4_flag);
+   SET_CMDFLAG(CMD_FLAG2_F5,                f5_flag);
+   SET_CMDFLAG(CMD_FLAG2_F6,                f6_flag);
+   SET_CMDFLAG(CMD_FLAG2_F7,                f7_flag);
+   SET_CMDFLAG(CMD_FLAG2_F8,                f8_flag);
+   SET_CMDFLAG(CMD_FLAG2_F9,                f9_flag);
+   SET_CMDFLAG(CMD_FLAG2_F10,               f10_flag);
+   SET_CMDFLAG(CMD_FLAG2_F11,               f11_flag);
+   SET_CMDFLAG(CMD_FLAG2_F12,               f12_flag);
+   SET_CMDFLAG(CMD_FLAG2_F13,               f13_flag);
+   SET_CMDFLAG(CMD_FLAG2_F14,               f14_flag);
+
+
    if (discarded_caches_work) {
       parsed_cmd->discarded_cache_types = discarded_caches_work;
       SET_CMDFLAG(CMD_FLAG_DISCARD_CACHES, true);
@@ -1593,6 +1596,7 @@ parse_command(
    }
 
 #undef SET_CMDFLAG
+#undef SET_CMDFLAG2
 #undef SET_CLR_CMDFLAG
 
    // Create display identifier
@@ -1709,7 +1713,7 @@ parse_command(
      if (!ok)
         EMIT_PARSER_ERROR(errmsgs, "Invalid floating point number: %s", fl1_work);
      else
-         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_FL1_SET;
+         parsed_cmd->flags = parsed_cmd->flags2 | CMD_FLAG2_FL1_SET;
       parsing_ok &= ok;
       FREE(fl1_work);
    }
@@ -1719,7 +1723,7 @@ parse_command(
      if (!ok)
         EMIT_PARSER_ERROR(errmsgs, "Invalid floating point number: %s", fl2_work);
      else
-         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_FL2_SET;
+         parsed_cmd->flags = parsed_cmd->flags2 | CMD_FLAG2_FL2_SET;
       parsing_ok &= ok;
       FREE(fl2_work);
    }

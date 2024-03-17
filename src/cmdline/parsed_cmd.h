@@ -52,7 +52,8 @@ typedef enum {
 
 typedef enum {
    CMD_FLAG_DDCDATA                  = 0x0001,
-   CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE = 0x0002,
+   CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE
+                                     = 0x0002,
    CMD_FLAG_FORCE_SLAVE_ADDR         = 0x0004,
    CMD_FLAG_TIMESTAMP_TRACE          = 0x0008,  // prepend trace and debug msgs with elapsed time
    CMD_FLAG_SHOW_UNSUPPORTED         = 0x0010,
@@ -75,21 +76,12 @@ typedef enum {
    CMD_FLAG_RO_ONLY                = 0x020000,
    CMD_FLAG_WO_ONLY                = 0x040000,
    CMD_FLAG_ASYNC_I2C_CHECK        = 0x080000,
-
    CMD_FLAG_ENABLE_UDF             = 0x100000,
    CMD_FLAG_ENABLE_USB             = 0x200000,
-   CMD_FLAG_F13                    = 0x400000,
-   CMD_FLAG_F14                    = 0x800000,
 
-   CMD_FLAG_F1                   = 0x01000000,
-   CMD_FLAG_F2                   = 0x02000000,
-   CMD_FLAG_F3                   = 0x04000000,
-   CMD_FLAG_F4                   = 0x08000000,
-   CMD_FLAG_F5                   = 0x10000000,
-   CMD_FLAG_F6                   = 0x20000000,
    CMD_FLAG_FLOCK                = 0x40000000,
-
    CMD_FLAG_DEFER_SLEEPS         = 0x80000000,
+
    CMD_FLAG_X52_NO_FIFO        = 0x0100000000,
    CMD_FLAG_VERBOSE_STATS      = 0x0200000000,
    CMD_FLAG_SHOW_SETTINGS      = 0x0400000000,
@@ -108,13 +100,10 @@ typedef enum {
 
    CMD_FLAG_QUICK            = 0x800000000000,
 
-   CMD_FLAG_F7             = 0x01000000000000,
-   CMD_FLAG_F8             = 0x02000000000000,
+
    CMD_FLAG_MOCK           = 0x04000000000000,
    CMD_FLAG_PROFILE_API    = 0x08000000000000,
 
-   CMD_FLAG_FL1_SET        = 0x10000000000000,
-   CMD_FLAG_FL2_SET        = 0x20000000000000,
    CMD_FLAG_ENABLE_CACHED_DISPLAYS
                            = 0x40000000000000,
    CMD_FLAG_TRACE_TO_SYSLOG_ONLY
@@ -126,15 +115,9 @@ typedef enum {
                          = 0x0200000000000000,
    CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR
                         =  0x0400000000000000,
-   CMD_FLAG_F9          =  0x0800000000000000,
 
-   CMD_FLAG_F10         =  0x1000000000000000,
-   CMD_FLAG_F11         =  0x2000000000000000,
-   CMD_FLAG_F12         =  0x4000000000000000,
    CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS
                         =  0x8000000000000000,
-
-
 
 #ifdef OLD
    CMD_FLAG_TIMEOUT_I2C_IO         = 0x400000,  // UNUSED  --timeout-i2c-io
@@ -145,7 +128,25 @@ typedef enum {
 } Parsed_Cmd_Flags;
 
 typedef enum {
-   CMD_FLAG_TRY_GET_EDID_FROM_SYSFS =  0x01,
+   CMD_FLAG_TRY_GET_EDID_FROM_SYSFS =
+                                  0x0100000000,
+
+   CMD_FLAG2_F1                   = 0x00000001,
+   CMD_FLAG2_F2                   = 0x00000002,
+   CMD_FLAG2_F3                   = 0x00000004,
+   CMD_FLAG2_F4                   = 0x00000008,
+   CMD_FLAG2_F5                   = 0x00000010,
+   CMD_FLAG2_F6                   = 0x00000020,
+   CMD_FLAG2_F7                   = 0x00000040,
+   CMD_FLAG2_F8                   = 0x00000080,
+   CMD_FLAG2_F9                   = 0x00000100,
+   CMD_FLAG2_F10                  = 0x00000200,
+   CMD_FLAG2_F11                  = 0x00000400,
+   CMD_FLAG2_F12                  = 0x00000800,
+   CMD_FLAG2_F13                  = 0x00001000,
+   CMD_FLAG2_F14                  = 0x00002000,
+   CMD_FLAG2_F15                  = 0x00004000,
+   CMD_FLAG2_F16                  = 0x00008000,
 
    CMD_FLAG2_I1_SET           = 0x010000000000,
    CMD_FLAG2_I2_SET           = 0x020000000000,
@@ -156,7 +157,8 @@ typedef enum {
    CMD_FLAG2_I7_SET           = 0x400000000000,
    CMD_FLAG2_I8_SET           = 0x800000000000,
 
-
+   CMD_FLAG2_FL1_SET        = 0x10000000000000,
+   CMD_FLAG2_FL2_SET        = 0x20000000000000,
 } Parsed_Cmd_Flags2;
 
 #define IGNORED_VID_PID_MAX 4

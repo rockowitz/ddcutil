@@ -340,25 +340,25 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
 
 STATIC void
 init_experimental_options(Parsed_Cmd* parsed_cmd) {
-   suppress_se_post_read = parsed_cmd->flags & CMD_FLAG_F1;
-   ddc_never_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F3;
-   // ddc_always_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F8;
+   suppress_se_post_read = parsed_cmd->flags2 & CMD_FLAG2_F1;
+   ddc_never_uses_null_response_for_unsupported = parsed_cmd->flags2 & CMD_FLAG2_F3;
+   // ddc_always_uses_null_response_for_unsupported = parsed_cmd->flags2 & CMD_FLAG2_F8;
 
-   if (parsed_cmd->flags & CMD_FLAG_F5)
+   if (parsed_cmd->flags2 & CMD_FLAG2_F5)
       EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
-   if (parsed_cmd->flags & CMD_FLAG_F6)
+   if (parsed_cmd->flags2 & CMD_FLAG2_F6)
       use_redetect_drm_connectors = true;
-   if (parsed_cmd->flags & CMD_FLAG_F7)
+   if (parsed_cmd->flags2 & CMD_FLAG2_F7)
       detect_phantom_displays = false;
-   if (parsed_cmd->flags & CMD_FLAG_F8)
+   if (parsed_cmd->flags2 & CMD_FLAG2_F8)
       ddc_slow_watch = true;
-   if (parsed_cmd->flags & CMD_FLAG_F9)
+   if (parsed_cmd->flags2 & CMD_FLAG2_F9)
       ddc_watch_mode = (ddc_watch_mode == Watch_Mode_Simple_Udev) ? Watch_Mode_Full_Poll
                                                                   : Watch_Mode_Simple_Udev;
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
-   if (parsed_cmd->flags & CMD_FLAG_F10)
+   if (parsed_cmd->flags2 & CMD_FLAG2_F10)
       null_msg_adjustment_enabled = true;
-   if (parsed_cmd->flags & CMD_FLAG_F11)
+   if (parsed_cmd->flags2 & CMD_FLAG2_F11)
       monitor_state_tests = true;
 #ifdef TEST_EDID_SMBUS
    if (parsed_cmd->flags & CMD_FLAG_F13)
@@ -430,7 +430,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    }
 
    drm_enabled = result2;
-   if (parsed_cmd->flags & CMD_FLAG_F12)
+   if (parsed_cmd->flags2 & CMD_FLAG2_F12)
       drm_enabled = false;
 
    // rpt_nl();

@@ -27,7 +27,7 @@
 
 #define REPORT_FLAG_OPTION(_flagno, _action) \
 rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
-     (parsed_cmd->flags & CMD_FLAG_F##_flagno ) ? "enabled: " : "disabled:", _action)
+     (parsed_cmd->flags2 & CMD_FLAG2_F##_flagno ) ? "enabled: " : "disabled:", _action)
 
 void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)

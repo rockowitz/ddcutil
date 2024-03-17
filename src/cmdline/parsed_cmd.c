@@ -192,6 +192,9 @@ dbgrpt_ntsa(int depth, char * title, gchar** values) {
 #define RPT_CMDFLAG(_desc, _flag, _depth) \
    rpt_str(_desc, NULL, SBOOL(parsed_cmd->flags & _flag), _depth)
 
+#define RPT_CMDFLAG2(_desc, _flag, _depth) \
+   rpt_str(_desc, NULL, SBOOL(parsed_cmd->flags2 & _flag), _depth)
+
 /** Dumps the #Parsed_Command data structure
  *  \param  parsed_cmd  pointer to instance
  *  \param  depth       logical indentation depth
@@ -426,26 +429,27 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
 #undef RPT_IVAL
 
-      rpt_bool("fl1 set",           NULL, parsed_cmd->flags & CMD_FLAG_FL1_SET,     d1);
-      if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
+      rpt_bool("fl1 set",           NULL, parsed_cmd->flags2 & CMD_FLAG2_FL1_SET,     d1);
+      if (parsed_cmd->flags2 & CMD_FLAG2_FL1_SET)
          rpt_vstring(d1, "fl1                                                      : %.2f", parsed_cmd->fl1);
-      rpt_bool("fl2 set",           NULL, parsed_cmd->flags & CMD_FLAG_FL2_SET,     d1);
-      if (parsed_cmd->flags & CMD_FLAG_FL2_SET)
+      rpt_bool("fl2 set",           NULL, parsed_cmd->flags2 & CMD_FLAG2_FL2_SET,     d1);
+      if (parsed_cmd->flags & CMD_FLAG2_FL2_SET)
          rpt_vstring(d1, "fl2                                                      : %.2f", parsed_cmd->fl2);
-      rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
-      rpt_bool("f2",                NULL, parsed_cmd->flags & CMD_FLAG_F2,           d1);
-      rpt_bool("f3",                NULL, parsed_cmd->flags & CMD_FLAG_F3,           d1);
-      rpt_bool("f4",                NULL, parsed_cmd->flags & CMD_FLAG_F4,           d1);
-      rpt_bool("f5",                NULL, parsed_cmd->flags & CMD_FLAG_F5,           d1);
-      rpt_bool("f6",                NULL, parsed_cmd->flags & CMD_FLAG_F6,           d1);
-      rpt_bool("f7",                NULL, parsed_cmd->flags & CMD_FLAG_F7,           d1);
-      rpt_bool("f8",                NULL, parsed_cmd->flags & CMD_FLAG_F8,           d1);
-      rpt_bool("f9",                NULL, parsed_cmd->flags & CMD_FLAG_F9,           d1);
-      RPT_CMDFLAG("f10", CMD_FLAG_F10, d1);
-      RPT_CMDFLAG("f11", CMD_FLAG_F11, d1);
-      RPT_CMDFLAG("f12", CMD_FLAG_F12, d1);
-      RPT_CMDFLAG("f13", CMD_FLAG_F13, d1);
-      RPT_CMDFLAG("f14", CMD_FLAG_F14, d1);
+      rpt_bool("f1",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F1,           d1);
+      rpt_bool("f2",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F2,           d1);
+      rpt_bool("f3",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F3,           d1);
+      rpt_bool("f4",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F4,           d1);
+      rpt_bool("f5",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F5,           d1);
+      rpt_bool("f6",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F6,           d1);
+      rpt_bool("f7",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F7,           d1);
+      rpt_bool("f8",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F8,           d1);
+      rpt_bool("f9",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F9,           d1);
+      RPT_CMDFLAG2("f10", CMD_FLAG2_F10, d1);
+      RPT_CMDFLAG2("f11", CMD_FLAG2_F11, d1);
+      RPT_CMDFLAG2("f12", CMD_FLAG2_F12, d1);
+      RPT_CMDFLAG2("f13", CMD_FLAG2_F13, d1);
+      RPT_CMDFLAG2("f14", CMD_FLAG2_F14, d1);
+
       rpt_str( "s1",                NULL, parsed_cmd->s1,                            d1);
       rpt_str( "s2",                NULL, parsed_cmd->s2,                            d1);
       rpt_str( "s3",                NULL, parsed_cmd->s3,                            d1);
