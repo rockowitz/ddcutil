@@ -168,7 +168,7 @@
        // returns 0 on success, negative error code otherwise
        int get_device_rc = drmGetDevice(fd, &ddev);
        if (get_device_rc < 0) {
-          DBGF(debug,  "drmGetDevice() returned %d", get_device_rc);
+          DBGF(debug,  "drmGetDevice() returned %d = %s", get_device_rc, strerror(-get_device_rc));
        }
        else {
           snprintf(busid2, sizeof(busid2), "%s:%04x:%02x:%02x.%d",
@@ -183,6 +183,7 @@
                  ddev->businfo.pci->dev,
                  ddev->businfo.pci->func);
 
+          DBGF(debug, "busid2 = |%s|", busid2);
           supports_drm = check_drm_supported_using_drm_api(busid2);
 
           drmFreeDevice(&ddev);
