@@ -23,6 +23,8 @@
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
+#include "util/drm_common.h"
+#include "util/drm_connector_state.h"
 #include "util/edid.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
@@ -89,6 +91,7 @@ static bool detect_usb_displays = false;
 #endif
 bool monitor_state_tests = false;
 bool skip_ddc_checks = false;
+bool use_redetect_drm_connectors = false;
 
 void ddc_add_display_ref(Display_Ref * dref) {
    g_ptr_array_add(all_display_refs, dref);
@@ -1577,6 +1580,9 @@ ddc_redetect_displays() {
    if (dsa2_is_enabled())
       dsa2_save_persistent_stats();
    // free_sysfs_drm_connector_names();
+
+   if (use_redetect_drm_connectors)
+      redetect_drm_connector_states();
 
    // init_sysfs_drm_connector_names();
    get_sys_drm_connectors(/*rescan=*/true);
