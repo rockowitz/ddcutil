@@ -17,6 +17,7 @@
 
 #include "coredefs_base.h"
 #include "data_structures.h"
+#include "drm_common.h"
 #include "report_util.h"
 #include "string_util.h"
 
@@ -40,46 +41,6 @@
 //
 // Identifier name tables
 //
-
-Value_Name_Title connector_type_table[] = {
-   VNT(DRM_MODE_CONNECTOR_Unknown     , "unknown"    ), //  0
-   VNT(DRM_MODE_CONNECTOR_VGA         , "VGA"        ), //  1
-   VNT(DRM_MODE_CONNECTOR_DVII        , "DVI-I"      ), //  2
-   VNT(DRM_MODE_CONNECTOR_DVID        , "DVI-D"      ), //  3
-   VNT(DRM_MODE_CONNECTOR_DVIA        , "DVI-A"      ), //  4
-   VNT(DRM_MODE_CONNECTOR_Composite   , "Composite"  ), //  5
-   VNT(DRM_MODE_CONNECTOR_SVIDEO      , "S-video"    ), //  6
-   VNT(DRM_MODE_CONNECTOR_LVDS        , "LVDS"       ), //  7
-   VNT(DRM_MODE_CONNECTOR_Component   , "Component"  ), //  8
-   VNT(DRM_MODE_CONNECTOR_9PinDIN     , "DIN"        ), //  9
-   VNT(DRM_MODE_CONNECTOR_DisplayPort , "DP"         ), // 10
-   VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMI"       ), // 11
-   VNT(DRM_MODE_CONNECTOR_HDMIB       , "HDMI-B"     ), // 12
-   VNT(DRM_MODE_CONNECTOR_TV          , "TV"         ), // 13
-   VNT(DRM_MODE_CONNECTOR_eDP         , "eDP"        ), // 14
-   VNT(DRM_MODE_CONNECTOR_VIRTUAL     , "Virtual"    ), // 15
-   VNT(DRM_MODE_CONNECTOR_DSI         , "DSI"        ), // 16  Display Signal Interface, used on Raspberry Pi
-   VNT_END
-};
-
-
-/** Returns the symbolic name of a connector type.
- * @param val connector type
- * @return symbolic name
- */
-char * connector_type_name(Byte val) {
-   return vnt_name(connector_type_table, val);
-}
-
-
-/** Returns the description string for a connector type.
- * @param val connector type
- * @return descriptive string
- */
-char * connector_type_title(Byte val) {
-   return vnt_title(connector_type_table, val);
-}
-
 
 // from libdrm/drm.h
 #define DRM_MODE_PROP_BITMASK   (1<<5) /* bitmask of enumerated types */
@@ -439,7 +400,7 @@ void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
    char buf[200];  int bufsz=200;
    rpt_structure_loc("drmModeConnector", p, depth);
    rpt_vstring(d1, "%-20s %d",       "connector_id:", p->connector_id);
-   rpt_vstring(d1, "%-20s %d - %s",  "connector_type:",    p->connector_type,  connector_type_name(p->connector_type));
+   rpt_vstring(d1, "%-20s %d - %s",  "connector_type:",    p->connector_type,  drm_connector_type_name(p->connector_type));
    rpt_vstring(d1, "%-20s %d",       "connector_type_id:", p->connector_type_id);
 
    rpt_vstring(d1, "%-20s %u",       "encoder_id", p->encoder_id);   // current encoder
