@@ -22,6 +22,7 @@
 #include "util/ddcutil_config_file.h"
 #include "util/debug_util.h"
 #include "util/file_util.h"
+#include "util/regex_util.h"
 #include "util/report_util.h"
 #include "util/sysfs_filter_functions.h"
 #include "util/xdg_util.h"
