@@ -33,6 +33,7 @@
 extern bool i2c_force_bus;
 extern bool drm_enabled;
 extern bool force_read_edid;
+extern bool verify_sysfs_edid;
 extern int  i2c_businfo_async_threshold;
 extern bool cross_instance_locks_enabled;
 extern int  flock_poll_millisec;

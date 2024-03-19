@@ -27,6 +27,8 @@
 
 #include "util/coredefs_base.h"
 #include "util/debug_util.h"
+#include "util/drm_common.h"
+#include "util/drm_connector_state.h"
 #include "util/edid.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
@@ -78,6 +80,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 bool drm_enabled = false;
 bool force_read_edid = true;
+bool verify_sysfs_edid = false;
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool cross_instance_locks_enabled = DEFAULT_ENABLE_FLOCK;
 int  flock_poll_millisec = DEFAULT_FLOCK_POLL_MILLISEC;
@@ -595,6 +598,112 @@ i2c_detect_x37(int fd) {
 }
 
 
+void validate_sysfs_edid(int fd, I2C_Bus_Info * bus_info) {
+   assert(bus_info->edid);
+   // 1 - does sysfs bus info match directly read
+   // if not:
+   // 2 - trigger sysfs reread
+   // 2a - does value read from drm match directly read value?
+   // 2b - does value now read from sysfs match directly read value?
+
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", bus_info->busno);
+
+   Parsed_Edid * true_i2c_edid;
+   DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &true_i2c_edid);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
+         bus_info->busno, psc_desc(ddcrc));
+   bool reset = false;
+   if (!true_i2c_edid) {
+      SEVEREMSG("EDID read from sysfs but not from I2C. Discarding sysfs value");
+      reset = true;
+   }
+   else if (memcmp( bus_info->edid->bytes, true_i2c_edid->bytes, 128) != 0) {
+      SEVEREMSG("busno=%d, Edid from sysfs does not match value read from i2c", bus_info->busno);
+      reset = true;
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "busno=%d, Edid initially read from sysfs matches direct read from I2C", bus_info->busno);
+   }
+   if (reset) {
+      free_parsed_edid(bus_info->edid);
+      bus_info->flags &= ~I2C_BUS_ADDR_0X50;
+      bus_info->flags &= ~I2C_BUS_SYSFS_EDID;
+
+      DBGMSG("Resetting sysfs data using redetect_connector_states()");
+      redetect_drm_connector_states();
+
+      // get the edid from connector states
+
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+              "Getting edid from Drm Connector States for connector %s", bus_info->drm_connector_name);
+      Drm_Connector_Identifier dci =  parse_sys_drm_connector_name(bus_info->drm_connector_name);
+      Drm_Connector_State * cstate = find_drm_connector_state(dci);
+      if (cstate) {
+         if (cstate->edid && true_i2c_edid) {
+            if (memcmp(true_i2c_edid->bytes, cstate->edid->bytes, 128) == 0) {
+               DBGMSG("Correct edid now read from drm connector state");
+            }
+            else {
+               SEVEREMSG("Incorrect edid read from drm connector state");
+            }
+         }
+         else if (cstate->edid && !true_i2c_edid) {
+            SEVEREMSG("edid that should be nonexistent read from drm");
+         }
+         else if (!cstate->edid && true_i2c_edid) {
+            SEVEREMSG("I2C edid exists but not read from drm");
+         }
+         else {
+            assert (!cstate->edid && !true_i2c_edid);
+            DBGMSG("I2C edid non-existent and none read from drm");
+         }
+      }
+      else {
+         SEVEREMSG("Drm_Connector_State not found for %s, %s",
+               bus_info->drm_connector_name, dci_repr(dci));
+      }
+
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                               "Getting edid from sysfs for connector %s", bus_info->drm_connector_name);
+      GByteArray*  sysfs_edid_bytes = NULL;
+      // int d = IS_DBGTRC(debug, TRACE_GROUP) ? 1 : -1;
+      int d = -1;
+      RPT_ATTR_EDID(d, &sysfs_edid_bytes, "/sys/class/drm", bus_info->drm_connector_name, "edid");
+      if (sysfs_edid_bytes && true_i2c_edid) {
+         if (memcmp(true_i2c_edid->bytes, sysfs_edid_bytes, 128) == 0) {
+            DBGMSG("Correct edid now read from sysfs");
+         }
+         else {
+            SEVEREMSG("Incorrect edid still read from sysfs");
+         }
+      }
+      else if (sysfs_edid_bytes && !true_i2c_edid) {
+         SEVEREMSG("edid that should be nonexistent read from sysfs");
+      }
+      else if (!sysfs_edid_bytes && true_i2c_edid) {
+         SEVEREMSG("I2C edid exists but not read from sysfs");
+      }
+      else {
+         assert (!sysfs_edid_bytes && !true_i2c_edid);
+         DBGMSG("I2C edid non-existent and none read from sysfs");
+      }
+
+   }
+   if (true_i2c_edid) {
+      free_parsed_edid(true_i2c_edid);
+   }
+
+   if (reset) {
+      free_parsed_edid(bus_info->edid);
+      bus_info->edid = NULL;
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
 /** Inspects an I2C bus.
  *
  *  Takes the number of the bus to be inspected from the #I2C_Bus_Info struct passed
@@ -667,6 +776,10 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
              assert(bus_info->functionality & I2C_FUNC_SMBUS_READ_BYTE_DATA);
           }
 #endif
+
+          if (bus_info->edid && verify_sysfs_edid) {
+             validate_sysfs_edid(fd, bus_info);
+          }
 
           if (!bus_info->edid) {
              DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
