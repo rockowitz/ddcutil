@@ -1,7 +1,7 @@
 /** \f sysfs_filter_functions.h
   */
 
-//// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+//// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SYSFS_FILTER_FUNCTIONS_H_
@@ -11,7 +11,7 @@
 
 #include "data_structures.h"
 
-void free_regex_hash_table();
+
 
 // Filename_Filter_Func
 
