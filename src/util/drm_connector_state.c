@@ -283,7 +283,7 @@ int get_connector_state_array(int fd, int cardno, GPtrArray* collector) {
          int depth=2;
          rpt_structure_loc("drmModeConnector", conn, depth);
          rpt_vstring(d1, "%-20s %d",       "connector_id:", conn->connector_id);
-         rpt_vstring(d1, "%-20s %d - %s",  "connector_type:",    conn->connector_type,  connector_type_name(conn->connector_type));
+         rpt_vstring(d1, "%-20s %d - %s",  "connector_type:",    conn->connector_type,  drm_connector_type_name(conn->connector_type));
          rpt_vstring(d1, "%-20s %d",       "connector_type_id:", conn->connector_type_id);
          rpt_vstring(d1, "%-20s %d - %s",  "connection:",        conn->connection, connector_status_name(conn->connection));
       }
@@ -322,8 +322,7 @@ int get_connector_state_array(int fd, int cardno, GPtrArray* collector) {
 
 
 
-void dbgrpt_connector_state(Drm_Connector_State * state, int depth
-      ) {
+void dbgrpt_connector_state(Drm_Connector_State * state, int depth) {
    rpt_structure_loc("Drm_Connector_State", state, depth);
    int d1 = depth+1;
    int d2 = depth+2;
@@ -332,7 +331,7 @@ void dbgrpt_connector_state(Drm_Connector_State * state, int depth
    rpt_vstring(d1, "connector_id:         %d", state->connector_id);
 
    // rpt_vstring(d1, "%-20s %d",       "connector_id:", conn->connector_id);
-   rpt_vstring(d1, "%-20s %d - %s",  "connector_type:",    state->connector_type,  connector_type_name(state->connector_type));
+   rpt_vstring(d1, "%-20s %d - %s",  "connector_type:",    state->connector_type,  drm_connector_type_name(state->connector_type));
    rpt_vstring(d1, "%-20s %d",       "connector_type_id:", state->connector_type_id);
    rpt_vstring(d1, "%-20s %d - %s",  "connection:",        state->connection, connector_status_name(state->connection));
 
@@ -536,3 +535,39 @@ void redetect_drm_connector_states() {
       free_drm_connector_states(all_card_connector_states);
    all_card_connector_states = drm_get_all_connector_states();
 }
+
+
+void report_drm_connector_states(int depth) {
+   if (!all_card_connector_states)
+      all_card_connector_states = drm_get_all_connector_states();
+   for (int ndx = 0; ndx < all_card_connector_states->len; ndx++) {
+      dbgrpt_connector_state(g_ptr_array_index(all_card_connector_states, ndx), 0);
+   }
+}
+
+
+// Drm_Connector_Identifier drm_connector_identifier_from_state(Drm_Connector_State cstate);
+
+Drm_Connector_State * find_drm_connector_state(Drm_Connector_Identifier cid) {
+   Drm_Connector_State * result = NULL;
+   for (int ndx = 0; ndx < all_card_connector_states->len; ndx++) {
+      Drm_Connector_State * cur = g_ptr_array_index(all_card_connector_states, ndx);
+      if (cur->cardno == cid.cardno) {
+         if (cid.connector_id >= 0) {
+            if (cid.connector_id == cur->connector_id) {
+               result = cur;
+               break;
+            }
+         }
+         else if (cid.connector_type >= 0 && cid.connector_type_id >= 0) {
+            if (cid.connector_type == cur->connector_type && cid.connector_type_id == cur->connector_type_id) {
+               result = cur;
+               break;
+            }
+         }
+      }
+   }
+   return result;
+}
+
+
