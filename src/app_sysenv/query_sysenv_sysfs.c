@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include "util/drm_connector_state.h"
 #include "util/data_structures.h"
 #include "util/device_id_util.h"
 #include "util/file_util.h"
@@ -863,6 +864,7 @@ void dump_sysfs_i2c(Env_Accumulator * accum) {
    rpt_nl();
 
    consolidated_i2c_sysfs_report(0);
+   report_drm_connector_states(0);
 
    if (accum->is_arm) {
       rpt_label(0,"*** Extended dump of sysfs video devices for ARM architecture ***");
