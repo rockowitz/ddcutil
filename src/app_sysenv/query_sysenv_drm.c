@@ -394,7 +394,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 
       char connector_name[100];
       snprintf(connector_name, 100, "%s-%u",
-                                    connector_type_title(conn->connector_type),
+                                    drm_connector_type_title(conn->connector_type),
                                     conn->connector_type_id);
 
       rpt_vstring(d1, "%-20s %u",       "connector_id:",      conn->connector_id);
@@ -402,7 +402,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
       //                                                         conn->connector_type_id);
       rpt_vstring(d2, "%-20s %s",       "connector name",     connector_name);
       rpt_vstring(d2, "%-20s %d - %s",  "connector_type:",    conn->connector_type,
-                                                              connector_type_title(conn->connector_type));
+                                                              drm_connector_type_title(conn->connector_type));
       rpt_vstring(d2, "%-20s %d",       "connector_type_id:", conn->connector_type_id);
       rpt_vstring(d2, "%-20s %d - %s",  "connection:",        conn->connection,
                                                               connector_status_title(conn->connection));
