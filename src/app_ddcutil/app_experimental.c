@@ -52,6 +52,8 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(12, "Disable DRM services");
    REPORT_FLAG_OPTION(13, "Command C1 only report display connection changes");
    REPORT_FLAG_OPTION(14, "Command C1 only report display DPMS state changes");
+   REPORT_FLAG_OPTION(15, "Verify sysfs EDID reads");
+   REPORT_FLAG_OPTION(16, "Unused");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra seconds to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZE_SECS);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
