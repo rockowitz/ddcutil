@@ -15,6 +15,7 @@
 
 #include "config.h"
 
+#include "util/drm_connector_state.h"
 #ifdef ENABLE_FAILSIM
 #include "util/failsim.h"
 #endif
@@ -364,6 +365,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags & CMD_FLAG_F13)
       EDID_Read_Uses_Smbus = true;
 #endif
+   if (parsed_cmd->flags2 & CMD_FLAG2_F15)
+      verify_sysfs_edid = true;
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
       extra_stabilize_seconds = parsed_cmd->i1;
@@ -438,6 +441,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    drm_enabled = false;
 #endif
    get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
+   redetect_drm_connector_states();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "drm_enabled = %s, sys_drm_connectors = %p",
          sbool(drm_enabled), sys_drm_connectors);
    subinit_i2c_bus_core();
