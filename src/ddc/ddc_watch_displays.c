@@ -1061,6 +1061,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
 }
 #endif
 
+
 //
 // Common to both variants
 //
