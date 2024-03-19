@@ -966,6 +966,8 @@ parse_command(
    gboolean f12_flag        = false;
    gboolean f13_flag        = false;
    gboolean f14_flag        = false;
+   gboolean f15_flag        = false;
+   gboolean f16_flag        = false;
    char *   i1_work         = NULL;
    char *   i2_work         = NULL;
    char *   i3_work         = NULL;
@@ -1256,6 +1258,8 @@ parse_command(
       {"f12",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f12_flag,         "Special flag 12",   NULL},
       {"f13",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f13_flag,         "Special flag 13",   NULL},
       {"f14",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f14_flag,         "Special flag 14",   NULL},
+      {"f15",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f15_flag,         "Special flag 15",   NULL},
+      {"f16",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f16_flag,         "Special flag 16",   NULL},
       {"s1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 1",  "string"},
       {"s2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 2",  "string"},
       {"s3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 3",  "string"},
@@ -1490,6 +1494,12 @@ parse_command(
          parsed_cmd->flags |= _bit; \
    } while(0)
 
+#define SET_CMDFLAG2(_bit, _flag) \
+   do { \
+      if (_flag) \
+         parsed_cmd->flags2 |= _bit; \
+   } while(0)
+
 #define SET_CLR_CMDFLAG(_bit, _flag) \
    do { \
       if (_flag) \
@@ -1563,20 +1573,23 @@ parse_command(
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_DISPLAYS, enable_cd_flag);
 // #endif
 
-   SET_CMDFLAG(CMD_FLAG2_F1,                f1_flag);
-   SET_CMDFLAG(CMD_FLAG2_F2,                f2_flag);
-   SET_CMDFLAG(CMD_FLAG2_F3,                f3_flag);
-   SET_CMDFLAG(CMD_FLAG2_F4,                f4_flag);
-   SET_CMDFLAG(CMD_FLAG2_F5,                f5_flag);
-   SET_CMDFLAG(CMD_FLAG2_F6,                f6_flag);
-   SET_CMDFLAG(CMD_FLAG2_F7,                f7_flag);
-   SET_CMDFLAG(CMD_FLAG2_F8,                f8_flag);
-   SET_CMDFLAG(CMD_FLAG2_F9,                f9_flag);
-   SET_CMDFLAG(CMD_FLAG2_F10,               f10_flag);
-   SET_CMDFLAG(CMD_FLAG2_F11,               f11_flag);
-   SET_CMDFLAG(CMD_FLAG2_F12,               f12_flag);
-   SET_CMDFLAG(CMD_FLAG2_F13,               f13_flag);
-   SET_CMDFLAG(CMD_FLAG2_F14,               f14_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F1,                f1_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F2,                f2_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F3,                f3_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F4,                f4_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F5,                f5_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F6,                f6_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F7,                f7_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F8,                f8_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F9,                f9_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F10,               f10_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F11,               f11_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F12,               f12_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F13,               f13_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F14,               f14_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F15,               f15_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F16,               f16_flag);
+
 
 
    if (discarded_caches_work) {
