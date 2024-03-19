@@ -27,6 +27,7 @@
 
 #include "util/data_structures.h"
 #include "util/ddcutil_config_file.h"
+#include "util/drm_connector_state.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/file_util.h"
@@ -36,6 +37,7 @@
 #include "util/libdrm_util.h"
 #endif
 #include "util/linux_util.h"
+#include "util/regex_util.h"
 #include "util/report_util.h"
 #include "util/simple_ini_file.h"
 #include "util/string_util.h"
@@ -896,11 +898,11 @@ main(int argc, char *argv[]) {
       goto bye;
    if (parsed_cmd->flags&CMD_FLAG_SHOW_SETTINGS)
       report_all_options(parsed_cmd, configure_fn, untokenized_cmd_prefix, 0);
-
    // xdg_tests(); // for development
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F2) {
       consolidated_i2c_sysfs_report(0);
+      report_drm_connector_states(0);
       // rpt_label(0, "*** Tests Done ***");
       // rpt_nl();
    }
@@ -965,6 +967,7 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_C2) {
       DBGMSG("Executing temporarily defined command C2: noop");
+      // report_drm_connector_states(0);
       main_rc = EXIT_SUCCESS;
    }
 
