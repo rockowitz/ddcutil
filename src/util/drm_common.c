@@ -18,6 +18,8 @@
 #include <unistd.h>  // for close() used by probe_dri_device_using_drm_api
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <libdrm/drm_mode.h>
+#include <drm/drm_mode.h>
 /** \endcond */
 
 #include "coredefs_base.h"
@@ -25,6 +27,7 @@
 #include "debug_util.h"
 #include "file_util.h"
 #include "subprocess_util.h"
+#include "regex_util.h"
 #include "report_util.h"
 #include "string_util.h"
 #include "sysfs_filter_functions.h"
@@ -520,6 +523,150 @@ bool check_all_video_adapters_implement_drm() {
    return result;
 }
 #endif
+
+
+
+
+ Value_Name_Title drm_connector_type_table[] = {
+    VNT(DRM_MODE_CONNECTOR_Unknown     , "unknown"    ), //  0
+    VNT(DRM_MODE_CONNECTOR_VGA         , "VGA"        ), //  1
+    VNT(DRM_MODE_CONNECTOR_DVII        , "DVI-I"      ), //  2
+    VNT(DRM_MODE_CONNECTOR_DVID        , "DVI-D"      ), //  3
+    VNT(DRM_MODE_CONNECTOR_DVIA        , "DVI-A"      ), //  4
+    VNT(DRM_MODE_CONNECTOR_Composite   , "Composite"  ), //  5
+    VNT(DRM_MODE_CONNECTOR_SVIDEO      , "S-video"    ), //  6
+    VNT(DRM_MODE_CONNECTOR_LVDS        , "LVDS"       ), //  7
+    VNT(DRM_MODE_CONNECTOR_Component   , "Component"  ), //  8
+    VNT(DRM_MODE_CONNECTOR_9PinDIN     , "DIN"        ), //  9
+    VNT(DRM_MODE_CONNECTOR_DisplayPort , "DP"         ), // 10
+    VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMI"       ), // 11
+    VNT(DRM_MODE_CONNECTOR_HDMIB       , "HDMI-B"     ), // 12
+    VNT(DRM_MODE_CONNECTOR_TV          , "TV"         ), // 13
+    VNT(DRM_MODE_CONNECTOR_eDP         , "eDP"        ), // 14
+    VNT(DRM_MODE_CONNECTOR_VIRTUAL     , "Virtual"    ), // 15
+    VNT(DRM_MODE_CONNECTOR_DSI         , "DSI"        ), // 16  Display Signal Interface, used on Raspberry Pi
+    VNT_END
+ };
+
+
+ /** Returns the symbolic name of a connector type.
+  * @param val connector type
+  * @return symbolic name
+  */
+ char * drm_connector_type_name(Byte val) {
+    return vnt_name(drm_connector_type_table, val);
+ }
+
+
+ /** Returns the description string for a connector type.
+  * @param val connector type
+  * @return descriptive string
+  */
+ char * drm_connector_type_title(Byte val) {
+    return vnt_title(drm_connector_type_table, val);
+ }
+
+
+
+
+// For getting the DRM connector type from the DRM connector name
+
+   Value_Name_Title connector_type_lookup_table[] = {
+       VNT(DRM_MODE_CONNECTOR_Unknown     , "unknown"    ), //  0
+       VNT(DRM_MODE_CONNECTOR_VGA         , "VGA"        ), //  1
+       VNT(DRM_MODE_CONNECTOR_DVII        , "DVII"      ), //  2
+       VNT(DRM_MODE_CONNECTOR_DVID        , "DVID"      ), //  3
+       VNT(DRM_MODE_CONNECTOR_DVIA        , "DVIA"      ), //  4
+       VNT(DRM_MODE_CONNECTOR_Composite   , "Composite"  ), //  5
+       VNT(DRM_MODE_CONNECTOR_SVIDEO      , "Svideo"    ), //  6
+       VNT(DRM_MODE_CONNECTOR_LVDS        , "LVDS"       ), //  7
+       VNT(DRM_MODE_CONNECTOR_Component   , "Component"  ), //  8
+       VNT(DRM_MODE_CONNECTOR_9PinDIN     , "DIN"        ), //  9
+       VNT(DRM_MODE_CONNECTOR_DisplayPort , "DP"         ), // 10
+       VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMI"       ), // 11
+       VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMIA"       ), // 11
+       VNT(DRM_MODE_CONNECTOR_HDMIB       , "HDMIB"     ), // 12
+       VNT(DRM_MODE_CONNECTOR_TV          , "TV"         ), // 13
+       VNT(DRM_MODE_CONNECTOR_eDP         , "eDP"        ), // 14
+       VNT(DRM_MODE_CONNECTOR_VIRTUAL     , "Virtual"    ), // 15
+       VNT(DRM_MODE_CONNECTOR_DSI         , "DSI"        ), // 16  Display Signal Interface, used on Raspberry Pi
+       VNT(DRM_MODE_CONNECTOR_DPI         , "DPI"        ), // 17
+       VNT(DRM_MODE_CONNECTOR_WRITEBACK   , "WRITEBACK"  ), // 18
+       VNT(DRM_MODE_CONNECTOR_SPI         , "SPI"        ), // 19
+       VNT(DRM_MODE_CONNECTOR_USB         , "USB"        ), // 20
+       VNT_END
+    };
+
+int lookup_connector_type(const char * name) {
+   int val = vnt_find_id(
+         connector_type_lookup_table,
+         name,
+         true,     // search by title
+         true,     // ignore_case,
+         -1);      // default_id
+   return val;
+}
+
+char * dci_repr(Drm_Connector_Identifier dci) {
+   char * buf = g_strdup_printf("[dci:cardno=%d,connector_id=%d,connector_type=%d=%s,connector_type_id=%d",
+         dci.cardno, dci.connector_id,
+         dci.connector_type, drm_connector_type_name(dci.connector_type),
+         dci.connector_type_id);
+   return buf;
+}
+
+// #ifdef FUTURE
+Drm_Connector_Identifier parse_sys_drm_connector_name(char * drm_connector) {
+   bool debug = true;
+   DBGF(debug, "Starting. drm_connector = |%s|", drm_connector);
+   Drm_Connector_Identifier result = {-1,-1,-1,-1};
+   static const char * drm_connector_pattern = "^card([0-9])[-](.*)([0-9]";
+
+   regmatch_t  matches[3];
+
+   bool ok =  compile_and_eval_regex_with_matches(
+         drm_connector_pattern,
+         drm_connector,
+         3,   //       max_matches,
+         matches);
+
+   if (ok) {
+      for (int kk = 0; kk < 3; kk++) {
+         rpt_vstring(1, "match %d, substring start=%d, end=%d", kk, matches[kk].rm_so, matches[kk].rm_eo);
+      }
+      char * cardno_s = substr(drm_connector, matches[0].rm_so, matches[0].rm_eo - matches[0].rm_so);
+      char * connector_type = substr(drm_connector, matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so);
+      char * connector_type_id_s = substr(drm_connector, matches[2].rm_so, matches[2].rm_eo - matches[2].rm_so);
+      result.cardno = g_ascii_digit_value(cardno_s[0]);
+      result.connector_type_id = g_ascii_digit_value(connector_type_id_s[0]);
+      char squished_type[20];
+      int ipos = 0;
+      int opos = 0;
+      while (opos < 19 && !connector_type[ipos]) {
+          if (g_ascii_isalnum(connector_type[ipos])) {
+                squished_type[opos++] = g_ascii_toupper(connector_type[ipos]);
+          }
+          ipos++;
+      }
+      squished_type[opos] = '\0';
+      DBGF(debug, "squished_type = %s", squished_type);
+
+      result.connector_type = lookup_connector_type(squished_type);
+
+      free(connector_type);
+      free(cardno_s);
+      free(connector_type_id_s);
+   }
+
+   // DBGF(debug, "Done.    Returning: [%d,%d,%d,%d]",
+   //       result.cardno, result.connector_id, result.connector_type, result.connector_type_id);
+   if (debug) {
+      char * s = dci_repr(result);
+      DBG("Done.     Returning: %s", s);
+      free(s);
+   }
+   return result;
+}
 
 
 
