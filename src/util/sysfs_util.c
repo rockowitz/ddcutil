@@ -483,9 +483,9 @@ rpt_attr_edid(
        *value_loc = NULL;
     GByteArray * edid = NULL;
     found = rpt_attr_binary(depth, &edid, pb1, NULL);
-    assert( (found && edid) || (!found && edid==NULL) );
+    ASSERT_IFF(found, edid);
     if (edid) {
-       if (depth >= 0)
+       if (!rpt2_silent && depth >= 0)
           rpt_hex_dump(edid->data, edid->len, depth+4);
        if (value_loc)
           *value_loc = edid;
