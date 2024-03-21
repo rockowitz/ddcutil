@@ -264,6 +264,17 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
        rpt_vstring(d2, "drmCheckModesettingSupported() returned undocumented status code %d", rc);
     }
    }
+   rpt_nl();
+    int  is_master = drmIsMaster(fd);
+    rpt_vstring(d1, "drmIsMaster() returned %d", is_master);  // 1 == true, 0 == false
+     rpt_vstring(d2, "i.e. %s master", (is_master) ? "IS" : "IS NOT");
+
+    // int drmrc = drmSetMaster(fd);
+    // if (drmrc != 0)
+    //    rpt_vstring(d1, "drmSetMaster failed.  drmrc = %d - %s", drmrc, psc_name(-drmrc));
+    // else
+    //   rpt_vstring(d1, "drmSetMaster() succeeded");
+
 
 #ifdef REF
    extern drmModePropertyPtr drmModeGetProperty(int fd, uint32_t propertyId);
