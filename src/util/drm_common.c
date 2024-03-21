@@ -19,7 +19,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <libdrm/drm_mode.h>
-#include <drm/drm_mode.h>
+// #include <drm/drm_mode.h>
 /** \endcond */
 
 #include "coredefs_base.h"
