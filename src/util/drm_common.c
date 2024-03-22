@@ -1,6 +1,6 @@
 /** @file drm_common.c
  *
- *  Consolidates DRM functions variants the have proliferated in the code base.
+ *  Consolidates DRM function variants the have proliferated in the code base.
  */
 
 // Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -19,7 +19,6 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <libdrm/drm_mode.h>
-// #include <drm/drm_mode.h>
 /** \endcond */
 
 #include "coredefs_base.h"
@@ -583,7 +582,7 @@ bool check_all_video_adapters_implement_drm() {
        VNT(DRM_MODE_CONNECTOR_Component   , "Component"  ), //  8
        VNT(DRM_MODE_CONNECTOR_9PinDIN     , "DIN"        ), //  9
        VNT(DRM_MODE_CONNECTOR_DisplayPort , "DP"         ), // 10
-       VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMI"       ), // 11
+       VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMI"       ), // 11  alternate common name for HDMIA
        VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMIA"       ), // 11
        VNT(DRM_MODE_CONNECTOR_HDMIB       , "HDMIB"     ), // 12
        VNT(DRM_MODE_CONNECTOR_TV          , "TV"         ), // 13
@@ -608,7 +607,7 @@ int lookup_connector_type(const char * name) {
 }
 
 char * dci_repr(Drm_Connector_Identifier dci) {
-   char * buf = g_strdup_printf("[dci:cardno=%d,connector_id=%d,connector_type=%d=%s,connector_type_id=%d",
+   char * buf = g_strdup_printf("[dci:cardno=%d,connector_id=%d,connector_type=%d=%s,connector_type_id=%d]",
          dci.cardno, dci.connector_id,
          dci.connector_type, drm_connector_type_name(dci.connector_type),
          dci.connector_type_id);
