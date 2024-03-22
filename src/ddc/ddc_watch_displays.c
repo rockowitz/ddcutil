@@ -926,8 +926,13 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
    bool debug = false;
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "Caller process id: %d, caller thread id: %d",
-         wdd->main_process_id, wdd->main_thread_id);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+         "Caller process id: %d, caller thread id: %d, event_classes=0x%02x",
+         wdd->main_process_id, wdd->main_thread_id, wdd->event_classes);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for display connection events: %s",
+         sbool(wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for dpms events: %s",
+          sbool(wdd->event_classes & DDCA_EVENT_CLASS_DPMS));
 
    pid_t cur_pid = getpid();
    pid_t cur_tid = get_thread_id();
@@ -939,11 +944,9 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
    udev = udev_new();
    assert(udev);
    struct udev_monitor* mon = udev_monitor_new_from_netlink(udev, "udev");
-   // udev_monitor_filter_add_match_subsystem_devtype(mon, "drm_dp_aux_dev", NULL);   // alt "hidraw"
+   // Alternative subsystem devtype values that did not detect changes:
+   // drm_dp_aux_dev, kernel, i2c-dev, i2c, hidraw
    udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // detects
-   // udev_monitor_filter_add_match_subsystem_devtype(mon, "kernel", NULL);   // alt "hidraw" // does not detect
-   // udev_monitor_filter_add_match_subsystem_devtype(mon,  "i2c-dev", NULL);  // does not detect
-   //udev_monitor_filter_add_match_subsystem_devtype(mon,  "i2c", NULL); // does not detect
    udev_monitor_enable_receiving(mon);
 
    // make udev_monitor_receive_device() blocking
@@ -952,9 +955,11 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
 
    Sysfs_Connector_Names current_connector_names = get_sysfs_drm_connector_names();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-        "Initial existing connectors: %s", join_string_g_ptr_array_t(current_connector_names.all_connectors, ", ") );
+        "Initial existing connectors: %s",
+        join_string_g_ptr_array_t(current_connector_names.all_connectors, ", ") );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-        "Initial connectors having edid: %s", join_string_g_ptr_array_t(current_connector_names.connectors_having_edid, ", ") );
+        "Initial connectors having edid: %s",
+        join_string_g_ptr_array_t(current_connector_names.connectors_having_edid, ", ") );
 
    GArray * deferred_events = g_array_new( false,      // zero_terminated
                                           false,      // clear
@@ -966,7 +971,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
       }
       while ( !dev ) {
          int sleep_secs = 2;   // default sleep time on each loop
-         if (ddc_slow_watch)
+         if (ddc_slow_watch)   // for testing
             sleep_secs *= 3;
          if (debug)
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Sleeping for %d seconds", sleep_secs);
@@ -1078,22 +1083,18 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p, event_clases=0x%02x, drm_enabled=%s",
                                        ddc_watch_mode_name(ddc_watch_mode),
                                        watch_thread, event_classes, SBOOL(drm_enabled) );
-   // DDCA_Status ddcrc = DDCRC_OK;
    Error_Info * err = NULL;
 
    if (!drm_enabled) {
-      // ddcrc = DDCRC_INVALID_OPERATION;
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
       goto bye;
    }
 
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
-      // ddcrc = DDCRC_ARG;
       err = ERRINFO_NEW(DDCRC_ARG, "Invalid event classes");
    }
    else if (watch_thread) {
-      // ddcrc = DDCRC_INVALID_OPERATION;
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Watch thread already running");
    }
    else {
@@ -1127,7 +1128,6 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
 bye:
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "watch_thread=%p", watch_thread);
-   // DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return err;
 }
 
