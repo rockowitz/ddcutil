@@ -444,11 +444,14 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("f7",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F7,           d1);
       rpt_bool("f8",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F8,           d1);
       rpt_bool("f9",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F9,           d1);
+      RPT_CMDFLAG2("f9",  CMD_FLAG2_F9,  d1);
       RPT_CMDFLAG2("f10", CMD_FLAG2_F10, d1);
       RPT_CMDFLAG2("f11", CMD_FLAG2_F11, d1);
       RPT_CMDFLAG2("f12", CMD_FLAG2_F12, d1);
       RPT_CMDFLAG2("f13", CMD_FLAG2_F13, d1);
       RPT_CMDFLAG2("f14", CMD_FLAG2_F14, d1);
+      RPT_CMDFLAG2("f15", CMD_FLAG2_F15, d1);
+      RPT_CMDFLAG2("f16", CMD_FLAG2_F16, d1);
 
       rpt_str( "s1",                NULL, parsed_cmd->s1,                            d1);
       rpt_str( "s2",                NULL, parsed_cmd->s2,                            d1);
