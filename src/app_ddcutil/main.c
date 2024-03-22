@@ -947,13 +947,12 @@ main(int argc, char *argv[]) {
       else {
          ddc_ensure_displays_detected();
          DDCA_Display_Event_Class event_classes = DDCA_EVENT_CLASS_ALL;
-         if (parsed_cmd->flags&CMD_FLAG2_F13)
+         if (parsed_cmd->flags2&CMD_FLAG2_F13)
             event_classes = DDCA_EVENT_CLASS_DISPLAY_CONNECTION;
-         if (parsed_cmd->flags&CMD_FLAG2_F14)
+         if (parsed_cmd->flags2&CMD_FLAG2_F14)
             event_classes = DDCA_EVENT_CLASS_DPMS;
          Error_Info * erec = ddc_start_watch_displays(event_classes);
          if (erec) {
-            DBGMSG(erec->detail);
             ERRINFO_FREE_WITH_REPORT(erec, true);
             main_rc = EXIT_FAILURE;
          }
