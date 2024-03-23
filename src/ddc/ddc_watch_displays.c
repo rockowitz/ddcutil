@@ -1036,11 +1036,11 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
          dbgrpt_udev_device(dev, 2);
       }
 
-      const char * prop_action    = udev_device_get_property_value(dev, "ACTION");
-      const char * prop_connector = udev_device_get_property_value(dev, "CONNECTOR");
-      const char * prop_devname   = udev_device_get_property_value(dev, "DEVNAME");
-      const char * prop_hotplug   = udev_device_get_property_value(dev, "HOTPLUG");
-      const char * attr_sysname   = udev_device_get_sysname(dev);
+      const char * prop_action    = udev_device_get_property_value(dev, "ACTION");     // always "changed"
+      const char * prop_connector = udev_device_get_property_value(dev, "CONNECTOR");  // drm connector number
+      const char * prop_devname   = udev_device_get_property_value(dev, "DEVNAME");    // e.g. /dev/dri/card0
+      const char * prop_hotplug   = udev_device_get_property_value(dev, "HOTPLUG");    // always 1
+      const char * attr_sysname   = udev_device_get_sysname(dev);                      // e.g. card0
 
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"ACTION: %s, CONNECTOR: %s, DEVNAME: %s, HOTPLUG: %s, sysname: %s",
             prop_action,
