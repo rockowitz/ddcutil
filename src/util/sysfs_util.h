@@ -71,6 +71,20 @@ rpt_attr_text(
    rpt_attr_text(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 bool
+rpt_attr_int(
+      int          depth,
+      int *        value_loc,
+      const char * fn_segment,
+      ...);
+
+#define RPT_ATTR_INT(depth, value_loc, fn_segment, ...) \
+   rpt_attr_int(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+
+#define GET_ATTR_INT(value_loc, fn_segment, ...) \
+   rpt_attr_int(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+
+
+bool
 rpt_attr_binary(
       int           depth,
       GByteArray ** value_loc,

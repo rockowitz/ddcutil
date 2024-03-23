@@ -382,6 +382,51 @@ rpt_attr_text(
 }
 
 
+bool
+rpt_attr_int(
+      int          depth,
+      int *        value_loc,
+      const char * fn_segment,
+      ...)
+{
+   bool debug = true;
+
+   char pb1[PATH_MAX];
+   va_list ap;
+   va_start(ap, fn_segment);
+   assemble_sysfs_path2(pb1, PATH_MAX, fn_segment, ap);
+   va_end(ap);
+   if (debug)
+      printf("(%s) pb1=%s\n", __func__, pb1);
+
+   bool found = false;
+   *value_loc = -1;
+
+   char * sval = read_sysfs_attr0(pb1, false);
+   if (sval) {
+      found = str_to_int(sval, value_loc, 10);
+      if (!found) {
+         char buf[40];
+         g_strdup_printf(buf, 40, "Not an integer: %s", sval);
+         rpt_attr_output(depth, pb1, ": ", buf);
+      }
+      else {
+         rpt_attr_output(depth, pb1, "=", sval);
+      }
+      free(sval);
+   }
+   else  {
+     rpt_attr_output(depth, pb1, ": ", "Not Found");
+  }
+
+  if (debug)
+     printf("(%s) Done.\n", __func__);
+
+  return found;
+}
+
+
+
 /** Reads a binary attribute and reports "Found" or "Not found".
  *
  *  \param  depth      logical indentation depth, if < 0, output nothing
