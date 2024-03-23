@@ -596,6 +596,7 @@ bool check_all_video_adapters_implement_drm() {
        VNT_END
     };
 
+
 int lookup_connector_type(const char * name) {
    int val = vnt_find_id(
          connector_type_lookup_table,
@@ -606,6 +607,7 @@ int lookup_connector_type(const char * name) {
    return val;
 }
 
+
 char * dci_repr(Drm_Connector_Identifier dci) {
    char * buf = g_strdup_printf("[dci:cardno=%d,connector_id=%d,connector_type=%d=%s,connector_type_id=%d]",
          dci.cardno, dci.connector_id,
@@ -614,7 +616,39 @@ char * dci_repr(Drm_Connector_Identifier dci) {
    return buf;
 }
 
-// #ifdef FUTURE
+
+/** Thread safe function that returns a brief string representation of a #Drm_Connector_Identifier.
+ *  The returned value is valid until the next call to this function on the current thread.
+ *
+ *
+ *  \param  dpath  pointer to ##DDCA_IO_Path
+ *  \return string representation of #DDCA_IO_Path
+ */
+char * dci_repr_t(Drm_Connector_Identifier dci) {
+   static GPrivate  dci_repr_key = G_PRIVATE_INIT(g_free);
+
+   char * repr = dci_repr(dci);
+   char * buf = get_thread_fixed_buffer(&dci_repr_key, 100);
+   g_snprintf(buf, 100, "%s", repr);
+   free(repr);
+
+   return buf;
+}
+
+
+bool dci_eq(Drm_Connector_Identifier dci1, Drm_Connector_Identifier dci2) {
+   bool result = false;
+   if (dci1.connector_id > 0 && dci1.connector_id == dci2.connector_id) {
+      result = true;
+   }
+   else
+      result = dci1.cardno            == dci2.cardno &&
+               dci1.connector_type    == dci2.connector_type &&
+               dci1.connector_type_id == dci2.connector_type_id;
+   return result;
+}
+
+
 Drm_Connector_Identifier parse_sys_drm_connector_name(char * drm_connector) {
    bool debug = true;
    DBGF(debug, "Starting. drm_connector = |%s|", drm_connector);

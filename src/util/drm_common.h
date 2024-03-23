@@ -40,6 +40,8 @@ typedef struct {
 } Drm_Connector_Identifier;
 
 char * dci_repr(Drm_Connector_Identifier dci);
+char * dci_repr_t(Drm_Connector_Identifier dci);
+bool dci_eq(Drm_Connector_Identifier dci1, Drm_Connector_Identifier dci2);
 Drm_Connector_Identifier parse_sys_drm_connector_name(char * drm_connector);
 
 #endif /* DRM_COMMON_H_ */
