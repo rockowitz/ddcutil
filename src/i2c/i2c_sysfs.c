@@ -603,7 +603,7 @@ static void report_one_bus_i2c(
    else {
       rpt_vstring(depth, "Examining /sys/bus/i2c/devices/i2c-%d...", busno);
       int d1 = depth+1;
-      // d1 > 0 => get_i2c_sys_info() reports as it collects, no need to call report_i2c_sys_info()
+      // reports as it collects, no need to call report_i2c_sys_info()
       I2C_Sys_Info * info = get_i2c_sys_info(busno, d1);
       // report_i2c_sys_info(info, depth+1);
       free_i2c_sys_info(info);
@@ -706,6 +706,7 @@ void report_one_sys_drm_connector(int depth, Sys_Drm_Connector * cur)
 
    rpt_vstring(d0, "Connector:   %s", cur->connector_name);
    rpt_vstring(d1, "i2c_busno:   %d", cur->i2c_busno);
+   rpt_vstring(d1, "connector_number: %d", cur->connector_number);
    rpt_vstring(d1, "name:        %s", cur->name);
    rpt_vstring(d1, "dev:         %s", cur->dev);
    rpt_vstring(d1, "enabled:     %s", cur->enabled);
@@ -732,6 +733,7 @@ void report_one_sys_drm_display_fixedinfo(int depth, Sys_Drm_Connector_FixedInfo
 
    rpt_vstring(d0, "Connector:   %s", cur->connector_name);
    rpt_vstring(d1, "i2c_busno:   %d", cur->i2c_busno);
+   rpt_vstring(d1, "connector_number: %d", cur->connector_number);
    rpt_vstring(d1, "name:        %s", cur->name);
    // rpt_vstring(d1, "dev:         %s", cur->dev);
    // rpt_vstring(d1, "enabled:     %s", cur->enabled);
@@ -778,6 +780,7 @@ void one_drm_connector(
    cur->connector_name = g_strdup(fn);   // e.g. card0-DP-1
    RPT_ATTR_REALPATH(d0, &cur->connector_path,
                                        dirname, fn);
+   RPT_ATTR_INT( d0, &cur->connector_number, dirname, fn, "connector_number");
    RPT_ATTR_TEXT(d0, &cur->enabled, dirname, fn, "enabled");   // e.g. /sys/class/drm/card0-DP-1/enabled
    RPT_ATTR_TEXT(d0, &cur->status,  dirname, fn, "status"); // e.g. /sys/class/drm/card0-DP-1/status
 
@@ -931,6 +934,7 @@ void one_drm_connector_fixedinfo(
    cur->base_busno = -1;
    g_ptr_array_add(drm_displays, cur);
    cur->connector_name = g_strdup(fn);   // e.g. card0-DP-1
+   RPT_ATTR_INT(     d0, &cur->connector_number, dirname, fn, "connector_number");
    RPT_ATTR_REALPATH(d0, &cur->connector_path, dirname, fn);
 
    GByteArray * edid_byte_array = NULL;
@@ -1210,8 +1214,51 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
    return result;
 }
 
+Sys_Drm_Connector *
+find_sys_drm_connector_by_connector_number(int connector_number) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "connector_number=%d", connector_number);
+   if (!sys_drm_connectors)
+     sys_drm_connectors = scan_sys_drm_connectors(-1);
+   assert(sys_drm_connectors);
+   Sys_Drm_Connector * result = NULL;
+   for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
+      Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
+      if (cur->connector_number < 0)  // driver does not set connector number, need only check once
+         break;
+      if (cur->connector_number == connector_number) {
+         DBGTRC(debug, DDCA_TRC_NONE, "Matched");
+         result = cur;
+         break;
+      }
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
+   return result;
+}
 
-int  sys_drm_get_busno_by_connector(const char * connector_name) {
+
+Sys_Drm_Connector *
+find_sys_drm_connector_by_connector_identifier(Drm_Connector_Identifier dci) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "dci = %s",  dci_repr_t(dci));
+   if (!sys_drm_connectors)
+     sys_drm_connectors = scan_sys_drm_connectors(-1);
+   assert(sys_drm_connectors);
+   Sys_Drm_Connector * result = NULL;
+   for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
+      Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
+      Drm_Connector_Identifier cur_dci = parse_sys_drm_connector_name(cur->connector_name);
+      if (dci_eq(dci, cur_dci)) {
+         result = cur;
+         break;
+      }
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
+   return result;
+}
+
+
+int sys_drm_get_busno_by_connector(const char * connector_name) {
    int result = -1;
    Sys_Drm_Connector * sdc = find_sys_drm_connector(-1, NULL, connector_name);
    if (sdc)
@@ -1226,7 +1273,8 @@ int  sys_drm_get_busno_by_connector(const char * connector_name) {
  *  @param  I2C bus number
  *  @return pointer to instance, NULL if not found
  */
-Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
+Sys_Drm_Connector *
+find_sys_drm_connector_by_busno(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
    Sys_Drm_Connector * result = find_sys_drm_connector(busno, NULL, NULL);
