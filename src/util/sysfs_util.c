@@ -389,7 +389,7 @@ rpt_attr_int(
       const char * fn_segment,
       ...)
 {
-   bool debug = true;
+   bool debug = false;
 
    char pb1[PATH_MAX];
    va_list ap;
