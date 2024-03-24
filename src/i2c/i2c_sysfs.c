@@ -1273,7 +1273,7 @@ int sys_drm_get_busno_by_connector(const char * connector_name) {
  *  @param  I2C bus number
  *  @return pointer to instance, NULL if not found
  */
-Sys_Drm_Connector *
+static Sys_Drm_Connector *
 find_sys_drm_connector_by_busno(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
@@ -2427,11 +2427,11 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(one_drm_connector);
    RTTI_ADD_FUNC(scan_sys_drm_connectors);
    RTTI_ADD_FUNC(report_sys_drm_connectors);
-   RTTI_ADD_FUNC(find_sys_drm_connector);
-#ifdef OUT
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno);
-#endif
+   RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_identifier);
+   RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_number);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);
+   RTTI_ADD_FUNC(find_sys_drm_connector);
    RTTI_ADD_FUNC(get_drm_connector_name_by_busno);
 
    // conflicting drivers
