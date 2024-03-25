@@ -54,6 +54,9 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_DISCARD_CACHE,"discard",        4,  1,       2,                  Option_None},
    {CMDID_LIST_RTTI,    "traceable-functions",
                                           2,  0,       0,                  Option_None},
+   {CMDID_NOOP,         "noop",           2,  0,       9,                  Option_None},
+   {CMDID_NOOP,         "iefbr14",        2,  0,       0,                  Option_None},
+
    {CMDID_C1,           "c1",             2,  0,       9,                  Option_None},
    {CMDID_C2,           "c2",             2,  0,       9,                  Option_None},
    {CMDID_C3,           "c3",             2,  0,       9,                  Option_None},

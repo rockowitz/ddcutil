@@ -44,6 +44,7 @@ typedef enum {
    CMDID_SAVE_SETTINGS = 0x010000,
    CMDID_DISCARD_CACHE = 0x020000,
    CMDID_LIST_RTTI     = 0x040000,
+   CMDID_NOOP          = 0x080000,
    CMDID_C1            = 0x100000,         // utility command id, for tests
    CMDID_C2            = 0x200000,
    CMDID_C3            = 0x400000,

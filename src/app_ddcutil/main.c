@@ -938,8 +938,13 @@ main(int argc, char *argv[]) {
    //    i2c_discard_caches(parsed_cmd->discarded_cache_types);
    // }
 
+   else if (parsed_cmd->cmd_id == CMDID_NOOP) {
+      rpt_vstring(0, "Executing options only");
+      main_rc = EXIT_SUCCESS;
+   }
+
    else if (parsed_cmd->cmd_id == CMDID_C1) {
-      DBGMSG("Executing temporarily defined command C1");
+      DBGMSG("Executing temporarily defined command C1: watch for display connection/disconnection");
       if (!drm_enabled) {
          DBGMSG("Requires DRM capable video drivers.");
          main_rc = EXIT_FAILURE;
