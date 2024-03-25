@@ -1132,8 +1132,8 @@ parse_command(
                   '\0', 0, G_OPTION_ARG_NONE, &discard_cached_capabilities_flag, "Discard capabilities cache", NULL},
       {"discard-dynamic-sleep-cache",
          '\0', 0, G_OPTION_ARG_NONE, &discard_dsa_cache_flag, "Discard dynamic sleep cache", NULL},
-      {"discard-dsa-cache",
-         '\0', 0, G_OPTION_ARG_NONE, &discard_dsa_cache_flag, "Discard dynamic sleep cache", NULL},
+   // {"discard-dsa-cache",
+   //    '\0', 0, G_OPTION_ARG_NONE, &discard_dsa_cache_flag, "Discard dynamic sleep cache", NULL},
 
       // Behavior options
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
