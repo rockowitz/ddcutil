@@ -161,6 +161,8 @@ discard_cache_arg_func(
 }
 
 
+
+
 #ifdef ENABLE_USB
 static gboolean
 ignored_hiddev_arg_func(const    gchar* option_name,
@@ -938,6 +940,7 @@ parse_command(
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
    gboolean watch_displays_flag = false;
+   gboolean discard_cached_capabilities_flag = false;
 
    gboolean try_get_edid_from_sysfs = DEFAULT_TRY_GET_EDID_FROM_SYSFS;
 
@@ -1124,6 +1127,8 @@ parse_command(
                                   G_OPTION_ARG_CALLBACK, discard_cache_arg_func,    "Discard performance caches",  "cache type"},
       {"discard-cache",     '\0', G_OPTION_FLAG_OPTIONAL_ARG,
          G_OPTION_ARG_CALLBACK, discard_cache_arg_func,    "Discard performance caches",  "cache type"},
+      {"discard-capabilities-cache",
+                  '\0', 0, G_OPTION_ARG_NONE, &discard_cached_capabilities_flag, "Discard capabilities cache", NULL},
 
       // Behavior options
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
@@ -1591,9 +1596,12 @@ parse_command(
    SET_CMDFLAG2(CMD_FLAG2_F16,               f16_flag);
 
 
-
    if (discarded_caches_work) {
       parsed_cmd->discarded_cache_types = discarded_caches_work;
+      SET_CMDFLAG(CMD_FLAG_DISCARD_CACHES, true);
+   }
+   if (discard_cached_capabilities_flag) {
+      parsed_cmd->discarded_cache_types |= CAPABILITIES_CACHE;;
       SET_CMDFLAG(CMD_FLAG_DISCARD_CACHES, true);
    }
 
