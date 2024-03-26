@@ -896,6 +896,12 @@ main(int argc, char *argv[]) {
 
    if (!master_initializer(parsed_cmd))
       goto bye;
+
+   if (parsed_cmd->cmd_id == CMDID_NOOP) {
+      rpt_vstring(0, "Executing options only");
+      rpt_nl();
+   }
+
    if (parsed_cmd->flags&CMD_FLAG_SHOW_SETTINGS)
       report_all_options(parsed_cmd, configure_fn, untokenized_cmd_prefix, 0);
    // xdg_tests(); // for development
@@ -939,7 +945,7 @@ main(int argc, char *argv[]) {
    // }
 
    else if (parsed_cmd->cmd_id == CMDID_NOOP) {
-      rpt_vstring(0, "Executing options only");
+      // rpt_vstring(0, "Executing options only");   // already reported
       main_rc = EXIT_SUCCESS;
    }
 
