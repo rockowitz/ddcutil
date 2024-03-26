@@ -40,6 +40,9 @@
 #include "base/drm_connector_state.h"
 
 
+// Trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_BASE;
+
 
  char * get_busid_from_fd(int fd) {
     int depth = 0;
@@ -58,9 +61,11 @@
               // interpreted as error code: %s",  rc, linux_errno_desc(-rc));
     }
     else {
-       rpt_vstring(d1, "Device information:");
-       rpt_vstring(d2, "bustype:                %d - %s",
-              ddev->bustype, drm_bus_type_name(ddev->bustype));
+       if (debug) {
+          rpt_vstring(d1, "Device information:");
+          rpt_vstring(d2, "bustype:                %d - %s",
+                      ddev->bustype, drm_bus_type_name(ddev->bustype));
+       }
        busid = g_strdup_printf("%s:%04x:%02x:%02x.%d",
               drm_bus_type_name(ddev->bustype),
               // "PCI",
@@ -133,8 +138,8 @@ static void free_enum_metadata(Enum_Metadata * meta) {
 #endif
 
 
-#ifdef UNUSED
-static void dbgrpt_enum_metadata(int depth, Enum_Metadata * meta) {
+
+static void dbgrpt_enum_metadata(Enum_Metadata * meta, int depth) {
    rpt_structure_loc("Enum_Metadata", meta, depth);
    if (meta) {
       int d1 = depth+1;
@@ -143,30 +148,29 @@ static void dbgrpt_enum_metadata(int depth, Enum_Metadata * meta) {
          rpt_vstring(d1, "%2d  %s", meta->values[ndx], meta->value_names);
    }
 }
-#endif
 
 
  static Enum_Metadata * drmModePropertyRes_to_enum_metadata(drmModePropertyRes * prop) {
     bool debug = false;
-    DBGF(debug, "Starting.  prop=%p", prop);
+    DBGTRC_STARTING(debug, TRACE_GROUP, "prop=%p", prop);
     assert(prop);
     Enum_Metadata * meta = calloc(1, sizeof(Enum_Metadata));
     meta->name = strdup(prop->name);
 
-    DBGF(debug, "prop->name = %s", prop->name);
-    DBGF(debug, "prop->count_enums = %d", prop->count_enums);
-    DBGF(debug, "prop->count_values = %d", prop->count_values);
+    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "prop->name = %s", prop->name);
+    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "prop->count_enums = %d", prop->count_enums);
+    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "prop->count_values = %d", prop->count_values);
     meta->count = prop->count_enums;
     meta->values = calloc(prop->count_enums, sizeof(uint64_t));
     meta->value_names = calloc(prop->count_enums, sizeof(char*));
     for (int ndx = 0; ndx < meta->count; ndx++) {
        struct drm_mode_property_enum * dmpe = prop->enums;
-       DBGF(debug, "prop->enums == dmpe = %p", prop->enums);
-       // DBGF(debug, "prop->values[%d] = %s", ndx, prop->values[ndx]);
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "prop->enums == dmpe = %p", prop->enums);
+       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "prop->values[%d] = %s", ndx, prop->values[ndx]);
        meta->values[ndx] = dmpe->value;
        meta->value_names[ndx] = strdup(dmpe->name);
     }
-    DBGF(debug, "Done.   Returning %p", meta);
+    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Enum_Metadata", dbgrpt_enum_metadata, meta);
     return meta;
  }
 
@@ -188,7 +192,7 @@ static void store_property_value(
       uint64_t               prop_value)
 {
    bool debug = false;
-   DBGF(debug, "Starting.  fd=%d. connector_state=%p, connector_state->connector_id=%d, prop_ptr=%p, prop_ptr->prop_id=%d, prop_value=%d",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting.  fd=%d. connector_state=%p, connector_state->connector_id=%d, prop_ptr=%p, prop_ptr->prop_id=%d, prop_value=%d",
           fd, connector_state, connector_state->connector_id, prop_ptr, prop_ptr->prop_id, prop_value);
 
    int d1 = 1;
@@ -241,93 +245,97 @@ static void store_property_value(
    default:
       break;
    }
-   DBGF(debug, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
 // Returns array of DRM_Connector_State for one card
-int get_connector_state_array(int fd, int cardno, GPtrArray* collector) {
+DDCA_Status get_connector_state_array(int fd, int cardno, GPtrArray* collector) {
    bool debug = false;
-   DBGF(debug, "Starting.  fd=%d, cardno=%d, collector=%p", fd, cardno, collector);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting.  fd=%d, cardno=%d, collector=%p", fd, cardno, collector);
+   int result = 0;
    // int depth = 0;
    int d1 = 1;
    int d2 = 2;
 
-   DBGF(debug, "Retrieving DRM resources...");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Retrieving DRM resources...");
    drmModeResPtr res = drmModeGetResources(fd);
-   DBGF(debug,"res=%p", (void*)res);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"res=%p", (void*)res);
    if (!res) {
       int errsv = errno;
       rpt_vstring(d1, "Failure retrieving DRM resources, errno=%d=%s", errsv, strerror(errsv));
       if (errsv == EINVAL)
          rpt_vstring(d1,"Driver apparently does not provide needed DRM ioctl calls");
-      DBGF(debug, "Done.   Returning %d", errsv);
-      return errsv;
+      result = -errsv;
    }
-   if (debug)
-      report_drmModeRes(res, d2);
-
-   DBGF(debug, "Scanning connectors for card %d ...", cardno);
-   for (int i = 0; i < res->count_connectors; ++i) {
-      DBGF(debug, "calling drmModeGetConnector for id %d", res->connectors[i]);
-
-      /* Doc for drmModeGetConnector in xf86drmMode.h:
-       *
-       * Retrieve all information about the connector connectorId. This will do a
-       * forced probe on the connector to retrieve remote information such as EDIDs
-       * from the display device.
-       */
-      drmModeConnector * conn = drmModeGetConnector(fd, res->connectors[i]);
-      if (!conn) {
-         rpt_vstring(d1, "Cannot retrieve DRM connector id %d errno=%s",
-                         res->connectors[i], strerrorname_np(errno));
-         continue;
-      }
-
+   else {
       if (debug)
-        report_drmModeConnector(fd, conn, d1) ;
-      Drm_Connector_State * connector_state = calloc(1,sizeof(Drm_Connector_State));
-      connector_state->cardno       = cardno;
-      connector_state->connector_id = res->connectors[i];
-      if (debug) {
-         int depth=2;
-         rpt_structure_loc("drmModeConnector", conn, depth);
-         rpt_vstring(d1, "%-20s %d",       "connector_id:", conn->connector_id);
-         rpt_vstring(d1, "%-20s %d - %s",  "connector_type:",    conn->connector_type,  drm_connector_type_name(conn->connector_type));
-         rpt_vstring(d1, "%-20s %d",       "connector_type_id:", conn->connector_type_id);
-         rpt_vstring(d1, "%-20s %d - %s",  "connection:",        conn->connection, connector_status_name(conn->connection));
-      }
-      connector_state->connector_type = conn->connector_type;;
-      connector_state->connector_type_id = conn->connector_type_id;
-      connector_state->connection = conn->connection;
-      drmModeConnector * p = conn;
-      if (debug)
-         rpt_vstring(d1, "%-20s %d",  "count_props", p->count_props);
-      for (int ndx = 0; ndx < p->count_props; ndx++) {
-           uint64_t curval = p->prop_values[ndx];   // coverity workaround
-           if (debug) {
-              rpt_vstring(d2, "index=%d, property id (props)=%" PRIu32 ", property value (prop_values)=%" PRIu64 ,
-                               ndx, p->props[ndx], curval);
-           }
-           int id = p->props[ndx];
-           if (id == EDID_PROP_ID         ||      //  1
-               id == DPMS_PROP_ID         ||      //  2
-               id == LINK_STATUS_PROP_ID  ||      //  5
-               id == SUBCONNECTOR_PROP_ID)        // 69
-           {
-              drmModePropertyPtr metadata_ptr = drmModeGetProperty(fd, p->props[ndx]);
-              if (metadata_ptr) {
-                 uint64_t  prop_value = p->prop_values[ndx];
-                 if (debug)
-                    report_property_value(fd, metadata_ptr, prop_value, d2);
-                 store_property_value(fd, connector_state, metadata_ptr, prop_value);
-                 drmModeFreeProperty(metadata_ptr);
+         report_drmModeRes(res, d2);
+
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Scanning connectors for card %d ...", cardno);
+      for (int i = 0; i < res->count_connectors; ++i) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calling drmModeGetConnector for id %d", res->connectors[i]);
+
+         /* Doc for drmModeGetConnector in xf86drmMode.h:
+          *
+          * Retrieve all information about the connector connectorId. This will do a
+          * forced probe on the connector to retrieve remote information such as EDIDs
+          * from the display device.
+          */
+         drmModeConnector * conn = drmModeGetConnector(fd, res->connectors[i]);
+         if (!conn) {
+            rpt_vstring(d1, "Cannot retrieve DRM connector id %d errno=%s",
+                            res->connectors[i], strerrorname_np(errno));
+            continue;
+         }
+
+         if (debug)
+           report_drmModeConnector(fd, conn, d1) ;
+         Drm_Connector_State * connector_state = calloc(1,sizeof(Drm_Connector_State));
+         connector_state->cardno       = cardno;
+         connector_state->connector_id = res->connectors[i];
+         if (debug) {
+            int depth=2;
+            rpt_structure_loc("drmModeConnector", conn, depth);
+            rpt_vstring(d1, "%-20s %d",       "connector_id:", conn->connector_id);
+            rpt_vstring(d1, "%-20s %d - %s",  "connector_type:",    conn->connector_type,  drm_connector_type_name(conn->connector_type));
+            rpt_vstring(d1, "%-20s %d",       "connector_type_id:", conn->connector_type_id);
+            rpt_vstring(d1, "%-20s %d - %s",  "connection:",        conn->connection, connector_status_name(conn->connection));
+         }
+         connector_state->connector_type = conn->connector_type;;
+         connector_state->connector_type_id = conn->connector_type_id;
+         connector_state->connection = conn->connection;
+         drmModeConnector * p = conn;
+         if (debug)
+            rpt_vstring(d1, "%-20s %d",  "count_props", p->count_props);
+         for (int ndx = 0; ndx < p->count_props; ndx++) {
+              uint64_t curval = p->prop_values[ndx];   // coverity workaround
+              if (debug) {
+                 rpt_vstring(d2, "index=%d, property id (props)=%" PRIu32 ", property value (prop_values)=%" PRIu64 ,
+                                  ndx, p->props[ndx], curval);
               }
-           }
-      } // for
-      g_ptr_array_add(collector, connector_state);
+              int id = p->props[ndx];
+              if (id == EDID_PROP_ID         ||      //  1
+                  id == DPMS_PROP_ID         ||      //  2
+                  id == LINK_STATUS_PROP_ID  ||      //  5
+                  id == SUBCONNECTOR_PROP_ID)        // 69
+              {
+                 drmModePropertyPtr metadata_ptr = drmModeGetProperty(fd, p->props[ndx]);
+                 if (metadata_ptr) {
+                    uint64_t  prop_value = p->prop_values[ndx];
+                    if (debug)
+                       report_property_value(fd, metadata_ptr, prop_value, d2);
+                    store_property_value(fd, connector_state, metadata_ptr, prop_value);
+                    drmModeFreeProperty(metadata_ptr);
+                 }
+              }
+         } // for
+         g_ptr_array_add(collector, connector_state);
+      }
+      result = 0;
    }
-   return 0;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
+   return result;
 }
 
 
@@ -373,12 +381,12 @@ void dbgrpt_connector_states(GPtrArray* states) {
 }
 
 
-int get_drm_connector_states_by_fd(int fd, int cardno, GPtrArray* collector) {
+DDCA_Status get_drm_connector_states_by_fd(int fd, int cardno, GPtrArray* collector) {
    bool debug = false;
    bool replace_fd = false;
    bool verbose = false;
    int result = 0;
-   DBGF(debug, "Starting.  fd=%d, cardno=%d, collector=%p, replace_busid=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting.  fd=%d, cardno=%d, collector=%p, replace_busid=%s",
          fd, cardno, collector, sbool(replace_fd));
 
    // returns null string if open() instead of drmOpen(,busid) was used to to open
@@ -396,15 +404,16 @@ int get_drm_connector_states_by_fd(int fd, int cardno, GPtrArray* collector) {
 
    if (replace_fd) {
       busid = get_busid_from_fd(fd);
-      DBGF(debug, "get_busid_from_fd() returned: %s", busid);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "get_busid_from_fd() returned: %s", busid);
       close(fd);
       fd = drmOpen(NULL, busid);
       if (fd < 0) {
          result = -errno;
-         DBGF(debug, "drmOpen(NULL, %s) failed. fd=%d, errno=%d - %s", busid, fd, errno, strerror(errno));
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "drmOpen(NULL, %s) failed. fd=%d, errno=%d - %s",
+                                               busid, fd, errno, strerror(errno));
       }
       else {
-         DBGF(debug, "drmOpen() succeeded");
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "drmOpen() succeeded");
       }
    }
 
@@ -417,14 +426,14 @@ int get_drm_connector_states_by_fd(int fd, int cardno, GPtrArray* collector) {
 
       get_connector_state_array(fd, cardno, collector);
    }
-   DBGF(debug, "Returning:   %d", result);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
 }
 
 
 Drm_Connector_State * get_drm_connector_state_by_fd(int fd, int cardno, int connector_id) {
    bool debug = false;
-   DBGF(debug, "Starting.  fd=%d, connector_id=%d", fd, connector_id);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting.  fd=%d, connector_id=%d", fd, connector_id);
 
    GPtrArray * connector_state_array = g_ptr_array_new();
    g_ptr_array_set_free_func(connector_state_array, free_drm_connector_state);
@@ -443,7 +452,7 @@ Drm_Connector_State * get_drm_connector_state_by_fd(int fd, int cardno, int conn
        }
       g_ptr_array_free(connector_state_array, true);
     }
-   DBGF(debug, "Done.  Returning %p", result);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", result);
    return result;
 }
 
@@ -483,14 +492,22 @@ Drm_Connector_State * get_drm_connector_state_by_devname(const char * devname, i
 #endif
 
 
-int get_drm_connector_states_by_devname(const char * devname, bool verbose, GPtrArray * collector) {
+DDCA_Status
+get_drm_connector_states_by_devname(
+      const char * devname,
+      bool         verbose,
+      GPtrArray *  collector)
+{
    bool debug = false;
-   DBGF(debug, "Starting.  devname=%s, verbose=%s, collector=%p", devname, sbool(verbose), collector);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting.  devname=%s, verbose=%s, collector=%p",
+         devname, sbool(verbose), collector);
    // validate that devmame looks like /dev/dri/cardN
+   DDCA_Status result = 0;
    int cardno = extract_cardno(devname);
    if (cardno < 0) {
       rpt_vstring(1, "Invalid device name: %s", devname);
-      return -EINVAL;
+      result = -EINVAL;
+      goto bye;
    }
 
    int fd  = open(devname,O_RDWR | O_CLOEXEC);
@@ -498,15 +515,18 @@ int get_drm_connector_states_by_devname(const char * devname, bool verbose, GPtr
       int errsv = errno;
       rpt_vstring(1, "Error opening device %s using open(), errno=%s",
                                  devname, strerrorname_np(errsv));
-      return -errsv;
+      result = -errsv;
+      goto bye;
    }
 
-   DBGF(debug, "Calling get_drm_connector_states_by_fd():");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling get_drm_connector_states_by_fd():");
    int rc = get_drm_connector_states_by_fd(fd, cardno, collector);
    if (rc == 0  && (verbose || debug))
       dbgrpt_connector_states(collector);
-   DBGF(debug, "Done.    collectors=%p", collector);
-   return rc;
+
+bye:
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
+   return result;
  }
 
 
@@ -582,5 +602,11 @@ Drm_Connector_State * find_drm_connector_state(Drm_Connector_Identifier cid) {
 
 
 void init_drm_connector_state() {
+   RTTI_ADD_FUNC(drmModePropertyRes_to_enum_metadata);
+   RTTI_ADD_FUNC(store_property_value);
+   RTTI_ADD_FUNC(get_connector_state_array);
+   RTTI_ADD_FUNC(get_drm_connector_states_by_fd);
+   RTTI_ADD_FUNC(get_drm_connector_state_by_fd);
+   RTTI_ADD_FUNC(get_drm_connector_states_by_devname);
 }
 

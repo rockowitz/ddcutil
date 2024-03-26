@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <xf86drmMode.h>
 
+#include <ddcutil_types.h>
+
 #include "util/drm_common.h"
 #include "util/edid.h"
 /** \endcond */
@@ -29,7 +31,7 @@ typedef struct {
    uint64_t          subconnector;
 } Drm_Connector_State;
 
-int
+DDCA_Status
 get_drm_connector_states_by_devname(
       const char * devname,
       bool         verbose,
