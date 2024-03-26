@@ -35,6 +35,7 @@
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
+#include "base/rtti.h"
 
 #include "base/drm_connector_state.h"
 
@@ -579,4 +580,7 @@ Drm_Connector_State * find_drm_connector_state(Drm_Connector_Identifier cid) {
    return result;
 }
 
+
+void init_drm_connector_state() {
+}
 

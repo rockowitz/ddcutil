@@ -11,6 +11,7 @@
 #include "core.h"
 #include "ddc_packets.h"
 #include "displays.h"
+#include "drm_connector_state.h"
 #include "dynamic_features.h"
 #include "dsa2.h"
 #include "execution_stats.h"
@@ -46,6 +47,7 @@ void init_base_services() {
    init_displays();
    init_i2c_bus_base();
    init_feature_metadata();
+   init_drm_connector_state();
    if (debug)
       printf("(%s) Done\n", __func__);
 }

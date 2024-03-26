@@ -52,4 +52,7 @@ report_drm_connector_states(int depth);
 Drm_Connector_State *
 find_drm_connector_state(Drm_Connector_Identifier cid);
 
+void
+init_drm_connector_state();
+
 #endif /* DRM_CONNECTOR_STATE_H_ */
