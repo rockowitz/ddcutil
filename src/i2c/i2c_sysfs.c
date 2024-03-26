@@ -1763,6 +1763,10 @@ GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
 // *** DRM Checks ***
 //
 
+
+#ifdef INVALID
+// adapter_path and adapter_class not set for nvidia driver
+
 /** Uses the Sys_I2C_Info array to get a list of all video adapters
  *  and checks if each supports DRM.
  *
@@ -1793,6 +1797,7 @@ bool all_sysfs_i2c_info_drm(bool rescan) {
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
+#endif
 
 
 char * get_conflicting_drivers_for_bus(int busno) {
@@ -2453,7 +2458,6 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(find_adapter);
    RTTI_ADD_FUNC(get_sys_video_devices);
    RTTI_ADD_FUNC(get_drm_connector_name_by_busno);
-   RTTI_ADD_FUNC(all_sysfs_i2c_info_drm);
 
 // RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_busno);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
