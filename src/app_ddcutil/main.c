@@ -11,6 +11,7 @@
 
 #include <assert.h>
 #include <base/base_services.h>
+#include <base/drm_connector_state.h>
 #include <ctype.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
@@ -27,7 +28,6 @@
 
 #include "util/data_structures.h"
 #include "util/ddcutil_config_file.h"
-#include "util/drm_connector_state.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/file_util.h"

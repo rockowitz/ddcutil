@@ -21,20 +21,22 @@
 #include <xf86drmMode.h>
 /** \endcond */
 
-#include "coredefs_base.h"
-#include "data_structures.h"
-#include "debug_util.h"
-#include "drm_common.h"
-#include "edid.h"
-#include "file_util.h"
-#include "libdrm_util.h"
-#include "subprocess_util.h"
-#include "report_util.h"
-#include "string_util.h"
-#include "sysfs_filter_functions.h"
-#include "sysfs_util.h"
+#include "util/coredefs_base.h"
+#include "util/data_structures.h"
+#include "util/debug_util.h"
+#include "util/drm_common.h"
+#include "util/edid.h"
+#include "util/file_util.h"
+#include "util/libdrm_util.h"
+#include "util/subprocess_util.h"
+#include "util/report_util.h"
+#include "util/string_util.h"
+#include "util/sysfs_filter_functions.h"
+#include "util/sysfs_util.h"
 
-#include "drm_connector_state.h"
+#include "base/core.h"
+
+#include "base/drm_connector_state.h"
 
 
 
@@ -92,7 +94,7 @@ typedef struct {
 } Enum_Metadata;
 
 
-char * get_enum_value_name(Enum_Metadata * meta, int value) {
+static char * get_enum_value_name(Enum_Metadata * meta, int value) {
    char * result = "UNRECOGNIZED";
    for (int i = 0; i < meta->count; i++) {
       if (meta->values[i] == value) {
@@ -117,7 +119,8 @@ static Enum_Metadata *      dpms_metadata = NULL;
 static Enum_Metadata *      link_status_metadata = NULL;
 
 
-void free_enum_metadata(Enum_Metadata * meta) {
+#ifdef UNUSED
+static void free_enum_metadata(Enum_Metadata * meta) {
    if (meta) {
       free(meta->name);
       if (meta->values) {
@@ -126,20 +129,26 @@ void free_enum_metadata(Enum_Metadata * meta) {
       free(meta);
    }
 }
+#endif
 
 
-void dbgrpt_enum_metadata(int depth, Enum_Metadata * meta) {
-   rpt_structure_loc("Enum_Metatdata", meta, depth);
-   int d1 = depth+1;
-   rpt_vstring(d1, "Name:  %s", meta->name);
-   for (int ndx = 0; ndx < meta->count; ndx++)
-      rpt_vstring(d1, "%2d  %s", meta->values[ndx], meta->value_names);
+#ifdef UNUSED
+static void dbgrpt_enum_metadata(int depth, Enum_Metadata * meta) {
+   rpt_structure_loc("Enum_Metadata", meta, depth);
+   if (meta) {
+      int d1 = depth+1;
+      rpt_vstring(d1, "Name:  %s", meta->name);
+      for (int ndx = 0; ndx < meta->count; ndx++)
+         rpt_vstring(d1, "%2d  %s", meta->values[ndx], meta->value_names);
+   }
 }
+#endif
 
 
- Enum_Metadata * drmModePropertyRes_to_enum_metadata(drmModePropertyRes * prop) {
+ static Enum_Metadata * drmModePropertyRes_to_enum_metadata(drmModePropertyRes * prop) {
     bool debug = false;
     DBGF(debug, "Starting.  prop=%p", prop);
+    assert(prop);
     Enum_Metadata * meta = calloc(1, sizeof(Enum_Metadata));
     meta->name = strdup(prop->name);
 
@@ -161,7 +170,7 @@ void dbgrpt_enum_metadata(int depth, Enum_Metadata * meta) {
  }
 
 
- void free_drm_connector_state(void * cs) {
+ static void free_drm_connector_state(void * cs) {
     Drm_Connector_State * cstate = (Drm_Connector_State*) cs;
     if (cstate) {
        if (cstate->edid)
@@ -171,7 +180,7 @@ void dbgrpt_enum_metadata(int depth, Enum_Metadata * meta) {
  }
 
 
-void store_property_value(
+static void store_property_value(
       int                    fd,
       Drm_Connector_State *  connector_state,
       drmModePropertyRes  *  prop_ptr,

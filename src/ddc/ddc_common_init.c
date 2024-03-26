@@ -9,13 +9,13 @@
 // be shared with libmain/api.base.c
 
 #include <assert.h>
+#include <base/drm_connector_state.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 
 #include "config.h"
 
-#include "util/drm_connector_state.h"
 #ifdef ENABLE_FAILSIM
 #include "util/failsim.h"
 #endif

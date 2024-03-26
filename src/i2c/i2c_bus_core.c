@@ -28,7 +28,7 @@
 #include "util/coredefs_base.h"
 #include "util/debug_util.h"
 #include "util/drm_common.h"
-#include "util/drm_connector_state.h"
+#include <base/drm_connector_state.h>
 #include "util/edid.h"
 #include "util/error_info.h"
 #include "util/failsim.h"

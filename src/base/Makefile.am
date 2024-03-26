@@ -1,11 +1,12 @@
 # src/base/Makefile.am
 
-AM_CPPFLAGS =        \
-  $(GLIB_CFLAGS)     \
+AM_CPPFLAGS =         \
+  $(LIBDRM_CFLAGS)    \
+  $(GLIB_CFLAGS)      \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
-AM_CFLAGS = $(AM_CFLAGS_STD) 
+AM_CFLAGS = $(AM_CFLAGS_STD)
 
 CLEANFILES = \
 *expand
@@ -33,9 +34,10 @@ core_per_thread_settings.c \
 ddc_command_codes.c       \
 ddc_errno.c               \
 ddc_packets.c             \
-dynamic_features.c        \
 displays.c                \
+drm_connector_state.c     \
 dsa2.c                    \
+dynamic_features.c        \
 execution_stats.c         \
 feature_lists.c           \
 feature_metadata.c        \

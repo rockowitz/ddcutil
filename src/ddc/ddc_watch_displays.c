@@ -28,7 +28,7 @@
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/drm_common.h"
-#include "util/drm_connector_state.h"
+#include <base/drm_connector_state.h>
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/glib_util.h"

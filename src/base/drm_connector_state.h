@@ -12,8 +12,8 @@
 #include <stdint.h>
 #include <xf86drmMode.h>
 
-#include "drm_common.h"
-#include "edid.h"
+#include "util/drm_common.h"
+#include "util/edid.h"
 /** \endcond */
 
 

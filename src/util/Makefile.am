@@ -25,7 +25,6 @@ libutil_la_SOURCES = \
 data_structures.c          \
 ddcutil_config_file.c      \
 debug_util.c               \
-drm_connector_state.c      \
 edid.c                     \
 error_info.c               \
 file_util.c                \

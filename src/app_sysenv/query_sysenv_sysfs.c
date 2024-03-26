@@ -8,6 +8,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <base/drm_connector_state.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -16,7 +17,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "util/drm_connector_state.h"
 #include "util/data_structures.h"
 #include "util/device_id_util.h"
 #include "util/file_util.h"
