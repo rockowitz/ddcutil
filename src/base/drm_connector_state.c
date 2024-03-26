@@ -145,7 +145,7 @@ static void dbgrpt_enum_metadata(Enum_Metadata * meta, int depth) {
       int d1 = depth+1;
       rpt_vstring(d1, "Name:  %s", meta->name);
       for (int ndx = 0; ndx < meta->count; ndx++)
-         rpt_vstring(d1, "%2d  %s", meta->values[ndx], meta->value_names);
+         rpt_vstring(d1, "%2d  %s", meta->values[ndx], meta->value_names[ndx]);
    }
 }
 
@@ -164,11 +164,9 @@ static void dbgrpt_enum_metadata(Enum_Metadata * meta, int depth) {
     meta->values = calloc(prop->count_enums, sizeof(uint64_t));
     meta->value_names = calloc(prop->count_enums, sizeof(char*));
     for (int ndx = 0; ndx < meta->count; ndx++) {
-       struct drm_mode_property_enum * dmpe = prop->enums;
-       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "prop->enums == dmpe = %p", prop->enums);
-       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "prop->values[%d] = %s", ndx, prop->values[ndx]);
-       meta->values[ndx] = dmpe->value;
-       meta->value_names[ndx] = strdup(dmpe->name);
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "prop->enums[%d].name = %s", ndx, prop->enums[ndx].name);
+       meta->values[ndx] = prop->enums[ndx].value;
+       meta->value_names[ndx] = strdup(prop->enums[ndx].name);
     }
     DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Enum_Metadata", dbgrpt_enum_metadata, meta);
     return meta;
@@ -344,16 +342,15 @@ void dbgrpt_connector_state(Drm_Connector_State * state, int depth) {
    rpt_structure_loc("Drm_Connector_State", state, depth);
    int d1 = depth+1;
    int d2 = depth+2;
+   int d3 = depth+3;
 
-   rpt_vstring(d1, "cardno:               %d", state->cardno);
-   rpt_vstring(d1, "connector_id:         %d", state->connector_id);
-
-   // rpt_vstring(d1, "%-20s %d",       "connector_id:", conn->connector_id);
+   rpt_vstring(d1, "%-20s %d",       "cardno:",            state->cardno);
+   rpt_vstring(d1, "%-20s %d",       "connector_id:",      state->connector_id);
    rpt_vstring(d1, "%-20s %d - %s",  "connector_type:",    state->connector_type,  drm_connector_type_name(state->connector_type));
    rpt_vstring(d1, "%-20s %d",       "connector_type_id:", state->connector_type_id);
    rpt_vstring(d1, "%-20s %d - %s",  "connection:",        state->connection, connector_status_name(state->connection));
 
-   rpt_vstring(d2, "Properties:");
+   rpt_vstring(d1, "Properties:");
    char * vname = get_enum_value_name(dpms_metadata, state->dpms);
    rpt_vstring(d2, "dpms:              %d - %s", state->dpms, vname);
 
@@ -364,8 +361,8 @@ void dbgrpt_connector_state(Drm_Connector_State * state, int depth) {
    rpt_vstring(d2, "subconnector:      %d- %s", state->subconnector, vname);
 
    if (state->edid) {
-      rpt_vstring(d1, "edid:");
-      report_parsed_edid(state->edid, true, d1);
+      rpt_vstring(d2, "edid:");
+      report_parsed_edid(state->edid, true, d3);
    }
    rpt_nl();
 
