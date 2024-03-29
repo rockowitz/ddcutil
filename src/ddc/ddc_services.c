@@ -3,7 +3,7 @@
  * ddc layer initialization and configuration, statistics management
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -30,6 +30,7 @@
 
 #include "dynvcp/dyn_feature_codes.h"
 #include "dynvcp/dyn_feature_files.h"
+#include "dynvcp/dyn_parsed_capabilities.h"
 
 #include "i2c/i2c_services.h"
 
@@ -203,6 +204,7 @@ void init_ddc_services() {
    // dyn:
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_dyn_feature_files();
+   init_dyn_parsed_capabilities();
 
    // i2c:
    init_i2c_display_lock();
