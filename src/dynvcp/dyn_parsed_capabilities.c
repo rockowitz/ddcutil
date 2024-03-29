@@ -3,7 +3,7 @@
  * Report parsed capabilities, taking into account dynamic feature definitions.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -21,6 +21,7 @@
 #include "base/core.h"
 #include "base/ddc_command_codes.h"
 #include "base/displays.h"
+#include "base/rtti.h"
 
 #include "vcp/parsed_capabilities_feature.h"
 #include "vcp/vcp_feature_codes.h"
@@ -29,9 +30,12 @@
 #include "vcp/parsed_capabilities_feature.h"
 
 #include "dynvcp/dyn_feature_codes.h"
+#include "dynvcp/dyn_feature_files.h"
 
 #include "dynvcp/dyn_parsed_capabilities.h"
 
+
+static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_VCP;
 
 /** Given a byte representing an absolute gamma value, as used in
  *  feature x72 (gamma), format a string representation of that value.
@@ -304,17 +308,18 @@ bye:
  *  @param dref        display reference
  *  @param vcp_version monitor VCP version, used in case feature
  *                     information is version specific, from parsed capabilities if possible
+ *
  *  @param depth       logical indentation depth
  */
 static void
-report_capabilities_feature(
+dyn_report_one_cap_feature(
       Capabilities_Feature_Record *  vfr,
       Display_Ref *                  dref,
       DDCA_MCCS_Version_Spec         vcp_version,
       int                            depth)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. vfr=%p, dref=%s, vcp_version=%d.%d",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "vfr=%p, dref=%s, vcp_version=%d.%d",
                  vfr, dref_repr_t(dref), vcp_version.major, vcp_version.minor);
    assert(vfr && memcmp(vfr->marker, CAPABILITIES_FEATURE_MARKER, 4) == 0);
 
@@ -322,145 +327,162 @@ report_capabilities_feature(
    int d1 = depth+1;
    int d2 = depth+2;
 
-   rpt_vstring(d0, "Feature: %02X (%s)",
-                  vfr->feature_id,
-                  dyn_get_feature_name(vfr->feature_id, dref));  // n. handles dref == NULL
-                  // get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));
-
-   DDCA_Output_Level ol = get_output_level();
-   DBGMSF(debug,  "vfr->value_string=%p", vfr->value_string);
-   if (ol >= DDCA_OL_VERBOSE && vfr->value_string) {
-      rpt_vstring(d1, "Values (unparsed): %s", vfr->value_string);
+   assert(dref->dfr);  // will be dummy if no dfr read
+   Dyn_Feature_Metadata* dfr_metadata = dyn_get_dynamic_feature_metadata(dref->dfr, vfr->feature_id);
+   if (dfr_metadata) {
+      rpt_vstring(d0, "Feature: %02X (UDF:%s)",
+                     vfr->feature_id, dfr_metadata->feature_name);
+      if ((dfr_metadata->feature_flags & DDCA_SIMPLE_NC) && dfr_metadata->sl_values) {
+         rpt_label(d1 , "UDF Values:");
+         DDCA_Feature_Value_Entry * cur = dfr_metadata->sl_values;
+         while (cur->value_name) {
+            rpt_vstring(d2, "%02x: %s", cur->value_code, cur->value_name);
+            cur++;
+         }
+      }
    }
 
-   // only BVA variant works because of feature x72 (gamma)
+   else {
+      rpt_vstring(d0, "Feature: %02X (%s)",
+                     vfr->feature_id,
+                     dyn_get_feature_name(vfr->feature_id, dref));  // n. handles dref == NULL
+                     // get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));
+
+      DDCA_Output_Level ol = get_output_level();
+      DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "vfr->value_string=%p", vfr->value_string);
+      if (ol >= DDCA_OL_VERBOSE && vfr->value_string) {
+         rpt_vstring(d1, "Values (unparsed): %s", vfr->value_string);
+      }
+
+      // only BVA variant works because of feature x72 (gamma)
 
 #ifdef CFR_BVA
-   // hex_dump((Byte*) vfr, sizeof(VCP_Feature_Record));
-   // if (vfr->values)
-   //    report_id_array(vfr->values, "Feature values:");
-   char * buf0 = NULL;
-   DBGMSF(debug, "vfr->values=%p", vfr->values);
-   if (vfr->values) {
-      if (vfr->feature_id == 0x72) { // special handling for feature x72 (gamma)
-         report_gamma_capabilities(vfr->values, d1);
-      }
-      else {
-         // Get the descriptions of the documented values for the feature
-         DDCA_Feature_Value_Entry * feature_values =
-               find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
+      // hex_dump((Byte*) vfr, sizeof(VCP_Feature_Record));
+      // if (vfr->values)
+      //    report_id_array(vfr->values, "Feature values:");
+      char * buf0 = NULL;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "vfr->values=%p", vfr->values);
+      if (vfr->values) {
+         if (vfr->feature_id == 0x72) { // special handling for feature x72 (gamma)
+            report_gamma_capabilities(vfr->values, d1);
+         }
+         else {
+            // Get the descriptions of the documented values for the feature
+            DDCA_Feature_Value_Entry * feature_values =
+                  find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
 
-         DBGMSF(debug, "Feature values %sfound for feature 0x%02x",
-                       (feature_values) ? "" : "NOT ",
-                       vfr->feature_id);
-         int ct = bva_length(vfr->values);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Feature values %sfound for feature 0x%02x",
+                          (feature_values) ? "" : "NOT ",
+                          vfr->feature_id);
+            int ct = bva_length(vfr->values);
 
-         if (feature_values) {  // did we find descriptions for the features?
-            if (ol >= DDCA_OL_VERBOSE)
-               rpt_label(d1, "Values (  parsed):");
-            else
-               rpt_label(d1 , "Values:");
-            int ndx = 0;
-            for (; ndx < ct; ndx++) {
-               Byte hval = bva_get(vfr->values, ndx);
-               char *  value_name = sl_value_table_lookup(feature_values, hval);
-               if (!value_name)
-                  value_name = "Unrecognized value";
-               rpt_vstring(d2, "%02x: %s", hval, value_name);
+            if (feature_values) {  // did we find descriptions for the features?
+               if (ol >= DDCA_OL_VERBOSE)
+                  rpt_label(d1, "Values (  parsed):");
+               else
+                  rpt_label(d1 , "Values:");
+               int ndx = 0;
+               for (; ndx < ct; ndx++) {
+                  Byte hval = bva_get(vfr->values, ndx);
+                  char *  value_name = sl_value_table_lookup(feature_values, hval);
+                  if (!value_name)
+                     value_name = "Unrecognized value";
+                  rpt_vstring(d2, "%02x: %s", hval, value_name);
+               }
+            }
+            else {          // no interpretation available, just show the values
+               int required_size = 3 * ct;
+               buf0 = malloc(required_size);
+               char * bufend = buf0+required_size;
+
+               char * pos = buf0;
+               int ndx = 0;
+               for (; ndx < ct; ndx++) {
+                  Byte hval = bva_get(vfr->values, ndx);
+                  snprintf(pos, bufend-pos, "%02X ", hval);
+                  pos = pos+3;
+               }
+               *(pos-1) = '\0';
+               if (ol >= DDCA_OL_VERBOSE)
+                  rpt_vstring(d1, "Values (  parsed): %s (interpretation unavailable)", buf0);
+               else
+                  rpt_vstring(d1, "Values: %s (interpretation unavailable)", buf0);
             }
          }
-         else {          // no interpretation available, just show the values
-            int required_size = 3 * ct;
-            buf0 = malloc(required_size);
-            char * bufend = buf0+required_size;
-
-            char * pos = buf0;
-            int ndx = 0;
-            for (; ndx < ct; ndx++) {
-               Byte hval = bva_get(vfr->values, ndx);
-               snprintf(pos, bufend-pos, "%02X ", hval);
-               pos = pos+3;
-            }
-            *(pos-1) = '\0';
-            if (ol >= DDCA_OL_VERBOSE)
-               rpt_vstring(d1, "Values (  parsed): %s (interpretation unavailable)", buf0);
-            else
-               rpt_vstring(d1, "Values: %s (interpretation unavailable)", buf0);
-         }
       }
-   }
 
-   // assert( streq(buf0, vfr->value_string));
-   if (buf0)
-      free(buf0);
+      // assert( streq(buf0, vfr->value_string));
+      if (buf0)
+         free(buf0);
 #endif
 
 #ifdef CFR_BBF
 
-   // WRONG: report_gamma_capabilities requires value bytes in order given in the
-   // capabilities string, no way to get that from BitByteFlags
-   DBGMSF(debug, "vfr->bbflags=%p", vfr->bbflags);
-   if (vfr->bbflags) {    // WRONG TEST, NOT A POINTER
+      // WRONG: report_gamma_capabilities requires value bytes in order given in the
+      // capabilities string, no way to get that from BitByteFlags
+      DBGMSF(debug, "vfr->bbflags=%p", vfr->bbflags);
+      if (vfr->bbflags) {    // WRONG TEST, NOT A POINTER
 
-      // Get the descriptions of the documented values for the feature
-      DDCA_Feature_Value_Entry * feature_values = NULL;
-      bool found_dynamic_feature = false;
-      if (dref && dref->dfr) {
-         DDCA_Feature_Metadata * dfr_metadata
-                  = get_dynamic_feature_metadata(dref->dfr, vfr->feature_id);
-         if (dfr_metadata) {
-            found_dynamic_feature = true;
-            feature_values = dfr_metadata->sl_values;
-         }
-      }
-      if (!found_dynamic_feature) {
-         feature_values =
-            find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
-      }
-      DBGMSF(debug, "Feature values %sfound for feature 0x%02x",
-                    (feature_values) ? "" : "NOT ",
-                    vfr->feature_id);
-
-      if (feature_values || vfr->feature_id == 0x72) {  // did we find descriptions for the features?
-         if (ol >= DDCA_OL_VERBOSE)
-            rpt_vstring(d1, "Values (  parsed):");
-         else
-            rpt_vstring(d1, "Values:");
-
-         char * dynamic_disclaimer = "";
-         if (found_dynamic_feature)
-            dynamic_disclaimer = " (from user defined feature definition)";
-
-         if (vfr->feature_id == 0x72) {    // special handling for gamma
-            // WRONG: report_gamma_capabilities requires value bytes in order given in the
-            // capabilities string, no way to get that from BitByteFlags
-            report_gamma_capabilities(vfr->values, d2);
-         }
-         else {
-            Byte_Bit_Flags iter = bbf_iter_new(vfr->bbflags);
-            int nextval = -1;
-            while ( (nextval = bbf_iter_next(iter)) >= 0) {
-                  assert(nextval < 256);
-                  char *  value_name = sl_value_table_lookup(feature_values, nextval);
-                  if (!value_name)
-                     value_name = "Unrecognized value";
-                  rpt_vstring(d2, "%02x: %s%s", nextval, value_name, dynamic_disclaimer);
+         // Get the descriptions of the documented values for the feature
+         DDCA_Feature_Value_Entry * feature_values = NULL;
+         bool found_dynamic_feature = false;
+         if (dref && dref->dfr) {
+            DDCA_Feature_Metadata * dfr_metadata
+                     = dyn_get_dynamic_feature_metadata(dref->dfr, vfr->feature_id);
+            if (dfr_metadata) {
+               found_dynamic_feature = true;
+               feature_values = dfr_metadata->sl_values;
             }
-            bbf_iter_free(iter);
+         }
+         if (!found_dynamic_feature) {
+            feature_values =
+               find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
+         }
+         DBGMSF(debug, "Feature values %sfound for feature 0x%02x",
+                       (feature_values) ? "" : "NOT ",
+                       vfr->feature_id);
+
+         if (feature_values || vfr->feature_id == 0x72) {  // did we find descriptions for the features?
+            if (ol >= DDCA_OL_VERBOSE)
+               rpt_vstring(d1, "Values (  parsed):");
+            else
+               rpt_vstring(d1, "Values:");
+
+            char * dynamic_disclaimer = "";
+            if (found_dynamic_feature)
+               dynamic_disclaimer = " (from user defined feature definition)";
+
+            if (vfr->feature_id == 0x72) {    // special handling for gamma
+               // WRONG: report_gamma_capabilities requires value bytes in order given in the
+               // capabilities string, no way to get that from BitByteFlags
+               report_gamma_capabilities(vfr->values, d2);
+            }
+            else {
+               Byte_Bit_Flags iter = bbf_iter_new(vfr->bbflags);
+               int nextval = -1;
+               while ( (nextval = bbf_iter_next(iter)) >= 0) {
+                     assert(nextval < 256);
+                     char *  value_name = sl_value_table_lookup(feature_values, nextval);
+                     if (!value_name)
+                        value_name = "Unrecognized value";
+                     rpt_vstring(d2, "%02x: %s%s", nextval, value_name, dynamic_disclaimer);
+               }
+               bbf_iter_free(iter);
+            }
+         }
+         else {          // no interpretation available, just show the values
+            char * buf1 = bbf_to_string(vfr->bbflags, NULL, 0);  // allocate buffer
+            if (ol >= DDCA_OL_VERBOSE)
+               rpt_vstring(d1, "Values (  parsed): %s (interpretation unavailable)", buf1);
+            else
+               rpt_vstring(d1, "Values: %s (interpretation unavailable)", buf1);
+            free(buf1);
          }
       }
-      else {          // no interpretation available, just show the values
-         char * buf1 = bbf_to_string(vfr->bbflags, NULL, 0);  // allocate buffer
-         if (ol >= DDCA_OL_VERBOSE)
-            rpt_vstring(d1, "Values (  parsed): %s (interpretation unavailable)", buf1);
-         else
-            rpt_vstring(d1, "Values: %s (interpretation unavailable)", buf1);
-         free(buf1);
-      }
-   }
 #endif
 
-   DBGMSF(debug, "Done.");
+      DBGTRC_DONE(debug, TRACE_GROUP, "");
+   }
 }
 
 
@@ -485,7 +507,7 @@ report_commands(Byte_Value_Array cmd_ids, int depth)
 
 
 static void
-report_features(
+dyn_report_cap_features(
       GPtrArray*             features,     // GPtrArray of Capabilities_Feature_Record
       Display_Ref *          dref,
       DDCA_MCCS_Version_Spec vcp_version)  // from parsed capabilities if possible
@@ -494,14 +516,30 @@ report_features(
    int d0 = 0;
    int d1 = 1;
 
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, vcp_version=%s",
+                   dref_repr_t(dref), format_vspec(vcp_version));
+
+   if (!(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED)) {
+      Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
+      Error_Info * erec = dfr_load_by_mmk(mmk, &dref->dfr);
+      if (erec) {
+         if (erec->status_code != DDCRC_NOT_FOUND || debug)
+            errinfo_report(erec,1);
+         errinfo_free(erec);
+      }
+      dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
+   }
+
    rpt_label(d0, "VCP Features:");
    int ct = features->len;
    int ndx;
    for (ndx=0; ndx < ct; ndx++) {
       Capabilities_Feature_Record * vfr = g_ptr_array_index(features, ndx);
       DBGMSF(debug, "vfr = %p", vfr);
-      report_capabilities_feature(vfr, dref, vcp_version, d1);
+      dyn_report_one_cap_feature(vfr, dref, vcp_version, d1);
    }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -530,7 +568,7 @@ void dyn_report_parsed_capabilities(
    int d2 = depth+2;
    bool debug = false;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
-   DBGMSF(debug, "Starting. dh-%s, dref=%s, pcaps->raw_cmds_segment_seen=%s, "
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dref=%s, pcaps->raw_cmds_segment_seen=%s, "
                  "pcaps->commands=%p, pcaps->vcp_features=%p",
                  dh_repr(dh), dref_repr_t(dref), sbool(pcaps->raw_cmds_segment_seen),
                  pcaps->commands, pcaps->vcp_features);
@@ -552,7 +590,6 @@ void dyn_report_parsed_capabilities(
          rpt_label(d1, g_ptr_array_index(pcaps->messages, ndx));
       }
    }
-
 
    rpt_vstring(d0, "Model: %s", (pcaps->model) ? pcaps->model : "Not specified");
 
@@ -616,7 +653,7 @@ void dyn_report_parsed_capabilities(
       g_ptr_array_add(pcaps->vcp_features, cfr);
 #endif
 
-      report_features(pcaps->vcp_features, dref, vspec);
+      dyn_report_cap_features(pcaps->vcp_features, dref, vspec);
    }
    else {
       // handle pathological case of 0 length capabilities string, e.g. Samsung S32D850T
@@ -636,6 +673,12 @@ void dyn_report_parsed_capabilities(
          }
       }
    }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
+void init_dyn_parsed_capabilities() {
+   RTTI_ADD_FUNC(dyn_report_parsed_capabilities);
+   RTTI_ADD_FUNC(dyn_report_cap_features);
+   RTTI_ADD_FUNC(dyn_report_one_cap_feature);
+}

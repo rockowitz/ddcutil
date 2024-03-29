@@ -3,7 +3,7 @@
  *  Report parsed capabilities, taking into account dynamic feature definitions.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DYN_PARSED_CAPABILITIES_H_
@@ -27,5 +27,7 @@ void dyn_report_parsed_capabilities(
          Display_Handle *        dh,
          Display_Ref *           dref,
          int                     depth);
+
+void init_dyn_parsed_capabilities();
 
 #endif /* DYN_PARSED_CAPABILITIES_H_ */
