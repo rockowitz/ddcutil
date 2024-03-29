@@ -3,7 +3,7 @@
  * Dynamic Feature Record definition, creation, destruction, and conversion
  */
 
-// Copyright (C) 2022-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_DYNAMIC_FEATURES_H_
@@ -84,7 +84,7 @@ create_dynamic_features_rec(
       Dynamic_Features_Rec ** dynamic_features_loc);
 
 Dyn_Feature_Metadata *
-get_dynamic_feature_metadata(
+dyn_get_dynamic_feature_metadata(
       Dynamic_Features_Rec *  dfr,
       uint8_t                 feature_code);
 

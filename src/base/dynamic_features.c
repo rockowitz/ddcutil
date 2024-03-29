@@ -131,7 +131,7 @@ dfr_repr_t(Dynamic_Features_Rec * dfr) {
  *  @return pointer to feature metadata, NULL if not found
  */
 Dyn_Feature_Metadata *
-get_dynamic_feature_metadata(
+dyn_get_dynamic_feature_metadata(
       Dynamic_Features_Rec * dfr,
       uint8_t                feature_code)
 {
@@ -643,6 +643,7 @@ create_dynamic_features_rec(
 
 
 void init_base_dynamic_features() {
+   RTTI_ADD_FUNC(dyn_get_dynamic_feature_metadata);
    RTTI_ADD_FUNC(create_dynamic_features_rec);
    RTTI_ADD_FUNC(free_feature_metadata);
    RTTI_ADD_FUNC(dfr_new);
