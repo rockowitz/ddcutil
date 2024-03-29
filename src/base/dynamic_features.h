@@ -70,10 +70,6 @@ void
 dfr_free(
       Dynamic_Features_Rec *  frec);
 
-void
-dfr_gdestroy(
-      gpointer p);
-
 Error_Info *
 create_dynamic_features_rec(
       const char *            mfg_id,

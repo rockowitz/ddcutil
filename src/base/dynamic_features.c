@@ -249,24 +249,9 @@ dfr_free(
 }
 
 
-/** Wrap a $dfr_free() call in the signature GDestroyNofify.
- *
- *  @param p pointer to record to free
- */
-void
-dfr_gdestroy(gpointer p) {
-   if (p) {
-      Dynamic_Features_Rec * frec = p;
-      assert(memcmp(frec->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
-      dfr_free(frec);
-   }
-}
-
-
 //
 // Functions private to create_monitor_dynamic_features()
 //
-
 
 /** Creates a #Error_Info using the error location (line number) and
  *  detail, and appends it to array **errors**..
