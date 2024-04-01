@@ -356,6 +356,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F9)
       ddc_watch_mode = (ddc_watch_mode == Watch_Mode_Simple_Udev) ? Watch_Mode_Full_Poll
                                                                   : Watch_Mode_Simple_Udev;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F16)
+      ddc_watch_mode = Watch_Mode_Udev_I2c;
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F10)
       null_msg_adjustment_enabled = true;
