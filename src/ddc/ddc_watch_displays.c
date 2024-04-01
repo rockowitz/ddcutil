@@ -77,6 +77,7 @@ const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
    switch (mode) {
    case Watch_Mode_Full_Poll:   result = "Watch_Mode_Full_Poll";   break;
    case Watch_Mode_Simple_Udev: result = "Watch_Mode_Simple_Udev"; break;
+   case Watch_Mode_Udev_I2c:    result = "Watch_Mode_Udev_I2c";    break;
    }
    return result;
 }
