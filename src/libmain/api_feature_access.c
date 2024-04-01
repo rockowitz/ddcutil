@@ -772,7 +772,7 @@ ddci_set_single_vcp_value(
    DDCA_Status psc = 0;
    free_thread_error_detail();
    WITH_VALIDATED_DH3(ddca_dh, psc, {
-         Error_Info * ddc_excp = ddc_set_vcp_value(dh, valrec, verified_value_loc);
+         Error_Info * ddc_excp = ddc_set_verified_vcp_value_with_retry(dh, valrec, verified_value_loc);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
          save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
          ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, DDCA_TRC_API));

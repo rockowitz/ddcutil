@@ -50,6 +50,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 bool enable_mock_data = false;
+int max_setvcp_verify_retries = 0;
 
 typedef struct {
    bool   verify_setvcp;
@@ -440,6 +441,49 @@ ddc_set_vcp_value(
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
+
+
+Error_Info *
+ddc_set_verified_vcp_value_with_retry(
+      Display_Handle *      dh,
+      DDCA_Any_Vcp_Value *  vrec,
+      DDCA_Any_Vcp_Value ** newval_loc)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newval_loc=%p, max_setvcp_verification_retries=%d",
+         dh_repr(dh),  newval_loc, max_setvcp_verify_retries);
+
+   Error_Info * erec = NULL;
+   if (newval_loc)
+      *newval_loc = NULL;
+
+   if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE &&
+      ddc_get_verify_setvcp()                       &&
+      is_rereadable_feature(dh, vrec->opcode)       &&
+      !is_unreadable_sl_value(vrec->opcode, vrec->val.c_nc.sl) )
+   {
+      GPtrArray * verification_failures = g_ptr_array_new();
+
+      for (int retry_ctr = 0; retry_ctr < max_setvcp_verify_retries; retry_ctr++) {
+         erec = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
+         if (!erec || ERRINFO_STATUS(erec) != DDCRC_VERIFY)
+            break;
+         g_ptr_array_add(verification_failures, erec);
+      }
+      if (erec && ERRINFO_STATUS(erec) == DDCRC_VERIFY) {
+         erec = errinfo_new_with_causes_gptr(DDCRC_VERIFY, verification_failures, __func__,
+               "Maximum setvcp verification failures (%d)", max_setvcp_verify_retries);
+      }
+
+   }
+   else {
+      erec = ddc_set_vcp_value(dh, vrec, newval_loc);
+   }
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, erec, "");
+   return erec;
+}
+
 
 
 static Parsed_Nontable_Vcp_Response * create_all_zero_response(Byte feature_code) {

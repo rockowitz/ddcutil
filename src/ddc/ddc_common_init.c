@@ -51,8 +51,8 @@
 #include "ddc_serialize.h"
 #include "ddc_services.h"
 #include "ddc_try_data.h"
-#include "ddc_watch_displays.h"
 #include "ddc_vcp.h"
+#include "ddc_watch_displays.h"
 
 #include "ddc_common_init.h"
 
@@ -378,6 +378,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
         flock_max_wait_millisec = parsed_cmd->i4;
    // if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
    //     dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->fl1);
+   if ((parsed_cmd->flags2 & CMD_FLAG2_I5_SET) && parsed_cmd->i5 > 0)
+      max_setvcp_verify_retries = parsed_cmd->i5;
 }
 
 

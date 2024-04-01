@@ -183,7 +183,7 @@ app_set_vcp_value(
       vrec.val.c_nc.sl = itemp & 0xff;
    }
 
-   ddc_excp = ddc_set_vcp_value(dh, &vrec, NULL);
+   ddc_excp = ddc_set_verified_vcp_value_with_retry(dh, &vrec, NULL);
 
    if (ddc_excp) {
       ddcrc = ERRINFO_STATUS(ddc_excp);

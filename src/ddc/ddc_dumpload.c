@@ -382,7 +382,7 @@ ddc_set_multiple(
       //    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "before set_vcp_value()");
       // }
 
-      ddc_excp = ddc_set_vcp_value(dh, vrec, NULL);
+      ddc_excp = ddc_set_verified_vcp_value_with_retry(dh, vrec, NULL);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
       if (ddc_excp) {
          SYSLOG2(DDCA_SYSLOG_ERROR, "Error setting value for VCP feature code 0x%02x: %s",
