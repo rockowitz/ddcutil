@@ -357,8 +357,8 @@ void dbgrpt_connector_state(Drm_Connector_State * state, int depth) {
    vname = get_enum_value_name(link_status_metadata, state->link_status);
    rpt_vstring(d2, "link_status:       %d - %s", state->link_status, vname);
 
-   vname = get_enum_value_name(subconn_metadata, state->subconnector);
-   rpt_vstring(d2, "subconnector:      %d- %s", state->subconnector, vname);
+   vname = (subconn_metadata) ? get_enum_value_name(subconn_metadata, state->subconnector) : "UNK";
+   rpt_vstring(d2, "subconnector:      %d - %s", state->subconnector, vname);
 
    if (state->edid) {
       rpt_vstring(d2, "edid:");
@@ -370,6 +370,13 @@ void dbgrpt_connector_state(Drm_Connector_State * state, int depth) {
 
 void dbgrpt_connector_states(GPtrArray* states) {
    assert(states);
+   rpt_label(1, "dpms_metadata:");
+   dbgrpt_enum_metadata(dpms_metadata, 2);
+   rpt_label(1, "link_status_metadata:");
+   dbgrpt_enum_metadata(link_status_metadata, 2);
+   rpt_label(1, "subconn_metadata:");
+   dbgrpt_enum_metadata(subconn_metadata, 2);
+   rpt_nl();
    rpt_structure_loc("GPtrArray", states, 0);
    for (int ndx = 0; ndx < states->len; ndx++) {
       Drm_Connector_State * cur =  g_ptr_array_index(states, ndx);
