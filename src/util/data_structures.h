@@ -199,7 +199,7 @@ Bit_Set_256    bs256_or(Bit_Set_256 set1, Bit_Set_256 set2);         // union
 Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersection
 Bit_Set_256    bs256_and_not(Bit_Set_256 set1, Bit_Set_256 set2);    // subtract
 
-char *         bs256_repr(Bit_Set_256 flags, char * buffer, int buflen);
+void           bs256_repr(Bit_Set_256 flags, char * buffer, int buflen);
 char *         bs256_to_string_t(Bit_Set_256 set, const char * value_prefix, const char * septr);   // provides for bbf_to_string()
 char *         bs256_to_string_decimal_t(Bit_Set_256 set, const char * value_prefix, const char * septr);
 Bit_Set_256    bs256_from_string(char * unparsed_string, Null_Terminated_String_Array * error_msgs_loc);

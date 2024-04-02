@@ -1114,15 +1114,15 @@ Bit_Set_256 bs256_and_not(
 }
 
 
-#define BB256_REPR_BUF_SZ (3*32+1)
+#define BS256_REPR_BUF_SZ (3*32+1)
 /** Represents a #Bit_Set_256 value as a sequence of 32 hex values.
  *
+ *  @param bbset value to represent
  *  @param buf   buffer in which to return value
  *  @param bufsz buffer size, must be at least #BB256_REPR_BUF_SZ
- *  @param bbset value to represent
  */
-void bb256_repr(char * buf, int bufsz, Bit_Set_256 bbset) {
-   assert(bufsz >= BB256_REPR_BUF_SZ);
+void bs256_repr(Bit_Set_256 bbset, char * buf, int bufsz) {
+   assert(bufsz >= BS256_REPR_BUF_SZ);
    g_snprintf(buf, bufsz,
               "%02x %02x %02x %02x %02x %02x %02x %02x "
               "%02x %02x %02x %02x %02x %02x %02x %02x "
@@ -1160,8 +1160,8 @@ int bs256_count(
       }
    }
    if (debug) {
-      char buf[BB256_REPR_BUF_SZ];
-      bb256_repr(buf, sizeof(buf), bbset);
+      char buf[BS256_REPR_BUF_SZ];
+      bs256_repr(bbset, buf, sizeof(buf));
       printf("(%s) Returning %d. bbset: %s\n", __func__, result, buf);
    }
    return result;
@@ -1539,15 +1539,15 @@ const Bit_Set_32 EMPTY_BIT_SET_32 = 0;
 const int BIT_SET_32_MAX = 32;
 
 
-#define BB32_REPR_BUF_SZ 10
+#define BS32_REPR_BUF_SZ 10
 /** Represents a #Bit_Set_32 value as a sequence of 4 hex values.
  *
  *  @param buf   buffer in which to return value
  *  @param bufsz buffer size, must be at least #BB256_REPR_BUF_SZ
  *  @param bbset value to represent
  */
-void bb32_repr(char * buf, int bufsz, Bit_Set_32 bbset) {
-   assert(bufsz >= BB256_REPR_BUF_SZ);
+void bs32_repr(Bit_Set_32 bbset, char * buf, int bufsz) {
+   assert(bufsz >= BS32_REPR_BUF_SZ);
    g_snprintf(buf, bufsz, "0x%08x", bbset);
 }
 
@@ -1569,8 +1569,8 @@ int bs32_count(
          result += 1;
    }
    if (debug) {
-      char buf[BB32_REPR_BUF_SZ];
-      bb32_repr(buf, sizeof(buf), bbset);
+      char buf[BS32_REPR_BUF_SZ];
+      bs32_repr(bbset, buf, sizeof(buf));
       printf("(%s) Returning %d. bbset: %s\n", __func__, result, buf);
    }
    return result;
