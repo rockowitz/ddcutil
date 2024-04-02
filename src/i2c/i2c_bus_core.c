@@ -956,7 +956,7 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
-// Bit_Set_256 attached_buses;
+Bit_Set_256 attached_buses;
 
 Byte_Value_Array i2c_detect_attached_buses() {
    bool debug = false;
@@ -985,15 +985,20 @@ Bit_Set_256 i2c_detect_attached_buses_as_bitset() {
 }
 
 
-#ifdef UNUSED
-void i2c_check_attached_buses() {
-   Bit_Set_256 cur_attached_buses = i2c_detect_attached_buses();
+void i2c_check_attached_buses(
+      Bit_Set_256* newly_attached_buses_loc,
+      Bit_Set_256* newly_detached_buses_loc)
+{
+   Bit_Set_256 cur_attached_buses = i2c_detect_attached_buses_as_bitset();
+   *newly_attached_buses_loc = EMPTY_BIT_SET_256;
+   *newly_detached_buses_loc = EMPTY_BIT_SET_256;
    if (!bs256_eq(cur_attached_buses, attached_buses)) {   // will be rare
       Bit_Set_256 newly_attached_buses = bs256_and_not(cur_attached_buses, attached_buses);
       Bit_Set_256 newly_detached_buses = bs256_and_not(attached_buses, cur_attached_buses);
+      *newly_attached_buses_loc = newly_attached_buses;
+      *newly_detached_buses_loc = newly_detached_buses;
    }
 }
-#endif
 
 
 /** Detect all currently attached buses and checks each to see if a display
@@ -1370,7 +1375,7 @@ void subinit_i2c_bus_core() {
 void init_i2c_bus_core() {
    init_i2c_bus_core_func_name_table();
    open_failures_reported = EMPTY_BIT_SET_256;
-   // attached_buses = EMPTY_BIT_SET_256;
+   attached_buses = EMPTY_BIT_SET_256;
    // connected_buses = EMPTY_BIT_SET_256;
 }
 
