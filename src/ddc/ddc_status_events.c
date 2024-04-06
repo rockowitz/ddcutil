@@ -180,7 +180,7 @@ void ddc_emit_display_status_record(
 
 /** Assembles a #DDCA_Display_Status_Event record and either calls
  *  #ddc_emit_display_status_record to emit it immediately or adds it to
- *  to a queue of event recors
+ *  to a queue of event records
  *
  *  @param  event_type  e.g. DDCA_EVENT_CONNECTED, DDCA_EVENT_AWAKE
  *  @param  connector_name
