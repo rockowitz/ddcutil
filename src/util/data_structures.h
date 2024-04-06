@@ -2,7 +2,7 @@
  *  General purpose data structures
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DATA_STRUCTURES_H
@@ -194,10 +194,12 @@ int            bs256_count(Bit_Set_256 set);
 bool           bs256_contains(Bit_Set_256 flags, uint8_t val);
 int            bs256_first_bit_set(Bit_Set_256 bitset);
 Bit_Set_256    bs256_insert(Bit_Set_256 flags, uint8_t val);
+Bit_Set_256    bs256_remove(Bit_Set_256 flags, uint8_t val);
 
 Bit_Set_256    bs256_or(Bit_Set_256 set1, Bit_Set_256 set2);         // union
 Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersection
 Bit_Set_256    bs256_and_not(Bit_Set_256 set1, Bit_Set_256 set2);    // subtract
+#define bs256_minus bs256_and_not
 
 void           bs256_repr(Bit_Set_256 flags, char * buffer, int buflen);
 char *         bs256_to_string_t(Bit_Set_256 set, const char * value_prefix, const char * septr);   // provides for bbf_to_string()
@@ -205,8 +207,8 @@ char *         bs256_to_string_decimal_t(Bit_Set_256 set, const char * value_pre
 Bit_Set_256    bs256_from_string(char * unparsed_string, Null_Terminated_String_Array * error_msgs_loc);
 Bit_Set_256    bs256_from_bva(Byte_Value_Array bva);
 
-int bs256_to_bytes(Bit_Set_256 flags, Byte * buffer, int buflen);
-Buffer * bs256_to_buffer(Bit_Set_256 flags);
+int            bs256_to_bytes(Bit_Set_256 flags, Byte * buffer, int buflen);
+Buffer *       bs256_to_buffer(Bit_Set_256 flags);
 
 /** Opaque iterator for Bit_Set_256 */
 typedef void * Bit_Set_256_Iterator;

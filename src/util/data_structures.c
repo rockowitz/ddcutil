@@ -983,7 +983,10 @@ void test_value_array() {
 
 const Bit_Set_256 EMPTY_BIT_SET_256 = {{0}};
 
-/** Sets a flag in a #Bit_Set_256
+/** Sets a flag in a #Bit_Set_256.
+ *
+ *  The flag is set in the returned value.
+ *  Parm **flags** is NOT modified in place.
  *
  *  @param  flags   existing #Bit_Set_256 value
  *  @param  flagno  flag number to set (0 based)
@@ -1010,11 +1013,40 @@ Bit_Set_256 bs256_insert(
        char * bs2 = g_strdup(bs256_to_string_t(result, "",""));
        printf("(%s) old bitstring=%s, value %d, returning: %s\n",
               __func__, bs1, bitno, bs2);
-       free( bs1);
+       free(bs1);
        free(bs2);
     }
 
     return result;
+}
+
+
+/** Clears a flag in a #Bit_Set_256.
+ *
+ *  The flag is cleared in the returned value.
+ *  Parm **flags** is NOT modified in place.
+ *
+ *  @param  flags   existing #Bit_Set_256 value
+ *  @param  flagno  flag number to set (0 based)
+ *  @return updated set
+ */
+Bit_Set_256 bs256_remove(
+      Bit_Set_256 bitset,
+      Byte        bitno)
+{
+   bool debug = false;
+
+   Bit_Set_256 result = bitset;
+   int bytendx   = bitno >> 3;
+   int shiftct   = bitno & 0x07;
+   Byte flagbit  = 0x01 << shiftct;
+   if (debug) {
+      printf("(%s) bitno=0x%02x, bytendx=%d, shiftct=%d, flagbit=0x%02x\n",
+             __func__, bitno, bytendx, shiftct, flagbit);
+   }
+   result.bytes[bytendx] &= ~flagbit;
+
+   return result;
 }
 
 
@@ -1046,6 +1078,7 @@ bool bs256_contains(
     }
     return result;
 }
+
 
 /** Returns the bit number of the first bit set.
  *  @param  bitset #Bit_Set_256 to check
@@ -1194,11 +1227,11 @@ int bs256_count(
  *  The value returned is valid until the next call to this function in the
  *  current thread.
  *
- *  @param  bitset value to represent
+ *  @param  bitset          value to represent
  *  @param  decimal_format  if true,  represent values as decimal numbers
  *                          if false, represent values as hex numbers
- *  @param  value_prefix  prefix for each hex number, typically "0x" or ""
- *  @param  sepstr        string to insert between each value, typically "", ",", or " "
+ *  @param  value_prefix    prefix for each hex number, typically "0x" or ""
+ *  @param  sepstr          string to insert between each value, typically "", ",", or " "
  *  @return string representation, caller should not free
  */
 static char *
@@ -1285,7 +1318,7 @@ bs256_to_string_t(
  *  The value returned is valid until the next call to this function or to
  *  #bs256_to_string() in the current thread.
  *
- *  @param  bitset value to represent
+ *  @param  bitset        value to represent
  *  @param  value_prefix  prefix for each decimal number
  *  @param  sepstr        string to insert between each value, typically "", ",", or " "
  *  @return string representation, caller should not free
