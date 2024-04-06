@@ -1107,12 +1107,22 @@ int i2c_detect_buses() {
 }
 
 
+void i2c_discard_buses0(GPtrArray* buses) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "buses=%p", buses);
+     if (buses) {
+        g_ptr_array_free(buses, true);
+     }
+     DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
 /** Discard all known buses */
 void i2c_discard_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (all_i2c_buses) {
-      g_ptr_array_free(all_i2c_buses, true);
+      i2c_discard_buses0(all_i2c_buses);
       all_i2c_buses= NULL;
    }
    // connected_buses = EMPTY_BIT_SET_256;

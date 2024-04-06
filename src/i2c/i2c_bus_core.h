@@ -57,6 +57,7 @@ Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 Bit_Set_256      buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 GPtrArray *      i2c_detect_buses0();
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
+void             i2c_discard_buses0(GPtrArray* buses);
 void             i2c_discard_buses();
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
 
