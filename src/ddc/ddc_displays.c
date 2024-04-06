@@ -889,15 +889,16 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
          continue;
       }
 
-      I2C_Bus_Info * businfo = (I2C_Bus_Info*) cur_dref->detail;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED=%s, dref_detail=%p -> /dev/i2c-%d",
-            sbool(cur_dref->flags&DREF_REMOVED), cur_dref->detail,  businfo->busno);
+      // I2C_Bus_Info * businfo = (I2C_Bus_Info*) cur_dref->detail;
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED=%s, dref_detail=%p -> /dev/i2c-%d",
+      //       sbool(cur_dref->flags&DREF_REMOVED), cur_dref->detail,  businfo->busno);
 
       if (ignore_invalid && cur_dref->flags&DREF_REMOVED) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p DREF_REMOVED set, Ignoring",
                 dref_repr_t(cur_dref), cur_dref);
          continue;
       }
+
       if (cur_dref->io_path.io_mode != DDCA_IO_I2C) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p io_mode != DDCA_IO_I2C, Ignoring",
                 dref_repr_t(cur_dref), cur_dref);
@@ -912,7 +913,7 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
          else {
             SEVEREMSG("active display ref has no bus info");
          }
-     }
+      }
 
       if ( (busno >= 0 && cur_dref->io_path.path.i2c_busno == busno) ||
            (connector  && streq(connector, cur_dref->drm_connector) ) )
