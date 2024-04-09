@@ -449,35 +449,43 @@ String_Array* new_string_array(int size) {
  *
  * Note: Each character in delims is used as an individual test.
  * The full string is NOT a delimiter string.
+ *
+ * If str_to_split is NULL, a null terminated array of 0 pieces is returned.
+ * If delims is NULL (and str_to_split is not NULL), a null terminated array
+ * containing 1 piece (containing the value of str_to_split) is returned.
  */
 Null_Terminated_String_Array strsplit(const char * str_to_split, const char * delims) {
    bool debug = false;
-   size_t max_pieces = (strlen(str_to_split)+1);
+   size_t max_pieces = (str_to_split) ? (strlen(str_to_split)+1) : 1;
    if (debug)
       printf("(%s) str_to_split=|%s|, delims=|%s|, max_pieces=%zu\n",
              __func__, str_to_split, delims, max_pieces);
 
    char** workstruct = calloc(sizeof(char *), max_pieces+1);
    int piecect = 0;
-
-   char * str_to_split_dup = g_strdup(str_to_split);
-   char * rest = str_to_split_dup;
-   char * token;
-   // originally token assignment was in while() clause, but valgrind
-   // complaining about uninitialized variable, trying to figure out why
-   token = strsep(&rest, delims);      // n. overwriteedid.cs character found
-   while (token) {
-      if (debug)
-         printf("(%s) token: |%s|\n", __func__, token);
-      if (strlen(token) > 0)
-         workstruct[piecect++] = g_strdup(token);
-      token = strsep(&rest, delims);
+   if (str_to_split) {
+      char * str_to_split_dup = g_strdup(str_to_split);
+      char * rest = str_to_split_dup;
+      char * token;
+      // originally token assignment was in while() clause, but valgrind
+      // complaining about uninitialized variable, trying to figure out why
+      token = strsep(&rest, delims);      // n. overwrites character found
+      while (token) {
+         if (debug)
+            printf("(%s) token: |%s|\n", __func__, token);
+         if (strlen(token) > 0)
+            workstruct[piecect++] = g_strdup(token);
+         token = strsep(&rest, delims);
+      }
+      free(str_to_split_dup);
    }
    if (debug)
       printf("(%s) piecect=%d\n", __func__, piecect);
+
    char ** result = calloc(sizeof(char *), piecect+1);
    // n. workstruct[piecect] == NULL because we used calloc()
    memcpy(result, workstruct, (piecect+1)*sizeof(char*) );
+
    if (debug) {
       int ndx = 0;
       char * curpiece = result[ndx];
@@ -485,11 +493,11 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
          printf("(%s) curpiece=%p |%s|\n", __func__, curpiece, curpiece);
          ndx++;
          curpiece = result[ndx];
-
       }
    }
+
    free(workstruct);
-   free(str_to_split_dup);
+
    return result;
 }
 
