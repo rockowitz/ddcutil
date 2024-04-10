@@ -175,7 +175,7 @@ get_feature_metadata(
  *  \return fully qualified name of file found (caller must free), NULL if not found
  */
 char *
-find_feature_def_file(
+dfr_find_feature_def_file(
       const char * simple_fn)
 {
    bool debug = false;
@@ -220,7 +220,7 @@ dfr_load_by_mmk(
    Dynamic_Features_Rec * dfr  = NULL;
 
    char * simple_fn = model_id_string(mmk.mfg_id, mmk.model_name,mmk.product_code);
-   char * fqfn = find_feature_def_file(simple_fn);
+   char * fqfn = dfr_find_feature_def_file(simple_fn);
    if (fqfn) {
       GPtrArray * lines = g_ptr_array_new_with_free_func(g_free);
       errs = file_getlines_errinfo(fqfn, lines); // read file into lines
@@ -356,5 +356,5 @@ dfr_check_by_mmk(
 void init_dyn_feature_files() {
    RTTI_ADD_FUNC(dfr_check_by_dref);
    RTTI_ADD_FUNC(dfr_load_by_mmk);
-   RTTI_ADD_FUNC(find_feature_def_file);
+   RTTI_ADD_FUNC(dfr_find_feature_def_file);
 }

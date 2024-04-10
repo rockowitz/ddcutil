@@ -18,6 +18,10 @@
 
 extern bool enable_dynamic_features;
 
+char *
+dfr_find_feature_def_file(
+      const char * simple_fn);
+
 Error_Info *
 dfr_load_by_mmk(
       Monitor_Model_Key       mmk,
