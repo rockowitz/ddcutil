@@ -36,6 +36,8 @@
 #include "usb/usb_displays.h"
 #endif
 
+#include "dynvcp/dyn_feature_files.h"
+
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
@@ -427,6 +429,19 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             }
             if (msg)
                rpt_vstring(d1, msg);
+         }
+
+         if (output_level >= DDCA_OL_VERBOSE) {
+            char * simple_fn = model_id_string(mmk.mfg_id, mmk.model_name, mmk.product_code);
+            char * fqfn = dfr_find_feature_def_file(simple_fn);
+            if (fqfn) {
+               rpt_vstring(d1, "Uses feature definition file: %s", fqfn);
+               free(fqfn);
+            }
+            else {
+               rpt_vstring(d1, "Feature definition file %s not found.", simple_fn);
+            }
+            free(simple_fn);
          }
       }
    }
