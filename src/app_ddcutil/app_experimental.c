@@ -46,21 +46,23 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(6,  "Redetect DRM connector states");
    REPORT_FLAG_OPTION(7,  "Disable phantom display detection");
    REPORT_FLAG_OPTION(8,  "Slow down watch display polling");
-   REPORT_FLAG_OPTION(9,  buf0);
+   // REPORT_FLAG_OPTION(9,  buf0);
+   REPORT_FLAG_OPTION(9,  "Unused");
    REPORT_FLAG_OPTION(10, "Extended sleep for DDC Null Msg");
    REPORT_FLAG_OPTION(11, "Explore monitor state tests");
    REPORT_FLAG_OPTION(12, "Disable DRM services");
    REPORT_FLAG_OPTION(13, "Command C1 only report display connection changes");
    REPORT_FLAG_OPTION(14, "Command C1 only report display DPMS state changes");
    REPORT_FLAG_OPTION(15, "Verify sysfs EDID reads");
-   REPORT_FLAG_OPTION(16, "Force  Watch_Mode_Udev_I2C");
+   REPORT_FLAG_OPTION(16, "Unused");
+   //REPORT_FLAG_OPTION(16, "Force  Watch_Mode_Udev_I2C");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra seconds to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZE_SECS);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
    rpt_vstring(depth+1, "Utility option --i3:          flock_poll_millisec (default = %d)", DEFAULT_FLOCK_POLL_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i5:          Max retries for setvcp verification failure");
-   rpt_vstring(depth+1, "Utility option --i6:          Unused");
+   rpt_vstring(depth+1, "Utility option --i6:          Watch Mode: 1=Udev_I2c, 2=Udev_Syfs, 3=Poll");
    rpt_vstring(depth+1, "Utility option --i7:          Unused");
    rpt_vstring(depth+1, "Utility option --i8:          Unused");
 

@@ -342,11 +342,19 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       detect_phantom_displays = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F8)
       ddc_slow_watch = true;
-   if (parsed_cmd->flags2 & CMD_FLAG2_F9)
-      ddc_watch_mode = (ddc_watch_mode == Watch_Mode_Simple_Udev) ? Watch_Mode_Full_Poll
-                                                                  : Watch_Mode_Simple_Udev;
-   if (parsed_cmd->flags2 & CMD_FLAG2_F16)
-      ddc_watch_mode = Watch_Mode_Udev_I2C;
+
+   switch(parsed_cmd->i6) {
+   case 1:  ddc_watch_mode = Watch_Mode_Udev_I2C;    break;
+   case 2:  ddc_watch_mode = Watch_Mode_Udev_Sysfs;  break;
+   case 3:  ddc_watch_mode = Watch_Mode_Full_Poll;   break;
+   default: ddc_watch_mode = Watch_Mode_Udev_I2C;    break;
+   }
+   // if (parsed_cmd->flags2 & CMD_FLAG2_F9)
+   //    ddc_watch_mode = (ddc_watch_mode == Watch_Mode_Udev_Sysfs) ? Watch_Mode_Full_Poll
+   //                                                                : Watch_Mode_Udev_Sysfs;
+   // if (parsed_cmd->flags2 & CMD_FLAG2_F16)
+   //    ddc_watch_mode = Watch_Mode_Udev_I2C;
+
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F10)
       null_msg_adjustment_enabled = true;
