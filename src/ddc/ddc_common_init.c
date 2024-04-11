@@ -16,6 +16,7 @@
 
 #include "config.h"
 
+#include "util/debug_util.h"
 #ifdef ENABLE_FAILSIM
 #include "util/failsim.h"
 #endif
@@ -107,8 +108,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    bool debug = false;
    Error_Info * result = NULL;
    GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func(g_free);
-   if (debug)
-      printf("(%s) Starting.\n",__func__);
+   DBGF(debug, "Starting.");
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)    // timestamps on debug and trace messages?
        dbgtrc_show_time = true;                         // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE)     // wall timestamps on debug and trace messages?
@@ -127,9 +127,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 
    if (parsed_cmd->traced_functions) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++) {
-          if (debug)
-                printf("(%s) Adding traced function: %s\n",
-                       __func__, parsed_cmd->traced_functions[ndx]);
+          DBGF(debug, "Adding traced function: %s", parsed_cmd->traced_functions[ndx]);
           char * curfunc = parsed_cmd->traced_functions[ndx];
           bool found = add_traced_function(curfunc);
           if (!found) {
@@ -142,9 +140,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
     if (parsed_cmd->traced_api_calls) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_api_calls); ndx++) {
           char * curfunc = parsed_cmd->traced_api_calls[ndx];
-          if (debug)
-                printf("(%s) Adding traced api_call: %s\n", __func__, curfunc);
-
+          DBGF(debug, "Adding traced api_call: %s", curfunc);
           bool found = add_traced_api_call(curfunc);
           if (!found) {
              emit_init_tracing_error(errinfo_accumulator, __func__, -EINVAL,
@@ -156,9 +152,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    if (parsed_cmd->traced_calls) {
       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_calls); ndx++) {
          char * curfunc = parsed_cmd->traced_calls[ndx];
-         if (debug)
-               printf("(%s) Adding traced call stack function: %s\n", __func__, curfunc);
-
+         DBGF(debug, "Adding traced call stack function: %s", curfunc);
          bool found = add_traced_callstack_call(curfunc);
          if (!found) {
             emit_init_tracing_error(errinfo_accumulator, __func__, -EINVAL,
@@ -169,17 +163,12 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 
    if (parsed_cmd->traced_files) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++) {
-          if (debug)
-             printf("(%s) Adding traced file: %s\n",
-                    __func__, parsed_cmd->traced_files[ndx]);
+          DBGF(debug, "Adding traced file: %s", parsed_cmd->traced_files[ndx]);
           add_traced_file(parsed_cmd->traced_files[ndx]);
        }
    }
 
    ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
-
-   // if (debug)
-   //    printf("(%s) Done. Returning: %s\n", __func__, sbool(ok));
 
    // dbgrpt_traced_function_table(2);
    if (errinfo_accumulator->len > 0)
