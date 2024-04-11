@@ -3,7 +3,7 @@
  *  Dynamic Feature Record definition, creation, destruction, and conversion
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -302,7 +302,7 @@ add_error(
 static bool
 attr_keyword(
       Dyn_Feature_Metadata * cur_feature_metadata,
-      char *                  keyword)
+      char *                 keyword)
 {
    bool debug = false;
    DBGMSF(debug, "keyword=|%s|", keyword);
@@ -320,6 +320,8 @@ attr_keyword(
    else if (streq(keyword, "CCONT"))
       *pflags |= DDCA_COMPLEX_CONT;
    else if (streq(keyword, "NC"))
+      *pflags |= DDCA_SIMPLE_NC;
+   else if (streq(keyword, "SNC"))
       *pflags |= DDCA_SIMPLE_NC;
    else if (streq(keyword, "T"))
       *pflags |= DDCA_TABLE;
