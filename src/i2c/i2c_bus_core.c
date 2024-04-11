@@ -225,7 +225,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
             // execute_shell_cmd_rpt(cmd, 1);
             // g_snprintf(cmd, 80, "cat /proc/%jd/cmdline", pid);
             // execute_shell_cmd_rpt(cmd, 1);
-            g_snprintf(cmd, 80, "cat /proc/%jd/status | egrep -e Name -e State -e '^Pid:'", pid);
+            g_snprintf(cmd, 80, "cat /proc/%jd/status | grep -E -e Name -e State -e '^Pid:'", pid);
             execute_shell_cmd_rpt(cmd, 1);
             GPtrArray * pids = execute_shell_cmd_collect(cmd);
             for (int ndx = 0; ndx < pids->len; ndx++) {
@@ -272,7 +272,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
                  for (int ndx = 0; ndx < pids->len; ndx++) {
                     char * spid = g_ptr_array_index(pids, ndx);
                     rpt_vstring(2, "%s", spid);  // *** TEMP ***
-                    g_snprintf(cmd, 80, "cat /proc/%s/status | egrep -e Name -e State -e '^Pid:'", spid);
+                    g_snprintf(cmd, 80, "cat /proc/%s/status | grep -E -e Name -e State -e '^Pid:'", spid);
                     execute_shell_cmd_rpt(cmd, 1); // *** TEMP ***
                     GPtrArray * status_lines = execute_shell_cmd_collect(cmd);
                     for (int k = 0; k < status_lines->len; k ++) {

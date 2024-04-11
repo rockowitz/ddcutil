@@ -430,7 +430,7 @@ void probe_config_files(Env_Accumulator * accum) {
 
    if (accum->is_arm) {
       rpt_title("Examining /boot/config.txt:", depth+1);
-      execute_shell_cmd_rpt("egrep -i -edtparam -edtoverlay -edevice_tree /boot/config.txt | grep -v \"^ *#\"", depth+2);
+      execute_shell_cmd_rpt("grep -E -i -edtparam -edtoverlay -edevice_tree /boot/config.txt | grep -v \"^ *#\"", depth+2);
       rpt_nl();
       rpt_vstring(depth+1, "Looking for blacklisted drivers in /etc/modprobe.d:");
       execute_shell_cmd_rpt("grep -ir blacklist /etc/modprobe.d | grep -v \"^ *#\"", depth+2);
