@@ -21,7 +21,7 @@ typedef void (*Display_Change_Handler)(
 
 typedef enum {
    Watch_Mode_Full_Poll,
-   Watch_Mode_Simple_Udev,
+   Watch_Mode_Udev_Sysfs,
    Watch_Mode_Udev_I2C,
 } DDC_Watch_Mode;
 

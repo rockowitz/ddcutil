@@ -28,7 +28,6 @@
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/drm_common.h"
-#include <base/drm_connector_state.h>
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/glib_util.h"
@@ -43,6 +42,7 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/ddc_errno.h"
+#include "base/drm_connector_state.h"
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
 #include "base/rtti.h"
@@ -68,7 +68,7 @@ static GThread * watch_thread = NULL;
 static DDCA_Display_Event_Class active_classes = DDCA_EVENT_CLASS_NONE;
 static GMutex    watch_thread_mutex;
 
-DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Simple_Udev;
+DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Udev_I2C;
 bool             ddc_slow_watch = false;
 int              extra_stabilize_seconds = DEFAULT_EXTRA_STABILIZE_SECS;
 
@@ -76,7 +76,7 @@ const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
    char * result = NULL;
    switch (mode) {
    case Watch_Mode_Full_Poll:   result = "Watch_Mode_Full_Poll";   break;
-   case Watch_Mode_Simple_Udev: result = "Watch_Mode_Simple_Udev"; break;
+   case Watch_Mode_Udev_Sysfs:  result = "Watch_Mode_Udev_Sysfs"; break;
    case Watch_Mode_Udev_I2C:    result = "Watch_Mode_Udev_I2C";    break;
    }
    return result;
@@ -134,7 +134,7 @@ bool check_thread_or_process(pid_t id) {
 /** Primary function to check for changes in display status (disconnect, DPMS),
  *  modify internal data structures, and emit client notifications.
  */
-void ddc_recheck_bus() {
+void ddc_poll_recheck_bus() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    // may need to wait on startup
@@ -144,11 +144,11 @@ void ddc_recheck_bus() {
    }
 
    Bit_Set_256  old_attached_buses_bitset  = buses_bitset_from_businfo_array(all_i2c_buses, false);
-   Bit_Set_256  old_connected_buses_bitset = buses_bitset_from_businfo_array(all_i2c_buses, true);
+   Bit_Set_256  old_buses_with_edid_bitset = buses_bitset_from_businfo_array(all_i2c_buses, true);
 
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_connected_buses_bitset has %d bits set", bs256_count(old_connected_buses_bitset));
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_connected_buses_bitset has %d bits set", bs256_count(old_buses_with_edid_bitset));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_attached_buses_bitset: %s", bs256_to_string_decimal_t(old_attached_buses_bitset, "", ",") );
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_connected_buses_bitset: %s",bs256_to_string_decimal_t(old_connected_buses_bitset, "", ","));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_buses_with_edid_bitset: %s",bs256_to_string_decimal_t(old_buses_with_edid_bitset, "", ","));
 
    Bit_Set_256  cur_attached_buses_bitset = i2c_detect_attached_buses_as_bitset();
    Bit_Set_256  newly_attached_buses_bitset = bs256_and_not(cur_attached_buses_bitset, old_attached_buses_bitset);
@@ -205,11 +205,11 @@ void ddc_recheck_bus() {
    }
 
    GPtrArray * new_buses = i2c_detect_buses0();
-   Bit_Set_256 new_connected_buses_bitset = buses_bitset_from_businfo_array(new_buses, true);
+   Bit_Set_256 new_buses_with_edid_bitset = buses_bitset_from_businfo_array(new_buses, true);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_bitset has %d bits set", bs256_count(new_bitset));
    
-   Bit_Set_256 newly_disconnected_buses_bitset = bs256_and_not(old_connected_buses_bitset, new_connected_buses_bitset);
-   Bit_Set_256 newly_connected_buses_bitset    = bs256_and_not(new_connected_buses_bitset, old_connected_buses_bitset);
+   Bit_Set_256 newly_disconnected_buses_bitset = bs256_and_not(old_buses_with_edid_bitset, new_buses_with_edid_bitset);
+   Bit_Set_256 newly_connected_buses_bitset    = bs256_and_not(new_buses_with_edid_bitset, old_buses_with_edid_bitset);
    int ct =  bs256_count(newly_disconnected_buses_bitset);
    if (ct > 0)
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "newly_disconnected_buses_bitset has %d bits set", ct);
@@ -314,7 +314,7 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
 
    while (!terminate_watch_thread) {
-      ddc_recheck_bus();
+      ddc_poll_recheck_bus();
       int microsec = 3000*1000;
       if (ddc_slow_watch)
          microsec *= 5;
@@ -566,6 +566,10 @@ bool ddc_hotplug_change_handler(
 }
 
 
+#define BS256 Bit_Set_256
+#define BS256_REPR(_bs) bs256_to_string_decimal_t(_bs, "", " ")
+
+
 /** Repeatedly calls #get_sysfs_drm_connector_names() until the value read
  *  equals the prior value.
  *
@@ -574,7 +578,7 @@ bool ddc_hotplug_change_handler(
  *  @return stabilized value
  */
 Sysfs_Connector_Names
-stabilized_connector_names(Sysfs_Connector_Names prior,
+ddc_stabilized_connector_names(Sysfs_Connector_Names prior,
                            bool                  some_displays_disconnected) {
    bool debug = false;
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
@@ -626,7 +630,6 @@ stabilized_connector_names(Sysfs_Connector_Names prior,
  *  @param prev_displays   GPtrArray of previously detected displays
  *  @return GPtrArray of currently detected monitors
  */
-//static
 Sysfs_Connector_Names ddc_check_displays(
       Sysfs_Connector_Names prev_connector_names,
       GArray * events_queue)
@@ -655,7 +658,7 @@ Sysfs_Connector_Names ddc_check_displays(
       bool detected_displays_removed = connectors_having_edid_removed->len > 0;
       g_ptr_array_free(connectors_having_edid_removed, true);
 
-      Sysfs_Connector_Names stabilized_names = stabilized_connector_names(new_connector_names, detected_displays_removed);
+      Sysfs_Connector_Names stabilized_names = ddc_stabilized_connector_names(new_connector_names, detected_displays_removed);
       if (IS_DBGTRC(debug, DDCA_TRC_NONE))  {
          DBGTRC(true, DDCA_TRC_NONE, "stabilized_names:");
          dbgrpt_sysfs_connector_names(stabilized_names, 2);
@@ -838,7 +841,7 @@ void set_fd_blocking(int fd) {
 #endif
 
 
-void dbgrpt_udev_device(struct udev_device * dev, int depth) {
+void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
    rpt_structure_loc("udev_device", dev, depth);
    // printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
    // printf("   Subsystem: %s\n", udev_device_get_subsystem(dev));  // drm
@@ -855,23 +858,25 @@ void dbgrpt_udev_device(struct udev_device * dev, int depth) {
    printf("   initialized: %d\n", udev_device_get_is_initialized(  dev));
    printf("   driver:    %s\n", udev_device_get_driver(  dev));
 
-   struct udev_list_entry * entries = NULL;
-   entries = udev_device_get_devlinks_list_entry(dev);
-   show_udev_list_entries(entries, "devlinks");
+   if (verbose) {
+      struct udev_list_entry * entries = NULL;
+      entries = udev_device_get_devlinks_list_entry(dev);
+      show_udev_list_entries(entries, "devlinks");
 
-   entries = udev_device_get_properties_list_entry(dev);
-   show_udev_list_entries(entries, "properties");
+      entries = udev_device_get_properties_list_entry(dev);
+      show_udev_list_entries(entries, "properties");
 
-   entries = udev_device_get_tags_list_entry(dev);
-   show_udev_list_entries(entries, "tags");
+      entries = udev_device_get_tags_list_entry(dev);
+      show_udev_list_entries(entries, "tags");
 
-   entries = udev_device_get_sysattr_list_entry(dev);
-   //show_udev_list_entries(entries, "sysattrs");
-   show_sysattr_list_entries(dev,entries);
+      entries = udev_device_get_sysattr_list_entry(dev);
+      //show_udev_list_entries(entries, "sysattrs");
+      show_sysattr_list_entries(dev,entries);
+   }
 }
 
 
-void filter_sleep_events(GArray * events) {
+void ddc_filter_sleep_events(GArray * events) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "Initial events queue length: %d", events->len);
    assert(events);
@@ -989,7 +994,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
                   DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
                   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Event %d in queue: %s", ndx, display_status_event_repr_t(evt));
                }
-               filter_sleep_events(deferred_events);
+               // buses with edid_sleep_events(deferred_events);  // stray edit?
             }
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting %d deferred events", deferred_events->len);
             for (int ndx = 0; ndx < deferred_events->len; ndx++) {
@@ -1034,7 +1039,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
 
       if (debug) {
          printf("Got Device\n");
-         dbgrpt_udev_device(dev, 2);
+         dbgrpt_udev_device(dev, /*verbose=*/ false, 2);
       }
 
       const char * prop_action    = udev_device_get_property_value(dev, "ACTION");     // always "changed"
@@ -1065,11 +1070,501 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
    g_ptr_array_free(sleepy_connectors, true);
    return NULL;
 }
-#endif
+
+
+// UNUSED ???
+void ddc_emit_deferred_events(GArray * deferred_events) {
+   bool debug = false;
+
+   if (deferred_events->len > 1) {  // FUTURE ENHANCMENT, filter out meaningless events
+      // check for cancellation events
+      for (int ndx = 0; ndx < deferred_events->len; ndx++) {
+         DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Event %d in queue: %s", ndx, display_status_event_repr_t(evt));
+      }
+      ddc_filter_sleep_events(deferred_events);
+   }
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting %d deferred events", deferred_events->len);
+   for (int ndx = 0; ndx < deferred_events->len; ndx++) {
+      DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting deferred event %s", display_status_event_repr_t(evt));
+      ddc_emit_display_status_record(evt);
+   }
+   g_array_remove_range(deferred_events,0, deferred_events->len);
+}
 
 
 //
-// Common to both variants
+// Variant using udev but not relying on /sys
+//
+
+#define BS256 Bit_Set_256
+#define BS256_REPR(_bs) bs256_to_string_decimal_t(_bs, "", " ")
+
+
+void ddc_i2c_filter_sleep_events(GArray * events) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "Initial events queue length: %d", events->len);
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      for (int ndx = 0; ndx < events->len; ndx++) {
+         DDCA_Display_Status_Event evt = g_array_index(events, DDCA_Display_Status_Event, ndx);
+         DBGMSG("%s", display_status_event_repr_t(evt));
+      }
+   }
+   assert(events);
+   int initial_ndx = 0;
+   while (initial_ndx < events->len) {
+      DDCA_Display_Status_Event evt = g_array_index(events, DDCA_Display_Status_Event, initial_ndx);
+      if (evt.event_type == DDCA_EVENT_DPMS_ASLEEP) {
+         int asleep_ndx = initial_ndx;
+         int awake_ndx = -1;
+         for (int successor_ndx = initial_ndx+1; successor_ndx < events->len; successor_ndx++) {
+             DDCA_Display_Status_Event evt2 = g_array_index(events, DDCA_Display_Status_Event, successor_ndx);
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "evt:  %s", display_status_event_repr_t(evt));
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "evt2: %s", display_status_event_repr_t(evt2));
+
+             if (evt2.event_type != DDCA_EVENT_DPMS_ASLEEP && evt2.event_type != DDCA_EVENT_DPMS_AWAKE) {
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Intervening non-sleep event");
+                // connection events intervened, can't simplify
+                break;
+             }
+             if (!dpath_eq(evt2.io_path, evt.io_path)) {
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Different bus number");
+                // for a different bus, ignore
+                continue;
+             }
+             if (evt.event_type == DDCA_EVENT_DPMS_ASLEEP) {
+                // multiple successive awake events, need to figure out logic
+                // ignore for now
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Multiple DDCA_EVENT_DPMS_ASLEEP events");
+                break;
+             }
+             awake_ndx = successor_ndx;
+             break;
+         }
+
+         if (awake_ndx > 0) {   // impossible for it to be the first
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing events %d, %d", asleep_ndx, awake_ndx);
+            DDCA_Display_Status_Event evt_asleep = g_array_index(events, DDCA_Display_Status_Event, asleep_ndx);
+            DDCA_Display_Status_Event evt_awake  = g_array_index(events, DDCA_Display_Status_Event, awake_ndx);
+            SYSLOG2(DDCA_SYSLOG_NOTICE, "Filtered out sleep event: %s", display_status_event_repr_t(evt_asleep));
+            SYSLOG2(DDCA_SYSLOG_NOTICE, "Filtered out sleep event: %s", display_status_event_repr_t(evt_awake));
+            g_array_remove_index(events, awake_ndx);
+            g_array_remove_index(events, asleep_ndx);
+            initial_ndx = asleep_ndx - 1;
+         }
+      }
+      initial_ndx++;
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Final events queue length: %d", events->len);
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      for (int ndx = 0; ndx < events->len; ndx++) {
+         DDCA_Display_Status_Event evt = g_array_index(events, DDCA_Display_Status_Event, ndx);
+         DBGMSG("%s", display_status_event_repr_t(evt));
+      }
+   }
+}
+
+
+
+
+void ddc_i2c_emit_deferred_events(GArray * deferred_events) {
+   bool debug = false;
+
+#ifdef TEMPORARY_SIMPLIFICATION
+   if (deferred_events->len > 1) {  // FUTURE ENHANCMENT, filter out meaningless events
+      // check for cancellation events
+      for (int ndx = 0; ndx < deferred_events->len; ndx++) {
+         DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Event %d in queue: %s", ndx, display_status_event_repr_t(evt));
+      }
+      ddc_i2c_filter_sleep_events(deferred_events);
+   }
+#endif
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting %d deferred events", deferred_events->len);
+   for (int ndx = 0; ndx < deferred_events->len; ndx++) {
+      DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting deferred event %s", display_status_event_repr_t(evt));
+      ddc_emit_display_status_record(evt);
+   }
+   g_array_remove_range(deferred_events,0, deferred_events->len);
+}
+
+
+/** Repeatedly calls i2c_detect_buses0() until the value read
+ *  equals the prior value.
+ *
+ *  @oaram prior  initial array of Bus_Info
+ *  @param some_displays_disconnected
+ *  @return stabilized value
+ */
+GPtrArray *
+ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "prior =%p, some_displays_disconnected=%s", prior, SBOOL(some_displays_disconnected));
+   Bit_Set_256 bs_prior =  buses_bitset_from_businfo_array(prior, /* only_connected */ true);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_prior:", BS256_REPR(bs_prior));
+
+   // Special handling for case of apparently disconnected displays.
+   // It has been observed that in some cases (Samsung U32H750) a disconnect is followed a
+   // few seconds later by a connect. Wait a few seconds to avoid triggering events
+   // in this case.
+   if (some_displays_disconnected) {
+      if (extra_stabilize_seconds > 0) {
+         char * s = g_strdup_printf(
+               "Delaying %d seconds to avoid a false disconnect/connect sequence...", extra_stabilize_seconds);
+         DBGTRC(debug, TRACE_GROUP, "%s", s);
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+         free(s);
+         usleep(extra_stabilize_seconds * 1000000);
+      }
+   }
+
+   int stablect = 0;
+   bool stable = false;
+   while (!stable) {
+      usleep(1000*1000);  // 1 second
+      GPtrArray* latest = i2c_detect_buses0();
+      Bit_Set_256 bs_latest =  buses_bitset_from_businfo_array(latest, /* only_connected */ true);
+      if (bs256_eq(bs_latest, bs_prior))
+            stable = true;
+      i2c_discard_buses0(prior);
+      prior = latest;
+      stablect++;
+   }
+   if (stablect > 1) {
+      DBGTRC(debug, TRACE_GROUP,   "Required %d extra calls to i2c_get_buses0()", stablect+1);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_get_buses0()", __func__, stablect-1);
+   }
+
+   DBGTRC_RETURNING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
+   return prior;
+}
+
+
+bool ddc_i2c_hotplug_change_handler(
+      BS256    bs_buses_removed,
+      BS256    bs_buses_added,
+      GArray * events_queue)
+
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bs_buses_removed: %s, events_queue=%p",
+         BS256_REPR(bs_buses_removed), events_queue);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_added: %s",
+         BS256_REPR(bs_buses_added));
+   bool event_emitted = false;
+
+   Bit_Set_256_Iterator iter = bs256_iter_new(bs_buses_removed);
+   int busno = bs256_iter_next(iter);
+   while(busno >= 0) {
+      Display_Ref * dref = DDC_GET_DREF_BY_BUSNO(busno, /*ignore_invalid*/ true);
+      if (dref) {
+         assert(!(dref->flags & DREF_REMOVED));
+         dref->flags |= DREF_REMOVED;
+         // dref->detail = NULL;
+         char buf[100];
+         g_snprintf(buf, 100, "Removing connected display, dref %s", dref_repr_t(dref));
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
+#ifdef MAYBE
+            DDCA_Display_Status_Event evt = ddc_create_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
+                                            connector_name,
+                                            dref,
+                                            dref->io_path);
+#endif
+         ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
+               dref->drm_connector, dref, dref->io_path, events_queue);
+         event_emitted = true;
+      }
+      else {
+         char s[80];
+         g_snprintf(s, 80, "Display_Ref not found for removed i2c bus: %d", busno);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", s);
+         SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
+      }
+      busno = bs256_iter_next(iter);
+   }
+   bs256_iter_free(iter);
+
+   iter = bs256_iter_new(bs_buses_added);
+   busno = bs256_iter_next(iter);
+   while (busno >= 0) {
+       I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
+       assert(businfo);
+       char buf[100];
+       g_snprintf(buf, 100, "Adding connected display with bus %d", busno);
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
+       DDCA_IO_Path path;
+       path.io_mode = DDCA_IO_I2C;
+       path.path.i2c_busno = busno;
+       ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED, businfo->drm_connector_name, NULL, path, events_queue);
+       event_emitted = true;
+       busno = bs256_iter_next(iter);
+   }
+   bs256_iter_free(iter);
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP,event_emitted, "");
+   return event_emitted;
+}
+
+
+
+
+Bit_Set_256 ddc_i2c_check_bus_asleep(
+      Bit_Set_256  bs_active_buses,
+      Bit_Set_256  bs_sleepy_buses,
+      GArray*      display_status_events) // array of DDCA_Display_Status_Event
+{
+   bool debug = false;
+   // two lines so bs256_to_descimal_t() calls don't clobber private thread specific buffer
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bs_active_buses: %s", BS256_REPR(bs_active_buses));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_sleepy_buses: %s", BS256_REPR(bs_sleepy_buses));
+
+// #ifdef TEMP
+   // remove from the sleepy_connectors array any connector that is not currently active
+   // so that it will not be marked asleep when it becomes active
+   // i.e. turn off is asleep if connector no longer has a monitor
+   bs_sleepy_buses = bs256_and(bs_sleepy_buses, bs_active_buses);
+
+   if (bs256_count(bs_sleepy_buses) > 0)
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "bs_sleepy_buses after removing inactive buses: %s", BS256_REPR(bs_sleepy_buses));
+
+   Bit_Set_256_Iterator iter = bs256_iter_new(bs_active_buses);
+   int busno = bs256_iter_next(iter);
+   while (busno >= 0) {
+      I2C_Bus_Info * businfo = i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
+      if (!businfo->drm_connector_name) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Unable to find connector for bus /dev/i2c-%d", busno);
+         SEVEREMSG("Unable to find connector for bus /dev/i2c-%d", busno);
+      }
+      else {
+         bool is_dpms_asleep = dpms_check_drm_asleep_by_connector(businfo->drm_connector_name);
+         bool last_checked_dpms_asleep = bs256_contains(bs_sleepy_buses, busno);
+         if (is_dpms_asleep != last_checked_dpms_asleep) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno = %d, last_checked_dpms_asleep=%s, is_dpms_asleep=%s",
+               busno, sbool (last_checked_dpms_asleep), sbool(is_dpms_asleep));
+            Display_Ref * dref = DDC_GET_DREF_BY_BUSNO(busno, /* ignore_invalid */ true);
+            DDCA_Display_Status_Event evt =
+                  ddc_create_display_status_event(
+                           (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE,
+                           businfo->drm_connector_name,
+                           dref,
+                           dref->io_path);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Queueing %s", display_status_event_repr_t(evt));
+            g_array_append_val(display_status_events,evt);
+
+            if (is_dpms_asleep) {
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding bus %d to sleepy_connectors", busno);
+               bs_sleepy_buses = bs256_insert(bs_sleepy_buses, busno);
+            }
+            else {
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing bus %d from sleepy_connectors", busno);
+               bs_sleepy_buses = bs256_remove(bs_sleepy_buses, busno);
+            }
+         }
+      }
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bottom of loop 2, active_connectors->len = %d, sleepy_connectors->len=%d",
+      //      bs256_count(bs_active_buses), bs256_count(*p_bs_sleepy_buses));
+      busno = bs256_iter_next(iter);
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: bs_sleepy_buses: %s",  BS256_REPR(bs_sleepy_buses));
+   return bs_sleepy_buses;
+}
+
+
+//static
+Bit_Set_256 ddc_i2c_check_bus_summary(
+      Bit_Set_256 bs_prev_buses,
+      GArray *    events_queue)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "prev_i2c_buses: %s", BS256_REPR(bs_prev_buses));
+
+   GPtrArray * new_buses = i2c_detect_buses0();
+   Bit_Set_256 bs_new_buses =  buses_bitset_from_businfo_array(new_buses, /* only_connected */ true);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_new_buses: %s", BS256_REPR(bs_new_buses));
+
+   if (!bs256_eq(bs_prev_buses, bs_new_buses)) {
+      // Detect need for special handling for case of display disconnected.
+      Bit_Set_256 bs_removed = bs256_and_not(bs_prev_buses,bs_new_buses);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "buses_having_edid_removed: %s", BS256_REPR(bs_removed));
+      bool detected_displays_removed_flag = bs256_count(bs_removed);
+
+      GPtrArray * stabilized_buses = ddc_i2c_stabilized_buses(new_buses, detected_displays_removed_flag);
+      BS256 bs_stabilized_buses = buses_bitset_from_businfo_array(stabilized_buses, /*only_connected*/ true);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_stabilized_buses: %s", BS256_REPR(bs_stabilized_buses));
+      new_buses = stabilized_buses;
+   }
+
+   bool hotplug_change_handler_emitted = false;
+   bool connected_buses_changed = !bs256_eq( bs_prev_buses, bs_new_buses);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "connected_buses_changed = %s", SBOOL(connected_buses_changed));
+
+   if (connected_buses_changed) {
+      BS256 bs_buses_removed = bs256_and_not(bs_prev_buses, bs_new_buses);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_removed: %s", BS256_REPR(bs_buses_removed));
+
+      BS256 bs_buses_added = bs256_and_not(bs_new_buses, bs_prev_buses);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_added: %s", BS256_REPR(bs_buses_added));
+
+      hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
+                                           bs_buses_removed,
+                                           bs_buses_added,
+                                           events_queue);
+   }
+
+   if (hotplug_change_handler_emitted)
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "hotplug_change_handler_emitted = %s",
+            sbool (hotplug_change_handler_emitted));
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning Bit_Set_256: %s", BS256_REPR(bs_new_buses));
+   return bs_new_buses;
+}
+
+
+gpointer ddc_watch_displays_udev_i2c(gpointer data) {
+   bool debug = false;
+   Watch_Displays_Data * wdd = data;
+   assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+         "Caller process id: %d, caller thread id: %d, event_classes=0x%02x",
+         wdd->main_process_id, wdd->main_thread_id, wdd->event_classes);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for display connection events: %s",
+         sbool(wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for dpms events: %s",
+          sbool(wdd->event_classes & DDCA_EVENT_CLASS_DPMS));
+
+   pid_t cur_pid = getpid();
+   pid_t cur_tid = get_thread_id();
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Our process id: %d, our thread id: %d", cur_pid, cur_tid);
+
+   GPtrArray * sleepy_connectors = g_ptr_array_new_with_free_func(g_free);
+   BS256 bs_sleepy_buses = EMPTY_BIT_SET_256;
+
+   struct udev* udev;
+   udev = udev_new();
+   assert(udev);
+   struct udev_monitor* mon = udev_monitor_new_from_netlink(udev, "udev");
+   // Alternative subsystem devtype values that did not detect changes:
+   // drm_dp_aux_dev, kernel, i2c-dev, i2c, hidraw
+   udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // detects
+   udev_monitor_enable_receiving(mon);
+
+   // make udev_monitor_receive_device() blocking
+   // int fd = udev_monitor_get_fd(mon);
+   // set_fd_blocking(fd);
+
+   // Sysfs_Connector_Names current_connector_names = get_sysfs_drm_connector_names();
+   GPtrArray * cur_active_buses = all_i2c_buses;
+   Bit_Set_256 bs_cur_active_buses =
+         buses_bitset_from_businfo_array(cur_active_buses, /*only_connected=*/ true);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial i2c buses with edids: %s",
+         BS256_REPR(bs_cur_active_buses));
+
+   GArray * deferred_events = g_array_new( false,      // zero_terminated
+                                          false,       // clear
+                                          sizeof(DDCA_Display_Status_Event));
+   struct udev_device * dev = NULL;
+   while (true) {
+      if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
+         dev = udev_monitor_receive_device(mon);
+      }
+      while ( !dev ) {
+         int sleep_secs = 2;   // default sleep time on each loop
+         if (ddc_slow_watch)   // for testing
+            sleep_secs *= 3;
+         // if (debug)
+         //   DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Sleeping for %d seconds", sleep_secs);
+         const int max_sleep_microsec = sleep_secs * 1000000;
+         const int sleep_step_microsec = MIN(200000, max_sleep_microsec);     // .2 sec
+         int slept = 0;
+         for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
+            usleep(sleep_step_microsec);
+
+         if (deferred_events->len > 0) {
+            ddc_i2c_emit_deferred_events(deferred_events);
+         }
+
+         if (terminate_watch_thread) {
+            DBGTRC_DONE(debug, TRACE_GROUP, "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
+            free_watch_displays_data(wdd);
+            g_thread_exit(0);
+            assert(false);    // avoid clang warning re wdd use after free
+         }
+
+         if (wdd->event_classes & DDCA_EVENT_CLASS_DPMS) {
+            // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Before ddc_check_bus_asleep(), bs_sleepy_buses: %s",
+            //      BS256_REPR(bs_sleepy_buses));
+            bs_sleepy_buses = ddc_i2c_check_bus_asleep(bs_cur_active_buses, bs_sleepy_buses, deferred_events);
+            // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After ddc_check_bus_asleep(), bs_sleepy_buses: %s",
+            //       BS256_REPR(bs_sleepy_buses));
+         }
+
+         // Doesn't work to detect client crash, main thread and process remains for some time.
+         // 11/2020: is this even needed since terminate_watch_thread check added?
+         // #ifdef DOESNT_WORK
+         bool pid_found = check_thread_or_process(cur_pid);
+         if (!pid_found) {
+            DBGMSG("Process %d not found", cur_pid);
+         }
+         bool tid_found = check_thread_or_process(cur_tid);
+         if (!pid_found || !tid_found) {
+            DBGMSG("Thread %d not found", cur_tid);
+            g_thread_exit(GINT_TO_POINTER(-1));
+            break;
+         }
+         // #endif
+
+         if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION)
+            dev = udev_monitor_receive_device(mon);
+      }
+
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "udev event received");
+
+      // if (debug) {
+      //    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Got Device\n");
+      //    // dbgrpt_udev_device(dev, /*verbose=*/false, 2);
+      // }
+
+      const char * prop_action    = udev_device_get_property_value(dev, "ACTION");     // always "changed"
+      const char * prop_connector = udev_device_get_property_value(dev, "CONNECTOR");  // drm connector number
+      const char * prop_devname   = udev_device_get_property_value(dev, "DEVNAME");    // e.g. /dev/dri/card0
+      const char * prop_hotplug   = udev_device_get_property_value(dev, "HOTPLUG");    // always 1
+      const char * attr_sysname   = udev_device_get_sysname(dev);                      // e.g. card0
+
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"udev event received: ACTION: %s, CONNECTOR: %s, DEVNAME: %s, HOTPLUG: %s, sysname: %s",
+            prop_action,
+            prop_connector,
+            prop_devname,
+            prop_hotplug,     // "1"
+            attr_sysname);
+
+      bs_cur_active_buses = ddc_i2c_check_bus_summary(bs_cur_active_buses, deferred_events);
+      // remove buses marked asleep if they no longer have a monitor so they will
+      // not be considered asleep when reconnected
+      bs_sleepy_buses = bs256_and(bs_sleepy_buses, bs_cur_active_buses);
+
+      udev_device_unref(dev);
+
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "udev event processed");
+
+      // printf("."); fflush(stdout);
+   }  // while
+
+   udev_monitor_unref(mon);
+   g_ptr_array_free(sleepy_connectors, true);
+   return NULL;
+}
+#endif
+
+#undef BS256
+#undef BS256_REPR
+
+//
+// Common to all variants
 //
 
 /** Starts thread that watches for changes in display connection status.
@@ -1110,17 +1605,22 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       data->main_process_id = getpid();
       // data->main_thread_id = syscall(SYS_gettid);
       data->main_thread_id = get_thread_id();
+      // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
       data->event_classes = event_classes;
 
+#ifdef ENABLE_UDEV
+      GThreadFunc watch_thread_func = NULL;
+      switch (ddc_watch_mode) {
+      case Watch_Mode_Full_Poll:   watch_thread_func = ddc_watch_displays_using_poll;  break;
+      case Watch_Mode_Udev_Sysfs: watch_thread_func = ddc_watch_displays_using_udev;  break;
+      case Watch_Mode_Udev_I2C:    watch_thread_func = ddc_watch_displays_udev_i2c;    break;
+      }
+#else
+      GThreadFunc watch_thread_func = ddc_watch_displays_using_poll;
+#endif
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
-#ifdef ENABLE_UDEV
-                       (ddc_watch_mode == Watch_Mode_Full_Poll) ?
-                             ddc_watch_displays_using_poll :
-                             ddc_watch_displays_using_udev,
-#else
-                       ddc_watch_displays_using_poll,
-#endif
+                       watch_thread_func,
                        data);
       active_classes = event_classes;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
@@ -1200,16 +1700,27 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
    RTTI_ADD_FUNC(ddc_get_active_watch_classes);
+
 // #ifdef WATCH_USING_POLL
-   RTTI_ADD_FUNC(ddc_recheck_bus);
+   RTTI_ADD_FUNC(ddc_poll_recheck_bus);
 //  #endif
    RTTI_ADD_FUNC(ddc_watch_displays_using_poll);
 #ifdef ENABLE_UDEV
+   RTTI_ADD_FUNC(ddc_emit_deferred_events);
+   RTTI_ADD_FUNC(ddc_filter_sleep_events);
+
    RTTI_ADD_FUNC(ddc_check_asleep);
-   RTTI_ADD_FUNC(stabilized_connector_names);
+   RTTI_ADD_FUNC(ddc_stabilized_connector_names);
+   RTTI_ADD_FUNC(ddc_hotplug_change_handler);
    RTTI_ADD_FUNC(ddc_check_displays);
    RTTI_ADD_FUNC(ddc_watch_displays_using_udev);
-   RTTI_ADD_FUNC(ddc_hotplug_change_handler);
-   RTTI_ADD_FUNC(filter_sleep_events);
+
+   RTTI_ADD_FUNC(ddc_i2c_filter_sleep_events);
+   RTTI_ADD_FUNC(ddc_i2c_check_bus_summary);
+   RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
+   RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
+   RTTI_ADD_FUNC(ddc_i2c_emit_deferred_events);
+   RTTI_ADD_FUNC(ddc_i2c_hotplug_change_handler);
+   RTTI_ADD_FUNC(ddc_watch_displays_udev_i2c);
 #endif
 }
