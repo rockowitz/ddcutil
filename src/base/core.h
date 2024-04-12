@@ -436,7 +436,8 @@ bool dbgtrc_returning_expression(
              __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
 #endif
 
-
+// can only pass a variable, not an expression or constant, to DBGTRC_RET_BOOL()
+// because failure simulation may assign a new value to the variable
 #define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
     dbgtrc_returning_expression( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
