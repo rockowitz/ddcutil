@@ -61,6 +61,12 @@ dyn_create_dynamic_feature_from_dfr_metadata(Dyn_Feature_Metadata * dfr_metadata
       else
          dfm->nontable_formatter = format_feature_detail_sl_byte;
    }
+   else if (dfr_metadata->feature_flags & DDCA_EXTENDED_NC) {
+      if (dfr_metadata->sl_values)
+         dfm->nontable_formatter_sl = dyn_format_feature_detail_sl_lookup_with_sh;  // HACK
+      else
+         dfm->nontable_formatter = format_feature_detail_sh_sl_bytes;
+   }
    else if (dfr_metadata->feature_flags & DDCA_STD_CONT)
       dfm->nontable_formatter = format_feature_detail_standard_continuous;
    else if (dfr_metadata->feature_flags & DDCA_TABLE)

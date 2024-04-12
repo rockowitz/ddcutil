@@ -761,6 +761,8 @@ get_nontable_feature_detail_function(
       func = format_feature_detail_standard_continuous;
    else if (version_specific_flags & DDCA_SIMPLE_NC)
       func = format_feature_detail_sl_lookup;
+   else if (version_specific_flags & DDCA_EXTENDED_NC)
+      func = format_feature_detail_sl_lookup_with_sh;
    else if (version_specific_flags & DDCA_WO_NC)
       func = NULL;      // but should never be called for this case
    else {
@@ -1233,7 +1235,7 @@ find_feature_value_table(
       // it uses the sl byte for one lookup table, and the sh byte for another
       // This hack lets capabilities interpretation look up the sl byte
       // Normal interpretation of function xca uses dedicated function
-      if ( (feature_flags & DDCA_SIMPLE_NC) || feature_code == 0xca) {
+      if ( (feature_flags & (DDCA_SIMPLE_NC|DDCA_EXTENDED_NC)) || feature_code == 0xca) {
          result = get_version_specific_sl_values(pentry, vcp_version);
       }
    }
@@ -1388,6 +1390,23 @@ bool format_feature_detail_sl_byte(
 }
 
 
+bool format_feature_detail_sh_sl_bytes(
+        Nontable_Vcp_Value *     code_info,
+        DDCA_MCCS_Version_Spec   vcp_version,
+        char *                   buffer,
+        int                      bufsz)
+{
+    bool debug = false;
+    DBGMSF(debug, "vcp_code=0x%02x, sh=0x%02x, sl=0x%02x",
+                  code_info->vcp_code, code_info->sh, code_info->sl);
+
+    g_snprintf(buffer, bufsz, "Value: sh=0x%02xm sl=0x%02x", code_info->sh, code_info->sl);
+
+    DBGMSF(debug, "Returning true, buffer=%s", buffer);
+    return true;
+}
+
+
 /* Formats the value of a non-continuous feature whose value is returned in byte SL.
  * The names of possible values is stored in a value list in the feature table entry
  * for the feature.
@@ -1412,6 +1431,34 @@ bool format_feature_detail_sl_lookup(
    snprintf(buffer, bufsz,"%s (sl=0x%02x)", s, code_info->sl);
    return true;
 }
+
+
+/* Formats the value of a non-continuous feature whose value is returned in byte SL,
+ * and which also uses byte SH.
+ * The names of possible values is stored in a value list in the feature table entry
+ * for the feature.
+ *
+ * Arguments:
+ *    code_info   parsed feature data
+ *    vcp_version VCP version
+ *    buffer      buffer in which to store output
+ *    bufsz       buffer size
+ *
+ * Returns:
+ *    true if formatting successful, false if not
+ */
+bool format_feature_detail_sl_lookup_with_sh(
+        Nontable_Vcp_Value *     code_info,
+        DDCA_MCCS_Version_Spec   vcp_version,
+        char *                   buffer,
+        int                      bufsz)
+{
+   // TODO: lookup feature code in dynamic_sl_value_table
+   char * s = lookup_value_name(code_info->vcp_code, vcp_version, code_info->sl);
+   snprintf(buffer, bufsz,"sh=0x%02x, sl=0x%02x=%s", code_info->sh, code_info->sl, s);
+   return true;
+}
+
 
 // wrong, needs to be per-display
 void register_dynamic_sl_values(
@@ -4373,7 +4420,9 @@ static void init_func_name_table() {
    RTTI_ADD_FUNC(format_feature_detail_debug_continuous);
    RTTI_ADD_FUNC(format_feature_detail_debug_bytes );
    RTTI_ADD_FUNC(format_feature_detail_sl_byte);
+   RTTI_ADD_FUNC(format_feature_detail_sh_sl_bytes);
    RTTI_ADD_FUNC(format_feature_detail_sl_lookup);
+   RTTI_ADD_FUNC(format_feature_detail_sl_lookup_with_sh);
    RTTI_ADD_FUNC(format_feature_detail_standard_continuous);
    RTTI_ADD_FUNC(format_feature_detail_ushort);
    RTTI_ADD_FUNC(format_feature_detail_x02_new_control_value);

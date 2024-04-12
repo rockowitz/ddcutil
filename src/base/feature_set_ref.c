@@ -44,6 +44,7 @@ Value_Name_Table vcp_subset_table = {
       VNT(VCP_SUBSET_CCONT,           "CCONT"),
       VNT(VCP_SUBSET_CONT,            "CONT"),
       VNT(VCP_SUBSET_SNC,             "SNC"),
+      VNT(VCP_SUBSET_XNC,             "XNC"),
       VNT(VCP_SUBSET_CNC,             "CNC"),
       VNT(VCP_SUBSET_NC,              "NC"),
       VNT(VCP_SUBSET_NC_WO,           "NC_WO"),

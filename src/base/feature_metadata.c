@@ -67,13 +67,14 @@ interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
    char * buffer = get_thread_fixed_buffer(&buf_key, 100);
 
-   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
        flags & DDCA_RO               ? "Read-Only, "                   : "",
        flags & DDCA_WO               ? "Write-Only, "                  : "",
        flags & DDCA_RW               ? "Read-Write, "                  : "",
        flags & DDCA_STD_CONT         ? "Continuous (standard), "       : "",
        flags & DDCA_COMPLEX_CONT     ? "Continuous (complex), "        : "",
        flags & DDCA_SIMPLE_NC        ? "Non-Continuous (simple), "     : "",
+       flags & DDCA_EXTENDED_NC      ? "Non-Continuous (extended), "   : "",
        flags & DDCA_COMPLEX_NC       ? "Non-Continuous (complex), "    : "",
        flags & DDCA_NC_CONT          ? "Non-Continuous with continuous subrange, " :"",
        flags & DDCA_WO_NC            ? "Non-Continuous (write-only), " : "",

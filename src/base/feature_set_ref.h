@@ -44,6 +44,7 @@ typedef enum {
    VCP_SUBSET_NC_CONT         = 0x00004000,    // combines reserved values with a continuous subrange
    VCP_SUBSET_NC              = 0x00002000,    // Non-Continuous feature
    VCP_SUBSET_TABLE           = 0x00001000,    // is a table feature
+   VCP_SUBSET_XNC             = 0x00000800,    // extended NC feature (user defined only)
 
    // subsets used only on command processing, not in feature descriptor table
    VCP_SUBSET_SCAN            = 0x00000040,

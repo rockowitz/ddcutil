@@ -236,6 +236,7 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_CCONT,     CMDID_GETVCP|CMDID_VCPINFO, 3, "CCONT",     "Complex Continuous features"},
    {VCP_SUBSET_CONT,      CMDID_GETVCP|CMDID_VCPINFO, 3, "CONT",      "All Continuous features"},
    {VCP_SUBSET_SNC,       CMDID_GETVCP|CMDID_VCPINFO, 3, "SNC",       "Simple NC features"},
+   {VCP_SUBSET_XNC,       CMDID_GETVCP|CMDID_VCPINFO, 3, "XNC",       "Extended NC features"},
    {VCP_SUBSET_CNC,       CMDID_GETVCP|CMDID_VCPINFO, 3, "CNC",       "Complex NC features"},
    {VCP_SUBSET_NC_WO,                  CMDID_VCPINFO, 4, "NC_WO",     "Write-only NC features"},
    {VCP_SUBSET_NC_CONT,   CMDID_GETVCP|CMDID_VCPINFO, 4, "NC_CONT",   "NC features with continuous subrange"},

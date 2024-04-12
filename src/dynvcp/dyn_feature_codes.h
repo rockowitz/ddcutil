@@ -70,6 +70,12 @@ bool dyn_format_feature_detail_sl_lookup(
       char *                     buffer,
       int                        bufsz);
 
+bool dyn_format_feature_detail_sl_lookup_with_sh(
+      Nontable_Vcp_Value *       code_info,
+      DDCA_Feature_Value_Entry * value_table,
+      char *                     buffer,
+      int                        bufsz);
+
 void
 init_dyn_feature_codes();
 

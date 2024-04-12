@@ -162,6 +162,9 @@ create_vcp_feature_set(
          case VCP_SUBSET_SNC:
             showit = vflags & DDCA_SIMPLE_NC;
             break;
+         case VCP_SUBSET_XNC:
+            showit = vflags & DDCA_EXTENDED_NC;
+            break;
          case VCP_SUBSET_CNC:
             showit = vflags & (DDCA_COMPLEX_NC);
             break;

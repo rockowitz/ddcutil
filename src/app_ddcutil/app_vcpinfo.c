@@ -236,6 +236,8 @@ interpret_ddca_version_feature_flags_type(
       result = "Continuous (complex)";
    else if (feature_flags & DDCA_SIMPLE_NC)
       result = "Non-Continuous (simple)";
+   else if (feature_flags & DDCA_EXTENDED_NC)
+      result = "Non-Continuous (extended)";
    else if (feature_flags & DDCA_COMPLEX_NC)
       result = "Non-Continuous (complex)";
    else if (feature_flags & DDCA_NC_CONT)

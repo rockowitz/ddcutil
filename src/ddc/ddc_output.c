@@ -636,11 +636,11 @@ ddc_get_formatted_value_for_dfm(
             *formatted_value_loc = formatted;
             free(hexbuf);
          }
-         else {                                // OL_PROGRAM, not table featdyn_create_feature_set2ure
+         else {                                // OL_TERSE, not table feature
             DDCA_Version_Feature_Flags vflags = dfm->feature_flags;
             // =   get_version_sensitive_feature_flags(vcp_entry, vspec);
             char buf[200];
-            assert(vflags & (DDCA_CONT | DDCA_SIMPLE_NC | DDCA_COMPLEX_NC | DDCA_NC_CONT));
+            assert(vflags & (DDCA_CONT | DDCA_SIMPLE_NC | DDCA_EXTENDED_NC | DDCA_COMPLEX_NC | DDCA_NC_CONT));
             if (vflags & DDCA_CONT) {
                snprintf(buf, 200, "VCP %02X C %d %d",
                                   feature_code,
@@ -649,6 +649,10 @@ ddc_get_formatted_value_for_dfm(
             else if (vflags & DDCA_SIMPLE_NC) {
                snprintf(buf, 200, "VCP %02X SNC x%02x",
                feature_code, pvalrec->val.c_nc.sl);
+            }
+            else if (vflags & DDCA_EXTENDED_NC) {
+               snprintf(buf, 200, "VCP %02X SNC x%02x x%02x",
+               feature_code, pvalrec->val.c_nc.sh, pvalrec->val.c_nc.sl);
             }
             else {
                assert(vflags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));

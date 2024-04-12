@@ -323,6 +323,8 @@ attr_keyword(
       *pflags |= DDCA_SIMPLE_NC;
    else if (streq(keyword, "SNC"))
       *pflags |= DDCA_SIMPLE_NC;
+   else if (streq(keyword, "XNC"))
+      *pflags |= DDCA_EXTENDED_NC;
    else if (streq(keyword, "T"))
       *pflags |= DDCA_TABLE;
 

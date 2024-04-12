@@ -67,6 +67,44 @@ bool dyn_format_feature_detail_sl_lookup(
 }
 
 
+/* Formats the name of a non-continuous feature whose value is returned in byte SL
+ * and also byte SH
+ *
+ * Arguments:
+ *    code_info   parsed feature data
+ *    value_table lookup table, if NULL, create generic name
+ *    buffer      buffer in which to store output
+ *    bufsz       buffer size
+ *
+ * Returns:
+ *    true if formatting successful, false if not
+ */
+bool dyn_format_feature_detail_sl_lookup_with_sh(
+        Nontable_Vcp_Value *       code_info,
+        DDCA_Feature_Value_Entry * value_table,
+        char *                     buffer,
+        int                        bufsz)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "code_info=%s", nontable_vcp_value_repr_t(code_info));
+
+   if (value_table) {
+      char * s = sl_value_table_lookup(value_table, code_info->sl);
+      if (!s)
+         s = "Unrecognized value";
+      g_snprintf(buffer, bufsz,"sh=0x%02x, sl=0x%02x=%s", code_info->sh, code_info->sl, s);
+   }
+   else
+      g_snprintf(buffer, bufsz, "sh=0x%02x, sl=0x%02x", code_info->sh, code_info->sl);
+
+   // can only pass a variable, not an expression or constant, to DBGTRC_RET_BOOL()
+   // because failure simulation may assign a new value to the variable
+   bool result = true;
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "*buffer=|%s|", buffer);
+   return result;
+}
+
+
 /** Returns a #Display_Feature_Metadata record for a specified feature, first
  *  checking for a user supplied feature definition, and then from the internal
  *  feature definition tables.
@@ -105,6 +143,12 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
              else
                 result->nontable_formatter = format_feature_detail_sl_byte;
           }
+          else if (dfr_metadata->feature_flags & DDCA_EXTENDED_NC) {
+             if (dfr_metadata->sl_values)
+                result->nontable_formatter_sl = dyn_format_feature_detail_sl_lookup_with_sh;  // HACK
+             else
+                result->nontable_formatter = format_feature_detail_sl_byte;
+          }
           else if (dfr_metadata->feature_flags & DDCA_STD_CONT)
              result->nontable_formatter = format_feature_detail_standard_continuous;
           else if (dfr_metadata->feature_flags & DDCA_TABLE)
@@ -138,7 +182,8 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                      result->table_formatter = NULL;
                   }
                   else {
-                     PROGRAM_LOGIC_ERROR("Neither DDCA_NORMAL_TABLE or DDCA_WO_TABLE  set in meta->feature_flags");
+                     PROGRAM_LOGIC_ERROR(""
+                           "Neither DDCA_NORMAL_TABLE or DDCA_WO_TABLE set in meta->feature_flags");
                   }
                }
             }
@@ -155,6 +200,16 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                   else {
                      //  DBGMSG("format_feature_detail_sl_byte");
                      result->nontable_formatter = format_feature_detail_sl_byte;
+                  }
+               }
+               else if (result->feature_flags & DDCA_EXTENDED_NC) {
+                  if (result->sl_values) {
+                     // DBGMSG("format_feature_detail_sl_lookup_with_sh");
+                     result->nontable_formatter = format_feature_detail_sl_lookup_with_sh;
+                  }
+                  else {
+                     //  DBGMSG("format_feature_detail_sl_byte");
+                     result->nontable_formatter = format_feature_detail_sh_sl_bytes;
                   }
                }
                else if (result->feature_flags & DDCA_WO_NC) {
@@ -459,6 +514,7 @@ void init_dyn_feature_codes() {
    RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dh);
    RTTI_ADD_FUNC(dyn_format_feature_detail);
    RTTI_ADD_FUNC(dyn_format_feature_detail_sl_lookup);
+   RTTI_ADD_FUNC(dyn_format_feature_detail_sl_lookup_with_sh);
    // dbgrpt_func_name_table(0);
 }
 
