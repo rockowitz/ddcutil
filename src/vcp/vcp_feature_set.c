@@ -1,7 +1,7 @@
 /** @file vcp_feature_set.c
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -15,6 +15,7 @@
 /** \endcond */
 
 #include "base/core.h"
+#include "base/rtti.h"
 
 #include "vcp/vcp_feature_set.h"
 
@@ -81,13 +82,13 @@ create_vcp_feature_set(
    assert(subset_id != VCP_SUBSET_SINGLE_FEATURE);
 
    bool debug = false;
-   if (debug || IS_TRACING()) {
-      char * sflags = feature_set_flag_names_t(feature_setflags);
-      DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
+
+   DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
-                 sflags);
-      // show_backtrace(2);
-   }
+                 feature_set_flag_names_t(feature_setflags));
+   // if (IS_DBGTRC(debug, TRACE_GROUP)) {
+   //    show_backtrace(2);
+   // }
 
    bool exclude_table_features = feature_setflags & FSF_NOTABLE;
 
@@ -228,10 +229,9 @@ create_vcp_feature_set(
    }
 
    assert(fset);
-   if (debug || IS_TRACING()) {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", fset);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", fset);
+   if (IS_DBGTRC(debug, TRACE_GROUP))
       dbgrpt_vcp_feature_set(fset, 1);
-   }
    return fset;
 }
 
@@ -261,11 +261,10 @@ create_vcp_feature_set_from_feature_set_ref(
    Feature_Set_Flags         flags)
 {
    bool debug = false;
-   if (debug || IS_TRACING()) {
-      char * flag_names = feature_set_flag_names_t(flags);
-      DBGMSG("fsref=%s, vcp_version=%d.%d. flags=%s",
-              fsref_repr_t(fsref), vcp_version.major, vcp_version.minor, flag_names);
-   }
+   DBGTRC(debug, TRACE_GROUP,"fsref=%s, vcp_version=%d.%d. flags=%s",
+                             fsref_repr_t(fsref),
+                             vcp_version.major, vcp_version.minor,
+                             feature_set_flag_names_t(flags));
 
     struct vcp_feature_set * fset = NULL;
 #ifdef OLD
@@ -298,11 +297,7 @@ create_vcp_feature_set_from_feature_set_ref(
        fset = create_vcp_feature_set(fsref->subset, vcp_version, flags);
     }
 
-    if (debug || IS_TRACING()) {
-       DBGMSG("Done.     Returning: %p", fset);
-       if (fset)
-          dbgrpt_vcp_feature_set(fset, 1);
-    }
+    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Vcp_Feature_Set", dbgrpt_vcp_feature_set, fset);
     return fset;
 }
 
@@ -567,4 +562,10 @@ feature_list_from_feature_set(VCP_Feature_Set * fset)
    return vcplist;
 }
 #endif
+
+
+void init_vcp_feature_set() {
+   RTTI_ADD_FUNC(create_vcp_feature_set);
+   RTTI_ADD_FUNC(create_vcp_feature_set_from_feature_set_ref);
+}
 

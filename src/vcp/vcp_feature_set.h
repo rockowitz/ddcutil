@@ -65,4 +65,6 @@ void filter_feature_set(VCP_Feature_Set * fset, VCP_Feature_Set_Filter_Func func
 DDCA_Feature_List feature_list_from_feature_set(VCP_Feature_Set * feature_set);
 #endif
 
+void init_vcp_feature_set();
+
 #endif /* VCP_FEATURE_SET_H_ */
