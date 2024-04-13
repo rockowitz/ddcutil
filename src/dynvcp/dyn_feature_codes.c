@@ -4,7 +4,7 @@
  * incorporate user-defined per-monitor feature information.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -92,7 +92,7 @@ bool dyn_format_feature_detail_sl_lookup_with_sh(
       char * s = sl_value_table_lookup(value_table, code_info->sl);
       if (!s)
          s = "Unrecognized value";
-      g_snprintf(buffer, bufsz,"sh=0x%02x, sl=0x%02x=%s", code_info->sh, code_info->sl, s);
+      g_snprintf(buffer, bufsz,"%s (sl=0x%02x), sh=0x%02x", s, code_info->sl, code_info->sh);
    }
    else
       g_snprintf(buffer, bufsz, "sh=0x%02x, sl=0x%02x", code_info->sh, code_info->sl);
