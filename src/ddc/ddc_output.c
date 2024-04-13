@@ -871,8 +871,8 @@ ddc_show_vcp_values(
         Bit_Set_256 *       features_seen)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "subset=%d, flags=%s,  dh=%s",
-                   subset, feature_set_flag_names_t(flags), dh_repr(dh) );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "subset=%s, flags=%s,  dh=%s",
+         feature_subset_name(subset), feature_set_flag_names_t(flags), dh_repr(dh) );
 
    Public_Status_Code psc = 0;
 
