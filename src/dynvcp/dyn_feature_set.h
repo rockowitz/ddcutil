@@ -4,7 +4,7 @@
  *  user supplied feature information in feature metadata.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DYN_FEATURE_SET_H_
@@ -88,5 +88,7 @@ filter_feature_set(
 
 void dyn_free_feature_set(
       Dyn_Feature_Set *  feature_set);
+
+void init_dyn_feature_set();
 
 #endif /* DYN_FEATURE_SET_H_ */

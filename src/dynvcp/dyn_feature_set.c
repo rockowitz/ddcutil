@@ -1,7 +1,7 @@
 /** @file dyn_feature_set.c
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <string.h>
@@ -13,6 +13,7 @@
 #include "base/feature_lists.h"
 #include "base/feature_metadata.h"
 #include "base/feature_set_ref.h"
+#include "base/rtti.h"
 
 #include "vcp/vcp_feature_codes.h"
 #include "dynvcp/dyn_feature_set.h"
@@ -169,7 +170,7 @@ dyn_create_feature_set(
       Feature_Set_Flags      feature_set_flags)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. subset_id=%d - %s, dref=%s, feature_setflags=0x%02x - %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%d - %s, dref=%s, feature_setflags=0x%02x - %s",
                   subset_id,
                   feature_subset_name(subset_id),
                   dref_repr_t(display_ref),
@@ -183,7 +184,7 @@ dyn_create_feature_set(
     GPtrArray * members_dfm = g_ptr_array_new();
 
     if (subset_id == VCP_SUBSET_UDF) {  // all user defined features
-       DBGMSF(debug, "VCP_SUBSET_UDF path");
+       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "VCP_SUBSET_UDF path");
 
        if (dref->dfr) {
           DBGMSF(debug, "dref->dfr is set");
@@ -420,5 +421,10 @@ void dyn_free_feature_set(
    }
    free(feature_set);
    DBGMSF(debug, "Done");
+}
+
+void init_dyn_feature_set() {
+   RTTI_ADD_FUNC(dyn_create_feature_set0);
+   RTTI_ADD_FUNC(dyn_create_feature_set);
 }
 
