@@ -27,8 +27,10 @@
 #include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
+#include "vcp/vcp_feature_set.h"
 
 #include "dynvcp/dyn_feature_codes.h"
+#include "dynvcp/dyn_feature_set.h"
 #include "dynvcp/dyn_feature_files.h"
 #include "dynvcp/dyn_parsed_capabilities.h"
 
@@ -200,9 +202,11 @@ void init_ddc_services() {
    init_persistent_capabilities();
    init_parse_capabilities();
    init_vcp_feature_codes();
+   init_vcp_feature_set();
 
    // dyn:
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
+   init_dyn_feature_set();
    init_dyn_feature_files();
    init_dyn_parsed_capabilities();
 
