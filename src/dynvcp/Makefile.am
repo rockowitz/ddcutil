@@ -12,6 +12,7 @@ CLEANFILES = \
 noinst_LTLIBRARIES = libdynvcp.la
 
 libdynvcp_la_SOURCES =      \
+vcp_feature_set.c           \
 dyn_feature_set.c           \
 dyn_parsed_capabilities.c   \
 dyn_feature_codes.c         \

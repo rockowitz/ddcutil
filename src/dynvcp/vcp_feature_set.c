@@ -17,7 +17,7 @@
 #include "base/core.h"
 #include "base/rtti.h"
 
-#include "vcp/vcp_feature_set.h"
+#include "dynvcp/vcp_feature_set.h"
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_VCP;

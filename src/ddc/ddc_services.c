@@ -27,7 +27,7 @@
 #include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
-#include "vcp/vcp_feature_set.h"
+#include "dynvcp/vcp_feature_set.h"
 
 #include "dynvcp/dyn_feature_codes.h"
 #include "dynvcp/dyn_feature_set.h"

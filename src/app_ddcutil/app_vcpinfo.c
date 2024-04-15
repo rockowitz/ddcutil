@@ -3,7 +3,7 @@
  *  Implement VCPINFO and (deprecated) LISTVCP commands
  */
 
-// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -20,7 +20,7 @@
 #include "base/rtti.h"
 #include "base/vcp_version.h"
 
-#include "vcp/vcp_feature_set.h"
+#include "dynvcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_codes.h"
 
 #include "app_ddcutil/app_vcpinfo.h"
