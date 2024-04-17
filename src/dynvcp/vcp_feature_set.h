@@ -50,13 +50,7 @@ create_vcp_feature_set_from_feature_set_ref(
    Feature_Set_Flags       flags);
  //  bool                    force);
 
-#ifdef OOPS
-Dyn_Feature_Set *
-create_dyn_feature_set_from_feature_set_ref(
-   Feature_Set_Ref *         fsref,
-   DDCA_MCCS_Version_Spec    vcp_version,
-   Feature_Set_Flags         flags);
-#endif
+
 
 #ifdef UNUSED
 VCP_Feature_Set * create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);

@@ -42,6 +42,8 @@ typedef struct {
 
 void free_dyn_feature_set(Dyn_Feature_Set * fset);
 
+void report_dyn_feature_set(Dyn_Feature_Set * fset, int depth);
+
 void
 dbgrpt_dyn_feature_set(
       Dyn_Feature_Set *   feature_set,
@@ -57,6 +59,12 @@ dyn_create_feature_set(
       VCP_Feature_Subset  subset,
       DDCA_Display_Ref    dref,
       Feature_Set_Flags   flags);
+
+Dyn_Feature_Set *
+create_dyn_feature_set_from_feature_set_ref(
+   Feature_Set_Ref *         fsref,
+   DDCA_MCCS_Version_Spec    vcp_version,
+   Feature_Set_Flags         flags);
 
 #ifdef UNUSED
 Dyn_Feature_Set *

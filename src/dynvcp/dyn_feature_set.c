@@ -41,6 +41,17 @@ void free_dyn_feature_set(Dyn_Feature_Set * fset) {
 
 
 
+void report_dyn_feature_set(Dyn_Feature_Set * fset, int depth) {
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+   for (int ndx=0; ndx < fset->members_dfm->len; ndx++) {
+      Display_Feature_Metadata * dfm_entry  = g_ptr_array_index(fset->members_dfm,ndx);
+      rpt_vstring(depth,
+                  "VCP code: %02X: %s",
+                  dfm_entry->feature_code,
+                  dfm_entry->feature_name);
+   }
+}
+
 
 
 
@@ -185,6 +196,25 @@ dyn_create_feature_set0(
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", fset);
    return fset;
 }
+
+static Dyn_Feature_Set *
+dyn_create_feature_set1(
+      VCP_Feature_Subset   subset_id,
+      GPtrArray *          members_dfm)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%d, number of members=%d",
+                              subset_id, (members_dfm) ? members_dfm->len : -1);
+
+   Dyn_Feature_Set * fset = calloc(1,sizeof(Dyn_Feature_Set));
+   memcpy(fset->marker, DYN_FEATURE_SET_MARKER, 4);
+   fset->subset = subset_id;
+   fset->members_dfm = members_dfm;
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", fset);
+   return fset;
+}
+
 
 
 // #ifdef OLD
@@ -388,8 +418,14 @@ dyn_create_feature_set(
                   feature_set_flag_names_t(feature_set_flags));
 
     Dyn_Feature_Set * result = NULL;
-    Display_Ref * dref = (Display_Ref *) display_ref;
-    assert( dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+    Display_Ref * dref = NULL;
+    if (display_ref) {
+       dref = (Display_Ref *) display_ref;
+       assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+    }
+    else {
+       feature_set_flags &= ~FSF_CHECK_UDF;
+    }
 
     GPtrArray * members_dfm = g_ptr_array_new();
 
@@ -398,7 +434,7 @@ dyn_create_feature_set(
     if (subset_id == VCP_SUBSET_UDF) {  // all user defined features
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "VCP_SUBSET_UDF path");
 
-       if ( (feature_set_flags&FSF_CHECK_UDF) && dref->dfr) {
+       if ( (feature_set_flags&FSF_CHECK_UDF) && dref && dref->dfr) {
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"dref->dfr is set");
           GHashTableIter iter;
           gpointer hash_key;
@@ -429,7 +465,8 @@ dyn_create_feature_set(
              found = g_hash_table_iter_next(&iter, &hash_key, &hash_value);
           }
        }   // if (dref->dfr)
-       result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
+       // result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
+       result = dyn_create_feature_set1(subset_id, members_dfm);
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "VCP_SUBSET_UDF complete");
     }      // VCP_SUBSET_DYNAMIC
 
@@ -482,7 +519,8 @@ dyn_create_feature_set(
 #endif
        }  // for
 
-       result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
+       // result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
+       result = dyn_create_feature_set1(subset_id, members_dfm);
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "VCP_SUBSET_SCAN or VCP_SUBSET_MFG complete");
     } // VCP_SUBSET_SCAN
 
@@ -601,7 +639,8 @@ dyn_create_feature_set(
           }
 
        }
-       result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
+       // result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
+       result = dyn_create_feature_set1(subset_id, members_dfm);
     }
 
     DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", result);
@@ -611,7 +650,7 @@ dyn_create_feature_set(
 }
 
 
-#ifdef OOPS
+
 /** Creates a VCP_Feature_Set from a feature set reference.
  *
  *  \param  fsref         external feature set reference
@@ -642,41 +681,41 @@ create_dyn_feature_set_from_feature_set_ref(
                              vcp_version.major, vcp_version.minor,
                              feature_set_flag_names_t(flags));
 
-    struct vcp_feature_set * fset = NULL;
-#ifdef OLD
-    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-       // fset = create_single_feature_set_by_hexid(fsref->specific_feature, flags & FSF_FORCE);
-       int feature_code = bs256_first_bit_set(fsref->features);
-       assert(feature_code >= 0);
-       fset = create_single_feature_set_by_hexid((Byte)feature_code, flags & FSF_FORCE);
-    }
-    else if (fsref->subset == VCP_SUBSET_MULTI_FEATURES) {
-#endif
+    Dyn_Feature_Set * fset = NULL;
+
+    assert(!(flags & FSF_CHECK_UDF));
+
     if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE ||
         fsref->subset == VCP_SUBSET_MULTI_FEATURES)
     {
        fset = calloc(1,sizeof(Dyn_Feature_Set));
        assert(fset);     // avoid coverity "Dereference before null check" warning
        memcpy(fset->marker, DYN_FEATURE_SET_MARKER, 4);
-       fset->members = g_ptr_array_sized_new(1);
+       fset->members_dfm = g_ptr_array_sized_new(1);
        fset->subset = fsref->subset;
        Bit_Set_256_Iterator iter = bs256_iter_new(fsref->features);
        int feature_code = -1;
        while ( (feature_code = bs256_iter_next(iter)) >= 0 ) {
           Byte hexid = (Byte) feature_code;
-          Display_Feature_Metadata * vcp_entry = vcp_find_feature_by_hexid_w_default(hexid);
-          g_ptr_array_add(fset->members, vcp_entry);
+          // Display_Feature_Metadata * vcp_entry = vcp_find_feature_by_hexid_w_default(hexid);
+          Display_Feature_Metadata * dfm_entry = dyn_get_feature_metadata_by_dref(
+                                              hexid,
+                                              NULL,
+                                              flags & FSF_CHECK_UDF,
+                                              false);    // with_default
+          g_ptr_array_add(fset->members_dfm, dfm_entry);
        }
        bs256_iter_free(iter);
     }
     else {
-       fset = create_vcp_feature_set(fsref->subset, vcp_version, flags);
+       fset = dyn_create_feature_set(fsref->subset, NULL, flags);
     }
 
-    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Vcp_Feature_Set", dbgrpt_vcp_feature_set, fset);
+    DBGTRC_DONE(debug, TRACE_GROUP, "Returning fset %p", fset);
+    if (IS_DBGTRC(debug, TRACE_GROUP))
+       dbgrpt_dyn_feature_set(fset, false, 1);
     return fset;
 }
-#endif
 
 
 

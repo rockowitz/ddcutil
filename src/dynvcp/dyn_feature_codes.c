@@ -312,14 +312,17 @@ dyn_get_feature_metadata_by_dref(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x, dref=%s, check_udf=%s, with_default=%s",
                  feature_code, dref_repr_t(dref), sbool(check_udf), sbool(with_default));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP,"dref->dfr=%p, DREF_OPEN: %s", dref->dfr, sbool(dref->flags & DREF_OPEN));
+   if (dref)
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"dref->dfr=%p, DREF_OPEN: %s", dref->dfr, sbool(dref->flags & DREF_OPEN));
 
-   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
+   DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_UNKNOWN;
+   if (dref)
+         get_vcp_version_by_dref(dref);
 
    Display_Feature_Metadata * result =
          dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                feature_code,
-               (check_udf) ? dref->dfr : NULL,
+               (check_udf && dref) ? dref->dfr : NULL,
                vspec,
                with_default);
    if (result)
