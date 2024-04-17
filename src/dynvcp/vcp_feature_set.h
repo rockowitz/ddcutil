@@ -29,15 +29,12 @@ typedef struct vcp_feature_set {
    GPtrArray *         members;     // array of pointers to VCP_Feature_Table_Entry
 } VCP_Feature_Set;
 
-typedef bool (*VCP_Feature_Set_Filter_Func)(VCP_Feature_Table_Entry * ventry);
-
 void free_vcp_feature_set(VCP_Feature_Set * fset);
 
-VCP_Feature_Set *
-create_vcp_feature_set(
-      VCP_Feature_Subset     subset,
-      DDCA_MCCS_Version_Spec vcp_version,
-      Feature_Set_Flags      flags);
+typedef bool (*VCP_Feature_Set_Filter_Func)(VCP_Feature_Table_Entry * ventry);
+
+
+
 
 VCP_Feature_Table_Entry *
 get_vcp_feature_set_entry(VCP_Feature_Set * feature_set, unsigned index);
@@ -52,6 +49,14 @@ create_vcp_feature_set_from_feature_set_ref(
    DDCA_MCCS_Version_Spec  vcp_version,
    Feature_Set_Flags       flags);
  //  bool                    force);
+
+#ifdef OOPS
+Dyn_Feature_Set *
+create_dyn_feature_set_from_feature_set_ref(
+   Feature_Set_Ref *         fsref,
+   DDCA_MCCS_Version_Spec    vcp_version,
+   Feature_Set_Flags         flags);
+#endif
 
 #ifdef UNUSED
 VCP_Feature_Set * create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);

@@ -3,7 +3,7 @@
  *  Capabilities related functions of the API
  */
 
-// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -302,6 +302,7 @@ ddca_report_parsed_capabilities_by_dref(
          dyn_get_feature_metadata_by_dref(
                cur_vcp->feature_code,
                ddca_dref,
+               true,     // check_udf
                true);    // create_default_if_not_found);
       assert(dfm);
       // dbgrpt_display_feature_metadata(dfm, 3);

@@ -149,6 +149,7 @@ Value_Name_Title_Table feature_set_flag_table = {
       VNT(FSF_RW_ONLY,          "include only RW features"),
       VNT(FSF_RO_ONLY,          "include only RO features"),
       VNT(FSF_WO_ONLY,          "include only WO features"),
+      VNT(FSF_CHECK_UDF,        "use user-defined feature definitions"),
       VNT_END
 };
 const int feature_set_flag_ct = ARRAY_SIZE(feature_set_flag_table)-1;

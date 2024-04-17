@@ -23,10 +23,12 @@
 #include "base/displays.h"
 #include "base/feature_set_ref.h"
 
-#include "vcp/vcp_feature_codes.h"
-#include "dynvcp/vcp_feature_set.h"
+// #include "dynvcp/vcp_feature_set.h"
 
 #include "dynvcp/dyn_feature_codes.h"
+
+
+
 
 
 #define DYN_FEATURE_SET_MARKER "DSET"
@@ -36,6 +38,9 @@ typedef struct {
    DDCA_Display_Ref     dref;
    GPtrArray *          members_dfm; // array of pointers to Display_Feature_Metadata - alt
 } Dyn_Feature_Set;
+
+
+void free_dyn_feature_set(Dyn_Feature_Set * fset);
 
 void
 dbgrpt_dyn_feature_set(

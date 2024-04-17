@@ -276,7 +276,7 @@ is_rereadable_feature(
 
    if (result) {
       Display_Feature_Metadata * dfm =
-            dyn_get_feature_metadata_by_dh(opcode, dh, /*with_default*/false);
+            dyn_get_feature_metadata_by_dh(opcode, dh, /*check_udf=*/ true, /*with_default*/false);
       // if not found, assume readable  ??
       if (dfm) {
          result = dfm->feature_flags & DDCA_READABLE;

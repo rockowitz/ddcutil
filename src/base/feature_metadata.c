@@ -337,11 +337,11 @@ dfm_free(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_VCP, "meta=%p", meta);
-   if (debug)
-      dbgrpt_display_feature_metadata(meta, 2);
+   // if (debug)
+   //    dbgrpt_display_feature_metadata(meta, 2);
    if (meta) {
-      assert(memcmp(meta->marker, DISPLAY_FEATURE_METADATA_MARKER, 4) == 0);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_VCP, "feature_code = 0x%02x", meta->feature_code);
+      assert(memcmp(meta->marker, DISPLAY_FEATURE_METADATA_MARKER, 4) == 0);
       meta->marker[3] = 'x';
       free(meta->feature_name);
       free(meta->feature_desc);

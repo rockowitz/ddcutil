@@ -620,6 +620,9 @@ extract_version_feature_info_from_feature_table_entry(
 
    Display_Feature_Metadata * dfm = dfm_new(vfte->code);
 
+   dfm->vcp_subsets = vfte->vcp_subsets;
+   dfm->vcp_spec_groups = vfte->vcp_spec_groups;
+
    // redundant, for now
    // info->version_id   = mccs_version_spec_to_id(vspec);
    dfm->vcp_version        = vspec;

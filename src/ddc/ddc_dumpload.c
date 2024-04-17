@@ -259,6 +259,7 @@ create_dumpload_data_from_g_ptr_array(
                                                    feature_id,
                                                    mmk,
                                                    data->vcp_version,
+                                                   true,    /* check_udf */
                                                    /*with_default=*/ true);
                      bool is_table_feature = dfm->feature_flags & DDCA_NORMAL_TABLE;
 

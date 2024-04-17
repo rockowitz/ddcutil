@@ -245,8 +245,9 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
  *  #DDCA_Monitor_Model_Key, and then from the internal feature definition tables.
  *
  * @param  feature_code   feature code
- * @param  mmk            monitor model key
+ * @param  mmk            monitor model key, if null do not check for user supplied feature def
  * @param  vspec          VCP version of the display
+ * @param  check_udf
  * @param  with_default   create default value if not found
  * @return Display_Feature_Metadata for the feature, caller must free,
  *         NULL if feature not found either in the user supplied feature definitions
@@ -260,6 +261,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec(
      DDCA_Vcp_Feature_Code    feature_code,
      Monitor_Model_Key        mmk,
      DDCA_MCCS_Version_Spec   vspec,
+     bool                     check_udf,
      bool                     with_default)
 {
     bool debug = false;
@@ -268,11 +270,13 @@ dyn_get_feature_metadata_by_mmk_and_vspec(
                   feature_code, mmk_repr(mmk), vspec.major, vspec.minor, sbool(with_default));
 
     Dynamic_Features_Rec * dfr = NULL;
-    Error_Info * erec = dfr_load_by_mmk(mmk, &dfr);
-    if (erec) {
-       if (erec->status_code != DDCRC_NOT_FOUND || debug)
-          errinfo_report(erec,1);
-       errinfo_free(erec);
+    if (check_udf) {
+       Error_Info * erec = dfr_load_by_mmk(mmk, &dfr);
+       if (erec) {
+          if (erec->status_code != DDCRC_NOT_FOUND || debug)
+             errinfo_report(erec,1);
+          errinfo_free(erec);
+       }
     }
 
     Display_Feature_Metadata * result =
@@ -292,6 +296,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec(
  *
  * @param  feature_code   feature code
  * @param  dref           display reference
+ * @oaram  check_udf      if true, first check for a user supplied feature definition
  * @param  with_default   create default value if not found
  * @return Display_Feature_Metadata for the feature, caller must free,
  *         NULL if feature not found either in the user supplied feature definitions
@@ -301,17 +306,22 @@ Display_Feature_Metadata *
 dyn_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code feature_code,
       Display_Ref *         dref,
+      bool                  check_udf,
       bool                  with_default)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x, dref=%s, with_default=%s",
-                 feature_code, dref_repr_t(dref), sbool(with_default));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x, dref=%s, check_udf=%s, with_default=%s",
+                 feature_code, dref_repr_t(dref), sbool(check_udf), sbool(with_default));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,"dref->dfr=%p, DREF_OPEN: %s", dref->dfr, sbool(dref->flags & DREF_OPEN));
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
 
    Display_Feature_Metadata * result =
-         dyn_get_feature_metadata_by_dfr_and_vspec_dfm(feature_code, dref->dfr, vspec, with_default);
+         dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
+               feature_code,
+               (check_udf) ? dref->dfr : NULL,
+               vspec,
+               with_default);
    if (result)
       result->display_ref = dref;
 
@@ -326,6 +336,7 @@ dyn_get_feature_metadata_by_dref(
  *
  * @param  feature_code   feature code
  * @param  dh             display handle
+ * @oaram  check_udf      if true, first check for a user supplied feature definition
  * @param  with_default   create default value if not found
  * @return Display_Feature_Metadata for the feature, caller must free,
  *         NULL if feature not found either in the user supplied feature definitions
@@ -335,19 +346,23 @@ Display_Feature_Metadata *
 dyn_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code id,
       Display_Handle *      dh,
+      bool                  check_udf,
       bool                  with_default)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-                 "id=0x%02x, dh=%s, with_default=%s",
-                 id, dh_repr(dh), sbool(with_default) );
+                 "id=0x%02x, dh=%s, check_udf=%s, with_default=%s",
+                 id, dh_repr(dh), sbool(check_udf), sbool(with_default) );
 
    // ensure dh->dref->vcp_version set without incurring additional open/close
    DDCA_MCCS_Version_Spec vspec =
    get_vcp_version_by_dh(dh);
    // Display_Feature_Metadata * result = dyn_get_feature_metadata_by_dref_dfm(id, dh->dref, with_default);
    Display_Feature_Metadata * result =
-         dyn_get_feature_metadata_by_dfr_and_vspec_dfm(id, dh->dref->dfr, vspec, with_default);
+         dyn_get_feature_metadata_by_dfr_and_vspec_dfm(id,
+                                                       (check_udf) ? dh->dref->dfr : NULL,
+                                                       vspec,
+                                                       with_default);
    if (result)
       result->display_ref = dh->dref;    // needed?
 
@@ -507,7 +522,6 @@ dyn_get_feature_name(
 
 
 void init_dyn_feature_codes() {
-   RTTI_ADD_FUNC(dyn_format_nontable_feature_detail);
    RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dfr_and_vspec_dfm);
    RTTI_ADD_FUNC(dyn_get_feature_metadata_by_mmk_and_vspec);
    RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dref);
@@ -515,6 +529,6 @@ void init_dyn_feature_codes() {
    RTTI_ADD_FUNC(dyn_format_feature_detail);
    RTTI_ADD_FUNC(dyn_format_feature_detail_sl_lookup);
    RTTI_ADD_FUNC(dyn_format_feature_detail_sl_lookup_with_sh);
-   // dbgrpt_func_name_table(0);
+   RTTI_ADD_FUNC(dyn_format_nontable_feature_detail);
 }
 

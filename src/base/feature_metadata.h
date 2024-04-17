@@ -20,6 +20,7 @@
 #include "util/data_structures.h"
 
 #include "base/dynamic_features.h"
+#include "base/feature_set_ref.h"
 
 
 /** Simple stripped-down version of Parsed_Nontable_Vcp_Response */
@@ -127,6 +128,8 @@ struct {
    DDCA_Display_Ref                        display_ref;    // needed?
    DDCA_Vcp_Feature_Code                   feature_code;
    DDCA_MCCS_Version_Spec                  vcp_version;    // needed - yes, used in ddcui
+   gushort                                 vcp_spec_groups;
+   VCP_Feature_Subset                      vcp_subsets;
    char *                                  feature_name;
    char *                                  feature_desc;
    DDCA_Feature_Value_Entry *              sl_values;     /**< valid when DDCA_SIMPLE_NC set */

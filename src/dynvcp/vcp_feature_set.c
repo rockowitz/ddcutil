@@ -20,7 +20,7 @@
 #include "dynvcp/vcp_feature_set.h"
 
 // Default trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_VCP;
+// static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_VCP;
 
 
 /* Free only synthetic VCP_Feature_Table_Entrys,
@@ -39,6 +39,8 @@ void free_transient_vcp_entry(gpointer ptr) {
 }
 
 
+
+
 void free_vcp_feature_set(VCP_Feature_Set * pset) {
    if (pset) {
       assert( memcmp(pset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
@@ -52,254 +54,6 @@ void free_vcp_feature_set(VCP_Feature_Set * pset) {
 }
 
 
-/** Given a feature set id for a named feature set (i.e. other than
- *  #VCP_Subset_Single_Feature), creates a #VCP_Feature_Set containing
- *  the features in the set.
- *
- *  @param   subset_id      feature subset id
- *  @param   vcp_version    vcp version, for obtaining most appropriate feature information,
- *                          e.g. feature type can vary by MCCS version
- *  @param   flags          flags to tailor execution
- *  @return  feature set listing the features in the set
- *
- *  @remark
- *  For #VCP_SUBSET_SCAN, whether Table type features are included is controlled
- *  by flag FSF_NOTABLE.
- *  @remark
- *  For remaining subset ids, the following flags apply:
- *  - FSF_NOTABLE - if set, ignore Table type features
- *    (Exception: For #VCP_SUBSET_TABLE and #VCP_SUBSET_LUT, flags #FSF_TABLE is ignored.)
- *  - FSF_RW_ONLY, FSF_RO_ONLY, FSF_WO_ONLy - filter feature ids by whether they are
- *    RW, RO, or WO
- */
-VCP_Feature_Set *
-create_vcp_feature_set(
-      VCP_Feature_Subset     subset_id,
-      DDCA_MCCS_Version_Spec vcp_version,
-      Feature_Set_Flags      feature_setflags)
-{
-   assert(subset_id);
-   assert(subset_id != VCP_SUBSET_SINGLE_FEATURE);
-
-   bool debug = false;
-
-   DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
-                 feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
-                 feature_set_flag_names_t(feature_setflags));
-   // if (IS_DBGTRC(debug, TRACE_GROUP)) {
-   //    show_backtrace(2);
-   // }
-
-   bool exclude_table_features = feature_setflags & FSF_NOTABLE;
-
-   struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
-   memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
-   fset->subset = subset_id;
-
-   fset->members = g_ptr_array_sized_new(250);
-   if (subset_id == VCP_SUBSET_SCAN || subset_id == VCP_SUBSET_MFG) {
-      int ndx = 1;
-      if (subset_id == VCP_SUBSET_MFG)
-         ndx = 0xe0;
-      for (; ndx < 256; ndx++) {
-         Byte id = ndx;
-         // DBGMSF(debug, "examining id 0x%02x", id);
-         // n. this is a pointer into permanent data structures, should not be freed:
-         VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid(id);
-         // original code looks at VCP2_READABLE, output level
-         if (vcp_entry) {
-            bool showit = true;
-            if ( is_table_feature_by_vcp_version(vcp_entry, vcp_version) ) {
-               if ( /* get_output_level() < DDCA_OL_VERBOSE || */
-                    exclude_table_features  )
-                  showit = false;
-            }
-            if (!is_feature_readable_by_vcp_version(vcp_entry, vcp_version)) {
-               showit = false;
-            }
-            if (showit) {
-               g_ptr_array_add(fset->members, vcp_entry);
-            }
-         }
-         else {  // unknown feature or manufacturer specific feature
-            g_ptr_array_add(fset->members, vcp_create_dummy_feature_for_hexid(id));
-            if (ndx >= 0xe0 && (get_output_level() >= DDCA_OL_VERBOSE && !exclude_table_features) ) {
-               // for manufacturer specific features, probe as both table and non-table
-               // Only probe table if --verbose, output is confusing otherwise
-               g_ptr_array_add(fset->members, vcp_create_table_dummy_feature_for_hexid(id));
-            }
-         }
-      }
-   }
-   else {
-      if (subset_id == VCP_SUBSET_TABLE || subset_id == VCP_SUBSET_LUT) {
-         exclude_table_features = false;
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Reset exclude_table_features = false");
-      }
-      int known_feature_ct = vcp_get_feature_code_count();
-      int ndx = 0;
-      for (ndx=0; ndx < known_feature_ct; ndx++) {
-         VCP_Feature_Table_Entry * vcp_entry = vcp_get_feature_table_entry(ndx);
-         assert(vcp_entry);
-         DDCA_Version_Feature_Flags vflags =
-               get_version_sensitive_feature_flags(vcp_entry, vcp_version);
-         bool showit = false;
-         switch(subset_id) {
-         case VCP_SUBSET_PRESET:
-            showit = vcp_entry->vcp_spec_groups & VCP_SPEC_PRESET;
-            break;
-         case VCP_SUBSET_TABLE:
-            showit = vflags & DDCA_TABLE;
-            break;
-         case VCP_SUBSET_CCONT:
-            showit = vflags & DDCA_COMPLEX_CONT;
-            break;
-         case VCP_SUBSET_SCONT:
-            showit = vflags & DDCA_STD_CONT;
-            break;
-         case VCP_SUBSET_CONT:
-            showit = vflags & DDCA_CONT;
-            break;
-         case VCP_SUBSET_SNC:
-            showit = vflags & DDCA_SIMPLE_NC;
-            break;
-         case VCP_SUBSET_XNC:
-            showit = vflags & DDCA_EXTENDED_NC;
-            break;
-         case VCP_SUBSET_CNC:
-            showit = vflags & (DDCA_COMPLEX_NC);
-            break;
-         case VCP_SUBSET_NC_CONT:
-            showit = vflags & (DDCA_NC_CONT);
-            break;
-         case VCP_SUBSET_NC_WO:
-            showit = vflags & (DDCA_WO_NC);
-            break;
-         case VCP_SUBSET_NC:
-            showit = vflags & DDCA_NC;
-            break;
-         case VCP_SUBSET_KNOWN:
-//       case VCP_SUBSET_ALL:
-//       case VCP_SUBSET_SUPPORTED:
-            showit = true;
-            break;
-         case VCP_SUBSET_COLOR:
-         case VCP_SUBSET_PROFILE:
-         case VCP_SUBSET_LUT:
-         case VCP_SUBSET_TV:
-         case VCP_SUBSET_AUDIO:
-         case VCP_SUBSET_WINDOW:
-         case VCP_SUBSET_DPVL:
-         case VCP_SUBSET_CRT:
-            showit = vcp_entry->vcp_subsets & subset_id;
-            break;
-         case VCP_SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
-         case VCP_SUBSET_MFG:     // will never happen
-         case VCP_SUBSET_UDF: // will never happen
-         case VCP_SUBSET_SINGLE_FEATURE:
-         case VCP_SUBSET_MULTI_FEATURES:
-         case VCP_SUBSET_NONE:
-            break;
-         }
-         if ( ( feature_setflags & (FSF_RW_ONLY | FSF_RO_ONLY | FSF_WO_ONLY) ) &&
-               subset_id != VCP_SUBSET_SINGLE_FEATURE && subset_id != VCP_SUBSET_NONE) {
-            if (feature_setflags &FSF_RW_ONLY) {
-               if (! (vflags & DDCA_RW) )
-                  showit = false;
-            }
-            else if (feature_setflags & FSF_RO_ONLY) {
-               if (! (vflags & DDCA_RO) )
-                  showit = false;
-            }
-            else if (feature_setflags & FSF_WO_ONLY) {
-               if (! (vflags & DDCA_WO) )
-                  showit = false;
-            }
-         }
-         if ( vflags & DDCA_TABLE)  {
-            // DBGMSF(debug, "Before final check for table feature.  showit=%s", bool_repr(showit));
-            if (exclude_table_features)
-               showit = false;
-            // DBGMSF(debug, "After final check for table feature.  showit=%s", bool_repr(showit));
-         }
-         if (showit) {
-            g_ptr_array_add(fset->members, vcp_entry);
-         }
-      }
-   }
-
-   assert(fset);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", fset);
-   if (IS_DBGTRC(debug, TRACE_GROUP))
-      dbgrpt_vcp_feature_set(fset, 1);
-   return fset;
-}
-
-
-/** Creates a VCP_Feature_Set from a feature set reference.
- *
- *  \param  fsref         external feature set reference
- *  \param  vcp_version
- *  \param  flags         checks only FSF_FORCE
- *
- *  \return feature set, NULL if not found
- *
- *  @remark
- *  If creating a #VCP_Feature_Set containing a single specified feature,
- *  flag #FSF_FORCE controls whether a feature set is created for an
- *  unrecognized feature.
- *  @remark
- *  If creating a named feature set, see called function #create_feature_set_ref()
- *  for the effect of #FSF_FORCE and other flags.
- *  @remark
- *  Used only for VCPINFO
- */
-VCP_Feature_Set *
-create_vcp_feature_set_from_feature_set_ref(
-   Feature_Set_Ref *         fsref,
-   DDCA_MCCS_Version_Spec    vcp_version,
-   Feature_Set_Flags         flags)
-{
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,"fsref=%s, vcp_version=%d.%d. flags=%s",
-                             fsref_repr_t(fsref),
-                             vcp_version.major, vcp_version.minor,
-                             feature_set_flag_names_t(flags));
-
-    struct vcp_feature_set * fset = NULL;
-#ifdef OLD
-    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-       // fset = create_single_feature_set_by_hexid(fsref->specific_feature, flags & FSF_FORCE);
-       int feature_code = bs256_first_bit_set(fsref->features);
-       assert(feature_code >= 0);
-       fset = create_single_feature_set_by_hexid((Byte)feature_code, flags & FSF_FORCE);
-    }
-    else if (fsref->subset == VCP_SUBSET_MULTI_FEATURES) {
-#endif
-    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE ||
-        fsref->subset == VCP_SUBSET_MULTI_FEATURES)
-    {
-       fset = calloc(1,sizeof(struct vcp_feature_set));
-       assert(fset);     // avoid coverity "Dereference before null check" warning
-       memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
-       fset->members = g_ptr_array_sized_new(1);
-       fset->subset = fsref->subset;
-       Bit_Set_256_Iterator iter = bs256_iter_new(fsref->features);
-       int feature_code = -1;
-       while ( (feature_code = bs256_iter_next(iter)) >= 0 ) {
-          Byte hexid = (Byte) feature_code;
-          VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid_w_default(hexid);
-          g_ptr_array_add(fset->members, vcp_entry);
-       }
-       bs256_iter_free(iter);
-    }
-    else {
-       fset = create_vcp_feature_set(fsref->subset, vcp_version, flags);
-    }
-
-    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Vcp_Feature_Set", dbgrpt_vcp_feature_set, fset);
-    return fset;
-}
 
 
 VCP_Feature_Table_Entry *
@@ -565,7 +319,6 @@ feature_list_from_feature_set(VCP_Feature_Set * fset)
 
 
 void init_vcp_feature_set() {
-   RTTI_ADD_FUNC(create_vcp_feature_set);
-   RTTI_ADD_FUNC(create_vcp_feature_set_from_feature_set_ref);
+
 }
 

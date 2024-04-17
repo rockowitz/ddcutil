@@ -122,10 +122,11 @@ app_show_single_vcp_value_by_feature_id(
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting feature 0x%02x for %s, force=%s",
                               feature_id, dh_repr(dh), sbool(force) );
 
-   Status_Errno_DDC         psc = 0;
+   Status_Errno_DDC psc = 0;
    Display_Feature_Metadata * dfm = dyn_get_feature_metadata_by_dh(
                                        feature_id,
                                        dh,
+                                       true,    // check_udf
                                        force || feature_id >= 0xe0);  // with_default
    if (!dfm) {
       printf("Unrecognized VCP feature code: x%02X\n", feature_id);
@@ -211,6 +212,8 @@ app_show_feature_set_values_by_dh(
       flags |= FSF_RW_ONLY;
    if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
       flags |= FSF_RO_ONLY;
+   if (parsed_cmd->flags & CMD_FLAG_ENABLE_UDF)
+      flags |= FSF_CHECK_UDF;
    // this is nonsense, getvcp on a WO feature should be caught by parser
    if (parsed_cmd->flags & CMD_FLAG_WO_ONLY) {
       // flags |= FSF_WO_ONLY;

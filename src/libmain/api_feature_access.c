@@ -518,7 +518,7 @@ ddci_format_any_vcp_value(
    }
 
    dfm = dyn_get_feature_metadata_by_mmk_and_vspec(
-            feature_code, *mmid, vspec, /*with_default=*/ true);
+            feature_code, *mmid, vspec, /* use_udf=*/ true, /*with_default=*/ true);
    if (!dfm) {
       ddcrc = DDCRC_ARG;
       *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);

@@ -100,7 +100,7 @@ app_set_vcp_value(
    bool                       good_value = false;
    DDCA_Any_Vcp_Value         vrec;
 
-   dfm = dyn_get_feature_metadata_by_dh(feature_code,dh, (force || feature_code >= 0xe0) );
+   dfm = dyn_get_feature_metadata_by_dh(feature_code,dh, /*check_udf=*/ true, (force || feature_code >= 0xe0) );
    if (!dfm) {
       ddc_excp = ERRINFO_NEW(DDCRC_UNKNOWN_FEATURE,
                               "Unrecognized VCP feature code: 0x%02x", feature_code);

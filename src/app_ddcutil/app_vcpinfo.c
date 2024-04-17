@@ -20,6 +20,7 @@
 #include "base/rtti.h"
 #include "base/vcp_version.h"
 
+#include "dynvcp/dyn_feature_set.h"
 #include "dynvcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_codes.h"
 
@@ -375,7 +376,10 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
       fsflags |= FSF_RO_ONLY;
    if (parsed_cmd->flags & CMD_FLAG_WO_ONLY)
       fsflags |= FSF_WO_ONLY;
+   // if (parsed_cmd->flags & CMD_FLAG_ENABLE_UDF)    // Do I want
+   //    fsflags |= FSF_CHECK_UDF;
 
+   // Dyn_Feature_Set * fset = create_dyn_feature_set_from_feature_set_ref(
    VCP_Feature_Set * fset = create_vcp_feature_set_from_feature_set_ref(
                                parsed_cmd->fref,
                                parsed_cmd->mccs_vspec,
@@ -390,12 +394,23 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
       if ( get_output_level() <= DDCA_OL_TERSE)
          report_vcp_feature_set(fset, 0);
       else {
-         int ct =  get_vcp_feature_set_size(fset);
+         int ct = get_vcp_feature_set_size(fset);
+         for (int ndx = 0; ndx < ct; ndx++) {
+             VCP_Feature_Table_Entry * pentry = get_vcp_feature_set_entry(fset, ndx);
+             report_vcp_feature_table_entry(pentry, 0);
+         }    
+#ifdef NEW
+         int ct =  dyn_get_feature_set_size(fset);
          int ndx = 0;
          for (;ndx < ct; ndx++) {
-            VCP_Feature_Table_Entry * pentry = get_vcp_feature_set_entry(fset, ndx);
+            VCP_Feature_Table_Entry * pentry = g_ptr_array_index(fset->members, ndx);
+
+            Display_Feature_Metadata * dfm = g_ptr_array_index(fset->members_dfm, ndx);
+            // VCP_Feature_Table_Entry * pentry = get_vcp_feature_set_entry(fset, ndx);
+            VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(dfm->feature_code);
             report_vcp_feature_table_entry(pentry, 0);
          }
+#endif
       }
       free_vcp_feature_set(fset);
    }
