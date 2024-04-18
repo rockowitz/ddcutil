@@ -2,7 +2,7 @@
  *  Implement the INTERROGATE command
  */
 
-// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -26,6 +26,7 @@
 
 #include "vcp/persistent_capabilities.h"
 
+#include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_execute.h"
 
 #include "ddc/ddc_displays.h"
@@ -69,10 +70,12 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
    f0printf(fout(), "Forcing --stats...\n");
    parsed_cmd->stats_types = DDCA_STATS_ALL;
-   f0printf(fout(), "Forcing --disable-capabilities-cache\n");
+   f0printf(fout(), "Forcing --disable-capabilities-cache...\n");
    enable_capabilities_cache(false);
    f0printf(fout(), "Forcing --force-slave-address..\n");
    i2c_forceable_slave_addr_flag = true;
+   f0printf(fout(), "Forcing --disable-cross-instance-locking...\n");
+   i2c_enable_cross_instance_locks(false);
    f0printf(fout(), "This command will take a while to run...\n\n");
 
    ddc_ensure_displays_detected();    // *** ???
