@@ -756,7 +756,7 @@ get_nontable_feature_detail_function(
          get_version_sensitive_feature_flags(vfte, vcp_version);
    DBGMSF(debug, "version_specific_flags = 0x%04x = %s",
          version_specific_flags,
-         interpret_feature_flags_t(version_specific_flags));
+         interpret_ddca_feature_flags_symbolic_t(version_specific_flags));
    assert(version_specific_flags);
    assert(version_specific_flags & DDCA_NON_TABLE);
    Format_Normal_Feature_Detail_Function func = NULL;
@@ -4387,25 +4387,25 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
 //                   vcp_interpret_version_feature_flags(pfte->v20_flags, buf, bufsz));
    rpt_vstring(d1, "v20_flags:         0x%04x - %s",
                    pfte->v20_flags,
-                   interpret_feature_flags_t(pfte->v20_flags));
+                   interpret_ddca_feature_flags_symbolic_t(pfte->v20_flags));
 //   rpt_vstring(d1, "v21_flags:         0x%04x - %s",
 //                   pfte->v21_flags,
 //                   vcp_interpret_version_feature_flags(pfte->v21_flags, buf, bufsz));
    rpt_vstring(d1, "v21_flags:         0x%04x - %s",
                    pfte->v21_flags,
-                   interpret_feature_flags_t(pfte->v21_flags));
+                   interpret_ddca_feature_flags_symbolic_t(pfte->v21_flags));
 //   rpt_vstring(d1, "v30_flags:         0x%04x - %s",
 //                   pfte->v30_flags,
 //                   vcp_interpret_version_feature_flags(pfte->v30_flags, buf, bufsz));
    rpt_vstring(d1, "v30_flags:         0x%04x - %s",
                    pfte->v30_flags,
-                   interpret_feature_flags_t(pfte->v30_flags));
+                   interpret_ddca_feature_flags_symbolic_t(pfte->v30_flags));
 //   rpt_vstring(d1, "v22_flags:         0x%04x - %s",
 //                   pfte->v22_flags,
 //                   vcp_interpret_version_feature_flags(pfte->v22_flags, buf, bufsz));
    rpt_vstring(d1, "v22_flags:         0x%04x - %s",
                    pfte->v22_flags,
-                   interpret_feature_flags_t(pfte->v22_flags));
+                   interpret_ddca_feature_flags_symbolic_t(pfte->v22_flags));
    dbgrpt_sl_value_table(pfte->default_sl_values, "default_sl_values", d1);
    dbgrpt_sl_value_table(pfte->v21_sl_values, "v21_sl_values", d1);
    dbgrpt_sl_value_table(pfte->v30_sl_values, "v30_sl_values", d1);
