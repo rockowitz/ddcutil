@@ -217,6 +217,140 @@ dyn_create_feature_set1(
 
 
 
+/**
+ *  Selection criteria:
+ *  @param  subset_id
+ *  @param  feature_set_flags
+ *
+ *  Feature code characteristics:
+ *  @param  vcp_spec_groups     spec groups to which the feature belongs
+ *  @param  feature_flags       feature code attributes
+ *  @param  vcp_subsets         subsets to which the feature code belongs
+ *
+ *  @return  true/false depending on whether the feature code satisfies
+ *           the selection criteria
+ */
+bool test_show_feature(
+      VCP_Feature_Subset    subset_id,
+      Feature_Set_Flags     feature_set_flags,
+
+      gushort               vcp_spec_groups,
+      DDCA_Feature_Flags    feature_flags,
+      VCP_Feature_Subset    vcp_subsets)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%d - %s, feature_set_flags=0x%02x - %s",
+                  subset_id,
+                  feature_subset_name(subset_id),
+                  feature_set_flags,
+                  feature_set_flag_names_t(feature_set_flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "vcp_spec_groups=0x%04x, feature_flags=%s, vcp_subsets=%s",
+                   vcp_spec_groups, feature_flags, vcp_subsets);
+
+   bool showit = true;
+   bool exclude_table_features = feature_set_flags & FSF_NOTABLE;
+    if ((feature_flags & DDCA_TABLE) && exclude_table_features)
+       showit = false;
+    else {
+       showit = false;
+        switch(subset_id) {
+        case VCP_SUBSET_PRESET:
+           showit = vcp_spec_groups & VCP_SPEC_PRESET;
+           break;
+        case VCP_SUBSET_TABLE:
+           showit = feature_flags & DDCA_TABLE;
+           break;
+        case VCP_SUBSET_CCONT:
+           showit = feature_flags & DDCA_COMPLEX_CONT;
+           break;
+        case VCP_SUBSET_SCONT:
+           showit = feature_flags & DDCA_STD_CONT;
+           break;
+        case VCP_SUBSET_CONT:
+           showit = feature_flags & DDCA_CONT;
+           break;
+        case VCP_SUBSET_SNC:
+           showit = feature_flags & DDCA_SIMPLE_NC;
+           break;
+        case VCP_SUBSET_XNC:
+           showit = feature_flags & DDCA_EXTENDED_NC;
+           break;
+        case VCP_SUBSET_CNC:
+           showit = feature_flags & (DDCA_COMPLEX_NC);
+           break;
+        case VCP_SUBSET_NC_CONT:
+           showit = feature_flags & (DDCA_NC_CONT);
+           break;
+        case VCP_SUBSET_NC_WO:
+           showit = feature_flags & (DDCA_WO_NC);
+           break;
+        case VCP_SUBSET_NC:
+           showit = feature_flags & DDCA_NC;
+           break;
+        case VCP_SUBSET_KNOWN:
+//       case VCP_SUBSET_ALL:
+//       case VCP_SUBSET_SUPPORTED:
+           showit = true;
+           break;
+        case VCP_SUBSET_COLOR:
+        case VCP_SUBSET_PROFILE:
+        case VCP_SUBSET_LUT:
+        case VCP_SUBSET_TV:
+        case VCP_SUBSET_AUDIO:
+        case VCP_SUBSET_WINDOW:
+        case VCP_SUBSET_DPVL:
+        case VCP_SUBSET_CRT:
+           showit = vcp_subsets & subset_id;
+           break;
+        case VCP_SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
+        case VCP_SUBSET_MFG:     // will never happen
+        case VCP_SUBSET_UDF: // will never happen
+        case VCP_SUBSET_SINGLE_FEATURE:
+        case VCP_SUBSET_MULTI_FEATURES:
+        case VCP_SUBSET_NONE:
+           break;
+        }  // switch
+        if ( ( feature_set_flags & (FSF_RW_ONLY | FSF_RO_ONLY | FSF_WO_ONLY) ) &&
+              subset_id != VCP_SUBSET_SINGLE_FEATURE && subset_id != VCP_SUBSET_NONE) {
+           if (feature_set_flags &FSF_RW_ONLY) {
+              if (! (feature_flags & DDCA_RW) )
+                 showit = false;
+           }
+           else if (feature_set_flags & FSF_RO_ONLY) {
+              if (! (feature_flags & DDCA_RO) )
+                 showit = false;
+           }
+           else if (feature_set_flags & FSF_WO_ONLY) {
+              if (! (feature_flags & DDCA_WO) )
+                 showit = false;
+           }
+        }
+
+        if ( feature_flags & DDCA_TABLE)  {
+           // DBGMSF(debug, "Before final check for table feature.  showit=%s", bool_repr(showit));
+           if (exclude_table_features)
+              showit = false;
+           // DBGMSF(debug, "After final check for table feature.  showit=%s", bool_repr(showit));
+        }
+        // if (showit) {
+        //    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding feature 0x%02x", feature_code);
+        //    g_ptr_array_add(members_dfm, dfm);
+        // }
+     }
+     // if ( !(feature_flags & DDCA_READABLE) )
+    if (feature_set_flags & FSF_READABLE_ONLY) {
+       if ( !(feature_flags & DDCA_READABLE) )
+          showit = false;
+    }
+
+   return showit;
+}
+
+
+
+
+
+
 // #ifdef OLD
 /** Given a feature set id for a named feature set (i.e. other than
  *  #VCP_Subset_Single_Feature), creates a #VCP_Feature_Set containing
@@ -309,85 +443,12 @@ create_vcp_feature_set(
          assert(vcp_entry);
          DDCA_Version_Feature_Flags vflags =
                get_version_sensitive_feature_flags(vcp_entry, vcp_version);
-         bool showit = false;
-         switch(subset_id) {
-         case VCP_SUBSET_PRESET:
-            showit = vcp_entry->vcp_spec_groups & VCP_SPEC_PRESET;
-            break;
-         case VCP_SUBSET_TABLE:
-            showit = vflags & DDCA_TABLE;
-            break;
-         case VCP_SUBSET_CCONT:
-            showit = vflags & DDCA_COMPLEX_CONT;
-            break;
-         case VCP_SUBSET_SCONT:
-            showit = vflags & DDCA_STD_CONT;
-            break;
-         case VCP_SUBSET_CONT:
-            showit = vflags & DDCA_CONT;
-            break;
-         case VCP_SUBSET_SNC:
-            showit = vflags & DDCA_SIMPLE_NC;
-            break;
-         case VCP_SUBSET_XNC:
-            showit = vflags & DDCA_EXTENDED_NC;
-            break;
-         case VCP_SUBSET_CNC:
-            showit = vflags & (DDCA_COMPLEX_NC);
-            break;
-         case VCP_SUBSET_NC_CONT:
-            showit = vflags & (DDCA_NC_CONT);
-            break;
-         case VCP_SUBSET_NC_WO:
-            showit = vflags & (DDCA_WO_NC);
-            break;
-         case VCP_SUBSET_NC:
-            showit = vflags & DDCA_NC;
-            break;
-         case VCP_SUBSET_KNOWN:
-//       case VCP_SUBSET_ALL:
-//       case VCP_SUBSET_SUPPORTED:
-            showit = true;
-            break;
-         case VCP_SUBSET_COLOR:
-         case VCP_SUBSET_PROFILE:
-         case VCP_SUBSET_LUT:
-         case VCP_SUBSET_TV:
-         case VCP_SUBSET_AUDIO:
-         case VCP_SUBSET_WINDOW:
-         case VCP_SUBSET_DPVL:
-         case VCP_SUBSET_CRT:
-            showit = vcp_entry->vcp_subsets & subset_id;
-            break;
-         case VCP_SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
-         case VCP_SUBSET_MFG:     // will never happen
-         case VCP_SUBSET_UDF: // will never happen
-         case VCP_SUBSET_SINGLE_FEATURE:
-         case VCP_SUBSET_MULTI_FEATURES:
-         case VCP_SUBSET_NONE:
-            break;
-         }
-         if ( ( feature_setflags & (FSF_RW_ONLY | FSF_RO_ONLY | FSF_WO_ONLY) ) &&
-               subset_id != VCP_SUBSET_SINGLE_FEATURE && subset_id != VCP_SUBSET_NONE) {
-            if (feature_setflags &FSF_RW_ONLY) {
-               if (! (vflags & DDCA_RW) )
-                  showit = false;
-            }
-            else if (feature_setflags & FSF_RO_ONLY) {
-               if (! (vflags & DDCA_RO) )
-                  showit = false;
-            }
-            else if (feature_setflags & FSF_WO_ONLY) {
-               if (! (vflags & DDCA_WO) )
-                  showit = false;
-            }
-         }
-         if ( vflags & DDCA_TABLE)  {
-            // DBGMSF(debug, "Before final check for table feature.  showit=%s", bool_repr(showit));
-            if (exclude_table_features)
-               showit = false;
-            // DBGMSF(debug, "After final check for table feature.  showit=%s", bool_repr(showit));
-         }
+         bool showit = test_show_feature(
+               subset_id,
+               feature_setflags,
+               vcp_entry->vcp_spec_groups,
+               vflags,
+               vcp_entry->vcp_subsets);
          if (showit) {
             g_ptr_array_add(fset->members, vcp_entry);
          }
@@ -401,6 +462,8 @@ create_vcp_feature_set(
    return fset;
 }
 // #endif
+
+
 
 
 Dyn_Feature_Set *
@@ -537,99 +600,12 @@ dyn_create_feature_set(
                                               feature_set_flags & FSF_CHECK_UDF,
                                               false);    // with_default
           if (dfm) {
-             bool showit = true;
-             if ((dfm->feature_flags & DDCA_TABLE) && exclude_table_features)
-                showit = false;
-             else {
-                showit = false;
-                 switch(subset_id) {
-                 case VCP_SUBSET_PRESET:
-                    showit = dfm->vcp_spec_groups & VCP_SPEC_PRESET;
-                    break;
-                 case VCP_SUBSET_TABLE:
-                    showit = dfm->feature_flags & DDCA_TABLE;
-                    break;
-                 case VCP_SUBSET_CCONT:
-                    showit = dfm->feature_flags & DDCA_COMPLEX_CONT;
-                    break;
-                 case VCP_SUBSET_SCONT:
-                    showit = dfm->feature_flags & DDCA_STD_CONT;
-                    break;
-                 case VCP_SUBSET_CONT:
-                    showit = dfm->feature_flags & DDCA_CONT;
-                    break;
-                 case VCP_SUBSET_SNC:
-                    showit = dfm->feature_flags & DDCA_SIMPLE_NC;
-                    break;
-                 case VCP_SUBSET_XNC:
-                    showit = dfm->feature_flags & DDCA_EXTENDED_NC;
-                    break;
-                 case VCP_SUBSET_CNC:
-                    showit = dfm->feature_flags & (DDCA_COMPLEX_NC);
-                    break;
-                 case VCP_SUBSET_NC_CONT:
-                    showit = dfm->feature_flags & (DDCA_NC_CONT);
-                    break;
-                 case VCP_SUBSET_NC_WO:
-                    showit = dfm->feature_flags & (DDCA_WO_NC);
-                    break;
-                 case VCP_SUBSET_NC:
-                    showit = dfm->feature_flags & DDCA_NC;
-                    break;
-                 case VCP_SUBSET_KNOWN:
-        //       case VCP_SUBSET_ALL:
-        //       case VCP_SUBSET_SUPPORTED:
-                    showit = true;
-                    break;
-                 case VCP_SUBSET_COLOR:
-                 case VCP_SUBSET_PROFILE:
-                 case VCP_SUBSET_LUT:
-                 case VCP_SUBSET_TV:
-                 case VCP_SUBSET_AUDIO:
-                 case VCP_SUBSET_WINDOW:
-                 case VCP_SUBSET_DPVL:
-                 case VCP_SUBSET_CRT:
-                    showit = dfm->vcp_subsets & subset_id;
-                    break;
-                 case VCP_SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
-                 case VCP_SUBSET_MFG:     // will never happen
-                 case VCP_SUBSET_UDF: // will never happen
-                 case VCP_SUBSET_SINGLE_FEATURE:
-                 case VCP_SUBSET_MULTI_FEATURES:
-                 case VCP_SUBSET_NONE:
-                    break;
-                 }  // switch
-                 if ( ( feature_set_flags & (FSF_RW_ONLY | FSF_RO_ONLY | FSF_WO_ONLY) ) &&
-                       subset_id != VCP_SUBSET_SINGLE_FEATURE && subset_id != VCP_SUBSET_NONE) {
-                    if (feature_set_flags &FSF_RW_ONLY) {
-                       if (! (dfm->feature_flags & DDCA_RW) )
-                          showit = false;
-                    }
-                    else if (feature_set_flags & FSF_RO_ONLY) {
-                       if (! (dfm->feature_flags & DDCA_RO) )
-                          showit = false;
-                    }
-                    else if (feature_set_flags & FSF_WO_ONLY) {
-                       if (! (dfm->feature_flags & DDCA_WO) )
-                          showit = false;
-                    }
-                 }
-                 if ( dfm->feature_flags & DDCA_TABLE)  {
-                    // DBGMSF(debug, "Before final check for table feature.  showit=%s", bool_repr(showit));
-                    if (exclude_table_features)
-                       showit = false;
-                    // DBGMSF(debug, "After final check for table feature.  showit=%s", bool_repr(showit));
-                 }
-                 // if (showit) {
-                 //    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding feature 0x%02x", dfm->feature_code);
-                 //    g_ptr_array_add(members_dfm, dfm);
-                 // }
-              }
-              // if ( !(dfm->feature_flags & DDCA_READABLE) )
-             if (feature_set_flags & FSF_READABLE_ONLY) {
-                if ( !(dfm->feature_flags & DDCA_READABLE) )
-                   showit = false;
-             }
+             bool showit = test_show_feature(
+                              subset_id,
+                              feature_set_flags,
+                              dfm->vcp_spec_groups,
+                              dfm->feature_flags,
+                              dfm->vcp_subsets);
              if (showit) {
                 DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding feature 0x%02x", dfm->feature_code);
                 g_ptr_array_add(members_dfm, dfm);
