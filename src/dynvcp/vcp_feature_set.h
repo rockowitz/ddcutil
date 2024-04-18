@@ -3,7 +3,7 @@
  *  some collection of VCP features.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_FEATURE_SET_H_
@@ -32,9 +32,6 @@ typedef struct vcp_feature_set {
 void free_vcp_feature_set(VCP_Feature_Set * fset);
 
 typedef bool (*VCP_Feature_Set_Filter_Func)(VCP_Feature_Table_Entry * ventry);
-
-
-
 
 VCP_Feature_Table_Entry *
 get_vcp_feature_set_entry(VCP_Feature_Set * feature_set, unsigned index);

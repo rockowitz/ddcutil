@@ -28,9 +28,6 @@
 #include "dynvcp/dyn_feature_codes.h"
 
 
-
-
-
 #define DYN_FEATURE_SET_MARKER "DSET"
 typedef struct {
    char                 marker[4];
@@ -65,6 +62,8 @@ create_dyn_feature_set_from_feature_set_ref(
    Feature_Set_Ref *         fsref,
    DDCA_MCCS_Version_Spec    vcp_version,
    Feature_Set_Flags         flags);
+
+
 
 #ifdef UNUSED
 Dyn_Feature_Set *
