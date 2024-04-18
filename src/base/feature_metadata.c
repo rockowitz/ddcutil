@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/debug_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
 /** \endcond */
@@ -53,6 +54,7 @@ char * nontable_vcp_value_repr_t(Nontable_Vcp_Value * vcp_value) {
 
 // Feature flags
 
+#ifdef UNUSED
 /** Creates a string representation of DDCA_Feature_Flags bitfield.
  *
  *  @param  flags      feature characteristics
@@ -95,7 +97,62 @@ interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
 
    return buffer;
 }
+#endif
 
+
+/** Creates a string representation of DDCA_Feature_Flags bitfield.
+ *
+ *  @param  flags      feature characteristics
+ *  @return string representation, valid until the next call
+ *          of this function in the current thread, do not free
+ *
+ *  @remark
+ *  DDCA_Feature_Flags is a union (DDCA_Version_Feature_Flags,DDCA_Global_Feature_Flags)
+ *  All are defined as uint16_t, so this function can be used to interpret
+ *  DDCA_Version_Feature_Flags and DDCA_Global_Feature_Flags as well as
+ *  DDCA_Feature_Flags.
+ */
+const char *
+interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
+   bool debug = false;
+
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * buffer = get_thread_fixed_buffer(&buf_key, 100);
+
+   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+       // Exactly 1 of the following should be set in DDCA_Version_Feature_Flags:
+       flags & DDCA_RO                  ? "DDCA_RO|"             : "",
+       flags & DDCA_WO                  ? "DDCA_WO|"             : "",
+       flags & DDCA_RW                  ? "DDCA_RW|"             : "",
+       // Exactly 1 of the following should be set in DDCA_Version_Feature_Flags:
+       flags & DDCA_STD_CONT            ? "DDCA_STD_CONT|"       : "",
+       flags & DDCA_COMPLEX_CONT        ? "DDCA_COMPLEX_CONT|"   : "",
+       flags & DDCA_SIMPLE_NC           ? "DDCA_SIMPLE_NC|"      : "",
+       flags & DDCA_EXTENDED_NC         ? "DDCA_EXTENDED_NC|"    : "",
+       flags & DDCA_COMPLEX_NC          ? "DDCA_COMPLEX_NC|"     : "",
+       flags & DDCA_NC_CONT             ? "DDCA_NC_CONT|"        : "",
+       flags & DDCA_WO_NC               ? "DDCA_WO_CONT|"        : "",
+       flags & DDCA_NORMAL_TABLE        ? "DDCA_NORMAL_TABLE|"   : "",
+       flags & DDCA_WO_TABLE            ? "DDCA_WO_TABLE|"       : "",
+       flags & DDCA_DEPRECATED          ? "DDCA_DEPRECATED|"     : "",
+
+       // Lifecycle in DDCA_Global_Feature_Flags:
+       flags & DDCA_PERSISTENT_METADATA ? "DDCA_PERSISTENT_METADATA|"    : "",
+       flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY
+                                        ? "DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY|" : "",
+       // Provenance in DDCA_Global_Feature_Flags:
+       flags & DDCA_USER_DEFINED        ? "DDCA_USER_DEFINED|"   : "",
+       flags & DDCA_SYNTHETIC           ? "DDCA_SYNTHESIZED|"    : ""
+
+   );
+   // remove final comma and blank
+   if (strlen(buffer) > 0)
+      buffer[strlen(buffer)-1] = '\0';
+
+   DBGF(debug, "flags=0x%04x, returning %s", flags, buffer);
+
+   return buffer;
+}
 
 
 // SL value tables
@@ -277,10 +334,9 @@ dbgrpt_dyn_feature_metadata(
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
-   rpt_vstring(d1, "Interpreted flags: %s", interpret_feature_flags_t(md->feature_flags));
+   rpt_vstring(d1, "Interpreted flags: %s", interpret_ddca_feature_flags_symbolic_t(md->feature_flags));
    dbgrpt_sl_value_table(md->sl_values, "Feature values", d1);
 }
-
 
 
 //
@@ -308,7 +364,7 @@ dbgrpt_display_feature_metadata(
                       meta->vcp_version.major, meta->vcp_version.minor, format_vspec(meta->vcp_version));
       rpt_vstring(d1, "feature_name:    %s", meta->feature_name);
       rpt_vstring(d1, "feature_desc:    %s", meta->feature_desc);
-      char * s = interpret_feature_flags_t(meta->feature_flags);
+      const char * s = interpret_ddca_feature_flags_symbolic_t(meta->feature_flags);
       rpt_vstring(d1, "flags:           0x%04x = %s", meta->feature_flags, s);
       dbgrpt_sl_value_table(meta->sl_values, "Feature values", d1);
       rpt_vstring(d1, "nontable_formatter:           %p - %s",
@@ -402,9 +458,11 @@ dfm_from_dyn_feature_metadata(
       Dyn_Feature_Metadata * ddca_meta)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddc_meta=%p", ddca_meta);
    assert(ddca_meta);
    assert(memcmp(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
+   if (debug)
+      dbgrpt_dyn_feature_metadata(ddca_meta, 2);
 
    Display_Feature_Metadata * dfm = dfm_new(ddca_meta->feature_code);
    dfm->display_ref = NULL;
@@ -418,7 +476,10 @@ dfm_from_dyn_feature_metadata(
    dfm->vcp_version =  DDCA_VSPEC_UNQUERIED;
    dfm->sl_values = copy_sl_value_table(ddca_meta->sl_values);
    // dfm->latest_sl_values = copy_sl_value_table(ddca_meta->latest_sl_values);
-   DBGMSF(debug, "Done. dfm=%p");
+
+   if (debug)
+      dbgrpt_display_feature_metadata(dfm, 2);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning dfm=%p", dfm);
    return dfm;
 }
 
@@ -445,7 +506,7 @@ dbgrpt_ddca_feature_metadata(
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
-   rpt_vstring(d1, "Interpreted flags: %s", interpret_feature_flags_t(md->feature_flags));
+   rpt_vstring(d1, "Interpreted flags: %s", interpret_ddca_feature_flags_symbolic_t(md->feature_flags));
    dbgrpt_sl_value_table(md->sl_values, "Feature values", d1);
 }
 
@@ -511,6 +572,6 @@ free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
 
 void init_feature_metadata() {
    RTTI_ADD_FUNC(dfm_free);
-   RTTI_ADD_FUNC(init_feature_metadata);
+   RTTI_ADD_FUNC(dfm_from_dyn_feature_metadata);
 }
 

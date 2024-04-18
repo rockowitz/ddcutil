@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FEATURE_METADATA_H_
@@ -97,8 +97,10 @@ sl_value_table_lookup(DDCA_Feature_Value_Entry * value_entries, Byte value_id);
 
 // Feature Flags
 
-char *
-interpret_feature_flags_t(DDCA_Version_Feature_Flags flags);
+// char * interpret_feature_flags_t(DDCA_Version_Feature_Flags flags);
+
+const char *
+interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags);
 
 
 // DDCA_Feature_Metadata
