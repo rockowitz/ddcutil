@@ -576,6 +576,8 @@ ddc_get_formatted_value_for_dfm(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "suppress_unsupported=%s", sbool(suppress_unsupported));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dfm->feature_flags = %s",
+         interpret_ddca_feature_flags_symbolic_t(dfm->feature_flags));
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp;
@@ -610,8 +612,9 @@ ddc_get_formatted_value_for_dfm(
             &pvalrec,
             (output_level == DDCA_OL_TERSE) ? NULL : msg_fh);
             // msg_fh);
+
    psc = ERRINFO_STATUS(ddc_excp);
-   assert( (psc==0 && (feature_type == pvalrec->value_type)) || (psc!=0 && !pvalrec) );
+   assert( (!ddc_excp && (feature_type == pvalrec->value_type)) || (psc!=0 && !pvalrec) );
    if (!ddc_excp) {      // changed from (psc == 0) to avoid avoid coverity complaint re resource leak
       // if (!is_table_feature && output_level >= OL_VERBOSE) {
       // if (!is_table_feature && debug) {
