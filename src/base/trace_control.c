@@ -116,14 +116,16 @@ void dbgrpt_traced_object_table(GPtrArray * table, const char * table_name, int 
             rpt_vstring(depth+1, g_ptr_array_index(table, ndx));
       }
    }
-   else
+   else {
       rpt_vstring(depth, "%s: NULL", table_name);
    }
+}
 
 
 void dbgrpt_traced_function_table(int depth) {
    dbgrpt_traced_object_table(traced_function_table, "traced_function_table", depth);
 }
+
 
 void dbgrpt_traced_callstack_call_table(int depth) {
    dbgrpt_traced_object_table(traced_callstack_call_table, "traced_callstack_call_table", depth);
@@ -132,27 +134,34 @@ void dbgrpt_traced_callstack_call_table(int depth) {
 
 
 /** Adds a function to the list of functions to be traced.
+ *
  *  @param funcname function name
+ *  @retval true  if funcname is traceable, false if not
  */
 bool add_traced_function(const char * funcname) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
+   if (debug) {
+      DBG("Starting. funcname=|%s|", funcname);
+      //  report_rtti_func_name_table(2, "current function name table:");
+   }
 
-   if (!rtti_get_func_addr_by_name(funcname))
-      return false;
+   bool result = false;
+   if (rtti_get_func_addr_by_name(funcname)) {  // if it's a traceable function
+      DBGF(debug, "%s is a tracable function", funcname);
+      if (!traced_function_table)
+         traced_function_table = g_ptr_array_new();
+      // n. g_ptr_array_find_with_equal_func() requires glib 2.54
+      bool missing = (gaux_string_ptr_array_find(traced_function_table, funcname) < 0);
+      if (missing)
+         g_ptr_array_add(traced_function_table, g_strdup(funcname));
+      result = true;
+   }
+   else {
+      DBGF(debug, "%s is NOT a traceable function", funcname);
+   }
 
-   if (!traced_function_table)
-      traced_function_table = g_ptr_array_new();
-   // n. g_ptr_array_find_with_equal_func() requires glib 2.54
-   bool missing = (gaux_string_ptr_array_find(traced_function_table, funcname) < 0);
-   if (missing)
-      g_ptr_array_add(traced_function_table, g_strdup(funcname));
-
-   if (debug)
-      printf("(%s) Done. funcname=|%s|, missing=%s\n",
-             __func__, funcname, SBOOL(missing));
-   return true;
+   DBGF(debug, "Done. funcname=|%s|, returning: %s", funcname, SBOOL(result));
+   return result;
 }
 
 
