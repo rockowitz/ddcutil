@@ -50,7 +50,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 bool enable_mock_data = false;
-int max_setvcp_verify_retries = 0;
+int max_setvcp_verify_tries = 1;
 
 typedef struct {
    bool   verify_setvcp;
@@ -450,21 +450,24 @@ ddc_set_verified_vcp_value_with_retry(
       DDCA_Any_Vcp_Value ** newval_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newval_loc=%p, max_setvcp_verification_retries=%d",
-         dh_repr(dh),  newval_loc, max_setvcp_verify_retries);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newval_loc=%p, max_setvcp_verify_tries=%d",
+         dh_repr(dh),  newval_loc, max_setvcp_verify_tries);
 
    Error_Info * erec = NULL;
    if (newval_loc)
       *newval_loc = NULL;
 
+   bool verification_enabled = ddc_get_verify_setvcp();
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "verification_enabled = %s", sbool(verification_enabled));
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE &&
-      ddc_get_verify_setvcp()                       &&
+      verification_enabled                          &&
       is_rereadable_feature(dh, vrec->opcode)       &&
       !is_unreadable_sl_value(vrec->opcode, vrec->val.c_nc.sl) )
    {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Retry loop");
       GPtrArray * verification_failures = g_ptr_array_new();
 
-      for (int retry_ctr = 0; retry_ctr < max_setvcp_verify_retries; retry_ctr++) {
+      for (int try_ctr = 0; try_ctr < max_setvcp_verify_tries; try_ctr++) {
          erec = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
          if (!erec || ERRINFO_STATUS(erec) != DDCRC_VERIFY)
             break;
@@ -472,11 +475,12 @@ ddc_set_verified_vcp_value_with_retry(
       }
       if (erec && ERRINFO_STATUS(erec) == DDCRC_VERIFY) {
          erec = errinfo_new_with_causes_gptr(DDCRC_VERIFY, verification_failures, __func__,
-               "Maximum setvcp verification failures (%d)", max_setvcp_verify_retries);
+               "Maximum setvcp verification failures (%d)", max_setvcp_verify_tries);
       }
 
    }
    else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Non-loop call of ddc_set_vcp_value");
       erec = ddc_set_vcp_value(dh, vrec, newval_loc);
    }
 
@@ -875,6 +879,7 @@ void init_ddc_vcp() {
    RTTI_ADD_FUNC(ddc_save_current_settings);
    RTTI_ADD_FUNC(ddc_set_nontable_vcp_value);
    RTTI_ADD_FUNC(ddc_set_vcp_value);
+   RTTI_ADD_FUNC(ddc_set_verified_vcp_value_with_retry);
    RTTI_ADD_FUNC(is_rereadable_feature);
    RTTI_ADD_FUNC(set_table_vcp_value);
 }
