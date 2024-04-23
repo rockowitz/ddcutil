@@ -413,7 +413,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
    i2c_enable_cross_instance_locks(parsed_cmd->flags & CMD_FLAG_FLOCK);
    force_read_edid = !(parsed_cmd->flags2 & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS);  // extern in i2c_bus_core.h
-   ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
+   setvcp_verify_default = parsed_cmd->flags & CMD_FLAG_VERIFY;  // for new threads
+   ddc_set_verify_setvcp(setvcp_verify_default);                 // set current thread
    set_output_level(parsed_cmd->output_level);  // current thread
    set_default_thread_output_level(parsed_cmd->output_level); // for future threads
    enable_report_ddc_errors( parsed_cmd->flags & CMD_FLAG_DDCDATA );
