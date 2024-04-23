@@ -860,7 +860,11 @@ parse_command(
    gboolean wall_timestamp_trace_flag = false;
    gboolean thread_id_trace_flag = false;
    gboolean process_id_trace_flag = false;
-   gboolean verify_flag    = false;
+   const char * verify_expl   = (DEFAULT_SETVCP_VERIFY) ? "Verify value set by setvcp (default)"
+                                                        : "Verify value set by setvcp";
+   const char * noverify_expl = (DEFAULT_SETVCP_VERIFY) ? "Do not verify value by setvcp"
+                                                        : "Do not verify value set by setvcp (default)";
+   gboolean verify_flag    = DEFAULT_SETVCP_VERIFY;
    gboolean noverify_flag  = false;
    gboolean async_flag     = false;
    // gboolean async_check_i2c_flag = true;
@@ -1137,8 +1141,8 @@ parse_command(
 
       // Behavior options
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
-      {"verify",  '\0', 0, G_OPTION_ARG_NONE,     &verify_flag,      "Read VCP value after setting it", NULL},
-      {"noverify",'\0', 0, G_OPTION_ARG_NONE,     &noverify_flag,    "Do not read VCP value after setting it", NULL},
+      {"verify",  '\0', 0, G_OPTION_ARG_NONE,     &verify_flag,      verify_expl,        NULL},
+      {"noverify",'\0', 0, G_OPTION_ARG_NONE,     &noverify_flag,    noverify_expl,      NULL},
 
       {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "Tailor feature handling to specific MCCS version",   "major.minor" },
 
@@ -1479,6 +1483,9 @@ parse_command(
    if (async_flag) {
       EMIT_PARSER_ERROR(errmsgs, "Deprecated option ignored: --async.");
       EMIT_PARSER_ERROR(errmsgs, "Use --i2c-bus-checks-async-min (experimental) or --ddc-checks-async-min");
+   }
+   if (verify_flag && noverify_flag) {
+      EMIT_PARSER_ERROR(errmsgs, "Both --verify and --noverify specified");
    }
 
 #define LIBDDCUTIL_ONLY_OPTION(_name,_val) \
