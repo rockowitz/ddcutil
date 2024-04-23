@@ -308,10 +308,10 @@ dbgrpt_circular_invocation_results_buffer(Circular_Invocation_Result_Buffer * ci
 // Results Tables
 //
 
-static int steps[] = {0,5,10,20,30,50,70,100,130, 160, 200};    // multiplier * 100
-static int absolute_step_ct = ARRAY_SIZE(steps);   //  11
-static int step_last = ARRAY_SIZE(steps)-1;
-static int adjusted_step_ct = ARRAY_SIZE(steps)-1;   // 11
+static int steps[] = {0, 5, 10, 20, 30, 50, 70, 100, 130, 160, 200};  // multiplier * 100
+static int absolute_step_ct = ARRAY_SIZE(steps);    // 11
+static int step_last = ARRAY_SIZE(steps)-1;         // 10
+static int adjusted_step_ct = ARRAY_SIZE(steps)-1;  // will be reset to absolute_step_ct - dsa2_step_floor
 
 #define RTABLE_FROM_CACHE    0x01
 #define RTABLE_BUS_DETECTED  0x02
@@ -453,6 +453,7 @@ free_results_table(Results_Table * rtable) {
 void
 dsa2_reset_results_table(int busno, DDCA_Sleep_Multiplier sleep_multiplier)
 {
+   // bool debug = false;
    Results_Table * rtable = results_tables[busno];
    if (rtable) {
       free_results_table(rtable);
@@ -463,6 +464,7 @@ dsa2_reset_results_table(int busno, DDCA_Sleep_Multiplier sleep_multiplier)
    int initial_step = (sleep_multiplier >= 0)
                          ? dsa2_multiplier_to_step(sleep_multiplier)
                          : dsa2_multiplier_to_step(1.0f);
+   // DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "sleep_multiplier=%4.2f, initial_step=%d, step_last=%d");
    rtable->initial_step = initial_step;
    rtable->cur_step = initial_step;
    rtable->cur_retry_loop_step = initial_step;
@@ -541,7 +543,7 @@ dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, Sleep_Multiplier multiplier) {
 
 
 /** Given a floating point multiplier value, return the index of the step
- *  found by rounding down the value specified.
+ *  with the greatest value less than the value specified.
  *
  *  @param  multiplier  floating point multiplier value
  *  @return step index
@@ -553,17 +555,18 @@ dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, Sleep_Multiplier multiplier) {
 int
 dsa2_multiplier_to_step(DDCA_Sleep_Multiplier multiplier) {
    bool debug = false;
-   int imult = multiplier * 100;
 
+   int imult = multiplier * 100;
    int ndx = dsa2_step_floor;
    for (; ndx <= step_last ; ndx++) {
       if ( steps[ndx] >= imult )
                break;
    }
+   int step = (ndx > step_last) ? step_last : ndx;
 
-   int step = (ndx == step_last) ? step_last-1 : ndx;
-   DBGTRC_EXECUTED(debug, TRACE_GROUP, "multiplier = %7.5f, imult = %d, step=%d, steps[%d]=%d",
-                                         multiplier, imult, step, step, steps[step]);
+   DBGTRC_EXECUTED(debug, TRACE_GROUP,
+         "multiplier = %5.2f, imult = %d, step_last=%d,  ndx=%d, step=%d, steps[%d]=%d, returning step=%d",
+         multiplier,          imult,      step_last,     ndx,    step,    step,steps[step], step);
    return step;
 }
 
@@ -590,7 +593,7 @@ void test_float_to_step_conversion() {
 void
 dsa2_reset_multiplier(DDCA_Sleep_Multiplier multiplier) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "multiplier=%7.3f", multiplier);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "multiplier=%5.2f", multiplier);
    initial_step = dsa2_multiplier_to_step(multiplier);
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx]) {
@@ -1484,11 +1487,11 @@ init_dsa2() {
    RTTI_ADD_FUNC(dsa2_too_few_errors);
    RTTI_ADD_FUNC(dsa2_too_many_errors);
    RTTI_ADD_FUNC(dsa2_next_retry_step);
+   RTTI_ADD_FUNC(dsa2_multiplier_to_step);
 
    results_tables = calloc(I2C_BUS_MAX+1, sizeof(Results_Table*));
 
    adjusted_step_ct = absolute_step_ct - dsa2_step_floor;   // 11;         //  initially 11
-
 
    // test_one_logistic(10);
    // test_dsa2_next_retry_step();
