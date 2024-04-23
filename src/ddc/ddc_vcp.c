@@ -80,7 +80,7 @@ static Thread_Vcp_Settings * get_thread_vcp_settings() {
 //  Save Control Settings
 //
 
-/** Executes the DDC Save Control Settings command.
+/** Executes the DDC Save Current Settings command.
  *
  * @param  dh handle of open display device
  * @return NULL if success, pointer to #Error_Info if failure
