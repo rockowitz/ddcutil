@@ -24,6 +24,7 @@
 #include "vcp/vcp_feature_values.h"
 
 extern bool enable_mock_data;
+extern bool setvcp_verify_default;
 extern int  max_setvcp_verify_tries;
 
 bool

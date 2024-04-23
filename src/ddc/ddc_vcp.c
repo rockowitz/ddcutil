@@ -26,6 +26,7 @@
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/parms.h"
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
@@ -49,9 +50,13 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
-bool enable_mock_data = false;
-int max_setvcp_verify_tries = 1;
+//
+// Globals
+//
 
+int max_setvcp_verify_tries = 1;
+bool setvcp_verify_default = DEFAULT_SETVCP_VERIFY;
+bool enable_mock_data = false;
 
 //
 // Maintain thread-specific vcp settings
@@ -71,7 +76,7 @@ static Thread_Vcp_Settings * get_thread_vcp_settings() {
 
    if (!settings) {
       settings = g_new0(Thread_Vcp_Settings, 1);
-      settings->verify_setvcp = false;     // set by g_new0(), but be explicit
+      settings->verify_setvcp = setvcp_verify_default;
 
       g_private_set(&per_thread_key, settings);
    }
