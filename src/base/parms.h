@@ -3,7 +3,7 @@
  *  System configuration and tuning
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARMS_H_
@@ -84,6 +84,7 @@
 #define DEFAULT_ENABLE_CACHED_DISPLAYS false
 #define DEFAULT_ENABLE_DSA2 true
 #define DEFAULT_ENABLE_FLOCK true
+#define DEFAULT_SETVCP_VERIFY true
 
 #define DEFAULT_DDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_WARNING
 #define DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_NOTICE
