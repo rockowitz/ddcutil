@@ -249,8 +249,9 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
-                         "deferred sleeps: %s", SBOOL(parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS),
-                         "sleep_multiplier: %5.2f", parsed_cmd->sleep_multiplier);
+                         "deferred sleeps: %s, sleep_multiplier: %5.2f",
+                         SBOOL(parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS),
+                         parsed_cmd->sleep_multiplier);
    enable_deferred_sleep( parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
 
 #ifdef OLD
@@ -476,5 +477,6 @@ bye:
 
 void init_ddc_common_init() {
    RTTI_ADD_FUNC(submaster_initializer);
+   RTTI_ADD_FUNC(init_performance_options);
 }
 
