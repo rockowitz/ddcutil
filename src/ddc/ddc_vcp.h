@@ -33,9 +33,6 @@ ddc_set_verify_setvcp(
 bool
 ddc_get_verify_setvcp();
 
-Error_Info *
-ddc_save_current_settings(
-      Display_Handle *          dh);
 
 Error_Info *
 ddc_set_nontable_vcp_value(

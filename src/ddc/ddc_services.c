@@ -51,6 +51,7 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_serialize.h"
+#include "ddc/ddc_save_current_settings.h"
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp.h"
@@ -215,6 +216,7 @@ void init_ddc_services() {
 
    // ddc:
    init_ddc_common_init();
+   init_ddc_save_current_settings();
    init_ddc_try_data();
    init_ddc_display_selection();
    init_ddc_display_ref_reports();

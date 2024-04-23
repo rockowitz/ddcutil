@@ -52,6 +52,11 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 bool enable_mock_data = false;
 int max_setvcp_verify_tries = 1;
 
+
+//
+// Maintain thread-specific vcp settings
+//
+
 typedef struct {
    bool   verify_setvcp;
 } Thread_Vcp_Settings;
@@ -77,418 +82,8 @@ static Thread_Vcp_Settings * get_thread_vcp_settings() {
 
 
 //
-//  Save Control Settings
+// Mock getvcp values
 //
-
-/** Executes the DDC Save Current Settings command.
- *
- * @param  dh handle of open display device
- * @return NULL if success, pointer to #Error_Info if failure
- */
-Error_Info *
-ddc_save_current_settings(
-      Display_Handle * dh)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP,
-          "Invoking DDC Save Current Settings command. dh=%s", dh_repr(dh));
-
-   Error_Info * ddc_excp = NULL;
-   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-      // command line parser should block this case
-      PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
-      ddc_excp = ERRINFO_NEW(DDCRC_UNIMPLEMENTED,
-                              "MCCS over USB does not have Save Current Settings command" );
-   }
-   else {
-      DDC_Packet * request_packet_ptr =
-         create_ddc_save_settings_request_packet("save_current_settings:request packet");
-      // DBGMSG("create_ddc_save_settings_request_packet returned packet_ptr=%p", request_packet_ptr);
-      // dump_packet(request_packet_ptr);
-
-      ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
-
-      free_ddc_packet(request_packet_ptr);
-   }
-
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
-   return ddc_excp;
-}
-
-
-//
-// Set VCP feature value
-//
-
-/** Sets a non-table VCP feature value.
- *
- *  @param  dh            display handle for open display
- *  @param  feature_code  VCP feature code
- *  @param  new_value     new value
- *  @return NULL if success,
- *          pointer to #Error_Info from #ddc_write_only_with_retry() if failure
- */
-Error_Info *
-ddc_set_nontable_vcp_value(
-      Display_Handle * dh,
-      Byte             feature_code,
-      int              new_value)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP,
-          "Writing feature 0x%02x , new value = %d, dh=%s",
-          feature_code, new_value, dh_repr(dh) );
-
-   Public_Status_Code psc = 0;
-   Error_Info * ddc_excp = NULL;
-   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-#ifdef ENABLE_USB
-      psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
-#else
-      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
-#endif
-   }
-   else {
-      DDC_Packet * request_packet_ptr =
-         create_ddc_setvcp_request_packet(feature_code, new_value, "set_vcp:request packet");
-      // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
-      // dump_packet(request_packet_ptr);
-
-      ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
-      psc = (ddc_excp) ? ddc_excp->status_code : 0;
-
-      free_ddc_packet(request_packet_ptr);
-   }
-
-   if ( psc==DDCRC_RETRIES )
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Try errors: %s", errinfo_causes_string(ddc_excp));  // needed?
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
-   return ddc_excp;
-}
-
-
-/** Sets a table VCP feature value.
- *
- *  @param  dh            display handle for open display
- *  @param  feature_code  VCP feature code
- *  @param  bytes         pointer to table bytes
- *  @param  bytect        number of bytes
- *  @return NULL  if success
- *          DDCRC_UNIMPLEMENTED if io mode is USB
- *          #Error_Info from #multi_part_write_with_retry() otherwise
- */
-Error_Info *
-set_table_vcp_value(
-      Display_Handle *  dh,
-      Byte              feature_code,
-      Byte *            bytes,
-      int               bytect)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d",
-                                       feature_code, bytect);
-
-   Public_Status_Code psc = 0;
-   Error_Info * ddc_excp = NULL;
-   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-#ifdef ENABLE_USB
-      psc = DDCRC_UNIMPLEMENTED;
-#else
-      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
-      psc = DDCRC_INTERNAL_ERROR;
-#endif
-      ddc_excp = ERRINFO_NEW(psc, "Error setting feature value");
-   }
-   else {
-      // TODO: clean up function signatures
-      // pointless wrapping in a Buffer just to unwrap
-      Buffer * new_value = buffer_new_with_value(bytes, bytect, __func__);
-
-      ddc_excp = multi_part_write_with_retry(dh, feature_code, new_value);
-      psc = (ddc_excp) ? ddc_excp->status_code : 0;
-
-      buffer_free(new_value, __func__);
-   }
-
-   if ( psc == DDCRC_RETRIES )
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Try errors: %s", errinfo_causes_string(ddc_excp));
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
-   return ddc_excp;
-}
-
-
-/** Sets the setvcp verification setting for the current thread.
- *
- *  If enabled, setvcp will read the feature value from the monitor after
- *  writing it, to ensure the monitor has actually changed the feature value.
- *
- *  @param onoff  **true** for enabled, **false** for disabled.
- *  @return prior setting
- */
-bool
-ddc_set_verify_setvcp(bool onoff) {
-   bool debug = false;
-   DBGMSF(debug, "Setting verify_setvcp = %s", sbool(onoff));
-
-   Thread_Vcp_Settings * settings = get_thread_vcp_settings();
-   bool old_value = settings->verify_setvcp;
-   settings->verify_setvcp = onoff;
-   return old_value;
-}
-
-
-/** Gets the current setvcp verification setting for the current thread.
- *
- *  @return **true** if setvcp verification enabled\n
- *          **false** if not
- */
-bool
-ddc_get_verify_setvcp() {
-   Thread_Vcp_Settings * settings = get_thread_vcp_settings();
-   return settings->verify_setvcp;
-}
-
-
-STATIC bool
-is_rereadable_feature(
-      Display_Handle * dh,
-      DDCA_Vcp_Feature_Code opcode)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "opcode = 0x%02x", opcode);
-
-   // readable features that should not be read after write
-   DDCA_Vcp_Feature_Code unrereadable_features[] = {
-         0x02,        // new control value
-         0x03,        // soft controls
-         0x60,        // input source - for some monitors it is meaningful to read the new 
-                      //                value, others won't respond if set to a different input
-   };
-
-   bool result = true;
-   for (int ndx = 0; ndx < ARRAY_SIZE(unrereadable_features); ndx++) {
-      if ( unrereadable_features[ndx] == opcode ) {
-          result = false;
-          DBGMSF(debug, "Unreadable opcode 0x%02x", opcode);
-          break;
-      }
-   }
-
-   if (result) {
-      Display_Feature_Metadata * dfm =
-            dyn_get_feature_metadata_by_dh(opcode, dh, /*check_udf=*/ true, /*with_default*/false);
-      // if not found, assume readable  ??
-      if (dfm) {
-         result = dfm->feature_flags & DDCA_READABLE;
-         dfm_free(dfm);
-      }
-   }
-
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
-   return result;
-}
-
-
-STATIC bool
-is_unreadable_sl_value(
-      DDCA_Vcp_Feature_Code opcode,
-      Byte                  sl_value)
-{
-   bool debug = false;
-   DBGMSF(debug, "opcode=0x%02x, sl_value=0x%02x", opcode, sl_value);
-
-   bool result = false;
-   switch(opcode) {
-   case 0xd6:
-      if (sl_value == 5)        // turn off display, trying to read from it will fail
-         result = true;
-      break;
-   default:
-      break;
-   }
-
-   DBGMSF(debug, "Done.     Returning: %s", sbool(result));
-   return result;
-}
-
-
-STATIC bool
-single_vcp_value_equal(
-      DDCA_Any_Vcp_Value * vrec1,
-      DDCA_Any_Vcp_Value * vrec2)
-{
-   assert(vrec1 && vrec2);  // no implementation for degenerate cases
-   bool debug = false;
-
-   bool result = false;
-   if (vrec1->opcode     == vrec2->opcode &&
-       vrec1->value_type == vrec2->value_type)
-   {
-      switch(vrec1->value_type) {
-      case(DDCA_NON_TABLE_VCP_VALUE):
-            // only check SL byte which would be set for any VCP, monitor
-      result = (vrec1->val.c_nc.sl == vrec2->val.c_nc.sl);
-            break;
-      case(DDCA_TABLE_VCP_VALUE):
-            result = (vrec1->val.t.bytect == vrec2->val.t.bytect) &&
-                     (memcmp(vrec1->val.t.bytes, vrec2->val.t.bytes, vrec1->val.t.bytect) == 0 );
-      }
-   }
-
-   DBGMSF(debug, "Returning: %s", sbool(result));
-   return result;
-}
-
-
-// TODO: Consider wrapping set_vcp_value() in set_vcp_value_with_retry(), which would
-// retry in case verification fails
-
-/** Sets a VCP feature value.
- *
- *  @param  dh            display handle for open display
- *  @param  vrec          pointer to value record
- *  @param  newval_loc    if non-null, address at which to return verified value
- *  @return NULL if success, pointer to #Error_Info if failure
- *
- *  If write verification is turned on, reads the feature value after writing it
- *  to ensure the display has actually changed the value.
- *
- * The caller is responsible for freeing the value returned at **newval_loc**.
- *  @remark
- *  If verbose messages are in effect, writes detailed messages to the current
- *  stdout device.
- */
-Error_Info *
-ddc_set_vcp_value(
-      Display_Handle *    dh,
-      DDCA_Any_Vcp_Value *  vrec,
-      DDCA_Any_Vcp_Value ** newval_loc)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
-
-   FILE * verbose_msg_dest = fout();
-   if ( get_output_level() < DDCA_OL_VERBOSE && !debug )
-      verbose_msg_dest = NULL;
-
-   Error_Info * ddc_excp = NULL;
-   if (newval_loc)
-      *newval_loc = NULL;
-   if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
-      ddc_excp = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
-   }
-   else {
-      assert(vrec->value_type == DDCA_TABLE_VCP_VALUE);
-      ddc_excp = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
-   }
-
-   if (!ddc_excp && ddc_get_verify_setvcp()) {
-      Public_Status_Code psc = 0;
-      if ( is_rereadable_feature(dh, vrec->opcode) &&
-           ( vrec->value_type != DDCA_NON_TABLE_VCP_VALUE ||
-             !is_unreadable_sl_value(vrec->opcode, vrec->val.c_nc.sl)
-           )
-         )
-      {
-         f0printf(verbose_msg_dest,
-               "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
-         DDCA_Any_Vcp_Value * newval = NULL;
-         ddc_excp = ddc_get_vcp_value(
-             dh,
-             vrec->opcode,
-             vrec->value_type,
-             &newval);
-         psc = (ddc_excp) ? ddc_excp->status_code : 0;
-         if (ddc_excp) {
-            f0printf(verbose_msg_dest,
-                  "(%s) Read after write failed. get_vcp_value() returned: %s\n",
-                  __func__, psc_desc(psc));
-            if (psc == DDCRC_RETRIES)
-               f0printf(verbose_msg_dest,
-                     "(%s)    Try errors: %s\n", __func__, errinfo_causes_string(ddc_excp));
-            // psc = DDCRC_VERIFY;
-         }
-         else {
-            assert(vrec && newval);    // silence clang complaint
-            // dbgrpt_ddca_single_vcp_value(vrec, 2);
-            // dbgrpt_ddca_single_vcp_value(newval, 3);
-
-            if (! single_vcp_value_equal(vrec,newval)) {
-               ddc_excp = ERRINFO_NEW(DDCRC_VERIFY, "Current value does not match value set");
-               f0printf(verbose_msg_dest, "Current value does not match value set.\n");
-            }
-            else {
-               f0printf(verbose_msg_dest, "Verification succeeded\n");
-            }
-            if (newval_loc)
-               *newval_loc = newval;
-            else
-               free_single_vcp_value(newval);
-         }
-      }
-      else {
-         if (!is_rereadable_feature(dh, vrec->opcode) )
-            f0printf(verbose_msg_dest, ""
-                  "Feature 0x%02x does not support verification\n", vrec->opcode);
-         else
-            f0printf(verbose_msg_dest,
-                  "Feature 0x%02x, value 0x%02x does not support verification\n",
-                  vrec->opcode,
-                  vrec->val.c_nc.sl);
-      }
-   }
-
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
-   return ddc_excp;
-}
-
-
-Error_Info *
-ddc_set_verified_vcp_value_with_retry(
-      Display_Handle *      dh,
-      DDCA_Any_Vcp_Value *  vrec,
-      DDCA_Any_Vcp_Value ** newval_loc)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newval_loc=%p, max_setvcp_verify_tries=%d",
-         dh_repr(dh),  newval_loc, max_setvcp_verify_tries);
-
-   Error_Info * erec = NULL;
-   if (newval_loc)
-      *newval_loc = NULL;
-
-   bool verification_enabled = ddc_get_verify_setvcp();
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "verification_enabled = %s", sbool(verification_enabled));
-   if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE &&
-      verification_enabled                          &&
-      is_rereadable_feature(dh, vrec->opcode)       &&
-      !is_unreadable_sl_value(vrec->opcode, vrec->val.c_nc.sl) )
-   {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Retry loop");
-      GPtrArray * verification_failures = g_ptr_array_new();
-
-      for (int try_ctr = 0; try_ctr < max_setvcp_verify_tries; try_ctr++) {
-         erec = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
-         if (!erec || ERRINFO_STATUS(erec) != DDCRC_VERIFY)
-            break;
-         g_ptr_array_add(verification_failures, erec);
-      }
-      if (erec && ERRINFO_STATUS(erec) == DDCRC_VERIFY) {
-         erec = errinfo_new_with_causes_gptr(DDCRC_VERIFY, verification_failures, __func__,
-               "Maximum setvcp verification failures (%d)", max_setvcp_verify_tries);
-      }
-
-   }
-   else {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Non-loop call of ddc_set_vcp_value");
-      erec = ddc_set_vcp_value(dh, vrec, newval_loc);
-   }
-
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, erec, "");
-   return erec;
-}
-
-
 
 static Parsed_Nontable_Vcp_Response * create_all_zero_response(Byte feature_code) {
    Parsed_Nontable_Vcp_Response * resp = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
@@ -501,7 +96,6 @@ static Parsed_Nontable_Vcp_Response * create_all_zero_response(Byte feature_code
    resp->sl = 0;
    return resp;
 }
-
 
 
 /** Possibly returns a mock value for a non-table feature
@@ -872,11 +466,407 @@ ddc_get_vcp_value(
 }
 
 
+
+//
+// Setvcp Verification
+//
+
+/** Sets the setvcp verification setting for the current thread.
+ *
+ *  If enabled, setvcp will read the feature value from the monitor after
+ *  writing it, to ensure the monitor has actually changed the feature value.
+ *
+ *  @param onoff  **true** for enabled, **false** for disabled.
+ *  @return prior setting
+ */
+bool
+ddc_set_verify_setvcp(bool onoff) {
+   // bool debug = false;
+   // DBGMSF(debug, "Setting verify_setvcp = %s", sbool(onoff));
+
+   Thread_Vcp_Settings * settings = get_thread_vcp_settings();
+   bool old_value = settings->verify_setvcp;
+   settings->verify_setvcp = onoff;
+   return old_value;
+}
+
+
+/** Gets the current setvcp verification setting for the current thread.
+ *
+ *  @return **true**  if setvcp verification enabled\n
+ *          **false** if not
+ */
+bool
+ddc_get_verify_setvcp() {
+   Thread_Vcp_Settings * settings = get_thread_vcp_settings();
+   return settings->verify_setvcp;
+}
+
+
+/** Checks whether it is meaningful to read a feature value for verification
+ *  after it has been written.
+ *
+ *  It is invalid if either:
+ *  - the feature is not readable
+ *  - the feature is one for which it is not meaningful to read the value after writing
+ *
+ *  @param  dh  display handle
+ *  @param  opcode  VCP feature code
+ *  @return **true**  if feature can be usefully reread\n
+ *          **false** if not
+ */
+STATIC bool
+is_rereadable_feature(
+      Display_Handle * dh,
+      DDCA_Vcp_Feature_Code opcode)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "opcode = 0x%02x", opcode);
+
+   // readable features that should not be read after write
+   DDCA_Vcp_Feature_Code unrereadable_features[] = {
+         0x02,        // new control value
+         0x03,        // soft controls
+         0x60,        // input source - for some monitors it is meaningful to read the new 
+                      //                value, others won't respond if set to a different input
+   };
+
+   bool result = true;
+   for (int ndx = 0; ndx < ARRAY_SIZE(unrereadable_features); ndx++) {
+      if ( unrereadable_features[ndx] == opcode ) {
+          result = false;
+          DBGMSF(debug, "Unreadable opcode 0x%02x", opcode);
+          break;
+      }
+   }
+
+   if (result) {
+      Display_Feature_Metadata * dfm =
+            dyn_get_feature_metadata_by_dh(opcode, dh, /*check_udf=*/ true, /*with_default*/false);
+      // if not found, assume readable  ??
+      if (dfm) {
+         result = dfm->feature_flags & DDCA_READABLE;
+         dfm_free(dfm);
+      }
+   }
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+
+/** Checks for specific NC feature values that cannot be read after they have been set
+ *
+ *  @param  opcode   VCP feature code
+ *  @param  sl_value feature value that cannot be verified
+ *  @return **true** if feature should not be read, **false** if ok
+ */
+STATIC bool
+is_unreadable_sl_value(
+      DDCA_Vcp_Feature_Code opcode,
+      Byte                  sl_value)
+{
+   bool debug = false;
+   DBGMSF(debug, "opcode=0x%02x, sl_value=0x%02x", opcode, sl_value);
+
+   bool result = false;
+   switch(opcode) {
+   case 0xd6:
+      if (sl_value == 5)        // turn off display, trying to read from it will fail
+         result = true;
+      break;
+   default:
+      break;
+   }
+
+   DBGMSF(debug, "Done.     Returning: %s", sbool(result));
+   return result;
+}
+
+
+STATIC bool
+single_vcp_value_equal(
+      DDCA_Any_Vcp_Value * vrec1,
+      DDCA_Any_Vcp_Value * vrec2)
+{
+   assert(vrec1 && vrec2);  // no implementation for degenerate cases
+   bool debug = false;
+
+   bool result = false;
+   if (vrec1->opcode     == vrec2->opcode &&
+       vrec1->value_type == vrec2->value_type)
+   {
+      switch(vrec1->value_type) {
+      case(DDCA_NON_TABLE_VCP_VALUE):
+            // N.B. not handling SH byte which would be set for NC feature
+            // or for a C feature using the upper byte
+            // only check SL byte which would be set for any VCP, monitor
+      result = (vrec1->val.c_nc.sl == vrec2->val.c_nc.sl);
+            break;
+      case(DDCA_TABLE_VCP_VALUE):
+            result = (vrec1->val.t.bytect == vrec2->val.t.bytect) &&
+                     (memcmp(vrec1->val.t.bytes, vrec2->val.t.bytes, vrec1->val.t.bytect) == 0 );
+      }
+   }
+
+   DBGMSF(debug, "Returning: %s", sbool(result));
+   return result;
+}
+
+
+//
+// Set VCP feature values
+//
+
+/** Sets a non-table VCP feature value.
+ *
+ *  @param  dh            display handle for open display
+ *  @param  feature_code  VCP feature code
+ *  @param  new_value     new value
+ *  @return NULL if success,
+ *          pointer to #Error_Info from #ddc_write_only_with_retry() if failure
+ */
+Error_Info *
+ddc_set_nontable_vcp_value(
+      Display_Handle * dh,
+      Byte             feature_code,
+      int              new_value)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+          "Writing feature 0x%02x , new value = %d, dh=%s",
+          feature_code, new_value, dh_repr(dh) );
+
+   Public_Status_Code psc = 0;
+   Error_Info * ddc_excp = NULL;
+   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
+#ifdef ENABLE_USB
+      psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
+#else
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+#endif
+   }
+   else {
+      DDC_Packet * request_packet_ptr =
+         create_ddc_setvcp_request_packet(feature_code, new_value, "set_vcp:request packet");
+      // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
+      // dump_packet(request_packet_ptr);
+
+      ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
+
+      free_ddc_packet(request_packet_ptr);
+   }
+
+   if ( psc==DDCRC_RETRIES )
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Try errors: %s", errinfo_causes_string(ddc_excp));  // needed?
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
+   return ddc_excp;
+}
+
+
+/** Sets a table VCP feature value.
+ *
+ *  @param  dh            display handle for open display
+ *  @param  feature_code  VCP feature code
+ *  @param  bytes         pointer to table bytes
+ *  @param  bytect        number of bytes
+ *  @return NULL  if success
+ *          DDCRC_UNIMPLEMENTED if io mode is USB
+ *          #Error_Info from #multi_part_write_with_retry() otherwise
+ */
+static Error_Info *
+set_table_vcp_value(
+      Display_Handle *  dh,
+      Byte              feature_code,
+      Byte *            bytes,
+      int               bytect)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d",
+                                       feature_code, bytect);
+
+   Public_Status_Code psc = 0;
+   Error_Info * ddc_excp = NULL;
+   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
+#ifdef ENABLE_USB
+      psc = DDCRC_UNIMPLEMENTED;
+#else
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+      psc = DDCRC_INTERNAL_ERROR;
+#endif
+      ddc_excp = ERRINFO_NEW(psc, "Error setting feature value");
+   }
+   else {
+      // TODO: clean up function signatures
+      // pointless wrapping in a Buffer just to unwrap
+      Buffer * new_value = buffer_new_with_value(bytes, bytect, __func__);
+
+      ddc_excp = multi_part_write_with_retry(dh, feature_code, new_value);
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
+
+      buffer_free(new_value, __func__);
+   }
+
+   if ( psc == DDCRC_RETRIES )
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Try errors: %s", errinfo_causes_string(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
+   return ddc_excp;
+}
+
+
+// TODO: Consider wrapping set_vcp_value() in set_vcp_value_with_retry(), which would
+// retry in case verification fails (work in progress)
+
+/** Sets a VCP feature value.
+ *
+ *  @param  dh            display handle for open display
+ *  @param  vrec          pointer to value record
+ *  @param  newval_loc    if non-null, address at which to return verified value
+ *  @return NULL if success, pointer to #Error_Info if failure
+ *
+ *  If write verification is turned on, reads the feature value after writing it
+ *  to ensure the display has actually changed the value.
+ *
+ * The caller is responsible for freeing the value returned at **newval_loc**.
+ *  @remark
+ *  If verbose messages are in effect, writes detailed messages to the current
+ *  stdout device.
+ */
+Error_Info *
+ddc_set_vcp_value(
+      Display_Handle *    dh,
+      DDCA_Any_Vcp_Value *  vrec,
+      DDCA_Any_Vcp_Value ** newval_loc)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   FILE * verbose_msg_dest = fout();
+   if ( get_output_level() < DDCA_OL_VERBOSE && !debug )
+      verbose_msg_dest = NULL;
+
+   Error_Info * ddc_excp = NULL;
+   if (newval_loc)
+      *newval_loc = NULL;
+   if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
+      ddc_excp = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
+   }
+   else {
+      assert(vrec->value_type == DDCA_TABLE_VCP_VALUE);
+      ddc_excp = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
+   }
+
+   if (!ddc_excp && ddc_get_verify_setvcp()) {
+      Public_Status_Code psc = 0;
+      if ( is_rereadable_feature(dh, vrec->opcode) &&
+           ( vrec->value_type != DDCA_NON_TABLE_VCP_VALUE ||
+             !is_unreadable_sl_value(vrec->opcode, vrec->val.c_nc.sl)
+           )
+         )
+      {
+         f0printf(verbose_msg_dest,
+               "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
+         DDCA_Any_Vcp_Value * newval = NULL;
+         ddc_excp = ddc_get_vcp_value(
+             dh,
+             vrec->opcode,
+             vrec->value_type,
+             &newval);
+         psc = (ddc_excp) ? ddc_excp->status_code : 0;
+         if (ddc_excp) {
+            f0printf(verbose_msg_dest,
+                  "(%s) Read after write failed. get_vcp_value() returned: %s\n",
+                  __func__, psc_desc(psc));
+            if (psc == DDCRC_RETRIES)
+               f0printf(verbose_msg_dest,
+                     "(%s)    Try errors: %s\n", __func__, errinfo_causes_string(ddc_excp));
+            // psc = DDCRC_VERIFY;
+         }
+         else {
+            assert(vrec && newval);    // silence clang complaint
+            // dbgrpt_ddca_single_vcp_value(vrec, 2);
+            // dbgrpt_ddca_single_vcp_value(newval, 3);
+
+            if (! single_vcp_value_equal(vrec,newval)) {
+               ddc_excp = ERRINFO_NEW(DDCRC_VERIFY, "Current value does not match value set");
+               f0printf(verbose_msg_dest, "Current value does not match value set.\n");
+            }
+            else {
+               f0printf(verbose_msg_dest, "Verification succeeded\n");
+            }
+            if (newval_loc)
+               *newval_loc = newval;
+            else
+               free_single_vcp_value(newval);
+         }
+      }
+      else {
+         if (!is_rereadable_feature(dh, vrec->opcode) )
+            f0printf(verbose_msg_dest, ""
+                  "Feature 0x%02x does not support verification\n", vrec->opcode);
+         else
+            f0printf(verbose_msg_dest,
+                  "Feature 0x%02x, value 0x%02x does not support verification\n",
+                  vrec->opcode,
+                  vrec->val.c_nc.sl);
+      }
+   }
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
+   return ddc_excp;
+}
+
+
+Error_Info *
+ddc_set_verified_vcp_value_with_retry(
+      Display_Handle *      dh,
+      DDCA_Any_Vcp_Value *  vrec,
+      DDCA_Any_Vcp_Value ** newval_loc)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newval_loc=%p, max_setvcp_verify_tries=%d",
+         dh_repr(dh),  newval_loc, max_setvcp_verify_tries);
+
+   Error_Info * erec = NULL;
+   if (newval_loc)
+      *newval_loc = NULL;
+
+   bool verification_enabled = ddc_get_verify_setvcp();
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "verification_enabled = %s", sbool(verification_enabled));
+   if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE &&
+      verification_enabled                          &&
+      is_rereadable_feature(dh, vrec->opcode)       &&
+      !is_unreadable_sl_value(vrec->opcode, vrec->val.c_nc.sl) )
+   {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Retry loop");
+      GPtrArray * verification_failures = g_ptr_array_new();
+
+      for (int try_ctr = 0; try_ctr < max_setvcp_verify_tries; try_ctr++) {
+         erec = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
+         if (!erec || ERRINFO_STATUS(erec) != DDCRC_VERIFY)
+            break;
+         g_ptr_array_add(verification_failures, erec);
+      }
+      if (erec && ERRINFO_STATUS(erec) == DDCRC_VERIFY) {
+         erec = errinfo_new_with_causes_gptr(DDCRC_VERIFY, verification_failures, __func__,
+               "Maximum setvcp verification failures (%d)", max_setvcp_verify_tries);
+      }
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Non-loop call of ddc_set_vcp_value");
+      erec = ddc_set_vcp_value(dh, vrec, newval_loc);
+   }
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, erec, "");
+   return erec;
+}
+
+
 void init_ddc_vcp() {
    RTTI_ADD_FUNC(ddc_get_nontable_vcp_value);
    RTTI_ADD_FUNC(ddc_get_table_vcp_value);
    RTTI_ADD_FUNC(ddc_get_vcp_value);
-   RTTI_ADD_FUNC(ddc_save_current_settings);
    RTTI_ADD_FUNC(ddc_set_nontable_vcp_value);
    RTTI_ADD_FUNC(ddc_set_vcp_value);
    RTTI_ADD_FUNC(ddc_set_verified_vcp_value_with_retry);

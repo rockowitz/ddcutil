@@ -91,6 +91,7 @@
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
+#include "ddc/ddc_save_current_settings.h"
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_try_data.h"
