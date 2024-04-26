@@ -56,7 +56,7 @@ static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 /** Given a sysfs node, walk up the chain of device directory links
  *  until an adapter node is found.
  *
- *  @param  path   e.g. /sys/bus/i2c/drivers/i2c-5
+ *  @param  path   e.g. /sys/bus/i2c/devices/i2c-5
  *  @param  depth  logical indentation depth
  *  @return sysfs path to adapter
  *
