@@ -306,12 +306,12 @@ assemble_sysfs_path2(
    assert(buffer && bufsz > 0);
    bool debug = false;
    DBGF(debug, "Starting.  bufsz=%d, fn_segment=|%s|", bufsz, fn_segment);
+   
    STRLCPY(buffer, fn_segment, bufsz-1);
    while(true) {
       char * segment = va_arg(ap, char*);
       if (!segment)
          break;
-      if (debug)
       DBGF(debug, "segment |%s|", segment);
       STRLCAT(buffer, "/", bufsz);
       STRLCAT(buffer, segment, bufsz);
