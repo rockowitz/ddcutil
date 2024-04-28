@@ -365,8 +365,10 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags & CMD_FLAG_F13)
       EDID_Read_Uses_Smbus = true;
 #endif
+#ifdef GET_EDID_USING_SYSFS
    if (parsed_cmd->flags2 & CMD_FLAG2_F15)
       verify_sysfs_edid = true;
+#endif
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
       extra_stabilize_seconds = parsed_cmd->i1;
@@ -412,7 +414,9 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
    i2c_enable_cross_instance_locks(parsed_cmd->flags & CMD_FLAG_FLOCK);
+#ifdef GET_EDID_USING_SYSFS
    force_read_edid = !(parsed_cmd->flags2 & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS);  // extern in i2c_bus_core.h
+#endif
    setvcp_verify_default = parsed_cmd->flags & CMD_FLAG_VERIFY;  // for new threads
    ddc_set_verify_setvcp(setvcp_verify_default);                 // set current thread
    set_output_level(parsed_cmd->output_level);  // current thread

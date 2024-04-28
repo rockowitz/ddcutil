@@ -53,7 +53,11 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(12, "Disable DRM services");
    REPORT_FLAG_OPTION(13, "Command C1 only report display connection changes");
    REPORT_FLAG_OPTION(14, "Command C1 only report display DPMS state changes");
+#ifdef GET_EDID_USING_SYSFS
    REPORT_FLAG_OPTION(15, "Verify sysfs EDID reads");
+#else
+   REPORT_FLAG_OPTION(15, "Unused");
+#endif
    REPORT_FLAG_OPTION(16, "Unused");
    //REPORT_FLAG_OPTION(16, "Force  Watch_Mode_Udev_I2C");
 

@@ -79,8 +79,10 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 bool drm_enabled = false;
+#ifdef GET_EDID_USING_SYSFS
 bool force_read_edid = true;
 bool verify_sysfs_edid = false;
+#endif
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool cross_instance_locks_enabled = DEFAULT_ENABLE_FLOCK;
 int  flock_poll_millisec = DEFAULT_FLOCK_POLL_MILLISEC;
@@ -714,7 +716,6 @@ void validate_sysfs_edid(int fd, I2C_Bus_Info * bus_info) {
 void i2c_check_bus(I2C_Bus_Info * bus_info) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, bus_info=%p", bus_info->busno, bus_info );
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "force_read_edid=%s", sbool(force_read_edid));
    assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
    assert( (bus_info->flags & I2C_BUS_EXISTS) &&
            (bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) &&
@@ -732,6 +733,8 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       if (bus_info->drm_connector_name) {
          bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
 
+#ifdef READ_EDID_FROM_SYSFS
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "force_read_edid=%s", sbool(force_read_edid));
          if (!force_read_edid) {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                           "Getting edid from sysfs for connector %s", bus_info->drm_connector_name);
@@ -757,6 +760,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
             if (edid_bytes)
                g_byte_array_free(edid_bytes,true);
          }
+#endif
       }
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_open_bus..");
@@ -777,9 +781,13 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           }
 #endif
 
+#ifdef READ_EDID_FROM_SYSFS
           if (bus_info->edid && verify_sysfs_edid) {
              validate_sysfs_edid(fd, bus_info);
           }
+#else
+          assert(!bus_info->edid);
+#endif
 
           if (!bus_info->edid) {
              DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
