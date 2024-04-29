@@ -133,7 +133,7 @@ Public_Status_Code try_single_getvcp_call(
       DBGMSF(debug, "read failed, errno=%s", linux_errno_desc(-rc));
       goto bye;
    }
-   rpt_vstring(depth, "read returned %s", hexstring_t(ddc_response_bytes+1,rc) );
+   rpt_vstring(depth, "read returned: %s", hexstring_t(ddc_response_bytes+1, readct) );
 
    if ( all_bytes_zero( ddc_response_bytes+1, readct) ) {
       DBGMSF(debug, "All bytes zero");
