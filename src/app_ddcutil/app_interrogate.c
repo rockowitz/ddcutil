@@ -76,6 +76,13 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    i2c_forceable_slave_addr_flag = true;
    f0printf(fout(), "Forcing --disable-cross-instance-locking...\n");
    i2c_enable_cross_instance_locks(false);
+   if (dsa2_is_enabled()) {
+      f0printf(fout(), "Dynamic sleep currently enabled, disabling...\n");
+      dsa2_enabled(false);
+   }
+   else {
+      f0printf(fout(), "Dynamic sleep currently disabled.\n");
+   }
    f0printf(fout(), "This command will take a while to run...\n\n");
 
    ddc_ensure_displays_detected();    // *** ???
