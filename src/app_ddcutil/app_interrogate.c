@@ -61,28 +61,7 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    dup2(1,2);   // redirect stderr to stdout
    // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
-   f0printf(fout(), "Setting output level very-verbose...\n");
-   set_output_level(DDCA_OL_VV);  // affects this thread only
-   f0printf(fout(), "Setting maximum retries...\n");
-   try_data_set_maxtries2(WRITE_ONLY_TRIES_OP, MAX_MAX_TRIES);
-   try_data_set_maxtries2(WRITE_READ_TRIES_OP, MAX_MAX_TRIES);
-   try_data_set_maxtries2(MULTI_PART_READ_OP,  MAX_MAX_TRIES);
-   try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
-   f0printf(fout(), "Forcing --stats...\n");
-   parsed_cmd->stats_types = DDCA_STATS_ALL;
-   f0printf(fout(), "Forcing --disable-capabilities-cache...\n");
-   enable_capabilities_cache(false);
-   f0printf(fout(), "Forcing --force-slave-address..\n");
-   i2c_forceable_slave_addr_flag = true;
-   f0printf(fout(), "Forcing --disable-cross-instance-locking...\n");
-   i2c_enable_cross_instance_locks(false);
-   if (dsa2_is_enabled()) {
-      f0printf(fout(), "Dynamic sleep currently enabled, disabling...\n");
-      dsa2_enabled(false);
-   }
-   else {
-      f0printf(fout(), "Dynamic sleep currently disabled.\n");
-   }
+   force_envcmd_settings();
    f0printf(fout(), "This command will take a while to run...\n\n");
 
    ddc_ensure_displays_detected();    // *** ???

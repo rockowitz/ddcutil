@@ -3,7 +3,7 @@
  *  Primary file for the ENVIRONMENT command
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // #define SYSENV_QUICK_TEST_RUN 1
@@ -733,6 +733,33 @@ void final_analysis(Env_Accumulator * accum, int depth) {
    }
 }
 
+
+void force_envcmd_settings(Parsed_Cmd * parsed_cmd) {
+   f0printf(fout(), "Setting output level very-verbose...\n");
+    set_output_level(DDCA_OL_VV);  // affects this thread only
+    f0printf(fout(), "Setting maximum retries...\n");
+    try_data_set_maxtries2(WRITE_ONLY_TRIES_OP, MAX_MAX_TRIES);
+    try_data_set_maxtries2(WRITE_READ_TRIES_OP, MAX_MAX_TRIES);
+    try_data_set_maxtries2(MULTI_PART_READ_OP,  MAX_MAX_TRIES);
+    try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
+    f0printf(fout(), "Forcing --stats...\n");
+    parsed_cmd->stats_types = DDCA_STATS_ALL;
+    f0printf(fout(), "Forcing --disable-capabilities-cache...\n");
+    enable_capabilities_cache(false);
+    f0printf(fout(), "Forcing --force-slave-address..\n");
+    i2c_forceable_slave_addr_flag = true;
+    f0printf(fout(), "Forcing --disable-cross-instance-locking...\n");
+    i2c_enable_cross_instance_locks(false);
+    if (dsa2_is_enabled()) {
+       f0printf(fout(), "Dynamic sleep currently enabled, disabling...\n");
+       dsa2_enabled(false);
+    }
+    else {
+       f0printf(fout(), "Dynamic sleep currently disabled.\n");
+    }
+}
+
+
 //
 // Mainline
 //
@@ -757,6 +784,8 @@ void query_sysenv(bool quick_env) {
    else if (get_output_level() >= DDCA_OL_VERBOSE) {
       rpt_label(0, "Set environment variable SYSENV_QUICK_TEST or option --quickenv to skip some long-running tests.");
    }
+
+
 
    i2c_forceable_slave_addr_flag = true;    // be a bully
 
