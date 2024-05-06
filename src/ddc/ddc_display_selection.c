@@ -162,6 +162,12 @@ bye:
 }
 
 
+/** Finds the first display reference satisfying a set of display criteria.
+ *  Phantom displays are ignored.
+ *
+ *  @param  criteria identifiers to check
+ *  @return display reference if found, NULL if not
+ */
 static Display_Ref *
 ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
    Display_Ref * result = NULL;
@@ -170,8 +176,11 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
       Display_Ref * drec = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT(memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
       if (ddc_test_display_ref_criteria(drec, criteria)) {
-         result = drec;
-         break;
+         // Ignore the match if it's a phantom display
+         if (drec->dispno != DISPNO_PHANTOM) {
+            result = drec;
+            break;
+         }
       }
    }
    return result;
@@ -179,7 +188,8 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 
 
 /** Searches the master display list for a display matching the
- *  specified #Display_Identifier, returning its #Display_Ref
+ *  specified #Display_Identifier, returning its #Display_Ref.
+ *  Phantom displays are ignored.
  *
  *  @param did display identifier to search for
  *  @return #Display_Ref for the display, NULL if not found or
@@ -239,16 +249,16 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
 
 /** Searches the detected displays for one matching the criteria in a
- *  #Display_Identifier.
+ *  #Display_Identifier. Phantom displays are ignored.
  *
  *  @param pdid  pointer to a #Display_Identifier
  *  @param callopts  standard call options
  *  @return pointer to #Display_Ref for the display, NULL if not found
  *
  *  \todo
- *  If the criteria directly specify an access path
- *  (e.g. I2C bus number) and CALLOPT_FORCE specified, then create a
- *  temporary #Display_Ref, bypassing the list of detected monitors.
+ *  If the criteria directly specify an access path (e.g. I2C bus number) and
+ *  CALLOPT_FORCE is specified, then create a temporary #Display_Ref,
+ *  bypassing the list of detected monitors.
  */
 Display_Ref *
 get_display_ref_for_display_identifier(
