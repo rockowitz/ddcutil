@@ -61,7 +61,7 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    dup2(1,2);   // redirect stderr to stdout
    // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
-   force_envcmd_settings();
+   force_envcmd_settings(parsed_cmd);
    f0printf(fout(), "This command will take a while to run...\n\n");
 
    ddc_ensure_displays_detected();    // *** ???

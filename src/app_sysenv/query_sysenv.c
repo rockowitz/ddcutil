@@ -47,13 +47,16 @@
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/rtti.h"
+#include "base/stats.h"
 
+#include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_execute.h"   // for i2c_forceable_slave_addr_flag
 #include "i2c/i2c_sysfs.h"
 
 #include "ddc/ddc_displays.h"     // for ddc_ensure_displays_detected()
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_serialize.h"
+#include "ddc/ddc_try_data.h"
 #include "ddc/ddc_watch_displays.h"
 
 #include "vcp/persistent_capabilities.h"
@@ -752,7 +755,7 @@ void force_envcmd_settings(Parsed_Cmd * parsed_cmd) {
     i2c_enable_cross_instance_locks(false);
     if (dsa2_is_enabled()) {
        f0printf(fout(), "Dynamic sleep currently enabled, disabling...\n");
-       dsa2_enabled(false);
+       dsa2_enable(false);
     }
     else {
        f0printf(fout(), "Dynamic sleep currently disabled.\n");

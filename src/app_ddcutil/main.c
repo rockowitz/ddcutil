@@ -1025,7 +1025,7 @@ main(int argc, char *argv[]) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
       if (parsed_cmd->output_level >= DDCA_OL_VERBOSE)
-         force_cmdenv_settings(parsed_cmd);
+         force_envcmd_settings(parsed_cmd);
       query_sysenv(parsed_cmd->flags & CMD_FLAG_QUICK);
       main_rc = EXIT_SUCCESS;
    }
