@@ -295,13 +295,13 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
             break;
         }
      }
-      if (lockrc != 0) {
+     if (lockrc != 0) {
          DBGTRC_NOPREFIX(true, TRACE_GROUP, "Cross instance locking failed");
          close(fd);
          unlock_display_by_dpath(dpath);
          master_error = ERRINFO_NEW(lockrc, "Cross instance locking failed. busno=%d", busno);
-      }
-   }
+     }
+ }
 
 bye:
    if (master_error) {
@@ -441,7 +441,16 @@ bool is_laptop_drm_connector_name(const char * connector_name) {
 // Check display status
 //
 
-bool i2c_check_edid_exists_by_dh(Display_Handle * dh) {
+
+/** Checks if the EDID of an existing display handle can be read
+ *  using the handle's I2C bus.  Failure indicates that the display
+ *  has been disconnected and the display handle is no longer valid.
+ *
+ *  @param  dh  display handle
+ *  @return true if the EDID can be read, false if not
+ */
+static bool
+i2c_check_edid_exists_by_dh(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dh = %s", dh_repr(dh));
 
