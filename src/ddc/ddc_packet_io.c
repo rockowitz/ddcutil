@@ -149,6 +149,12 @@ void ddc_dbgrpt_valid_display_handles(int depth) {
 }
 
 
+// TODO: generalize, move to more appropriate location
+static bool is_drm_conformant_driver(const char * driver_name) {
+   return streq(driver_name, "amdgpu") || streq(driver_name, "i915");
+}
+
+
 //
 // Open/Close Display
 //
@@ -184,7 +190,10 @@ ddc_open_display(
    int fd = -1;
   
    // DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "driver_name: %s", dref->driver_name);
-   if (dref->drm_connector && strlen(dref->drm_connector) > 0) {
+   if (is_drm_conformant_driver(dref->driver_name) &&
+       dref->drm_connector &&
+       strlen(dref->drm_connector) > 0)
+   {
       char * status;
       RPT_ATTR_TEXT(-1, &status, "/sys/class/drm", dref->drm_connector, "status");
       if (streq(status, "disconnected"))
