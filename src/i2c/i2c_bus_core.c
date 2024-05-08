@@ -464,9 +464,17 @@ i2c_check_edid_exists_by_dh(Display_Handle * dh) {
 }
 
 
+#ifdef UNUSED
+/** Attempts to read the EDID on the I2C bus specified in
+ *  a #Businfo record.
+ *
+ *  @param  businfo
+ *  @return true if the EDID can be read, false if not
+ */
 bool i2c_check_edid_exists_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno = %d", businfo->busno);
+
    bool result = false;
    int fd = -1;
    Error_Info * erec = i2c_open_bus(businfo->busno, CALLOPT_ERR_MSG, &fd);
@@ -481,9 +489,11 @@ bool i2c_check_edid_exists_by_businfo(I2C_Bus_Info * businfo) {
     }
    else
       ERRINFO_FREE(erec);
+
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
+#endif
 
 
 #ifdef OUT
@@ -512,7 +522,7 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
 #endif
 
 
-/**
+/** Tests if an open display handle is still
  *
  *  @param  dh     display handle
  *  @retval NULL   ok
@@ -534,6 +544,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 
    Error_Info * result = NULL;
    bool edid_exists = false;
+#ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
    if (businfo->drm_connector_name) {
       edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
       // edid_exists = i2c_check_bus_responsive_using_drm(businfo->drm_connector_name);  // fails for Nvidia
@@ -542,6 +553,10 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
       // read edid
       edid_exists = i2c_check_edid_exists_by_dh(dh);
    }
+#else
+   edid_exists = i2c_check_edid_exists_by_dh(dh);
+#endif
+
    if (!edid_exists) {
       result = ERRINFO_NEW(DDCRC_DISCONNECTED,
                "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
