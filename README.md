@@ -1,13 +1,3 @@
-2024-05-10
-
-I am travelling and did not have time to configure my travel laptop for github 2FA.
-For the time being I will create ddcutil and ddcui repos with a different owner, 
-most likely rockowitz2.
-
-Sanford Rockowitz
-
-
-
 ddcutil
 =======
 
