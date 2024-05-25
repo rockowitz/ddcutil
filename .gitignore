@@ -40,7 +40,7 @@ src/**/am--include-marker
 # Generated files
 ddcutil.pc
 src/public/ddcutil_macros.h
-
+docs/ddcutil-c-api
 
 # Executable
 /src/ddcutil
@@ -62,3 +62,5 @@ doxydoc/apidoc
 
 # Miscellaneous tools
 /heaptrack*
+*.tar.gz
+
