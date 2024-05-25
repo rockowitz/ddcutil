@@ -30,6 +30,7 @@
 #include "report_util.h"
 #include "string_util.h"
 #include "sysfs_filter_functions.h"
+#include "sysfs_i2c_util.h"
 #include "sysfs_util.h"
 
 #include "drm_common.h"
@@ -125,10 +126,10 @@ const char * drm_bus_type_name(uint8_t bus) {
     char * result = NULL;
 
     switch(bus) {
-           case DRM_BUS_PCI:      result = "pci";               break; // 0
-           case DRM_BUS_USB:      result = "usb";               break; // 1
-           case DRM_BUS_PLATFORM: result = "<DRM_BUS_PLATFORM>";break; // 2
-           case DRM_BUS_HOST1X:   result = "<DRM_BUS_HOSTIX>";  break; // 3
+           case DRM_BUS_PCI:      result = "pci";      break; // 0
+           case DRM_BUS_USB:      result = "usb";      break; // 1
+           case DRM_BUS_PLATFORM: result = "platform"; break; // 2
+           case DRM_BUS_HOST1X:   result = "host1x";   break; // 3
            default:               result = "unrecognized";
     }
 
