@@ -864,20 +864,39 @@ void dump_sysfs_i2c(Env_Accumulator * accum) {
    rpt_nl();
 
    consolidated_i2c_sysfs_report(0);
+   rpt_nl();
+
+   rpt_label(0, "*** All sysfs class attributes ***");
+   execute_shell_cmd("find /sys/devices -name class | xargs grep \".*\"");
+   rpt_nl();
+
    report_drm_connector_states(0);
 
    if (accum->is_arm) {
       rpt_label(0,"*** Extended dump of sysfs video devices for ARM architecture ***");
       rpt_nl();
+      GPtrArray * video_devices = get_video_adapter_devices();
+ #ifdef OLD
       GPtrArray *  video_devices =   execute_shell_cmd_collect(
-            "find /sys/devices -name class | xargs grep -il 0x03 | xargs dirname | xargs ls -lR");
-      rpt_nl();
+            "find /sys/devices -name class | xargs grep -il 0x03 | xargs dirname");
+      // "find /sys/devices -name class | xargs grep -il 0x03 | xargs dirname | xargs ls -lR");
+#endif
 
-      rpt_vstring(0, "Display devices: (class 0x03nnnn)");
-      for (int ndx = 0; ndx < video_devices->len; ndx++) {
-         char * dirname = g_ptr_array_index(video_devices, ndx);
-         rpt_vstring(2, "%s", dirname);
+      if (video_devices->len == 0) {
+         rpt_vstring(1,"No devices with class 0x03nnnn found.");
       }
+      else {
+         rpt_vstring(0, "Display devices: (class 0x03nnnn)");
+         for (int ndx = 0; ndx < video_devices->len; ndx++) {
+            char * dirname = g_ptr_array_index(video_devices, ndx);
+            rpt_vstring(2, "%s", dirname);
+            char * s = g_strdup_printf("ls -lR %s", dirname);
+            execute_shell_cmd(s);
+            free(s);
+         }
+      }
+      // g_ptr_array_set_free_func(video_devices,free);  //redundant
+      g_ptr_array_free(video_devices,true);
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
