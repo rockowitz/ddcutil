@@ -40,5 +40,8 @@ bool
 sysfs_is_ignorable_i2c_device(
       int busno);
 
+GPtrArray *
+get_video_adapter_devices();
+
 #endif /* SYSFS_I2C_UTIL_H_ */
 
