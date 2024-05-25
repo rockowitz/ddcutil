@@ -431,7 +431,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    bool result1 = all_displays_drm_using_drm_api();          // in drm_common.c
 
    // For each video adapter node in sysfs, check that subdirectories drm/cardN/cardN-xxx exist
-   bool result2 = check_all_video_adapters_implement_drm();  // in drm_common.c
+   bool result2 = check_all_video_adapters_implement_drm();  // in i2c_sysfs.c
 
 #ifdef OUT
    // Fails if nvidia driver, adapter path not filled in
