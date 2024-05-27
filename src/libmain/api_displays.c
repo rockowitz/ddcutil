@@ -587,7 +587,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
    API_PROLOGX(debug, "dh = %s", dh_repr(dh));
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
-         err = errinfo_new(DDCRC_ARG, __func__, "Invalid display handle");
+         err = ERRINFO_NEW(DDCRC_ARG, "Invalid display handle");
       }
       else {
          // TODO: ddc_close_display() needs an action if failure parm,
@@ -897,15 +897,15 @@ set_ddca_error_detail_from_open_errors() {
    GPtrArray * errs = ddc_get_bus_open_errors();
    DDCA_Status master_rc = 0;
    if (errs && errs->len > 0) {
-      Error_Info * master_error = errinfo_new(DDCRC_OTHER, __func__, "Error(s) opening ddc devices");
+      Error_Info * master_error = ERRINFO_NEW(DDCRC_OTHER, "Error(s) opening ddc devices");
       for (int ndx = 0; ndx < errs->len; ndx++) {
          Bus_Open_Error * cur = g_ptr_array_index(errs, ndx);
          Error_Info * errinfo = NULL;
          if (cur->io_mode == DDCA_IO_I2C)
-            errinfo = errinfo_new(cur->error, __func__, "Error %s opening /dev/i2c-%d",
+            errinfo = ERRINFO_NEW(cur->error, "Error %s opening /dev/i2c-%d",
                                              psc_desc(cur->error), cur->devno);
          else
-            errinfo = errinfo_new(cur->error, __func__, "Error %s opening /dev/usb/hiddev%d %s",
+            errinfo = ERRINFO_NEW(cur->error, "Error %s opening /dev/usb/hiddev%d %s",
                                              psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
          errinfo_add_cause(master_error, errinfo);
       }
