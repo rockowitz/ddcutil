@@ -283,6 +283,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
                     rpt_nl();
                     g_ptr_array_free(status_lines, true);
                  }
+                 g_ptr_array_free(pids,true);
               }
               lockrc = DDCRC_FLOCKED;
               break;
