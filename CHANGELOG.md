@@ -183,9 +183,10 @@ backwards compatible.
 
 #### Added
 - Install /usr/lib/modules-load.d/ddcutil.conf. Ensures that driver i2c-dev
-  is loaded, making configuration using group i2c unnecessary in most cases.
+  is loaded.
 - Install file /usr/share/udev/rules.d/60-ddcutil-i2c.rules, autmatically granting
   the logged on user read/write access to /dev/i2c devices for video displays.
+  For most configurations, use of group i2c is no longer unnecessary.
 - Command options not of interest to general users are now hidden when help is 
   requested.  Option ***--hh*** exposes them, and implies option ***--help***.
 - Option ***--noconfig***. Do not process the configuration file.
