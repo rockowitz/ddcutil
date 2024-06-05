@@ -4,7 +4,7 @@
  *  and applicable multipliers.
  */
 
-// Copyright (C) 2019-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -193,7 +193,7 @@ adjust_sleep_time(
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "dh=%s, Replacing adjusted sleep multiplier %3.2f with 1.00 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS",
                dh_repr(dh), dsa_multiplier);
-         SYSLOG2(DDCA_SYSLOG_WARNING,
+         SYSLOG2(DDCA_SYSLOG_VERBOSE,
                "dh=%s, Replacing adjusted sleep multiplier %3.2f with 1.00 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS",
                dh_repr(dh), dsa_multiplier);
          dsa_multiplier = 1.0;
@@ -202,7 +202,7 @@ adjust_sleep_time(
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "dh=%s, Keeping adjusted sleep multiplier %3.2f for SE_POST_WRITE or SE_POST_SAVE_SETTINGS",
                dh_repr(dh), dsa_multiplier);
-         SYSLOG2(DDCA_SYSLOG_WARNING,
+         SYSLOG2(DDCA_SYSLOG_VERBOSE,
                "dh=%s, Keeping adjusted sleep multiplier %3.2f for SE_POST_WRITE or SE_POST_SAVE_SETTINGS",
                dh_repr(dh), dsa_multiplier);
 
