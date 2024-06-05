@@ -296,9 +296,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
 #endif
                 if (businfo->flags & I2C_BUS_LVDS_OR_EDP)
-                   msg = "This is a laptop display.  Laptop displays do not support DDC/CI";
+                   msg = "This is a laptop display.  Laptop displays do not support DDC/CI.";
                 else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP)
-                   msg = "This appears to be a laptop display.  Laptop displays do not support DDC/CI";
+                   msg = "This appears to be a laptop display.  Laptop displays do not support DDC/CI.";
                 else if (drm_dpms || drm_status || drm_enabled) {
                    if (drm_dpms && !streq(drm_dpms,"On")) {
                       rpt_vstring(d1, "DRM reports the monitor is in a DPMS sleep state (%s).", drm_dpms);
