@@ -37,4 +37,18 @@ DDCA_Status  ddc_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc
 bool         is_watch_thread_executing();
 void         init_ddc_watch_displays();
 
+
+#define WATCH_DISPLAYS_DATA_MARKER "WDDM"
+typedef struct {
+   char                     marker[4];
+   pid_t                    main_process_id;
+   pid_t                    main_thread_id;
+   DDCA_Display_Event_Class event_classes;
+// #ifdef OLD_HOTPLUG_VERSION
+   Display_Change_Handler display_change_handler;
+   Bit_Set_32             drm_card_numbers;
+// #endif
+} Watch_Displays_Data;
+
+
 #endif /* DDC_WATCH_DISPLAYS_H_ */
