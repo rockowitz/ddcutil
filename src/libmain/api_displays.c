@@ -891,30 +891,37 @@ ddca_get_display_info(
 }
 
 
-STATIC DDCA_Status
+STATIC void
 set_ddca_error_detail_from_open_errors() {
    bool debug = false;
    GPtrArray * errs = ddc_get_bus_open_errors();
-   DDCA_Status master_rc = 0;
+   // DDCA_Status master_rc = 0;
    if (errs && errs->len > 0) {
       Error_Info * master_error = ERRINFO_NEW(DDCRC_OTHER, "Error(s) opening ddc devices");
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error(s) opening ddc devices");
       for (int ndx = 0; ndx < errs->len; ndx++) {
          Bus_Open_Error * cur = g_ptr_array_index(errs, ndx);
          Error_Info * errinfo = NULL;
-         if (cur->io_mode == DDCA_IO_I2C)
+         if (cur->io_mode == DDCA_IO_I2C) {
             errinfo = ERRINFO_NEW(cur->error, "Error %s opening /dev/i2c-%d",
                                              psc_desc(cur->error), cur->devno);
-         else
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error %s opening /dev/i2c-%d",
+                                             psc_desc(cur->error), cur->devno);
+         }
+         else {
             errinfo = ERRINFO_NEW(cur->error, "Error %s opening /dev/usb/hiddev%d %s",
                                              psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error %s opening /dev/usb/hiddev%d %s",
+                  psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
+         }
          errinfo_add_cause(master_error, errinfo);
       }
-      master_rc = master_error->status_code;
+      // master_rc = master_error->status_code;
       DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
       errinfo_free_with_report(master_error, debug, __func__);
       save_thread_error_detail(public_error_detail);
    }
-   return master_rc;
+   // return master_rc;
 }
 
 
@@ -958,7 +965,8 @@ ddca_get_display_refs(
    *drefs_loc = result_list;
    assert(*drefs_loc);
 
-   ddcrc = set_ddca_error_detail_from_open_errors();
+   set_ddca_error_detail_from_open_errors();
+   ddcrc = 0;
 
    API_EPILOG(debug, ddcrc, "Returned list has %d displays", dref_ct);
 }
@@ -1008,7 +1016,8 @@ ddca_get_display_info_list2(
       dbgrpt_display_info_list(result_list, 2);
    }
 
-   ddcrc = set_ddca_error_detail_from_open_errors();
+   set_ddca_error_detail_from_open_errors();
+   ddcrc = 0;
    *dlist_loc = result_list;
    assert(*dlist_loc);
 
