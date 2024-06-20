@@ -176,6 +176,7 @@ GPtrArray * get_sys_video_devices();
 char * get_drm_connector_name_by_busno(int busno);
 char * get_drm_connector_name_by_edid(Byte * edid_bytes);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name);
+Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
 bool   is_drm_display_by_busno(int busno);
 
 

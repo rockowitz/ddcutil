@@ -1273,7 +1273,7 @@ int sys_drm_get_busno_by_connector(const char * connector_name) {
  *  @param  I2C bus number
  *  @return pointer to instance, NULL if not found
  */
-static Sys_Drm_Connector *
+Sys_Drm_Connector *
 find_sys_drm_connector_by_busno(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
