@@ -2,7 +2,7 @@
  *
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_BUS_BASE_H_
@@ -34,6 +34,7 @@
 #define I2C_BUS_LVDS_OR_EDP           0x4000
 #define I2C_BUS_APPARENT_LAPTOP       0x2000
 #define I2C_BUS_LAPTOP                (I2C_BUS_LVDS_OR_EDP | I2C_BUS_APPARENT_LAPTOP)
+#define I2C_BUS_DISPLAYLINK           0x1000
 
 typedef enum {
    DRM_CONNECTOR_NOT_CHECKED    = 0,    // ??? needed?
