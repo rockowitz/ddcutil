@@ -79,10 +79,10 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 bool drm_enabled = false;
-#ifdef GET_EDID_USING_SYSFS
+// #ifdef GET_EDID_USING_SYSFS
 bool force_read_edid = true;
 bool verify_sysfs_edid = false;
-#endif
+// #endif
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool cross_instance_locks_enabled = DEFAULT_ENABLE_FLOCK;
 int  flock_poll_millisec = DEFAULT_FLOCK_POLL_MILLISEC;
@@ -731,6 +731,21 @@ void validate_sysfs_edid(int fd, I2C_Bus_Info * bus_info) {
 }
 
 
+bool is_displaylink_device(int busno) {
+   bool debug = false;
+   bool result = false;
+   char bus_path[40];
+   g_snprintf(bus_path, 40, "/sys/bus/i2c/devices/i2c-%d", busno);
+   char * name;
+   RPT_ATTR_TEXT((debug)? 1 : -1, &name, bus_path, "name");
+   if (name) {
+      result =  streq(name, "DisplayLink I2C Adapter");
+      free(name);
+   }
+   return result;
+}
+
+
 /** Inspects an I2C bus.
  *
  *  Takes the number of the bus to be inspected from the #I2C_Bus_Info struct passed
@@ -752,15 +767,22 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Probing");
       bus_info->flags |= I2C_BUS_PROBED;
       bus_info->driver = get_driver_for_busno(bus_info->busno);
-      bus_info->drm_connector_name = get_drm_connector_name_by_busno(bus_info->busno);
+      Sys_Drm_Connector * sys_drm_connector =  find_sys_drm_connector_by_busno(bus_info->busno);
+      // bus_info->drm_connector_name = get_drm_connector_name_by_busno(bus_info->busno);
+
       bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       // connector = NULL;   // *** TEST ***
-      if (bus_info->drm_connector_name) {
+      if (sys_drm_connector) {
+         bus_info->drm_connector_name = strdup(sys_drm_connector->connector_name);
          bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
+         if (streq(sys_drm_connector->name, "DisplayLink I2C Adapter") ) {
+            bus_info->flags |= I2C_BUS_DISPLAYLINK;
+         }
 
-#ifdef READ_EDID_FROM_SYSFS
+
+// #ifdef READ_EDID_FROM_SYSFS
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "force_read_edid=%s", sbool(force_read_edid));
-         if (!force_read_edid) {
+         if ( (bus_info->flags&I2C_BUS_DISPLAYLINK) || !force_read_edid) {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                           "Getting edid from sysfs for connector %s", bus_info->drm_connector_name);
             GByteArray*  edid_bytes = NULL;
@@ -785,7 +807,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
             if (edid_bytes)
                g_byte_array_free(edid_bytes,true);
          }
-#endif
+// #endif
       }
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_open_bus..");
@@ -810,8 +832,8 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           if (bus_info->edid && verify_sysfs_edid) {
              validate_sysfs_edid(fd, bus_info);
           }
-#else
-          assert(!bus_info->edid);
+// #else
+//          assert(!bus_info->edid);
 #endif
 
           if (!bus_info->edid) {
@@ -837,7 +859,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           }
 
           // Check if laptop
-          if (bus_info->edid) {
+          if (bus_info->edid && !(bus_info->flags&I2C_BUS_DISPLAYLINK)) {
              if (bus_info->drm_connector_name) {
                 if ( is_laptop_drm_connector_name(bus_info->drm_connector_name) ) {
                    // double check, eDP has been seen to be applied to external display, see:
