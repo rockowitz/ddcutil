@@ -899,6 +899,28 @@ void dump_sysfs_i2c(Env_Accumulator * accum) {
       g_ptr_array_free(video_devices,true);
    }
 
+   rpt_label(0,"*** Examining displaylink related attributes ***");
+   rpt_nl();
+   GPtrArray * displaylink_devices = execute_shell_cmd_collect(
+         "find /sys -name \"evdi*\"");
+   if (displaylink_devices->len == 0) {
+      rpt_vstring(1,"No displaylink devices found.");
+   }
+   else {
+      rpt_vstring(0, "Displaylink devices:");
+      for (int ndx = 0; ndx < displaylink_devices->len; ndx++) {
+         char * dirname = g_ptr_array_index(displaylink_devices, ndx);
+         rpt_vstring(2, "%s", dirname);
+         char * s = g_strdup_printf("ls -lR %s", dirname);
+         execute_shell_cmd(s);
+         free(s);
+      }
+   }
+   // g_ptr_array_set_free_func(displaylink_devices,free);  //redundant
+   g_ptr_array_free(displaylink_devices,true);
+
+
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
