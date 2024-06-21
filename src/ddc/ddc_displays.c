@@ -1650,7 +1650,6 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  @param   require_not_asleep
  *  @retval  DDCRC_OK
  *  @retval  DDCRC_ARG             dref is null or does not point to a Display_Ref
- *  @retval  DDCRC_INTERNAL_ERROR  dref->drm_connector == NULL
  *  @retval  DDCRC_DISCONNECTED    display has been disconnected
  *  @retval  DDCRC_DPMS_ASLEEP     possible if require_not_asleep == true
  */
@@ -1660,22 +1659,23 @@ ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_a
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s, require_not_asleep=%s",
          dref, dref_repr_t(dref), sbool(require_not_asleep));
    assert(all_display_refs);
-   
-   int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
+
    DDCA_Status ddcrc = DDCRC_OK;
    if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0)
          ddcrc = DDCRC_ARG;
    // else if (dref->dispno < 0)   // cause of ddcui issue  #55
    //    ddcrc = DDCRC_ARG;
-   else if (drm_enabled && !basic_only) {
-      if (!dref->drm_connector)
-         ddcrc = DDCRC_INTERNAL_ERROR;
-      else if (dref->flags & DREF_REMOVED)
-         ddcrc = DDCRC_DISCONNECTED;
+   else if (dref->flags & DREF_REMOVED)
+      ddcrc = DDCRC_DISCONNECTED;
+   else if (drm_enabled && dref->drm_connector && !basic_only) {
+      // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
+      // if (!dref->drm_connector)
+      //   ddcrc = DDCRC_INTERNAL_ERROR;
       // wrong, bug in driver, edid persists after disconnection
-      else if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
-         ddcrc = DDCRC_DISCONNECTED;
-      else if (require_not_asleep && dpms_check_drm_asleep_by_connector(dref->drm_connector))
+      // else if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
+      //    ddcrc = DDCRC_DISCONNECTED;
+      // else
+      if (require_not_asleep && dpms_check_drm_asleep_by_connector(dref->drm_connector))
          ddcrc = DDCRC_DPMS_ASLEEP;
    }
 
