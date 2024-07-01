@@ -58,8 +58,8 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 #else
    REPORT_FLAG_OPTION(15, "Unused");
 #endif
-   REPORT_FLAG_OPTION(16, "Unused");
-   //REPORT_FLAG_OPTION(16, "Force  Watch_Mode_Udev_I2C");
+   // REPORT_FLAG_OPTION(16, "Simple report /sys/class/drm");
+   REPORT_FLAG_OPTION(16, "Force  Watch_Mode_Udev_I2C");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra seconds to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZE_SECS);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
