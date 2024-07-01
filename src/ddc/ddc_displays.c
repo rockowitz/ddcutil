@@ -505,6 +505,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          DBGTRC(debug, TRACE_GROUP, "Laptop display definitely detected, not checking feature x10");
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       }
+      else if (businfo->flags & I2C_BUS_ADDR_0X37) {
+         DBGTRC(debug, TRACE_GROUP, "Slave address x37 not responsive, not checking feature x10");
+         dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+      }
       else {
          DDCA_Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
          Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
