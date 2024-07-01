@@ -381,7 +381,7 @@ create_vcp_feature_set(
    assert(subset_id);
    assert(subset_id != VCP_SUBSET_SINGLE_FEATURE);
 
-   bool debug = true;
+   bool debug = false;
 
    DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
