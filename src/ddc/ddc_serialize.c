@@ -1,6 +1,6 @@
 /** @file ddc_serialize.c */
 
-// Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -55,7 +55,7 @@ Display_Ref * ddc_find_deserialized_display(int busno, Byte* edidbytes) {
       }
    }
    if (result)
-      DBGTRC_RET_STRUCT(debug, DDCA_TRC_DDCIO, Display_Ref, dbgrpt_display_ref, result);
+      DBGTRC_RET_STRUCT(debug, DDCA_TRC_DDCIO, Display_Ref, dbgrpt_display_ref0, result);
    else
       DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "Not found. Returning NULL");
    return result;
@@ -135,7 +135,7 @@ json_t* serialize_one_display(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "dref=%s", dref_repr_t(dref));
    if (debug)
-      dbgrpt_display_ref(dref, 2);
+      dbgrpt_display_ref(dref, true, 2);
 
    json_t * jtmp = NULL;
    json_t * jdisp = json_object();
@@ -314,7 +314,7 @@ Display_Ref *  deserialize_one_display(json_t* disp_node) {
       dref->driver_name = g_strdup(json_string_value(jtmp));
    }
 
-   DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, Display_Ref, dbgrpt_display_ref, dref);
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, Display_Ref, dbgrpt_display_ref0, dref);
    return dref;
 }
 
