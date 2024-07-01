@@ -583,7 +583,7 @@ ddca_format_any_vcp_value_by_dref(
          {
                if (debug || IS_TRACING()) {
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
-                  dbgrpt_display_ref(dref,1);
+                  dbgrpt_display_ref(dref,true, 1);
                }
                ddcrc = ddci_format_any_vcp_value(
                          feature_code,
@@ -674,7 +674,7 @@ ddca_format_non_table_vcp_value_by_dref(
          {
                if (debug || IS_TRACING()) {
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
-                  dbgrpt_display_ref(dref,1);
+                  dbgrpt_display_ref(dref, true, 1);
                }
                ddcrc = ddci_format_non_table_vcp_value(
                          feature_code,
@@ -742,7 +742,7 @@ ddca_format_table_vcp_value_by_dref(
          {
                if (debug || IS_TRACING()) {
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
-                  dbgrpt_display_ref(dref,1);
+                  dbgrpt_display_ref(dref,true,1);
                }
               ddcrc = ddci_format_table_vcp_value(
                          feature_code,
