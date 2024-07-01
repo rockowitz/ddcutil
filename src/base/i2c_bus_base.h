@@ -86,7 +86,7 @@ I2C_Bus_Info *   i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int 
 int              i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno);
 
 // Reports
-void             i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth);
+void             i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth);
 
 // Detected Buses
 extern GPtrArray * all_i2c_buses;
@@ -97,7 +97,8 @@ void             i2c_check_attached_buses(Bit_Set_256* newly_attached_buses_loc,
                                           Bit_Set_256* newly_detached_buses_loc);
 I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
 I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
-int              i2c_dbgrpt_buses(bool report_all, int depth);  // Reports all detected i2c buses
+int              i2c_dbgrpt_buses(bool report_all, bool include_sysfs_info, int depth);  // Reports all detected i2c buses
+void             i2c_dbgrpt_buses_summary(int depth);
 
 // Basic I2C bus operations
 bool             i2c_device_exists(int busno); // Simple bus detection, no side effects

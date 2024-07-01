@@ -129,7 +129,7 @@ void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
    }
    if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Final bus_info:");
-      i2c_dbgrpt_bus_info(bus_info, 2);
+      i2c_dbgrpt_bus_info(bus_info, true, 2);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -156,14 +156,15 @@ char * i2c_get_drm_connector_name(I2C_Bus_Info * businfo) {
 
 /** Reports on a single I2C bus.
  *
- *  \param   businfo    pointer to Bus_Info structure describing bus
- *  \param   depth      logical indentation depth
+ *  \param   businfo         pointer to Bus_Info structure describing bus
+ *  \param   include_sysinfo report I2C_Sys_Info for bus
+ *  \param   depth           logical indentation depth
  *
  *  \remark
  *  Although this is a debug type report, it is called (indirectly) by the
  *  ENVIRONMENT command.
  */
-void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth) {
+void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    assert(businfo);
@@ -205,9 +206,11 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(depth, "last_checked_asleep:       %s", sbool(businfo->last_checked_dpms_asleep));
    }
 #ifndef TARGET_BSD
-   I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
-   dbgrpt_i2c_sys_info(info, depth);
-   free_i2c_sys_info(info);
+   if (include_sysinfo) {
+      I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
+      dbgrpt_i2c_sys_info(info, depth);
+      free_i2c_sys_info(info);
+   }
 #endif
    DBGMSF(debug, "Done");
 }
@@ -282,9 +285,9 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
          existing->busno, existing, new);
    if ( IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Initial bus info:");
-      i2c_dbgrpt_bus_info(existing, 4);
+      i2c_dbgrpt_bus_info(existing, true, 4);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new bus info:");
-      i2c_dbgrpt_bus_info(new, 4);
+      i2c_dbgrpt_bus_info(new, true, 4);
    }
 
    if (existing->edid) {
@@ -325,7 +328,7 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
 
    if ( IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updated bus info:");
-      i2c_dbgrpt_bus_info(existing, 4);
+      i2c_dbgrpt_bus_info(existing, true, 4);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -433,7 +436,7 @@ I2C_Bus_Info * i2c_get_bus_info_by_index(guint busndx) {
  * @remark
  * Used by query-sysenv.c, always OL_VERBOSE
  */
-int i2c_dbgrpt_buses(bool report_all, int depth) {
+int i2c_dbgrpt_buses(bool report_all, bool include_sysfs_info, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "report_all=%s", sbool(report_all));
 
@@ -451,7 +454,7 @@ int i2c_dbgrpt_buses(bool report_all, int depth) {
       I2C_Bus_Info * busInfo = g_ptr_array_index(all_i2c_buses, ndx);
       if ( (busInfo->flags & I2C_BUS_ADDR_0X50) || report_all) {
          rpt_nl();
-         i2c_dbgrpt_bus_info(busInfo, depth);
+         i2c_dbgrpt_bus_info(busInfo, include_sysfs_info, depth);
          reported_ct++;
       }
    }
@@ -460,6 +463,33 @@ int i2c_dbgrpt_buses(bool report_all, int depth) {
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d", reported_ct);
    return reported_ct;
+}
+
+
+void i2c_dbgrpt_buses_summary(int depth) {
+   Bit_Set_256 buses_all = EMPTY_BIT_SET_256;
+   Bit_Set_256 buses_x50 = EMPTY_BIT_SET_256;
+   Bit_Set_256 buses_x37 = EMPTY_BIT_SET_256;
+
+   assert(all_i2c_buses);
+   int busct = all_i2c_buses->len;
+   for (int ndx = 0; ndx < busct; ndx++) {
+      I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
+      int busno = businfo->busno;
+      buses_all = bs256_insert(buses_all, busno);
+      ASSERT_IFF( businfo->flags & I2C_BUS_ADDR_0X50, businfo->edid);
+      if ( (businfo->flags & I2C_BUS_ADDR_0X50) ) {
+         buses_x50 = bs256_insert(buses_x50, busno);
+         if ( (businfo->flags & I2C_BUS_ADDR_0X37) ) {
+            buses_x37 = bs256_insert(buses_x37, busno);
+         }
+      }
+   }
+
+   rpt_vstring(depth, "Number of buses:       %d", bs256_count(buses_all));
+   rpt_vstring(depth, "All I2C buses:         %s", bs256_to_string_decimal_t(buses_all, "", " "));
+   rpt_vstring(depth, "Buses with edid:       %s", bs256_to_string_decimal_t(buses_x50, "", " "));
+   rpt_vstring(depth, "Buses with x37 active: %s", bs256_to_string_decimal_t(buses_x37, "", " "));
 }
 
 
