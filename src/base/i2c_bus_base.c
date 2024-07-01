@@ -429,6 +429,7 @@ I2C_Bus_Info * i2c_get_bus_info_by_index(guint busndx) {
  *
  * @param report_all    if false, only reports buses with monitors,\n
  *                      if true, reports all detected buses
+ * @param include_sysfs_info include sysfs information in report
  * @param depth         logical indentation depth
  *
  * @return count of reported buses
