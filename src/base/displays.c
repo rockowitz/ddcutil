@@ -480,10 +480,10 @@ Display_Ref * create_bus_display_ref(int busno) {
    dref->driver_name = get_i2c_sysfs_driver_by_busno(busno);
    if (debug) {
       DBGMSG("Done.  Constructed bus display ref %s:", dref_repr_t(dref));
-      dbgrpt_display_ref(dref,0);
+      dbgrpt_display_ref(dref, true, 0);
    }
 
-   DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref0, dref);
    return dref;
 }
 
@@ -516,7 +516,7 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
       dbgrpt_display_ref(dref,0);
    }
 #endif
-   DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref0, dref);
    // DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
    return dref;
 }
@@ -650,7 +650,7 @@ bool dref_get_alive(Display_Ref * dref) {
  *  \param  dref  pointer to #Display_Ref instance
  *  \param  depth logical indentation depth
  */
-void dbgrpt_display_ref(Display_Ref * dref, int depth) {
+void dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_repr_t(dref));
    int d1 = depth+1;
@@ -678,10 +678,10 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_vstring(d1, "actual_display_path: %s",
          (dref->actual_display_path) ? dpath_repr_t(dref->actual_display_path) : "NULL");
    rpt_vstring(d1, "detail:         %p", dref->detail);
-   if (dref->io_path.io_mode == DDCA_IO_I2C) {
+   if (dref->io_path.io_mode == DDCA_IO_I2C && include_businfo) {
       I2C_Bus_Info * businfo = dref->detail;
       if (businfo) {
-         i2c_dbgrpt_bus_info(businfo, d2);
+         i2c_dbgrpt_bus_info(businfo, true, d2);
       }
    }
    rpt_vstring(d1, "drm_connector:   %s", dref->drm_connector);
@@ -689,6 +689,10 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
+// for use by DBGTRC_RET_STRUCT()
+void dbgrpt_display_ref0(Display_Ref * dref, int depth) {
+   dbgrpt_display_ref(dref, true, depth);
+}
 
 /** Thread safe function that returns a short description of a #Display_Ref.
  *  The returned value is valid until the next call to this function on
@@ -719,6 +723,32 @@ char * dref_repr_t(Display_Ref * dref) {
 #else
    g_snprintf(buf, 100, "Display_Ref[%s]", dpath_short_name_t(&dref->io_path));
 #endif
+   else
+      strcpy(buf, "Display_Ref[NULL]");
+   return buf;
+}
+
+
+/** Thread safe function that returns an extended string representation
+ *  of a #Display_Ref, suitable for diagnostic messages.
+ *  The representation includes the address of the #Display_Ref and
+ *  an indication if the display reference is for a disconnected monitor.
+ *
+ *  The returned value is valid until the next call to this function on
+ *  the current thread.
+ *
+ *  \param  dref  pointer to #Display_Ref
+ *  \return string representation of #Display_Ref
+ */
+char * dref_reprx_t(Display_Ref * dref) {
+   static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
+   if (dref)
+      g_snprintf(buf, 100, "Display_Ref[%s%s @%p]",
+            (dref->flags & DREF_REMOVED) ? "Disconnected:" : "",
+            dpath_short_name_t(&dref->io_path),
+            (void*) dref);
    else
       strcpy(buf, "Display_Ref[NULL]");
    return buf;

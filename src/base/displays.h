@@ -202,9 +202,11 @@ typedef struct _display_ref {
 Display_Ref * create_base_display_ref(DDCA_IO_Path io_path);
 Display_Ref * create_bus_display_ref(int busno);
 Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname);
-void          dbgrpt_display_ref(Display_Ref * dref, int depth);
+void          dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth);
+void          dbgrpt_display_ref0(Display_Ref * dref, int depth);
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
+char *        dref_reprx_t(Display_Ref * dref);  // value valid until next call
 DDCA_Status   free_display_ref(Display_Ref * dref);
 Display_Ref * copy_display_ref(Display_Ref * dref);
 
