@@ -812,6 +812,14 @@ ddc_get_filtered_display_refs(bool include_invalid_displays) {
    return result;
 }
 
+void ddc_dbgrpt_display_refs(bool include_invalid_displays, bool report_businfo, int depth) {
+   GPtrArray * drefs = ddc_get_filtered_display_refs(include_invalid_displays);
+   rpt_vstring(depth, "Reporting %d display refs", drefs->len);
+   for (int ndx = 0; ndx < drefs->len; ndx++) {
+      dbgrpt_display_ref(g_ptr_array_index(drefs, ndx), false, depth+1);
+   }
+}
+
 #ifdef UNUSED
 Display_Ref *
 ddc_get_display_ref_by_drm_connector(
@@ -1818,7 +1826,8 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
    i2c_check_bus(businfo);   // needed?
    if (businfo->flags & I2C_BUS_ADDR_0X50) {
       dref = create_bus_display_ref(businfo->busno);
-      dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
+      // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
+      dref->dispno = 99;   // dispno not used in libddcutil except to indicate invalid
       dref->pedid = copy_parsed_edid(businfo->edid);
       dref->mmid  = monitor_model_key_new(
                        dref->pedid->mfg_id,
@@ -1842,7 +1851,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No display detected on bus %d", businfo->busno);
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref %s", dref_repr_t(dref));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref %s", dref_reprx_t(dref), dref);
    return dref;
 }
 
@@ -1868,7 +1877,7 @@ Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    if (dref) {
       assert(!(dref->flags & DREF_REMOVED));  // it was checked in the ddc_get_dref_by_busno_or_connector() call
       dref->flags |= DREF_REMOVED;
-      // dref->detail = NULL;
+      dref->detail = NULL;
       // ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
       //                                 businfo->drm_connector_name,
       //                                 dref, dref->io_path);
