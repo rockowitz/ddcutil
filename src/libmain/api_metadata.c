@@ -608,7 +608,7 @@ ddca_get_feature_metadata_by_dh(
          ddca_dh, psc,
          {
                if (debug)
-                  dbgrpt_display_ref(dh->dref, 1);
+                  dbgrpt_display_ref(dh->dref, true, 1);
 
                DDCA_Feature_Metadata * external_metadata = NULL;
                Display_Feature_Metadata * internal_metadata =
