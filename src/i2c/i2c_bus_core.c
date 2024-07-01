@@ -1093,7 +1093,7 @@ GPtrArray * i2c_detect_buses0() {
    if (debug) {
       for (int ndx = 0; ndx < buses->len; ndx++) {
          I2C_Bus_Info * businfo = g_ptr_array_index(buses, ndx);
-         i2c_dbgrpt_bus_info(businfo, 0);
+         i2c_dbgrpt_bus_info(businfo, true, 0);
       }
    }
 
@@ -1199,7 +1199,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
       businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
       i2c_check_bus(businfo);
       if (debug)
-         i2c_dbgrpt_bus_info(businfo, 0);
+         i2c_dbgrpt_bus_info(businfo, true, 0);
       g_ptr_array_add(all_i2c_buses, businfo);
    }
 
