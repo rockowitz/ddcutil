@@ -2417,6 +2417,53 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
 }
 
 
+static
+void simple_report_one_connector(
+      const char * dirname,     // <device>/drm/cardN
+      const char * simple_fn,   // card0-HDMI-1 etc
+      void *       data,
+      int          depth)
+{
+   bool debug = false;
+   int d1 = depth+1;
+   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+   assert(dirname);
+   assert(simple_fn);
+
+   rpt_nl();
+   rpt_vstring(depth, "Connector: %s", simple_fn);
+   GByteArray * edid_byte_array;
+   RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "enabled");
+   RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "status");
+   RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "dpms");
+   RPT_ATTR_EDID(d1, &edid_byte_array, dirname, simple_fn, "edid");
+
+   if (edid_byte_array)
+      g_byte_array_free(edid_byte_array, true);
+
+   DBGMSF(debug, "Done");
+}
+
+
+void dbgrpt_simple_drm_probe(int depth) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   int d0 = depth;
+   rpt_nl();
+   char * dname = "/sys/class/drm";
+
+   rpt_vstring(d0, "*** Examining %s ***", dname);
+   dir_filtered_ordered_foreach(
+                dname,
+                is_card_connector_dir,   // filter function
+                NULL,                    // ordering function
+                simple_report_one_connector,
+                NULL,                    // accumulator
+                depth);
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
 /** Module initialization */
 void init_i2c_sysfs() {
 
