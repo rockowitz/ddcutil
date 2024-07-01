@@ -3,7 +3,7 @@
  *  Query environment using /sys file system
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef QUERY_SYSENV_SYSFS_H_
@@ -12,10 +12,10 @@
 #include "query_sysenv_base.h"
 
 typedef struct {
-   ushort   vendor_id;
-   ushort   device_id;
-   ushort   subdevice_id;    // subsystem device id
-   ushort   subvendor_id;    // subsystem vendor id
+   unsigned short int   vendor_id;
+   unsigned short int   device_id;
+   unsigned short int   subdevice_id;    // subsystem device id
+   unsigned short int   subvendor_id;    // subsystem vendor id
 } Device_Ids;
 Device_Ids read_device_ids1(char * cur_dir_name);
 Device_Ids read_device_ids2(char * cur_dir_name);
