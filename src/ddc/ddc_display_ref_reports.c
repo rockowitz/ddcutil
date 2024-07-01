@@ -266,9 +266,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          I2C_Bus_Info * bus_info = dref->detail;
          if (!(bus_info->flags & I2C_BUS_LVDS_OR_EDP) && bus_info->flags & I2C_BUS_ADDR_0X37) {
             rpt_vstring(d1, "DDC communication failed");
-            if (output_level >= DDCA_OL_VERBOSE)
-            if (dref->communication_error_summary) {
-               rpt_vstring(d1, "Failure detail: getvcp of feature x10 returned %s", dref->communication_error_summary);
+            if (output_level >= DDCA_OL_VERBOSE && dref->communication_error_summary) {
+               rpt_vstring(d1, "Failure detail: getvcp of feature x10 returned %s",
+                               dref->communication_error_summary);
             }
          }
          char msgbuf[100] = {0};
