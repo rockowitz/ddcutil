@@ -2445,7 +2445,12 @@ void simple_report_one_connector(
 }
 
 
-void dbgrpt_simple_drm_probe(int depth) {
+/** Reports sysfs attributes enabled, status, dpms, and edid
+ *  for each DRM connector.
+ *
+ *  @param depth  logical indentation depth
+ */
+void dbgrpt_sysfs_basic_connector_attributes(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    int d0 = depth;

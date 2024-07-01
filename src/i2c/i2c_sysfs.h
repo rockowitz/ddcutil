@@ -200,7 +200,7 @@ Sysfs_Connector_Names copy_sysfs_connector_names_struct(Sysfs_Connector_Names or
 
 char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
 
-void dbgrpt_simple_drm_probe(int depth);    // for testing display attach/detach
+void dbgrpt_sysfs_basic_connector_attributes(int depth);    // for testing display attach/detach
 
 void init_i2c_sysfs();
 void terminate_i2c_sysfs();
