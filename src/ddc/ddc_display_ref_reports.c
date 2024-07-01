@@ -301,7 +301,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                 else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP)
                    msg = "This appears to be a laptop display.  Laptop displays do not support DDC/CI.";
                 else if (!(businfo->flags & I2C_BUS_ADDR_0X37)) {
-                   msg = "This monitor does not support DDC. (I2C slave address x37 is unresponsive.)";
+                   msg = "This monitor does not support DDC/CI. (I2C slave address x37 is unresponsive.)";
                    vmsg = "If the monitor's on screen display has a DDC/CI setting, check it is enabled.";
                 }
                 else if (drm_dpms || drm_status || drm_enabled) {
