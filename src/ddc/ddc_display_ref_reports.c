@@ -299,6 +299,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                    msg = "This is a laptop display.  Laptop displays do not support DDC/CI.";
                 else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP)
                    msg = "This appears to be a laptop display.  Laptop displays do not support DDC/CI.";
+                else if (!(businfo->flags & I2C_BUS_ADDR_0X37)) {
+                   msg = "Monitor does not support DDC. (I2C slave address x37 unresponsive.)";
+                }
                 else if (drm_dpms || drm_status || drm_enabled) {
                    if (drm_dpms && !streq(drm_dpms,"On")) {
                       rpt_vstring(d1, "DRM reports the monitor is in a DPMS sleep state (%s).", drm_dpms);
@@ -647,7 +650,7 @@ ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_structure_loc("Display_Ref", dref, depth);
    rpt_int("dispno", NULL, dref->dispno, d1);
 
-   dbgrpt_display_ref(dref, d1);
+   dbgrpt_display_ref(dref, true, d1);
 
    rpt_vstring(d1, "io_mode: %s", io_mode_name(dref->io_path.io_mode));
    switch(dref->io_path.io_mode) {
@@ -655,7 +658,7 @@ ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
          rpt_vstring(d1, "I2C bus information: ");
          I2C_Bus_Info * businfo = dref->detail;
          TRACED_ASSERT( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0);
-         i2c_dbgrpt_bus_info(businfo, d2);
+         i2c_dbgrpt_bus_info(businfo, true, d2);
          break;
    case(DDCA_IO_USB):
 #ifdef ENABLE_USB
@@ -690,7 +693,7 @@ ddc_dbgrpt_drefs(char * msg, GPtrArray * ptrarray, int depth) {
       for (int ndx = 0; ndx < ptrarray->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(ptrarray, ndx);
          TRACED_ASSERT(dref);
-         dbgrpt_display_ref(dref, d1);
+         dbgrpt_display_ref(dref, true, d1);
       }
    }
 }
