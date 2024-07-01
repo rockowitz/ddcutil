@@ -46,9 +46,10 @@
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+#include "i2c/i2c_sysfs.h"
+
 #include "ddc_displays.h"
 #include "ddc_multi_part_io.h"
-
 #include "ddc_serialize.h"
 #include "ddc_services.h"
 #include "ddc_try_data.h"
@@ -467,6 +468,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->flags & CMD_FLAG_DISCARD_CACHES) {
       i2c_discard_caches(parsed_cmd->discarded_cache_types);
    }
+   // if (parsed_cmd->flags & CMD_FLAG2_F16)
+   //    dbgrpt_sysfs_basic_connector_attributes(1);
 
    init_performance_options(parsed_cmd);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
