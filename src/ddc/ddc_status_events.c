@@ -179,7 +179,7 @@ void ddc_emit_display_status_record(
 
 
 /** Assembles a #DDCA_Display_Status_Event record and either calls
- *  #ddc_emit_display_status_record to emit it immediately or adds it to
+ *  #ddc_emit_display_status_record to emit it immediately or adds it
  *  to a queue of event records
  *
  *  @param  event_type  e.g. DDCA_EVENT_CONNECTED, DDCA_EVENT_AWAKE
@@ -189,7 +189,7 @@ void ddc_emit_display_status_record(
  *  @param  io_path     for DDCA_EVENT_BUS_ATTACHED or DDCA_EVENT_BUS_DETACHED
  *  @param  queue       if non-null, append status event record
  */
-void ddc_emit_display_status_event(
+void ddc_emit_or_queue_display_status_event(
       DDCA_Display_Event_Type event_type,
       const char *            connector_name,
       Display_Ref*            dref,
@@ -233,7 +233,7 @@ void ddc_emit_display_status_event(
 
 
 void init_ddc_status_events() {
-   RTTI_ADD_FUNC(ddc_emit_display_status_event);
+   RTTI_ADD_FUNC(ddc_emit_or_queue_display_status_event);
    RTTI_ADD_FUNC(ddc_emit_display_status_record);
    RTTI_ADD_FUNC(ddc_register_display_status_callback);
    RTTI_ADD_FUNC(ddc_unregister_display_status_callback);
