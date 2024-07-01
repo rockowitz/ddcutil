@@ -69,6 +69,81 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 #define DDCA_EVENT_CONNECTOR_REMOVED DDCA_EVENT_UNUSED2
 
 
+// UNUSED ???
+#ifdef UNUSED
+void ddc_emit_deferred_events(GArray * deferred_events) {
+   bool debug = false;
+
+   if (deferred_events->len > 1) {  // FUTURE ENHANCMENT, filter out meaningless events
+      // check for cancellation events
+      for (int ndx = 0; ndx < deferred_events->len; ndx++) {
+         DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Event %d in queue: %s", ndx, display_status_event_repr_t(evt));
+      }
+      ddc_filter_sleep_events(deferred_events);
+   }
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting %d deferred events", deferred_events->len);
+   for (int ndx = 0; ndx < deferred_events->len; ndx++) {
+      DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting deferred event %s", display_status_event_repr_t(evt));
+      ddc_emit_display_status_record(evt);
+   }
+   g_array_remove_range(deferred_events,0, deferred_events->len);
+}
+#endif
+
+
+
+#ifdef WHERE_DOES_THIS_GO
+// When a display is disconnected and then reconnected, a udev event for
+// the disconnection is not received until immediately before the connection
+// event.  Address this situation by treating this "double tap" as a single
+// hotplug event.  Unfortunately, because a disconnect udev event is not
+// received in a timely manner, clients will have to discover that a display
+// has been disconnected by failure of an API call.
+
+// No longer a problem since udev_monitor_receive_device() no longer blocks
+
+static uint64_t last_emit_millisec = 0;
+static uint64_t double_tap_millisec = 5000;
+
+void ddc_emit_display_hotplug_event() {
+   bool debug = false;
+   uint64_t cur_emit_millisec = cur_realtime_nanosec() / (1000*1000);
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "last_emit_millisec = %jd, cur_emit_millisec = %jd, double_tap_millisec = %jd",
+         last_emit_millisec, cur_emit_millisec, double_tap_millisec);
+
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Hotplug_Event");
+   int callback_ct = 0;
+
+   uint64_t delta_millisec = cur_emit_millisec - last_emit_millisec;
+   if ( delta_millisec > double_tap_millisec) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "delta_millisec = %jd, invoking registered callback functions", delta_millisec);
+      SYSLOG2(DDCA_SYSLOG_NOTICE,
+            "delta_millisec = %jd, invoking registered callback functions", delta_millisec);
+      if (display_hotplug_callbacks) {
+         for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
+            DDCA_Display_Hotplug_Callback_Func func = g_ptr_array_index(display_hotplug_callbacks, ndx);
+            DDCA_Display_Hotplug_Event event = {NULL, NULL};
+            func(event);
+         }
+         callback_ct =  display_hotplug_callbacks->len;
+      }
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "delta_millisec = %jd, double tap", delta_millisec);
+      SYSLOG2(DDCA_SYSLOG_NOTICE,
+         "delta_millisec = %jd, double tap", delta_millisec);
+   }
+   last_emit_millisec = cur_emit_millisec;
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks", callback_ct);
+}
+#endif
+
+
 
 
 bool ddc_hotplug_change_handler(
@@ -168,7 +243,7 @@ bool ddc_hotplug_change_handler(
                                             dref,
                                             dref->io_path);
 #endif
-            ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, dref, dref->io_path, events_queue);
+            ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, dref, dref->io_path, events_queue);
             event_emitted = true;
          }
          else {
@@ -189,7 +264,7 @@ bool ddc_hotplug_change_handler(
                 g_snprintf(buf, 100, "Removing connected display with bus %s, drm connector %s", dpath_repr_t(&path), connector_name);
                 DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
                 SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
-                ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, NULL, path, events_queue);
+                ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED, connector_name, NULL, path, events_queue);
                 event_emitted = true;
              }
          }
@@ -226,7 +301,7 @@ bool ddc_hotplug_change_handler(
                g_snprintf(buf, 100, "Adding connected display with bus %s, drm connector %s", dpath_repr_t(&path), connector_name);
                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
                // SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);   // *** TEMP ***
-               ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, NULL, path, events_queue);
+               ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, NULL, path, events_queue);
                event_emitted = true;
             }
          }
@@ -236,7 +311,7 @@ bool ddc_hotplug_change_handler(
                   dref_repr_t(dref), connector_name);
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
             SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, buf);
-            ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, dref, dref->io_path, events_queue);
+            ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED, connector_name, dref, dref->io_path, events_queue);
             event_emitted = true;
          }
       }
@@ -482,7 +557,7 @@ void  ddc_check_asleep(GPtrArray * active_connectors,
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Queueing %s", display_status_event_repr_t(evt));
          g_array_append_val(display_status_events,evt);
 #ifdef OLD
-            ddc_emit_display_status_event(
+            ddc_emit_or_queue_display_status_event(
                   (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE,
                   connector,
                   dref,
@@ -693,11 +768,11 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
          // Doesn't work to detect client crash, main thread and process remains for some time.
          // 11/2020: is this even needed since terminate_watch_thread check added?
          // #ifdef DOESNT_WORK
-         bool pid_found = check_thread_or_process(cur_pid);
+         bool pid_found = is_valid_thread_or_process(cur_pid);
          if (!pid_found) {
             DBGMSG("Process %d not found", cur_pid);
          }
-         bool tid_found = check_thread_or_process(cur_tid);
+         bool tid_found = is_valid_thread_or_process(cur_tid);
          if (!pid_found || !tid_found) {
             DBGMSG("Thread %d not found", cur_tid);
             g_thread_exit(GINT_TO_POINTER(-1));
