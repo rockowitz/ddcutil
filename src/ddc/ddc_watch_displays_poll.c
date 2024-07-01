@@ -164,7 +164,7 @@ void ddc_poll_recheck_bus() {
          break;
       I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
       Display_Ref * dref = ddc_remove_display_by_businfo(businfo);
-      ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
+      ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
                                       businfo->drm_connector_name,
                                       dref, dref->io_path,
                                       NULL);
@@ -198,7 +198,7 @@ void ddc_poll_recheck_bus() {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updating businfo for /dev/i2c-%d", old_businfo->busno);
          i2c_update_bus_info(old_businfo, new_businfo);
          Display_Ref * dref = ddc_add_display_by_businfo(old_businfo);
-         ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED,
+         ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED,
                              old_businfo->drm_connector_name, dref, dref->io_path, NULL);
       }
       else {
@@ -211,7 +211,7 @@ void ddc_poll_recheck_bus() {
          g_ptr_array_remove_index(new_buses, new_index);
          g_ptr_array_add(all_i2c_buses, new_businfo);
          Display_Ref * dref = ddc_add_display_by_businfo(new_businfo);
-         ddc_emit_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED,
+         ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED,
                              new_businfo->drm_connector_name, dref, dref->io_path, NULL);
 
       }
@@ -236,7 +236,7 @@ void ddc_poll_recheck_bus() {
             assert(dref);
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sleep change event for dref=%p->%s", dref, dref_repr_t(dref));
             DDCA_Display_Event_Type event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
-            ddc_emit_display_status_event(event_type, dref->drm_connector, dref, dref->io_path, NULL);
+            ddc_emit_or_queue_display_status_event(event_type, dref->drm_connector, dref, dref->io_path, NULL);
             businfo->last_checked_dpms_asleep = is_dpms_asleep;
          }
       }
