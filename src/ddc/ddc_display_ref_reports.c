@@ -273,6 +273,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          }
          char msgbuf[100] = {0};
          char * msg = NULL;
+         char * vmsg = NULL;
          if (dref->dispno == DISPNO_PHANTOM) {
             if (dref->actual_display) {
                snprintf(msgbuf, 100, "Use non-phantom device %s",
@@ -300,7 +301,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                 else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP)
                    msg = "This appears to be a laptop display.  Laptop displays do not support DDC/CI.";
                 else if (!(businfo->flags & I2C_BUS_ADDR_0X37)) {
-                   msg = "Monitor does not support DDC. (I2C slave address x37 unresponsive.)";
+                   msg = "This monitor does not support DDC. (I2C slave address x37 is unresponsive.)";
+                   vmsg = "If the monitor's on screen display has a DDC/CI setting, check it is enabled.";
                 }
                 else if (drm_dpms || drm_status || drm_enabled) {
                    if (drm_dpms && !streq(drm_dpms,"On")) {
@@ -342,6 +344,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          }
          if (msg) {
             rpt_vstring(d1, msg);
+            if (vmsg)
+               rpt_vstring(d1, vmsg);
             if (dref->dispno > 0 && (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)) {
                report_drm_dpms_status(d1, businfo->drm_connector_name);
             }
