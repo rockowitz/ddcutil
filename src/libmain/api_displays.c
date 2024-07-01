@@ -384,10 +384,11 @@ ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p", ddca_dref);
    char * result = NULL;
-   Display_Ref * dref = NULL;
-   validate_ddca_display_ref(ddca_dref, /*basic_only*/ true, /* require_not_asleep */ false, &dref);
-   if (dref) {
-      result = dref_repr_t(dref);
+   Display_Ref * dref = (Display_Ref *) ddca_dref;
+   if (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) {
+      // else if (dref->dispno < 0)   // cause of ddcui issue  #55
+      //    ddcrc = DDCRC_ARG;
+      result = dref_reprx_t(dref);
    }
    DBGMSF(debug, "Done.     Returning: %s", result);
    return result;
@@ -405,7 +406,7 @@ ddca_dbgrpt_display_ref(
    validate_ddca_display_ref(ddca_dref, /* basic_only*/ true, /* require_not_asleep */ false, &dref);
    rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
    if (dref)
-      dbgrpt_display_ref(dref, depth+1);
+      dbgrpt_display_ref(dref, true, depth+1);
 }
 
 
