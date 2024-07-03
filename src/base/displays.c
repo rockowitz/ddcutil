@@ -694,6 +694,32 @@ void dbgrpt_display_ref0(Display_Ref * dref, int depth) {
    dbgrpt_display_ref(dref, true, depth);
 }
 
+void dbgrpt_display_ref_summary(Display_Ref * dref, bool include_businfo, int depth) {
+   bool debug = false;
+   int d1 = depth+1;
+   int d2 = depth+2;
+
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
+   rpt_vstring(depth, "%s", dref_reprx_t(dref));
+   // rpt_vstring(d1, "io_path:          %s", dpath_repr_t(&(dref->io_path)));
+   rpt_vstring(d1, "flags:               %s", interpret_dref_flags_t(dref->flags) );
+   rpt_vstring(d1, "mmid:                %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
+   rpt_vstring(d1, "dispno:              %d", dref->dispno);
+   rpt_vstring(d1, "pedid:               %p", dref->pedid);
+   // report_parsed_edid(dref->pedid, /*verbose*/ false, depth+1);
+
+   rpt_vstring(d1, "detail:              %p", dref->detail);
+   if (dref->io_path.io_mode == DDCA_IO_I2C && include_businfo) {
+      I2C_Bus_Info * businfo = dref->detail;
+      if (businfo) {
+         i2c_dbgrpt_bus_info(businfo, false, d2);
+      }
+   }
+   rpt_vstring(d1, "drm_connector:       %s", dref->drm_connector);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+}
+
 /** Thread safe function that returns a short description of a #Display_Ref.
  *  The returned value is valid until the next call to this function on
  *  the current thread.
