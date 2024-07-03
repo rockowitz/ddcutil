@@ -762,6 +762,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
            (bus_info->flags & I2C_BUS_HAS_VALID_NAME)
          );
    assert(sys_drm_connectors);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "initial flags = %s", i2c_interpret_bus_flags_t(bus_info->flags));
 
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Probing");
@@ -774,6 +775,9 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       // connector = NULL;   // *** TEST ***
       if (sys_drm_connector) {
          bus_info->drm_connector_name = strdup(sys_drm_connector->connector_name);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                         "sys_drm_connector found: %s, drm_connector_name=%s",
+                         SBOOL(sys_drm_connector), bus_info->drm_connector_name);
          bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
          if (streq(sys_drm_connector->name, "DisplayLink I2C Adapter") ) {
             bus_info->flags |= I2C_BUS_DISPLAYLINK;
