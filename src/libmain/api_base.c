@@ -745,6 +745,7 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    API_PROLOG(debug, "Starting");
 
    DDCA_Error_Detail * edet = NULL;
+#ifdef ENABLE_UDEVX
    if (!drm_enabled) {
       edet = new_ddca_error_detail(DDCRC_INVALID_OPERATION,
                "Display hotplug detection requires DRM enabled video drivers");
@@ -754,6 +755,9 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
       edet = error_info_to_ddca_detail(erec);
       ERRINFO_FREE(erec);
    }
+#else
+   edet = new_ddca_error_detail(DDCRC_INVALID_OPERATION, "Display change detection requires UDEV");
+#endif
 
    DDCA_Status ddcrc = 0;
    if (edet) {
