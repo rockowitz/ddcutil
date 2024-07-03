@@ -27,7 +27,7 @@ typedef enum {
 
 extern DDC_Watch_Mode ddc_watch_mode;
 extern bool           ddc_slow_watch;
-#define DEFAULT_EXTRA_STABILIZE_SECS 6
+#define DEFAULT_EXTRA_STABILIZE_SECS 4
 extern int            extra_stabilize_seconds;
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
