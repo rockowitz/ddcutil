@@ -1766,15 +1766,18 @@ const char *
 const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
 
+
 /** Start the thread watching for display status changes.
  *
  *  @param  enabled_clases  event classes to watch
  *  @retval DDCRC_OK
- *  #retval DDCRC_ARG     no event classes specified
+ *  #retval DDCRC_ARG     no event classes or invalid event classes specified
  *  @retval DDCRC_INVALID_OPERATION watch thread already running
  *  @retval DDCRC_INVALID_OPERATION not all video drivers support DRM
+ *  @retval DDCRC_UNIMPLEMENTED watching for DPMS changes unimplemented
  *
- *  @since 2.1.0
+ *  The only valid event_type value is DDCA_EVENT_CLASS_DISPLAY_CONNECTION.
+ *  DDCA_EVENT_CLASS_ALL is equivalent to DDCA_EVENT_CLSS_DISPLAY_CONNECTION.
  */
 DDCA_Status
 ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes);
