@@ -689,16 +689,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
       data->event_classes = event_classes;
 
-      GThreadFunc watch_thread_func = NULL;
-
-#ifdef OLD
-      switch (ddc_watch_mode) {
-      case Watch_Mode_Full_Poll:  watch_thread_func = ddc_watch_displays_using_poll;  break;
-      case Watch_Mode_Udev_Sysfs: watch_thread_func = ddc_watch_displays_using_udev;  break;
-      case Watch_Mode_Udev_I2C:   watch_thread_func = ddc_watch_displays_udev_i2c;    break;
-      }
-#endif
-      watch_thread_func = ddc_watch_displays_udev_i2c;
+      GThreadFunc watch_thread_func = ddc_watch_displays_udev_i2c;
 
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
