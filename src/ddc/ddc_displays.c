@@ -1837,7 +1837,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
    // Sys_Drm_Connector * conrec = find_sys_drm_connector(-1, NULL, drm_connector_name);  // unused
 
    businfo->flags &= ~I2C_BUS_PROBED;
-   i2c_check_bus(businfo);   // needed?
+   i2c_check_bus(businfo);
    if (businfo->flags & I2C_BUS_ADDR_0X50) {
       dref = create_bus_display_ref(businfo->busno);
       // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
