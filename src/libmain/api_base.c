@@ -745,15 +745,23 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    API_PROLOG(debug, "Starting");
 
    DDCA_Error_Detail * edet = NULL;
-#ifdef ENABLE_UDEVX
+#ifdef ENABLE_UDEV
    if (!drm_enabled) {
       edet = new_ddca_error_detail(DDCRC_INVALID_OPERATION,
                "Display hotplug detection requires DRM enabled video drivers");
    }
-   else {
-      Error_Info * erec = ddc_start_watch_displays(enabled_classes);
-      edet = error_info_to_ddca_detail(erec);
-      ERRINFO_FREE(erec);
+   else if (enabled_classes != DDCA_EVENT_CLASS_NONE) {
+      if (enabled_classes != DDCA_EVENT_CLASS_ALL && (enabled_classes&DDCA_EVENT_CLASS_DPMS) ) {
+         edet = new_ddca_error_detail(DDCRC_UNIMPLEMENTED, "Watching for DPMS state changes unimplemented");
+      }
+      else if (enabled_classes != DDCA_EVENT_CLASS_ALL && enabled_classes != DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
+         edet = new_ddca_error_detail (DDCRC_ARG, "Invalid event class specified");
+      }
+      else {
+         Error_Info * erec = ddc_start_watch_displays(enabled_classes);
+         edet = error_info_to_ddca_detail(erec);
+         ERRINFO_FREE(erec);
+      }
    }
 #else
    edet = new_ddca_error_detail(DDCRC_INVALID_OPERATION, "Display change detection requires UDEV");
