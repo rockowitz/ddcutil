@@ -36,6 +36,7 @@ bool         ddc_initial_checks_by_dref(Display_Ref * dref);
 void         ddc_add_display_ref(Display_Ref * dref);
 GPtrArray *  ddc_get_all_display_refs();  // returns GPtrArray of Display_Ref instances, including invalid displays
 void         ddc_dbgrpt_display_refs(bool include_invalid_displays, bool report_businfo, int depth);
+void         ddc_dbgrpt_display_refs_summary(bool include_invalid_displays, bool report_businfo, int depth);
 GPtrArray *  ddc_get_filtered_display_refs(bool include_invalid_displays);
 GPtrArray *  ddc_get_bus_open_errors();
 int          ddc_get_display_count(bool include_invalid_displays);

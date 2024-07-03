@@ -824,6 +824,15 @@ void ddc_dbgrpt_display_refs(bool include_invalid_displays, bool report_businfo,
    }
 }
 
+void ddc_dbgrpt_display_refs_summary(bool include_invalid_displays, bool report_businfo, int depth) {
+   GPtrArray * drefs = ddc_get_filtered_display_refs(include_invalid_displays);
+   // rpt_vstring(depth, "Reporting %d display refs", drefs->len);
+   for (int ndx = 0; ndx < drefs->len; ndx++) {
+      dbgrpt_display_ref_summary(g_ptr_array_index(drefs, ndx), report_businfo, depth);
+   }
+}
+
+
 #ifdef UNUSED
 Display_Ref *
 ddc_get_display_ref_by_drm_connector(
@@ -1827,6 +1836,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
    // Sys_Drm_Connector * conrec = find_sys_drm_connector(-1, NULL, drm_connector_name);  // unused
 
+   businfo->flags &= ~I2C_BUS_PROBED;
    i2c_check_bus(businfo);   // needed?
    if (businfo->flags & I2C_BUS_ADDR_0X50) {
       dref = create_bus_display_ref(businfo->busno);
