@@ -388,7 +388,7 @@ ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    if (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) {
       // else if (dref->dispno < 0)   // cause of ddcui issue  #55
       //    ddcrc = DDCRC_ARG;
-      result = dref_reprx_t(dref);
+      result = dref_repr_t(dref);
    }
    DBGMSF(debug, "Done.     Returning: %s", result);
    return result;
