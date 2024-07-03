@@ -684,11 +684,6 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       terminate_watch_thread = false;
       Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
       memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-#ifdef OLD_HOTPLUG_VERSION
-   // data->display_change_handler = api_display_change_handler;
-   // data->display_change_handler = dummy_display_change_handler;
-#endif
-
       data->main_process_id = getpid();
       data->main_thread_id = get_thread_id();  // alt = syscall(SYS_gettid);
       // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
