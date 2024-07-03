@@ -296,7 +296,9 @@ bool ddc_i2c_hotplug_change_handler(
       //  i2c_dbgrpt_buses(false, false, 1);
       i2c_dbgrpt_buses_summary(1);
       rpt_nl();
-      ddc_dbgrpt_display_refs(/*include_invalid_displays*/ true, /*report_businfo*/ false, 1);
+      ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
+                                      false,    // report_businfo
+                                      1);       // depth
    }
 
    Bit_Set_256_Iterator iter = bs256_iter_new(bs_buses_w_edid_removed);
@@ -360,7 +362,9 @@ bool ddc_i2c_hotplug_change_handler(
       i2c_dbgrpt_buses_summary(1);
       rpt_nl();
       rpt_label(0,"After display refs added or marked disconnected:");
-      ddc_dbgrpt_display_refs(/*include_invalid_displays*/ true, false, 1);
+      ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
+                                      false,    // report_businfo
+                                      1);       // depth
    }
    DBGTRC_RET_BOOL(debug, TRACE_GROUP,event_emitted, "");
    return event_emitted;
@@ -528,6 +532,10 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       rpt_vstring(0, "Initial I2C buses:");
       i2c_dbgrpt_buses_summary(1);
+      rpt_vstring(0, "Initial Display Refs:");
+      ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
+                                      false,    // report_businfo
+                                      1);       // depth
    }
 
    GArray * deferred_events = g_array_new( false,      // zero_terminated
