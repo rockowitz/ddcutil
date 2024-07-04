@@ -1825,11 +1825,13 @@ ddc_is_usb_display_detection_enabled() {
  *
  */
 Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
-   bool debug = false;
+   bool debug  = false;
    assert(businfo);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
-   // if (IS_DBGTRC(debug, DDCA_TRC_NONE))
-   //    i2c_dbgrpt_bus_info(businfo, 4);
+   // if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+   //    i2c_dbgrpt_bus_info(businfo, true, 4);
+   //    ddc_dbgrpt_display_refs_summary(/* include_invalid_displays*/ true, /* report_businfo */ false, 2 );
+   // }
 
    // bool ok = false;
    Display_Ref * dref = NULL;
@@ -1852,6 +1854,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       dref->detail = businfo;
       dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
       dref->flags |= DREF_DDC_IS_MONITOR;
+      dref->drm_connector = g_strdup(businfo->drm_connector_name);
 
       ddc_initial_checks_by_dref(dref);
       g_ptr_array_add(all_display_refs, dref);
@@ -1865,22 +1868,23 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No display detected on bus %d", businfo->busno);
    }
 
+   // ddc_dbgrpt_display_refs_summary(/* include_invalid_displays*/ true, /* report_businfo */ true, 2 );
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref %s", dref_reprx_t(dref), dref);
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+      dbgrpt_display_ref_summary(dref, /* include_businfo*/ false, 2);
    return dref;
 }
 
 
 /** Given a #I2C_Bus_Info instance, checks if there is a currently active #Display_Ref
  *  for that bus (i.e. one with the DREF_REMOVED flag not set).
- *  If found, sets the DREF_REMOVED flag and calls ddc_emit_display_detection_event()
- *  to notify any client programs that have registered for a callback that the display
- *  has been disconnected.
+ *  If found, sets the DREF_REMOVED flag.
  *
  *  @param  businfo
- *  @return true if display ref was found, false if not
+ *  @return Display_Ref
  */
 Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
-   bool debug = false;
+   bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
    assert(all_display_refs);
 
@@ -1888,6 +1892,8 @@ Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    // i2c_dbgrpt_buses(/* report_all */ true, 2);
 
    Display_Ref * dref = ddc_get_dref_by_busno_or_connector(businfo->busno, NULL, /*ignore_invalid*/ true);
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+      dbgrpt_display_ref_summary(dref, false /*include_businfo*/ ,  1);
    if (dref) {
       assert(!(dref->flags & DREF_REMOVED));  // it was checked in the ddc_get_dref_by_busno_or_connector() call
       dref->flags |= DREF_REMOVED;
