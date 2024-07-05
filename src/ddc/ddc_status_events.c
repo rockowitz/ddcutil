@@ -110,12 +110,12 @@ const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
 
 char * display_status_event_repr(DDCA_Display_Status_Event evt) {
    char * s = g_strdup_printf(
-   "DDCA_Display_Status_Event( %s:  %s, %s, dref: %s, io_path:/dev/i2c-%d]",
-   formatted_time_t(evt.timestamp_nanos),   // will this clobber a wrapping DBGTRC?
-   ddc_display_event_type_name(evt.event_type),
-   evt.connector_name,
-   dref_repr_t(evt.dref),
-   evt.io_path.path.i2c_busno);
+      "DDCA_Display_Status_Event[%s:  %s, %s, dref: %s, io_path:/dev/i2c-%d]",
+      formatted_time_t(evt.timestamp_nanos),   // will this clobber a wrapping DBGTRC?
+      ddc_display_event_type_name(evt.event_type),
+      evt.connector_name,
+      dref_repr_t(evt.dref),
+      evt.io_path.path.i2c_busno);
    return s;
 }
 
