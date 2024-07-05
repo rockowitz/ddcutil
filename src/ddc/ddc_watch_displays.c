@@ -330,6 +330,15 @@ bool ddc_i2c_hotplug_change_handler(
                                             dref,
                                             dref->io_path);
 #endif
+         if (!i2c_device_exists(busno)) {
+            int  busNdx = i2c_find_bus_info_index_in_gptrarray_by_busno(all_i2c_buses, busno);
+            assert (busNdx >= 0);
+            I2C_Bus_Info * businfo = g_ptr_array_remove_index(all_i2c_buses, busNdx);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Device /dev/i2c-%d no longer exists. Removing businfo record %p.",
+                  busno, businfo);
+            i2c_free_bus_info(businfo);
+         }
+
          ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
                dref->drm_connector, dref, dref->io_path, events_queue);
          event_emitted = true;
@@ -477,7 +486,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
       Bit_Set_256 bs_prev_buses_w_edid,
       GArray *    events_queue)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bs_prev_buses_w_edid: %s", BS256_REPR(bs_prev_buses_w_edid));
 
    GPtrArray * new_buses = i2c_detect_buses0();
