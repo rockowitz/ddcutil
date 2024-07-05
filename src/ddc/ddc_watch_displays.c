@@ -336,7 +336,6 @@ bool ddc_i2c_hotplug_change_handler(
             I2C_Bus_Info * businfo = g_ptr_array_remove_index(all_i2c_buses, busNdx);
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Device /dev/i2c-%d no longer exists. Removing businfo record %p.",
                   busno, businfo);
-            i2c_free_bus_info(businfo);
          }
 
          ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
@@ -360,7 +359,8 @@ bool ddc_i2c_hotplug_change_handler(
        I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
        if (!businfo) {
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to list of buses", busno);
-          i2c_dbgrpt_buses(true /*report_all*/, true /*include_sysinfo*/, 2);
+          if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+             i2c_dbgrpt_buses(true /*report_all*/, true /*include_sysinfo*/, 2);
           get_sys_drm_connectors(/*rescan*/ true);  // so that drm connector name picked up
           businfo = i2c_new_bus_info(busno);
           businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
