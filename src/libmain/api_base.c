@@ -744,6 +744,9 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
    API_PROLOG(debug, "Starting");
 
+   if (enabled_classes == DDCA_EVENT_CLASS_ALL)
+      enabled_classes = DDCA_EVENT_CLASS_DISPLAY_CONNECTION;
+
    DDCA_Error_Detail * edet = NULL;
 #ifdef ENABLE_UDEV
    if (!drm_enabled) {
@@ -753,10 +756,10 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    else if (enabled_classes == DDCA_EVENT_CLASS_NONE) {
       edet = new_ddca_error_detail(DDCRC_ARG, "No event class specified");
    }
-   else if (enabled_classes != DDCA_EVENT_CLASS_ALL && (enabled_classes&DDCA_EVENT_CLASS_DPMS) ) {
+   else if (enabled_classes&DDCA_EVENT_CLASS_DPMS) {
       edet = new_ddca_error_detail(DDCRC_UNIMPLEMENTED, "Watching for DPMS state changes unimplemented");
    }
-   else if (enabled_classes != DDCA_EVENT_CLASS_ALL && enabled_classes != DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
+   else if (enabled_classes != DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
       edet = new_ddca_error_detail (DDCRC_ARG, "Invalid event class specified");
    }
    else {
