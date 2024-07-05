@@ -1825,13 +1825,13 @@ ddc_is_usb_display_detection_enabled() {
  *
  */
 Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
-   bool debug  = false;
+   bool debug = false;
    assert(businfo);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
-   // if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-   //    i2c_dbgrpt_bus_info(businfo, true, 4);
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      i2c_dbgrpt_bus_info(businfo, /* include sysinfo*/ true, 4);
    //    ddc_dbgrpt_display_refs_summary(/* include_invalid_displays*/ true, /* report_businfo */ false, 2 );
-   // }
+   }
 
    // bool ok = false;
    Display_Ref * dref = NULL;
