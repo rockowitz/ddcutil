@@ -1892,9 +1892,9 @@ Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    // i2c_dbgrpt_buses(/* report_all */ true, 2);
 
    Display_Ref * dref = ddc_get_dref_by_busno_or_connector(businfo->busno, NULL, /*ignore_invalid*/ true);
-   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
-      dbgrpt_display_ref_summary(dref, false /*include_businfo*/ ,  1);
    if (dref) {
+      if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+         dbgrpt_display_ref_summary(dref, false /*include_businfo*/ ,  1);
       assert(!(dref->flags & DREF_REMOVED));  // it was checked in the ddc_get_dref_by_busno_or_connector() call
       dref->flags |= DREF_REMOVED;
       dref->detail = NULL;
