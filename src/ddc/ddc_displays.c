@@ -1818,7 +1818,7 @@ ddc_is_usb_display_detection_enabled() {
 
 
 /** If a display is present on a specified bus adds a Display_Ref
- *  for that bus.
+ *  for that display.
  *
  *  @param businfo  I2C_Bus_Info record for the bus
  *  @return         true Display_Ref added, false if not.
@@ -1876,6 +1876,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
+#ifdef WATCH_DISPLAYS_USING_POLL
 /** Given a #I2C_Bus_Info instance, checks if there is a currently active #Display_Ref
  *  for that bus (i.e. one with the DREF_REMOVED flag not set).
  *  If found, sets the DREF_REMOVED flag.
@@ -1906,6 +1907,7 @@ Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref %s", dref_repr_t(dref));
    return dref;
 }
+#endif
 
 
 #ifdef UNUSED
@@ -1992,7 +1994,9 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(read_unsupported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_validate_display_ref);
+#ifdef WATCH_DISPLAYS_USING_POLL
    RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
+#endif
    RTTI_ADD_FUNC(ddc_get_dref_by_busno_or_connector);
 }
 
