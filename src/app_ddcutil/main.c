@@ -958,13 +958,13 @@ main(int argc, char *argv[]) {
       }
       else {
          ddc_ensure_displays_detected();
-         Error_Info * erec = ddc_start_watch_displays(DDCA_EVENT_CLASS_ALL);
+         Error_Info * erec = ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
          if (erec) {
             ERRINFO_FREE_WITH_REPORT(erec, true);
             main_rc = EXIT_FAILURE;
          }
          else {
-            DBGMSG("Sleeping for 60 minutes");
+            DBGMSG("Watching for 60 minutes");
             sleep(60*60);
             DBGMSG("Terminating execution after 60 minutes");
             ddc_stop_watch_displays(true, NULL);
