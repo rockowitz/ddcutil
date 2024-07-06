@@ -782,7 +782,8 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
 
    DDCA_Status ddcrc = DDCRC_OK;
 #ifdef ENABLE_UDEV
-   *enabled_classes_loc = DDCA_EVENT_CLASS_NONE;
+   if (enabled_classes_loc)
+      *enabled_classes_loc = DDCA_EVENT_CLASS_NONE;
    g_mutex_lock(&watch_thread_mutex);
 
    if (watch_thread) {
