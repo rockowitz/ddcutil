@@ -352,13 +352,13 @@ void dbgrpt_connector_state(Drm_Connector_State * state, int depth) {
 
    rpt_vstring(d1, "Properties:");
    char * vname = get_enum_value_name(dpms_metadata, state->dpms);
-   rpt_vstring(d2, "dpms:              %d - %s", state->dpms, vname);
+   rpt_vstring(d2, "dpms:              %d - %s", (int) state->dpms, vname);
 
    vname = get_enum_value_name(link_status_metadata, state->link_status);
-   rpt_vstring(d2, "link_status:       %d - %s", state->link_status, vname);
+   rpt_vstring(d2, "link_status:       %d - %s", (int) state->link_status, vname);
 
    vname = (subconn_metadata) ? get_enum_value_name(subconn_metadata, state->subconnector) : "UNK";
-   rpt_vstring(d2, "subconnector:      %d - %s", state->subconnector, vname);
+   rpt_vstring(d2, "subconnector:      %d - %s", (int) state->subconnector, vname);
 
    if (state->edid) {
       rpt_vstring(d2, "edid:");
