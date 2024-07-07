@@ -466,7 +466,6 @@ int extract_cardno(const char * devname) {
    char * bn = g_path_get_basename(devname);
    if (!bn || strlen(bn) < 5 || memcmp(bn, "card", 4) != 0 || !g_ascii_isdigit(bn[4]) ) {
       rpt_vstring(1, "Invalid device name: %s", devname);
-      free(bn);
    }
    else {
       cardno = g_ascii_digit_value(bn[4]);
