@@ -47,7 +47,9 @@ void         ddc_ensure_displays_detected();
 void         ddc_discard_detected_displays();
 void         ddc_redetect_displays();
 bool         ddc_displays_already_detected();
+#ifdef UNUSED
 Display_Ref* detect_display_by_businfo(I2C_Bus_Info * businfo);
+#endif
 DDCA_Status  ddc_enable_usb_display_detection(bool onoff);
 bool         ddc_is_usb_display_detection_enabled();
 void         dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);
