@@ -642,7 +642,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 }
 
 
-/** Given a #Display_Ref, opens the monitor device and calls #initial_checks_by_dh()
+/** Given a #Display_Ref, opens the monitor device and calls #ddc_initial_checks_by_dh()
  *  to perform initial monitor checks.
  *
  *  @param dref pointer to #Display_Ref for monitor
