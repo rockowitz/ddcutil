@@ -1,5 +1,140 @@
 # Changelog
 
+## [2.1.5] 2024-mm-dd
+
+- Rework laptop detection, allow for non-laptop displays having eDP connector
+  (video driver bug, will not be fixed) 
+
+- Rework display change detection
+
+- 60-ddcutil-i2c-rules
+  enable logged on user r/w access to /dev/dri/cardN, needed
+  to allow logged on user to probe connectors using DRM
+
+  command detect: only show communication error detail if --verbose
+
+  add command noop to show settings with option --settings without
+  having to execute a command
+
+  8     Add option --discard-capabilities-cache as alt to --discard-cache capabilities
+ 1599     
+ 1600     For symmetry with --enable-capabilities-cache, --disable-capabilities-cache
+
+587     Add --discard-sleep-cache  as alt to --discard cache dsa|sleep
+ 1588     
+ 1589     alias --discard-dsa-cache
+ 1590     for symmetry with --enable-dynamic-sleep, --disable-dynamic-sleep
+ 1591 
+
+ 1579     eliminate --enable-dsa-cache as alias for --enable-dynamic-sleep-cache
+
+bug fix: checking if all video adapters implement drm failed for nvidia
+
+fix segfault in dbgrpt_connector_state() issue #390
+
+report user defined features as part parsed capabilities
+
+UDF: allow SNC as alternative name for NC
+
+add XNC (Extended Non-Continous) like simple NC, but the SH byte is also reported
+
+force option --disable-cross-instance-locking ???
+
+fix core dump on ddcutil getvcp issue #407
+
+improve handling of --verify/--noverify, error if both specified
+
+interrogate command: try_single_vcp_call() was not reporting bytes of response packet
+
+interrogate:  disable dynamic sleep
+
+forced settings apply to env -v as well as interrogate
+
+ignore phantom displays when searching for a display reference, fixes issue #412
+
+ commit 3787e400ee8fd627e7e195856416c3713141b264
+  825 Author: Sanford Rockowitz (/shared/home/rock/dot_gitconfig) <rockowitz@minsoft.com>
+  826 Date:   Wed May 8 07:24:00 2024 -0400
+  827 
+  828     i2c_checK_open_bus_alive(): do not use /sys to check if display still connected
+  829     
+  830     apparently unreliable, at least w driver vfd on Raspberry Pi
+  831     
+  832     may address issue #413
+  833 
+  834     also:
+  835     - iftest out unused i2c_check_edid_exists_by_businfo()
+  836     - documentation
+
+
+.gitignore: 
+- add *.tar.gz, docs/ddcutil-c-api
+
+interrogate: handle case of no devices with class x03 
+caused dump of user's home directory
+issue #413
+
+recognize bus types DRM_BUS_PLATFORM, DRM_BUS_HOST1X, report as "platform", "host1x"
+
+679     adjust_sleep_time(): change syslog msg level from WARNING to VERBOSE
+  680     
+  681     addresses issue #427 "Keep adjusting multiplier" msg fills syslog
+  682     when libddcutil used by clightd
+
+  646     ddca_get_display_refs(), ddca_get_display_info_list2() always return 0.
+  647     Addresses issue #417. 
+  648     
+  649     Errors that occur opening individual displays or reading their EDIDs
+  650     are still reported using ddca_get_error_detail().
+  651     In addition, error messages are written to the terminal and, depending
+  652     on the current syslog level, to the system log.
+  653 
+  654     API documentation in ddcutil_c_api.h is updated to reflect this behavior.
+
+  handle DisplayLink devices
+    n. cant read edid using I2C, must read from /sysfs
+
+  595 commit b4039d15d87c2ec6e20b4bb79607cc7c979e74a1
+  596 Author: Sanford Rockowitz (/shared/home/rock/dot_gitconfig) <rockowitz@minsoft.com>
+  597 Date:   Fri Jun 21 08:44:34 2024 -0400
+  598     
+  599     ddc_validate_display_ref(): do not use dref->drm_connector
+  600     
+  601     may be invalid after hotplug
+  602     
+  603     addresses issue #418
+  604 
+
+    clearer msg if slave address x37 inactive
+  484     
+  485     - "Monitor does not support DDC" instead of generic "DDC_commnication failed"
+
+  372 commit 4e3d9e1b5ac3b12b4a2e92d12d3c7170d8e2d387
+  373 Author: Sanford Rockowitz (/shared/home/rock/dot_gitconfig) <rockowitz@minsoft.com>
+  374 Date:   Mon Jul 1 12:53:45 2024 -0400
+  375 
+  376     ddca_dref_repr(): only check that dref->marker is valid
+  377     
+  378     addresses issue #55
+
+336     if slave address x37 inactive, add verbose msg to check monitor's OSD
+
+  212     ddca_start_watch_displays(): the only allowed enabled event class is DDCA_EVENT_CLASS_DISPLAY_CONNECTION
+  213     
+  214     - regards DDCA_EVENT_CLASS_ALL as same as DDCA_EVENT_CLASS_DISPLAY_CONNECTION
+  215     - error if DDCA_EVENT_CLASS_DPMS
+
+  202     ddca_start_watch_displays(): regard DDCA_EVENT_CLASS_NONE as error
+
+
+## [2.1.4] 2024-02-17
+
+### Shared Library
+
+- Reinstall previously deprecated and removed  ddca_create_display_ref(), 
+  allowing existing clients to build unchanged.
+
+
 ## [2.1.3] 2024-02-07
 
 ### Changed
