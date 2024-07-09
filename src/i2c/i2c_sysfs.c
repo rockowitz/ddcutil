@@ -696,10 +696,11 @@ void free_sys_drm_connectors_fixedinfo() {
 
 /** Reports the contents of one #Sys_Drm_Connector instance
  *
- *  @param depth logical indentation depth
- *  @param cur   pointer to instance
+ *  @param cur            pointer to instance
+ *  @param detailed_edid  if false, show only edid summary
+ *  @param depth          logical indentation depth
  */
-void report_one_sys_drm_connector(int depth, Sys_Drm_Connector * cur)
+void report_one_sys_drm_connector(Sys_Drm_Connector * cur, bool detailed_edid, int depth)
 {
    int d0 = depth;
    int d1 = depth+1;
@@ -718,11 +719,21 @@ void report_one_sys_drm_connector(int depth, Sys_Drm_Connector * cur)
       rpt_vstring(d1, "base dev:    %s", cur->base_dev);
    }
    if (cur->edid_size > 0) {
-      rpt_label(d1,   "edid:");
-      rpt_hex_dump(cur->edid_bytes, cur->edid_size, d1);
+      if (detailed_edid) {
+         rpt_label(d1,   "edid:");
+         rpt_hex_dump(cur->edid_bytes, cur->edid_size, d1);
+      }
+      else {
+         Parsed_Edid * edid = create_parsed_edid(cur->edid_bytes);
+         if (edid)
+            rpt_vstring(d1, "edid:        %s, %s, %s",
+                  edid->mfg_id, edid->model_name, edid->serial_ascii);
+         else
+            rpt_label(d1, "edid:              invalid");
+      }
    }
    else
-      rpt_label(d1,"edid:        None");
+      rpt_label(d1,      "edid:            None");
 }
 
 // Simplified variant
@@ -1122,10 +1133,13 @@ GPtrArray* get_sys_drm_connectors_fixedinfo(bool rescan) {
 
 
 /** Reports the contents of the array of #Sys_Drm_Connector instances
- *  pointed to by global #sys_drm_connectors. If #sys_drm_connectors is
- *  not NULL, scan the /sys/class/drm/<connecter> tree.
+ *  pointed to by global #sys_drm_connectors. If global #sys_drm_connectors
+ *  is NULL, scan the /sys/class/drm/<connecter> tree.
+ *
+ *  @param verbose  if true, show full edid information
+ *  @param depth    logical indentation depth
  */
-void report_sys_drm_connectors(int depth) {
+void report_sys_drm_connectors(bool verbose, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
    int d0 = depth;
@@ -1141,12 +1155,13 @@ void report_sys_drm_connectors(int depth) {
    else {
       for (int ndx = 0; ndx < displays->len; ndx++) {
          Sys_Drm_Connector * cur = g_ptr_array_index(displays, ndx);
-         report_one_sys_drm_connector(depth, cur);
+         report_one_sys_drm_connector(cur, verbose, depth);
          rpt_nl();
       }
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
+
 
 // future simplified variant
 void report_sys_drm_connectors_fixedinfo(int depth) {
@@ -1855,7 +1870,7 @@ void consolidated_i2c_sysfs_report(int depth) {
    int d1 = depth+1;
 
    rpt_label(d0, "*** Sys_Drm_Connector report: Detailed /sys/class/drm report: ***");
-   report_sys_drm_connectors(d1);
+   report_sys_drm_connectors(true, d1);
    rpt_nl();
 
    // not currently used, and leaks memory
@@ -2429,15 +2444,25 @@ void simple_report_one_connector(
    DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
    assert(dirname);
    assert(simple_fn);
-
-   rpt_nl();
-   rpt_vstring(depth, "Connector: %s", simple_fn);
-   GByteArray * edid_byte_array;
-   RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "enabled");
-   RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "status");
-   RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "dpms");
-   RPT_ATTR_EDID(d1, &edid_byte_array, dirname, simple_fn, "edid");
-
+   GByteArray * edid_byte_array = NULL;
+   char * status = NULL;
+   char * sbusno = NULL;
+   GET_ATTR_TEXT(&status, dirname, simple_fn, "status");
+   GET_ATTR_TEXT(&sbusno, dirname, simple_fn, "i2c_busno");
+   GET_ATTR_EDID(&edid_byte_array, dirname, simple_fn, "edid");
+   if (edid_byte_array || streq(status, "connected")) {
+      rpt_nl();
+      rpt_vstring(depth, "Connector: %s", simple_fn);
+      rpt_vstring(d1,       "I2C busno: %s", sbusno);
+      rpt_vstring(d1,       "status:    %s", status);
+      if (edid_byte_array) {
+         Parsed_Edid * parsed = create_parsed_edid(edid_byte_array->data);
+         if (parsed)
+            rpt_vstring(d1, "edid:      %s/%s/%s",   parsed->mfg_id, parsed->model_name, parsed->serial_ascii);
+         else
+            rpt_label(  d1, "edid:      parse failed");
+      }
+   }
    if (edid_byte_array)
       g_byte_array_free(edid_byte_array, true);
 

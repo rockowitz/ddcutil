@@ -85,7 +85,7 @@ typedef struct {
 
 GPtrArray*          get_sys_drm_connectors(bool rescan);
 // GPtrArray*          get_sys_drm_connectors_sysinfo(bool rescan);
-void                report_sys_drm_connectors(int depth);
+void                report_sys_drm_connectors(bool verbose, int depth);
 Sys_Drm_Connector * find_sys_drm_connector(int busno, Byte * raw_edid, const char * connector_name);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_number(int connector_number);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_identifier(Drm_Connector_Identifier dci);
