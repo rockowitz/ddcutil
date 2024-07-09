@@ -857,7 +857,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 bus_info->open_errno =  ddcrc;
              }
              else {
-                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, already have EDID", bus_info->busno);
+                // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, already have EDID", bus_info->busno);
                 bus_info->flags |= I2C_BUS_ADDR_0X50;
              }
           }
@@ -909,6 +909,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 }
              }
 #endif
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "i2c_detect_x37() returned %s", psc_desc(rc));
              if (rc == 0)
                 bus_info->flags |= I2C_BUS_ADDR_0X37;
              // else if (rc == -EBUSY)
