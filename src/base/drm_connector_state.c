@@ -342,7 +342,7 @@ void dbgrpt_connector_state(Drm_Connector_State * state, int depth) {
    rpt_structure_loc("Drm_Connector_State", state, depth);
    int d1 = depth+1;
    int d2 = depth+2;
-   int d3 = depth+3;
+   // int d3 = depth+3;
 
    rpt_vstring(d1, "%-20s %d",       "cardno:",            state->cardno);
    rpt_vstring(d1, "%-20s %d",       "connector_id:",      state->connector_id);
@@ -352,21 +352,54 @@ void dbgrpt_connector_state(Drm_Connector_State * state, int depth) {
 
    rpt_vstring(d1, "Properties:");
    char * vname = get_enum_value_name(dpms_metadata, state->dpms);
-   rpt_vstring(d2, "dpms:              %d - %s", (int) state->dpms, vname);
+   rpt_vstring(d2, "dpms:             %d - %s", (int) state->dpms, vname);
 
    vname = get_enum_value_name(link_status_metadata, state->link_status);
-   rpt_vstring(d2, "link_status:       %d - %s", (int) state->link_status, vname);
+   rpt_vstring(d2, "link_status:      %d - %s", (int) state->link_status, vname);
 
    vname = (subconn_metadata) ? get_enum_value_name(subconn_metadata, state->subconnector) : "UNK";
-   rpt_vstring(d2, "subconnector:      %d - %s", (int) state->subconnector, vname);
+   rpt_vstring(d2, "subconnector:     %d - %s", (int) state->subconnector, vname);
 
    if (state->edid) {
-      rpt_vstring(d2, "edid:");
-      report_parsed_edid(state->edid, true, d3);
+      // rpt_vstring(d2, "edid:");
+      // report_parsed_edid(state->edid, true, d3);
+      rpt_vstring(d2,
+                   "edid:             %s, %s, %s",
+            state->edid->mfg_id, state->edid->model_name, state->edid->serial_ascii);
+   }
+   else {
+      rpt_label(d2,"edid:             NULL");
    }
    rpt_nl();
-
 }
+
+
+void dbgrpt_connector_state_basic(Drm_Connector_State * state, int depth) {
+   int d0 = depth;
+   int d1 = depth+1;
+
+   rpt_vstring(d0, "%-20s %s-%d",  "connector:",
+              drm_connector_type_name(state->connector_type),
+              state->connector_type_id);
+   rpt_vstring(d1, "%-17s %d - %s",  "connection:",
+         state->connection, connector_status_name(state->connection));
+
+   char * vname = get_enum_value_name(dpms_metadata, state->dpms);
+   rpt_vstring(d1, "%-17s %d - %s", "dpms", (int) state->dpms, vname);
+
+   vname = get_enum_value_name(link_status_metadata, state->link_status);
+   rpt_vstring(d1, "%-17s %d - %s", "link-status:", (int) state->link_status, vname);
+
+   if (state->edid) {
+      rpt_vstring(d1, "%-17s %s, %s, %s", "edid:",
+            state->edid->mfg_id, state->edid->model_name, state->edid->serial_ascii);
+   }
+   else {
+      rpt_vstring(d1,"%-17s %s", "edid:", "NULL");
+   }
+   rpt_nl();
+}
+
 
 void dbgrpt_connector_states(GPtrArray* states) {
    assert(states);
@@ -575,6 +608,21 @@ void report_drm_connector_states(int depth) {
       all_card_connector_states = drm_get_all_connector_states();
    for (int ndx = 0; ndx < all_card_connector_states->len; ndx++) {
       dbgrpt_connector_state(g_ptr_array_index(all_card_connector_states, ndx), 0);
+   }
+}
+
+
+void report_drm_connector_states_basic(bool refresh, int depth) {
+   if (refresh && all_card_connector_states) {
+      free_drm_connector_states(all_card_connector_states);
+      all_card_connector_states = NULL;
+   }
+   if (!all_card_connector_states)
+      all_card_connector_states = drm_get_all_connector_states();
+   for (int ndx = 0; ndx < all_card_connector_states->len; ndx++) {
+      Drm_Connector_State * cur = g_ptr_array_index(all_card_connector_states, ndx);
+      if (cur->edid || cur->connection == DRM_MODE_CONNECTED )
+         dbgrpt_connector_state_basic(cur, 0);
    }
 }
 

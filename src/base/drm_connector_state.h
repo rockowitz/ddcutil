@@ -51,6 +51,9 @@ redetect_drm_connector_states();
 void
 report_drm_connector_states(int depth);
 
+void
+report_drm_connector_states_basic(bool refresh, int depth);
+
 Drm_Connector_State *
 find_drm_connector_state(Drm_Connector_Identifier cid);
 
