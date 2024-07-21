@@ -570,33 +570,42 @@ execute_cmd_with_optional_display_handle(
    case CMDID_CAPABILITIES:
       {
          assert(dh);
-         app_check_dynamic_features(dh->dref);
-         ensure_vcp_version_set(dh);
+         if (app_check_dynamic_features(dh->dref)) {
+            ensure_vcp_version_set(dh);
 
-         DDCA_Status ddcrc = app_capabilities(dh);
-         main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+            DDCA_Status ddcrc = app_capabilities(dh);
+            main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+         }
+         else
+            main_rc = EXIT_FAILURE;
          break;
       }
 
    case CMDID_GETVCP:
       {
          assert(dh);
-         app_check_dynamic_features(dh->dref);
-         ensure_vcp_version_set(dh);
+         if (app_check_dynamic_features(dh->dref)) {
+            ensure_vcp_version_set(dh);
 
-         Public_Status_Code psc = app_show_feature_set_values_by_dh(dh, parsed_cmd);
-         main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+            Public_Status_Code psc = app_show_feature_set_values_by_dh(dh, parsed_cmd);
+            main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+         }
+         else
+            main_rc = EXIT_FAILURE;
       }
       break;
 
    case CMDID_SETVCP:
       {
          assert(dh);
-         app_check_dynamic_features(dh->dref);
-         ensure_vcp_version_set(dh);
+         if (app_check_dynamic_features(dh->dref)) {
+            ensure_vcp_version_set(dh);
 
-         int rc = app_setvcp(parsed_cmd, dh);
-         main_rc = (rc == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+            int rc = app_setvcp(parsed_cmd, dh);
+            main_rc = (rc == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+         }
+         else
+            main_rc = EXIT_FAILURE;
       }
       break;
 
@@ -629,34 +638,47 @@ execute_cmd_with_optional_display_handle(
       {
          assert(dh);
          // MCCS vspec can affect whether a feature is NC or TABLE
-         app_check_dynamic_features(dh->dref);
-         ensure_vcp_version_set(dh);
+         if (app_check_dynamic_features(dh->dref)) {
+            ensure_vcp_version_set(dh);
 
-         Public_Status_Code psc =
+            Public_Status_Code psc =
                app_dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
                                       ? parsed_cmd->args[0]
                                       : NULL );
-         main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+            main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+         }
+         else
+            main_rc = EXIT_FAILURE;
          break;
       }
 
    case CMDID_READCHANGES:
+   {
       assert(dh);
-      app_check_dynamic_features(dh->dref);
-      ensure_vcp_version_set(dh);
+      if (app_check_dynamic_features(dh->dref)) {
+         ensure_vcp_version_set(dh);
 
-      app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
-      main_rc = EXIT_FAILURE;
+         app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
+         main_rc = EXIT_FAILURE;
+      }
+      else
+         main_rc = EXIT_FAILURE;
       break;
+   }
 
    case CMDID_PROBE:
+   {
       assert(dh);
-      app_check_dynamic_features(dh->dref);
-      ensure_vcp_version_set(dh);
+      if (app_check_dynamic_features(dh->dref)) {
+         ensure_vcp_version_set(dh);
 
-      app_probe_display_by_dh(dh);
-      main_rc = EXIT_SUCCESS;
+         app_probe_display_by_dh(dh);
+         main_rc = EXIT_SUCCESS;
+      }
+      else
+         main_rc = EXIT_FAILURE;
       break;
+   }
 
    default:
       main_rc = EXIT_FAILURE;
