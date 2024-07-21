@@ -49,17 +49,17 @@ first_word(char * s) {
    // DBGMSG("Starting. s=|%s|", s);
    Tokenized result = {NULL,NULL};
    if (s) {
-      while (*s == ' ')
+      while (isspace(*s))
             s++;
       if (*s) {
          char * end = s;
-         while (*++end && *end != ' ');
+         while (*++end && !isspace(*end));
          int wordlen = end-s;
          result.word = malloc( wordlen+1);
          memcpy(result.word, s, wordlen);
          result.word[wordlen] = '\0';
 
-         while (*end == ' ')
+         while (isspace(*end))
             end++;
          if (*end == '\0')
             end = NULL;
@@ -527,7 +527,6 @@ create_dynamic_features_rec(
                   // todo: handle xnn as well as nn ?
                   //bool ok = hhs_to_byte_in_buf(feature_code, &feature_id);
                   char * can = canonicalize_possible_hex_value(feature_code);
-
                   bool ok = str_to_int(can, &feature_id, 16);
                   free(can);
                   if (!ok) {
@@ -542,7 +541,7 @@ create_dynamic_features_rec(
             }
             else if (streq(t1.word, "VALUE")) {
                if (!t2.rest) {
-                  ADD_ERROR(linectr, "Invalid feature value data \"%s\"", line);
+                  ADD_ERROR(linectr, "Invalid feature value data \"%s\"");
                }
                else {   // found value code and name
                   int feature_value;
