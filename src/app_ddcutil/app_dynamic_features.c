@@ -1,6 +1,6 @@
 /** @file app_dynamic_features.c */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -28,13 +28,15 @@
 /** Wraps call to #dfr_check_by_dref(), writing error messages
  *  for errors reported.
  *
- *  \param dref  display reference
+ *  \param  dref  display reference
+ *  \return false if errors occurred, true otherwise
  */
-void app_check_dynamic_features(Display_Ref * dref) {
+bool app_check_dynamic_features(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_TOP|DDCA_TRC_UDF, "dref=%s, enable_dynamic_features=%s",
                           dref_repr_t(dref), sbool(enable_dynamic_features));
 
+   bool result = true;
    if (!enable_dynamic_features)    // global variable
       goto bye;
 
@@ -52,6 +54,7 @@ void app_check_dynamic_features(Display_Ref * dref) {
          for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
             f0printf(fout(), "   %s\n", errs->causes[ndx]->detail);
          }
+         result = false;
       }
       errinfo_free(errs);
    }
@@ -64,7 +67,8 @@ void app_check_dynamic_features(Display_Ref * dref) {
    }
 
 bye:
-   DBGTRC_DONE(debug, DDCA_TRC_UDF, "");
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_UDF, result, "");
+   return result;
 }
 
 
