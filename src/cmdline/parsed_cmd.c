@@ -246,7 +246,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
         rpt_bool("i2c_io_fileio",    NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO,d1);
         rpt_bool("i2c_io_ioctl",     NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL, d1);
-        RPT_CMDFLAG("heuristicly detect unsupported features", CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, d1);
+        //RPT_CMDFLAG("heuristicly detect unsupported features", CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, d1);
+        rpt_vstring(d1, "%s: %s", "heuristically detect unsupported features                ",
+                                          SBOOL(parsed_cmd->flags& CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES));
         rpt_bool("quick",             NULL, parsed_cmd->flags & CMD_FLAG_QUICK,                   d1);
 
         RPT_CMDFLAG("watch hotplug events", CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS, d1);
@@ -357,7 +359,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("enable_failure_simulation", NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_FAILSIM,   d1);
       rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn,                        d1);
       rpt_bool("mock data",         NULL, parsed_cmd->flags & CMD_FLAG_MOCK,                    d1);
-      RPT_CMDFLAG("simulate Null Msg indicates unsupported", CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, d1);
+      // RPT_CMDFLAG("simulate Null Msg indicates unsupported", CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, d1);
+      rpt_vstring(d1, "%s: %s", "simulate Null Msg indicates unsupported                  ",
+                                        SBOOL(parsed_cmd->flags& CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE));
       RPT_CMDFLAG("skip ddc checks",      CMD_FLAG_SKIP_DDC_CHECKS, d1);
       RPT_CMDFLAG("async I2C bus checks", CMD_FLAG_ASYNC_I2C_CHECK, d1);
       RPT_CMDFLAG("enable_flock",         CMD_FLAG_FLOCK, d1);
