@@ -96,7 +96,7 @@ void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, in
    // rpt_int("vid",        NULL, devsum->vid, d1);
    // rpt_int("pid",        NULL, devsum->pid, d1);
    rpt_str("vendor_id",     NULL, devsum->vendor_id, d1);
-   rpt_str("product_id",    "",   devsum->product_id, d1);
+   rpt_str("product_id",    NULL, devsum->product_id, d1);
    rpt_str("vendor_name",   NULL, devsum->vendor_name, d1);
    rpt_str("product_name",  NULL, devsum->product_name, d1);
    rpt_str("busnum_s",      NULL, devsum->busnum_s, d1);
