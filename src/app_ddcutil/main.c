@@ -1066,7 +1066,7 @@ main(int argc, char *argv[]) {
 #ifdef ENABLE_USB
       // DBGMSG("Processing command chkusbmon...\n");
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command CHKUSBMON...");
-      bool is_monitor = check_usb_monitor( parsed_cmd->args[0] );
+      bool is_monitor = (parsed_cmd->flags&CMD_FLAG_ENABLE_USB) && check_usb_monitor( parsed_cmd->args[0] );
       main_rc = (is_monitor) ? EXIT_SUCCESS : EXIT_FAILURE;
 #else
       main_rc = EXIT_FAILURE;
