@@ -5,7 +5,7 @@
  *  See https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
  */
 
-// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -325,9 +325,6 @@ static char * xdg_dirs_iter_next(Iter_State * state) {
    char * p = state->iter_start;
    while (p < state->iter_end && *p != ':')
       p++;
-   if (p == state->iter_end) {
-      return NULL;
-   }
    int len = p - state->iter_start;
    char * buf = calloc(len + 1, 1);
    memcpy(buf, state->iter_start, len);
