@@ -1,27 +1,24 @@
-# Rules for USB attached monitors, which are categorized as User Interface Devices. 
+# Rules for monitors implementing USB communication with their Virtual Control Panel. 
 
-# This sample file can be modified and copied to /etc/udev/rules.d.  If file 
-# /etc/udev/rules.d/60-ddcutil-usb.rules exists, it overrides a file with the 
-# same name in /usr/lib/udev/rules.d, which is created by ddcutil installation.
-# This can be useful in cases where the usual rules do not work as needed, or
-# during development. 
+# This sample file can be modified and copied to /etc/udev/rules.d.  
 
-# The usual case, using TAG+="uaccess":  Use ddcutil to check if a USB Human 
-# Interface Device appears to be a monitor. If so, grant the current user 
-# access to it.
-#
+# If file /etc/udev/rules.d/60-ddcutil-usb.rules exists, it overrides a file with
+# the same name in /usr/lib/udev/rules.d.  (This file used to be created by ddcutil 
+# installation.)
+
+# The simplest solution is to specify a particular monitor device by its vid/pid, 
+# and then use TAG+="uaccess" to grant the current user read/write access to it.
+# The values in this example are for an Apple Cinema Display, model A1082:
+# SUBSYSTEM=="usbmisc", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="9223", TAG+="uaccess" 
+
+# A more general solution is to use ddcutil chkusbmon to check if a USB Human
+# Interface device implements the USB Device Class Definition for Human Interface
+# Devices. Unfortunately, this has been seen to cause system instability in 
+# certain ill-defined cases.
+
 # Note this rule may  have to be adjusted to reflect the actual path where 
 # ddcutil is installed.  The -v option produces informational messages.
 # These are lost when the rule is normally executed by udev, but can be 
 # helpful when rules are tested using the "udevadm test" command. 
 # SUBSYSTEM=="usbmisc",  KERNEL=="hiddev*", PROGRAM="/usr/bin/ddcutil chkusbmon $env{DEVNAME} -v", TAG+="uaccess"
-
-# Assign HID monitors to group video, and give RW permission to users in that
-# group.  Alternatively, you can give everyone RW permission for monitor devices
-# by changing 'MODE="0660", GROUP="video"' to 'MODE="0666"'. 
-# SUBSYSTEM=="usbmisc",  KERNEL=="hiddev*", PROGRAM="/usr/bin/ddcutil chkusbmon $env{DEVNAME} -v", MODE="0660", GROUP="video"
-
-# Identifies a particular monitor device by its vid/pid.
-# The values in this example are for an Apple Cinema Display, model A1082. 
-# SUBSYSTEM=="usbmisc", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="9223",  MODE="0666" 
 
