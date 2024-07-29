@@ -1,6 +1,6 @@
 # File data/Makefile.am
 
-# Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+# Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # The proper location for pkgconfig files is ambiguous, and the 
@@ -24,7 +24,6 @@
 # to be kept in sync with where autotools puts the files.
 
 
-
 resfiles = \
 	etc/modprobe.d/nvidia-i2c.conf \
 	etc/udev/rules.d/60-ddcutil-i2c.rules \
@@ -32,8 +31,7 @@ resfiles = \
 	etc/X11/xorg.conf.d/90-nvidia-i2c.conf
 
 rulesfiles = \
-	usr/lib/udev/rules.d/60-ddcutil-i2c.rules \
-	usr/lib/udev/rules.d/60-ddcutil-usb.rules
+	usr/lib/udev/rules.d/60-ddcutil-i2c.rules 
 
 distributed_modulesfiles = \
     usr/lib/modules-load.d/ddcutil.conf
