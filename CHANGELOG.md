@@ -1,131 +1,107 @@
 # Changelog
 
-## [2.1.5] 2024-mm-dd
+## [2.1.5] 2024-08-12
 
-- Rework laptop detection, allow for non-laptop displays having eDP connector
-  (video driver bug, will not be fixed) 
+### General
 
-- Rework display change detection
+#### Added
 
-- 60-ddcutil-i2c-rules
-  enable logged on user r/w access to /dev/dri/cardN, needed
-  to allow logged on user to probe connectors using DRM
+- Support DisplayLink devices
+- Add command **noop**, which allows for executing options such as 
+  ***--settings*** without having to execute a real command.
 
-  command detect: only show communication error detail if --verbose
+#### Changed
 
-  add command noop to show settings with option --settings without
-  having to execute a command
+- User Defined Features: 
+  - Add XNC (Extended Non-Continous) like simple NC, but the SH byte is
+    also reported.
+  - Allow SNC (Simple Non-Contuous) as alternative name for NC.
+  - Report user defined features as part of parsed capabilities.
+  - Commands recognizing user defined features now fail if there's an error
+    loading a user defined feature file.  These are **capabilities**, 
+    **setvcp**, **dumpvcp**, and **probe**.
+- /usr/lib/udev/rules.d/60-ddcutil-i2c-rules:
+  - Give logged on user r/w access to /dev/dri/cardN, needed
+    to allow logged on user to probe connectors using DRM.
+- Do not install /usr/lib/udev/rules.d/60-ddcutil-usb.rules, delete it
+  if previously installed.
+  Addresses issues #405, #428, #437
+- Command **ddcutil chkusbmon**:  
+  - Skip processing and always return 1 (failure) if option ***--disable-usb***
+    is in effect.
+- Command **detect**: 
+  - Only show communication error detail if --verbose
+  - Provide a clearer message if slave address x37 is inactive: 
+     - "Monitor does not support DDC" instead of generic "DDC_commnication failed"
+     - If option ***--verbose*** is in effect, emit an additional message to
+       check the monitor's OSD.
+- Parser changes:
+  - Add alternative option names for symmetry with other options: 
+    - ***--discard-capabilities-cache*** is an alias for ***--discard-cache capabilities***
+    - ***--discard-sleep-cache*** is an alias for ***--discard cache dsa***
+    - ***--discard-dsa-cache*** is an alias for ***--discard cache dsa***
+  - Eliminate --enable-dsa-cache as alias for --enable-dynamic-sleep-cache
+  - Improve handling of --verify/--noverify, error if both specified
+- File .gitignore:
+  - Add: *.tar.gz, docs/ddcutil-c-api
+- Commands **interrogate** and **environment --verbose**:
+  - Force settings --disable-cross-instance-locking, --disable-dynamic-sleep (VERIFY)
+  - Forced settings apply to **environment --verbose** as well as **interrogate**
+  - When probing DRM, recognize bus types DRM_BUS_PLATFORM, DRM_BUS_HOST1X, 
+    report as "platform", "host1x"
+- Change the system log message level when sleep time is adjusted from WARNING
+  to VERBOSE. Addresses issue #427: Adjusting multiplier message fills system
+  log when libddcutil used by clightd
 
-  8     Add option --discard-capabilities-cache as alt to --discard-cache capabilities
- 1599     
- 1600     For symmetry with --enable-capabilities-cache, --disable-capabilities-cache
+#### Fixed
 
-587     Add --discard-sleep-cache  as alt to --discard cache dsa|sleep
- 1588     
- 1589     alias --discard-dsa-cache
- 1590     for symmetry with --enable-dynamic-sleep, --disable-dynamic-sleep
- 1591 
+- Rework laptop detection. A non-laptop display can have an eDP connector.
+  This is an i915 video driver bug that will not be fixed.
+- When processing environment variable user $XDG_DATA_DIRS, or $XDG_CONFIG_DIRS,  
+  the final directory in the list was ignored.  Issue #438
+- When processing a user defined feature file, recognize any whitespace character
+  (e.g. tab), not just space.
+- Fix core dump on ddcutil getvcp. Issue #407 
+- Commands **interrogate** and **environment --verbose**
+   - Simple getvcp test was not reporting the bytes of the response packet.
+   - If no device with class x03 was found, the user's home directory
+     was dumped. Issue #413.
+- Fix display not found on Raspberry Pi. Do not rely on /sys/class/drm to read 
+  EDID, which is not valid for some drivers.  Addresses issue #403
 
- 1579     eliminate --enable-dsa-cache as alias for --enable-dynamic-sleep-cache
+### Shared Library
 
-bug fix: checking if all video adapters implement drm failed for nvidia
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.1.0. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.1.3. (VERIFY)
 
-fix segfault in dbgrpt_connector_state() issue #390
+#### Changed
 
-report user defined features as part parsed capabilities
+- **ddca_start_watch_displays()**: 
+  - The only event class that can currently be enabled is DDCA_EVENT_CLASS_DISPLAY_CONNECTION. 
+    Watching for sleep state changes is not currently supported.  
+  - Regards DDCA_EVENT_CLASS_ALL as same as DDCA_EVENT_CLASS_DISPLAY_CONNECTION
+  - Error if either DDCA_EVENT_CLASS_DPMS or DDCA_EVENT_CLASS_NONE are specified.
 
-UDF: allow SNC as alternative name for NC
+#### Fixed
 
-add XNC (Extended Non-Continous) like simple NC, but the SH byte is also reported
-
-force option --disable-cross-instance-locking ???
-
-fix core dump on ddcutil getvcp issue #407
-
-improve handling of --verify/--noverify, error if both specified
-
-interrogate command: try_single_vcp_call() was not reporting bytes of response packet
-
-interrogate:  disable dynamic sleep
-
-forced settings apply to env -v as well as interrogate
-
-ignore phantom displays when searching for a display reference, fixes issue #412
-
- commit 3787e400ee8fd627e7e195856416c3713141b264
-  825 Author: Sanford Rockowitz (/shared/home/rock/dot_gitconfig) <rockowitz@minsoft.com>
-  826 Date:   Wed May 8 07:24:00 2024 -0400
-  827 
-  828     i2c_checK_open_bus_alive(): do not use /sys to check if display still connected
-  829     
-  830     apparently unreliable, at least w driver vfd on Raspberry Pi
-  831     
-  832     may address issue #413
-  833 
-  834     also:
-  835     - iftest out unused i2c_check_edid_exists_by_businfo()
-  836     - documentation
-
-
-.gitignore: 
-- add *.tar.gz, docs/ddcutil-c-api
-
-interrogate: handle case of no devices with class x03 
-caused dump of user's home directory
-issue #413
-
-recognize bus types DRM_BUS_PLATFORM, DRM_BUS_HOST1X, report as "platform", "host1x"
-
-679     adjust_sleep_time(): change syslog msg level from WARNING to VERBOSE
-  680     
-  681     addresses issue #427 "Keep adjusting multiplier" msg fills syslog
-  682     when libddcutil used by clightd
-
-  646     ddca_get_display_refs(), ddca_get_display_info_list2() always return 0.
-  647     Addresses issue #417. 
-  648     
-  649     Errors that occur opening individual displays or reading their EDIDs
-  650     are still reported using ddca_get_error_detail().
-  651     In addition, error messages are written to the terminal and, depending
-  652     on the current syslog level, to the system log.
-  653 
-  654     API documentation in ddcutil_c_api.h is updated to reflect this behavior.
-
-  handle DisplayLink devices
-    n. cant read edid using I2C, must read from /sysfs
-
-  595 commit b4039d15d87c2ec6e20b4bb79607cc7c979e74a1
-  596 Author: Sanford Rockowitz (/shared/home/rock/dot_gitconfig) <rockowitz@minsoft.com>
-  597 Date:   Fri Jun 21 08:44:34 2024 -0400
-  598     
-  599     ddc_validate_display_ref(): do not use dref->drm_connector
-  600     
-  601     may be invalid after hotplug
-  602     
-  603     addresses issue #418
-  604 
-
-    clearer msg if slave address x37 inactive
-  484     
-  485     - "Monitor does not support DDC" instead of generic "DDC_commnication failed"
-
-  372 commit 4e3d9e1b5ac3b12b4a2e92d12d3c7170d8e2d387
-  373 Author: Sanford Rockowitz (/shared/home/rock/dot_gitconfig) <rockowitz@minsoft.com>
-  374 Date:   Mon Jul 1 12:53:45 2024 -0400
-  375 
-  376     ddca_dref_repr(): only check that dref->marker is valid
-  377     
-  378     addresses issue #55
-
-336     if slave address x37 inactive, add verbose msg to check monitor's OSD
-
-  212     ddca_start_watch_displays(): the only allowed enabled event class is DDCA_EVENT_CLASS_DISPLAY_CONNECTION
-  213     
-  214     - regards DDCA_EVENT_CLASS_ALL as same as DDCA_EVENT_CLASS_DISPLAY_CONNECTION
-  215     - error if DDCA_EVENT_CLASS_DPMS
-
-  202     ddca_start_watch_displays(): regard DDCA_EVENT_CLASS_NONE as error
-
+- **ddca_start_watch_displays()**: 
+  Fixed segfault that occured with driver nvidia when checking if all video
+  adapters implement drm. Issue #390. 
+- Rework display change detection.
+- Ignore phantom displays when searching for a display reference. Issue #412. 
+- **ddca_get_display_refs()**, **ddca_get_display_info_list2()** always
+  return 0, even if an error occured when examining a particular monitor. 
+  Addresses issue #417. 
+  - Errors that occur opening individual displays or reading their EDIDs are
+    are still reported using **ddca_get_error_detail()**. In addition, error
+    messages are written to the terminal and, depending on the current
+    syslog level, to the system log.
+- Display reference validation: Do not use dref->drm_connector, which may be 
+  invalid after hotplug. Addresses issue #418.
+- **ddca_dref_repr()**: Do not check that the display reference is still valid.
+  It is meaningful to create a string representation of a display reference even
+  if it is no longer usable. Addresses ddcui issue #55.
 
 ## [2.1.4] 2024-02-17
 
@@ -321,7 +297,7 @@ backwards compatible.
   is loaded.
 - Install file /usr/share/udev/rules.d/60-ddcutil-i2c.rules, autmatically granting
   the logged on user read/write access to /dev/i2c devices for video displays.
-  For most configurations, use of group i2c is no longer unnecessary.
+  For most configurations, use of group i2c is no longer necessary.
 - Command options not of interest to general users are now hidden when help is 
   requested.  Option ***--hh*** exposes them, and implies option ***--help***.
 - Option ***--noconfig***. Do not process the configuration file.
