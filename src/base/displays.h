@@ -228,12 +228,14 @@ typedef struct {
    Display_Ref* dref;
    int          fd;     // file descriptor
    char *       repr;
+   char *       repr_p;
    bool         testing_unsupported_feature_active;
 } Display_Handle;
 
 Display_Handle * create_base_display_handle(int fd, Display_Ref * dref);
 void             dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth);
 char *           dh_repr(Display_Handle * dh);
+char *           dh_repr_p(Display_Handle * dh);
 void             free_display_handle(Display_Handle * dh);
 
 // For internal display selection functions

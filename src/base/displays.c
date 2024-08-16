@@ -799,14 +799,10 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
    dh->fd = fd;
    dh->dref = dref;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
-      dh->repr = g_strdup_printf(
-#ifdef WITH_ADDR
-                     "Display_Handle[i2c-%d: fd=%d @%p]",
-                     dh->dref->io_path.path.i2c_busno, dh->fd, (void*)dh);
-#else
-      "Display_Handle[i2c-%d: fd=%d]",
-      dh->dref->io_path.path.i2c_busno, dh->fd);
-#endif
+      dh->repr = g_strdup_printf("Display_Handle[i2c-%d: fd=%d]",
+                          dh->dref->io_path.path.i2c_busno, dh->fd);
+      dh->repr_p = g_strdup_printf("Display_Handle[i2c-%d: fd=%d @%p]",
+                          dh->dref->io_path.path.i2c_busno, dh->fd, (void*)dh);
    }
 #ifdef ENABLE_USB
    else if (dref->io_path.io_mode == DDCA_IO_USB) {
@@ -883,6 +879,21 @@ char * dh_repr(Display_Handle * dh) {
    return dh->repr;
 }
 
+
+/** Returns a string summarizing the specified #Display_Handle,
+ *  including its address.
+ *
+ * \param  dh    display handle
+ * \return  string representation of handle
+ *
+ * \remark
+ * The value is calculated when the Display_Handle is created.
+ */
+char * dh_repr_p(Display_Handle * dh) {
+   if (!dh)
+      return "Display_Handle[NULL]";
+   return dh->repr_p;
+}
 
 /** Frees a #Display_Handle struct.
  *
