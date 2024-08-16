@@ -180,7 +180,7 @@ ddc_open_display(
       Display_Handle** dh_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Opening display %s, callopts=%s, dh_loc=%p",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, callopts=%s, dh_loc=%p",
                       dref_repr_t(dref), interpret_call_options_t(callopts), dh_loc );
    TRACED_ASSERT(dh_loc);
    // TRACED_ASSERT(1==5);    // for testing
@@ -284,6 +284,7 @@ ddc_open_display(
       dref->flags |= DREF_OPEN;
       // protect with lock?
       TRACED_ASSERT(open_displays);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding dh=%s@ to open_displays hash table", dh_repr_p(dh));
       g_hash_table_add(open_displays, dh);
    }
    else {
@@ -303,7 +304,7 @@ bye:
    *dh_loc = dh;
    TRACED_ASSERT_IFF( !err, *dh_loc );
    // dbgrpt_distinct_display_descriptors(0);
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*dh_loc=%s", dh_repr(*dh_loc));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*dh_loc=%s", dh_repr_p(*dh_loc));
    return err;
 }
 
@@ -320,7 +321,7 @@ Error_Info *
 ddc_close_display(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dref=%s, fd=%d, dpath=%s",
-              dh_repr(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path));
+              dh_repr_p(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path));
    Display_Ref * dref = dh->dref;
    Error_Info * err = NULL;
    Status_Errno rc = 0;
@@ -380,6 +381,7 @@ ddc_close_display(Display_Handle * dh) {
    }
 #endif
    assert(open_displays);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing dh=%s from open_displays hash table", dh_repr_p(dh));
    g_hash_table_remove(open_displays, dh);
 
    free_display_handle(dh);
@@ -388,7 +390,7 @@ ddc_close_display(Display_Handle * dh) {
 }
 
 
-// Handles common case where ddc_close_display()'s return value is ignored
+// Handles common case where the return value of ddc_close_display is ignored
 void ddc_close_display_wo_return(Display_Handle * dh) {
    Error_Info * err = ddc_close_display(dh);
    if (err) {
