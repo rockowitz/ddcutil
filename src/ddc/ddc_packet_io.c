@@ -381,7 +381,8 @@ ddc_close_display(Display_Handle * dh) {
    }
 #endif
    assert(open_displays);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing dh=%s from open_displays hash table", dh_repr_p(dh));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing dh=%s from open_displays hash table of size %d",
+         dh_repr_p(dh), g_hash_table_size(open_displays) );
    g_hash_table_remove(open_displays, dh);
 
    free_display_handle(dh);
