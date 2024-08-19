@@ -1979,6 +1979,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(check_how_unsupported_reported);
    RTTI_ADD_FUNC(ddc_add_display_by_businfo);
    RTTI_ADD_FUNC(ddc_async_scan);
+   RTTI_ADD_FUNC(ddc_close_all_displays);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(ddc_discard_detected_displays);
    RTTI_ADD_FUNC(ddc_displays_already_detected);
