@@ -11,7 +11,7 @@
  * in base/ddc_errno.c.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -49,7 +49,8 @@
 #define DDCRC_LOCKED                 (-(RCRANGE_DDC_START+25) ) ///< resource locked
 #define DDCRC_ALREADY_OPEN           (-(RCRANGE_DDC_START+26) ) ///< already open in current thread
 #define DDCRC_BAD_DATA               (-(RCRANGE_DDC_START+27) ) ///< invalid data
-#define DDCRC_INVALID_CONFIG_FILE    (-(RCRANGE_DDC_START+28) ) ///< config file syntax
+#define DDCRC_CONFIG_ERROR           (-(RCRANGE_DDC_START+28) ) ///< invalid configuration parm, invalid config file
+#define DDCRC_INVALID_CONFIG_FILE    DDCRC_CONFIG_ERROR         ///< for backward compatibility
 #define DDCRC_DISCONNECTED           (-(RCRANGE_DDC_START+29) ) ///< display has been disconnected
 #define DDCRC_DPMS_ASLEEP            (-(RCRANGE_DDC_START+30) ) ///< display is in a DPMS sleep mode
 #define DDCRC_FLOCKED                (-(RCRANGE_DDC_START+31) ) ///< flock() failure, cross-process locking
