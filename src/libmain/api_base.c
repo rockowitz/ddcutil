@@ -639,8 +639,7 @@ ddci_init(const char *      libopts,
       }
       syslog_level = syslog_level_arg;  // global in trace_control.h
 
-      GPtrArray* infomsgs = NULL;
-         infomsgs = g_ptr_array_new_with_free_func(g_free);
+      GPtrArray* infomsgs = g_ptr_array_new_with_free_func(g_free);
 
       if ((opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE) && !libopts) {
          parsed_cmd = new_parsed_cmd();
@@ -674,8 +673,11 @@ ddci_init(const char *      libopts,
          ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
          per_display_stats = parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS;
          dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS;
-         if (!submaster_initializer(parsed_cmd))
+         Error_Info * submaster_status = submaster_initializer(parsed_cmd);
+         if (submaster_status) {
             master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
+            errinfo_add_cause(master_error, submaster_status);
+         }
       }
    }
 
