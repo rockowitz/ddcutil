@@ -174,7 +174,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    // dbgrpt_traced_function_table(2);
    if (errinfo_accumulator->len > 0)
       result = errinfo_new_with_causes_gptr(
-            -EINVAL, errinfo_accumulator, __func__, "Invalid trace option(s):");
+            DDCRC_CONFIG_ERROR, errinfo_accumulator, __func__, "Invalid trace option(s):");
    g_ptr_array_free(errinfo_accumulator, false);
 
    tracing_initialized = true;
@@ -182,9 +182,9 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 }
 
 
-STATIC bool
+STATIC Error_Info *
 init_failsim(Parsed_Cmd * parsed_cmd) {
-   bool debug = true;
+   Error_Info * result = NULL;
 
 #ifdef ENABLE_FAILSIM
    fsim_set_name_to_number_funcs(
@@ -199,16 +199,14 @@ init_failsim(Parsed_Cmd * parsed_cmd) {
       else  {
          // fprintf(stderr, "Error loading failure simulation control file %s.\n",
          //                 parsed_cmd->failsim_control_fn);
-         return false;
+         result = ERRINFO_NEW(DDCRC_CONFIG_ERROR,
+                              "Error loading failure simulation control file %s",
+                              parsed_cmd->failsim_control_fn);
       }
    }
 #endif
 
-   if (parsed_cmd->flags & CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE) {
-      DBGMSF(debug, "setting simulate_null_msg_means_unspported = true");
-      simulate_null_msg_means_unsupported = true;
-   }
-   return true;
+   return result;
 }
 
 
@@ -396,15 +394,21 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
  *  @param  parsed_cmd   parsed command
  *  @return ok if initialization succeeded, false if not
  */
-bool
+Error_Info *
 submaster_initializer(Parsed_Cmd * parsed_cmd) {
    assert(tracing_initialized);  // Full tracing services now available
    bool debug = false;
-   bool ok = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDC, "parsed_cmd = %p", parsed_cmd);
+   Error_Info * final_result = NULL;
 
-   if (!init_failsim(parsed_cmd))
+   final_result = init_failsim(parsed_cmd);
+   if (final_result)
       goto bye;      // main_rc == EXIT_FAILURE
+
+   if (parsed_cmd->flags & CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE) {
+      DBGMSF(debug, "setting simulate_null_msg_means_unspported = true");
+      simulate_null_msg_means_unsupported = true;
+   }
 
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
@@ -475,11 +479,10 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
    skip_ddc_checks = parsed_cmd->flags & CMD_FLAG_SKIP_DDC_CHECKS;
    init_experimental_options(parsed_cmd);
-   ok = true;
 
 bye:
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_DDC, ok, "");
-   return ok;
+   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_DDC, final_result,  "");
+   return final_result;
 }
 
 
