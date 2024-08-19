@@ -478,8 +478,7 @@ bool fsim_load_control_file(char * fn) {
    DBGF(debug, "Read %d lines", linect);
    bool result = false;
    if (linect < 0) {
-      char * msg = g_strdup_printf("Failed to read %s: %s", fn, strerror(-linect));
-      fprintf(stderr, "%s\n", msg);
+      fprintf(stderr, "Failed to read %s: %s\n", fn, strerror(-linect));
    }
    else {
       result = fsim_load_control_from_gptrarray(lines, errmsgs);
