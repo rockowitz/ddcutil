@@ -360,8 +360,12 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    DBGMSF(debug, "Starting ...");
    bool ok = false;
-   if (!submaster_initializer(parsed_cmd))    // shared with libddcutil
+   Error_Info * submaster_errs = submaster_initializer(parsed_cmd);  // shared with libddcutil
+   if (submaster_errs) {
+      errinfo_report_details(submaster_errs, 0);
+      ERRINFO_FREE(submaster_errs);
       goto bye;
+   }
 
 #ifdef ENABLE_ENVCMDS
    if (parsed_cmd->cmd_id != CMDID_ENVIRONMENT) {
