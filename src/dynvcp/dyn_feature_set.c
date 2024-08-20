@@ -875,15 +875,6 @@ dyn_create_feature_set_from_feature_set_ref2(
 #endif
 
 
-#ifdef UNUSED
-// wrap dfm_free() in signature of GDestroyNotify()
-static void
-free_dfm_func(gpointer data) {
-   dfm_free((Display_Feature_Metadata *) data);
-}
-#endif
-
-
 void dyn_free_feature_set(
       Dyn_Feature_Set * feature_set)
 {
