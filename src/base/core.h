@@ -545,15 +545,14 @@ int                 syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Leve
 extern const char * valid_syslog_levels_string;
 
 
-/** The specified ddcutil severity level converted to a syslog priority and
- *  written to the system log.
+/** Checks that the specified ddcutil severity level is at least as great
+ *  as the severity cutoff level currently in effect.  If so, the ddcutil
+ *  severity is converted to a syslog severity, and the messages is written
+ *  to the system log.
  *
  *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
  *  @param  fmt                message format
  *  @param  ...                message arguments
- *
- *  Messages are written to the system log with the syslog priority
- *  corresponding to the ddcutil severity.
  */
 #define SYSLOG2(_ddcutil_severity, format, ...) \
 do { \
