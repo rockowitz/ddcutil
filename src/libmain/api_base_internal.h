@@ -208,18 +208,6 @@ ddci_get_precondition_failure_mode();
       if (ptd_api_profiling_enabled) ptd_profile_function_start(__func__); \
   } while(0)
 
-#ifdef UNUSED
-#define API_PROLOGX(debug_flag, _trace_groups, format, ...) \
-   do { \
-      if (!library_initialized)  { \
-         ddca_init(DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE); \
-      } \
-      trace_api_call_depth++; \
-      dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (_trace_groups), DBGTRC_OPTIONS_NONE, \
-            __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
-  } while(0)
-#endif
-
 
 #define API_EPILOG(_debug_flag, _rc, _format, ...) \
    do { \
