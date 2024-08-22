@@ -445,23 +445,33 @@ void profile_report(FILE * dest, bool by_thread) {
 // Tracing
 //
 
+/** Collects all output that normally goes to the terminal and appends it in
+ *  the specified file. The file is created if it does not already exist.
+ *
+ *  @param  library_trace_file  file in which to store the output.
+ *  @param  debug               if true, issue debug messages
+ *
+ *  If the file name is not fully qualified, it is considered to be a
+ *  subdirectory of the user's XDG state file, normally
+ *  $HOME/.local/state/libddcutil.
+ */
 void
-init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debug) {
-   DBGF(debug, "library_trace_file = \"%s\", enable_syslog = %s", library_trace_file, sbool(enable_syslog));
-   char * trace_file = (library_trace_file[0] != '/')
-          ? xdg_state_home_file("ddcutil", library_trace_file)
+init_library_trace_file(char * library_trace_file, bool debug) {
+   DBGF(debug, "library_trace_file = \"%s\"", library_trace_file);
+   char * fq_trace_file = (library_trace_file[0] != '/')
+          ? xdg_state_home_file("libddcutil", library_trace_file)
           : g_strdup(library_trace_file);
-   DBGF(debug, "Setting trace destination %s", trace_file);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Trace destination: %s", trace_file);
 
-   fopen_mkdir(trace_file, "a", stderr, &flog);
+   fopen_mkdir(fq_trace_file, "a", stderr, &flog);
    if (flog) {
+      DBGF(debug, "Writing %s trace output to %s", "libddcutil",fq_trace_file);
+      syslog(LOG_NOTICE, "Trace destination: %s", fq_trace_file);
       time_t trace_start_time = time(NULL);
       char * trace_start_time_s = asctime(localtime(&trace_start_time));
       if (trace_start_time_s[strlen(trace_start_time_s)-1] == 0x0a)
            trace_start_time_s[strlen(trace_start_time_s)-1] = 0;
       fprintf(flog, "%s tracing started %s\n", "libddcutil", trace_start_time_s);
-      DBGF(debug, "Writing %s trace output to %s", "libddcutil",trace_file);
+
       set_default_thread_output_settings(flog, flog);
       set_fout(flog);
       set_ferr(flog);
@@ -471,12 +481,12 @@ init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debu
    }
    else {
       fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
-                      trace_file, strerror(errno));
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening libddcutil trace file %s: %s",
-                             trace_file, strerror(errno));
+                      fq_trace_file, strerror(errno));
+      syslog(LOG_ERR, "Error opening libddcutil trace file %s: %s",
+                             fq_trace_file, strerror(errno));
    }
-   free(trace_file);
-   DBGF(debug, "Done.");
+   free(fq_trace_file);
+   DBGF(debug, "Done");
 }
 
 
@@ -608,93 +618,103 @@ ddci_init(const char *      libopts,
       debug = true;
 
    DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
+   DBG( "stdout file name: %s",  filename_for_fd_t(1));
+   syslog(LOG_ERR, "stdout file name: %s",  filename_for_fd_t(1));
+
 
    if (infomsg_loc)
       *infomsg_loc = NULL;
 
    Parsed_Cmd * parsed_cmd = NULL;
    Error_Info * master_error = NULL;
+   DDCA_Status ddcrc = 0;
+   enable_init_msgs = opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS;
+   enable_init_msgs = true;  // *** TEMP ***
+
    if (library_initialized) {
       master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil already initialized");
-      SYSLOG2(DDCA_SYSLOG_ERROR, "libddcutil already initialized");
+      syslog(LOG_ERR, "libddcutil already initialized");
+      goto bye;
    }
-   else {
-      enable_init_msgs = opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS;
-      // enable_init_msgs = true;  // *** TEMP ***
-      client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
-      if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
-         syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;
-      if (syslog_level_arg != DDCA_SYSLOG_NEVER) {
-         enable_syslog = true;
-         if (!client_opened_syslog) {
+
+   client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
+   if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
+      syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;
+   enable_syslog = (syslog_level_arg == DDCA_SYSLOG_NEVER) ? false : true;  // global in core.c
+
+   if (enable_syslog) {
+      if (!client_opened_syslog) {
          openlog("libddcutil",       // prepended to every log message
                  LOG_CONS | LOG_PID, // write to system console if error sending to system logger
                                      // include caller's process id
                  LOG_USER);          // generic user program, syslogger can use to determine how to handle
-         }
-         // special handling for start and termination msgs
-         // always output if syslog is opened
-         syslog(LOG_NOTICE, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
+      }
+
+      // special handling for start and termination msgs
+      // always output if syslog is opened
+      syslog(LOG_NOTICE, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
                    get_full_ddcutil_version(), ddca_libddcutil_filename());
-      }
+
       syslog_level = syslog_level_arg;  // global in trace_control.h
+   }
 
-      GPtrArray* infomsgs = g_ptr_array_new_with_free_func(g_free);
+   GPtrArray* infomsgs = g_ptr_array_new_with_free_func(g_free);
 
-      if ((opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE) && !libopts) {
-         parsed_cmd = new_parsed_cmd();
-      }
-      else {
-         master_error = get_parsed_libmain_config(
-                           libopts,
-                           opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE,
-                           infomsgs,
-                           &parsed_cmd);
-         ASSERT_IFF(master_error, !parsed_cmd);
+   if ((opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE) && !libopts) {
+      parsed_cmd = new_parsed_cmd();
+   }
+   else {
+      master_error = get_parsed_libmain_config(
+                        libopts,
+                        opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE,
+                        infomsgs,
+                        &parsed_cmd);
+      ASSERT_IFF(master_error, !parsed_cmd);
 
-         if (enable_init_msgs && infomsgs && infomsgs->len > 0) {
-            for (int ndx = 0; ndx < infomsgs->len; ndx++)
+      if (infomsgs && infomsgs->len > 0) {
+         for (int ndx = 0; ndx < infomsgs->len; ndx++) {
+            if (enable_init_msgs)
                fprintf(fout(), "%s\n", (char*) g_ptr_array_index(infomsgs, ndx));
+            syslog(LOG_NOTICE, "%s", (char*) g_ptr_array_index(infomsgs, ndx));
          }
+
          if (infomsg_loc) {
             *infomsg_loc = g_ptr_array_to_ntsa(infomsgs, /*duplicate=*/true);
          }
-         g_ptr_array_free(infomsgs, true);
+         // g_ptr_array_free(infomsgs, true);
       }
-      if (!master_error) {
-         if (parsed_cmd->trace_destination) {
-            DBGF(debug, "Setting library trace file: %s", parsed_cmd->trace_destination);
-            init_library_trace_file(parsed_cmd->trace_destination, enable_syslog, debug);
-         }
-         master_error = init_tracing(parsed_cmd);
+   }
+
+   if (!master_error) {
+      if (parsed_cmd->trace_destination) {
+         DBGF(debug, "Setting library trace file: %s", parsed_cmd->trace_destination);
+         init_library_trace_file(parsed_cmd->trace_destination, debug);
       }
-      if (!master_error) {
-         requested_stats = parsed_cmd->stats_types;
-         ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
-         per_display_stats = parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS;
-         dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS;
-         Error_Info * submaster_status = submaster_initializer(parsed_cmd);
-         if (submaster_status) {
-            master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
-            errinfo_add_cause(master_error, submaster_status);
-         }
+      master_error = init_tracing(parsed_cmd);
+   }
+
+   if (!master_error) {
+      requested_stats = parsed_cmd->stats_types;
+      ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
+      per_display_stats = parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS;
+      dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS;
+      Error_Info * submaster_status = submaster_initializer(parsed_cmd);
+      if (submaster_status) {
+         master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
+         errinfo_add_cause(master_error, submaster_status);
       }
    }
 
    assert(master_error || parsed_cmd);  // avoid null-dereference warning
-   DDCA_Status ddcrc = 0;
+
    if (master_error) {
-      ddcrc = master_error->status_code;
-      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
-      save_thread_error_detail(public_error_detail);
-      if (test_emit_syslog(DDCA_SYSLOG_ERROR)) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Library initialization failed: %s", psc_desc(master_error->status_code));
-         for (int ndx = 0; ndx < master_error->cause_ct; ndx++) {
-            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", master_error->causes[ndx]->detail);
-         }
+      syslog(LOG_CRIT, "Library initialization failed: %s", psc_desc(master_error->status_code));
+      for (int ndx = 0; ndx < master_error->cause_ct; ndx++) {
+         syslog(LOG_CRIT, "%s", master_error->causes[ndx]->detail);
       }
+
       if (enable_init_msgs) {
-         printf("(%s) calling report_parse_errors()\n", __func__);
+         DBGF(debug, "Calling report_parse_errors()", __func__);
          report_parse_errors(master_error);
       }
       errinfo_free(master_error);
@@ -708,16 +728,32 @@ ddci_init(const char *      libopts,
          ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS);
          SYSLOG2(DDCA_SYSLOG_NOTICE,
                "Started watch displays for DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS");
-      }
+   }
 #endif
       library_initialized = true;
       library_initialization_failed = false;
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
+      syslog(LOG_NOTICE, "Library initialization complete.");
+      free_parsed_cmd(parsed_cmd);
    }
-   free_parsed_cmd(parsed_cmd);
 
    DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
 
+bye:
+   if (debug) {     // for development
+      msg_to_syslog_only = true;
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = true");
+      msg_to_syslog_only = false;
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = false");
+      DBG( "stdout file name: %s",  filename_for_fd_t(1));
+      syslog(LOG_ERR, "stdout file name: %s",  filename_for_fd_t(1));
+   }
+
+   if (master_error) {
+      ddcrc = master_error->status_code;
+      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
+      save_thread_error_detail(public_error_detail);
+      errinfo_free(master_error);
+   }
    return ddcrc;
 }
 
