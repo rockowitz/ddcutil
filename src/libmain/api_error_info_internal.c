@@ -74,7 +74,7 @@ error_info_to_ddca_detail(Error_Info * erec)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. erec=%p", erec);
-   if (debug)
+   if (debug && erec)
       errinfo_report(erec, 2);
 
    DDCA_Error_Detail * result = NULL;
