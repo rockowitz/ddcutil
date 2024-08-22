@@ -209,6 +209,12 @@ ddci_get_precondition_failure_mode();
   } while(0)
 
 
+// Function epilog variants
+
+
+/** For functions that return a DDCA_Status.  Perform the function return in
+ *  the macro.
+ */
 #define API_EPILOG(_debug_flag, _rc, _format, ...) \
    do { \
         dbgtrc_ret_ddcrc( \
@@ -221,6 +227,8 @@ ddci_get_precondition_failure_mode();
    } while(0)
 
 
+/** For functions that return a boolean.  Perform the return in the macro.
+ */
 #define API_EPILOG_RET_BOOL(_debug_flag, _result, _format, ...) \
    do { \
       dbgtrc_returning_expression( \
@@ -233,6 +241,9 @@ ddci_get_precondition_failure_mode();
    } while(0)
 
 
+/** For functions that return a DDCA_Status.  This variant reports the status code
+ *  being returned, but leaves it to the caller to actually execute the return;
+ */
 #define API_EPILOG_WO_RETURN(_debug_flag, _rc, _format, ...) \
    do { \
         dbgtrc_ret_ddcrc( \
@@ -244,6 +255,9 @@ ddci_get_precondition_failure_mode();
    } while(0)
 
 
+/** Emits a trace message that contains no return status information, and leaves
+ *  it  to the caller for execute the return.
+ */
 #define API_EPILOG_NO_RETURN(_debug_flag, _format, ...) \
    do { \
         dbgtrc( \
