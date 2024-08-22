@@ -147,6 +147,12 @@ ddci_get_precondition_failure_mode();
       } while (0)
 #endif
 
+
+/** API function prolog for functions that don't return a status code.
+ *
+ *  Similar to API_PROLOGX(), except that there is no test if explicit
+ *  library initialization failed.
+ */
 #define API_PROLOG(debug_flag, format, ...) \
    do { \
       if (!library_initialized)  { \
@@ -161,6 +167,27 @@ ddci_get_precondition_failure_mode();
   } while(0)
 
 
+/** Standard API function prolog
+ *
+ *  @param debug_flag  if true, always perform function tracing
+ *                     if false, only trace if API tracing is enabled
+ *  @param format      trace message format string
+ *  @param ...         trace message arguments
+ *
+ *  If explicit library initialization failed, write a message to the system log,
+ *  save an explanation in the thread error detail, and return from the function
+ *  immediately with status DDCRC_INITIALIZED.
+ *
+ *  If the library is uninitialized, but ddca_init2() or ddca_init() was not called,
+ *  write a message to the system log and perform implicit library initialization.
+ *
+ *  If this API function is being traced, or it was called by another API function
+ *  that is being traced, increment thread local variable trace_api_call_depth.
+ *
+ *  Call dbgtrc() to perform function tracing, if enabled for this function.
+ *
+ *  If profiling is enabled for this thread, start profiling for this function.
+ */
 #define API_PROLOGX(debug_flag, format, ...) \
    do { \
       if (library_initialization_failed) { \
