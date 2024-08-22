@@ -212,7 +212,8 @@ ddca_parse_capabilities_string(
    *parsed_capabilities_loc = result;
    API_EPILOG_WO_RETURN(debug, ddcrc, "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
    ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
-   if ( IS_DBGTRC(debug, DDCA_TRC_API) && *parsed_capabilities_loc)
+   // if ( IS_DBGTRC(debug, DDCA_TRC_API) && *parsed_capabilities_loc)
+   if (is_traced_api_call(__func__) && *parsed_capabilities_loc)
       dbgrpt_ddca_capabilities(*parsed_capabilities_loc, 2);
    return ddcrc;
 }
