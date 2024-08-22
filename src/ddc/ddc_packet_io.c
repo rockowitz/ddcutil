@@ -282,10 +282,11 @@ ddc_open_display(
    if (!err) {
       assert(dh->dref->pedid);
       dref->flags |= DREF_OPEN;
-      // protect with lock?
       TRACED_ASSERT(open_displays);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding dh=%s@ to open_displays hash table", dh_repr_p(dh));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding dh=%s to open_displays hash table", dh_repr_p(dh));
+      g_mutex_lock (&open_displays_mutex);
       g_hash_table_add(open_displays, dh);
+      g_mutex_unlock(&open_displays_mutex);
    }
    else {
 #ifdef NO
@@ -381,9 +382,11 @@ ddc_close_display(Display_Handle * dh) {
    }
 #endif
    assert(open_displays);
+   g_mutex_lock (&open_displays_mutex);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing dh=%s from open_displays hash table of size %d",
          dh_repr_p(dh), g_hash_table_size(open_displays) );
    g_hash_table_remove(open_displays, dh);
+   g_mutex_unlock (&open_displays_mutex);
 
    free_display_handle(dh);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dref=%s", dref_repr_t(dref));
