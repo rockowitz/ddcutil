@@ -101,7 +101,7 @@ extern __thread  unsigned int  trace_callstack_call_depth;
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
-extern bool dbgtrc_show_process_id; // prefix debug/trace messsages with process id
+extern bool dbgtrc_show_process_id; // prefix debug/trace messages with process id
 extern bool dbgtrc_trace_to_syslog_only;
 
 // void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
@@ -535,6 +535,8 @@ void core_errmsg_emitter(
 // Use of system log
 //
 
+extern bool msg_to_syslog_only;
+
 extern bool enable_syslog;
 extern DDCA_Syslog_Level syslog_level;
 
@@ -580,9 +582,11 @@ do { \
  */
 #define MSG_W_SYSLOG(_ddcutil_severity, format, ...) \
 do { \
-   FILE * f = (_ddcutil_severity <= DDCA_SYSLOG_WARNING) ? ferr() : fout(); \
-   fprintf(f, format, ##__VA_ARGS__); \
-   fprintf(f, "\n"); \
+   if (!msg_to_syslog_only) { \
+      FILE * f = (_ddcutil_severity <= DDCA_SYSLOG_WARNING) ? ferr() : fout(); \
+      fprintf(f, format, ##__VA_ARGS__); \
+      fprintf(f, "\n"); \
+   } \
    if (test_emit_syslog(_ddcutil_severity)) { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
