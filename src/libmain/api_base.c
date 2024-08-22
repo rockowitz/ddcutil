@@ -780,7 +780,7 @@ ddca_init2(const char *     libopts,
 DDCA_Status
 ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
-   API_PROLOG(debug, "Starting");
+   API_PROLOGX(debug, "Starting");
 
    if (enabled_classes == DDCA_EVENT_CLASS_ALL)
       enabled_classes = DDCA_EVENT_CLASS_DISPLAY_CONNECTION;
@@ -821,7 +821,7 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
 DDCA_Status
 ddca_stop_watch_displays(bool wait) {
    bool debug = false;
-   API_PROLOG(debug, "Starting");
+   API_PROLOGX(debug, "Starting");
    DDCA_Display_Event_Class active_classes;
    DDCA_Status ddcrc = ddc_stop_watch_displays(wait, &active_classes);
    API_EPILOG(debug, ddcrc, "");
@@ -831,7 +831,7 @@ ddca_stop_watch_displays(bool wait) {
 DDCA_Status
 ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
    bool debug = false;
-   API_PROLOG(debug, "Starting classes_loc=%p", classes_loc);
+   API_PROLOGX(debug, "Starting classes_loc=%p", classes_loc);
    DDCA_Status ddcrc = ddc_get_active_watch_classes(classes_loc);
    API_EPILOG(debug, ddcrc, "*classes_loc=0x%02x", *classes_loc);
 }
