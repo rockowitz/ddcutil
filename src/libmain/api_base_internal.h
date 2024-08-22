@@ -162,10 +162,12 @@ ddci_get_precondition_failure_mode();
 
 #define API_PROLOGX(debug_flag, format, ...) \
    do { \
-      if (library_initialization_failed) \
+      if (library_initialization_failed) { \
+         syslog(LOG_CRIT, "%s called after ddca_init2() or ddca_init() failure", __func__); \
          return DDCRC_UNINITIALIZED; \
+      } \
       if (!library_initialized)  { \
-         syslog(LOG_WARNING, "%s called before ddca_init2() or ddca_init()", __func__); \
+         syslog(LOG_WARNING, "%s called before ddca_init2() or ddca_init(). Performing default initialization", __func__); \
          ddci_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE, NULL); \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
