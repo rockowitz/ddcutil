@@ -20,6 +20,7 @@
 #include "public/ddcutil_c_api.h"
 
 #include "base/per_thread_data.h"
+#include "libmain/api_error_info_internal.h"
 
 
 extern bool library_initialized;
@@ -164,6 +165,9 @@ ddci_get_precondition_failure_mode();
    do { \
       if (library_initialization_failed) { \
          syslog(LOG_CRIT, "%s called after ddca_init2() or ddca_init() failure", __func__); \
+         save_thread_error_detail( \
+               new_ddca_error_detail(DDCRC_UNINITIALIZED, \
+                                     "%s called after ddca_init2() or ddca_init() failure", __func__)); \
          return DDCRC_UNINITIALIZED; \
       } \
       if (!library_initialized)  { \
