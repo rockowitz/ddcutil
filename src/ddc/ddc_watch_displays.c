@@ -536,7 +536,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
  */
 gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    bool debug = false;
-   bool debug_sysfs_state = true;
+   bool debug_sysfs_state = false;
    bool use_deferred_event_queue = false;
 
    Watch_Displays_Data * wdd = data;
