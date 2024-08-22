@@ -342,6 +342,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       detect_phantom_displays = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F8)
       ddc_slow_watch = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F9)
+      msg_to_syslog_only = true;
 
    switch(parsed_cmd->i6) {
    case 1:  ddc_watch_mode = Watch_Mode_Udev_I2C;    break;

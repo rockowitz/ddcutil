@@ -47,7 +47,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(7,  "Disable phantom display detection");
    REPORT_FLAG_OPTION(8,  "Slow down watch display polling");
    // REPORT_FLAG_OPTION(9,  buf0);
-   REPORT_FLAG_OPTION(9,  "Unused");
+   REPORT_FLAG_OPTION(9,  "Message to syslog only");
    REPORT_FLAG_OPTION(10, "Extended sleep for DDC Null Msg");
    REPORT_FLAG_OPTION(11, "Explore monitor state tests");
    REPORT_FLAG_OPTION(12, "Disable DRM services");
