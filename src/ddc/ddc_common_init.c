@@ -434,11 +434,19 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    //    parsed_cmd->stats = true;
 
 #ifdef USE_LIBDRM
-   // For each file in /dev/dri, check that DRM is supported by using the drm api
-   bool result1 = all_displays_drm_using_drm_api();          // in drm_common.c
+   bool result1 = false;
+   if (parsed_cmd->flags2&CMD_FLAG2_F13) {
+      // For each file in /dev/dri, check that DRM is supported by using the drm api
+      result1 = all_displays_drm_using_drm_api();          // in drm_common.c
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_displays_drm_using drm_api() returned %s", sbool(result1));
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Do not use all_displays_drm_using_drm_api()");
+   }
 
    // For each video adapter node in sysfs, check that subdirectories drm/cardN/cardN-xxx exist
    bool result2 = check_all_video_adapters_implement_drm();  // in i2c_sysfs.c
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "check_all_video_adapters_implement_drm() returned %s", sbool(result2));
 
 #ifdef OUT
    // Fails if nvidia driver, adapter path not filled in
@@ -448,10 +456,6 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "all_sysfs_i2c_info_drm() returned %s", sbool(result3));
 #endif
 
-   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "all_displays_drm_using drm_api() returned %s", sbool(result1));
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "check_all_video_adapters_implement_drm() returned %s", sbool(result2));
-   }
 
    drm_enabled = result2;
    if (parsed_cmd->flags2 & CMD_FLAG2_F12)
