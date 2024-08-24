@@ -767,7 +767,7 @@ static void probe_one_device_using_libdrm(char * devname, int depth) {
 
    if (fd >= 0) {
       probe_open_device_using_libdrm(fd, depth);
-      close(fd);
+      CLOSE_W_ERRMSG(fd);
    }
 }
 
