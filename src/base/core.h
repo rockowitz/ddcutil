@@ -293,6 +293,19 @@ bool dbgtrc_returning_expression(
    } while (0)
 #endif
 
+
+#define CLOSE_W_ERRMSG(_fd) \
+   do \
+   { \
+      int close_rc = close(fd); \
+      if (close_rc < 0) { \
+         dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_SEVERE, __func__, __LINE__, __FILE__, \
+               "Unexpected error on close(): fd=%d, filename=%s, errno=%s at line %d in file %s", \
+               _fd, filename_for_fd_t(_fd), linux_errno_name(errno), __LINE__, __FILE__); \
+      } \
+   } while(0)
+
+
 #define SEVEREMSG(format, ...) \
    dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_SEVERE, \
           __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
