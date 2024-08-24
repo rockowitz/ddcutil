@@ -402,14 +402,17 @@ void dbgrpt_connector_state_basic(Drm_Connector_State * state, int depth) {
 
 
 void dbgrpt_connector_states(GPtrArray* states) {
+   bool debug = false;
    assert(states);
-   rpt_label(1, "dpms_metadata:");
-   dbgrpt_enum_metadata(dpms_metadata, 2);
-   rpt_label(1, "link_status_metadata:");
-   dbgrpt_enum_metadata(link_status_metadata, 2);
-   rpt_label(1, "subconn_metadata:");
-   dbgrpt_enum_metadata(subconn_metadata, 2);
-   rpt_nl();
+   if (debug) {
+      rpt_label(1, "dpms_metadata:");
+      dbgrpt_enum_metadata(dpms_metadata, 2);
+      rpt_label(1, "link_status_metadata:");
+      dbgrpt_enum_metadata(link_status_metadata, 2);
+      rpt_label(1, "subconn_metadata:");
+      dbgrpt_enum_metadata(subconn_metadata, 2);
+      rpt_nl();
+   }
    rpt_structure_loc("GPtrArray", states, 0);
    for (int ndx = 0; ndx < states->len; ndx++) {
       Drm_Connector_State * cur =  g_ptr_array_index(states, ndx);
@@ -455,12 +458,13 @@ DDCA_Status get_drm_connector_states_by_fd(int fd, int cardno, GPtrArray* collec
    }
 
    if (fd >= 0) {
+#ifdef OUT
       // try to set master
-      int rc = drmSetMaster(fd);
+      int rc = drmSetMaster(fd);  // always fails, errno=13, but apparently not needed
       if (rc < 0 && (verbose || debug))
          rpt_vstring(1,"(%s) drmSetMaster() failed, errno = %d - %s",
                        __func__, errno, strerror(errno));
-
+#endif
       get_connector_state_array(fd, cardno, collector);
    }
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
@@ -494,16 +498,26 @@ Drm_Connector_State * get_drm_connector_state_by_fd(int fd, int cardno, int conn
 }
 
 
+/** Extract the card number from a file name of the form ".../cardN".
+ *
+ *  @param devname  device name
+ *  @return card number, or -1 if not found
+ */
 int extract_cardno(const char * devname) {
    int cardno = -1;
-   char * bn = g_path_get_basename(devname);
-   if (!bn || strlen(bn) < 5 || memcmp(bn, "card", 4) != 0 || !g_ascii_isdigit(bn[4]) ) {
-      rpt_vstring(1, "Invalid device name: %s", devname);
+   if (devname) {
+      char * bn = g_path_get_basename(devname);
+      if (!bn || strlen(bn) < 5 || memcmp(bn, "card", 4) != 0 || !g_ascii_isdigit(bn[4]) ) {
+         // rpt_vstring(1, "Invalid device name: %s", devname);
+      }
+      else {
+         cardno = g_ascii_digit_value(bn[4]);
+      }
+      free(bn);
    }
-   else {
-      cardno = g_ascii_digit_value(bn[4]);
-   }
-   free(bn);
+   // if (cardno < 0) {
+   //    MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Invalid device name: %s", devname);
+   // }
    return cardno;
 }
 
@@ -528,6 +542,19 @@ Drm_Connector_State * get_drm_connector_state_by_devname(const char * devname, i
 #endif
 
 
+#ifdef UNUSED    // replaced by CLOSE_W_ERRMSG()
+void syslogged_close(int fd) {
+   bool debug = false;
+   DBGF(debug, "fd=%d, filename =%s", fd, filename_for_fd_t(fd));
+   int rc = close(fd);
+   if (rc < 0) {
+      int errsv = errno;
+      syslog(LOG_ERR, "close() failed for fd=%d=%s. errno=%d", fd, filename_for_fd_t(fd), errsv);
+   }
+}
+#endif
+
+
 DDCA_Status
 get_drm_connector_states_by_devname(
       const char * devname,
@@ -541,7 +568,7 @@ get_drm_connector_states_by_devname(
    DDCA_Status result = 0;
    int cardno = extract_cardno(devname);
    if (cardno < 0) {
-      rpt_vstring(1, "Invalid device name: %s", devname);
+      SEVEREMSG("Invalid device name: %s", devname);
       result = -EINVAL;
       goto bye;
    }
@@ -549,7 +576,7 @@ get_drm_connector_states_by_devname(
    int fd  = open(devname,O_RDWR | O_CLOEXEC);
    if (fd < 0) {
       int errsv = errno;
-      rpt_vstring(1, "Error opening device %s using open(), errno=%s",
+      SEVEREMSG("Error opening device %s using open(), errno=%s",
                                  devname, strerrorname_np(errsv));
       result = -errsv;
       goto bye;
@@ -557,8 +584,9 @@ get_drm_connector_states_by_devname(
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling get_drm_connector_states_by_fd():");
    int rc = get_drm_connector_states_by_fd(fd, cardno, collector);
-   if (rc == 0  && (verbose || debug))
+   if (rc == 0  && (verbose || IS_DBGTRC(debug, DDCA_TRC_NONE)))
       dbgrpt_connector_states(collector);
+   CLOSE_W_ERRMSG(fd);
 
 bye:
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
