@@ -194,7 +194,7 @@ const char * drm_bus_type_name(uint8_t bus) {
 
           drmFreeDevice(&ddev);
        }
-       close(fd);  // because O_CLOEXEC not recognized
+       close(fd);
     }
     DBGF(debug, "Done. Returning: %s", sbool(supports_drm));
     return supports_drm;
