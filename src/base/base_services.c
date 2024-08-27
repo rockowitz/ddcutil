@@ -3,9 +3,10 @@
  *  Initialize and release base services.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "util/debug_util.h"
 #include "util/error_info.h"
 
 #include "core.h"
@@ -30,8 +31,7 @@
  */
 void init_base_services() {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting.\n", __func__);
+   DBGF(debug, "Starting.");
    errinfo_init(psc_name, psc_desc);
    init_core();
    init_base_dynamic_features();
@@ -48,8 +48,7 @@ void init_base_services() {
    init_i2c_bus_base();
    init_feature_metadata();
    init_drm_connector_state();
-   if (debug)
-      printf("(%s) Done\n", __func__);
+   DBGF(debug, "Done");
 }
 
 
