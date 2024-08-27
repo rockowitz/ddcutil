@@ -3,7 +3,7 @@
  *  String utility functions
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -138,6 +138,9 @@ bool str_ends_with(const char * value_to_test, const char * suffix) {
  *  @return starting position of substring, -1 if not found
  */
 int str_contains(const char * value_to_test, const char * segment) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) value_to_test=|%s|, segment=|%s|\n", __func__, value_to_test, segment);
    int result = -1;
    if (value_to_test && segment) {
       int seglen = strlen(segment);
@@ -149,6 +152,8 @@ int str_contains(const char * value_to_test, const char * segment) {
          }
       }
    }
+   if (debug)
+      printf("(%s) Returning: %d\n", __func__, result);
    return result;
 }
 
