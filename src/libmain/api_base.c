@@ -3,7 +3,7 @@
  *  C API base functions.
  */
 
-// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -29,6 +29,7 @@
 
 #include "base/base_services.h"
 #include "base/build_info.h"
+#include "base/build_timestamp.h"
 #include "base/core_per_thread_settings.h"
 #include "base/core.h"
 #include "base/dsa2.h"
@@ -378,7 +379,6 @@ void atexit_func() {
 #endif
 
 
-
 /** Initializes the ddcutil library module.
  *
  *  Called automatically when the shared library is loaded.
@@ -393,7 +393,8 @@ _ddca_new_init(void) {
    if (s && strlen(s) > 0)
       debug = true;
 
-   DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
+   DBGF(debug, "Starting. library built %s at %s", BUILD_DATE, BUILD_TIME);
+   syslog(LOG_NOTICE, "Starting. library built %s at %s", BUILD_DATE, BUILD_TIME);
 
    init_api_base();         // registers functions in RTTI table
    init_base_services();    // initializes tracing related modules
@@ -617,10 +618,8 @@ ddci_init(const char *      libopts,
    if (s && strlen(s) > 0)
       debug = true;
 
-   DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
-   DBG( "stdout file name: %s",  filename_for_fd_t(1));
-   syslog(LOG_ERR, "stdout file name: %s",  filename_for_fd_t(1));
-
+   DBGF(debug, "Starting. library built %s at %s, library_initialized=%s",
+               BUILD_DATE, BUILD_TIME, sbool(library_initialized));
 
    if (infomsg_loc)
       *infomsg_loc = NULL;
@@ -739,15 +738,6 @@ ddci_init(const char *      libopts,
    DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
 
 bye:
-   if (debug) {     // for development
-      msg_to_syslog_only = true;
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = true");
-      msg_to_syslog_only = false;
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = false");
-      DBG( "stdout file name: %s",  filename_for_fd_t(1));
-      syslog(LOG_ERR, "stdout file name: %s",  filename_for_fd_t(1));
-   }
-
    if (master_error) {
       ddcrc = master_error->status_code;
       DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
