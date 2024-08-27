@@ -49,6 +49,7 @@
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/subprocess_util.h"
 #include "util/timestamp.h"
 
 #include "base/build_info.h"
@@ -144,6 +145,7 @@ bool dbgtrc_show_wall_time =  false;  ///< include wall time in debug/trace outp
 bool dbgtrc_show_thread_id =  false;  ///< include thread id in debug/trace output
 bool dbgtrc_show_process_id = false;  ///< include process id in debug/trace output
 bool dbgtrc_trace_to_syslog_only = false; ///< send trace output only to system log
+bool stdout_stderr_redirected = false;
 
 
 #ifdef UNUSED
@@ -626,7 +628,7 @@ static bool vdbgtrc(
             free(syslog_msg);
          }
 
-         if (!dbgtrc_trace_to_syslog_only) {
+         if (!dbgtrc_trace_to_syslog_only && !stdout_stderr_redirected) {
             FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
                               ? thread_settings->ferr
                               : thread_settings->fout;
@@ -1194,5 +1196,43 @@ base_errinfo_free_with_report(
 }
 
 
+void detect_sysout_syserr_redirection() {
+   bool debug = false;
+   DBGF(debug, "Starting");
+   // syslog(LOG_ERR,  "(%s)",msg);
+  //  msg_to_syslog_only = true;
+   // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = true");
+   // msg_to_syslog_only = false;
+   // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = false");
+   char * stdout_fn = NULL;
+   filename_for_fd(1, &stdout_fn);
+   DBGF(debug, "stdout file name: %s",  stdout_fn);
+   stdout_stderr_redirected = (str_contains(stdout_fn, "socket") >= 0);
+   free(stdout_fn);
+   DBGF(debug, "set stdout_stderr_redirected = %s", SBOOL(stdout_stderr_redirected));
+
+   char * initsys = execute_shell_cmd_one_line_result("ps -p 1 -o comm=");
+   DBGF(debug, "Using init system: %s", initsys);
+   // need to check if initsys is a symbolic link and if so what it points to, use stat command
+   free(initsys);
+
+   // shows nothing
+   // show_backtrace(1);
+
+   // syslog(LOG_ERR, "stdout file name: %s",  filename_for_fd_t(1));
+
+   char * journalstream = getenv("JOURNAL_STREAM");  // do not free
+   DBGF(debug, "$JOURNAL_STREAM = %s", journalstream);
+  //  MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$JOURNAL_STREAM = %s", journalstream);
+   // char * s = getenv("INVOCATION_ID");  // do not free
+   // DBG("$INVOCATION_ID = %s", s);
+   // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$INVOCATION_ID = %s", s);
+}
+
+
 void init_core() {
+   bool debug = true;
+   DBGF(debug, "Starting");
+   detect_sysout_syserr_redirection();
+   DBGF(debug, "Done");
 }
