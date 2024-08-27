@@ -353,7 +353,7 @@ uninstall-local:
 	rm -f $(DESTDIR)$(libdir)/libddcutil*  
 	
 	
-# Rename to "all=local" for development 
+# Rename from all-local-disabled to  "all-local" for development 
 all-local-disabled:
 	@echo ""
 	@echo "(src/Makefile:all-local) Variable values:"
