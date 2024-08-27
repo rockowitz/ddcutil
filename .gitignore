@@ -36,6 +36,7 @@ Makefile.in
 /autoscan.log
 /configure.scan
 src/**/am--include-marker
+src/base/build_details.h
 
 # Generated files
 ddcutil.pc
