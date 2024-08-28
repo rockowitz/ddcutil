@@ -11,7 +11,6 @@ AM_CFLAGS = $(AM_CFLAGS_STD)
 # Does not work to force recompilation
 # AM_MAKEFLAGS = -Wbuild_timestamp.c 
 
-
 CLEANFILES = \
    *expand \
    build_details.h
@@ -21,8 +20,16 @@ CLEANFILES = \
 
 BUILT_SOURCES = build_details.h
 
+# Fails. Under some circumstances $0 is null, so explicitly redirect to build_details.h instead
+# build_details.h:
+#	echo "// Dummy include file to force rebuilding built_timestamp.c" >$0
+
 build_details.h:
-	echo "// Dummy include file to force rebuilding built_timestamp.c" >$0
+	echo "// Dummy include file to force rebuilding built_timestamp.c" > build_details.h
+
+all-local:
+	@echo "(src/base/Makefile) all-local"
+	rm -fv build_details.h
 	
 clean-local:
 	@echo "(src/base/Makefile) clean-local"
