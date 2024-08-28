@@ -43,7 +43,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(3,  "DDC Null Message never indicates invalid feature");
    REPORT_FLAG_OPTION(4,  "Read strategy tests");
    REPORT_FLAG_OPTION(5,  buf5);
-   REPORT_FLAG_OPTION(6,  "Redetect DRM connector states");
+   REPORT_FLAG_OPTION(6,  "Use DRM connector states");
    REPORT_FLAG_OPTION(7,  "Disable phantom display detection");
    REPORT_FLAG_OPTION(8,  "Slow down watch display polling");
    // REPORT_FLAG_OPTION(9,  buf0);
@@ -52,7 +52,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(11, "Explore monitor state tests");
    REPORT_FLAG_OPTION(12, "Disable DRM services");
    REPORT_FLAG_OPTION(13, "Use all_displays_drm_using_drm_api()");
-   REPORT_FLAG_OPTION(14, "Unused");
+   REPORT_FLAG_OPTION(14, "Use DRM API outside of ENVIRONMENT cmd");
 #ifdef GET_EDID_USING_SYSFS
    REPORT_FLAG_OPTION(15, "Verify sysfs EDID reads");
 #else

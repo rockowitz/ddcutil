@@ -91,7 +91,7 @@ static bool detect_usb_displays = false;
 #endif
 bool monitor_state_tests = false;
 bool skip_ddc_checks = false;
-bool use_redetect_drm_connectors = false;
+
 
 void ddc_add_display_ref(Display_Ref * dref) {
    g_ptr_array_add(all_display_refs, dref);
@@ -1603,7 +1603,7 @@ ddc_redetect_displays() {
       dsa2_save_persistent_stats();
    // free_sysfs_drm_connector_names();
 
-   if (use_redetect_drm_connectors)
+   if (use_drm_connector_states)
       redetect_drm_connector_states();
 
    // init_sysfs_drm_connector_names();

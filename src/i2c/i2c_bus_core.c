@@ -79,6 +79,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 bool drm_enabled = false;
+bool use_drm_connector_states = false;
 // #ifdef GET_EDID_USING_SYSFS
 bool force_read_edid = true;
 bool verify_sysfs_edid = false;
@@ -658,38 +659,42 @@ void validate_sysfs_edid(int fd, I2C_Bus_Info * businfo) {
       businfo->flags &= ~I2C_BUS_ADDR_0X50;
       businfo->flags &= ~I2C_BUS_SYSFS_EDID;
 
-      DBGMSG("Resetting sysfs data using redetect_connector_states()");
-      redetect_drm_connector_states();
+      if (use_drm_connector_states) {
+         DBGMSG("Resetting sysfs data using redetect_connector_states()");
+         redetect_drm_connector_states();
+      }
 
       // get the edid from connector states
 
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
               "Getting edid from Drm Connector States for connector %s", businfo->drm_connector_name);
       Drm_Connector_Identifier dci =  parse_sys_drm_connector_name(businfo->drm_connector_name);
-      Drm_Connector_State * cstate = find_drm_connector_state(dci);
-      if (cstate) {
-         if (cstate->edid && true_i2c_edid) {
-            if (memcmp(true_i2c_edid->bytes, cstate->edid->bytes, 128) == 0) {
-               DBGMSG("Correct edid now read from drm connector state");
+      if (use_drm_connector_states) {
+         Drm_Connector_State * cstate = find_drm_connector_state(dci);
+         if (cstate) {
+            if (cstate->edid && true_i2c_edid) {
+               if (memcmp(true_i2c_edid->bytes, cstate->edid->bytes, 128) == 0) {
+                  DBGMSG("Correct edid now read from drm connector state");
+               }
+               else {
+                  SEVEREMSG("Incorrect edid read from drm connector state");
+               }
+            }
+            else if (cstate->edid && !true_i2c_edid) {
+               SEVEREMSG("edid that should be nonexistent read from drm");
+            }
+            else if (!cstate->edid && true_i2c_edid) {
+               SEVEREMSG("I2C edid exists but not read from drm");
             }
             else {
-               SEVEREMSG("Incorrect edid read from drm connector state");
+               assert (!cstate->edid && !true_i2c_edid);
+               DBGMSG("I2C edid non-existent and none read from drm");
             }
          }
-         else if (cstate->edid && !true_i2c_edid) {
-            SEVEREMSG("edid that should be nonexistent read from drm");
-         }
-         else if (!cstate->edid && true_i2c_edid) {
-            SEVEREMSG("I2C edid exists but not read from drm");
-         }
          else {
-            assert (!cstate->edid && !true_i2c_edid);
-            DBGMSG("I2C edid non-existent and none read from drm");
+            SEVEREMSG("Drm_Connector_State not found for %s, %s",
+                  businfo->drm_connector_name, dci_repr(dci));
          }
-      }
-      else {
-         SEVEREMSG("Drm_Connector_State not found for %s, %s",
-               businfo->drm_connector_name, dci_repr(dci));
       }
 
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,

@@ -804,7 +804,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
             prop_hotplug,     // "1"
             attr_sysname);
 
-      if (use_redetect_drm_connectors)
+      if (use_drm_connector_states)
          redetect_drm_connector_states();
       current_connector_names = ddc_check_displays(current_connector_names, deferred_events);
 

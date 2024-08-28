@@ -337,7 +337,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F5)
       EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
    if (parsed_cmd->flags2 & CMD_FLAG2_F6)
-      use_redetect_drm_connectors = true;
+      use_drm_connector_states = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F7)
       detect_phantom_displays = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F8)
@@ -433,6 +433,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
 
+
 #ifdef USE_LIBDRM
    bool result1 = false;
    if (parsed_cmd->flags2&CMD_FLAG2_F13) {
@@ -466,9 +467,10 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    drm_enabled = false;
 #endif
    get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
-   redetect_drm_connector_states();
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "drm_enabled = %s, sys_drm_connectors = %p",
-         sbool(drm_enabled), sys_drm_connectors);
+   if (use_drm_connector_states)
+      redetect_drm_connector_states();
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s, sys_drm_connectors = %p",
+         sbool(use_drm_connector_states), sbool(drm_enabled), sys_drm_connectors);
    subinit_i2c_bus_core();
 
    init_max_tries(parsed_cmd);

@@ -586,8 +586,10 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
                                       false,    // report_businfo
                                       1);       // depth
-      rpt_vstring(0, "Initial DRM connector states");
-      report_drm_connector_states_basic(/*refresh*/ true, 1);
+      if (use_drm_connector_states) {
+         rpt_vstring(0, "Initial DRM connector states");
+         report_drm_connector_states_basic(/*refresh*/ true, 1);
+      }
    }
 
    GArray * deferred_events = NULL;
@@ -683,8 +685,10 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       if (debug_sysfs_state) {
          rpt_label(0, "/sys/class/drm state after hotplug event:");
          dbgrpt_sysfs_basic_connector_attributes(1);
-         rpt_vstring(0, "DRM connector states after hotplug event:");
-         report_drm_connector_states_basic(/*refresh*/ true, 1);
+         if (use_drm_connector_states) {
+            rpt_vstring(0, "DRM connector states after hotplug event:");
+            report_drm_connector_states_basic(/*refresh*/ true, 1);
+         }
       }
 
       // emits display change events or queues them

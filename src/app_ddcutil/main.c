@@ -935,7 +935,8 @@ main(int argc, char *argv[]) {
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F2) {
       consolidated_i2c_sysfs_report(0);
-      report_drm_connector_states(0);
+      if (use_drm_connector_states)
+         report_drm_connector_states(0);
       // rpt_label(0, "*** Tests Done ***");
       // rpt_nl();
    }

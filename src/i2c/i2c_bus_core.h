@@ -32,6 +32,7 @@
 
 extern bool i2c_force_bus;
 extern bool drm_enabled;
+extern bool use_drm_connector_states;
 extern bool force_read_edid;
 extern bool verify_sysfs_edid;
 extern int  i2c_businfo_async_threshold;
