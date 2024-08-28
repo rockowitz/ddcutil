@@ -31,19 +31,9 @@ typedef struct {
    uint64_t          subconnector;
 } Drm_Connector_State;
 
-DDCA_Status
-get_drm_connector_states_by_devname(
-      const char * devname,
-      bool         verbose,
-      GPtrArray *  collector);   // array of Drm_Connector_State
 
-Drm_Connector_State *
-get_drm_connector_state_by_devname(
-      const char * devname,
-      int          connector_id);
 
-GPtrArray*                       // array of Drm_Connector_State
-drm_get_all_connector_states();
+
 
 void
 redetect_drm_connector_states();

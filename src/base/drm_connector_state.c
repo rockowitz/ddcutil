@@ -44,7 +44,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_BASE;
 
 
- char * get_busid_from_fd(int fd) {
+static char * get_busid_from_fd(int fd) {
     int depth = 0;
     int d1 = depth+1;
     int d2 = depth+2;
@@ -555,7 +555,7 @@ void syslogged_close(int fd) {
 #endif
 
 
-DDCA_Status
+static DDCA_Status
 get_drm_connector_states_by_devname(
       const char * devname,
       bool         verbose,
@@ -597,7 +597,7 @@ bye:
 GPtrArray* all_card_connector_states = NULL;
 
 
-GPtrArray * drm_get_all_connector_states() {
+static GPtrArray * drm_get_all_connector_states() {
    bool verbose = false;
    GPtrArray * devnames = get_dri_device_names_using_filesys();
    GPtrArray * allstates = g_ptr_array_new();
