@@ -27,9 +27,9 @@ BUILT_SOURCES = build_details.h
 build_details.h:
 	echo "// Dummy include file to force rebuilding built_timestamp.c" > build_details.h
 
-all-local:
-	@echo "(src/base/Makefile) all-local"
-	rm -fv build_details.h
+# all-local:
+#	@echo "(src/base/Makefile) all-local"
+#	rm -fv build_details.h
 	
 clean-local:
 	@echo "(src/base/Makefile) clean-local"

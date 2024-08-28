@@ -299,6 +299,10 @@ libddcutil_la_LDFLAGS += --disable-static
 
 endif
 
+all-local:
+	@echo "(src/Makefile) all-local"
+	rm -fv base/build_details.h
+
 
 # debug-install-hook:
 #  	ls -ld $(DESTDIR)$(libdir)
