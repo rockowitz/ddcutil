@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.5] 2024-08-12
+## [2.1.5] 2024-08-31
 
 ### General
 
@@ -82,6 +82,9 @@ file is libddcutil.so.5.1.3. (VERIFY)
     Watching for sleep state changes is not currently supported.  
   - Regards DDCA_EVENT_CLASS_ALL as same as DDCA_EVENT_CLASS_DISPLAY_CONNECTION
   - Error if either DDCA_EVENT_CLASS_DPMS or DDCA_EVENT_CLASS_NONE are specified.
+- Status code DDCRC_INVALID_CONFIG_FILE renamed to more general DDCRC_CONFIG_ERROR. 
+  DDCRC_INVALID_CONFIG_FILE is a valid alias.
+- Write build date and time to system log when starting libddcutil.
 
 #### Fixed
 
@@ -102,6 +105,7 @@ file is libddcutil.so.5.1.3. (VERIFY)
 - **ddca_dref_repr()**: Do not check that the display reference is still valid.
   It is meaningful to create a string representation of a display reference even
   if it is no longer usable. Addresses ddcui issue #55.
+- Protect hash table of open monitors to avoid a possible race condition.
 
 ## [2.1.4] 2024-02-17
 
