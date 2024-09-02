@@ -1,7 +1,7 @@
 /* @file i2c_display_lock.h
  */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_DISPLAY_LOCK_H_
@@ -18,7 +18,7 @@
 
 typedef enum {
    DDISP_NONE  = 0x00,     ///< No flags set
-   DDISP_WAIT  = 0x01      ///< If true, #lock_distinct_display() should wait
+   DDISP_WAIT  = 0x01      ///< If set, #lock_display() should wait
 } Display_Lock_Flags;
 
 #define DISPLAY_LOCK_MARKER "DDSC"
