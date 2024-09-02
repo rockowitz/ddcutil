@@ -524,6 +524,36 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
 #endif
 
 
+static Status_Errno_DDC
+i2c_detect_x37(int fd) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s", fd, filename_for_fd_t(fd) );
+
+   // Quirks
+   // - i2c_set_addr() Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
+   //   avoided by never calling this function for an eDP screen
+   // - Dell P2715Q does not respond to single byte read, but does respond to
+   //   a write (7/2018), so this function checks both
+   Status_Errno_DDC rc = 0;
+   // regard either a successful write() or a read() as indication slave address is valid
+   Byte    writebuf = {0x00};
+
+   rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
+   // rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
+   // rc = 6; // for testing
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                   "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
+   if (rc != 0) {
+      Byte    readbuf[4];  //  4 byte buffer
+      rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
+      //rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                      "invoke_i2c_reader() for slave address x37 returned %s", psc_name_code(rc));
+   }
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"");
+   return rc;
+}
+
 /** Tests if an open display handle is still
  *
  *  @param  dh     display handle
@@ -564,6 +594,11 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
                "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
    }
    else {
+      int ddcrc = i2c_detect_x37(dh->fd);
+      if (ddcrc)
+         result = ERRINFO_NEW(DDCRC_OTHER, "Slave address x37 unresponsive. io status = %s", psc_desc(ddcrc));
+   }
+   if (!result) {
       if (dpms_check_drm_asleep_by_dref(dh->dref))
          result = ERRINFO_NEW(DDCRC_DPMS_ASLEEP,
                "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
@@ -595,35 +630,7 @@ Bit_Set_256 check_edids(GPtrArray * buses) {
 // I2C Bus Inspection - Fill in and report Bus_Info
 //
 
-static Status_Errno_DDC
-i2c_detect_x37(int fd) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s", fd, filename_for_fd_t(fd) );
 
-   // Quirks
-   // - i2c_set_addr() Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
-   //   avoided by never calling this function for an eDP screen
-   // - Dell P2715Q does not respond to single byte read, but does respond to
-   //   a write (7/2018), so this function checks both
-   Status_Errno_DDC rc = 0;
-   // regard either a successful write() or a read() as indication slave address is valid
-   Byte    writebuf = {0x00};
-
-   rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
-   // rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
-   // rc = 6; // for testing
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                   "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
-   if (rc != 0) {
-      Byte    readbuf[4];  //  4 byte buffer
-      rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
-      //rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                      "invoke_i2c_reader() for slave address x37 returned %s", psc_name_code(rc));
-   }
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"");
-   return rc;
-}
 
 
 void validate_sysfs_edid(int fd, I2C_Bus_Info * businfo) {
