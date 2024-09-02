@@ -11,7 +11,6 @@
 
 #include <assert.h>
 #include <base/base_services.h>
-#include <base/drm_connector_state.h>
 #include <ctype.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
@@ -37,7 +36,6 @@
 #include "util/libdrm_util.h"
 #endif
 #include "util/linux_util.h"
-#include "util/regex_util.h"
 #include "util/report_util.h"
 #include "util/simple_ini_file.h"
 #include "util/string_util.h"
@@ -91,7 +89,6 @@
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
-#include "ddc/ddc_save_current_settings.h"
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_try_data.h"
@@ -360,12 +357,8 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    DBGMSF(debug, "Starting ...");
    bool ok = false;
-   Error_Info * submaster_errs = submaster_initializer(parsed_cmd);  // shared with libddcutil
-   if (submaster_errs) {
-      errinfo_report_details(submaster_errs, 0);
-      ERRINFO_FREE(submaster_errs);
+   if (!submaster_initializer(parsed_cmd))    // shared with libddcutil
       goto bye;
-   }
 
 #ifdef ENABLE_ENVCMDS
    if (parsed_cmd->cmd_id != CMDID_ENVIRONMENT) {
@@ -574,42 +567,33 @@ execute_cmd_with_optional_display_handle(
    case CMDID_CAPABILITIES:
       {
          assert(dh);
-         if (app_check_dynamic_features(dh->dref)) {
-            ensure_vcp_version_set(dh);
+         app_check_dynamic_features(dh->dref);
+         ensure_vcp_version_set(dh);
 
-            DDCA_Status ddcrc = app_capabilities(dh);
-            main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
-         }
-         else
-            main_rc = EXIT_FAILURE;
+         DDCA_Status ddcrc = app_capabilities(dh);
+         main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
          break;
       }
 
    case CMDID_GETVCP:
       {
          assert(dh);
-         if (app_check_dynamic_features(dh->dref)) {
-            ensure_vcp_version_set(dh);
+         app_check_dynamic_features(dh->dref);
+         ensure_vcp_version_set(dh);
 
-            Public_Status_Code psc = app_show_feature_set_values_by_dh(dh, parsed_cmd);
-            main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
-         }
-         else
-            main_rc = EXIT_FAILURE;
+         Public_Status_Code psc = app_show_feature_set_values_by_dh(dh, parsed_cmd);
+         main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
       }
       break;
 
    case CMDID_SETVCP:
       {
          assert(dh);
-         if (app_check_dynamic_features(dh->dref)) {
-            ensure_vcp_version_set(dh);
+         app_check_dynamic_features(dh->dref);
+         ensure_vcp_version_set(dh);
 
-            int rc = app_setvcp(parsed_cmd, dh);
-            main_rc = (rc == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
-         }
-         else
-            main_rc = EXIT_FAILURE;
+         int rc = app_setvcp(parsed_cmd, dh);
+         main_rc = (rc == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
       }
       break;
 
@@ -642,47 +626,34 @@ execute_cmd_with_optional_display_handle(
       {
          assert(dh);
          // MCCS vspec can affect whether a feature is NC or TABLE
-         if (app_check_dynamic_features(dh->dref)) {
-            ensure_vcp_version_set(dh);
+         app_check_dynamic_features(dh->dref);
+         ensure_vcp_version_set(dh);
 
-            Public_Status_Code psc =
+         Public_Status_Code psc =
                app_dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
                                       ? parsed_cmd->args[0]
                                       : NULL );
-            main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
-         }
-         else
-            main_rc = EXIT_FAILURE;
+         main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
          break;
       }
 
    case CMDID_READCHANGES:
-   {
       assert(dh);
-      if (app_check_dynamic_features(dh->dref)) {
-         ensure_vcp_version_set(dh);
+      app_check_dynamic_features(dh->dref);
+      ensure_vcp_version_set(dh);
 
-         app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
-         main_rc = EXIT_FAILURE;
-      }
-      else
-         main_rc = EXIT_FAILURE;
+      app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
+      main_rc = EXIT_FAILURE;
       break;
-   }
 
    case CMDID_PROBE:
-   {
       assert(dh);
-      if (app_check_dynamic_features(dh->dref)) {
-         ensure_vcp_version_set(dh);
+      app_check_dynamic_features(dh->dref);
+      ensure_vcp_version_set(dh);
 
-         app_probe_display_by_dh(dh);
-         main_rc = EXIT_SUCCESS;
-      }
-      else
-         main_rc = EXIT_FAILURE;
+      app_probe_display_by_dh(dh);
+      main_rc = EXIT_SUCCESS;
       break;
-   }
 
    default:
       main_rc = EXIT_FAILURE;
@@ -923,20 +894,13 @@ main(int argc, char *argv[]) {
 
    if (!master_initializer(parsed_cmd))
       goto bye;
-
-   if (parsed_cmd->cmd_id == CMDID_NOOP) {
-      rpt_vstring(0, "Executing options only");
-      rpt_nl();
-   }
-
    if (parsed_cmd->flags&CMD_FLAG_SHOW_SETTINGS)
       report_all_options(parsed_cmd, configure_fn, untokenized_cmd_prefix, 0);
+
    // xdg_tests(); // for development
 
-   if (parsed_cmd->flags2 & CMD_FLAG2_F2) {
+   if (parsed_cmd->flags & CMD_FLAG_F2) {
       consolidated_i2c_sysfs_report(0);
-      if (use_drm_connector_states)
-         report_drm_connector_states(0);
       // rpt_label(0, "*** Tests Done ***");
       // rpt_nl();
    }
@@ -972,29 +936,28 @@ main(int argc, char *argv[]) {
    //    i2c_discard_caches(parsed_cmd->discarded_cache_types);
    // }
 
-   else if (parsed_cmd->cmd_id == CMDID_NOOP) {
-      // rpt_vstring(0, "Executing options only");   // already reported
-      main_rc = EXIT_SUCCESS;
-   }
-
    else if (parsed_cmd->cmd_id == CMDID_C1) {
-      DBGMSG("Executing temporarily defined command C1: watch for display connection/disconnection");
+      DBGMSG("Executing temporarily defined command C1");
       if (!drm_enabled) {
          DBGMSG("Requires DRM capable video drivers.");
          main_rc = EXIT_FAILURE;
       }
       else {
          ddc_ensure_displays_detected();
-         Error_Info * erec = ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
+         DDCA_Display_Event_Class event_classes = DDCA_EVENT_CLASS_ALL;
+         if (parsed_cmd->flags&CMD_FLAG_F13)
+            event_classes = DDCA_EVENT_CLASS_DISPLAY_CONNECTION;
+         if (parsed_cmd->flags&CMD_FLAG_F14)
+            event_classes = DDCA_EVENT_CLASS_DPMS;
+         Error_Info * erec = ddc_start_watch_displays(event_classes);
          if (erec) {
+            DBGMSG(erec->detail);
             ERRINFO_FREE_WITH_REPORT(erec, true);
             main_rc = EXIT_FAILURE;
          }
          else {
-            DBGMSG("Watching for 60 minutes");
+            DBGMSG("Sleeping for 60 minutes");
             sleep(60*60);
-            DBGMSG("Terminating execution after 60 minutes");
-            ddc_stop_watch_displays(true, NULL);
             main_rc = EXIT_SUCCESS;
          }
       }
@@ -1002,7 +965,6 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_C2) {
       DBGMSG("Executing temporarily defined command C2: noop");
-      // report_drm_connector_states(0);
       main_rc = EXIT_SUCCESS;
    }
 
@@ -1025,7 +987,7 @@ main(int argc, char *argv[]) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
       verify_i2c_access();
 
-      if ( parsed_cmd->flags2 & CMD_FLAG2_F4) {
+      if ( parsed_cmd->flags & CMD_FLAG_F4) {
          test_display_detection_variants();
       }
       else {     // normal case
@@ -1048,8 +1010,6 @@ main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
-      if (parsed_cmd->output_level >= DDCA_OL_VERBOSE)
-         force_envcmd_settings(parsed_cmd);
       query_sysenv(parsed_cmd->flags & CMD_FLAG_QUICK);
       main_rc = EXIT_SUCCESS;
    }
@@ -1071,7 +1031,7 @@ main(int argc, char *argv[]) {
 #ifdef ENABLE_USB
       // DBGMSG("Processing command chkusbmon...\n");
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command CHKUSBMON...");
-      bool is_monitor = (parsed_cmd->flags&CMD_FLAG_ENABLE_USB) && check_usb_monitor( parsed_cmd->args[0] );
+      bool is_monitor = check_usb_monitor( parsed_cmd->args[0] );
       main_rc = (is_monitor) ? EXIT_SUCCESS : EXIT_FAILURE;
 #else
       main_rc = EXIT_FAILURE;
