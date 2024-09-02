@@ -503,6 +503,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
       BS256 bs_stabilized_buses_w_edid = buses_bitset_from_businfo_array(stabilized_buses, /*only_connected*/ true);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_stabilized_buses_w_edid: %s", BS256_REPR(bs_stabilized_buses_w_edid));
       new_buses = stabilized_buses;
+      bs_new_buses_w_edid = bs_stabilized_buses_w_edid;
    }
 
    bool hotplug_change_handler_emitted = false;
