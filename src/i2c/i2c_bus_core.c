@@ -1131,10 +1131,11 @@ GPtrArray * i2c_detect_buses0() {
 
 
 /** Creates a bit set in which the nth bit is set corresponding to the number
- *  of each bus in an array of #I2C_Bus_Info for which a monitor is connected,
- *  i.e. for which an EDID is detected.
+ *  of each bus in an array of #I2C_Bus_Info, possibly restricted to those buses
+ *  for which a monitor is connected, i.e. for which an EDID is detected.
  *
  *  @param  buses   array of I2C_Bus_Info
+ *  @param  only_connected if true, only include buses having EDID
  *  @return bit set
  */
 Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only_connected) {
