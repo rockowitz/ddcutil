@@ -378,7 +378,8 @@ void dbgrpt_connector_state_basic(Drm_Connector_State * state, int depth) {
    int d0 = depth;
    int d1 = depth+1;
 
-   rpt_vstring(d0, "%-20s %s-%d",  "connector:",
+   rpt_vstring(d0, "%-20s %d", "connector id:", state->connector_id);
+   rpt_vstring(d1, "%-17s %s-%d",  "connector:",
               drm_connector_type_name(state->connector_type),
               state->connector_type_id);
    rpt_vstring(d1, "%-17s %d - %s",  "connection:",
