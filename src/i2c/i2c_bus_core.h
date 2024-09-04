@@ -39,6 +39,7 @@ extern int  i2c_businfo_async_threshold;
 extern bool cross_instance_locks_enabled;
 extern int  flock_poll_millisec;
 extern int  flock_max_wait_millisec;
+extern bool debug_flock;
 
 void             i2c_enable_cross_instance_locks(bool yesno);
 

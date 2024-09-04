@@ -362,6 +362,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       null_msg_adjustment_enabled = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F11)
       monitor_state_tests = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F14)
+      debug_flock = true;
 #ifdef TEST_EDID_SMBUS
    if (parsed_cmd->flags & CMD_FLAG_F13)
       EDID_Read_Uses_Smbus = true;
