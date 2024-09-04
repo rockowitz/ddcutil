@@ -3,7 +3,7 @@
  *  Miscellaneous Linux utilities
  */
 
-// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -336,7 +336,7 @@ intmax_t get_thread_id() {
    pid_t tid = syscall(SYS_gettid);
 #endif
    if (debug)
-      printf("(%s) Done.    Returning %ld\n", __func__, (intmax_t) tid);
+      printf("(%s) Done.    Returning %jd\n", __func__, (intmax_t) tid);
    return tid;
 }
 
