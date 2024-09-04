@@ -3,7 +3,7 @@
  *  Manage whether tracing is performed
  */
 
-// Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef TRACE_CONTROL_H_
@@ -39,8 +39,6 @@ void add_trace_groups(DDCA_Trace_Group trace_flags);
 // char * get_active_trace_group_names();  // unimplemented
 
 void report_tracing(int depth);
-
-bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
 
 /** Checks if tracking is currently active for the globally defined TRACE_GROUP value,
  *  current file and function.
