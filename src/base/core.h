@@ -103,6 +103,7 @@ extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall tim
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
 extern bool dbgtrc_show_process_id; // prefix debug/trace messages with process id
 extern bool dbgtrc_trace_to_syslog_only;
+extern bool stdout_stderr_redirected;
 
 // void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
 
@@ -114,6 +115,7 @@ typedef uint16_t Dbgtrc_Options;
 #define DBGTRC_OPTIONS_STARTING  0x08
 #define DBGTRC_OPTIONS_DONE      0x10
 
+bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
 
 //
 //  Error_Info reporting
@@ -630,6 +632,7 @@ char * end_capture(void);
 // Initialization
 //
 
+void detect_stdout_stderr_redirection();
 void init_core();
 
 #endif /* BASE_CORE_H_ */
