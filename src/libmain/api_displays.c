@@ -53,7 +53,7 @@ static inline bool valid_display_ref(Display_Ref * dref) {
 #endif
 
 
-DDCA_Status validate_ddca_display_ref(
+DDCA_Status ddci_validate_ddca_display_ref(
       DDCA_Display_Ref ddca_dref,
       bool             basic_only,
       bool             require_not_asleep,
@@ -403,7 +403,7 @@ ddca_dbgrpt_display_ref(
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
    Display_Ref * dref = NULL;
-   validate_ddca_display_ref(ddca_dref, /* basic_only*/ true, /* require_not_asleep */ false, &dref);
+   ddci_validate_ddca_display_ref(ddca_dref, /* basic_only*/ true, /* require_not_asleep */ false, &dref);
    rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
    if (dref)
       dbgrpt_display_ref(dref, true, depth+1);
@@ -421,7 +421,7 @@ ddca_report_display_by_dref(
    assert(library_initialized);
 
    Display_Ref * dref = NULL;
-   DDCA_Status rc = validate_ddca_display_ref(ddca_dref,  /* basic_only*/ true, /*require_not_asleep*/ false,  &dref);
+   DDCA_Status rc = ddci_validate_ddca_display_ref(ddca_dref,  /* basic_only*/ true, /*require_not_asleep*/ false,  &dref);
    if (rc == 0)
       ddc_report_display_by_dref(dref, depth);
 
@@ -441,7 +441,7 @@ ddca_validate_display_ref(DDCA_Display_Ref ddca_dref, bool require_not_asleep)
    Display_Ref * dref = NULL;
    DDCA_Status rc = DDCRC_ARG;
    if (ddca_dref)
-      rc = validate_ddca_display_ref(ddca_dref, /* basic_only*/ false,  require_not_asleep, &dref);
+      rc = ddci_validate_ddca_display_ref(ddca_dref, /* basic_only*/ false,  require_not_asleep, &dref);
 #ifdef REDUNDANT
    Error_Info * errinfo = NULL;
    if (rc != 0)
@@ -541,7 +541,7 @@ ddca_open_display3(
    *dh_loc = NULL;        // in case of error
    DDCA_Status rc = 0;
    Error_Info * err = NULL;
-   rc  = validate_ddca_display_ref(ddca_dref, /* basic_only*/ false, /* require_not_asleep */ true, &dref);
+   rc  = ddci_validate_ddca_display_ref(ddca_dref, /* basic_only*/ false, /* require_not_asleep */ true, &dref);
    if (!rc) {
      Display_Handle* dh = NULL;
      Call_Options callopts = CALLOPT_NONE;
@@ -815,9 +815,9 @@ ddca_get_display_info_list(void)
 #endif
 
 
-STATIC void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
+STATIC void ddci_init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
    bool debug = false;
-   DBGMSF(debug, "dref=%p, curinfo=%p", dref,curinfo);
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "dref=%s, curinfo=%p", dref_repr_t(dref),curinfo);
    memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
    curinfo->dispno        = dref->dispno;
 
@@ -861,7 +861,7 @@ STATIC void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
 // #endif
 #endif
 
-   DBGMSF(debug, "Done");
+   DBGTRC_DONE(debug, DDCA_TRC_API, "");
 }
 
 
@@ -882,7 +882,7 @@ ddca_get_display_info(
          ddca_dref, ddcrc,
          {
             DDCA_Display_Info * info = calloc(1, sizeof(DDCA_Display_Info));
-            init_display_info(dref, info);
+            ddci_init_display_info(dref, info);
             *dinfo_loc = info;
          }
    )
@@ -1007,7 +1007,7 @@ ddca_get_display_info_list2(
       // DDCA_Display_Info * curinfo = &result_list->info[ndx++];
 
       DBGMSF(debug, "dref=%p, curinfo=%p", dref, curinfo);
-      init_display_info(dref, curinfo);
+      ddci_init_display_info(dref, curinfo);
       curinfo++;
    }
    g_ptr_array_free(filtered_displays, true);
@@ -1384,7 +1384,7 @@ ddca_set_display_sleep_multiplier(
 
     assert(library_initialized);
     Display_Ref * dref = NULL;
-    DDCA_Status rc = validate_ddca_display_ref(ddca_dref, /* basic_only*/ true, /*require_not_asleep*/false, &dref);
+    DDCA_Status rc = ddci_validate_ddca_display_ref(ddca_dref, /* basic_only*/ true, /*require_not_asleep*/false, &dref);
     if (rc == 0)  {
        Per_Display_Data * pdd = dref->pdd;
        if (multiplier >= 0.0 && multiplier <= 10.0) {
@@ -1409,7 +1409,7 @@ ddca_get_current_display_sleep_multiplier(
 
     assert(library_initialized);
     Display_Ref * dref = NULL;
-    DDCA_Status rc = validate_ddca_display_ref(ddca_dref, true, false, &dref);
+    DDCA_Status rc = ddci_validate_ddca_display_ref(ddca_dref, true, false, &dref);
     if (rc == 0) {
        Per_Display_Data * pdd = dref->pdd;
        *multiplier_loc        = pdd->final_successful_adjusted_sleep_multiplier;
@@ -1463,7 +1463,8 @@ void init_api_displays() {
    RTTI_ADD_FUNC(ddca_report_display_by_dref);
    RTTI_ADD_FUNC(ddca_register_display_status_callback);
    RTTI_ADD_FUNC(ddca_unregister_display_status_callback);
-   RTTI_ADD_FUNC(validate_ddca_display_ref);
+   RTTI_ADD_FUNC(ddci_init_display_info);
+   RTTI_ADD_FUNC(ddci_validate_ddca_display_ref);
    RTTI_ADD_FUNC(ddca_validate_display_ref);
 }
 
