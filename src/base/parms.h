@@ -109,7 +109,7 @@
 // EDID in /sys can have stale data
 #define DEFAULT_TRY_GET_EDID_FROM_SYSFS  false
 
-#define DEFAULT_FLOCK_POLL_MILLISEC      500
+#define DEFAULT_FLOCK_POLL_MILLISEC      100
 #define DEFAULT_FLOCK_MAX_WAIT_MILLISEC 3000
 
 /** Maximum number of i2c buses this code supports */
