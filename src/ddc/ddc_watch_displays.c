@@ -67,7 +67,8 @@ static GMutex    watch_thread_mutex;
 
 DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Udev_I2C;
 bool             ddc_slow_watch = false;
-int              extra_stabilize_seconds = DEFAULT_EXTRA_STABILIZE_SECS;
+int              extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISECS;
+int              stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
 
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
@@ -239,20 +240,20 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
    // few seconds later by a connect. Wait a few seconds to avoid triggering events
    // in this case.
    if (some_displays_disconnected) {
-      if (extra_stabilize_seconds > 0) {
+      if (extra_stabilization_millisec > 0) {
          char * s = g_strdup_printf(
-               "Delaying %d seconds to avoid a false disconnect/connect sequence...", extra_stabilize_seconds);
+               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", extra_stabilization_millisec);
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         usleep(extra_stabilize_seconds * 1000000);
+         usleep(extra_stabilization_millisec * 1000);
       }
    }
 
    int stablect = 0;
    bool stable = false;
    while (!stable) {
-      usleep(1000*1000);  // 1 second
+      usleep(1000*stabilization_poll_millisec);
       GPtrArray* latest = i2c_detect_buses0();
       Bit_Set_256 bs_latest =  buses_bitset_from_businfo_array(latest, /* only_connected */ true);
       if (bs256_eq(bs_latest, bs_prior))
@@ -262,7 +263,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
       stablect++;
    }
    if (stablect > 1) {
-      DBGTRC(debug, TRACE_GROUP,   "Required %d extra calls to i2c_get_buses0()", stablect+1);
+      DBGTRC(debug || true, TRACE_GROUP,   "Required %d extra calls to i2c_get_buses0()", stablect+1);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_get_buses0()", __func__, stablect-1);
    }
 
@@ -289,7 +290,7 @@ bool ddc_i2c_hotplug_change_handler(
       BS256    bs_buses_w_edid_added,
       GArray * events_queue)
 {
-   bool debug = false;
+   bool debug = true;
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "bs_buses_removed: %s",
             BS256_REPR(bs_buses_w_edid_removed));
@@ -499,11 +500,14 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_removed: %s", BS256_REPR(bs_removed));
       bool detected_displays_removed_flag = bs256_count(bs_removed);
 
-      GPtrArray * stabilized_buses = ddc_i2c_stabilized_buses(new_buses, detected_displays_removed_flag);
-      BS256 bs_stabilized_buses_w_edid = buses_bitset_from_businfo_array(stabilized_buses, /*only_connected*/ true);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_stabilized_buses_w_edid: %s", BS256_REPR(bs_stabilized_buses_w_edid));
-      new_buses = stabilized_buses;
-      bs_new_buses_w_edid = bs_stabilized_buses_w_edid;
+      if (detected_displays_removed_flag) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling ddc_i2c_stabilized_buses()");
+         GPtrArray * stabilized_buses = ddc_i2c_stabilized_buses(new_buses, detected_displays_removed_flag);
+         BS256 bs_stabilized_buses_w_edid = buses_bitset_from_businfo_array(stabilized_buses, /*only_connected*/ true);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_stabilized_buses_w_edid: %s", BS256_REPR(bs_stabilized_buses_w_edid));
+         new_buses = stabilized_buses;
+         bs_new_buses_w_edid = bs_stabilized_buses_w_edid;
+      }
    }
 
    bool hotplug_change_handler_emitted = false;
@@ -820,7 +824,7 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
 }
 
 
-/** If the watch thread is currently executing returns, reports the
+/** If the watch thread is currently executing, returns the
  *  currently active display event classes as a bit flag.
  *
  *  @param  classes_loc  where to return bit flag
