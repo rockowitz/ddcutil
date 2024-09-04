@@ -55,6 +55,7 @@
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_vcp_version.h"
 #ifdef BUILD_SHARED_LIB
 #include "ddc/ddc_watch_displays.h"
 #endif
@@ -229,6 +230,7 @@ void init_ddc_services() {
    init_ddc_status_events();
    init_ddc_multi_part_io();
    init_ddc_vcp();
+   init_ddc_vcp_version();
 // #ifdef BUILD_SHARED_LIB
    init_ddc_watch_displays();
 // #endif
