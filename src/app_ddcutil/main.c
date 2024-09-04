@@ -28,6 +28,7 @@
 
 #include "util/data_structures.h"
 #include "util/ddcutil_config_file.h"
+#include "util/debug_util.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/file_util.h"
@@ -358,7 +359,7 @@ verify_i2c_access() {
 STATIC bool
 master_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
-   DBGMSF(debug, "Starting ...");
+   DBGF(debug, "Starting ...");
    bool ok = false;
    Error_Info * submaster_errs = submaster_initializer(parsed_cmd);  // shared with libddcutil
    if (submaster_errs) {
@@ -383,7 +384,7 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
    ok = true;
 
 bye:
-   DBGMSF(debug, "Done");
+   DBGF(debug, "Done");
    return ok;
 }
 
@@ -764,7 +765,7 @@ main(int argc, char *argv[]) {
 #ifdef ENABLE_ENVCMDS
    init_app_sysenv_services();
 #endif
-   DBGMSF(main_debug, "init_base_services() complete, ol = %s",
+   DBGF(main_debug, "init_base_services() complete, ol = %s",
                       output_level_name(get_output_level()) );
    // dbgrpt_rtti_func_name_table(3);
 
@@ -779,7 +780,7 @@ main(int argc, char *argv[]) {
       syslog_level = preparsed_level;
       explicit_syslog_level = true;
    }
-   DBGMSF(main_debug, "syslog_level=%s, explicit_syslog_level=%s",
+   DBGF(main_debug, "syslog_level=%s, explicit_syslog_level=%s",
                       syslog_level_name(syslog_level),  sbool(explicit_syslog_level));
 
    preparse_verbose = ntsa_find(argv, "--verbose") >= 0 || ntsa_find(argv, "-v") >= 0;
@@ -801,8 +802,8 @@ main(int argc, char *argv[]) {
                        &untokenized_cmd_prefix,
                        &configure_fn,
                        config_file_errs);
-      DBGMSF(main_debug, "apply_config_file() returned %s", psc_desc(apply_config_rc));
-      DBGMSF(main_debug, "syslog_level=%s, explicit_syslog_level=%s",
+      DBGF(main_debug, "apply_config_file() returned %s", psc_desc(apply_config_rc));
+      DBGF(main_debug, "syslog_level=%s, explicit_syslog_level=%s",
                          syslog_level_name(syslog_level), SBOOL(explicit_syslog_level));
       if (config_file_errs->len > 0) {
          if (syslog_level > DDCA_SYSLOG_NEVER) {
@@ -811,7 +812,7 @@ main(int argc, char *argv[]) {
                      LOG_PID,     // include caller's process id
                      LOG_USER);   // generic user program, syslogger can use to determine how to handle
             syslog_opened = true;
-            DBGMSF(main_debug, "openlog() executed");
+            DBGF(main_debug, "openlog() executed");
          }
          f0printf(ferr(), "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
          if (syslog_opened)
@@ -847,7 +848,7 @@ main(int argc, char *argv[]) {
    }
 
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, NULL);
-   DBGMSF(main_debug, "parse_command() returned %p", parsed_cmd);
+   DBGF(main_debug, "parse_command() returned %p", parsed_cmd);
    ntsa_free(new_argv, true);
    if (!parsed_cmd)
       goto bye;      // main_rc == EXIT_FAILURE
@@ -880,12 +881,12 @@ main(int argc, char *argv[]) {
                  LOG_PID,            // include caller's process id
                  LOG_USER);          // generic user program, syslogger can use to determine how to handle
          syslog_opened = true;
-         DBGMSF(main_debug, "openlog() executed");
+         DBGF(main_debug, "openlog() executed");
       }
    }
    else if (parsed_cmd->syslog_level == DDCA_SYSLOG_NEVER && syslog_opened) {
       // oops
-      DBGMSF(main_debug, "parsed_cmd=>syslog_level == DDCA_SYSLOG_NEVER, calling closelog()");
+      DBGF(main_debug, "parsed_cmd=>syslog_level == DDCA_SYSLOG_NEVER, calling closelog()");
       closelog();
       syslog_opened = false;
    }
@@ -895,8 +896,8 @@ main(int argc, char *argv[]) {
                          parsed_cmd->traced_files     ||
                          IS_TRACING()                 ||
                          main_debug;
-   DBGMSF(main_debug, "start_time_reported = %s", SBOOL(start_time_reported));
-   DBGMSF(start_time_reported, "Starting %s execution, %s",
+   DBGF(main_debug, "start_time_reported = %s", SBOOL(start_time_reported));
+   DBGF(start_time_reported, "Starting %s execution, %s",
                parser_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
 
@@ -951,7 +952,8 @@ main(int argc, char *argv[]) {
 #endif
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
-   DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");
+   // DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");
+   DBGF(main_debug, "Initialization complete, process commands");
 
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {    // vestigial
       app_listvcp(stdout);
