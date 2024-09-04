@@ -20,6 +20,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/displays.h"
+#include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
 #ifdef ENABLE_USB
@@ -40,7 +41,7 @@ DDCA_MCCS_Version_Spec
 set_vcp_version_xdf_by_dh(Display_Handle * dh)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dh=%s", dh_repr(dh));
 
    dh->dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
 
@@ -62,40 +63,69 @@ set_vcp_version_xdf_by_dh(Display_Handle * dh)
   #endif
      }
      else {    // normal case, not USB
-        DDCA_Any_Vcp_Value * pvalrec;
+#ifdef REF
+        Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
+           rpt_vstring(1, "Getting value of feature 0x%02x", feature_code);;
+           Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+           ASSERT_IFF(!ddc_excp, parsed_response_loc);
+           if (ddc_excp) {
+              rpt_vstring(2, "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
+                    feature_code, errinfo_summary(ddc_excp));
+              free(ddc_excp);
+           }
+           else {
+              if (!parsed_response_loc->valid_response)
+                 rpt_vstring(2, "Invalid Response");
+              else if (!parsed_response_loc->supported_opcode)
+                 rpt_vstring(2, "Unsupported feature code");
+              else {
+                 rpt_vstring(2, "getvcp 0x%02x succeeded", feature_code);
+                 rpt_vstring(2, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
+                       parsed_response_loc->mh, parsed_response_loc->ml,
+                       parsed_response_loc->sh, parsed_response_loc->sl);
+              }
+              free(parsed_response_loc);
+           }
+#endif
+
+        Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
 
         // verbose output is distracting since this function is called when
         // querying for other things
         DDCA_Output_Level olev = get_output_level();
         if (olev == DDCA_OL_VERBOSE)
            set_output_level(DDCA_OL_NORMAL);
-        Public_Status_Code psc =  0;
-        Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0xdf, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
-        psc = ERRINFO_STATUS(ddc_excp);
-        DBGMSF(debug, "get_vcp_value() returned %s", psc_desc(psc));
-        if (debug && psc == DDCRC_RETRIES)
-           DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
+
+        Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0xdf, &parsed_response_loc);
+        ASSERT_IFF(!ddc_excp, parsed_response_loc);
+
         if (olev == DDCA_OL_VERBOSE)
            set_output_level(olev);
 
-        if (psc == 0) {
-           dh->dref->vcp_version_xdf.major = pvalrec->val.c_nc.sh;
-           dh->dref->vcp_version_xdf.minor = pvalrec->val.c_nc.sl;
-           DBGMSF(debug, "Set dh->dref->vcp_version_xdf to %d.%d, %s",
+        const char * e1 = "Error detecting VCP version using VCP feature xDF:";
+        if (ddc_excp)
+           MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s %s", e1, errinfo_summary(ddc_excp));
+        else {
+           if (!parsed_response_loc->valid_response)
+              MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s Invalid respose", e1);
+           else if (!parsed_response_loc->supported_opcode) {
+              // happens for pre MCCS v2 monitors
+              MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "%s Unsupported feature code", e1);
+           }
+           else {
+              dh->dref->vcp_version_xdf.major = parsed_response_loc->sh; // pvalrec->val.c_nc.sh;
+              dh->dref->vcp_version_xdf.minor = parsed_response_loc->sl; // pvalrec->val.c_nc.sl;
+              DBGMSF(debug, "Set dh->dref->vcp_version_xdf to %d.%d, %s",
                          dh->dref->vcp_version_xdf.major,
                          dh->dref->vcp_version_xdf.minor,
                          format_vspec(dh->dref->vcp_version_xdf) );
-           free_single_vcp_value(pvalrec);
-        }
-        else {
-           // happens for pre MCCS v2 monitors
-           DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. psc=%s", psc_desc(psc) );
+           }
+           free(parsed_response_loc);
         }
      }  // not USB
 
      assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
-     DBGMSF(debug, "Returning newly set dh->dref->vcp_version_xdf = %d.%d, %s",
-                   dh->dref->vcp_version_xdf.major, dh->dref->vcp_version_xdf.minor,
+     DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning newly set dh->dref->vcp_version_xdf = %s",
                    format_vspec(dh->dref->vcp_version_xdf));
      return dh->dref->vcp_version_xdf;
 }
@@ -200,18 +230,22 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    assert(dref);
    bool debug = false;
 
-   if (debug) {
-      DBGMSG(   "          dref->vcp_version_cmdline =  %s",
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,"dref=%s", dref_repr_t(dref));
+
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"dref->vcp_version_cmdline =  %s",
                         format_vspec_verbose(dref->vcp_version_cmdline));
       if (dref->dfr)
-         DBGMSG("          dref->dfr->vspec = ",
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "dref->dfr->vspec = ",
                         format_vspec_verbose(dref->dfr->vspec));
       else
-         DBGMSG("          dref->dfr is null");
-      DBGMSG(   "          dref->vcp_version_xdf = %s",
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "dref->dfr is null");
+
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "dref->vcp_version_xdf = %s",
                         format_vspec_verbose (dref->vcp_version_xdf));
+
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)) {
-         DBGMSG("       flags: %s", interpret_dref_flags_t(dref->flags) );
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flags: %s", interpret_dref_flags_t(dref->flags) );
       }
    }
 
@@ -244,3 +278,8 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    return result;
 }
 
+
+void init_ddc_vcp_version() {
+   RTTI_ADD_FUNC(set_vcp_version_xdf_by_dh);
+   RTTI_ADD_FUNC(get_vcp_version_by_dref);
+}
