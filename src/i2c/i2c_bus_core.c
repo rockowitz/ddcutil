@@ -145,6 +145,30 @@ void include_open_failures_reported(int busno) {
 }
 
 
+void show_flock(const char * filename) {
+   int inode = get_inode_by_fn(filename);
+   MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Processes locking %s (inode %d): ", filename, inode);
+   char cmd[80];
+   g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d | cut -d' ' -f'1'", inode);
+   execute_shell_cmd_rpt(cmd, 1);  // *** TEMP ***
+   GPtrArray * pids = execute_shell_cmd_collect(cmd);
+   // rpt_vstring(1, "Processes locking inode %jd", inode);
+   for (int ndx = 0; ndx < pids->len; ndx++) {
+      char * spid = g_ptr_array_index(pids, ndx);
+      rpt_vstring(2, "%s", spid);  // *** TEMP ***
+      g_snprintf(cmd, 80, "cat /proc/%s/status | grep -E -e Name -e State -e '^Pid:'", spid);
+      execute_shell_cmd_rpt(cmd, 1); // *** TEMP ***
+      GPtrArray * status_lines = execute_shell_cmd_collect(cmd);
+      for (int k = 0; k < status_lines->len; k ++) {
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "   %s", (char*) g_ptr_array_index(status_lines, k));
+      }
+      rpt_nl();
+      g_ptr_array_free(status_lines, true);
+   }
+   g_ptr_array_free(pids,true);
+}
+
+
 /** Open an I2C bus device.
  *
  *  @param busno     bus number
@@ -194,11 +218,12 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
    }
 
    if (cross_instance_locks_enabled) {
+      bool debug_flock = true;
       int operation = LOCK_EX|LOCK_NB;
       int poll_microsec = flock_poll_millisec * 1000;
       uint64_t max_wait_millisec = (callopts & CALLOPT_WAIT) ? flock_max_wait_millisec : 0;
       uint64_t max_nanos = cur_realtime_nanosec() + (max_wait_millisec * 1000 * 1000);
-      DBGTRC(debug, DDCA_TRC_NONE, "flock_poll_millisec=%jd, flock_max_wait_millisec=%jd, max_wait_millisec=%jd",
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock_poll_millisec=%jd, flock_max_wait_millisec=%jd, max_wait_millisec=%jd",
             flock_poll_millisec, flock_max_wait_millisec, max_wait_millisec);
       Status_Errno lockrc = 0;
       int flock_call_ct = 0;
@@ -207,7 +232,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
          flock_call_ct++;
          int flockrc = flock(fd, operation);
          if (flockrc == 0)  {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock succeeded");
+            DBGTRC_NOPREFIX(debug || (flock_call_ct > 1 && debug_flock), DDCA_TRC_NONE, "flock succeeded, flock_call_ct=%d", flock_call_ct);
 #ifdef EXPLORING
             int inode = get_inode_by_fd(fd);
             intmax_t pid = get_process_id();
@@ -239,11 +264,14 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
          }
          assert(flockrc == -1);
          int errsv = errno;
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "busno=%d, flock() returned: %s", busno, psc_desc(-errsv));
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "busno=%d, flock_call_ct=%d, flock() returned: %s",
+               busno, flock_call_ct, psc_desc(-errsv));
          if (errsv == EWOULDBLOCK ) {          // n. EWOULDBLOCK == EAGAIN
            uint64_t now = cur_realtime_nanosec();
            if (now < max_nanos) {
-              // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Resource locked. Sleeping");
+              DBGTRC_NOPREFIX(debug || debug_flock, DDCA_TRC_NONE, "Resource locked. flock_call_ct=%d, Sleeping", flock_call_ct);
+              show_flock(filename);
+
               if (flock_call_ct == 1)
                  MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE, "%s locked.  Retrying...", filename);
               usleep(poll_microsec);
@@ -263,28 +291,12 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
                  }
                  g_ptr_array_free(lsof_lines, true);
 
-                 int inode = get_inode_by_fn(filename);
+                 // int inode = get_inode_by_fn(filename);
                  // int inode2 = get_inode_by_fd(fd);
                  // assert(inode == inode2);
 
-                 MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Processes locking %s (inode %d): ", filename, inode);
-                 g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d | cut -d' ' -f'1'", inode);
-                 execute_shell_cmd_rpt(cmd, 1);  // *** TEMP ***
-                 GPtrArray * pids = execute_shell_cmd_collect(cmd);
-                 // rpt_vstring(1, "Processes locking inode %jd", inode);
-                 for (int ndx = 0; ndx < pids->len; ndx++) {
-                    char * spid = g_ptr_array_index(pids, ndx);
-                    rpt_vstring(2, "%s", spid);  // *** TEMP ***
-                    g_snprintf(cmd, 80, "cat /proc/%s/status | grep -E -e Name -e State -e '^Pid:'", spid);
-                    execute_shell_cmd_rpt(cmd, 1); // *** TEMP ***
-                    GPtrArray * status_lines = execute_shell_cmd_collect(cmd);
-                    for (int k = 0; k < status_lines->len; k ++) {
-                       MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "   %s", (char*) g_ptr_array_index(status_lines, k));
-                    }
-                    rpt_nl();
-                    g_ptr_array_free(status_lines, true);
-                 }
-                 g_ptr_array_free(pids,true);
+                 show_flock(filename);
+
               }
               lockrc = DDCRC_FLOCKED;
               break;
