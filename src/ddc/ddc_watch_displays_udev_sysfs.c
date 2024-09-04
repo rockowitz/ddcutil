@@ -348,13 +348,13 @@ ddc_stabilized_connector_names(Sysfs_Connector_Names prior,
    // few seconds later by a connect. Wait a few seconds to avoid triggering events
    // in this case.
    if (some_displays_disconnected) {
-      if (extra_stabilize_seconds > 0) {
+      if (extra_stabilization_millisec > 0) {
          char * s = g_strdup_printf(
-               "Delaying %d seconds to avoid a false disconnect/connect sequence...", extra_stabilize_seconds);
+               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", extra_stabilization_millisec);
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         usleep(extra_stabilize_seconds * 1000000);
+         usleep(extra_stabilization_millisec * 1000);
       }
    }
 
