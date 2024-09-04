@@ -341,7 +341,7 @@ get_parsed_libmain_config(const char * libopts_string,
    if (!result) {   // if no errors
       assert(new_argc >= 1);
       char * combined = strjoin((const char**)(new_argv+1), new_argc, " ");
-      char * msg = g_strdup_printf("Applying combined options: %s", combined);
+      char * msg = g_strdup_printf("Applying combined libddcutil options: %s", combined);
       emit_parse_info_msg(msg, infomsgs);
       free(msg);
 
@@ -387,14 +387,17 @@ void atexit_func() {
  *  that cannot fail.
  */
 void  __attribute__ ((constructor))
-_ddca_new_init(void) {
+_libddcutil_constructor(void) {
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
       debug = true;
 
    DBGF(debug, "Starting. library built %s at %s", BUILD_DATE, BUILD_TIME);
-   syslog(LOG_NOTICE, "Starting. library built %s at %s", BUILD_DATE, BUILD_TIME);
+   detect_stdout_stderr_redirection();
+   DBGF(debug, "stdout_stderr_redirected = %s", SBOOL(stdout_stderr_redirected));
+   syslog(LOG_NOTICE, "Starting libddcutil. library built %s at %s. stdout_stderr_redirected=%s",
+                      BUILD_DATE, BUILD_TIME, sbool(stdout_stderr_redirected));
 
    init_api_base();         // registers functions in RTTI table
    init_base_services();    // initializes tracing related modules
@@ -628,7 +631,8 @@ ddci_init(const char *      libopts,
    Error_Info * master_error = NULL;
    DDCA_Status ddcrc = 0;
    enable_init_msgs = opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS;
-   enable_init_msgs = true;  // *** TEMP ***
+   // enable_init_msgs = true;  // *** TEMP ***
+   DBGF(debug, "enable_init_msgs=%s", SBOOL(enable_init_msgs));
 
    if (library_initialized) {
       master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil already initialized");
@@ -655,7 +659,11 @@ ddci_init(const char *      libopts,
                    get_full_ddcutil_version(), ddca_libddcutil_filename());
 
       syslog_level = syslog_level_arg;  // global in trace_control.h
+
    }
+
+   DBGF(debug, "syslog_level_arg = %s, syslog_level=%s, enable_syslog=%s",
+               syslog_level_name(syslog_level_arg), syslog_level_name(syslog_level), sbool(enable_syslog));
 
    GPtrArray* infomsgs = g_ptr_array_new_with_free_func(g_free);
 
@@ -671,11 +679,15 @@ ddci_init(const char *      libopts,
       ASSERT_IFF(master_error, !parsed_cmd);
 
       if (infomsgs && infomsgs->len > 0) {
+         DBGF(debug, "emit infomsgs starting. enable_init_msgs=%s, stdout_stderr_redirected=%s, infomsgs->len=%d",
+               sbool(enable_init_msgs), sbool(stdout_stderr_redirected), infomsgs->len);
          for (int ndx = 0; ndx < infomsgs->len; ndx++) {
-            if (enable_init_msgs)
+            if (enable_init_msgs && !stdout_stderr_redirected)
                fprintf(fout(), "%s\n", (char*) g_ptr_array_index(infomsgs, ndx));
-            syslog(LOG_NOTICE, "%s", (char*) g_ptr_array_index(infomsgs, ndx));
+            // already done in emit_parse_info_msg():
+            // syslog(LOG_NOTICE, "%s", (char*) g_ptr_array_index(infomsgs, ndx));
          }
+         DBGF(debug, "emit infomsgs done");
 
          if (infomsg_loc) {
             *infomsg_loc = g_ptr_array_to_ntsa(infomsgs, /*duplicate=*/true);
@@ -683,6 +695,7 @@ ddci_init(const char *      libopts,
          // g_ptr_array_free(infomsgs, true);
       }
    }
+   DBGF(debug, "parsing complete");
 
    if (!master_error) {
       if (parsed_cmd->trace_destination) {
@@ -690,6 +703,10 @@ ddci_init(const char *      libopts,
          init_library_trace_file(parsed_cmd->trace_destination, debug);
       }
       master_error = init_tracing(parsed_cmd);
+      if (master_error)
+         DBGF(debug, "init_tracing failed");
+      else
+         DBGF(debug, "init_tracing succeeded");
    }
 
    if (!master_error) {
@@ -716,10 +733,11 @@ ddci_init(const char *      libopts,
          DBGF(debug, "Calling report_parse_errors()", __func__);
          report_parse_errors(master_error);
       }
-      errinfo_free(master_error);
+      // errinfo_free(master_error);
       library_initialization_failed = true;
    }
    else {
+      DBGF(debug, "performing display detection ...");
       i2c_detect_buses();
       ddc_ensure_displays_detected();
 #ifdef OUT
@@ -735,8 +753,6 @@ ddci_init(const char *      libopts,
       free_parsed_cmd(parsed_cmd);
    }
 
-   DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
-
 bye:
    if (master_error) {
       ddcrc = master_error->status_code;
@@ -744,6 +760,7 @@ bye:
       save_thread_error_detail(public_error_detail);
       errinfo_free(master_error);
    }
+   DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
    return ddcrc;
 }
 
