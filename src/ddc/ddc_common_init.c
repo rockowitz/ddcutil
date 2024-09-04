@@ -372,7 +372,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 #endif
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
-      extra_stabilize_seconds = parsed_cmd->i1;
+      extra_stabilization_millisec = parsed_cmd->i1;
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
    if (parsed_cmd->flags2 & CMD_FLAG2_I3_SET)
