@@ -23,6 +23,7 @@
 //* \cond */
 #include <glib-2.0/glib.h>
 #include <errno.h>
+#include <limits.h>
 #include <rtti.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1029,6 +1030,8 @@ DDCA_Syslog_Level syslog_level_name_to_value(const char * name) {
 bool test_emit_syslog(DDCA_Syslog_Level msg_level) {
    bool result =  (syslog_level != DDCA_SYSLOG_NOT_SET && syslog_level != DDCA_SYSLOG_NEVER &&
          msg_level <= syslog_level);
+   // DBG("syslog_level=%d=%s, msg_level=%d=%s, returning %s",
+   //       syslog_level, syslog_level_name(syslog_level), msg_level, syslog_level_name(msg_level), sbool(result));
    return result;
 }
 
@@ -1196,7 +1199,7 @@ base_errinfo_free_with_report(
 }
 
 
-void detect_sysout_syserr_redirection() {
+void detect_stdout_stderr_redirection() {
    bool debug = false;
    DBGF(debug, "Starting");
    // syslog(LOG_ERR,  "(%s)",msg);
@@ -1204,17 +1207,35 @@ void detect_sysout_syserr_redirection() {
    // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = true");
    // msg_to_syslog_only = false;
    // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = false");
+
+   char * s = realpath("/sbin/init", NULL);
+   char * initsys = NULL;
+   if (!s) {   // pathological
+      initsys = g_strdup_printf("UNKNOWN");
+   }
+   else {
+      initsys = g_path_get_basename(s);
+      free(s);
+   }
+   DBGF(debug, "Init system: %s", initsys);
+   free(initsys);
+
    char * stdout_fn = NULL;
    filename_for_fd(1, &stdout_fn);
    DBGF(debug, "stdout file name: %s",  stdout_fn);
    stdout_stderr_redirected = (str_contains(stdout_fn, "socket") >= 0);
    free(stdout_fn);
    DBGF(debug, "set stdout_stderr_redirected = %s", SBOOL(stdout_stderr_redirected));
+   // stdout_stderr_redirected = false;    // *** TEMP ****
+   // DBG("Forced stdout_stderr_redirected = false for testing");
 
+
+#ifdef OLD
    char * initsys = execute_shell_cmd_one_line_result("ps -p 1 -o comm=");
    DBGF(debug, "Using init system: %s", initsys);
    // need to check if initsys is a symbolic link and if so what it points to, use stat command
    free(initsys);
+#endif
 
    // shows nothing
    // show_backtrace(1);
@@ -1227,12 +1248,13 @@ void detect_sysout_syserr_redirection() {
    // char * s = getenv("INVOCATION_ID");  // do not free
    // DBG("$INVOCATION_ID = %s", s);
    // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$INVOCATION_ID = %s", s);
+   DBGF(debug, "Done");
 }
 
 
 void init_core() {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting");
-   detect_sysout_syserr_redirection();
+   // detect_sysout_syserr_redirection();
    DBGF(debug, "Done");
 }
