@@ -413,7 +413,7 @@ filename_for_fd(int fd, char** filename_loc) {
       *filename_loc = result;
    }
    if (debug)
-      printf("(%s) fd=%d, ct=%ld, returning: %d, *filename_loc=%p -> |%s|\n",
+      printf("(%s) fd=%d, ct=%zd, returning: %d, *filename_loc=%p -> |%s|\n",
           __func__, fd, ct, rc, *filename_loc, *filename_loc);
    return rc;
 }
