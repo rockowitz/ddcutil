@@ -1236,7 +1236,7 @@ int hhs_to_byte_array(const char * hhs, Byte** ba_loc)
 {
    bool debug = false;
    if (debug)
-      printf("(%s) strlen(hhs) = %ld, ba_loc=%p\n", __func__, strlen(hhs), ba_loc);
+      printf("(%s) strlen(hhs) = %zu, ba_loc=%p\n", __func__, strlen(hhs), ba_loc);
    if ( strlen(hhs) % 2)     // if odd number of characters
       return -1;
    char xlate[] = "0123456789ABCDEF";
@@ -1497,7 +1497,7 @@ char * hexstring3_t(
          strcat(buf, sepstr);
    }
    if (debug) {
-      printf("(%s) strlen(buf) = %ld, required_size=%zu\n", __func__, strlen(buf), required_size );
+      printf("(%s) strlen(buf) = %zu, required_size=%zu\n", __func__, strlen(buf), required_size );
       printf("(%s)  buf=|%s|\n", __func__, buf );
    }
    assert(strlen(buf) <= required_size-1);
