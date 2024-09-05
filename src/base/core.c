@@ -527,7 +527,7 @@ static bool vdbgtrc(
    bool debug = false;
    if (debug) {
       printf("(vdbgtrc) Starting. trace_group=0x%04x, options=0x%02x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
+             " filename=%s, lineno=%d, thread=%jd, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
                        trace_group, options, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
                        retval_info, format);
@@ -715,7 +715,7 @@ bool dbgtrc(
 {
    bool debug = false;
    DBGF(debug, "Starting. trace_group=0x%04x, options=0x%02x, funcname=%s,"
-               " filename=%s, lineno=%d, thread=%ld, trace_callstack_call_depth=%d, fout() %s sysout",
+               " filename=%s, lineno=%d, thread=%jd, trace_callstack_call_depth=%d, fout() %s sysout",
                trace_group, options, funcname, filename, lineno, get_thread_id(),
                trace_callstack_call_depth, (fout() == stdout) ? "==" : "!=");
 
@@ -750,7 +750,7 @@ bool dbgtrc_ret_ddcrc(
 {
    bool debug = false;
    DBGF(debug, "Starting. trace_group = 0x%04x, funcname=%s,"
-               " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, rc=%d, format=|%s|",
+               " filename=%s, lineno=%d, thread=%jd, fout() %s sysout, rc=%d, format=|%s|",
                trace_group, funcname, filename, lineno, get_thread_id(),
                (fout() == stdout) ? "==" : "!=", rc, format);
 
@@ -788,7 +788,7 @@ bool dbgtrc_ret_bool(
    bool debug = false;
    if (debug)
       printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, result=%s, format=|%s|\n",
+             " filename=%s, lineno=%d, thread=%jd, fout() %s sysout, result=%s, format=|%s|\n",
                        __func__,
                        trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
@@ -833,7 +833,7 @@ bool dbgtrc_returning_errinfo(
    bool debug = false;
    if (debug)
       printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, errs=%p, format=|%s|\n",
+             " filename=%s, lineno=%d, thread=%jd, fout() %s sysout, errs=%p, format=|%s|\n",
                        __func__,
                        trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
@@ -877,7 +877,7 @@ bool dbgtrc_returning_expression(
    bool debug = false;
    if (debug)
       printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, retval=%s, format=|%s|\n",
+             " filename=%s, lineno=%d, thread=%jd, fout() %s sysout, retval=%s, format=|%s|\n",
                        __func__,
                        trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
