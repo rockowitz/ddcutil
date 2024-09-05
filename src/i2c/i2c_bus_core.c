@@ -1454,6 +1454,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_check_open_bus_alive);
    RTTI_ADD_FUNC(i2c_close_bus);
    RTTI_ADD_FUNC(i2c_detect_buses);
+   RTTI_ADD_FUNC(i2c_detect_buses0);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_detect_x37);
    RTTI_ADD_FUNC(i2c_discard_buses);
