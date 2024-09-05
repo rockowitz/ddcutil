@@ -117,7 +117,7 @@ Thread_Output_Settings *  get_thread_settings() {
       settings->tid = get_thread_id();
       g_private_set(&per_thread_dests_key, settings);
       if (debug)
-         printf("(%s) Allocated settings=%p for thread %ld,"
+         printf("(%s) Allocated settings=%p for thread %jd,"
                 " fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
                 __func__, (void*)settings, settings->tid,
                 (void*)settings->fout, (void*)settings->ferr,
@@ -146,7 +146,7 @@ void set_fout(FILE * fout) {
    Thread_Output_Settings * dests = get_thread_settings();
    dests->fout = fout;
    if (debug)
-      printf("(%s) tid=%ld, dests=%p, fout=%p, stdout=%p\n",
+      printf("(%s) tid=%jd, dests=%p, fout=%p, stdout=%p\n",
              __func__, dests->tid, (void*)dests, (void*)fout, (void*)stdout);
    rpt_change_output_dest(fout);
 }
