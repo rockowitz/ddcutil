@@ -13,6 +13,7 @@
 #include <unistd.h>
 /** \endcond */
 
+#include "util/debug_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
 
@@ -69,9 +70,9 @@ static Thread_Output_Settings * get_default_thread_output_settings() {
  */
 void set_default_thread_output_settings(FILE * fout, FILE * ferr) {
    bool debug = false;
-   if (debug)
-      printf("(%s) fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
-             __func__, (void*)fout, (void*)ferr, (void*)stdout, (void*)stderr);
+   DBGF(debug, "fout=%p, ferr=%p, stdout=%p, stderr=%p",
+               (void*)fout, (void*)ferr, (void*)stdout, (void*)stderr);
+
    g_mutex_lock(&default_thread_output_settings_mutex);
    if ( !default_thread_output_settings )
       allocate_default_thread_output_settings();
@@ -89,8 +90,8 @@ void set_default_thread_output_settings(FILE * fout, FILE * ferr) {
  */
 void set_default_thread_output_level(DDCA_Output_Level ol) {
    bool debug = false;
-   if (debug)
-      printf("(%s) ol=%s\n", __func__, output_level_name(ol));
+   DBGF(debug, "ol=%s", output_level_name(ol));
+
    g_mutex_lock(&default_thread_output_settings_mutex);
    if ( !default_thread_output_settings )
       allocate_default_thread_output_settings();
@@ -116,10 +117,9 @@ Thread_Output_Settings *  get_thread_settings() {
       settings = get_default_thread_output_settings();
       settings->tid = get_thread_id();
       g_private_set(&per_thread_dests_key, settings);
-      if (debug)
-         printf("(%s) Allocated settings=%p for thread %jd,"
-                " fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
-                __func__, (void*)settings, settings->tid,
+      DBGF(debug, "Allocated settings=%p for thread %jd,"
+                " fout=%p, ferr=%p, stdout=%p, stderr=%p",
+                (void*)settings, settings->tid,
                 (void*)settings->fout, (void*)settings->ferr,
                 (void*)stdout, (void*)stderr);
    }
@@ -145,9 +145,8 @@ void set_fout(FILE * fout) {
 
    Thread_Output_Settings * dests = get_thread_settings();
    dests->fout = fout;
-   if (debug)
-      printf("(%s) tid=%jd, dests=%p, fout=%p, stdout=%p\n",
-             __func__, dests->tid, (void*)dests, (void*)fout, (void*)stdout);
+   DBGF(debug, "tid=%jd, dests=%p, fout=%p, stdout=%p",
+               dests->tid, (void*)dests, (void*)fout, (void*)stdout);
    rpt_change_output_dest(fout);
 }
 
