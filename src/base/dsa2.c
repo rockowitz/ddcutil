@@ -782,9 +782,9 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    if ( IS_DBGTRC(debug, DDCA_TRC_NONE) ) {
       GPtrArray * svals = g_ptr_array_new_with_free_func(g_free);
       for (int ndx = 0; ndx < actual_lookback; ndx++) {
-         char * s = g_strdup_printf("{tryct:%d,reqd step:%d,%ld}",
+         char * s = g_strdup_printf("{tryct:%d,reqd step:%d,%jd}",
              latest_values[ndx].tryct, latest_values[ndx].required_step,
-             latest_values[ndx].epoch_seconds);
+             (intmax_t)latest_values[ndx].epoch_seconds);
          g_ptr_array_add(svals, s);
       }
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "busno=%d, actual_lookback = %d, latest_values:%s",
@@ -1193,7 +1193,7 @@ dsa2_save_persistent_stats() {
 #endif
          for (int k = 0; k < rtable->recent_values->ct; k++) {
             Successful_Invocation si = cirb_get_logical(rtable->recent_values, k);
-            fprintf(stats_file, " {%d,%d,%ld}", si.tryct, si.required_step, si.epoch_seconds);
+            fprintf(stats_file, " {%d,%d,%jd}", si.tryct, si.required_step, (intmax_t)si.epoch_seconds);
          }
 #ifdef OUT
          // wrong - should write it to the circular buffer
@@ -1271,7 +1271,9 @@ cirb_parse_and_add(Circular_Invocation_Result_Buffer * cirb, char * segment) {
             Successful_Invocation si;
             result  = str_to_int(s+1,             &si.tryct,         10);
             result &= str_to_int(comma_pos  + 1,  &si.required_step, 10);
-            result &= str_to_long(comma_pos2 + 1, &si.epoch_seconds, 10);
+            long esec;
+            result &= str_to_long(comma_pos2 + 1, &esec, 10);
+            si.epoch_seconds = (time_t) esec;
             if (result) {
                cirb_add(cirb, si);
             }
