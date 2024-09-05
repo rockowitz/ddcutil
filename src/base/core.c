@@ -526,20 +526,19 @@ static bool vdbgtrc(
 {
    bool debug = false;
    if (debug) {
-      printf("(vdbgtrc) Starting. trace_group=0x%04x, options=0x%02x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%jd, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
-                       trace_group, options, funcname, filename, lineno, get_thread_id(),
-                       (fout() == stdout) ? "==" : "!=",
-                       retval_info, format);
-      printf("(vdbgtrc) trace_api_call_depth=%d\n", trace_api_call_depth);
+      DBG("Starting. trace_group=0x%04x, options=0x%02x, funcname=%s, filename=%s,"
+          " lineno=%d, thread=%jd, fout() %s sysout, pre_prefix=|%s|, format=|%s|",
+          trace_group, options, funcname, filename, lineno, get_thread_id(),
+          (fout() == stdout) ? "==" : "!=",
+          retval_info, format);
+      DBG("trace_api_call_depth=%d", trace_api_call_depth);
    }
 
    bool msg_emitted = false;
 
    if (trace_api_call_depth > 0 || trace_callstack_call_depth > 0)
       trace_group = DDCA_TRC_ALL;
-   if (debug)
-      printf("(%s) Adjusted trace_group == 0x%02x\n", __func__, trace_group);
+   DBGF(debug, "Adjusted trace_group == 0x%02x", trace_group);
 
    bool perform_emit = true;
 // #ifndef ENABLE_TRACE
@@ -553,8 +552,8 @@ static bool vdbgtrc(
       if ( is_tracing(trace_group, filename, funcname)  ) {
          char * base_msg = g_strdup_vprintf(format, ap);
          if (debug) {
-            printf("(%s) base_msg=%p->|%s|\n", __func__, base_msg, base_msg);
-            printf("(%s) retval_info=%p->|%s|\n", __func__, retval_info, retval_info);
+            DBG("base_msg=%p->|%s|", base_msg, base_msg);
+            DBG("retval_info=%p->|%s|", retval_info, retval_info);
          }
          char elapsed_prefix[20]  = "";
          char walltime_prefix[20] = "";
@@ -580,10 +579,7 @@ static bool vdbgtrc(
                    : g_strdup_printf("%s%s%s%s(%-30s) %s%s",
                           process_prefix, thread_prefix, walltime_prefix, elapsed_prefix, funcname,
                           retval_info, base_msg);
-         if (debug)
-            printf("(%s) decorated_msg=%p->|%s|\n", __func__, decorated_msg, decorated_msg);
-
-
+         DBGF(debug, "decorated_msg=%p->|%s|", decorated_msg, decorated_msg);
 
 #ifdef NO
          if (trace_destination) {
@@ -645,8 +641,7 @@ static bool vdbgtrc(
       }
    }
 
-   if (debug)
-      printf("(%s) Done.   Returning %s\n", __func__, sbool(msg_emitted));
+   DBGF(debug, "Done.   Returning %s", sbool(msg_emitted));
    return msg_emitted;
 }
 
@@ -667,17 +662,15 @@ bool check_callstack(Dbgtrc_Options options, const char * funcname) {
             trace_callstack_call_depth = 1;
          }
       }
-      if (debug)
-         printf("(%s(           trace_callstack_call_depth=%d\n", __func__, trace_callstack_call_depth);
+      DBGF(debug, "      trace_callstack_call_depth=%d", trace_callstack_call_depth);
    }
 
    if ((options & DBGTRC_OPTIONS_DONE) && trace_callstack_call_depth > 0) {
       trace_callstack_call_depth--;
    }
 
-   if (debug)
-      printf("(%s) Done.     trace_callstack_call_depth=%d, returning %s\n",
-            __func__, trace_callstack_call_depth, sbool(trace_callstack_call_depth > 0));
+   DBGF(debug, "Done.     trace_callstack_call_depth=%d, returning %s",
+               trace_callstack_call_depth, sbool(trace_callstack_call_depth > 0));
    return trace_callstack_call_depth > 0;
 }
 
@@ -831,13 +824,11 @@ bool dbgtrc_returning_errinfo(
         ...)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%jd, fout() %s sysout, errs=%p, format=|%s|\n",
-                       __func__,
-                       trace_group, funcname, filename, lineno, get_thread_id(),
-                       (fout() == stdout) ? "==" : "!=",
-                       (void*)errs, format);
+   DBGF(debug, "Starting. trace_group = 0x%04x, funcname=%s, filename=%s,"
+               " lineno=%d, thread=%jd, fout() %s sysout, errs=%p, format=|%s|",
+               trace_group, funcname, filename, lineno, get_thread_id(),
+               (fout() == stdout) ? "==" : "!=",
+               (void*)errs, format);
 
    bool msg_emitted = false;
    bool in_callstack = check_callstack(options, funcname);
@@ -856,8 +847,7 @@ bool dbgtrc_returning_errinfo(
       g_free(pre_prefix);
    }
 
-   if (debug)
-      printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
+   DBGF(debug, "Done.     Returning %s", sbool(msg_emitted));
    return msg_emitted;
 }
 
@@ -875,13 +865,11 @@ bool dbgtrc_returning_expression(
         ...)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%jd, fout() %s sysout, retval=%s, format=|%s|\n",
-                       __func__,
-                       trace_group, funcname, filename, lineno, get_thread_id(),
-                       (fout() == stdout) ? "==" : "!=",
-                       retval, format);
+   DBGF(debug, "Starting. trace_group = 0x%04x, funcname=%s, filename=%s,"
+               "lineno=%d, thread=%jd, fout() %s sysout, retval=%s, format=|%s|",
+               trace_group, funcname, filename, lineno, get_thread_id(),
+               (fout() == stdout) ? "==" : "!=",
+               retval, format);
 
    bool msg_emitted = false;
    bool in_callstack = check_callstack(options, funcname);
@@ -899,8 +887,8 @@ bool dbgtrc_returning_expression(
       va_end(args);
       free(pre_prefix);
    }
-   if (debug)
-      printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
+
+   DBGF(debug, "Done.     Returning %s", sbool(msg_emitted));
    return msg_emitted;
 }
 
