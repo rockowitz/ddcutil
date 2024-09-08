@@ -541,7 +541,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
  */
 gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    bool debug = false;
-   bool debug_sysfs_state = false;
+   bool debug_sysfs_state = true;
    bool use_deferred_event_queue = false;
 
    Watch_Displays_Data * wdd = data;
@@ -688,6 +688,18 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
 
       // if (IS_DBGTRC(debug_sysfs_state, DDCA_TRC_NONE)) {
       if (debug_sysfs_state) {
+         // NB needs validity checks for production
+         int connector_number;
+         bool valid_number = str_to_int(prop_connector, &connector_number, 10);
+         assert(valid_number);
+         get_sys_drm_connectors(true);
+         rpt_vstring(1, "drm connectors");
+         report_sys_drm_connectors(true, 1);
+         Sys_Drm_Connector * conn = find_sys_drm_connector_by_connector_number(connector_number);
+         rpt_vstring(1, "connector_number=%d, busno=%d, has_edid=%s",
+               connector_number, conn->i2c_busno, sbool(conn->edid_bytes != NULL));
+
+
          rpt_label(0, "/sys/class/drm state after hotplug event:");
          dbgrpt_sysfs_basic_connector_attributes(1);
          if (use_drm_connector_states) {

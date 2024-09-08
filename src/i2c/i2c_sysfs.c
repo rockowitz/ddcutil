@@ -2102,12 +2102,14 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    if (drm_connector) {
      businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
      businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
+     businfo->drm_connector_id = drm_connector->connector_id;
    }
    else if (businfo->edid) {
      drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
      if (drm_connector) {
         businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
         businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
+        businfo->drm_connector_id = drm_connector->connector_id;
      }
    }
    businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;

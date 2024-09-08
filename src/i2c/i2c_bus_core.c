@@ -806,6 +806,7 @@ void i2c_check_bus(I2C_Bus_Info * businfo) {
                          "sys_drm_connector found: %s, drm_connector_name=%s",
                          SBOOL(sys_drm_connector), businfo->drm_connector_name);
          businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
+         businfo->drm_connector_id = sys_drm_connector->connector_id;
          if (streq(sys_drm_connector->name, "DisplayLink I2C Adapter") ) {
             businfo->flags |= I2C_BUS_DISPLAYLINK;
          }
@@ -1357,6 +1358,12 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
             rpt_vstring(d, "%-*s%s", tw, title_buf, attr_value);
             free(attr_value);
 
+            attr = "connector_id";
+            attr_value = i2c_get_drm_connector_attribute(businfo, attr);
+            g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
+            rpt_vstring(d, "%-*s%s", tw, title_buf, attr_value);
+            free(attr_value);
+
 #ifdef OLD
             char * dpms    = NULL;
             char * status  = NULL;
@@ -1433,6 +1440,7 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
          rpt_vstring(depth, "I2C bus:          /dev/"I2C"-%d", businfo->busno);
          if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND)
             rpt_vstring(depth, "DRM connector:    %s", businfo->drm_connector_name);
+         rpt_vstring(depth, "drm_connector_id: %d", businfo->drm_connector_id);
          rpt_vstring(depth, "Monitor:          %s:%s:%s",
                             businfo->edid->mfg_id,
                             businfo->edid->model_name,

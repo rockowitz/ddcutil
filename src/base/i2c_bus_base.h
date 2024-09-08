@@ -59,6 +59,7 @@ struct {
    char *           drm_connector_name; ///< from /sys
    Drm_Connector_Found_By
                     drm_connector_found_by;
+   int              drm_connector_id;
    bool             last_checked_dpms_asleep;
 } I2C_Bus_Info;
 

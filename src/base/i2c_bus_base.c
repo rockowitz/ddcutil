@@ -195,6 +195,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
          rpt_vstring(depth, "drm_connector_found_by:  %s (%d)",
             drm_connector_found_by_name(businfo->drm_connector_found_by), businfo->drm_connector_found_by);
          rpt_vstring(depth, "drm_connector_name:      %s", businfo->drm_connector_name);
+         rpt_vstring(depth, "drm_connector_id:        %d", businfo->drm_connector_id);
       }
       // not useful and clutters the output
       // i2c_report_functionality_flags(businfo->functionality, /* maxline */ 90, depth);
@@ -315,11 +316,13 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
    if (existing->drm_connector_name) {
       free(existing->drm_connector_name);
       existing->drm_connector_name = NULL;
+      existing->drm_connector_id = -1;
    }
    if (!existing->drm_connector_name) {
       if (new->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) {
          if (new->drm_connector_name)
             existing->drm_connector_name = g_strdup_printf("%s", new->drm_connector_name);
+         existing->drm_connector_id = new->drm_connector_id;
          existing->drm_connector_found_by = new->drm_connector_found_by;
          existing->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       }

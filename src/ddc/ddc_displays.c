@@ -486,11 +486,14 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       char * drm_dpms = NULL;
       char * drm_status = NULL;
       char * drm_enabled = NULL;
+      int    drm_connector_id = -1;
       int depth = (debug) ? 1 : -1;
       if (businfo->drm_connector_name) {
          RPT_ATTR_TEXT(depth, &drm_dpms,   "/sys/class/drm",businfo->drm_connector_name, "dpms");
          RPT_ATTR_TEXT(depth, &drm_status, "/sys/class/drm",businfo->drm_connector_name, "status");
          RPT_ATTR_TEXT(depth, &drm_enabled,"/sys/class/drm",businfo->drm_connector_name, "enabled");
+         RPT_ATTR_INT (depth, &drm_connector_id,
+                                           "/sys/class/drm",businfo->drm_connector_name, "drm_connector_id");
       }
       // not currently used, just free
       free(drm_dpms);
@@ -1341,6 +1344,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             if (businfo->drm_connector_name) {
                dref->drm_connector = g_strdup(businfo->drm_connector_name);
             }
+            dref->drm_connector_id = businfo->drm_connector_id;
             dref->pedid = copy_parsed_edid(businfo->edid);
             dref->mmid  = monitor_model_key_new(dref->pedid->mfg_id,
                                                 dref->pedid->model_name,
@@ -1855,6 +1859,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
       dref->flags |= DREF_DDC_IS_MONITOR;
       dref->drm_connector = g_strdup(businfo->drm_connector_name);
+      dref->drm_connector_id = businfo->drm_connector_id;
 
       ddc_initial_checks_by_dref(dref);
       g_ptr_array_add(all_display_refs, dref);
