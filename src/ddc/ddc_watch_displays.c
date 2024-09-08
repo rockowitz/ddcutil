@@ -695,7 +695,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
          get_sys_drm_connectors(true);
          rpt_vstring(1, "drm connectors");
          report_sys_drm_connectors(true, 1);
-         Sys_Drm_Connector * conn = find_sys_drm_connector_by_connector_number(connector_number);
+         Sys_Drm_Connector * conn = find_sys_drm_connector_by_connector_id(connector_number);
          rpt_vstring(1, "connector_number=%d, busno=%d, has_edid=%s",
                connector_number, conn->i2c_busno, sbool(conn->edid_bytes != NULL));
 

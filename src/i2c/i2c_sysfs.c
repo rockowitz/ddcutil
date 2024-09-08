@@ -1265,9 +1265,9 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
 }
 
 Sys_Drm_Connector *
-find_sys_drm_connector_by_connector_number(int connector_number) {
+find_sys_drm_connector_by_connector_id(int connector_id) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "connector_id=%d", connector_number);
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "connector_id=%d", connector_id);
    if (!sys_drm_connectors)
      sys_drm_connectors = scan_sys_drm_connectors(-1);
    assert(sys_drm_connectors);
@@ -1276,7 +1276,7 @@ find_sys_drm_connector_by_connector_number(int connector_number) {
       Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
       if (cur->connector_id < 0)  // driver does not set connector number, need only check once
          break;
-      if (cur->connector_id == connector_number) {
+      if (cur->connector_id == connector_id) {
          DBGTRC(debug, DDCA_TRC_NONE, "Matched");
          result = cur;
          break;
@@ -2551,7 +2551,7 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(report_sys_drm_connectors);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_identifier);
-   RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_number);
+   RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_id);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);
    RTTI_ADD_FUNC(find_sys_drm_connector);
    RTTI_ADD_FUNC(get_drm_connector_name_by_busno);
