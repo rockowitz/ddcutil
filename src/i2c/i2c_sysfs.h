@@ -69,7 +69,7 @@ typedef struct {
    char * connector_name;
    char * connector_path;
    int    i2c_busno;
-   int    connector_number;
+   int    connector_id;
    char * name;
    char * dev;
    char * ddc_dir_path;
@@ -93,6 +93,8 @@ Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid);
 void                free_sys_drm_connectors();
 Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
 int                 sys_drm_get_busno_by_connector(const char * connector_name);
+bool                all_sys_drm_connectors_have_connector_number(bool rescan);
+Bit_Set_256         buses_having_edid_from_sys_drm_connectors(bool rescan);
 
 
 // Simplified Sys_Drm_Connector for production use
