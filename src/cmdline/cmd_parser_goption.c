@@ -976,6 +976,14 @@ parse_command(
    gboolean f14_flag        = false;
    gboolean f15_flag        = false;
    gboolean f16_flag        = false;
+   gboolean f17_flag        = false;
+   gboolean f18_flag        = false;
+   gboolean f19_flag        = false;
+   gboolean f20_flag        = false;
+   gboolean f21_flag        = false;
+   gboolean f22_flag        = false;
+   gboolean f23_flag        = false;
+   gboolean f24_flag        = false;
    char *   i1_work         = NULL;
    char *   i2_work         = NULL;
    char *   i3_work         = NULL;
@@ -1274,6 +1282,14 @@ parse_command(
       {"f14",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f14_flag,         "Special flag 14",   NULL},
       {"f15",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f15_flag,         "Special flag 15",   NULL},
       {"f16",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f16_flag,         "Special flag 16",   NULL},
+      {"f17",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f17_flag,         "Special flag 16",   NULL},
+      {"f18",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f18_flag,         "Special flag 16",   NULL},
+      {"f19",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f19_flag,         "Special flag 16",   NULL},
+      {"f20",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f20_flag,         "Special flag 16",   NULL},
+      {"f21",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f21_flag,         "Special flag 16",   NULL},
+      {"f22",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f22_flag,         "Special flag 16",   NULL},
+      {"f23",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f23_flag,         "Special flag 16",   NULL},
+      {"f24",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f24_flag,         "Special flag 16",   NULL},
       {"s1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 1",  "string"},
       {"s2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 2",  "string"},
       {"s3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 3",  "string"},
@@ -1606,6 +1622,14 @@ parse_command(
    SET_CMDFLAG2(CMD_FLAG2_F14,               f14_flag);
    SET_CMDFLAG2(CMD_FLAG2_F15,               f15_flag);
    SET_CMDFLAG2(CMD_FLAG2_F16,               f16_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F17,               f17_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F18,               f18_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F19,               f19_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F20,               f20_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F21,               f21_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F22,               f22_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F23,               f23_flag);
+   SET_CMDFLAG2(CMD_FLAG2_F24,               f24_flag);
 
    if (discarded_caches_work) {
       parsed_cmd->discarded_cache_types = discarded_caches_work;
