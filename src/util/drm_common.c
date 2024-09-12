@@ -541,6 +541,8 @@ bool dci_eq(Drm_Connector_Identifier dci1, Drm_Connector_Identifier dci2) {
 }
 
 
+/** Compares 2 Drm_Connector_Identifier values. */
+
 int dci_cmp(Drm_Connector_Identifier dci1, Drm_Connector_Identifier dci2) {
    int result = 0;
    if (dci1.cardno < dci2.cardno)
@@ -564,6 +566,10 @@ int dci_cmp(Drm_Connector_Identifier dci1, Drm_Connector_Identifier dci2) {
    return result;
 }
 
+
+/** Compare drm connector names so that e.g. card1-DP-10 comes
+ *  after card1-DP-2, not before.
+ */
 int sys_drm_connector_name_cmp0(const char * s1, const char * s2) {
    int result = 0;
 
@@ -585,7 +591,8 @@ int sys_drm_connector_name_cmp0(const char * s1, const char * s2) {
 }
 
 
-
+/** QSort style comparison function for sorting drm connector names.
+ */
 int sys_drm_connector_name_cmp(gconstpointer connector_name1, gconstpointer connector_name2) {
    bool debug = false;
 
