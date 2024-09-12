@@ -41,6 +41,7 @@ typedef struct {
    char * status;
 } Sys_Drm_Connector;
 
+// Functions that use the persistent array of Sys_Drm_Connector:
 GPtrArray*          get_sys_drm_connectors(bool rescan);
 // GPtrArray*       get_sys_drm_connectors_sysinfo(bool rescan);
 void                report_sys_drm_connectors(bool verbose, int depth);
@@ -53,41 +54,28 @@ void                free_sys_drm_connectors();
 Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
 int                 sys_drm_get_busno_by_connector_name(const char * connector_name);
 bool                all_sys_drm_connectors_have_connector_id(bool rescan);
-
 Bit_Set_256         buses_having_edid_from_sys_drm_connectors(bool rescan);
-
-// Functions that access drm connector directory directly, instead of
-// using array of Sys_Drm_Connector
-Sys_Drm_Connector * one_drm_connector0(const char * dirname, const char * fn, int depth);
-Sys_Drm_Connector * get_drm_connector(const char * fn, int depth);
-
-char * find_drm_connector_name_by_busno(int busno);
-char * get_drm_connector_name_by_edid(Byte * edid_bytes);
+char *              find_drm_connector_name_by_busno(int busno);
+char *              get_drm_connector_name_by_edid(Byte * edid_bytes);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
-bool   is_drm_display_by_busno(int busno);
+
+// Functions that access sysfs connector dirs directly, instead of using the
+// persistent array of Sys_Drm_Connector:
+Sys_Drm_Connector * one_drm_connector0(const char * dirname, const char * fn, int depth);
+Sys_Drm_Connector * get_drm_connector(const char * fn, int depth);
 
 typedef struct {
    GPtrArray * all_connectors;
    GPtrArray * connectors_having_edid;
 } Sysfs_Connector_Names;
 
-// Sysfs_Connector_Names sysfs_drm_connector_names;
-
-
 Sysfs_Connector_Names get_sysfs_drm_connector_names();
-bool sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);
-
-void free_sysfs_connector_names_contents(Sysfs_Connector_Names names_struct);
-void dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
-
-gpointer g_string_copy_func(gconstpointer src, gpointer data);
-GPtrArray * gaux_deep_copy_string_array(GPtrArray * old_names);
+bool                  sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);
+void                  free_sysfs_connector_names_contents(Sysfs_Connector_Names names_struct);
+void                  dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
 Sysfs_Connector_Names copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
-
-char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
-
-void dbgrpt_sysfs_basic_connector_attributes(int depth);    // for testing display attach/detach
+char *                find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
 
 void init_i2c_sysfs();
 
