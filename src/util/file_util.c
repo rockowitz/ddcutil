@@ -491,6 +491,35 @@ dir_foreach(
 }
 
 
+void dir_foreach_terminatable(
+      const char *          dirname,
+      Filename_Filter_Func  fn_filter,
+      Terminating_Dir_Foreach_Func      func,
+      void *                accumulator,
+      int                   depth)
+{
+   struct dirent *dent;
+   DIR           *d;
+   d = opendir(dirname);
+   if (!d) {
+      rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
+   }
+   else {
+      while ((dent = readdir(d)) != NULL) {
+         // DBGMSG("%s", dent->d_name);
+         if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+            if (!fn_filter || fn_filter(dent->d_name)) {
+               bool halt = func(dirname, dent->d_name, accumulator, depth);
+               if (halt)
+                  break;
+            }
+         }
+      }
+      closedir(d);
+   }
+}
+
+
 /** Iterates over a directory in an ordered manner.
  *
  *  \param   dirname      directory name
