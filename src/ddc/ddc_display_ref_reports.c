@@ -31,6 +31,8 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_sysfs.h"
+#include "i2c/i2c_sysfs_top.h"
+#include "i2c/i2c_sysfs_conflicting_drivers.h"
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"
