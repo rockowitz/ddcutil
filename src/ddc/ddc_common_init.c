@@ -46,6 +46,7 @@
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+#include "i2c/i2c_sysfs_base.h"
 #include "i2c/i2c_sysfs.h"
 
 #include "ddc_displays.h"
@@ -473,6 +474,19 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
       redetect_drm_connector_states();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s, sys_drm_connectors = %p",
          sbool(use_drm_connector_states), sbool(drm_enabled), sys_drm_connectors);
+
+#ifdef NOT_HERE
+   // adding or removing MST device can change whether all drm connectors have connector_id
+   all_drm_connectors_have_connector_id = all_sys_drm_connectors_have_connector_id(false);
+   bool all2 =                            all_sys_drm_connectors_have_connector_id_direct();
+   assert(all2 == all_drm_connectors_have_connector_id);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_drm_connectors_have_connector_id = %s",
+         SBOOL(all_drm_connectors_have_connector_id));
+   // all_drm_connectors_have_connector_id = all_drm_connectors_have_connector_id && (parsed_cmd->flags2 & CMD_FLAG2_F17);
+#endif
+   if (parsed_cmd->flags2 & CMD_FLAG2_F17)
+      use_sysfs_connector_id = true;
+
    subinit_i2c_bus_core();
 
    init_max_tries(parsed_cmd);
