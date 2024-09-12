@@ -27,6 +27,7 @@
 #include "base/rtti.h"
 
 #include "i2c/i2c_sysfs.h"
+#include "i2c/i2c_sysfs_conflicting_drivers.h"
 #include "i2c/i2c_dpms.h"
 
 #include "ddc/ddc_displays.h"
