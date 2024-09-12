@@ -541,50 +541,105 @@ bool dci_eq(Drm_Connector_Identifier dci1, Drm_Connector_Identifier dci2) {
 }
 
 
-Drm_Connector_Identifier parse_sys_drm_connector_name(char * drm_connector) {
-   bool debug = true;
+int dci_cmp(Drm_Connector_Identifier dci1, Drm_Connector_Identifier dci2) {
+   int result = 0;
+   if (dci1.cardno < dci2.cardno)
+      result = -1;
+   else if (dci1.cardno > dci2.cardno)
+      result = 1;
+   else {
+      if (dci1.connector_type < dci2.connector_type)
+         result = -1;
+      else if (dci1.connector_type > dci2.connector_type)
+         result = 1;
+      else {
+         if (dci1.connector_type_id < dci2.connector_type_id)
+            result = -1;
+         else if (dci1.connector_type_id > dci2.connector_type_id)
+            result = 1;
+         else
+            result = 0;
+      }
+   }
+   return result;
+}
+
+int sys_drm_connector_name_cmp0(const char * s1, const char * s2) {
+   int result = 0;
+
+   // do something "reasonable" for pathological cases
+   if (!s1 && s2)
+      result = -1;
+   else if (!s1 && !s2)
+      result = 0;
+   else if (s1 && !s2)
+      result = 1;
+
+   else {      // normal case
+      Drm_Connector_Identifier dci1 = parse_sys_drm_connector_name(s1);
+      Drm_Connector_Identifier dci2 = parse_sys_drm_connector_name(s2);
+      result = dci_cmp(dci1, dci2);
+   }
+
+   return result;
+}
+
+
+
+int sys_drm_connector_name_cmp(gconstpointer connector_name1, gconstpointer connector_name2) {
+   bool debug = false;
+
+   int result = 0;
+   char * s1 = (connector_name1) ? *(char**)connector_name1 : NULL;
+   char * s2 = (connector_name2) ? *(char**)connector_name2 : NULL;
+   DBGF(debug, "s1=%p->%s, s2=%p->%s", s1, s1, s2, s2);
+
+   result = sys_drm_connector_name_cmp0(s1, s2);
+
+   DBGF(debug, "Returning: %d", result);
+   return result;
+}
+
+
+Drm_Connector_Identifier parse_sys_drm_connector_name(const char * drm_connector) {
+   bool debug = false;
    DBGF(debug, "Starting. drm_connector = |%s|", drm_connector);
    Drm_Connector_Identifier result = {-1,-1,-1,-1};
-   static const char * drm_connector_pattern = "^card([0-9])[-](.*)([0-9]";
+   static const char * drm_connector_pattern = "^card([0-9])[-](.*)[-]([0-9]+)";
 
-   regmatch_t  matches[3];
+   regmatch_t  matches[4];
 
    bool ok =  compile_and_eval_regex_with_matches(
          drm_connector_pattern,
          drm_connector,
-         3,   //       max_matches,
+         4,   //       max_matches,
          matches);
 
    if (ok) {
-      for (int kk = 0; kk < 3; kk++) {
-         rpt_vstring(1, "match %d, substring start=%d, end=%d", kk, matches[kk].rm_so, matches[kk].rm_eo);
-      }
-      char * cardno_s = substr(drm_connector, matches[0].rm_so, matches[0].rm_eo - matches[0].rm_so);
-      char * connector_type = substr(drm_connector, matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so);
-      char * connector_type_id_s = substr(drm_connector, matches[2].rm_so, matches[2].rm_eo - matches[2].rm_so);
-      result.cardno = g_ascii_digit_value(cardno_s[0]);
-      result.connector_type_id = g_ascii_digit_value(connector_type_id_s[0]);
-      char squished_type[20];
-      int ipos = 0;
-      int opos = 0;
-      while (opos < 19 && !connector_type[ipos]) {
-          if (g_ascii_isalnum(connector_type[ipos])) {
-                squished_type[opos++] = g_ascii_toupper(connector_type[ipos]);
-          }
-          ipos++;
-      }
-      squished_type[opos] = '\0';
-      DBGF(debug, "squished_type = %s", squished_type);
+      // for (int kk = 0; kk < 4; kk++) {
+      //    rpt_vstring(1, "match %d, substring start=%d, end=%d", kk, matches[kk].rm_so, matches[kk].rm_eo);
+      // }
+      char * cardno_s = substr(drm_connector, matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so);
+      char * connector_type = substr(drm_connector, matches[2].rm_so, matches[2].rm_eo - matches[2].rm_so);
+      char * connector_type_id_s = substr(drm_connector, matches[3].rm_so, matches[3].rm_eo - matches[3].rm_so);
+      // DBGF(debug, "cardno_s=|%s|", cardno_s);
+      // DBGF(debug, "connector_type=|%s|", connector_type);
+      // DBGF(debug, "connector_type_id_s=|%s|", connector_type_id_s);
 
-      result.connector_type = lookup_connector_type(squished_type);
+      ok = str_to_int(cardno_s, &result.cardno, 10);
+      assert(ok);
+      ok = str_to_int(connector_type_id_s, &result.connector_type_id, 10);
+      assert(ok);
+      // DBGF(debug, "result.cardno: %d", result.cardno);
+      // DBGF(debug, "connector_type_id: %d", result.connector_type_id);
+
+      result.connector_type = lookup_connector_type(connector_type);
 
       free(connector_type);
       free(cardno_s);
       free(connector_type_id_s);
    }
 
-   // DBGF(debug, "Done.    Returning: [%d,%d,%d,%d]",
-   //       result.cardno, result.connector_id, result.connector_type, result.connector_type_id);
    if (debug) {
       char * s = dci_repr(result);
       DBG("Done.     Returning: %s", s);
