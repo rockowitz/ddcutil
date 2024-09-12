@@ -3,7 +3,7 @@
  *  Query environment using /sys file system
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -34,6 +34,8 @@
 /** \endcond */
 
 #include "i2c/i2c_sysfs.h"
+#include "i2c/i2c_sysfs_sys_info.h"
+#include "i2c/i2c_sysfs_top.h"
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs_common.h"
