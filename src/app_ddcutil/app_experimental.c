@@ -61,7 +61,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    // REPORT_FLAG_OPTION(16, "Simple report /sys/class/drm");
    REPORT_FLAG_OPTION(16, "Force  Watch_Mode_Udev_I2C");
    REPORT_FLAG_OPTION(17, "Use sysfs connector_id");
-   REPORT_FLAG_OPTION(18, "Unused");
+   REPORT_FLAG_OPTION(18, "Always report UDEV events");
    REPORT_FLAG_OPTION(19, "Unused");
    REPORT_FLAG_OPTION(20, "Unused");
    REPORT_FLAG_OPTION(21, "Unused");

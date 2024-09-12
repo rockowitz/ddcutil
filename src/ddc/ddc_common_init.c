@@ -487,6 +487,9 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F17)
       use_sysfs_connector_id = true;
 
+   if (parsed_cmd->flags2 & CMD_FLAG2_F18)
+      report_udev_events = true;
+
    subinit_i2c_bus_core();
 
    init_max_tries(parsed_cmd);
