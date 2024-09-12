@@ -60,6 +60,15 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 #endif
    // REPORT_FLAG_OPTION(16, "Simple report /sys/class/drm");
    REPORT_FLAG_OPTION(16, "Force  Watch_Mode_Udev_I2C");
+   REPORT_FLAG_OPTION(17, "Use sysfs connector_id");
+   REPORT_FLAG_OPTION(18, "Unused");
+   REPORT_FLAG_OPTION(19, "Unused");
+   REPORT_FLAG_OPTION(20, "Unused");
+   REPORT_FLAG_OPTION(21, "Unused");
+   REPORT_FLAG_OPTION(22, "Unused");
+   REPORT_FLAG_OPTION(23, "Unused");
+   REPORT_FLAG_OPTION(24, "Unused");
+
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZATION_MILLISECS);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
