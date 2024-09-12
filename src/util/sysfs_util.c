@@ -296,7 +296,7 @@ get_single_subdir_name(
  *
  *  The assembled value will be silently truncated if necessary to fit in buffer
  */
-static char *
+char *
 assemble_sysfs_path2(
       char *        buffer,
       int           bufsz,
@@ -308,10 +308,14 @@ assemble_sysfs_path2(
    DBGF(debug, "Starting.  bufsz=%d, fn_segment=|%s|", bufsz, fn_segment);
    
    STRLCPY(buffer, fn_segment, bufsz-1);
+   int segment_ct = 1;
    while(true) {
       char * segment = va_arg(ap, char*);
       if (!segment)
          break;
+      segment_ct++;
+      DBGF(debug, "segment_ct: %d, segment=%p", segment_ct, segment);
+      // hex_dump((const Byte*)segment,32);
       DBGF(debug, "segment |%s|", segment);
       STRLCAT(buffer, "/", bufsz);
       STRLCAT(buffer, segment, bufsz);
@@ -511,7 +515,7 @@ rpt_attr_edid(
  {
     bool debug = false;
     if (debug) {
-       printf("(%s) Starting.  depth=%d, value_loc=%p\n", __func__, depth, value_loc);
+       printf("(%s) Starting.  depth=%d, value_loc=%p, fn_segment=|%s|\n", __func__, depth, value_loc, fn_segment);
        if (debug && depth < 0)
           depth=1;
     }
