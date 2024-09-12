@@ -66,8 +66,6 @@
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
 
-#include "i2c/i2c_sysfs.h"
-
 #include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
@@ -78,6 +76,8 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+#include "i2c/i2c_sysfs_sys_info.h"
+#include "i2c/i2c_sysfs_top.h"
 #include "i2c/i2c_sysfs.h"
 
 #ifdef ENABLE_USB
