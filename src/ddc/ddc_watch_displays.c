@@ -27,13 +27,16 @@
 
 #include "util/coredefs.h"
 #include "util/data_structures.h"
+#include "util/debug_util.h"
 #include "util/drm_common.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/glib_util.h"
+#include "util/i2c_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_util.h"
 #include "util/udev_util.h"
 
 #include "base/core.h"
@@ -45,6 +48,7 @@
 #include "base/rtti.h"
 /** \endcond */
 
+#include "i2c/i2c_sysfs_base.h"
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_sysfs.h"
@@ -69,6 +73,7 @@ DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Udev_I2C;
 bool             ddc_slow_watch = false;
 int              extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISECS;
 int              stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
+bool             use_sysfs_connector_id = false;
 
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
@@ -88,6 +93,41 @@ void free_watch_displays_data(Watch_Displays_Data * wdd) {
       assert( memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
       wdd->marker[3] = 'x';
       free(wdd);
+   }
+}
+
+
+void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
+   rpt_structure_loc("udev_device", dev, depth);
+   // printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
+   // printf("   Subsystem: %s\n", udev_device_get_subsystem(dev));  // drm
+   // printf("   Devtype: %s\n", udev_device_get_devtype(dev));      // drm_minor
+
+   printf("   Action:    %s\n", udev_device_get_action(   dev));     // "change"
+   printf("   devpath:   %s\n", udev_device_get_devpath(  dev));
+   printf("   subsystem: %s\n", udev_device_get_subsystem(dev));     // drm
+   printf("   devtype:   %s\n", udev_device_get_devtype(  dev));     // drm_minor
+   printf("   syspath:   %s\n", udev_device_get_syspath(  dev));
+   printf("   sysname:   %s\n", udev_device_get_sysname(  dev));
+   printf("   sysnum:    %s\n", udev_device_get_sysnum(   dev));
+   printf("   devnode:   %s\n", udev_device_get_devnode(  dev));     // /dev/dri/card0
+   printf("   initialized: %d\n", udev_device_get_is_initialized(  dev));
+   printf("   driver:    %s\n", udev_device_get_driver(  dev));
+
+   if (verbose) {
+      struct udev_list_entry * entries = NULL;
+      entries = udev_device_get_devlinks_list_entry(dev);
+      show_udev_list_entries(entries, "devlinks");
+
+      entries = udev_device_get_properties_list_entry(dev);
+      show_udev_list_entries(entries, "properties");
+
+      entries = udev_device_get_tags_list_entry(dev);
+      show_udev_list_entries(entries, "tags");
+
+      entries = udev_device_get_sysattr_list_entry(dev);
+      //show_udev_list_entries(entries, "sysattrs");
+      show_sysattr_list_entries(dev,entries);
    }
 }
 
@@ -272,6 +312,100 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
 }
 
 
+/** Repeatedly reads the edid attibute from the sysfs drm connector dir
+ *  whose connector_id has the specfied value.  The value is repeatedly read
+ *  until the current value equals the prior value.
+ *
+ *  @param connector_id          DRM id number of connector to check
+ *  @param prior_has_edid        value prior to recent sysfs drm change
+ *  @return true if sysfs connnector dir attribute edid has value, false if not
+ */
+bool
+ddc_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool prior_has_edid) {
+   bool debug = true;
+   // int debug_depth = (debug) ? 1 : -1;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "drm_connector_name=%s, prior_has_edid =%s",
+         drm_connector_name, SBOOL(prior_has_edid));
+
+
+   assert(drm_connector_name);
+
+   // Special handling for case of apparently disconnected displays.
+   // It has been observed that in some cases (Samsung U32H750) a disconnect is followed a
+   // few seconds later by a connect. Wait a few seconds to avoid triggering events
+   // in this case.
+   if (prior_has_edid) {
+      if (extra_stabilization_millisec > 0) {
+         char * s = g_strdup_printf(
+               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", extra_stabilization_millisec);
+         DBGTRC(debug, TRACE_GROUP, "%s", s);
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+         free(s);
+         usleep(extra_stabilization_millisec * 1000);
+      }
+   }
+
+   int stablect = 0;
+   bool stable = false;
+   while (!stable) {
+      usleep(1000*stabilization_poll_millisec);
+
+      char * s = g_strdup_printf("/sys/class/drm/%s/edid", drm_connector_name);
+      DBGF(debug, "reading: %s", s);
+      GByteArray* bytes = read_binary_file(s, 2048, true);
+      DBGF(debug, "bytes read: %d\n", bytes->len);
+      bool cur_has_edid = (bytes && bytes->len > 0);
+      g_byte_array_free(bytes, true);
+      free(s);
+
+      // when MST hub powered on or off, failure in assemble_sysfs_path2()
+      // bool cur_has_edid = rpt_attr_edid(debug_depth, NULL, "/sys/class/drm", drm_connector_name, "edid");
+      if (cur_has_edid == prior_has_edid)
+         stable = true;
+      else
+         prior_has_edid = cur_has_edid;
+      stablect++;
+   }
+   if (stablect > 1) {
+      DBGTRC(debug || true, TRACE_GROUP,   "Required %d extra calls to rpt_attr_edid()", stablect+1);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to rpt_attr_edid()", __func__, stablect-1);
+   }
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, prior_has_edid, "");
+   return prior_has_edid;
+}
+
+
+/** Repeatedly reads the edid attibute from the sysfs drm connector dir
+ *  whose connector_id has the specfied value.  The value is repeatedly read
+ *  until the current value equals the prior value.
+ *
+ *  @param connector_id          DRM id number of connector to check
+ *  @param prior_has_edid        value prior to recent sysfs drm change
+ *  @return true if sysfs connnector dir attribute edid has value, false if not
+ */
+bool
+ddc_i2c_stabilized_single_bus_by_connector_id(int connector_id, bool prior_has_edid) {
+   bool debug = true;
+   // int debug_depth = (debug) ? 1 : -1;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_id=%d, prior_has_edid =%s",
+         connector_id, SBOOL(prior_has_edid));
+
+   char * drm_connector_name =  get_sys_drm_connector_name_by_connector_id(connector_id);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "drm_connector_name = |%s|", drm_connector_name);
+   assert(drm_connector_name);
+
+   prior_has_edid = ddc_i2c_stabilized_single_bus_by_connector_name(
+                          drm_connector_name, prior_has_edid);
+
+   free(drm_connector_name);
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, prior_has_edid, "");
+   return prior_has_edid;
+}
+
+
+
 /** Updates persistent data structures for bus changes and
  *  either emits change events or queues them for later processing.
  *
@@ -360,8 +494,8 @@ bool ddc_i2c_hotplug_change_handler(
        I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
        if (!businfo) {
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to list of buses", busno);
-          if (IS_DBGTRC(debug, DDCA_TRC_NONE))
-             i2c_dbgrpt_buses(true /*report_all*/, true /*include_sysinfo*/, 2);
+          // if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+          //    i2c_dbgrpt_buses(true /*report_all*/, true /*include_sysinfo*/, 2);
           get_sys_drm_connectors(/*rescan*/ true);  // so that drm connector name picked up
           businfo = i2c_new_bus_info(busno);
           businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
@@ -535,13 +669,155 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
    return bs_new_buses_w_edid;
 }
 
+
+
+
+
+/** Simpler alternative to #ddc_i2c_check_bus_changes() for the common case where
+ *  all displays have a sysfs connector record with an accurate edid attribute.
+ *
+ *  Checks whether the edid attribute in the card-connector directory exists,
+ *  and determines whether the list of buses with edid in
+ *  **bs_prev_buses_w_edid** has changed.
+ *
+ *  If differences exist, either emit events directly or place them on the
+ *  deferred events queue.
+ *
+ *  @param connector_number     drm connector number
+ *  @param connector_name       name of card-connector directory
+ *  @param bs_prev_buses_w_edid  previous set of buses have edid
+ *  @param events_queue          if null, emit events directly
+ *                               if non-null, put events on the queue
+ *  @return updated set of buses having edid
+ */
+Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
+      int         connector_number,
+      char *      connector_name,
+      Bit_Set_256 bs_prev_buses_w_edid,
+      GArray *    events_queue)
+{
+   bool debug = true;
+   int debug_depth = (debug) ? 1 : -1;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_number=%d, connector_name=%s, bs_prev_buses_w_edid: %s",
+         connector_number, connector_name, BS256_REPR(bs_prev_buses_w_edid));
+
+   Bit_Set_256 bs_new_buses_w_edid = bs_prev_buses_w_edid;
+
+   Sys_Drm_Connector * conn = get_drm_connector(connector_name, debug_depth);
+   int busno = conn->i2c_busno;
+   free(conn);
+   bool prior_has_edid = bs256_contains(bs_prev_buses_w_edid, busno);
+
+
+   bool stabilized_bus_has_edid = ddc_i2c_stabilized_single_bus_by_connector_id(connector_number, prior_has_edid);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ddc_i2c_stabilized_single_bus() returned %s", SBOOL(stabilized_bus_has_edid));
+   if (stabilized_bus_has_edid != prior_has_edid) {
+      if (stabilized_bus_has_edid) {
+         bs_new_buses_w_edid = bs256_insert(bs_new_buses_w_edid, busno);
+      }
+      else {
+         bs_new_buses_w_edid = bs256_remove(bs_new_buses_w_edid, busno);
+      }
+   }
+
+   bool hotplug_change_handler_emitted = false;
+   bool connected_buses_changed = !bs256_eq( bs_prev_buses_w_edid, bs_new_buses_w_edid);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "connected_buses_changed = %s", SBOOL(connected_buses_changed));
+
+   if (connected_buses_changed) {
+      BS256 bs_buses_w_edid_removed = bs256_and_not(bs_prev_buses_w_edid, bs_new_buses_w_edid);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_removed: %s", BS256_REPR(bs_buses_w_edid_removed));
+
+      BS256 bs_buses_w_edid_added = bs256_and_not(bs_new_buses_w_edid, bs_prev_buses_w_edid);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_added: %s", BS256_REPR(bs_buses_w_edid_added));
+
+      hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
+                                           bs_buses_w_edid_removed,
+                                           bs_buses_w_edid_added,
+                                           events_queue);
+   }
+
+   if (hotplug_change_handler_emitted)
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "hotplug_change_handler_emitted = %s",
+            sbool (hotplug_change_handler_emitted));
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning Bit_Set_256: %s", BS256_REPR(bs_new_buses_w_edid));
+   return bs_new_buses_w_edid;
+}
+
+
+#ifdef BAD
+Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
+      int         connector_number,
+      char *      connector_name,
+      Bit_Set_256 bs_prev_buses_w_edid,
+      GArray *    events_queue)
+{
+   bool debug = true;
+   int debug_depth = (debug) ? 1 : -1;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_number=%d, connector_name=%s, bs_prev_buses_w_edid: %s",
+         connector_number, connector_name, BS256_REPR(bs_prev_buses_w_edid));
+
+   Sys_Drm_Connector * conn = get_drm_connector(connector_name, debug_depth);   // can fail!
+   int busno = conn->i2c_busno;
+   free(conn);
+
+   return ddc_i2c_check_bus_changes_for_busno(busno, bs_prev_buses_w_edid, events_queue);
+}
+#endif
+
+
+
+
+
+typedef struct {
+   const char * prop_subsystem;
+   const char * prop_action;
+   const char * prop_connector;
+   const char * prop_devname;
+   const char * prop_hotplug;
+   const char * sysname;
+   const char * attr_name;
+} Udev_Event_Detail;
+
+Udev_Event_Detail* collect_udev_event_detail(struct udev_device * dev) {
+   Udev_Event_Detail * cd = calloc(1, sizeof(Udev_Event_Detail));
+   cd->prop_subsystem = udev_device_get_property_value(dev, "SUBSYSTEM");
+   cd->prop_action    = udev_device_get_property_value(dev, "ACTION");     // always "changed"
+   cd->prop_connector = udev_device_get_property_value(dev, "CONNECTOR");  // drm connector number
+   cd->prop_devname   = udev_device_get_property_value(dev, "DEVNAME");    // e.g. /dev/dri/card0
+   cd->prop_hotplug   = udev_device_get_property_value(dev, "HOTPLUG");    // always 1
+   cd->sysname        = udev_device_get_sysname(dev);                      // e.g. card0, i2c-27
+   cd-> attr_name     = udev_device_get_sysattr_value(dev, "name");
+   return cd;
+}
+
+
+void free_udev_event_detail(Udev_Event_Detail * detail) {
+   free(detail);
+}
+
+
+void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth) {
+   rpt_structure_loc("Udev_Event_Detail", detail, depth);
+   int d1 = depth + 1;
+   rpt_vstring(d1, "prop_subsystem:     %s", detail->prop_subsystem);
+   rpt_vstring(d1, "prop_action:     %s", detail->prop_action);
+   rpt_vstring(d1, "prop_connector:  %s", detail->prop_connector);
+   rpt_vstring(d1, "prop_devname:    %s", detail->prop_devname);
+   rpt_vstring(d1, "prop_hotplug:    %s", detail->prop_hotplug);
+   rpt_vstring(d1, "sysname:         %s", detail->sysname);
+   rpt_vstring(d1, "attr_name:       %s", detail->attr_name);
+}
+
+
 /** Main loop watching for display changes. Runs as thread.
  *
  *  @param data   #Watch_Displays_Data passed from creator thread
  */
 gpointer ddc_watch_displays_udev_i2c(gpointer data) {
-   bool debug = false;
-   bool debug_sysfs_state = true;
+   bool debug = true;
+   bool debug_sysfs_state = false;
    bool use_deferred_event_queue = false;
 
    Watch_Displays_Data * wdd = data;
@@ -571,7 +847,13 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    struct udev_monitor* mon = udev_monitor_new_from_netlink(udev, "udev");
    // Alternative subsystem devtype values that did not detect changes:
    // drm_dp_aux_dev, kernel, i2c-dev, i2c, hidraw
-   udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // detects
+    udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // detects
+   // testing for hub changes
+    // i2c-dev report i2c device number, i2c does not
+   udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c-dev", NULL);
+   // udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c", NULL);
+   // udev_monitor_filter_add_match_subsystem_devtype(mon, NULL, "i2c");
+   // udev_monitor_filter_add_match_subsystem_devtype(mon, NULL, "i2c-dev");
    udev_monitor_enable_receiving(mon);
 
    // make udev_monitor_receive_device() blocking
@@ -608,7 +890,12 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       dbgrpt_sysfs_basic_connector_attributes(1);
    }
 
+   struct udev_device * dev2 = NULL;
    struct udev_device * dev = NULL;
+   Udev_Event_Detail * drm_udev_detail = NULL;
+   Udev_Event_Detail * i2c_dev_udev_detail = NULL;
+   // Udev_Event_Detail * unexpected_udev_detail = NULL;
+
    while (true) {
       if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
          dev = udev_monitor_receive_device(mon);
@@ -667,49 +954,122 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
             dev = udev_monitor_receive_device(mon);
       }
 
-      // if (debug) {
-      //    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Got Device\n");
-      //    // dbgrpt_udev_device(dev, /*verbose=*/false, 2);
-      // }
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "==> udev_event received");
 
-      const char * prop_action    = udev_device_get_property_value(dev, "ACTION");     // always "changed"
-      const char * prop_connector = udev_device_get_property_value(dev, "CONNECTOR");  // drm connector number
-      const char * prop_devname   = udev_device_get_property_value(dev, "DEVNAME");    // e.g. /dev/dri/card0
-      const char * prop_hotplug   = udev_device_get_property_value(dev, "HOTPLUG");    // always 1
-      const char * attr_sysname   = udev_device_get_sysname(dev);                      // e.g. card0
-
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "udev event received: ACTION: %s, CONNECTOR: %s, DEVNAME: %s, HOTPLUG: %s, sysname: %s",
-            prop_action,
-            prop_connector,
-            prop_devname,
-            prop_hotplug,     // "1"
-            attr_sysname);
-
-      // if (IS_DBGTRC(debug_sysfs_state, DDCA_TRC_NONE)) {
-      if (debug_sysfs_state) {
-         // NB needs validity checks for production
-         int connector_number;
-         bool valid_number = str_to_int(prop_connector, &connector_number, 10);
-         assert(valid_number);
-         get_sys_drm_connectors(true);
-         rpt_vstring(1, "drm connectors");
-         report_sys_drm_connectors(true, 1);
-         Sys_Drm_Connector * conn = find_sys_drm_connector_by_connector_id(connector_number);
-         rpt_vstring(1, "connector_number=%d, busno=%d, has_edid=%s",
-               connector_number, conn->i2c_busno, sbool(conn->edid_bytes != NULL));
-
-
-         rpt_label(0, "/sys/class/drm state after hotplug event:");
-         dbgrpt_sysfs_basic_connector_attributes(1);
-         if (use_drm_connector_states) {
-            rpt_vstring(0, "DRM connector states after hotplug event:");
-            report_drm_connector_states_basic(/*refresh*/ true, 1);
-         }
+#ifdef DEBUGGING
+      // WHICH REPORT TO USE?
+      if (true) {
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Got Device\n");
+         dbgrpt_udev_device(dev, /*verbose=*/false, 2);
       }
 
-      // emits display change events or queues them
-      bs_cur_buses_w_edid = ddc_i2c_check_bus_changes(bs_cur_buses_w_edid, deferred_events);
+      report_udev_device(dev, 3 );
+#endif
+
+      drm_udev_detail = NULL;
+      i2c_dev_udev_detail = NULL;
+      // unexpected_udev_detail = NULL;
+
+      Udev_Event_Detail * cd = collect_udev_event_detail(dev);
+      dbgrpt_udev_event_detail(cd, 2);
+
+      if (streq(cd->prop_subsystem, "drm")) {
+           drm_udev_detail = cd;
+      }
+      else if (streq(cd->prop_subsystem, "i2c-dev")) {
+           i2c_dev_udev_detail = cd;
+      }
+      else {
+         DBGMSG("Unexpected subsystem: %s", cd->prop_subsystem);
+         free_udev_event_detail(cd);
+      }
+
+      int second_udev_receive_millisec = 500;
+      usleep(second_udev_receive_millisec * 1000);
+      dev2 = udev_monitor_receive_device(mon);
+      if (dev2) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Second event detected");
+         Udev_Event_Detail * cd = collect_udev_event_detail(dev2);
+         dbgrpt_udev_event_detail(cd, 2);
+
+         if (streq(cd->prop_subsystem, "drm")) {
+              drm_udev_detail = cd;
+         }
+         else if (streq(cd->prop_subsystem, "i2c-dev")) {
+              i2c_dev_udev_detail = cd;
+         }
+         else {
+            DBGMSG("Unexpected subsystem: %s", cd->prop_subsystem);
+            free_udev_event_detail(cd);
+         }
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "No second udev event");
+      }
+
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_drm_connectors_have_connector_id = %s",
+            SBOOL(all_drm_connectors_have_connector_id));
+
+      bool processed = false;
+      if (use_sysfs_connector_id) {
+         char * cname = NULL;
+         int connector_number = -1;
+         if (drm_udev_detail && drm_udev_detail->prop_connector) {  // seen null when MST hub added
+            bool valid_number = str_to_int(drm_udev_detail->prop_connector, &connector_number, 10);
+            assert(valid_number);
+            cname = get_sys_drm_connector_name_by_connector_id(connector_number);
+            DBGMSG("connector name reported by get_sys_drm_connector_name_by_connector_id(): %s", cname);
+
+            // if (IS_DBGTRC(debug_sysfs_state, DDCA_TRC_NONE)) {
+            if (debug_sysfs_state) {
+               // NB needs validity checks for production
+
+               if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+                  Sys_Drm_Connector * cur =  get_drm_connector(cname, 2);
+                  free_sys_drm_connector(cur);
+               }
+
+               get_sys_drm_connectors(true);
+               rpt_vstring(1, "drm connectors");
+               report_sys_drm_connectors(true, 1);
+               Sys_Drm_Connector * conn = find_sys_drm_connector_by_connector_id(connector_number);
+               rpt_vstring(1, "connector_number=%d, busno=%d, has_edid=%s",
+                     connector_number, conn->i2c_busno, sbool(conn->edid_bytes != NULL));
+
+
+               rpt_label(0, "/sys/class/drm state after hotplug event:");
+               dbgrpt_sysfs_basic_connector_attributes(1);
+               if (use_drm_connector_states) {
+                  rpt_vstring(0, "DRM connector states after hotplug event:");
+                  report_drm_connector_states_basic(/*refresh*/ true, 1);
+               }
+            }
+            if (cname) {
+               DBGTRC(true, DDCA_TRC_NONE, "Using connector id %d, name =%s", connector_number, cname);
+               bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
+                                     connector_number, cname, bs_cur_buses_w_edid, deferred_events);
+               processed = true;
+            }
+            else {  // cname not found, try busno
+               if (i2c_dev_udev_detail && i2c_dev_udev_detail->prop_devname) {  // is this the right attribute
+                  int busno = i2c_name_to_busno(i2c_dev_udev_detail->prop_devname);
+                  cname = get_sys_drm_connector_name_by_busno(busno);
+               }
+               if (cname) {
+                  DBGMSG("connector name reported by get_sys_drm_connector_name_by_busno(): %s", cname);
+                  bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
+                                     connector_number, cname, bs_cur_buses_w_edid, deferred_events);
+                  processed = true;
+               }
+            }
+         }
+         free(cname);
+      }
+
+     if (!processed) {
+         // emits display change events or queues them
+         bs_cur_buses_w_edid = ddc_i2c_check_bus_changes(bs_cur_buses_w_edid, deferred_events);
+      }
 
       if (watch_dpms) {
          // remove buses marked asleep if they no longer have a monitor so they will
@@ -717,9 +1077,19 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
          bs_sleepy_buses = bs256_and(bs_sleepy_buses, bs_cur_buses_w_edid);
       }
 
-      udev_device_unref(dev);
 
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "udev event processed");
+      free_udev_event_detail(drm_udev_detail);
+      free_udev_event_detail(i2c_dev_udev_detail);
+      drm_udev_detail = NULL;
+      i2c_dev_udev_detail = NULL;
+      udev_device_unref(dev);
+      dev = NULL;
+      if (dev2) {
+         udev_device_unref(dev2);
+         dev2 = NULL;
+      }
+
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "==> udev event processed");
    }  // while
 
    udev_monitor_unref(mon);
@@ -871,7 +1241,9 @@ void init_ddc_watch_displays() {
 #endif
 
    RTTI_ADD_FUNC(ddc_i2c_check_bus_changes);
+   RTTI_ADD_FUNC(ddc_i2c_check_bus_changes_for_connector);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
+   RTTI_ADD_FUNC(ddc_i2c_stabilized_single_bus_by_connector_id);
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
    RTTI_ADD_FUNC(ddc_i2c_emit_deferred_events);
    RTTI_ADD_FUNC(ddc_i2c_hotplug_change_handler);
