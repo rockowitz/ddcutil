@@ -3,7 +3,7 @@
  * UDEV utility functions
  */
 
-// Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Adapted from source code at http://www.signal11.us/oss/udev/
@@ -15,6 +15,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "debug_util.h"
 #include "report_util.h"
 #include "string_util.h"
 
@@ -211,6 +212,8 @@ bye:
  * @param  depth         logical indentation depth
  */
 void report_udev_device(struct udev_device * dev, int depth) {
+   bool debug = true;
+   DBGF(debug, "Starting");
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_structure_loc("struct udev_device", dev, depth);
@@ -286,6 +289,7 @@ void report_udev_device(struct udev_device * dev, int depth) {
          rpt_vstring(d2, "%s -> %s", attr_name, attr_value2);
       }
    }
+   DBGF(debug, "Done");
 }
 
 
