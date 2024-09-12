@@ -163,7 +163,7 @@ bool ddc_hotplug_change_handler(
       SYSLOG2(DDCA_SYSLOG_NOTICE, "(ddc_hotplug_change_handler) DRM connectors removed: %s", s);
       for (int ndx = 0; ndx < connectors_removed->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_removed, ndx);
-         Sys_Drm_Connector_Old * conn = find_sys_drm_connector(-1, NULL, connector_name);
+         Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
          if (!conn) {
             // connector has already been removed
             char buf[80];
@@ -195,7 +195,7 @@ bool ddc_hotplug_change_handler(
       SYSLOG2(DDCA_SYSLOG_NOTICE, "(%s) DRM connectors added: %s", __func__, s);
       for (int ndx = 0; ndx < connectors_added->len; ndx++) {
          char * connector_name = g_ptr_array_index(connectors_added, ndx);
-         Sys_Drm_Connector_Old * conn = find_sys_drm_connector(-1, NULL, connector_name);
+         Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
          if (!conn) {
             char buf[100];
             g_snprintf(buf, 100, "Sys_Drm_Connector not found for connector %s", connector_name);
@@ -249,7 +249,7 @@ bool ddc_hotplug_change_handler(
          else {
             // dref has already been logically removed
             // As there's no dref, report the io path for the display
-            Sys_Drm_Connector_Old * conn = find_sys_drm_connector(-1, NULL, connector_name);
+            Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
             if (!conn) {
                 char buf[100];
                 g_snprintf(buf, 100, "INTERNAL ERROR: Sys_Drm_Connector not found for connector %s", connector_name);
@@ -285,7 +285,7 @@ bool ddc_hotplug_change_handler(
             // the list of display refs.
 
             // As there's no dref, report the io path for the display
-            Sys_Drm_Connector_Old * conn = find_sys_drm_connector(-1, NULL, connector_name);
+            Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
             if (!conn) {
                char buf[100];
                g_snprintf(buf, 100, "INTERNAL ERROR: Sys_Drm_Connector not found for connector %s", connector_name);
