@@ -68,7 +68,9 @@
 #include "i2c/i2c_display_lock.h"
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+#include "i2c/i2c_sysfs_base.h"
 #include "i2c/i2c_sysfs.h"
+#include "i2c/i2c_sysfs_conflicting_drivers.h"
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_edid.h"
 
@@ -645,9 +647,17 @@ Bit_Set_256 check_edids(GPtrArray * buses) {
 // I2C Bus Inspection - Fill in and report Bus_Info
 //
 
-
-
-
+/** The EDID can be read in several ways.  This function exists to
+ *  verify that these methods obtain the same value.  It should be
+ *  used only for test purposes.
+ *  - value currently in struct I2C_Bus_Info
+ *  - direct read using I2C
+ *  - edid attribute in sysfs card-connector directory
+ *  - using the DRM API
+ *
+ *  @param  fd       file descriptor for open /dev/i2c bus
+ *  @param  businfo  I2C_Bus_Info struct
+ */
 void validate_sysfs_edid(int fd, I2C_Bus_Info * businfo) {
    assert(businfo->edid);
    // 1 - does sysfs bus info match directly read
