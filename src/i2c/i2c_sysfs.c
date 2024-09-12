@@ -1016,8 +1016,6 @@ void init_i2c_sysfs() {
 }
 
 
-
-
 #ifdef FOR_FUTURE_USE
 
 Connector_Busno_Dref_Table * cbd_table = NULL;
@@ -1093,7 +1091,5 @@ void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth) {
    }
 }
 #endif
-
-
 
 
