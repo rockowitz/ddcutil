@@ -111,7 +111,7 @@ bool eval_regex_with_matches(
       size_t        max_matches,
       regmatch_t *  pm )
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. re=%p, value=|%s|\n", __func__, (void*)re, value);
    int rc = regexec(
