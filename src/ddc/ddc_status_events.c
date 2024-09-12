@@ -138,7 +138,10 @@ ddc_create_display_status_event(
       Display_Ref*            dref,
       DDCA_IO_Path            io_path)
 {
+   bool debug = false;
    DDCA_Display_Status_Event evt;
+   DBGMSF(debug, "sizeof(DDCA_Display_Status_Event) = %d, sizeof(evt) = %d",
+         sizeof(DDCA_Display_Status_Event), sizeof(evt));
    evt.timestamp_nanos = elapsed_time_nanosec();
    evt.dref = (DDCA_Display_Ref) dref;
    evt.event_type = event_type;
