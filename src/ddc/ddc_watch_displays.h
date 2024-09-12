@@ -32,6 +32,7 @@ extern int            extra_stabilization_millisec;
 #define DEFAULT_STABILIZATION_POLL_MILLISEC 1000
 extern int            stabilization_poll_millisec;
 extern bool           use_sysfs_connector_id;
+extern bool           report_udev_events;
 
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
