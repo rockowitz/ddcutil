@@ -193,6 +193,7 @@ typedef struct _display_ref {
    char *                   drm_connector;         // e.g. card0-HDMI-A-1  // REDUNDANT - IDENTICAL TO Bus_Info.drm_connector
    int                      drm_connector_id;      // identical to Bus_Info.drm_connector_id
    char *                   communication_error_summary;
+   uint64_t                 creation_timestamp;
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \

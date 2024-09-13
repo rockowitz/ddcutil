@@ -21,6 +21,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_i2c_util.h"
+#include "util/timestamp.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_util.h"
 #include "util/udev_usb_util.h"
@@ -455,6 +456,7 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    dref->io_path = io_path;
    dref->vcp_version_xdf = DDCA_VSPEC_UNQUERIED;
    dref->vcp_version_cmdline = DDCA_VSPEC_UNQUERIED;
+   dref->creation_timestamp = cur_realtime_nanosec();
    // Per_Display_Data * pdd = pdd_get_per_display_data(io_path, true);
    // dref->pdd = pdd;
    // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
@@ -687,6 +689,7 @@ void dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth) {
    }
    rpt_vstring(d1, "drm_connector:   %s", dref->drm_connector);
    rpt_vstring(d1, "drm_connector_id: %d", dref->drm_connector_id);
+   rpt_vstring(d1, "creation_timestamp: %s", formatted_time_t(dref->creation_timestamp));
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
