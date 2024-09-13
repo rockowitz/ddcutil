@@ -236,7 +236,7 @@ void get_connector_bus_numbers(
 
       // Examine drm_dp_auxN subdirectory
       // Present: i915, amdgpu
-      // Absent:
+      // Absent:  Nvidia
       char * drm_dp_aux_dir = NULL;
       bool has_drm_dp_aux_dir =    // does it exist? e.g. /sys/class/drm/card0-DP-1/drm_dp_aux0
             RPT_ATTR_SINGLE_SUBDIR(d0, &drm_dp_aux_dir, fn_starts_with, "drm_dp_aux", dirname, fn);
@@ -248,7 +248,7 @@ void get_connector_bus_numbers(
 
       // Examine i2c-N subdirectory
       // Present: i915, amdgpu (normal)
-      // Absent:  amdgpu(MST)
+      // Absent:  amdgpu(MST), Nvidia
       char * i2cN_buf = NULL;   // i2c-N
       bool has_i2c_subdir =
                RPT_ATTR_SINGLE_SUBDIR(d0, &i2cN_buf, fn_starts_with,"i2c-", dirname, fn);
@@ -313,6 +313,9 @@ void get_connector_bus_numbers(
    } // DP
 
    else {   // not DP
+
+      // Examine ddc subdirectory
+      // Not present: Nvidia
       char * ddc_dir_path = NULL;
       bool found_ddc = RPT_ATTR_REALPATH(d0, &ddc_dir_path,    dirname, fn, "ddc");
       ASSERT_IFF(found_ddc, ddc_dir_path);  // guaranteed by RPT_ATTR_REALPATH()
