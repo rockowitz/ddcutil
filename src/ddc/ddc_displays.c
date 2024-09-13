@@ -92,19 +92,26 @@ static bool detect_usb_displays = false;
 #endif
 bool monitor_state_tests = false;
 bool skip_ddc_checks = false;
+bool debug_locks = false;
 
 
 
 void ddc_add_display_ref(Display_Ref * dref) {
+   bool debug = false || debug_locks;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
    g_mutex_lock(&all_display_refs_mutex);
    g_ptr_array_add(all_display_refs, dref);
    g_mutex_unlock(&all_display_refs_mutex);
+   DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
 }
 
 void ddc_mark_display_ref_removed(Display_Ref* dref) {
+   bool debug = false || debug_locks;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
    g_mutex_lock(&all_display_refs_mutex);
    dref->flags |= DREF_REMOVED;
    g_mutex_unlock(&all_display_refs_mutex);
+   DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
 }
 
 
@@ -903,7 +910,7 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
       bool         ignore_invalid)
 {
    ASSERT_IFF(busno >= 0, !connector);
-   bool debug = false;
+   bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d, connector = %s, ignore_invalid=%s",
                                        busno, connector, SBOOL(ignore_invalid));
    assert(all_display_refs);
@@ -993,8 +1000,8 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
             }
          }
       }
-      g_mutex_unlock(&all_display_refs_mutex);
    }
+   g_mutex_unlock(&all_display_refs_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p= %s", result, dref_repr_t(result));
    return result;
@@ -1585,7 +1592,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
  */
 void
 ddc_ensure_displays_detected() {
-   bool debug = false;
+   bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (!all_display_refs) {
       // i2c_detect_buses();  // called in ddc_detect_all_displays()
@@ -1609,7 +1616,7 @@ ddc_ensure_displays_detected() {
  */
 void
 ddc_discard_detected_displays() {
-   bool debug = false;
+   bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    // grab locks to prevent any opens?
    ddc_close_all_displays();
@@ -1644,7 +1651,7 @@ ddc_discard_detected_displays() {
 
 void
 ddc_redetect_displays() {
-   bool debug = false;
+   bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
    DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
