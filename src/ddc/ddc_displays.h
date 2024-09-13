@@ -62,7 +62,8 @@ Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connecto
              ddc_get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
 Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
 
-
+void ddc_add_display_ref(Display_Ref * dref);
+void ddc_mark_display_ref_removed(Display_Ref* dref);
 
 #ifdef OLD
 // Report Hotplug Event (alternative, simpler)

@@ -81,6 +81,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 static GPtrArray * all_display_refs = NULL;         // all detected displays, array of Display_Ref *
+static GMutex      all_display_refs_mutex;
 static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
 static int dispno_max = 0;                      // highest assigned display number
 static int ddc_detect_async_threshold = DEFAULT_DDC_CHECK_ASYNC_THRESHOLD;
@@ -93,11 +94,20 @@ bool monitor_state_tests = false;
 bool skip_ddc_checks = false;
 
 
-#ifdef UNUSED
+
 void ddc_add_display_ref(Display_Ref * dref) {
+   g_mutex_lock(&all_display_refs_mutex);
    g_ptr_array_add(all_display_refs, dref);
+   g_mutex_unlock(&all_display_refs_mutex);
 }
-#endif
+
+void ddc_mark_display_ref_removed(Display_Ref* dref) {
+   g_mutex_lock(&all_display_refs_mutex);
+   dref->flags |= DREF_REMOVED;
+   g_mutex_unlock(&all_display_refs_mutex);
+}
+
+
 
 
 //
@@ -1544,7 +1554,9 @@ ddc_ensure_displays_detected() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (!all_display_refs) {
       // i2c_detect_buses();  // called in ddc_detect_all_displays()
+      g_mutex_lock(&all_display_refs_mutex);
       all_display_refs = ddc_detect_all_displays(&display_open_errors);
+      g_mutex_unlock(&all_display_refs_mutex);
    }
    DBGTRC_DONE(debug, TRACE_GROUP,
                "all_displays=%p, all_displays has %d displays",
@@ -1580,7 +1592,9 @@ ddc_discard_detected_displays() {
          free_display_ref(dref);
 #endif
       }
+      g_mutex_lock(&all_display_refs_mutex);
       g_ptr_array_free(all_display_refs, true);
+      g_mutex_unlock(&all_display_refs_mutex);
       all_display_refs = NULL;
       if (display_open_errors) {
          g_ptr_array_free(display_open_errors, true);
@@ -1623,7 +1637,9 @@ ddc_redetect_displays() {
       }
    }
    i2c_detect_buses();
+   g_mutex_lock(&all_display_refs_mutex);
    all_display_refs = ddc_detect_all_displays(&display_open_errors);
+   g_mutex_unlock(&all_display_refs_mutex);
    if (debug) {
       ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
       // dbgrpt_valid_display_refs(1);
@@ -1864,7 +1880,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       dref->drm_connector_id = businfo->drm_connector_id;
 
       ddc_initial_checks_by_dref(dref);
-      g_ptr_array_add(all_display_refs, dref);
+      ddc_add_display_ref(dref);
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "Display %s found on bus %d", dref_repr_t(dref), businfo->busno);

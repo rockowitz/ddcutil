@@ -450,7 +450,7 @@ bool ddc_i2c_hotplug_change_handler(
       i2c_reset_bus_info(businfo);
       if (dref) {
          assert(!(dref->flags & DREF_REMOVED));
-         dref->flags |= DREF_REMOVED;
+         ddc_mark_display_ref_removed(dref);
          // dref->detail = NULL;
          char buf[100];
          g_snprintf(buf, 100, "Removing connected display, dref %s", dref_repr_t(dref));
@@ -804,6 +804,31 @@ void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth) {
 }
 
 
+void debug_watch_state(int connector_number, char * cname) {
+   // NB needs validity checks for production
+   bool debug = true;
+
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      Sys_Drm_Connector * cur =  get_drm_connector(cname, 2);
+      free_sys_drm_connector(cur);
+   }
+
+   get_sys_drm_connectors(true);
+   rpt_vstring(1, "drm connectors");
+   report_sys_drm_connectors(true, 1);
+   Sys_Drm_Connector * conn = find_sys_drm_connector_by_connector_id(connector_number);
+   rpt_vstring(1, "connector_number=%d, busno=%d, has_edid=%s",
+         connector_number, conn->i2c_busno, sbool(conn->edid_bytes != NULL));
+
+   rpt_label(0, "/sys/class/drm state after hotplug event:");
+   dbgrpt_sysfs_basic_connector_attributes(1);
+   if (use_drm_connector_states) {
+      rpt_vstring(0, "DRM connector states after hotplug event:");
+      report_drm_connector_states_basic(/*refresh*/ true, 1);
+   }
+}
+
+
 /** Main loop watching for display changes. Runs as thread.
  *
  *  @param data   #Watch_Displays_Data passed from creator thread
@@ -1002,56 +1027,56 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "No second udev event");
       }
 
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_drm_connectors_have_connector_id = %s",
-            SBOOL(all_drm_connectors_have_connector_id));
-
       bool processed = false;
       if (use_sysfs_connector_id) {
          char * cname = NULL;
          int connector_number = -1;
-         if (drm_udev_detail && drm_udev_detail->prop_connector) {  // seen null when MST hub added
+         if (drm_udev_detail && streq(drm_udev_detail->prop_action, "change")
+                             && drm_udev_detail->prop_connector) {  // seen null when MST hub added
             bool valid_number = str_to_int(drm_udev_detail->prop_connector, &connector_number, 10);
             assert(valid_number);
             cname = get_sys_drm_connector_name_by_connector_id(connector_number);
-            DBGMSG("connector name reported by get_sys_drm_connector_name_by_connector_id(): %s", cname);
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
+                  "get_sys_drm_connector_name_by_connector_id() returned: %s", cname);
 
             // if (IS_DBGTRC(debug_sysfs_state, DDCA_TRC_NONE)) {
             if (debug_sysfs_state) {
-               // NB needs validity checks for production
+               debug_watch_state(connector_number, cname);
+            }  // debug_sysfs_state
 
-               if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-                  Sys_Drm_Connector * cur =  get_drm_connector(cname, 2);
-                  free_sys_drm_connector(cur);
-               }
-
-               get_sys_drm_connectors(true);
-               rpt_vstring(1, "drm connectors");
-               report_sys_drm_connectors(true, 1);
-               Sys_Drm_Connector * conn = find_sys_drm_connector_by_connector_id(connector_number);
-               rpt_vstring(1, "connector_number=%d, busno=%d, has_edid=%s",
-                     connector_number, conn->i2c_busno, sbool(conn->edid_bytes != NULL));
-
-
-               rpt_label(0, "/sys/class/drm state after hotplug event:");
-               dbgrpt_sysfs_basic_connector_attributes(1);
-               if (use_drm_connector_states) {
-                  rpt_vstring(0, "DRM connector states after hotplug event:");
-                  report_drm_connector_states_basic(/*refresh*/ true, 1);
-               }
-            }
             if (cname) {
-               DBGTRC(true, DDCA_TRC_NONE, "Using connector id %d, name =%s", connector_number, cname);
+               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "1) Using connector id %d, name =%s", connector_number, cname);
                bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
                                      connector_number, cname, bs_cur_buses_w_edid, deferred_events);
                processed = true;
             }
-            else {  // cname not found, try busno
-               if (i2c_dev_udev_detail && i2c_dev_udev_detail->prop_devname) {  // is this the right attribute
-                  int busno = i2c_name_to_busno(i2c_dev_udev_detail->prop_devname);
+            if (!processed) {
+               if (drm_udev_detail &&
+                     (streq(drm_udev_detail->prop_action,"add")||streq(drm_udev_detail->prop_action, "remove") )
+                     && drm_udev_detail->sysname)
+               {
+                  int busno = i2c_name_to_busno(drm_udev_detail->sysname);
                   cname = get_sys_drm_connector_name_by_busno(busno);
                }
                if (cname) {
-                  DBGMSG("connector name reported by get_sys_drm_connector_name_by_busno(): %s", cname);
+                  DBGTRC(true, DDCA_TRC_NONE,
+                        "2) connector name reported by get_sys_drm_connector_name_by_busno(): %s",
+                        cname);
+                  bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
+                                     connector_number, cname, bs_cur_buses_w_edid, deferred_events);
+                  processed = true;
+               }
+            }
+            if (!processed) {
+               if (i2c_dev_udev_detail && i2c_dev_udev_detail->sysname
+                   && (streq(drm_udev_detail->prop_action,"add")||streq(drm_udev_detail->prop_action, "remove")) )
+               {
+                  int busno = i2c_name_to_busno(i2c_dev_udev_detail->sysname);
+                  cname = get_sys_drm_connector_name_by_busno(busno);
+               }
+               if (cname) {
+                  DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
+                        "3) connector name reported by get_sys_drm_connector_name_by_busno(): %s", cname);
                   bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
                                      connector_number, cname, bs_cur_buses_w_edid, deferred_events);
                   processed = true;
@@ -1062,6 +1087,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       }
 
      if (!processed) {
+        DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "4) Calling ddc_i2c_check_bus_changes");
          // emits display change events or queues them
          bs_cur_buses_w_edid = ddc_i2c_check_bus_changes(bs_cur_buses_w_edid, deferred_events);
       }
