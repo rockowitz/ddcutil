@@ -76,7 +76,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i5:          Max retries for setvcp verification failure");
    rpt_vstring(depth+1, "Utility option --i6:          Watch Mode: 1=Udev_I2c, 2=Udev_Syfs, 3=Poll");
-   rpt_vstring(depth+1, "Utility option --i7:          Additional secondary udev receive millisec (default = %d", DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC);
+   rpt_vstring(depth+1, "Utility option --i7:          Additional secondary udev receive millisec (default = %d)", DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i8:          Unused");
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");
