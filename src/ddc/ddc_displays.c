@@ -93,9 +93,11 @@ bool monitor_state_tests = false;
 bool skip_ddc_checks = false;
 
 
+#ifdef UNUSED
 void ddc_add_display_ref(Display_Ref * dref) {
    g_ptr_array_add(all_display_refs, dref);
 }
+#endif
 
 
 //
