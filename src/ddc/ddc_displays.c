@@ -967,7 +967,11 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
       }
    }
    // assert(non_removed_ct <= 1);
-   if (non_removed_ct > 0) {
+   if (non_removed_ct > 1) {
+      if (!ignore_invalid) {
+         // don't try to recover from this very very very rare case
+         assert(non_removed_ct <= 1);
+      }
       SEVEREMSG("Multiple non-removed displays on device %s detected. "
                 "All but the most recent are being marked DDC_REMOVED",
                 dpath_repr_t(&result->io_path));
