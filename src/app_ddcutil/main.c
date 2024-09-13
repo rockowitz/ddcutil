@@ -1003,13 +1003,10 @@ main(int argc, char *argv[]) {
       }
    }
 
-   else if (parsed_cmd->cmd_id == CMDID_C2) {
-      DBGMSG("Executing temporarily defined command C2: noop");
-      // report_drm_connector_states(0);
-      main_rc = EXIT_SUCCESS;
-   }
-
-   else if (parsed_cmd->cmd_id == CMDID_C3 || parsed_cmd->cmd_id == CMDID_C4) {
+   else if (parsed_cmd->cmd_id == CMDID_C2 ||
+            parsed_cmd->cmd_id == CMDID_C3 ||
+            parsed_cmd->cmd_id == CMDID_C4)
+   {
       Cmd_Desc * desc = get_command(parsed_cmd->cmd_id);
       DBGMSG("Unrecognized command: %s", desc->cmd_name);
       main_rc = EXIT_FAILURE;
