@@ -910,6 +910,10 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
 
    Display_Ref * result = NULL;
    int non_removed_ct = 0;
+   uint64_t highest_non_removed_creation_timestamp = 0;
+   // lock entire function on the extremely rare possibility that recovery
+   // will mark a display ref removed
+   g_mutex_lock(&all_display_refs_mutex);
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       // If a display is repeatedly removed and added on a particular connector,
       // there will be multiple Display_Ref records.  All but one should already
@@ -929,7 +933,7 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED=%s, dref_detail=%p -> /dev/i2c-%d",
       //       sbool(cur_dref->flags&DREF_REMOVED), cur_dref->detail,  businfo->busno);
 
-      if (ignore_invalid && cur_dref->flags&DREF_REMOVED) {
+      if (ignore_invalid && (cur_dref->flags&DREF_REMOVED)) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p DREF_REMOVED set, Ignoring",
                 dref_repr_t(cur_dref), cur_dref);
          continue;
@@ -956,10 +960,37 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
       {
          // the match should only happen once, but count matches as check
          non_removed_ct++;
-         result = cur_dref;
+         if (cur_dref->creation_timestamp > highest_non_removed_creation_timestamp) {
+            highest_non_removed_creation_timestamp = cur_dref->creation_timestamp;
+            result = cur_dref;
+         }
       }
    }
-   assert(non_removed_ct <= 1);
+   // assert(non_removed_ct <= 1);
+   if (non_removed_ct > 0) {
+      SEVEREMSG("Multiple non-removed displays on device %s detected. "
+                "All but the most recent are being marked DDC_REMOVED",
+                dpath_repr_t(&result->io_path));
+      for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+         Display_Ref * cur_dref = g_ptr_array_index(all_display_refs, ndx);
+         if (ignore_invalid && cur_dref->dispno <= 0)
+            continue;
+         if (ignore_invalid && (cur_dref->flags&DREF_REMOVED))
+            continue;
+         if (cur_dref->io_path.io_mode != DDCA_IO_I2C)
+            continue;
+         if ( (busno >= 0 && cur_dref->io_path.path.i2c_busno == busno) ||
+              (connector  && streq(connector, cur_dref->drm_connector) ) )
+         {
+            if (cur_dref->creation_timestamp < highest_non_removed_creation_timestamp) {
+               SEVEREMSG("Marking dref %s removed", dref_reprx_t(cur_dref));
+               //ddc_mark_display_ref_removed(cur_dref);
+               cur_dref->flags |= DREF_REMOVED;
+            }
+         }
+      }
+      g_mutex_unlock(&all_display_refs_mutex);
+   }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p= %s", result, dref_repr_t(result));
    return result;
