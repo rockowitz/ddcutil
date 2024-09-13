@@ -106,6 +106,8 @@
 // *** Miscellaneous
 //
 
+#define DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC 100
+
 // EDID in /sys can have stale data
 #define DEFAULT_TRY_GET_EDID_FROM_SYSFS  false
 

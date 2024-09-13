@@ -485,10 +485,13 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // all_drm_connectors_have_connector_id = all_drm_connectors_have_connector_id && (parsed_cmd->flags2 & CMD_FLAG2_F17);
 #endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F17)
-      use_sysfs_connector_id = true;
+      use_sysfs_connector_id = false;
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F18)
       report_udev_events = true;
+
+   if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
+      secondary_udev_receive_millisec = parsed_cmd->i7;
 
    subinit_i2c_bus_core();
 

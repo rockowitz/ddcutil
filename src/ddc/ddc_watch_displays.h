@@ -33,6 +33,7 @@ extern int            extra_stabilization_millisec;
 extern int            stabilization_poll_millisec;
 extern bool           use_sysfs_connector_id;
 extern bool           report_udev_events;
+extern int            secondary_udev_receive_millisec;
 
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);

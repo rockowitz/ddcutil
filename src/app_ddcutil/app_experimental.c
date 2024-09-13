@@ -60,7 +60,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 #endif
    // REPORT_FLAG_OPTION(16, "Simple report /sys/class/drm");
    REPORT_FLAG_OPTION(16, "Force  Watch_Mode_Udev_I2C");
-   REPORT_FLAG_OPTION(17, "Use sysfs connector_id");
+   REPORT_FLAG_OPTION(17, "Do not use sysfs connector_id");
    REPORT_FLAG_OPTION(18, "Always report UDEV events");
    REPORT_FLAG_OPTION(19, "Unused");
    REPORT_FLAG_OPTION(20, "Unused");
@@ -76,7 +76,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i5:          Max retries for setvcp verification failure");
    rpt_vstring(depth+1, "Utility option --i6:          Watch Mode: 1=Udev_I2c, 2=Udev_Syfs, 3=Poll");
-   rpt_vstring(depth+1, "Utility option --i7:          Unused");
+   rpt_vstring(depth+1, "Utility option --i7:          Additional secondary udev receive millisec (default = %d", DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i8:          Unused");
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");

@@ -73,7 +73,8 @@ DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Udev_I2C;
 bool             ddc_slow_watch = false;
 int              extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISECS;
 int              stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
-bool             use_sysfs_connector_id = false;
+int              secondary_udev_receive_millisec = DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC;
+bool             use_sysfs_connector_id = true;
 bool             report_udev_events;
 
 
@@ -1001,8 +1002,8 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
          free_udev_event_detail(cd);
       }
 
-      int second_udev_receive_millisec = 100;
-      usleep(second_udev_receive_millisec * 1000);
+      if (secondary_udev_receive_millisec > 0)
+         usleep(secondary_udev_receive_millisec * 1000);
       dev2 = udev_monitor_receive_device(mon);
       if (dev2) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Second event detected");
