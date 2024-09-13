@@ -92,6 +92,11 @@ void             i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinf
 // Detected Buses
 extern GPtrArray * all_i2c_buses;
 
+void             i2c_add_bus_info(I2C_Bus_Info * businfo);
+void             i2c_discard_buses0(GPtrArray* buses);
+void             i2c_discard_buses();
+void             i2c_remove_bus_info(int busno);
+
 Byte_Value_Array i2c_detect_attached_buses();
 Bit_Set_256      i2c_detect_attached_buses_as_bitset();
 void             i2c_check_attached_buses(Bit_Set_256* newly_attached_buses_loc,

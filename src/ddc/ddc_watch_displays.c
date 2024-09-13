@@ -463,11 +463,8 @@ bool ddc_i2c_hotplug_change_handler(
                                             dref->io_path);
 #endif
          if (!i2c_device_exists(busno)) {
-            int  busNdx = i2c_find_bus_info_index_in_gptrarray_by_busno(all_i2c_buses, busno);
-            assert (busNdx >= 0);
-            I2C_Bus_Info * businfo = g_ptr_array_remove_index(all_i2c_buses, busNdx);
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Device /dev/i2c-%d no longer exists. Removing businfo record %p.",
-                  busno, businfo);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Device /dev/i2c-%d no longer exists.", busno);
+            i2c_remove_bus_info(busno);
          }
 
          ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
@@ -488,6 +485,7 @@ bool ddc_i2c_hotplug_change_handler(
    busno = bs256_iter_next(iter);
    while (busno >= 0) {
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Added bus: %d", busno);
+       // need to protect ?
        I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
        if (!businfo) {
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to list of buses", busno);
@@ -496,7 +494,7 @@ bool ddc_i2c_hotplug_change_handler(
           get_sys_drm_connectors(/*rescan*/ true);  // so that drm connector name picked up
           businfo = i2c_new_bus_info(busno);
           businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
-          g_ptr_array_add(all_i2c_buses, businfo);
+          i2c_add_bus_info(businfo);
        }
        char buf[100];
        g_snprintf(buf, 100, "Adding connected display with bus %d", busno);

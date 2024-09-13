@@ -1,7 +1,7 @@
 /** @file i2c_bus_base.c
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -13,6 +13,8 @@
 
 #include "util/coredefs.h"
 #include "util/edid.h"
+
+#include "public/ddcutil_types.h"
 
 #include "util/glib_string_util.h"
 #include "util/report_util.h"
@@ -30,6 +32,9 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
+
+GPtrArray * all_i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
+static GMutex all_i2c_buses_mutex;
 
 //
 // Local utility functions
@@ -109,6 +114,23 @@ char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char 
       RPT_ATTR_TEXT(-1, &result, "/sys/class/drm", businfo->drm_connector_name, attribute);
    }
    return result;
+}
+
+
+void i2c_remove_bus_info(int busno) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d");
+   g_mutex_lock(&all_i2c_buses_mutex);
+   int  busNdx = i2c_find_bus_info_index_in_gptrarray_by_busno(all_i2c_buses, busno);
+   if (busNdx < 0) {
+      MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Record for busno %d not found in all_i2c_buses array", busno);
+   }
+   else {
+      I2C_Bus_Info * businfo = g_ptr_array_remove_index(all_i2c_buses, busNdx);
+      i2c_free_bus_info(businfo);
+   }
+   g_mutex_unlock(&all_i2c_buses_mutex);
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -234,6 +256,43 @@ I2C_Bus_Info * i2c_new_bus_info(int busno) {
    businfo->busno = busno;
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", businfo);
    return businfo;
+}
+
+
+void i2c_add_bus_info(I2C_Bus_Info * businfo) {
+   assert(businfo);
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Adding businfo record for bus %d to all_i2c_buses", businfo->busno);
+   g_mutex_lock(&all_i2c_buses_mutex);
+   g_ptr_array_add(all_i2c_buses, businfo);
+   g_mutex_unlock(&all_i2c_buses_mutex);
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+
+void i2c_discard_buses0(GPtrArray* buses) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "buses=%p", buses);
+     if (buses) {
+        g_ptr_array_free(buses, true);
+     }
+     DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+/** Discard all known buses */
+void i2c_discard_buses() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   if (all_i2c_buses) {
+      g_mutex_lock(&all_i2c_buses_mutex);
+      i2c_discard_buses0(all_i2c_buses);
+      all_i2c_buses= NULL;
+      g_mutex_unlock(&all_i2c_buses_mutex);
+   }
+   // connected_buses = EMPTY_BIT_SET_256;
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -382,9 +441,6 @@ int   i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno
 //
 // Operations on the set of all buses
 //
-
-GPtrArray * all_i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
-
 
 /** Retrieves bus information by I2C bus number.
  *

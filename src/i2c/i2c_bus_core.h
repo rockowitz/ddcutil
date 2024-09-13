@@ -45,6 +45,9 @@ void             i2c_enable_cross_instance_locks(bool yesno);
 
 Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices);
 
+// Lifecycle
+I2C_Bus_Info * remove_i2c_bus_info();
+
 // Bus open and close
 void             add_open_failures_reported(Bit_Set_256 failures);
 void             include_open_failures_reported(int busno);
@@ -59,8 +62,6 @@ Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 Bit_Set_256      buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 GPtrArray *      i2c_detect_buses0();
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
-void             i2c_discard_buses0(GPtrArray* buses);
-void             i2c_discard_buses();
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
 
 // Reports
