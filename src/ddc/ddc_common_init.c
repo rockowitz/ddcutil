@@ -490,8 +490,16 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F18)
       report_udev_events = true;
 
+#ifdef SECONDARY_UNDEV_READ
    if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
       secondary_udev_receive_millisec = parsed_cmd->i7;
+#endif
+
+   if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
+      stabilization_poll_millisec = parsed_cmd->i7;
+
+   if (parsed_cmd->i8 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I8_SET)
+      udev_poll_loop_millisec = parsed_cmd->i7;
 
    subinit_i2c_bus_core();
 
