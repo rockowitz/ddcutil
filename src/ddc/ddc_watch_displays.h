@@ -27,13 +27,12 @@ typedef enum {
 
 extern DDC_Watch_Mode ddc_watch_mode;
 extern bool           ddc_slow_watch;
-#define DEFAULT_EXTRA_STABILIZATION_MILLISECS 0   // 4000
 extern int            extra_stabilization_millisec;
-#define DEFAULT_STABILIZATION_POLL_MILLISEC 1000
 extern int            stabilization_poll_millisec;
 extern bool           use_sysfs_connector_id;
 extern bool           report_udev_events;
 extern int            secondary_udev_receive_millisec;
+extern int            udev_poll_loop_millisec;
 
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
