@@ -112,7 +112,7 @@
 // libddcutil repeatedly checks /sys/class/drm until the reported displays
 // stabilize
 /** Extra time to wait before first stabilization check */
-#define DEFAULT_EXTRA_STABILIZATION_MILLISECS 0   // 4000
+#define DEFAULT_EXTRA_STABILIZATION_MILLISEC 0   // 4000
 /** Polling interval between stabilization checks */
 #define DEFAULT_STABILIZATION_POLL_MILLISEC 1000
 
