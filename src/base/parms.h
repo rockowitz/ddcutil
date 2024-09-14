@@ -98,15 +98,32 @@
 /** Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
 #define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD CHECK_ASYNC_NEVER
 /** Parallelize DDC communication checks if at least this number of /dev/i2c devices have an EDID */
-// on banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
+// on workstation banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
 #define DEFAULT_DDC_CHECK_ASYNC_THRESHOLD 3
+
+
+//
+// *** Watching for display changes
+//
+
+/** How frequently libddcutil watches for changes to connected displays */
+#define DEFAULT_UDEV_POLL_LOOP_MILLISEC 500
+// Once a UDEV DRM event is received that possibly indicates a display change,
+// libddcutil repeatedly checks /sys/class/drm until the reported displays
+// stabilize
+/** Extra time to wait before first stabilization check */
+#define DEFAULT_EXTRA_STABILIZATION_MILLISECS 0   // 4000
+/** Polling interval between stabilization checks */
+#define DEFAULT_STABILIZATION_POLL_MILLISEC 1000
+
+#ifdef UDEV_I2C_DEV
+#define DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC 100
+#endif
 
 
 //
 // *** Miscellaneous
 //
-
-#define DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC 100
 
 // EDID in /sys can have stale data
 #define DEFAULT_TRY_GET_EDID_FROM_SYSFS  false
