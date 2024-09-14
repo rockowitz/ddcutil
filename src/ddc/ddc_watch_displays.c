@@ -71,11 +71,14 @@ static GMutex    watch_thread_mutex;
 
 DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Udev_I2C;
 bool             ddc_slow_watch = false;
-int              extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISECS;
+int              extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
 int              stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
+#ifdef SECONDARY_UDEV_RECEIVE
 int              secondary_udev_receive_millisec = DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC;
+#endif
 bool             use_sysfs_connector_id = true;
 bool             report_udev_events;
+int              udev_poll_loop_millisec = DEFAULT_UDEV_POLL_LOOP_MILLISEC;   // 2000;   // default sleep time on each loop
 
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
@@ -101,31 +104,35 @@ void free_watch_displays_data(Watch_Displays_Data * wdd) {
 
 void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
    rpt_structure_loc("udev_device", dev, depth);
+   int d1 = depth+1;
    // printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
    // printf("   Subsystem: %s\n", udev_device_get_subsystem(dev));  // drm
    // printf("   Devtype: %s\n", udev_device_get_devtype(dev));      // drm_minor
 
-   printf("   Action:    %s\n", udev_device_get_action(   dev));     // "change"
-   printf("   devpath:   %s\n", udev_device_get_devpath(  dev));
-   printf("   subsystem: %s\n", udev_device_get_subsystem(dev));     // drm
-   printf("   devtype:   %s\n", udev_device_get_devtype(  dev));     // drm_minor
-   printf("   syspath:   %s\n", udev_device_get_syspath(  dev));
-   printf("   sysname:   %s\n", udev_device_get_sysname(  dev));
-   printf("   sysnum:    %s\n", udev_device_get_sysnum(   dev));
-   printf("   devnode:   %s\n", udev_device_get_devnode(  dev));     // /dev/dri/card0
-   printf("   initialized: %d\n", udev_device_get_is_initialized(  dev));
-   printf("   driver:    %s\n", udev_device_get_driver(  dev));
+   rpt_vstring(d1, "Action:      %s", udev_device_get_action(   dev));     // "change"
+   rpt_vstring(d1, "devpath:     %s", udev_device_get_devpath(  dev));
+   rpt_vstring(d1, "subsystem:   %s", udev_device_get_subsystem(dev));     // drm
+   rpt_vstring(d1, "devtype:     %s", udev_device_get_devtype(  dev));     // drm_minor
+   rpt_vstring(d1, "syspath:     %s", udev_device_get_syspath(  dev));
+   rpt_vstring(d1, "sysname:     %s", udev_device_get_sysname(  dev));
+   rpt_vstring(d1, "sysnum:      %s", udev_device_get_sysnum(   dev));
+   rpt_vstring(d1, "devnode:     %s", udev_device_get_devnode(  dev));     // /dev/dri/card0
+   rpt_vstring(d1, "initialized: %d", udev_device_get_is_initialized(  dev));
+   rpt_vstring(d1, "driver:      %s", udev_device_get_driver(  dev));
 
    if (verbose) {
       struct udev_list_entry * entries = NULL;
+
+#ifdef NOT_USEFUL     // see udevadm -p
       entries = udev_device_get_devlinks_list_entry(dev);
       show_udev_list_entries(entries, "devlinks");
 
-      entries = udev_device_get_properties_list_entry(dev);
-      show_udev_list_entries(entries, "properties");
-
       entries = udev_device_get_tags_list_entry(dev);
       show_udev_list_entries(entries, "tags");
+#endif
+
+      entries = udev_device_get_properties_list_entry(dev);
+      show_udev_list_entries(entries, "properties");
 
       entries = udev_device_get_sysattr_list_entry(dev);
       //show_udev_list_entries(entries, "sysattrs");
@@ -866,11 +873,11 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    // drm_dp_aux_dev, kernel, i2c-dev, i2c, hidraw
     udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // detects
    // testing for hub changes
-    // i2c-dev report i2c device number, i2c does not
-   udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c-dev", NULL);
+#ifdef UDEV_I2C_DEV
+    // i2c-dev report i2c device number, i2c does not, but still not useful
+    udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c-dev", NULL);
+#endif
    // udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c", NULL);
-   // udev_monitor_filter_add_match_subsystem_devtype(mon, NULL, "i2c");
-   // udev_monitor_filter_add_match_subsystem_devtype(mon, NULL, "i2c-dev");
    udev_monitor_enable_receiving(mon);
 
    // make udev_monitor_receive_device() blocking
@@ -878,9 +885,8 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    // set_fd_blocking(fd);
 
    // Sysfs_Connector_Names current_connector_names = get_sysfs_drm_connector_names();
-   GPtrArray * cur_active_buses = all_i2c_buses;
    Bit_Set_256 bs_cur_buses_w_edid =
-         buses_bitset_from_businfo_array(cur_active_buses, /*only_connected=*/ true);
+         buses_bitset_from_businfo_array(all_i2c_buses, /*only_connected=*/ true);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial i2c buses with edids: %s",
          BS256_REPR(bs_cur_buses_w_edid));
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
@@ -907,24 +913,30 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       dbgrpt_sysfs_basic_connector_attributes(1);
    }
 
+#ifdef SECONDARY_UDEV
    struct udev_device * dev2 = NULL;
+   Udev_Event_Detail * i2c_dev_udev_detail = NULL;
+#endif
    struct udev_device * dev = NULL;
    Udev_Event_Detail * drm_udev_detail = NULL;
-   Udev_Event_Detail * i2c_dev_udev_detail = NULL;
-   // Udev_Event_Detail * unexpected_udev_detail = NULL;
 
    while (true) {
-      if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
-         dev = udev_monitor_receive_device(mon);
-      }
-      while ( !dev ) {
+      while (true) {
+         if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
+            dev = udev_monitor_receive_device(mon);
+         }
+         if (dev) {
+            DBGTRC(debug || report_udev_events, DDCA_TRC_NONE, "Udev event received");
+            break;
+         }
+
          int slept = 0;
          if (!deferred_events || deferred_events->len == 0) {
-            int sleep_secs = 2;   // default sleep time on each loop
+            int poll_loop_millisec = udev_poll_loop_millisec;
             if (ddc_slow_watch)   // for testing
-               sleep_secs *= 3;
-            const int max_sleep_microsec = sleep_secs * 1000000;
-            const int sleep_step_microsec = MIN(200000, max_sleep_microsec);     // .2 sec
+               poll_loop_millisec *= 3;
+            const int max_sleep_microsec = poll_loop_millisec * 1000;
+            const int sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
             int slept = 0;
             for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
                usleep(sleep_step_microsec);
@@ -966,9 +978,6 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
             break;
          }
          // #endif
-
-         if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION)
-            dev = udev_monitor_receive_device(mon);
       }
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "==> udev_event received");
@@ -984,24 +993,28 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
 #endif
 
       drm_udev_detail = NULL;
+#ifdef UDEV_I2C_DEV
       i2c_dev_udev_detail = NULL;
-      // unexpected_udev_detail = NULL;
+#endif
 
       Udev_Event_Detail * cd = collect_udev_event_detail(dev);
-      if (IS_DBGTRC(debug || report_udev_events, DDCA_TRC_NONE))
+       if (IS_DBGTRC(debug || report_udev_events, DDCA_TRC_NONE))
          dbgrpt_udev_event_detail(cd, 2);
 
       if (streq(cd->prop_subsystem, "drm")) {
            drm_udev_detail = cd;
       }
+#ifdef UDEV_I2C_DEV
       else if (streq(cd->prop_subsystem, "i2c-dev")) {
            i2c_dev_udev_detail = cd;
       }
+#endif
       else {
          DBGMSG("Unexpected subsystem: %s", cd->prop_subsystem);
          free_udev_event_detail(cd);
       }
 
+#ifdef SECONDARY
       if (secondary_udev_receive_millisec > 0)
          usleep(secondary_udev_receive_millisec * 1000);
       dev2 = udev_monitor_receive_device(mon);
@@ -1025,89 +1038,97 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       else {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "No second udev event");
       }
+#endif
 
-      bool processed = false;
-      if (use_sysfs_connector_id) {
-         char * cname = NULL;
-         int connector_number = -1;
-         if (drm_udev_detail && streq(drm_udev_detail->prop_action, "change")
-                             && drm_udev_detail->prop_connector) {  // seen null when MST hub added
-            bool valid_number = str_to_int(drm_udev_detail->prop_connector, &connector_number, 10);
-            assert(valid_number);
-            cname = get_sys_drm_connector_name_by_connector_id(connector_number);
-            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
-                  "get_sys_drm_connector_name_by_connector_id() returned: %s", cname);
+      bool useful_udev_record = drm_udev_detail && streq(drm_udev_detail->prop_action, "change");
+      if (useful_udev_record) {
+         bool processed = false;
+         if (use_sysfs_connector_id) {
+            char * cname = NULL;
+            int connector_number = -1;
+            if (drm_udev_detail && streq(drm_udev_detail->prop_action, "change")
+                                && drm_udev_detail->prop_connector) {  // seen null when MST hub added
+               bool valid_number = str_to_int(drm_udev_detail->prop_connector, &connector_number, 10);
+               assert(valid_number);
+               cname = get_sys_drm_connector_name_by_connector_id(connector_number);
+               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
+                     "get_sys_drm_connector_name_by_connector_id() returned: %s", cname);
 
-            // if (IS_DBGTRC(debug_sysfs_state, DDCA_TRC_NONE)) {
-            if (debug_sysfs_state) {
-               debug_watch_state(connector_number, cname);
-            }  // debug_sysfs_state
+               if (debug_sysfs_state) {   // move debug statements out of mainline
+                  debug_watch_state(connector_number, cname);
+               }  // debug_sysfs_state
 
-            if (cname) {
-               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "1) Using connector id %d, name =%s", connector_number, cname);
-               bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
-                                     connector_number, cname, bs_cur_buses_w_edid, deferred_events);
-               processed = true;
-            }
-            if (!processed) {
-               if (drm_udev_detail &&
-                     (streq(drm_udev_detail->prop_action,"add")||streq(drm_udev_detail->prop_action, "remove") )
-                     && drm_udev_detail->sysname)
-               {
-                  int busno = i2c_name_to_busno(drm_udev_detail->sysname);
-                  cname = get_sys_drm_connector_name_by_busno(busno);
-               }
                if (cname) {
-                  DBGTRC(true, DDCA_TRC_NONE,
-                        "2) connector name reported by get_sys_drm_connector_name_by_busno(): %s",
-                        cname);
+                  DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "1) Using connector id %d, name =%s", connector_number, cname);
                   bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
-                                     connector_number, cname, bs_cur_buses_w_edid, deferred_events);
+                                        connector_number, cname, bs_cur_buses_w_edid, deferred_events);
                   processed = true;
                }
-            }
-            if (!processed) {
-               if (i2c_dev_udev_detail && i2c_dev_udev_detail->sysname
-                   && (streq(drm_udev_detail->prop_action,"add")||streq(drm_udev_detail->prop_action, "remove")) )
-               {
-                  int busno = i2c_name_to_busno(i2c_dev_udev_detail->sysname);
-                  cname = get_sys_drm_connector_name_by_busno(busno);
+   #ifdef UDEV_I2C_DEV
+               if (!processed) {
+                  if (drm_udev_detail &&
+                        (streq(drm_udev_detail->prop_action,"add")||streq(drm_udev_detail->prop_action, "remove") )
+                        && drm_udev_detail->sysname)
+                  {
+                     int busno = i2c_name_to_busno(drm_udev_detail->sysname);
+                     cname = get_sys_drm_connector_name_by_busno(busno);
+                  }
+                  if (cname) {
+                     DBGTRC(true, DDCA_TRC_NONE,
+                           "2) connector name reported by get_sys_drm_connector_name_by_busno(): %s",
+                           cname);
+                     bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
+                                        connector_number, cname, bs_cur_buses_w_edid, deferred_events);
+                     processed = true;
+                  }
                }
-               if (cname) {
-                  DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
-                        "3) connector name reported by get_sys_drm_connector_name_by_busno(): %s", cname);
-                  bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
-                                     connector_number, cname, bs_cur_buses_w_edid, deferred_events);
-                  processed = true;
+               if (!processed) {
+                  if (i2c_dev_udev_detail && i2c_dev_udev_detail->sysname
+                      && (streq(drm_udev_detail->prop_action,"add")||streq(drm_udev_detail->prop_action, "remove")) )
+                  {
+                     int busno = i2c_name_to_busno(i2c_dev_udev_detail->sysname);
+                     cname = get_sys_drm_connector_name_by_busno(busno);
+                  }
+                  if (cname) {
+                     DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
+                           "3) connector name reported by get_sys_drm_connector_name_by_busno(): %s", cname);
+                     bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
+                                        connector_number, cname, bs_cur_buses_w_edid, deferred_events);
+                     processed = true;
+                  }
                }
+   #endif
             }
+            free(cname);
          }
-         free(cname);
-      }
 
-     if (!processed) {
-        DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "4) Calling ddc_i2c_check_bus_changes");
-         // emits display change events or queues them
-         bs_cur_buses_w_edid = ddc_i2c_check_bus_changes(bs_cur_buses_w_edid, deferred_events);
-      }
+        if (!processed) {
+           DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "4) Calling ddc_i2c_check_bus_changes");
+            // emits display change events or queues them
+            bs_cur_buses_w_edid = ddc_i2c_check_bus_changes(bs_cur_buses_w_edid, deferred_events);
+         }
 
-      if (watch_dpms) {
-         // remove buses marked asleep if they no longer have a monitor so they will
-         // not be considered asleep when reconnected
-         bs_sleepy_buses = bs256_and(bs_sleepy_buses, bs_cur_buses_w_edid);
+        if (watch_dpms) {
+           // remove buses marked asleep if they no longer have a monitor so they will
+           // not be considered asleep when reconnected
+           bs_sleepy_buses = bs256_and(bs_sleepy_buses, bs_cur_buses_w_edid);
+        }
       }
-
 
       free_udev_event_detail(drm_udev_detail);
-      free_udev_event_detail(i2c_dev_udev_detail);
       drm_udev_detail = NULL;
+#ifdef UDEV_I2C_DEV
       i2c_dev_udev_detail = NULL;
+#endif
       udev_device_unref(dev);
       dev = NULL;
+#ifdef SECONDARY
+      free_udev_event_detail(i2c_dev_udev_detail);
       if (dev2) {
          udev_device_unref(dev2);
          dev2 = NULL;
       }
+#endif
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "==> udev event processed");
    }  // while
