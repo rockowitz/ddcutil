@@ -3,7 +3,7 @@
  *  Reads an INI style configuration file
  */
 
-// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -173,7 +173,12 @@ int ini_file_load(
          char * line = g_ptr_array_index(config_lines, ndx);
          DBGF(debug, "Processing line %d: |%s|", ndx+1, line);
          char * trimmed = trim_in_place(line);
-         // DBGMSF(debug, "line=%d. trimmed=|%s|", ndx+1, trimmed);
+         char * ptr = strchr(trimmed, '#');
+         if (ptr) {
+            *ptr = '\0';
+            rtrim_in_place(trimmed);
+         }
+         DBGF(debug, "line=%d. trimmed=|%s|", ndx+1, trimmed);
 
          char * seg_name;
          char * key;
