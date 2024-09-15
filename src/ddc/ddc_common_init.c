@@ -31,6 +31,7 @@
 #include "base/core.h"
 #include "base/display_retry_data.h"
 #include "base/dsa2.h"
+#include "base/flock.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
 #include "base/per_thread_data.h"

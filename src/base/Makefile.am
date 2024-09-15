@@ -64,6 +64,7 @@ execution_stats.c         \
 feature_lists.c           \
 feature_metadata.c        \
 feature_set_ref.c         \
+flock.c                   \
 i2c_bus_base.c            \
 linux_errno.c             \
 monitor_model_key.c       \

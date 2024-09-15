@@ -16,6 +16,7 @@
 #include "dynamic_features.h"
 #include "dsa2.h"
 #include "execution_stats.h"
+#include "flock.h"
 #include "feature_metadata.h"
 #include "i2c_bus_base.h"
 #include "linux_errno.h"
@@ -48,6 +49,7 @@ void init_base_services() {
    init_i2c_bus_base();
    init_feature_metadata();
    init_drm_connector_state();
+   init_flock();
    DBGF(debug, "Done");
 }
 

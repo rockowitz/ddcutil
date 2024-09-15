@@ -44,6 +44,7 @@
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/dsa2.h"
+#include "base/flock.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/rtti.h"
