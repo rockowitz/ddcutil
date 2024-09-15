@@ -518,6 +518,7 @@ dyn_report_cap_features(
 
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, vcp_version=%s",
                    dref_repr_t(dref), format_vspec(vcp_version));
+   assert(dref);
 
    if (!(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED)) {
       Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
