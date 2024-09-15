@@ -91,7 +91,8 @@ void explore_flock(int fd, const char * filename) {
    GPtrArray * pids_locking_inode = execute_shell_cmd_collect(cmd);
    rpt_vstring(1, "Processing locking inode %jd:", inode);
    for (int ndx = 0; ndx < pids_locking_inode->len; ndx++) {
-      rpt_vstring(2, "%s", g_ptr_array_index(pids_locking_inode, ndx));
+      // cast to avoid coverity warning:
+      rpt_vstring(2, "%s", (char*)  g_ptr_array_index(pids_locking_inode, ndx));
    }
 
    // g_snprintf(cmd, 80, "ls /proc/%jd", pid);
