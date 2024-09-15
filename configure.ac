@@ -226,23 +226,6 @@ AS_IF([test "x$enable_lib" = "xno" -a "x$enable_install_lib_only" = "xyes" ],
        AC_MSG_ERROR( [--disable-lib contradicts --enable-install-lib-only] )
    ) 
 
-dnl *** configure option: --install-lib-only
-AC_ARG_ENABLE([install-lib-only],
-              [ AS_HELP_STRING([--enable-install-lib-only=@<:@yes/no@:>@], [Install only shared shared librarys@<:@default=no@:>@] )],
-              [enable_install_lib_only=${enableval}],
-              [enable_install_lib_only=no] )
-AM_CONDITIONAL([INSTALL_LIB_ONLY_COND], [test "x$enable_install_lib_only" = "xyes"] )
-AS_IF([test "x$enable_install_lib_only" = "xyes"],
-      AC_MSG_NOTICE( [install_lib_only...        enabled] )
-     ,
-      AC_MSG_NOTICE( [install_lib_only...        disabled] )
-     )
-
-
-AS_IF([test "x$enable_lib" = "xno" -a "x$enable_install_lib_only" = "xyes" ],
-       AC_MSG_ERROR( [--disable-lib contradicts --enable-install-lib-only] )
-   ) 
-
 dnl *** configure option: --enable-envcmds
 AC_ARG_ENABLE([envcmds],
               [ AS_HELP_STRING([--enable-envcmds=@<:@yes/no@:>@], [Include environment and usbenvironment@<:@default=yes@:>@] )],
