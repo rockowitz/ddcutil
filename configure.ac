@@ -201,11 +201,11 @@ dnl Set flag for automake.am:
 AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" = "xyes"] )
 dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
 AS_IF([test "x$enable_lib" = "xyes"],
-      AC_MSG_NOTICE( [lib...        enabled] )
+      AC_MSG_NOTICE( [lib...              enabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 1)
 	  AC_DEFINE( [BUILD_SHARED_LIB], [1], [If defined, buid shared library.])
      ,
-      AC_MSG_NOTICE( [lib...        disabled] )
+      AC_MSG_NOTICE( [lib...              disabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 0)
      )
      
@@ -216,25 +216,40 @@ AC_ARG_ENABLE([install-lib-only],
               [enable_install_lib_only=no] )
 AM_CONDITIONAL([INSTALL_LIB_ONLY_COND], [test "x$enable_install_lib_only" = "xyes"] )
 AS_IF([test "x$enable_install_lib_only" = "xyes"],
-      AC_MSG_NOTICE( [install_lib_only...        enabled] )
+      AC_MSG_NOTICE( [install_lib_only... enabled] )
      ,
-      AC_MSG_NOTICE( [install_lib_only...        disabled] )
+      AC_MSG_NOTICE( [install_lib_only... disabled] )
      )
-
 
 AS_IF([test "x$enable_lib" = "xno" -a "x$enable_install_lib_only" = "xyes" ],
        AC_MSG_ERROR( [--disable-lib contradicts --enable-install-lib-only] )
    ) 
 
+dnl *** configure option: --enable-build-timestamp
+AC_ARG_ENABLE([build-timestamp],
+              [ AS_HELP_STRING([--enable-build-timestamp=@<:@yes/no@:>@], [Insert build date/time in executables@<:@default=yes@:>@] )],
+              [enable_build_timestamp=${enableval}],
+              [enable_build_timestamp=yes] )
+dnl Set flag for automake.am:
+AM_CONDITIONAL([ENABLE_BUILD_TIMESTAMP_COND], [test "x$enable_build_timestamp" = "xyes"] )
+AS_IF([test "x$enable_build_timestamp" = "xyes"],
+      AC_MSG_NOTICE( [build-timestamp...  enabled] )
+      AC_SUBST(ENABLE_BUILD_TIMESTAMP_FLAG, 1)
+      AC_DEFINE( [BUILD_TIMESTAMP], [1], [If defined, include build date/time in executables.])
+     ,
+      AC_MSG_NOTICE( [build-timestamp...  disabled] )
+      AC_SUBST(ENABLE_BUILD_TIMESTAMP_FLAG, 0)
+     )
+   
 dnl *** configure option: --enable-envcmds
 AC_ARG_ENABLE([envcmds],
               [ AS_HELP_STRING([--enable-envcmds=@<:@yes/no@:>@], [Include environment and usbenvironment@<:@default=yes@:>@] )],
               [enable_envcmds=${enableval}],
               [enable_envcmds=yes] )
 AS_IF([test "x$enable_envcmds" = "xyes"],
-        AC_MSG_NOTICE( [envcmds...    enabled (provisional) ]  )
+        AC_MSG_NOTICE( [envcmds...          enabled (provisional) ]  )
       ,
-        AC_MSG_NOTICE( [envcmds...    disabled] )
+        AC_MSG_NOTICE( [envcmds...          disabled] )
      )
 
 dnl *** configure option: --enable-udev
@@ -254,9 +269,9 @@ AC_ARG_ENABLE([usb],
               [enable_usb=${enableval}],
               [enable_usb=yes] )
 AS_IF([test "x$enable_usb" = "xyes"],
-        AC_MSG_NOTICE( [usb...        enabled (provisional) ]  )
+        AC_MSG_NOTICE( [usb...              enabled (provisional) ]  )
       ,
-        AC_MSG_NOTICE( [usb...        disabled] )
+        AC_MSG_NOTICE( [usb...              disabled] )
      )
 
 dnl *** configure option: --enable-drm
@@ -265,9 +280,9 @@ AC_ARG_ENABLE([drm],
               [enable_drm=${enableval}],
               [enable_drm=yes] )
 AS_IF([test "x$enable_drm" = "xyes"],
-        AC_MSG_NOTICE( [drm...        enabled (provisional) ]  )
+        AC_MSG_NOTICE( [drm...              enabled (provisional) ]  )
       ,
-        AC_MSG_NOTICE( [drm...        disabled] )
+        AC_MSG_NOTICE( [drm...              disabled] )
      )
 
 dnl *** configure option: --enable-x11
@@ -277,8 +292,8 @@ AC_ARG_ENABLE([x11],
               [enable_x11=yes] )
 enable_x11=no
  AS_IF([test "x$enable_x11" = "xyes"],
-       AC_MSG_NOTICE( [x11...      Deprecated option ignored]  ),
-       AC_MSG_NOTICE( [x11...      disabled] )
+       AC_MSG_NOTICE( [x11...              Deprecated option ignored]  ),
+       AC_MSG_NOTICE( [x11...              disabled] )
       )              
 
 dnl *** configure option: --enable-static-functions-visible
@@ -289,9 +304,9 @@ AC_ARG_ENABLE([static-functions-visible],
 AM_CONDITIONAL([STATIC_FUNCTIONS_VISIBLE_COND], [test "x$enable_static_functions_visible" = "xyes"] )
 AS_IF( [test "x$enable_static_functions_visible" = "xyes"],
          AC_DEFINE( [STATIC_FUNCTIONS_VISIBLE], [1], [If defined, remove static qualifier from function declarations.])
-         AC_MSG_NOTICE( [static_functions_visible...enabled] )
+         AC_MSG_NOTICE( [static_functions_visible... enabled] )
       ,
-         AC_MSG_NOTICE( [static_functions_visible...disabled] )
+         AC_MSG_NOTICE( [static_functions_visible... disabled] )
      )
 
 dnl *** configure option: --enable-asan
@@ -302,9 +317,9 @@ AC_ARG_ENABLE([asan],
 AM_CONDITIONAL([ASAN_COND], [test "x$enable_asan" = "xyes"] )
 AS_IF( [test "x$enable_asan" = "xyes"],
          AC_DEFINE( [WITH_ASAN], [1], [If defined, building for Asan instrumentation.])
-         AC_MSG_NOTICE( [asan..........enabled] )
+         AC_MSG_NOTICE( [asan...             enabled] )
       ,
-         AC_MSG_NOTICE( [asan..........disabled] )
+         AC_MSG_NOTICE( [asan...             disabled] )
      )
 
 
@@ -315,10 +330,10 @@ dnl               [ AS_HELP_STRING( [--enable-trace=@<:@yes/no@:>@], [Output tra
 dnl               [enable_trace=${enableval}],
 dnl               [enable_trace=yes] )
 dnl AS_IF([test "x$enable_trace" = "xyes"],
-dnl         AC_MSG_NOTICE( [trace...     enabled]  )
+dnl         AC_MSG_NOTICE( [trace...          enabled]  )
 dnl         AC_DEFINE([ENABLE_TRACE], [1], [If defined, enable trace messages.])
 dnl       ,
-dnl         AC_MSG_NOTICE( [TRACE...     disabled] )
+dnl         AC_MSG_NOTICE( [TRACE...          disabled] )
 dnl      )
 
 dnl *** configure option: --enable-targetbsd
@@ -879,6 +894,7 @@ AC_MSG_RESULT([
 
 	enable_lib:             ${enable_lib}
 	enable_install_lib_only ${enable_install_lib_only}
+	enable_build_timestamp  ${enable_build_timestamp}
 	enable_envcmds          ${enable_envcmds}
 	enable_udev             ${enable_udev}
 	enable_usb:             ${enable_usb}
