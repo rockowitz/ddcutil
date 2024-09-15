@@ -19,8 +19,12 @@
 
 #include "base/core.h"
 #include "base/parms.h"
-#include "rtti.h"
+#include "base/rtti.h"
 #include "base/status_code_mgt.h"
+
+// for some reason, usleep is declared in unistd.h, but not recognized
+// explicitly declare it here
+extern int usleep (__useconds_t __useconds);
 
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_BASE;
 
@@ -104,8 +108,10 @@ void explore_flock(int fd, const char * filename) {
 
 
 Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "filename=%s", filename);
+   assert(filename);
+   bool debug = false;
+   debug = debug ||  debug_flock;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "fd=%d, filename=%s, wait=%s", fd, filename, SBOOL(wait));
 
    // int inode = get_inode_by_fn(filename);
    // int inode2 = get_inode_by_fd(fd);
@@ -122,11 +128,10 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
    int flock_call_ct = 0;
 
    while(true) {
-#ifdef x
       DBGTRC_NOPREFIX(debug||debug_flock, DDCA_TRC_NONE, "Calling flock(%d,0x%04x), filename=%s ...",
             fd, operation, filename);
       flock_call_ct++;
-      int flockrc = flock(fd, operation);
+      flockrc = flock(fd, operation);
       if (flockrc == 0)  {
          DBGTRC_NOPREFIX(debug || debug_flock /* (flock_call_ct > 1 && debug_flock) */, DDCA_TRC_NONE,
                "flock succeeded, filename=%s, flock_call_ct=%d", filename, flock_call_ct);
@@ -134,7 +139,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
          explore_flock(fd, filename);
 #endif
          break;
-      }
+      } // flockrc == 0
 
       assert(flockrc == -1);
       int errsv = errno;
@@ -160,27 +165,25 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
            flockrc = DDCRC_FLOCKED;
            break;
         }
-     }
+     }  // EWOULDBLOCK
      else {
          DBGTRC_NOPREFIX(true, TRACE_GROUP, "Unexpected error from flock() for %s: %s",
                filename, psc_desc(-errsv));
          flockrc = -errsv;
          break;
      }
-#endif
    }
 
-   DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE,flockrc, "");
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE,flockrc, "filename=%s", filename);
    return flockrc;
 }
 
 
 Status_Errno flock_unlock_by_fd(int fd) {
-   bool debug = true;
+   bool debug = false;
+   debug = debug || debug_flock;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "fd=%d, filename=%s", fd, filename_for_fd_t(fd));
    int result = 0;
-
-#ifdef OUT
    assert(cross_instance_locks_enabled);
 
    DBGTRC_NOPREFIX(debug || debug_flock, TRACE_GROUP, "Calling flock(%d,LOCK_UN) filename=%s...",
@@ -193,8 +196,8 @@ Status_Errno flock_unlock_by_fd(int fd) {
             psc_desc(-result));
    }
 
-#endif
-   DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE, result, "");
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE, result, "filename=%s", filename_for_fd_t(fd));
+   return result;
 }
 
 

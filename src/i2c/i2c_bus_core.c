@@ -598,7 +598,7 @@ void validate_sysfs_edid(int fd, I2C_Bus_Info * businfo) {
          }
          else {
             SEVEREMSG("Drm_Connector_State not found for %s, %s",
-                  businfo->drm_connector_name, dci_repr(dci));
+                  businfo->drm_connector_name, dci_repr_t(dci));
          }
       }
 
