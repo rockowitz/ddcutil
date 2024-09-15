@@ -3,7 +3,7 @@
  *  Parse the command line using the glib goption functions.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -24,6 +24,7 @@
 #include "util/report_util.h"
 
 #include "base/build_info.h"
+#include "base/build_timestamp.h"
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/parms.h"
@@ -699,9 +700,7 @@ static bool parse_discard_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
 
 
 static void report_ddcutil_build_info() {
-
-      // TODO: patch values at link time
-      // printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
+      printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
 #ifdef ENABLE_USB
       printf("Built with support for displays using USB for MCCS communication.\n");
 #else
