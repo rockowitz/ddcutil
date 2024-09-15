@@ -403,11 +403,14 @@ ddca_dbgrpt_display_ref(
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
-   Display_Ref * dref = NULL;
-   ddci_validate_ddca_display_ref(ddca_dref, /* basic_only*/ true, /* require_not_asleep */ false, &dref);
-   rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
-   if (dref)
+   Display_Ref * dref = ddca_dref;
+   if (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) {
+      rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
       dbgrpt_display_ref(dref, true, depth+1);
+   }
+   else {
+      rpt_vstring(depth, "Not a display ref: %p", dref);
+   }
 }
 
 
