@@ -285,13 +285,14 @@ void i2c_discard_buses0(GPtrArray* buses) {
 void i2c_discard_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   g_mutex_lock(&all_i2c_buses_mutex);
    if (all_i2c_buses) {
-      g_mutex_lock(&all_i2c_buses_mutex);
       i2c_discard_buses0(all_i2c_buses);
       all_i2c_buses= NULL;
-      g_mutex_unlock(&all_i2c_buses_mutex);
    }
-   // connected_buses = EMPTY_BIT_SET_256;
+   g_mutex_unlock(&all_i2c_buses_mutex);
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
