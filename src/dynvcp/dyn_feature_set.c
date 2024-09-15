@@ -24,10 +24,6 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
 
 
-
-
-
-
 void free_dyn_feature_set(Dyn_Feature_Set * fset) {
    if (fset) {
       assert( memcmp(fset->marker, DYN_FEATURE_SET_MARKER, 4) == 0);
@@ -40,7 +36,6 @@ void free_dyn_feature_set(Dyn_Feature_Set * fset) {
 }
 
 
-
 void report_dyn_feature_set(Dyn_Feature_Set * fset, int depth) {
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    for (int ndx=0; ndx < fset->members_dfm->len; ndx++) {
@@ -51,8 +46,6 @@ void report_dyn_feature_set(Dyn_Feature_Set * fset, int depth) {
                   dfm_entry->feature_name);
    }
 }
-
-
 
 
 void dbgrpt_dyn_feature_set(
@@ -434,7 +427,8 @@ create_vcp_feature_set(
    else {
       if (subset_id == VCP_SUBSET_TABLE || subset_id == VCP_SUBSET_LUT) {
          exclude_table_features = false;
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Reset exclude_table_features = false");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Reset exclude_table_features = %s",
+                                             SBOOL(exclude_table_features));
       }
       int known_feature_ct = vcp_get_feature_code_count();
       int ndx = 0;
@@ -591,7 +585,8 @@ dyn_create_feature_set(
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "subset=id = %s", feature_subset_name(subset_id));
        if (subset_id == VCP_SUBSET_TABLE || subset_id == VCP_SUBSET_LUT) {
           exclude_table_features = false;
-          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Reset exclude_table_features = false");
+          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Reset exclude_table_features = %s",
+                                              SBOOL(exclude_table_features));
        }
        for (int feature_code = 0; feature_code < 256; feature_code++) {
           Display_Feature_Metadata * dfm = dyn_get_feature_metadata_by_dref(
