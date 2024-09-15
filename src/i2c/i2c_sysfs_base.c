@@ -500,6 +500,7 @@ bool check_busno(
       terminate = true;
       accum->connector_name = g_strdup(fn);
    }
+   free(cbn);
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, terminate, "accum->connector_name = |%s|", accum->connector_name);
    return terminate;
