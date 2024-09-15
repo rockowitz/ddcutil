@@ -703,8 +703,10 @@ ddci_init(const char *      libopts,
          init_library_trace_file(parsed_cmd->trace_destination, debug);
       }
       master_error = init_tracing(parsed_cmd);
-      if (master_error)
+      if (master_error) {
          DBGF(debug, "init_tracing failed");
+         free_parsed_cmd(parsed_cmd);
+      }
       else
          DBGF(debug, "init_tracing succeeded");
    }
