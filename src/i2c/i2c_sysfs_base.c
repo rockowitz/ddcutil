@@ -388,8 +388,10 @@ void simple_report_one_connector0(
       rpt_vstring(d1,       "enabled:      %s", enabled);
       if (edid_byte_array) {
          Parsed_Edid * parsed = create_parsed_edid(edid_byte_array->data);
-         if (parsed)
+         if (parsed) {
             rpt_vstring(d1, "edid:         %s/%s/%s",   parsed->mfg_id, parsed->model_name, parsed->serial_ascii);
+            free_parsed_edid(parsed);
+         }
          else
             rpt_label(  d1, "edid:         parse failed");
       }
