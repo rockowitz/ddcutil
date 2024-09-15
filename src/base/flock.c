@@ -102,7 +102,8 @@ void explore_flock(int fd, const char * filename) {
    execute_shell_cmd_rpt(cmd, 1);
    GPtrArray * pids = execute_shell_cmd_collect(cmd);
    for (int ndx = 0; ndx < pids->len; ndx++) {
-      rpt_vstring(3, "%s", g_ptr_array_index(pids, ndx));
+      //* case avoids coverity warning
+      rpt_vstring(3, "%s", (char *) g_ptr_array_index(pids, ndx));
    }
 }
 
