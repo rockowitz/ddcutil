@@ -58,6 +58,8 @@
 #include "ddc/ddc_vcp_version.h"
 #ifdef BUILD_SHARED_LIB
 #include "ddc/ddc_watch_displays.h"
+#include "ddc/ddc_watch_displays_main.h"
+#include "ddc/ddc_watch_displays_common.h"
 #endif
 
 #include "ddc/ddc_services.h"
@@ -233,6 +235,8 @@ void init_ddc_services() {
    init_ddc_vcp_version();
 // #ifdef BUILD_SHARED_LIB
    init_ddc_watch_displays();
+   init_ddc_watch_displays_common();
+   init_ddc_watch_displays_main();
 // #endif
 
    RTTI_ADD_FUNC(ddc_report_stats_main);
