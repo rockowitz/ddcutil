@@ -391,7 +391,7 @@ ddc_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool 
  *  @return true if sysfs connnector dir attribute edid has value, false if not
  */
 bool
-ddc_i2c_stabilized_single_bus_by_connector_id(int connector_id, bool prior_has_edid) {
+ddc_i2c_stabilized_bus_by_connector_id(int connector_id, bool prior_has_edid) {
    bool debug = false;
    // int debug_depth = (debug) ? 1 : -1;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_id=%d, prior_has_edid =%s",
@@ -642,7 +642,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
          GPtrArray * stabilized_buses = ddc_i2c_stabilized_buses(new_buses, detected_displays_removed_flag);
          BS256 bs_stabilized_buses_w_edid = buses_bitset_from_businfo_array(stabilized_buses, /*only_connected*/ true);
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_stabilized_buses_w_edid: %s", BS256_REPR(bs_stabilized_buses_w_edid));
-         new_buses = stabilized_buses;
+         // new_buses = stabilized_buses;  // unused
          bs_new_buses_w_edid = bs_stabilized_buses_w_edid;
       }
    }
@@ -710,8 +710,11 @@ Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
    int busno = conn->i2c_busno;
    free(conn);
    bool prior_has_edid = bs256_contains(bs_prev_buses_w_edid, busno);
-   bool stabilized_bus_has_edid = ddc_i2c_stabilized_single_bus_by_connector_id(connector_number, prior_has_edid);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ddc_i2c_stabilized_single_bus() returned %s", SBOOL(stabilized_bus_has_edid));
+   bool stabilized_bus_has_edid =
+         ddc_i2c_stabilized_bus_by_connector_id(connector_number, prior_has_edid);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "ddc_i2c_stabilized_bus_by_connector_id() returned %s",
+         SBOOL(stabilized_bus_has_edid));
    if (stabilized_bus_has_edid != prior_has_edid) {
       if (stabilized_bus_has_edid) {
          bs_new_buses_w_edid = bs256_insert(bs_new_buses_w_edid, busno);
@@ -860,9 +863,11 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    pid_t cur_tid = get_thread_id();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Our process id: %d, our thread id: %d", cur_pid, cur_tid);
 
+#ifdef NEVER_USED
    GPtrArray * sleepy_connectors = NULL;
    if (watch_dpms)
       sleepy_connectors = g_ptr_array_new_with_free_func(g_free);
+#endif
    BS256 bs_sleepy_buses = EMPTY_BIT_SET_256;
 
    struct udev* udev;
@@ -873,10 +878,10 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    // drm_dp_aux_dev, kernel, i2c-dev, i2c, hidraw
     udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // detects
    // testing for hub changes
-#ifdef UDEV_I2C_DEV
+// #ifdef UDEV_I2C_DEV
     // i2c-dev report i2c device number, i2c does not, but still not useful
     udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c-dev", NULL);
-#endif
+// #endif
    // udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c", NULL);
    udev_monitor_enable_receiving(mon);
 
@@ -912,6 +917,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       rpt_label(0, "Initial sysfs state:");
       dbgrpt_sysfs_basic_connector_attributes(1);
    }
+   ASSERT_IFF(deferred_events, use_deferred_event_queue);
 
 #ifdef SECONDARY_UDEV
    struct udev_device * dev2 = NULL;
@@ -920,33 +926,34 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    struct udev_device * dev = NULL;
    Udev_Event_Detail * drm_udev_detail = NULL;
 
-   while (true) {
-      while (true) {
-         if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
-            dev = udev_monitor_receive_device(mon);
-         }
-         if (dev) {
-            DBGTRC(debug || report_udev_events, DDCA_TRC_NONE, "Udev event received");
-            break;
-         }
 
-         int slept = 0;
-         if (!deferred_events || deferred_events->len == 0) {
+   while (true) {
+
+      if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
+         dev = udev_monitor_receive_device(mon);
+      }
+      if (dev) {
+         DBGTRC(debug || report_udev_events, DDCA_TRC_NONE, "Udev event received");
+      }
+
+      while (!dev) {
+         int slept = 0;   // will contain length of final sleep
+         if (deferred_events && deferred_events->len > 0) {
+            ddc_i2c_emit_deferred_events(deferred_events);
+         }
+         else {     // skip polling loop sleep if deferred events were output
             int poll_loop_millisec = udev_poll_loop_millisec;
             if (ddc_slow_watch)   // for testing
                poll_loop_millisec *= 3;
             const int max_sleep_microsec = poll_loop_millisec * 1000;
             const int sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
-            int slept = 0;
+            slept = 0;
             for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
                usleep(sleep_step_microsec);
          }
 
-         if (deferred_events && deferred_events->len > 0) {
-            ddc_i2c_emit_deferred_events(deferred_events);
-         }
-
          if (terminate_watch_thread) {
+            // n. slept == 0 if no sleep was performed
             DBGTRC_DONE(debug, TRACE_GROUP,
                   "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
             free_watch_displays_data(wdd);
@@ -978,7 +985,15 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
             break;
          }
          // #endif
-      }
+
+
+         if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
+            dev = udev_monitor_receive_device(mon);
+         }
+         if (dev) {
+            DBGTRC(debug || report_udev_events, DDCA_TRC_NONE, "Udev event received");
+         }
+      }  // end of udev_monitor_receive_dev() polling loop
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "==> udev_event received");
 
@@ -1134,8 +1149,10 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    }  // while
 
    udev_monitor_unref(mon);
+#ifdef UNUSED
    if (watch_dpms)
       g_ptr_array_free(sleepy_connectors, true);
+#endif
    return NULL;
 }
 
@@ -1284,7 +1301,7 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_i2c_check_bus_changes);
    RTTI_ADD_FUNC(ddc_i2c_check_bus_changes_for_connector);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
-   RTTI_ADD_FUNC(ddc_i2c_stabilized_single_bus_by_connector_id);
+   RTTI_ADD_FUNC(ddc_i2c_stabilized_bus_by_connector_id);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_single_bus_by_connector_name);
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
    RTTI_ADD_FUNC(ddc_i2c_emit_deferred_events);
