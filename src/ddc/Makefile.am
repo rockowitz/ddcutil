@@ -37,6 +37,8 @@ ddc_try_data.c
 
 if ENABLE_SHARED_LIB_COND
 libddc_la_SOURCES += \
+  ddc_watch_displays_common.c \
+  ddc_watch_displays_main.c \
   ddc_watch_displays.c
 endif
 
