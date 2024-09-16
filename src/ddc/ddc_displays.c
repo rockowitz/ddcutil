@@ -1770,6 +1770,48 @@ ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_a
    return ddcrc;
 }
 
+#define DREF_VALIDATE_NONE         0
+#define DREF_VALIDATE_EDID         1
+#define DREF_VALIDATE_AWAKE        2
+
+
+DDCA_Status
+ddc_validate_display_ref2(Display_Ref * dref, Byte validation_options) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s, validation_options=x%02x",
+         dref, dref_repr_t(dref), validation_options);
+   assert(all_display_refs);
+
+   DDCA_Status ddcrc = DDCRC_OK;
+   if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
+         ddcrc = DDCRC_ARG;
+   }
+   else {
+      int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
+      if (dref->flags & DREF_REMOVED)
+         ddcrc = DDCRC_DISCONNECTED;
+      else if (drm_enabled) {
+         if (!dref->drm_connector) {
+            ddcrc = DDCRC_INTERNAL_ERROR;
+         }
+         if (ddcrc == 0 && (validation_options&DREF_VALIDATE_EDID)) {
+            // may be wrong if bug in driver, edid persists after disconnection
+            if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
+                   ddcrc = DDCRC_DISCONNECTED;
+         }
+         if (ddcrc == 0 && (validation_options&DREF_VALIDATE_AWAKE)) {
+            if (dpms_check_drm_asleep_by_connector(dref->drm_connector))
+               ddcrc = DDCRC_DPMS_ASLEEP;
+         }
+      }
+   }
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
+}
+
+
+
 #ifdef OLD
 DDCA_Status
 ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
