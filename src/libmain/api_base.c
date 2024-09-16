@@ -55,7 +55,7 @@
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_watch_displays.h"
+#include "ddc/ddc_watch_displays_main.h"
 
 #include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"
