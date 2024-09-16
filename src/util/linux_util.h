@@ -2,7 +2,7 @@
  *  Miscellaneous Linux utilities
  */
 
-// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef LINUX_UTIL_H_
@@ -24,6 +24,7 @@ bool is_module_loadable(const char * module_name);
 
 intmax_t get_thread_id();
 intmax_t get_process_id();
+bool is_valid_thread_or_process(pid_t id);
 
 void rpt_lsof(const char * fqfn, int depth);
 GPtrArray* rpt_lsof_collect(const char * fqfn);
