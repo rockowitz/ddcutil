@@ -541,7 +541,7 @@ create_dynamic_features_rec(
             }
             else if (streq(t1.word, "VALUE")) {
                if (!t2.rest) {
-                  ADD_ERROR(linectr, "Invalid feature value data \"%s\"");
+                  ADD_ERROR(linectr, "Missing feature value data \"%s\"", line);
                }
                else {   // found value code and name
                   int feature_value;
