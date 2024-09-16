@@ -109,14 +109,15 @@ ddc_is_valid_display_handle(Display_Handle * dh) {
 }
 #endif
 
-
+#ifdef OLD
 DDCA_Status
 ddc_validate_display_handle(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%p", dh);
    assert(open_displays);
 
-   DDCA_Status result = ddc_validate_display_ref(dh->dref, /*basic_only*/ false, /*test_asleep*/ true);
+   // DDCA_Status result = ddc_validate_display_ref(dh->dref, /*basic_only*/ false, /*test_asleep*/ true);
+   DDCA_Status result = ddc_validate_display_ref2(dh->dref, DREF_VALIDATE_EDID|DREF_VALIDATE_AWAKE);
    if (result == DDCRC_OK) {
       g_mutex_lock (&open_displays_mutex);
       if (!g_hash_table_contains(open_displays, dh) )
@@ -127,6 +128,26 @@ ddc_validate_display_handle(Display_Handle * dh) {
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
    return result;
 }
+#endif
+
+DDCA_Status
+ddc_validate_display_handle2(Display_Handle * dh) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%p", dh);
+   assert(open_displays);
+
+   DDCA_Status result = ddc_validate_display_ref2(dh->dref,  DREF_VALIDATE_EDID|DREF_VALIDATE_AWAKE);
+   if (result == DDCRC_OK) {
+      g_mutex_lock (&open_displays_mutex);
+      if (!g_hash_table_contains(open_displays, dh) )
+         result = DDCRC_ARG;
+      g_mutex_unlock(&open_displays_mutex);
+   }
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
+   return result;
+}
+
 
 
 
@@ -1062,7 +1083,7 @@ init_ddc_packet_io_func_name_table() {
    RTTI_ADD_FUNC(ddc_write_read_with_retry);
    RTTI_ADD_FUNC(ddc_write_only);
    RTTI_ADD_FUNC(ddc_write_only_with_retry);
-   RTTI_ADD_FUNC(ddc_validate_display_handle);
+   RTTI_ADD_FUNC(ddc_validate_display_handle2);
 }
 
 
