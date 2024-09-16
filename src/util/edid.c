@@ -309,7 +309,11 @@ Parsed_Edid * copy_parsed_edid(Parsed_Edid * original) {
    DBGF(debug, "Starting. original=%p", original);
    Parsed_Edid * copy =  NULL;
    if (original) {
+      // it's easier to simply reparse the bytes we know successfully parsed
+      // than to perform a deep copy
       copy = create_parsed_edid(original->bytes);
+      assert(copy);
+      // the one field that won't have been reparsed
       memcpy(&copy->edid_source, original->edid_source, sizeof(original->edid_source));
       // report_parsed_edid(copy, true, 2);
    }
