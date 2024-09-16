@@ -1594,12 +1594,14 @@ void
 ddc_ensure_displays_detected() {
    bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   g_mutex_lock(&all_display_refs_mutex);
    if (!all_display_refs) {
       // i2c_detect_buses();  // called in ddc_detect_all_displays()
-      g_mutex_lock(&all_display_refs_mutex);
       all_display_refs = ddc_detect_all_displays(&display_open_errors);
-      g_mutex_unlock(&all_display_refs_mutex);
    }
+   g_mutex_unlock(&all_display_refs_mutex);
+
    DBGTRC_DONE(debug, TRACE_GROUP,
                "all_displays=%p, all_displays has %d displays",
                all_display_refs, all_display_refs->len);
