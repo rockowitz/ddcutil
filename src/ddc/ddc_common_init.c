@@ -57,6 +57,7 @@
 #include "ddc_try_data.h"
 #include "ddc_vcp.h"
 #include "ddc_watch_displays.h"
+#include "ddc_watch_displays_main.h"
 
 #include "ddc_common_init.h"
 
