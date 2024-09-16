@@ -53,6 +53,11 @@ void         dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);
 bool         ddc_is_valid_display_ref(Display_Ref * dref);
 DDCA_Status  ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_asleep);
 
+#define DREF_VALIDATE_NONE         0
+#define DREF_VALIDATE_EDID         1
+#define DREF_VALIDATE_AWAKE        2
+DDCA_Status  ddc_validate_display_ref2(Display_Ref * dref, Byte validation_options);
+
 // Display Status Change
 Display_Ref* ddc_add_display_by_businfo(I2C_Bus_Info * businfo);
 Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connector, bool ignore_invalid);
@@ -62,8 +67,8 @@ Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connecto
              ddc_get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
 // Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
 
-void ddc_add_display_ref(Display_Ref * dref);
-void ddc_mark_display_ref_removed(Display_Ref* dref);
+void         ddc_add_display_ref(Display_Ref * dref);
+void         ddc_mark_display_ref_removed(Display_Ref* dref);
 
 #ifdef OLD
 // Report Hotplug Event (alternative, simpler)
