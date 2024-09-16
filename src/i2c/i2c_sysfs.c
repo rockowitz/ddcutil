@@ -129,9 +129,11 @@ void report_one_sys_drm_connector(Sys_Drm_Connector * cur, bool detailed_edid, i
       }
       else {
          Parsed_Edid * edid = create_parsed_edid(cur->edid_bytes);
-         if (edid)
+         if (edid) {
             rpt_vstring(d1, "edid:        %s, %s, %s",
                   edid->mfg_id, edid->model_name, edid->serial_ascii);
+            free_parsed_edid(edid);
+         }
          else
             rpt_label(d1, "edid:              invalid");
       }
