@@ -412,6 +412,7 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
             Display_Feature_Metadata * dfm = g_ptr_array_index(fset->members_dfm, ndx);
             // VCP_Feature_Table_Entry * pentry = get_vcp_feature_set_entry(fset, ndx);
             VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(dfm->feature_code);
+            assert(pentry);   // every possible feature code has a feature table entry
             report_vcp_feature_table_entry(pentry, 0);
          }
       }
