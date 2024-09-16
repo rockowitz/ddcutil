@@ -219,6 +219,10 @@ void           bs256_iter_free( Bit_Set_256_Iterator iter);
 void           bs256_iter_reset(Bit_Set_256_Iterator iter);
 int            bs256_iter_next( Bit_Set_256_Iterator iter);
 
+// defines to make use a little less verbose
+#define BS256 Bit_Set_256
+#define BS256_REPR(_bs) bs256_to_string_decimal_t(_bs, "", " ")
+
 
 //
 // Bit_Set_32
