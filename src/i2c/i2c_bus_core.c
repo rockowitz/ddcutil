@@ -263,7 +263,7 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
       result = -errsv;
    }
    assert(result <= 0);
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "fd=%d",fd);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "busno=%d, fd=%d",busno, fd);
    return result;
 }
 
