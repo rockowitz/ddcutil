@@ -74,6 +74,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_watch_displays.h"
+#include "ddc/ddc_watch_displays_main.h"
 
 #include "ddc/ddc_displays.h"
 
@@ -1740,6 +1741,7 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  @retval  DDCRC_DISCONNECTED    display has been disconnected
  *  @retval  DDCRC_DPMS_ASLEEP     possible if require_not_asleep == true
  */
+#ifdef OLD
 DDCA_Status
 ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_asleep) {
    bool debug = false;
@@ -1769,14 +1771,11 @@ ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_a
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
-
-#define DREF_VALIDATE_NONE         0
-#define DREF_VALIDATE_EDID         1
-#define DREF_VALIDATE_AWAKE        2
+#endif
 
 
 DDCA_Status
-ddc_validate_display_ref2(Display_Ref * dref, Byte validation_options) {
+ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation_options) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s, validation_options=x%02x",
          dref, dref_repr_t(dref), validation_options);
@@ -2087,27 +2086,34 @@ void check_drefs_alive() {
 void init_ddc_displays() {
    RTTI_ADD_FUNC(check_how_unsupported_reported);
    RTTI_ADD_FUNC(ddc_add_display_by_businfo);
+   RTTI_ADD_FUNC(ddc_add_display_ref);
    RTTI_ADD_FUNC(ddc_async_scan);
    RTTI_ADD_FUNC(ddc_close_all_displays);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(ddc_discard_detected_displays);
    RTTI_ADD_FUNC(ddc_displays_already_detected);
+   RTTI_ADD_FUNC(ddc_ensure_displays_detected);
    RTTI_ADD_FUNC(ddc_get_all_display_refs);
+   RTTI_ADD_FUNC(ddc_get_dref_by_busno_or_connector);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
+   RTTI_ADD_FUNC(ddc_mark_display_ref_removed);
    RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(ddc_redetect_displays);
+#ifdef OLD
+   RTTI_ADD_FUNC(ddc_validate_display_ref);
+#endif
+   RTTI_ADD_FUNC(ddc_validate_display_ref2);
    RTTI_ADD_FUNC(drefs_edid_equal);
-   RTTI_ADD_FUNC(has_duplicate_edids);
    RTTI_ADD_FUNC(filter_phantom_displays);
+   RTTI_ADD_FUNC(has_duplicate_edids);
    RTTI_ADD_FUNC(is_phantom_display);
    RTTI_ADD_FUNC(read_unsupported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
-   RTTI_ADD_FUNC(ddc_validate_display_ref);
+
 #ifdef WATCH_DISPLAYS_USING_POLL
    RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
 #endif
-   RTTI_ADD_FUNC(ddc_get_dref_by_busno_or_connector);
 }
 
 
