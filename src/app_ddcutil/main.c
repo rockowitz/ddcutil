@@ -98,7 +98,8 @@
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_watch_displays.h"
+// #include "ddc/ddc_watch_displays.h"
+#include "ddc/ddc_watch_displays_main.h"
 
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/cmd_parser.h"
@@ -994,8 +995,8 @@ main(int argc, char *argv[]) {
             main_rc = EXIT_FAILURE;
          }
          else {
-            DBGMSG("Watching for 60 minutes");
-            sleep(60*60);
+            DBGMSG("Watching for 10 hours");
+            sleep(10*60*60);
             DBGMSG("Terminating execution after 60 minutes");
             ddc_stop_watch_displays(true, NULL);
             main_rc = EXIT_SUCCESS;
