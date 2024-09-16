@@ -73,7 +73,6 @@
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_watch_displays.h"
 #include "ddc/ddc_watch_displays_main.h"
 
 #include "ddc/ddc_displays.h"
