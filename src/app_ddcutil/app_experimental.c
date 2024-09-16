@@ -1,6 +1,6 @@
 /** @file app_experimental.c */
 
-// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -21,6 +21,8 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_watch_displays.h"
+#include "ddc/ddc_watch_displays_common.h"
+#include "ddc/ddc_watch_displays_main.h"
 
 #include "app_experimental.h"
 
