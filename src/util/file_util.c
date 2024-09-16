@@ -964,3 +964,17 @@ long get_inode_by_fd(int fd) {
    }
    return result;
 }
+
+
+
+#ifdef UNUSED
+void set_fd_blocking(int fd) {
+   int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
+   assert (flags != -1);
+   flags &= ~O_NONBLOCK;
+   (void) fcntl(fd, F_SETFL, flags);
+   assert(rc != -1);
+}
+#endif
+
+
