@@ -579,7 +579,7 @@ ddca_format_any_vcp_value_by_dref(
              summarize_single_vcp_value(valrec) );
    assert(formatted_value_loc);
    DDCA_Status ddcrc = 0;
-   WITH_BASIC_VALIDATED_DR3(ddca_dref, ddcrc,
+   WITH_VALIDATED_DR4(ddca_dref, ddcrc, DREF_VALIDATE_BASIC_ONLY,
          {
                if (debug || IS_TRACING()) {
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
@@ -670,7 +670,7 @@ ddca_format_non_table_vcp_value_by_dref(
                           feature_code, ddca_dref);
    assert(formatted_value_loc);
    DDCA_Status ddcrc = 0;
-   WITH_BASIC_VALIDATED_DR3(ddca_dref, ddcrc,
+   WITH_VALIDATED_DR4(ddca_dref, ddcrc, DREF_VALIDATE_BASIC_ONLY,
          {
                if (debug || IS_TRACING()) {
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
@@ -738,7 +738,7 @@ ddca_format_table_vcp_value_by_dref(
    API_PROLOGX(debug, "feature_code=0x%02x, ddca_dref=%p", feature_code, ddca_dref);
    assert(formatted_value_loc);
    DDCA_Status ddcrc = 0;
-   WITH_BASIC_VALIDATED_DR3(ddca_dref, ddcrc,
+   WITH_VALIDATED_DR4(ddca_dref, ddcrc, DREF_VALIDATE_BASIC_ONLY,
          {
                if (debug || IS_TRACING()) {
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
