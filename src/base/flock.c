@@ -119,27 +119,20 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
    // assert(inode == inode2);
 
    int operation = LOCK_EX|LOCK_NB;
-   int poll_microsec = flock_poll_millisec * 1000;
+   int total_wait_millisec = 0;
    uint64_t max_wait_millisec = (wait) ? flock_max_wait_millisec : 0;
-   uint64_t max_nanos = cur_realtime_nanosec() + (max_wait_millisec * 1000 * 1000);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-         "flock_poll_millisec=%jd, flock_max_wait_millisec=%jd, max_wait_millisec=%jd ",
-         flock_poll_millisec, flock_max_wait_millisec, max_wait_millisec);
+         "flock_poll_millisec=%jd, flock_max_wait_millisec=%jd ",
+         flock_poll_millisec, flock_max_wait_millisec);
    Status_Errno flockrc = 0;
    int flock_call_ctr = 0;
-   time_t total_wait_nanosec = 0;
-   time_t end_time_nanosec = cur_realtime_nanosec() + 1888*flock_max_wait_millisec;
 
    while(true) {
-      flock_call_ctr++;
-      DBGTRC_NOPREFIX(debug||debug_flock, DDCA_TRC_NONE, "Calling flock(%d,0x%04x), filename=%s flock_call_ctr=%d, total_wait_millisec...",
-            fd, operation, filename, flock_call_ctr, total_wait_nanosec);
+      DBGTRC_NOPREFIX(debug||debug_flock, DDCA_TRC_NONE,
+            "Calling flock(%d,0x%04x), filename=%s flock_call_ctr=%d, total_wait_millisec %d...",
+            fd, operation, filename, flock_call_ctr, total_wait_millisec);
 
-      if ( cur_realtime_nanosec() > end_time_nanosec) {
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Max wait time exceeded after %d flock() calls", flock_call_ctr);
-         flockrc = DDCRC_FLOCKED;
-         break;
-      }
+      flock_call_ctr++;
       flockrc = flock(fd, operation);
       if (flockrc == 0)  {
          DBGTRC_NOPREFIX(debug || debug_flock /* (flock_call_ctr > 1 && debug_flock) */, DDCA_TRC_NONE,
@@ -155,32 +148,30 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       int errsv = errno;
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "filename=%s, flock_call_ctr=%d, flock() returned: %s",
             filename, flock_call_ctr, psc_desc(-errsv));
-      if (errsv == EWOULDBLOCK ) {          // n. EWOULDBLOCK == EAGAIN
-        uint64_t now = cur_realtime_nanosec();
-        if (now < max_nanos) {
-           DBGTRC_NOPREFIX(debug || debug_flock, DDCA_TRC_NONE,
+
+      if (total_wait_millisec > max_wait_millisec) {
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Max wait time exceeded after %d flock() calls", flock_call_ctr);
+         flockrc = DDCRC_FLOCKED;
+         break;
+      }
+
+      if (errsv != EWOULDBLOCK ) {          // n. EWOULDBLOCK == EAGAIN
+         DBGTRC_NOPREFIX(true, TRACE_GROUP, "Unexpected error from flock() for %s: %s",
+                   filename, psc_desc(-errsv));
+         flockrc = -errsv;
+         break;
+      }
+
+      DBGTRC_NOPREFIX(debug || debug_flock, DDCA_TRC_NONE,
                  "Resource locked. filename=%s, flock_call_ctr=%d, Sleeping", filename, flock_call_ctr);
 
-           if (flock_call_ctr == 1)
+      if (flock_call_ctr == 1)
               MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE, "%s locked.  Retrying...", filename);
-           usleep(poll_microsec);
-           continue;
-        }
-        else {
-           MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Max wait exceeded for %s", filename);
-
-           flockrc = DDCRC_FLOCKED;
-           break;
-        }
-     }  // EWOULDBLOCK
-     else {
-         DBGTRC_NOPREFIX(true, TRACE_GROUP, "Unexpected error from flock() for %s: %s",
-               filename, psc_desc(-errsv));
-         flockrc = -errsv;
-     }
+      usleep(flock_poll_millisec*1000);
+      total_wait_millisec += flock_poll_millisec;
    }
 
-   if (flockrc == DDCRC_FLOCKED) {
+   if (flockrc != 0) {
       if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
          DBGMSG("Flock diagnostics:");
          show_flock(filename);
