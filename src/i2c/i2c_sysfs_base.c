@@ -177,7 +177,7 @@ void dbgrpt_connector_bus_numbers(Connector_Bus_Numbers * cbn, int depth) {
    int d1 = depth+1;
    rpt_vstring(d1, "i2c_busno:    %d", cbn->i2c_busno);
    rpt_vstring(d1, "base_busno:   %d", cbn->base_busno);
-   rpt_vstring(d1, "connector_id: %d", cbn->connector_number);
+   rpt_vstring(d1, "connector_id: %d", cbn->connector_id);
    rpt_vstring(d1, "name:         %s", cbn->name);
 }
 
@@ -216,6 +216,7 @@ void get_connector_bus_numbers(
       Connector_Bus_Numbers * cbn)
 {
    bool debug = false;
+   int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=|%s|", dirname, fn);
    int d0 = (debug) ? 1 : -1;
    bool validate_name = debug;
@@ -225,7 +226,13 @@ void get_connector_bus_numbers(
 
    cbn->i2c_busno = -1;      // 0 is valid bus number
    cbn->base_busno = -1;
-   cbn->connector_number = -1;
+   cbn->connector_id = -1;
+
+   int connector_id;
+   bool found = RPT_ATTR_INT(d, &connector_id, dirname, fn, "connector_id");
+   if (found)
+      cbn->connector_id = connector_id;
+
 
    if (is_dp_connector) {  // DP  // was has_i2c_subdir
 
@@ -602,7 +609,7 @@ bool check_connector_id_present(
  */
 
 bool all_sys_drm_connectors_have_connector_id_direct() {
-   bool debug = true;
+   bool debug = false;
    int depth = 0;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "depth=%d", depth);
 

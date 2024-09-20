@@ -29,7 +29,7 @@ char *  get_driver_for_busno(int busno);
 typedef struct {
    int    i2c_busno;
    int    base_busno;
-   int    connector_number;
+   int    connector_id;
    char * name;
 } Connector_Bus_Numbers;
 
