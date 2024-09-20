@@ -841,8 +841,8 @@ ddca_get_display_info_list(void)
 }
 #endif
 
-
-STATIC void ddci_init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
+// STATIC
+ void ddci_init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "dref=%s, curinfo=%p", dref_repr_t(dref),curinfo);
    memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
