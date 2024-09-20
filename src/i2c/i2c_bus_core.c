@@ -515,22 +515,40 @@ i2c_detect_x37(int fd) {
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = 0;
-   // regard either a successful write() or a read() as indication slave address is valid
-   Byte    writebuf = {0x00};
+   int max_tries = 3;
+   bool use_file_io = false;
+   int poll_wait_millisec = 400;
+   char * s = (use_file_io) ? "i2c" : "ioctl";
+   int loopctr;
+   for (loopctr = 0; loopctr < max_tries; loopctr++) {  // retries seem to give no benefit
 
-   rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
-   // rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
-   // rc = 6; // for testing
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                   "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
-   if (rc != 0) {
-      Byte    readbuf[4];  //  4 byte buffer
-      rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
-      //rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
+      // regard either a successful write() or a read() as indication slave address is valid
+      Byte    writebuf = {0x00};
+
+      if (use_file_io)
+         rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
+      else
+         rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
+      // rc = 6; // for testing
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                      "invoke_i2c_reader() for slave address x37 returned %s", psc_name_code(rc));
+                   "invoke_%s_writer() for slave address x37 returned %s", s, psc_name_code(rc));
+      if (rc != 0) {
+         Byte    readbuf[4];  //  4 byte buffer
+         if (use_file_io)
+            rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
+         else
+            rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                      "invoke_%s_reader() for slave address x37 returned %s", s, psc_name_code(rc));
+      }
+      if (rc == 0)
+         break;
+
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "sleeping for %d millisec", poll_wait_millisec);
+            usleep(poll_wait_millisec*1000);
    }
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"loopctr=%d", loopctr);
    return rc;
 }
 
@@ -999,8 +1017,8 @@ Error_Info * i2c_check_bus2(I2C_Bus_Info * businfo) {
    }
 
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "WOLF 4: Bus %s: connector_name=%s, found by: %s",
-      dev_name, businfo->drm_connector_name, drm_connector_found_by_name(businfo->drm_connector_found_by));
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "WOLF 4: Bus %s: connector_name=%s, found by: %s",
+   //    dev_name, businfo->drm_connector_name, drm_connector_found_by_name(businfo->drm_connector_found_by));
 
     businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;   // ???
 
@@ -1036,7 +1054,7 @@ Error_Info * i2c_check_bus2(I2C_Bus_Info * businfo) {
     if (businfo->flags & (I2C_BUS_LVDS_OR_EDP)) {
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Laptop display detected, not checking x37");
     }
-    else {  // start, x37 check
+    else  if (businfo->edid) {  // start, x37 check
        // The check here for slave address x37 had previously been removed.
        // It was commented out in commit 78fb4b on 4/29/2013, and the code
        // finally delete by commit f12d7a on 3/20/2020, with the following
@@ -1513,6 +1531,7 @@ int i2c_detect_buses() {
       g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
    }
    int result = all_i2c_buses->len;
+
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %d", result);
    return result;
 }
@@ -1752,6 +1771,8 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_report_active_bus);
    RTTI_ADD_FUNC(is_laptop_drm_connector_name);
    RTTI_ADD_FUNC(threaded_initial_checks_by_businfo);
+   RTTI_ADD_FUNC(i2c_non_async_scan);
+   RTTI_ADD_FUNC(i2c_async_scan);
 }
 
 
