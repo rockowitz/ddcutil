@@ -2,7 +2,7 @@
  *  i2c specific /sys functions
  */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -228,7 +228,8 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
 bool
 sysfs_is_ignorable_i2c_device(int busno) {
    bool debug = false;
-   bool result = false;
+   bool ignorable = false;
+   DBGF(debug, "Starting.  busno=%d", busno);
 
    // It is possible for a display device to have an I2C bus
    // that should be ignored.  Recent AMD Navi board (e.g. RX 6000)
@@ -238,30 +239,27 @@ sysfs_is_ignorable_i2c_device(int busno) {
 
    char * name = get_i2c_device_sysfs_name(busno);
    char * driver = get_i2c_sysfs_driver_by_busno(busno);
-   if (name)
-      result = ignorable_i2c_device_sysfs_name(name, driver);
-   if (debug)
-      printf("(%s) busno=%d, name=|%s|, result=%s\n", __func__, busno, name, sbool(result));
+   if (name) {
+      ignorable = ignorable_i2c_device_sysfs_name(name, driver);
+      DBGF(debug, "busno=%d, name=|%s|, ignoreable_i2c_sysfs_name() returned %s", busno, name, sbool(ignorable));
+   }
    free(name);    // safe if NULL
    free(driver);  // ditto
 
-   if (!result) {
+   if (!ignorable) {
       uint32_t class = get_i2c_device_sysfs_class(busno);
       if (class) {
-         // printf("(%s) class = 0x%08x\n", __func__, class);
+         DBGF(debug, "class = 0x%08x", class);
          uint32_t cl2 = class & 0xffff0000;
-         if (debug)
-            printf("(%s) cl2 = 0x%08x\n", __func__, cl2);
-         result = (cl2 != 0x030000 &&
+         DBGF(debug, "cl2 = 0x%08x", cl2);
+         ignorable = (cl2 != 0x030000 &&
                    cl2 != 0x0a0000);    // docking station
       }
    }
 
-   if (debug)
-      printf("(%s) busno=%d, returning: %s\n", __func__, busno, sbool(result));
-   return result;
+   DBGF(debug, "busno=%d, returning: %s", busno, sbool(ignorable));
+   return ignorable;
 }
-
 
 
 // Beginning of get_video_devices2() segment
