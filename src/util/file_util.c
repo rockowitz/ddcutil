@@ -292,6 +292,20 @@ bye:
 }
 
 
+
+/** Checks if a file exists, without checking type
+ *
+ * @param fqfn fully qualified file name
+ * @return     true/false
+ */
+bool
+any_file_exists(const char * fqfn) {
+   struct stat stat_buf;
+   int rc = stat(fqfn, &stat_buf);
+   return (rc == 0);
+}
+
+
 /** Checks if a regular file exists.
  *
  * @param fqfn fully qualified file name

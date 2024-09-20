@@ -41,6 +41,9 @@ char * read_file_single_string(
       const char * filename,
       bool         verbose);
 
+bool any_file_exists(
+      const char * fqfn);
+
 bool regular_file_exists(
       const char *  fqfn);
 
