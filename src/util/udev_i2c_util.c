@@ -2,7 +2,7 @@
   *  I2C specific udev utilities
   */
 
-// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -13,6 +13,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "debug_util.h"
 #include "report_util.h"
 #include "string_util.h"
 #include "sysfs_i2c_util.h"
@@ -186,8 +187,7 @@ is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
 Byte_Value_Array
 get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting.\n", __func__);
+   DBGF(debug, "Starting.");
 
    Byte_Value_Array bva = bva_create();
 
