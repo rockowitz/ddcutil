@@ -1375,7 +1375,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    GPtrArray * display_list = g_ptr_array_new();
 
    int busct = i2c_detect_buses();
-   DBGMSF(debug, "i2c_detect_buses() returned: %d", busct);
+   DBGTRC(debug, DDCA_TRC_NONE, "i2c_detect_buses() returned: %d", busct);
    guint busndx = 0;
    for (busndx=0; busndx < busct; busndx++) {
       DBGMSF(debug, "busndx = %d", busndx);
@@ -1544,6 +1544,8 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    for (int ndx = 0; ndx < display_list->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(display_list, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
+         DBGMSG("dref=%s, DREV_DDC_COMMUNICATON_WORKING not set", dref_repr_t(dref));
       // if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
       //    dref->dispno = DISPNO_INVALID;  // does this need to be different?
       if (dref->flags & DREF_DDC_BUSY)
