@@ -89,7 +89,7 @@ Value_Name_Table callopt_bitname_table2 = {
  */
 char * interpret_call_options_t(Call_Options calloptions) {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
-   char * buf = get_thread_fixed_buffer(&buf_key, 100);
+   char * buf = get_thread_fixed_buffer(&buf_key, 200);
 
    char * buftemp = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
    g_strlcpy(buf, buftemp, 200);    // n. this is a debug msg, truncation benign
