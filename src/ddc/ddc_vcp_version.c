@@ -5,7 +5,7 @@
  * the acyclic graph of #includes within the ddc source directory.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -16,6 +16,8 @@
 
 #include "util/error_info.h"
 /** \endcond */
+
+#include "util/debug_util.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -125,8 +127,8 @@ set_vcp_version_xdf_by_dh(Display_Handle * dh)
      }  // not USB
 
      assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
-     DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning newly set dh->dref->vcp_version_xdf = %s",
-                   format_vspec(dh->dref->vcp_version_xdf));
+     DBGTRC_DONE(debug, DDCA_TRC_NONE, "dh=%s, Returning newly set dh->dref->vcp_version_xdf = %s",
+                   dh_repr(dh), format_vspec(dh->dref->vcp_version_xdf));
      return dh->dref->vcp_version_xdf;
 }
 
@@ -166,7 +168,7 @@ DDCA_MCCS_Version_Spec get_saved_vcp_version(
        DBGMSF(debug, "Using dref->vcp_version_xdf = %s", format_vspec_verbose(result));
     }
 
-    DBGMSF(debug, "Returning: %s", format_vspec_verbose(result));
+    DBGMSF(debug, "dref=%s, Returning: %s", dref_repr_t(dref), format_vspec_verbose(result));
     return result;
  }
 
@@ -207,7 +209,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dh(Display_Handle * dh) {
       assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
    }
 
-   DBGMSF(debug, "Returning: %s", format_vspec_verbose(result));
+   DBGTRC(debug, DDCA_TRC_NONE, "Returning: %s", format_vspec_verbose(result));
    return result;
 }
 
@@ -249,7 +251,11 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
       }
    }
 
-   assert(dref->flags & DREF_DDC_COMMUNICATION_WORKING);
+   if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)) {
+      DBGMSG( "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
+      dbgrpt_display_ref(dref,  true,  2);
+      ASSERT_WITH_BACKTRACE(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ;
+   }
 
    DDCA_MCCS_Version_Spec result = get_saved_vcp_version(dref);
    if (vcp_version_eq(result, DDCA_VSPEC_UNQUERIED)) {
@@ -274,7 +280,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    }
 
    assert( !vcp_version_eq(result, DDCA_VSPEC_UNQUERIED) );
-   DBGMSF(debug, "Done.    Returning: %s", format_vspec_verbose(result));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "dref=%s, Returning: %s", dref_repr_t(dref), format_vspec_verbose(result));
    return result;
 }
 
