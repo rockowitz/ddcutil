@@ -119,7 +119,8 @@ char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char 
 
 void i2c_remove_bus_info(int busno) {
    bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
+   assert(busno);
    g_mutex_lock(&all_i2c_buses_mutex);
    int  busNdx = i2c_find_bus_info_index_in_gptrarray_by_busno(all_i2c_buses, busno);
    if (busNdx < 0) {
@@ -127,7 +128,9 @@ void i2c_remove_bus_info(int busno) {
    }
    else {
       I2C_Bus_Info * businfo = g_ptr_array_remove_index(all_i2c_buses, busNdx);
-      i2c_free_bus_info(businfo);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "businfo=%p", businfo);
+      // not needed, i2c_free_bus_info() is free func for all_i2c_buses
+      // i2c_free_bus_info(businfo);
    }
    g_mutex_unlock(&all_i2c_buses_mutex);
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -251,6 +254,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
 I2C_Bus_Info * i2c_new_bus_info(int busno) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "busno=%d", busno);
+   assert(busno != 255 && busno != -1);
    I2C_Bus_Info * businfo = calloc(1, sizeof(I2C_Bus_Info));
    memcpy(businfo->marker, I2C_BUS_INFO_MARKER, 4);
    businfo->busno = busno;
@@ -263,9 +267,12 @@ void i2c_add_bus_info(I2C_Bus_Info * businfo) {
    assert(businfo);
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Adding businfo record for bus %d to all_i2c_buses", businfo->busno);
+   assert(businfo->busno != 255 && businfo->busno != -1);
+
    g_mutex_lock(&all_i2c_buses_mutex);
    g_ptr_array_add(all_i2c_buses, businfo);
    g_mutex_unlock(&all_i2c_buses_mutex);
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
@@ -274,10 +281,12 @@ void i2c_add_bus_info(I2C_Bus_Info * businfo) {
 void i2c_discard_buses0(GPtrArray* buses) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "buses=%p", buses);
-     if (buses) {
-        g_ptr_array_free(buses, true);
-     }
-     DBGTRC_DONE(debug, TRACE_GROUP, "");
+
+   if (buses) {
+      g_ptr_array_free(buses, true);
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -566,23 +575,19 @@ void i2c_dbgrpt_buses_summary(int depth) {
  * @return  true/false
  */
 bool i2c_device_exists(int busno) {
-   bool result = false;
    bool debug = false;
-   int  errsv;
+
+   bool result = false;
    char namebuf[20];
    struct stat statbuf;
-   int  rc = 0;
    sprintf(namebuf, "/dev/"I2C"-%d", busno);
-   errno = 0;
-   rc = stat(namebuf, &statbuf);
-   errsv = errno;
+   int rc = stat(namebuf, &statbuf);
    if (rc == 0) {
-      DBGMSF(debug, "Found %s", namebuf);
       result = true;
    }
    else {
       DBGMSF(debug,  "stat(%s) returned %d, errno=%s",
-                     namebuf, rc, linux_errno_desc(errsv) );
+                     namebuf, rc, linux_errno_desc(errno) );
    }
 
    DBGMSF(debug, "busno=%d, returning %s", busno, sbool(result) );
@@ -618,6 +623,7 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_new_bus_info);
    RTTI_ADD_FUNC(i2c_reset_bus_info);
    RTTI_ADD_FUNC(i2c_update_bus_info);
+   RTTI_ADD_FUNC(i2c_remove_bus_info);
 
    // connected_buses = EMPTY_BIT_SET_256;
 }
