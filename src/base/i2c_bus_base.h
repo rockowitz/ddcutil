@@ -20,7 +20,7 @@
 // Keep in sync with i2c_bus_flags_table
 #define I2C_BUS_EXISTS                  0x08
 #define I2C_BUS_ACCESSIBLE              0x04
-#define I2C_BUS_ADDR_0X50               0x02      ///< detected I2C bus address 0x50
+#define I2C_BUS_ADDR_0X50               0x02      ///< detected I2C bus address 0x50, may or may not have valid EDID
 #define I2C_BUS_ADDR_0X37               0x01      ///< detected I2C bus address 0x37
 #define I2C_BUS_ADDR_0X30               0x80      ///< detected write-only addr to specify EDID block number
 // #define I2C_BUS_EDP                     0x40      ///< bus associated with eDP display
@@ -30,6 +30,8 @@
 #define I2C_BUS_VALID_NAME_CHECKED    0x0800
 #define I2C_BUS_HAS_VALID_NAME        0x0400
 #define I2C_BUS_SYSFS_EDID            0x0100
+#define I2C_BUS_X50_EDID              0x0200
+#define I2C_BUS_HAS_EDID              (I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID)
 #define I2C_BUS_DRM_CONNECTOR_CHECKED 0x8000
 #define I2C_BUS_LVDS_OR_EDP           0x4000
 #define I2C_BUS_APPARENT_LAPTOP       0x2000

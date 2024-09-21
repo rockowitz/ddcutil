@@ -53,6 +53,7 @@ Value_Name_Table i2c_bus_flags_table = {
       VN(I2C_BUS_VALID_NAME_CHECKED),
       VN(I2C_BUS_HAS_VALID_NAME),
       VN(I2C_BUS_SYSFS_EDID),
+      VN(I2C_BUS_X50_EDID),
       VN(I2C_BUS_DRM_CONNECTOR_CHECKED),
       VN(I2C_BUS_LVDS_OR_EDP),
       VN(I2C_BUS_APPARENT_LAPTOP),
@@ -225,10 +226,8 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
       }
       // not useful and clutters the output
       // i2c_report_functionality_flags(businfo->functionality, /* maxline */ 90, depth);
-      if ( businfo->flags & I2C_BUS_ADDR_0X50) {
-         if (businfo->edid) {
-            report_parsed_edid(businfo->edid, true /* verbose */, depth);
-         }
+      if (businfo->edid) {
+         report_parsed_edid(businfo->edid, true /* verbose */, depth);
       }
       rpt_vstring(depth, "last_checked_asleep:       %s", sbool(businfo->last_checked_dpms_asleep));
    }
@@ -380,6 +379,7 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
    COPY_BIT(existing, new, I2C_BUS_ADDR_0X30);
    COPY_BIT(existing, new, I2C_BUS_PROBED);
    COPY_BIT(existing, new, I2C_BUS_SYSFS_EDID);
+   COPY_BIT(existing, new, I2C_BUS_X50_EDID);
    COPY_BIT(existing, new, I2C_BUS_DRM_CONNECTOR_CHECKED);
 #undef COPY_BIT
 
@@ -519,11 +519,11 @@ int i2c_dbgrpt_buses(bool report_all, bool include_sysfs_info, int depth) {
    if (report_all)
       rpt_vstring(depth,"Detected %d non-ignorable I2C buses:", busct);
    else
-      rpt_vstring(depth, "I2C buses with monitors detected at address 0x50:");
+      rpt_vstring(depth, "I2C buses with monitors detected:");
 
    for (int ndx = 0; ndx < busct; ndx++) {
       I2C_Bus_Info * busInfo = g_ptr_array_index(all_i2c_buses, ndx);
-      if ( (busInfo->flags & I2C_BUS_ADDR_0X50) || report_all) {
+      if ( (busInfo->edid) || report_all) {
          rpt_nl();
          i2c_dbgrpt_bus_info(busInfo, include_sysfs_info, depth);
          reported_ct++;
@@ -538,9 +538,9 @@ int i2c_dbgrpt_buses(bool report_all, bool include_sysfs_info, int depth) {
 
 
 void i2c_dbgrpt_buses_summary(int depth) {
-   Bit_Set_256 buses_all = EMPTY_BIT_SET_256;
-   Bit_Set_256 buses_x50 = EMPTY_BIT_SET_256;
-   Bit_Set_256 buses_x37 = EMPTY_BIT_SET_256;
+   Bit_Set_256 buses_all    = EMPTY_BIT_SET_256;
+   Bit_Set_256 buses_w_edid = EMPTY_BIT_SET_256;
+   Bit_Set_256 buses_x37    = EMPTY_BIT_SET_256;
 
    assert(all_i2c_buses);
    int busct = all_i2c_buses->len;
@@ -548,9 +548,8 @@ void i2c_dbgrpt_buses_summary(int depth) {
       I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
       int busno = businfo->busno;
       buses_all = bs256_insert(buses_all, busno);
-      ASSERT_IFF( businfo->flags & I2C_BUS_ADDR_0X50, businfo->edid);
-      if ( (businfo->flags & I2C_BUS_ADDR_0X50) ) {
-         buses_x50 = bs256_insert(buses_x50, busno);
+      if ( (businfo->edid) ) {
+         buses_w_edid = bs256_insert(buses_w_edid, busno);
          if ( (businfo->flags & I2C_BUS_ADDR_0X37) ) {
             buses_x37 = bs256_insert(buses_x37, busno);
          }
@@ -559,7 +558,7 @@ void i2c_dbgrpt_buses_summary(int depth) {
 
    rpt_vstring(depth, "Number of buses:       %d", bs256_count(buses_all));
    rpt_vstring(depth, "All I2C buses:         %s", bs256_to_string_decimal_t(buses_all, "", " "));
-   rpt_vstring(depth, "Buses with edid:       %s", bs256_to_string_decimal_t(buses_x50, "", " "));
+   rpt_vstring(depth, "Buses with edid:       %s", bs256_to_string_decimal_t(buses_w_edid, "", " "));
    rpt_vstring(depth, "Buses with x37 active: %s", bs256_to_string_decimal_t(buses_x37, "", " "));
 }
 
