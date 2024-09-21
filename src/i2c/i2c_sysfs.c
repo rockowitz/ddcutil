@@ -211,8 +211,7 @@ Sys_Drm_Connector * one_drm_connector0(
    get_connector_bus_numbers(dirname, fn, cbn);
    cur->base_busno = cbn->base_busno;
    cur->i2c_busno = cbn->i2c_busno;
-   if (cbn->name)
-      cur->name = strdup(cbn->name);
+   cur->connector_id = cbn->connector_id;
    free_connector_bus_numbers(cbn);
    RPT_ATTR_TEXT(d0, &cur->enabled, dirname, fn, "enabled");   // e.g. /sys/class/drm/card0-DP-1/enabled
    RPT_ATTR_TEXT(d0, &cur->status,  dirname, fn, "status"); // e.g. /sys/class/drm/card0-DP-1/status
