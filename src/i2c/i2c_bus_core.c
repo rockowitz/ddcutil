@@ -210,7 +210,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
       cur_error = lock_display_by_dpath(dpath, ddisp_flags);
       if (cur_error) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "lock_display_by_dpath(%s) returned %s", filename,
-                         psc_desc(master_error->status_code));
+                         psc_desc(cur_error->status_code));
       }
       else
          device_locked = true;
