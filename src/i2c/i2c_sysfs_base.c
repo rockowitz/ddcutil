@@ -251,12 +251,14 @@ void get_connector_bus_numbers(
             SBOOL(has_drm_dp_aux_dir), drm_dp_aux_dir);
       if (has_drm_dp_aux_dir) {
          RPT_ATTR_TEXT(d0, &aux_dir_name, dirname, fn, drm_dp_aux_dir, "name");
+         free(drm_dp_aux_dir);
       }
 
       // Examine i2c-N subdirectory
       // Present: i915, amdgpu (normal)
       // Absent:  amdgpu(MST), Nvidia
       char * i2cN_buf = NULL;   // i2c-N
+      char * i2cN_buf2 = NULL;
       bool has_i2c_subdir =
                RPT_ATTR_SINGLE_SUBDIR(d0, &i2cN_buf, fn_starts_with,"i2c-", dirname, fn);
       if (has_i2c_subdir) {   // i2c-N directory not present for MST hub
@@ -280,16 +282,18 @@ void get_connector_bus_numbers(
          if (has_i2c_dev_subdir) {
             // looking for e.g. /sys/bus/drm/card0-DP-1/ddc/i2c-dev/i2c-1
             has_i2c_subdir =
-                  RPT_ATTR_SINGLE_SUBDIR(d0, &i2cN_buf, fn_starts_with, "i2c-",
+                  RPT_ATTR_SINGLE_SUBDIR(d0, &i2cN_buf2, fn_starts_with, "i2c-",
                                          dirname, fn, "ddc", "i2c-dev");
             if (has_i2c_subdir) {
-               cbn->base_busno = i2c_name_to_busno(i2cN_buf);
+               cbn->base_busno = i2c_name_to_busno(i2cN_buf2);
 
-               // RPT_ATTR_TEXT(d0, &cbn->base_dev, dirname, fn, "ddc", "i2c-dev", i2cN_buf, "dev");
-               free(i2cN_buf);
+               // RPT_ATTR_TEXT(d0, &cbn->base_dev, dirname, fn, "ddc", "i2c-dev", i2cN_buf2, "dev");
+
             }
          }
       }  //ddc subdirectory
+      free(i2cN_buf);
+      free(i2cN_buf2);
 
 
       DBGTRC(debug, DDCA_TRC_NONE, "connector: %s, aux_dir_name: |%s|, i2cN_dir_name: |%s|, ddc_dir_name: |%s|",
@@ -352,7 +356,9 @@ void get_connector_bus_numbers(
             }
          }
          free(i2cN_buf);
+         free(ddc_dir_path);
       }  // has ddc subdirectory
+
    }   // not DP
 
    if (IS_DBGTRC(debug, TRACE_GROUP))
