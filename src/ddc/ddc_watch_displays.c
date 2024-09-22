@@ -581,6 +581,7 @@ void free_udev_event_detail(Udev_Event_Detail * detail) {
 
 
 void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth) {
+   assert(detail);
    rpt_structure_loc("Udev_Event_Detail", detail, depth);
    int d1 = depth + 1;
    rpt_vstring(d1, "prop_subsystem:  %s", detail->prop_subsystem);
@@ -784,6 +785,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       }  // end of udev_monitor_receive_dev() polling loop
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "==> udev_event received");
+      assert(dev);
 
 #ifdef DEBUGGING
       // WHICH REPORT TO USE?
@@ -798,16 +800,16 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       skip_next_sleep = true;
 
       Udev_Event_Detail * cd = collect_udev_event_detail(dev);
+      assert(cd);      // mollify coverity scan
        if (IS_DBGTRC(debug || report_udev_events, DDCA_TRC_NONE))
          dbgrpt_udev_event_detail(cd, 2);
        // xxx("Event received");
 
       if (!streq(cd->prop_subsystem, "i2c-dev") &&  !streq(cd->prop_subsystem, "drm")) {
          DBGMSG("Unexpected subsystem: %s", cd->prop_subsystem);
-         free_udev_event_detail(cd);
       }
 
-      if (  streq(cd->prop_subsystem, "i2c-dev") && streq(cd->prop_action, "add") ) {
+      else if (  streq(cd->prop_subsystem, "i2c-dev") && streq(cd->prop_action, "add") ) {
          // const char * sysname = cd->sysname;     // e.g i2c-27
          // const char * attr_name = cd->attr_name;
          int busno = i2c_name_to_busno(cd->sysname);
@@ -948,7 +950,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
            // not be considered asleep when reconnected
            bs_sleepy_buses = bs256_and(bs_sleepy_buses, bs_cur_buses_w_edid);
         }
-      }
+      } // subsystem drm, action change
 
       free_udev_event_detail(cd);
       cd = NULL;
