@@ -488,6 +488,23 @@ typedef struct {
 } EDID_Use_Record;
 
 
+void free_edid_use_record0(EDID_Use_Record * rec, bool free_edid) {
+   if (rec) {
+      if (free_edid)
+         free(rec->edid);
+      free(rec);
+   }
+}
+
+/** Free an EDID_Use_Record but not the underlying edid byte array
+ *
+ * @param rec  EDID_Use_Record
+ */
+void free_edid_use_record(EDID_Use_Record * rec) {
+   free_edid_use_record0(rec, false);
+}
+
+
 /** Create array of #Edid_Use_Record
  */
 static GPtrArray *
@@ -501,9 +518,10 @@ create_edid_use_table() {
  */
 static void
 free_edid_use_table(GPtrArray* table) {
-      // free's each Edid_Use_Record, but not the edid the records point to
-      g_ptr_array_free(table, true);
-   }
+   // free's each Edid_Use_Record, but not the edid the records point to
+   g_ptr_array_set_free_func(table, (void*)free_edid_use_record);
+   g_ptr_array_free(table, true);
+}
 
 
 /** Returns the EDID_Use_Record for a particular EDID.
