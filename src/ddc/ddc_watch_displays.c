@@ -436,7 +436,7 @@ int search_all_businfo_record_by_connector_name(char *connector_name) {
       // look through all businfo records for one with the connector name
       for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
          I2C_Bus_Info *businfo = g_ptr_array_index(all_i2c_buses, ndx);
-         DBGMSG("Examing businfo record for bus %d, I2C_BUS_PROBED=%s, connector_found_by=%s",
+         DBGMSG("Examining businfo record for bus %d, I2C_BUS_PROBED=%s, connector_found_by=%s",
                businfo->busno, sbool(businfo->flags & I2C_BUS_PROBED),
                drm_connector_found_by_name(businfo->drm_connector_found_by));
          // need to check if businfo record is valid?
@@ -709,13 +709,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    }
    ASSERT_IFF(deferred_events, use_deferred_event_queue);
 
-#ifdef SECONDARY_UDEV
-   struct udev_device * dev2 = NULL;
-#endif
-   Udev_Event_Detail * i2c_dev_udev_detail = NULL;
    struct udev_device * dev = NULL;
-   Udev_Event_Detail * drm_udev_detail = NULL;
-
    time_t last_drm_change_timestamp = 0;
    bool skip_next_sleep = false;
    while (true) {
@@ -802,92 +796,51 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
 #endif
 
       skip_next_sleep = true;
-      drm_udev_detail = NULL;
-      i2c_dev_udev_detail = NULL;
 
       Udev_Event_Detail * cd = collect_udev_event_detail(dev);
        if (IS_DBGTRC(debug || report_udev_events, DDCA_TRC_NONE))
          dbgrpt_udev_event_detail(cd, 2);
-       xxx("Event received");
+       // xxx("Event received");
 
-      if (streq(cd->prop_subsystem, "drm")) {
-           drm_udev_detail = cd;
-      }
-      else if (streq(cd->prop_subsystem, "i2c-dev")) {
-           i2c_dev_udev_detail = cd;
-      }
-      else {
+      if (!streq(cd->prop_subsystem, "i2c-dev") &&  !streq(cd->prop_subsystem, "drm")) {
          DBGMSG("Unexpected subsystem: %s", cd->prop_subsystem);
-
          free_udev_event_detail(cd);
       }
 
-#ifdef SECONDARY
-      if (secondary_udev_receive_millisec > 0)
-         usleep(secondary_udev_receive_millisec * 1000);
-      dev2 = udev_monitor_receive_device(mon);
-      if (dev2) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Second event detected");
-         Udev_Event_Detail * cd = collect_udev_event_detail(dev2);
-         if (IS_DBGTRC(debug || report_udev_events, DDCA_TRC_NONE))
-            dbgrpt_udev_event_detail(cd, 2);
-
-         if (streq(cd->prop_subsystem, "drm")) {
-              drm_udev_detail = cd;
-         }
-         else if (streq(cd->prop_subsystem, "i2c-dev")) {
-              i2c_dev_udev_detail = cd;
-         }
-         else {
-            DBGMSG("Unexpected subsystem: %s", cd->prop_subsystem);
-            free_udev_event_detail(cd);
-         }
-      }
-      else {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "No second udev event");
-      }
-#endif
-
-      if (  streq(cd->prop_subsystem, "i2c-dev") && streq(i2c_dev_udev_detail->prop_action, "add") ) {
+      if (  streq(cd->prop_subsystem, "i2c-dev") && streq(cd->prop_action, "add") ) {
          // const char * sysname = cd->sysname;     // e.g i2c-27
          // const char * attr_name = cd->attr_name;
          int busno = i2c_name_to_busno(cd->sysname);
-         // xxx("i2c-dev add");
-         // DBGMSG("Sleeping 8 sec to let sysfs catch up");
-         // usleep(8000lu*1000lu);
-         // xxx("i2c-dev add");
-         // DBGMSG("sleep done");
-
-
-         bool new_businfo = false;
-         I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
-         if (businfo) {
-            DBGMSG("Unexpected businfo record %p already exists for bus %d", businfo, busno);
-            // TO DO: check for use in non-removed drefs
-            i2c_reset_bus_info(businfo);
+         if (busno < 0) {
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "sysname is not i2c-n");
          }
-         if (!businfo) {
-            businfo = i2c_new_bus_info(busno);
-            new_businfo = true;
-         }
-         Error_Info * err = i2c_check_bus2(businfo);
-         ERRINFO_FREE_WITH_REPORT(err, debug || IS_TRACING() || report_freed_exceptions);
-         i2c_dbgrpt_bus_info(businfo, /*include_sysinfo*/ true, 0);
-         if (new_businfo) {
-            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to list of buses", busno);
-            i2c_add_bus_info(businfo);
+         else {
+            bool new_businfo = false;
+            I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
+            if (businfo) {
+               DBGMSG("Unexpected businfo record %p already exists for bus %d", businfo, busno);
+               // TO DO: check for use in non-removed drefs
+               i2c_reset_bus_info(businfo);
+            }
+            if (!businfo) {
+               businfo = i2c_new_bus_info(busno);
+               new_businfo = true;
+            }
+            i2c_check_bus2(businfo);
+            // Error_Info * err = i2c_check_bus2(businfo);
+            // ERRINFO_FREE_WITH_REPORT(err, debug || IS_TRACING() || report_freed_exceptions);
+            i2c_dbgrpt_bus_info(businfo, /*include_sysinfo*/ true, 0);
+
+            if (new_businfo) {
+               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to list of buses", busno);
+               i2c_add_bus_info(businfo);
+            }
          }
       }
 
-      else if ( streq(cd->prop_subsystem,           "drm") &&
-                 streq(drm_udev_detail->prop_action, "add") ) {
+      else if ( streq(cd->prop_subsystem, "drm") &&
+                 streq(cd->prop_action,   "add") ) {
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Processing subsystem drm, action add");
-         // xxx("drm add");
-         // DBGMSG("Sleeping 8 sec to let sysfs catch up");
-         // usleep(8000l*1000l);
-         // DBGMSG("sleep done");
-         // xxx("drm add");
-
          Bit_Set_256  bs_udev_buses =    i2c_detect_attached_buses_as_bitset();
          Bit_Set_256  bs_known_buses = EMPTY_BIT_SET_256;
          for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
@@ -916,21 +869,20 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
          }
       }
 
-
-      else if ( streq(cd->prop_subsystem,           "drm") &&
-                streq(drm_udev_detail->prop_action, "change") ) {
+      else if ( streq(cd->prop_subsystem,  "drm") &&
+                streq(cd->prop_action,     "change") ) {
          // xxx("drm change");
          bool processed = false;
          time_t prev_change_timestamp = last_drm_change_timestamp;
          last_drm_change_timestamp = cur_realtime_nanosec();
          time_t delta_time = last_drm_change_timestamp - prev_change_timestamp;
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "nanosec since prev drm/change event: %jd", delta_time);    // or is it %zd?
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "nanosec since prev drm/change event: %jd", delta_time);
          if (use_sysfs_connector_id) {
             char * cname = NULL;
             int connector_number = -1;
-            if (drm_udev_detail && streq(drm_udev_detail->prop_action, "change")
-                                && drm_udev_detail->prop_connector) {  // seen null when MST hub added
-               bool valid_number = str_to_int(drm_udev_detail->prop_connector, &connector_number, 10);
+            if (cd && streq(cd->prop_action, "change")
+                                && cd->prop_connector) {  // seen null when MST hub added
+               bool valid_number = str_to_int(cd->prop_connector, &connector_number, 10);
                assert(valid_number);
                cname = get_sys_drm_connector_name_by_connector_id(connector_number);
                DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
@@ -998,20 +950,10 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
         }
       }
 
-      free_udev_event_detail(drm_udev_detail);
-      drm_udev_detail = NULL;
-#ifdef UDEV_I2C_DEV
-      i2c_dev_udev_detail = NULL;
-#endif
+      free_udev_event_detail(cd);
+      cd = NULL;
       udev_device_unref(dev);
       dev = NULL;
-#ifdef SECONDARY
-      free_udev_event_detail(i2c_dev_udev_detail);
-      if (dev2) {
-         udev_device_unref(dev2);
-         dev2 = NULL;
-      }
-#endif
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "==> udev event processed");
    }  // while
