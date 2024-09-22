@@ -129,7 +129,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
                        watch_thread_func,
                        data);
       active_classes = event_classes;
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil watch thread started");
    }
    g_mutex_unlock(&watch_thread_mutex);
 #endif
