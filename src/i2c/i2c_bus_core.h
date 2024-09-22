@@ -51,7 +51,7 @@ Error_Info *     i2c_open_bus(int busno, Byte callopts, int * fd_loc);
 Status_Errno     i2c_close_bus(int busno, int fd, Call_Options callopts);
 
 // Bus inspection
-Error_Info *     i2c_check_bus2(I2C_Bus_Info * businfo);
+void             i2c_check_bus2(I2C_Bus_Info * businfo);
 Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 
 // Bus inventory - detect and probe buses

@@ -291,7 +291,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
 
    ASSERT_IFF(master_error, *fd_loc == -1);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, master_error,
-         "busno=%d, tryctr=%d, Set file descriptor *fd_loc = %d", busno, tryctr, *fd_loc);
+      "busno=%d, tryctr=%d, Set file descriptor *fd_loc = %d", busno, tryctr, *fd_loc);
    return master_error;
 }
 
@@ -669,8 +669,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
    }
    if (reset) {
       free_parsed_edid(businfo->edid);
-      businfo->flags &= ~I2C_BUS_ADDR_0X50;
-      businfo->flags &= ~I2C_BUS_SYSFS_EDID;
+      businfo->flags &= ~(I2C_BUS_ADDR_0X50 | I2C_BUS_HAS_EDID );
 
       if (use_drm_connector_states) {
          DBGMSG("Resetting sysfs data using redetect_connector_states()");
@@ -771,6 +770,11 @@ typedef struct {
 } Find_Sys_Drm_Connector_Result;
 
 
+void free_find_sys_drm_connector_result_contents(Find_Sys_Drm_Connector_Result rec) {
+   free(rec.connector_name);
+}
+
+
 void dbgrpt_find_sys_drm_connector_result(Find_Sys_Drm_Connector_Result val, int depth) {
    rpt_vstring(depth, "Find_Sys_Drm_Connector_Result:");
    rpt_vstring(depth+1, "connector_name:   %s", val.connector_name);
@@ -778,18 +782,17 @@ void dbgrpt_find_sys_drm_connector_result(Find_Sys_Drm_Connector_Result val, int
    rpt_vstring(depth+1, "found_by:         %s", drm_connector_found_by_name(val.found_by));
 }
 
-
+// n. result returned on stack
 Find_Sys_Drm_Connector_Result find_sys_drm_connector_by_busno_or_edid(int busno, Byte * edid_bytes) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, " busno = %d, edid = %p" , busno, edid_bytes);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "edid=%p -> %s", edid_bytes, edid_summary_from_bytes(edid_bytes));
+   int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
    if (busno == 255)  // happens somehow
       busno = -1;
    bool check_busno = (busno != -1);
    bool check_edid = edid_bytes;
    assert(check_busno || check_edid);
-
-   int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
 
    Find_Sys_Drm_Connector_Result result;
    result.connector_name = NULL;
@@ -804,12 +807,11 @@ Find_Sys_Drm_Connector_Result find_sys_drm_connector_by_busno_or_edid(int busno,
       if (check_busno) {
          Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
          get_connector_bus_numbers("/sys/class/drm", cname, cbn);
-
          if (cbn->i2c_busno == busno){
             found = true;
             result.connector_name = strdup(cname);
             result.found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
-            result.connector_id =
+            result.connector_id = cbn->connector_id;
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Found connector %s by i2c bus number match for bus i2c-%d", cname, busno);
          }
          free_connector_bus_numbers(cbn);
@@ -832,6 +834,8 @@ Find_Sys_Drm_Connector_Result find_sys_drm_connector_by_busno_or_edid(int busno,
          }
       }
    }
+   free_sysfs_connector_names_contents(cnames);
+
 
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_DONE(true, DDCA_TRC_NONE, "Returning:");
@@ -891,7 +895,7 @@ Byte * get_connector_edid(const char * connector_name) {
  *
  *  @param  businfo  pointer to #I2C_Bus_Info struct in which information will be set
  */
-Error_Info * i2c_check_bus2(I2C_Bus_Info * businfo) {
+void i2c_check_bus2(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p", businfo->busno, businfo );
    assert(businfo && ( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
@@ -902,7 +906,7 @@ Error_Info * i2c_check_bus2(I2C_Bus_Info * businfo) {
    // int busno = businfo->busno;
    char sysfs_name[30];
    char dev_name[15];
-   char i2cN[8];
+   char i2cN[10];  // only need 8, but coverity complains
    g_snprintf(i2cN, 10, "i2c-%d", businfo->busno);
    g_snprintf(sysfs_name, 30, "/sys/bus/i2c/devices/%s", i2cN);
    g_snprintf(dev_name,   15, "/dev/%s", i2cN);
@@ -928,29 +932,38 @@ Error_Info * i2c_check_bus2(I2C_Bus_Info * businfo) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Finding DRM connector name for bus %s using busno", dev_name);
    Find_Sys_Drm_Connector_Result res = find_sys_drm_connector_by_busno_or_edid(businfo->busno, NULL);
    if (res.connector_name) {
-      businfo->drm_connector_name = res.connector_name;
+      businfo->drm_connector_name = strdup(res.connector_name);
       businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
       businfo->drm_connector_id = res.connector_id;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Found DRM connector name %s by busno, found_by=%s",
             businfo->drm_connector_name, drm_connector_found_by_name(businfo->drm_connector_found_by));
+      free_find_sys_drm_connector_result_contents(res);
    }
    else {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DRM connector not found by busno %d", businfo->busno);
    }
-
+   assert(businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_FOUND ||
+          businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO);  // quiet coverity warning
 
    // *** Possibly try to get the EDID from sysfs
    // skip if already set or flags & I2C_DRM_CONNECTOR_CHECKED?
    bool checked_connector_for_edid = false;
-   if (try_get_edid_from_sysfs_first  || (businfo->flags&I2C_BUS_DISPLAYLINK)) {
-      if (businfo->drm_connector_name) {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
+   if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
+      if (try_get_edid_from_sysfs_first  ||
+            (businfo->flags&I2C_BUS_DISPLAYLINK))   // X50 can't be read for DisplayLink, must use sysfs
+      {
          checked_connector_for_edid = true;
          Byte * edidbytes = get_connector_edid(businfo->drm_connector_name);
          if (edidbytes) {
             businfo->edid = create_parsed_edid2(edidbytes, "SYSFS");
-            // TODO handle failure, memory allocation
-            businfo->flags |= I2C_BUS_ADDR_0X50;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Found edid for %s using connector name %s", dev_name, businfo->drm_connector_name);
+            if (!businfo->edid) {
+               MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Invalid EDID read from /sys/class/drm%s/edid", businfo->drm_connector_name);
+            }
+            else {
+               businfo->flags |= I2C_BUS_SYSFS_EDID;
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Found edid for %s using connector name %s", dev_name, businfo->drm_connector_name);
+            }
+            free(edidbytes);
          }
          else {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Failed to get edid using DRM connector %s", businfo->drm_connector_name);
@@ -971,7 +984,7 @@ Error_Info * i2c_check_bus2(I2C_Bus_Info * businfo) {
       //open succeeded
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", businfo->busno);
       businfo->flags |= I2C_BUS_ACCESSIBLE;
-      businfo->functionality = i2c_get_functionality_flags_by_fd(fd);  // is this really needed?  if so, get it for case where edid read from sysfs
+      businfo->functionality = i2c_get_functionality_flags_by_fd(fd);  // is this really needed?
 #ifdef TEST_EDID_SMBUS
              if (EDID_Read_Uses_Smbus) {
                 // for the smbus hack
@@ -1022,12 +1035,7 @@ Error_Info * i2c_check_bus2(I2C_Bus_Info * businfo) {
 
     businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;   // ???
 
-    if ( !(businfo->drm_connector_found_by != DRM_CONNECTOR_FOUND_BY_BUSNO ||
-           businfo->drm_connector_found_by != DRM_CONNECTOR_FOUND_BY_EDID))
-    {
-       businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
-       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DRM Connector not found for bus i2c-%d", businfo->busno);
-    }
+    assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
 
     // *** Check if laptop
     if (businfo->edid && !(businfo->flags&I2C_BUS_DISPLAYLINK)) {
@@ -1098,7 +1106,7 @@ bye:
       // i2c_dbgrpt_bus_info(businfo, 2);
       DBGTRC_DONE(true, TRACE_GROUP, "");
    }
-   return NULL;   // ???
+   ERRINFO_FREE_WITH_REPORT(master_err, true);
 }
 
 
@@ -1504,8 +1512,8 @@ Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only
    for (int ndx = 0; ndx < businfo_array->len; ndx++) {
       I2C_Bus_Info * businfo = g_ptr_array_index(businfo_array, ndx);
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "businfo=%p", businfo);
-      if (!only_connected || businfo->flags & I2C_BUS_ADDR_0X50) {
-         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "BUS_ADDR_0X50 set");
+      if (!only_connected || businfo->edid) {
+         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "EDID exists");
          result = bs256_insert(result, businfo->busno);
       }
    }
