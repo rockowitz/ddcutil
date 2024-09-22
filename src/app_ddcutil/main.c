@@ -454,7 +454,7 @@ find_dref(
       // is this really a monitor?
       I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
       if (businfo) {
-         if (businfo->flags & I2C_BUS_ADDR_0X50)  {
+         if (businfo->edid)  {
             dref = create_bus_display_ref(busno);
             dref->dispno = DISPNO_INVALID;      // or should it be DISPNO_NOT_SET?
             dref->pedid = copy_parsed_edid(businfo->edid);
