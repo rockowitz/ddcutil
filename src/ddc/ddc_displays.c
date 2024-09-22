@@ -1382,7 +1382,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       // if (IS_DBGTRC(debug, DDCA_TRC_NONE))
       //    i2c_dbgrpt_bus_info(businfo, 2);
-      if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
+      if ( businfo->edid ) {
          Display_Ref * dref = NULL;
          // Do not restore serialized display ref if slave address x37 inactive
          // Prevents creating a display ref with stale contents
@@ -1948,7 +1948,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
    businfo->flags &= ~I2C_BUS_PROBED;
    i2c_check_bus2(businfo);
-   if (businfo->flags & I2C_BUS_ADDR_0X50) {
+   if (businfo->edid) {
       dref = create_bus_display_ref(businfo->busno);
       // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
       dref->dispno = 99;   // dispno not used in libddcutil except to indicate invalid
