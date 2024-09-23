@@ -661,9 +661,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
 #endif
    BS256 bs_sleepy_buses = EMPTY_BIT_SET_256;
 
-   struct udev* udev;
-   udev = udev_new();
-   assert(udev);
+   struct udev* udev = udev_new();
    struct udev_monitor* mon = udev_monitor_new_from_netlink(udev, "udev");
    // Alternative subsystem devtype values that did not detect changes:
    // drm_dp_aux_dev, kernel, i2c-dev, i2c, hidraw
@@ -714,7 +712,6 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
    time_t last_drm_change_timestamp = 0;
    bool skip_next_sleep = false;
    while (true) {
-
       if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
          dev = udev_monitor_receive_device(mon);
       }
@@ -745,7 +742,14 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
             // n. slept == 0 if no sleep was performed
             DBGTRC_DONE(debug, TRACE_GROUP,
                   "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
-            free_watch_displays_data(wdd);
+              free_watch_displays_data(wdd);
+              //  int rc = udev_monitor_filter_remove(mon);
+              udev_monitor_unref(mon);
+              udev_unref(udev);
+#ifdef WATCH_DPMS
+              if (watch_dpms)
+                 g_ptr_array_free(sleepy_connectors, true);
+#endif
             g_thread_exit(0);
             assert(false);    // avoid clang warning re wdd use after free
          }
@@ -960,11 +964,9 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "==> udev event processed");
    }  // while
 
-   udev_monitor_unref(mon);
-#ifdef UNUSED
-   if (watch_dpms)
-      g_ptr_array_free(sleepy_connectors, true);
-#endif
+   // This is not the real function exit point.  Function termination occurs
+   // using g_thread_exit within the udev event polling loop.
+   assert(false);
    return NULL;
 }
 
