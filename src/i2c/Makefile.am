@@ -29,7 +29,7 @@ i2c_edid.c                \
 i2c_execute.c             \
 i2c_services.c            \
 i2c_strategy_dispatcher.c \
-i2c_sysfs.c               \
+i2c_sys_drm_connector.c   \
 i2c_sysfs_base.c          \
 i2c_sysfs_conflicting_drivers.c \
 i2c_sysfs_i2c_info.c      \

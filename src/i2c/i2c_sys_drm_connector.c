@@ -1,4 +1,4 @@
-/** @file i2c_sysfs.c
+/** @file i2c_sys_drm_connector.c
  *
  *  Query /sys file system for information on I2C devices
  */
@@ -47,7 +47,7 @@
 #include "base/rtti.h"
 
 #include "i2c/i2c_sysfs_base.h"
-#include "i2c/i2c_sysfs.h"
+#include <i2c/i2c_sys_drm_connector.h>
 
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;

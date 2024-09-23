@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <glib-2.0/glib.h>
+#include <i2c/i2c_sys_drm_connector.h>
 
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_c_api.h"
@@ -15,8 +16,6 @@
 
 #include "base/core.h"
 #include "base/rtti.h"
-
-#include "i2c/i2c_sysfs.h"
 
 #include "ddc_status_events.h"
 

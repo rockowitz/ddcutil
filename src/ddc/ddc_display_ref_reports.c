@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
+#include <i2c/i2c_sys_drm_connector.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -30,7 +31,6 @@
 #include "base/rtti.h"
 
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_sysfs.h"
 #include "i2c/i2c_sysfs_top.h"
 #include "i2c/i2c_sysfs_conflicting_drivers.h"
 

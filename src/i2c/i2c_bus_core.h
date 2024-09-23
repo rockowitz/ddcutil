@@ -25,7 +25,7 @@
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 
-#include "i2c/i2c_sysfs.h"
+#include <i2c/i2c_sys_drm_connector.h>
 
 /** \def I2C_SLAVE_ADDR_MAX Addresses on an I2C bus are 7 bits in size */
 #define I2C_SLAVE_ADDR_MAX 128

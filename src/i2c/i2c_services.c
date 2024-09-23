@@ -1,4 +1,5 @@
 /** @file i2c_services.c
+#include <i2c/i2c_sys_drm_connector.h>
  */
 
 // Copyright (C) 2022-2024 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -9,7 +10,6 @@
 #include "i2c_edid.h"
 #include "i2c_execute.h"
 #include "i2c_strategy_dispatcher.h"
-#include "i2c_sysfs.h"
 #include "i2c_sysfs_conflicting_drivers.h"
 #include "i2c_sysfs_sys_info.h"
 #include "i2c_sysfs_i2c_info.h"

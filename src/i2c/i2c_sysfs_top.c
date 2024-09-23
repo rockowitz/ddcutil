@@ -5,11 +5,11 @@
 
  
 #include <glib-2.0/glib.h>
+#include <i2c/i2c_sys_drm_connector.h>
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
 
-#include "i2c_sysfs.h"
 #include "i2c_sysfs_conflicting_drivers.h"
 #include "i2c_sysfs_sys_info.h"
 #include "i2c_sysfs_i2c_info.h"

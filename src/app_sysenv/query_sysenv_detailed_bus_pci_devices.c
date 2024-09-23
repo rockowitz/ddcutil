@@ -12,6 +12,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
+#include <i2c/i2c_sys_drm_connector.h>
 #include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
@@ -31,8 +32,6 @@
 #include "base/linux_errno.h"
 #include "base/rtti.h"
 /** \endcond */
-
-#include "i2c/i2c_sysfs.h"
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs_common.h"

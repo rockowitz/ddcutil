@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
+#include <i2c/i2c_sys_drm_connector.h>
 #include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
@@ -33,7 +34,6 @@
 #include "base/rtti.h"
 /** \endcond */
 
-#include "i2c/i2c_sysfs.h"
 #include "i2c/i2c_sysfs_sys_info.h"
 #include "i2c/i2c_sysfs_top.h"
 

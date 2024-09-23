@@ -6,8 +6,8 @@
 // Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_SYSFS_H_
-#define I2C_SYSFS_H_
+#ifndef I2C_SYS_DRM_CONNECTOR_H_
+#define I2C_SYS_DRM_CONNECTOR_H_
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
@@ -69,4 +69,4 @@ Sys_Drm_Connector * get_drm_connector(const char * fn, int depth);
 void init_i2c_sysfs();
 
 
-#endif /* I2C_SYSFS_H_ */
+#endif /* I2C_SYS_DRM_CONNECTOR_H_ */

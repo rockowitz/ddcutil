@@ -42,7 +42,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#include "i2c/i2c_sysfs.h"
+#include <i2c/i2c_sys_drm_connector.h>
 #include "i2c/i2c_sysfs_conflicting_drivers.h"
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;

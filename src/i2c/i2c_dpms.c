@@ -27,7 +27,7 @@
 #include "base/displays.h"
 #include "base/rtti.h"
 
-#include "i2c/i2c_sysfs.h"
+#include <i2c/i2c_sys_drm_connector.h>
 #include "i2c/i2c_dpms.h"
 
 

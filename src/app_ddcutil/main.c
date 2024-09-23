@@ -78,7 +78,7 @@
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs_sys_info.h"
 #include "i2c/i2c_sysfs_top.h"
-#include "i2c/i2c_sysfs.h"
+#include <i2c/i2c_sys_drm_connector.h>
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"
