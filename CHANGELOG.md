@@ -13,7 +13,7 @@
   the ddcutil and libddcutil executables.  This is reported using command
   **ddcutil --version --verbose".  **libddcutil** reports this to the system
   log. If reproducible builds are required, use **configure** option 
-  ***--disable-build-timestamp***. (For reproducible builds, builing typically
+  ***--disable-build-timestamp***. (For reproducible builds, building typically
   is performed using a script or build system, so it's not inconvenient to 
   specify ***--disable-build-timestamp*** in this case.)
 
