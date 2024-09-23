@@ -1,9 +1,7 @@
-// i2c_sysfs_sys_info.h
+/** @file i2c_sysfs_sys_info.h */
 
 // Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
- 
 
 #ifndef I2C_SYSFS_SYS_INFO_H_
 #define I2C_SYSFS_SYS_INFO_H_
@@ -29,6 +27,7 @@ typedef struct {
    char *  ddc_i2c_dev_dev;
 } I2C_Sys_Info;
 
+#ifdef FUTURE
 // In progress: Simplified I2C_Sys_Info for production as opposed to exploratory use
 typedef struct {
    char * pci_device_path;
@@ -38,6 +37,7 @@ typedef struct {
    char * device_name;
    int    busno;
 } I2C_Fixed_Sys_Info;
+#endif
 
 void           free_i2c_sys_info(I2C_Sys_Info * info);
 I2C_Sys_Info * get_i2c_sys_info(int busno, int depth);
