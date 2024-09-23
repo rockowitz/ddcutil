@@ -167,7 +167,7 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
       if (wait)
          g_thread_join(watch_thread);
 
-      //  g_thread_unref(watch_thread);
+      g_thread_unref(watch_thread);
       watch_thread = NULL;
       if (enabled_classes_loc)
          *enabled_classes_loc = active_classes;
