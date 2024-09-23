@@ -692,7 +692,7 @@ ddci_init(const char *      libopts,
          if (infomsg_loc) {
             *infomsg_loc = g_ptr_array_to_ntsa(infomsgs, /*duplicate=*/true);
          }
-         // g_ptr_array_free(infomsgs, true);
+         g_ptr_array_free(infomsgs, true);
       }
    }
    DBGF(debug, "parsing complete");
