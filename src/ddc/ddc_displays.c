@@ -141,19 +141,6 @@ value_bytes_zero_for_nontable_value(Parsed_Nontable_Vcp_Response* valrec) {
 }
 
 
-static inline bool
-all_causes_same_status(Error_Info * ddc_excp, DDCA_Status psc) {
-   bool all_same = true;
-   for (int ndx = 0; ndx < ddc_excp->cause_ct; ndx++) {
-      if (ddc_excp->causes[ndx]->status_code != psc) {
-         all_same = false;
-         break;
-      }
-   }
-   return all_same;
-}
-
-
 //
 // Exploratory programming, DPMS detection
 //
@@ -323,7 +310,7 @@ retry:
       }
    }
    else if ( ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES ) {
-      if (all_causes_same_status(ddc_excp, DDCRC_NULL_RESPONSE)) {
+      if (errinfo_all_causes_same_status(ddc_excp, DDCRC_NULL_RESPONSE)) {
          errinfo_free(ddc_excp);
          ddc_excp = ERRINFO_NEW(DDCRC_ALL_RESPONSES_NULL, "");
          dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
