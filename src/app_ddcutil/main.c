@@ -298,7 +298,7 @@ verify_i2c_access() {
    int buses_without_devices_ct = 0;
    int inaccessible_devices_ct = 0;
 
-   Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers();  //sysfs bus numbers, not dev-i2c
+   Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers_using_i2c_sys_info();  //sysfs bus numbers, not dev-i2c
    buses_ct = bs256_count(buses);
    DBGTRC(debug, TRACE_GROUP, "/sys/bus/i2c/devices to check: %s",
                               bs256_to_string_decimal_t(buses, "i2c-", ", "));

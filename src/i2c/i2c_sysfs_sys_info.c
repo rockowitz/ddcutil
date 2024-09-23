@@ -484,7 +484,7 @@ void dbgrpt_sys_bus_i2c(int depth) {
  *  This function looks only in /sys. It does not verify that the
  *  corresponding /dev/i2c-N devices exist.
  */
-Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
+Bit_Set_256 get_possible_ddc_ci_bus_numbers_using_i2c_sys_info() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Bit_Set_256 result = EMPTY_BIT_SET_256;
@@ -509,7 +509,7 @@ void init_i2c_sysfs_sys_info() {
    RTTI_ADD_FUNC(one_drm_card);
    RTTI_ADD_FUNC(read_pci_display_controller_node);
    RTTI_ADD_FUNC(get_i2c_sys_info);
-   RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers);
+   RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers_using_i2c_sys_info);
 
 }
 

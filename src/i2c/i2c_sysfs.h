@@ -60,45 +60,13 @@ char *              get_drm_connector_name_by_edid(Byte * edid_bytes);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
 
+
 // Functions that access sysfs connector dirs directly, instead of using the
 // persistent array of Sys_Drm_Connector:
 Sys_Drm_Connector * one_drm_connector0(const char * dirname, const char * fn, int depth);
 Sys_Drm_Connector * get_drm_connector(const char * fn, int depth);
 
-typedef struct {
-   GPtrArray * all_connectors;
-   GPtrArray * connectors_having_edid;
-} Sysfs_Connector_Names;
-
-Sysfs_Connector_Names get_sysfs_drm_connector_names();
-bool                  sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);
-void                  free_sysfs_connector_names_contents(Sysfs_Connector_Names names_struct);
-void                  dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
-Sysfs_Connector_Names copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
-char *                find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
-
 void init_i2c_sysfs();
-
-
-#ifdef FOR_FUTURE_USE
-typedef struct {
-   char * connector;
-   int    busno;
-   Display_Ref * dref;    // currently
-}   Connector_Busno_Dref;
-extern GPtrArray * cbd_table;
-typedef GPtrArray Connector_Busno_Dref_Table;
-
-Connector_Busno_Dref_Table * create_connector_busnfo_dref_table();
-Connector_Busno_Dref * new_cbd0(int busno);
-Connector_Busno_Dref * new_cbd(const char * connector, int busno);
-Connector_Busno_Dref * get_cbd_by_connector(const char * connector);
-Connector_Busno_Dref * get_cbd_by_busno(int busno);
-// if dref != NULL, replaces, if NULL, just erases
-void                   set_cbd_connector(Connector_Busno_Dref * cbd, Display_Ref * dref);
-void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
-#endif
-
 
 
 #endif /* I2C_SYSFS_H_ */

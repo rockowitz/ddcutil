@@ -40,6 +40,39 @@ void get_connector_bus_numbers(
       const char *            fn,         // card0-HDMI-1 etc
       Connector_Bus_Numbers * cbn);
 
+
+typedef struct {
+   GPtrArray * all_connectors;
+   GPtrArray * connectors_having_edid;
+} Sysfs_Connector_Names;
+
+Sysfs_Connector_Names get_sysfs_drm_connector_names();
+bool                  sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);
+void                  free_sysfs_connector_names_contents(Sysfs_Connector_Names names_struct);
+void                  dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
+Sysfs_Connector_Names copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
+char *                find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
+
 void init_i2c_sysfs_base();
+
+
+#ifdef FOR_FUTURE_USE
+typedef struct {
+   char * connector;
+   int    busno;
+   Display_Ref * dref;    // currently
+}   Connector_Busno_Dref;
+extern GPtrArray * cbd_table;
+typedef GPtrArray Connector_Busno_Dref_Table;
+
+Connector_Busno_Dref_Table * create_connector_busnfo_dref_table();
+Connector_Busno_Dref * new_cbd0(int busno);
+Connector_Busno_Dref * new_cbd(const char * connector, int busno);
+Connector_Busno_Dref * get_cbd_by_connector(const char * connector);
+Connector_Busno_Dref * get_cbd_by_busno(int busno);
+// if dref != NULL, replaces, if NULL, just erases
+void                   set_cbd_connector(Connector_Busno_Dref * cbd, Display_Ref * dref);
+void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
+#endif
 
 #endif /* I2C_SYSFS_BASE_H_ */
