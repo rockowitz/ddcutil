@@ -844,6 +844,7 @@ void ddc_dbgrpt_display_refs(bool include_invalid_displays, bool report_businfo,
    for (int ndx = 0; ndx < drefs->len; ndx++) {
       dbgrpt_display_ref(g_ptr_array_index(drefs, ndx), false, depth+1);
    }
+   g_ptr_array_free(drefs,true);
 }
 
 void ddc_dbgrpt_display_refs_summary(bool include_invalid_displays, bool report_businfo, int depth) {
@@ -852,6 +853,7 @@ void ddc_dbgrpt_display_refs_summary(bool include_invalid_displays, bool report_
    for (int ndx = 0; ndx < drefs->len; ndx++) {
       dbgrpt_display_ref_summary(g_ptr_array_index(drefs, ndx), report_businfo, depth);
    }
+   g_ptr_array_free(drefs,true);
 }
 
 
