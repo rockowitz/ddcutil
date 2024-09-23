@@ -48,7 +48,7 @@ static char * get_busid_from_fd(int fd) {
     int depth = 0;
     int d1 = depth+1;
     int d2 = depth+2;
-    bool debug = true;
+    bool debug = false;
     DBGF(debug, "Starting. fd=%d", fd);
 
     char * busid = NULL;
@@ -174,8 +174,10 @@ static void dbgrpt_enum_metadata(Enum_Metadata * meta, int depth) {
 
 
  static void free_drm_connector_state(void * cs) {
+    bool debug = false;
     Drm_Connector_State * cstate = (Drm_Connector_State*) cs;
     if (cstate) {
+       DBGF(debug, "Freeing Drm_Connector_State at %p", cs);
        if (cstate->edid)
           free_parsed_edid(cstate->edid);
        free(cstate);
@@ -286,6 +288,7 @@ DDCA_Status get_connector_state_array(int fd, int cardno, GPtrArray* collector) 
                             res->connectors[i], strerrorname_np(errno));
             continue;
          }
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "got drmModeConnector conn = %p", conn);
 
          if (debug)
            report_drmModeConnector(fd, conn, d1) ;
@@ -328,8 +331,11 @@ DDCA_Status get_connector_state_array(int fd, int cardno, GPtrArray* collector) 
                  }
               }
          } // for
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "calling drmModeFreeConnector(%p)", conn);
+         drmModeFreeConnector(conn);
          g_ptr_array_add(collector, connector_state);
       }
+      drmModeFreeResources(res);
       result = 0;
    }
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
@@ -433,8 +439,10 @@ DDCA_Status get_drm_connector_states_by_fd(int fd, int cardno, GPtrArray* collec
    // returns null string if open() instead of drmOpen(,busid) was used to to open
    // uses successive DRM_IOCTL_GET_UNIQUE calls
    char* busid = drmGetBusid(fd);
-   if (busid && (verbose || debug) ) {
-      rpt_vstring(1, "drmGetBusid() returned: |%s|", busid);
+   if (busid) {
+      if (verbose || debug) {
+         rpt_vstring(1, "drmGetBusid() returned: |%s|", busid);
+      }
       // drmFreeBusid(busid);  // requires root
       free(busid);
    }
@@ -595,6 +603,7 @@ bye:
  }
 
 
+/** Persistent array of Card_Connector_State records */
 GPtrArray* all_card_connector_states = NULL;
 
 
@@ -607,10 +616,16 @@ static GPtrArray * drm_get_all_connector_states() {
       char * driname = g_ptr_array_index(devnames, ndx);
       get_drm_connector_states_by_devname(driname, verbose, allstates);
    }
+   g_ptr_array_free(devnames, true);
    return allstates;
 }
 
 
+/** Remove all records from a GPtrArray of #Drm_Connector_State records,
+ *  but keep the array.
+ *
+ *  @param cstates  pointer to GPtrArray
+ */
 void empty_drm_connector_states(GPtrArray * cstates) {
    if (cstates) {
       g_ptr_array_remove_range(cstates, 0, cstates->len);
@@ -618,13 +633,19 @@ void empty_drm_connector_states(GPtrArray * cstates) {
 }
 
 
+/** Destroy a GPtrArray of #Drm_Connector_State records
+ *
+ *  @param cstates  pointer to GPtrArray
+ */
 void free_drm_connector_states(GPtrArray * cstates) {
    if (cstates) {
       g_ptr_array_free(cstates, true);
-      cstates = NULL;
    }
 }
 
+
+/** Repopulate the #all_card_connector_states array.
+ */
 void redetect_drm_connector_states() {
    if (all_card_connector_states)
       free_drm_connector_states(all_card_connector_states);
@@ -632,26 +653,62 @@ void redetect_drm_connector_states() {
 }
 
 
+/** Report on the DRM connector states array
+ *
+ *  @param  bool   refresh, if the array currently exists, erase it
+ *                 and repopulate it
+ *  @param  depth  logical indentation depth
+ *
+ *  If #all_card_connector_states is not set on entry to this
+ *  function, it is not set on exit.
+ */
 void report_drm_connector_states(int depth) {
-   if (!all_card_connector_states)
+   bool debug = false;
+   bool preexisting = true;
+   if (!all_card_connector_states) {
+      DBGF(debug, "all_card_connector_states == NULL, creating array...");
+      preexisting = false;
       all_card_connector_states = drm_get_all_connector_states();
+   }
    for (int ndx = 0; ndx < all_card_connector_states->len; ndx++) {
       dbgrpt_connector_state(g_ptr_array_index(all_card_connector_states, ndx), 0);
+   }
+   if (!preexisting) {
+      DBGF(debug, "Freeing all_card_connector_states..");
+      free_drm_connector_states(all_card_connector_states);
+      all_card_connector_states = NULL;
    }
 }
 
 
+/** Provide a simple report on the DRM connector states array
+ *
+ *  @param  bool   refresh, if the array currently exists, erase it
+ *                 and repopulate it
+ *  @param  depth  logical indentation depth
+ *
+ *  If #all_card_connector_states is not set on entry to this
+ *  function, it is not set on exit.
+ */
 void report_drm_connector_states_basic(bool refresh, int depth) {
    if (refresh && all_card_connector_states) {
       free_drm_connector_states(all_card_connector_states);
       all_card_connector_states = NULL;
    }
-   if (!all_card_connector_states)
+   bool preexisting = true;
+   if (!all_card_connector_states) {
       all_card_connector_states = drm_get_all_connector_states();
+      preexisting = false;
+   }
    for (int ndx = 0; ndx < all_card_connector_states->len; ndx++) {
       Drm_Connector_State * cur = g_ptr_array_index(all_card_connector_states, ndx);
-      if (cur->edid || cur->connection == DRM_MODE_CONNECTED )
+      if (cur->edid || cur->connection == DRM_MODE_CONNECTED ) {
          dbgrpt_connector_state_basic(cur, 0);
+      }
+   }
+   if (!preexisting) {
+      free_drm_connector_states(all_card_connector_states);
+      all_card_connector_states = NULL;
    }
 }
 

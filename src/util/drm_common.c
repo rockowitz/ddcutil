@@ -145,7 +145,7 @@ const char * drm_bus_type_name(uint8_t bus) {
 
  /* Scans /dev/dri to obtain list of device names
   *
-  * Returns:   GPtrArray of device names.
+  * Returns:   GPtrArray of device names, caller must free
   */
  GPtrArray * get_dri_device_names_using_filesys() {
     const char *dri_paths[] = { "/dev/dri/", NULL };
