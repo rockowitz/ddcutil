@@ -212,7 +212,7 @@ multi_part_read_with_retry(
       try_errors[tryctr] = ddc_excp;
       rc = (ddc_excp) ? ddc_excp->status_code : 0;
 
-      if (rc == DDCRC_NULL_RESPONSE || rc == DDCRC_ALL_RESPONSES_NULL) {
+      if (rc == DDCRC_NULL_RESPONSE || rc == DDCRC_ALL_RESPONSES_NULL || errinfo_all_causes_same_status(ddc_excp, DDCRC_NULL_RESPONSE)) {
          // generally means this, but could conceivably indicate a protocol error.
          // try multiple times to ensure it's really unsupported?
 
