@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.5] 2024-08-31
+## [2.1.5] 2024-09-23
 
 ### General
 
@@ -9,6 +9,13 @@
 - Support DisplayLink devices
 - Add command **noop**, which allows for executing options such as 
   ***--settings*** without having to execute a real command.
+- As an aid to development, the build date and time are normally embedded in
+  the ddcutil and libddcutil executables.  This is reported using command
+  **ddcutil --version --verbose".  **libddcutil** reports this to the system
+  log. If reproducible builds are required, use **configure** option 
+  ***--disable-build-timestamp***. (For reproducible builds, builing typically
+  is performed using a script or build system, so it's not inconvenient to 
+  specify ***--disable-build-timestamp*** in this case.)
 
 #### Changed
 
@@ -52,6 +59,8 @@
 - Change the system log message level when sleep time is adjusted from WARNING
   to VERBOSE. Addresses issue #427: Adjusting multiplier message fills system
   log when libddcutil used by clightd
+- Configuration file ddcutilrc: If there is a pound sign "#" on a line, 
+  the remainder of the line is treated as a comment.
 
 #### Fixed
 
@@ -68,6 +77,10 @@
      was dumped. Issue #413.
 - Fix display not found on Raspberry Pi. Do not rely on /sys/class/drm to read 
   EDID, which is not valid for some drivers.  Addresses issue #403
+- User Define Features file: fix error msg when nothing follow VALUE
+- Convert CRLF line endings to LF
+- Use printf() formats %jd and %zd to portably print variables of type ssize_t, 
+  time_t, so as to build  unchanged on architectures such as armel, armhf.
 
 ### Shared Library
 
@@ -85,6 +98,10 @@ file is libddcutil.so.5.1.3. (VERIFY)
 - Status code DDCRC_INVALID_CONFIG_FILE renamed to more general DDCRC_CONFIG_ERROR. 
   DDCRC_INVALID_CONFIG_FILE is a valid alias.
 - Write build date and time to system log when starting libddcutil.
+- Rework libdccutil output to avoid duplicate msgs in system log when all terminal 
+  output is directed to the log, as with KDE Plasma
+- Most functions that specify a display ref now return status code 
+  DDCRC_DISCONNECTED if the display reference is no longer valid.
 
 #### Fixed
 
@@ -106,6 +123,21 @@ file is libddcutil.so.5.1.3. (VERIFY)
   It is meaningful to create a string representation of a display reference even
   if it is no longer usable. Addresses ddcui issue #55.
 - Protect hash table of open monitors to avoid a possible race condition.
+- Recover instead of abort when more than one non-removed display refs exist 
+  for the same display.
+- Use mutexes to control access to corruptable data structures
+
+#### Display Change Handling
+
+- handle MST hub devices
+- use udev events for display detection
+- use /sys to get edid if possible
+- most functions that return a status code now may return 
+  DDCRC_    
+api display ref and handle
+only perform stabilization for removed display
+- not checking for asleep
+
 
 ## [2.1.4] 2024-02-17
 
