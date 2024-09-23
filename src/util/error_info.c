@@ -110,6 +110,21 @@ errinfo_all_causes_same_status(
    return all_same;
 }
 
+#ifdef ALT
+bool
+errinfo_all_causes_same_status(Error_Info * ddc_excp, int status_code) {
+     bool all_same = true;
+     for (int ndx = 0; ndx < ddc_excp->cause_ct; ndx++) {
+        if (ddc_excp->causes[ndx]->status_code != status_code) {
+           all_same = false;
+           break;
+        }
+     }
+     return all_same;
+  }
+#endif
+
+
 
 //
 // Instance destruction
