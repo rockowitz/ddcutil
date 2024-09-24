@@ -8,6 +8,8 @@
 
 #include <glib-2.0/glib.h>
 
+#include "util/data_structures.h"
+
 typedef struct {
    int    busno;
    char * name;
@@ -21,6 +23,7 @@ typedef struct {
 GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth);
 void        dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
 char *      get_conflicting_drivers_for_bus(int busno);
+Bit_Set_256 get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info();
 void        init_i2c_sysfs_i2c_info();
 void        terminate_i2c_sysfs_i2c_info();
 

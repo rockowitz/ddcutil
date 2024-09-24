@@ -1,4 +1,4 @@
-// i2c_sysfs_sys_info.c
+/** @file i2c_sysfs_sys_info.c */
 
 // Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -44,7 +44,7 @@
 #include "base/rtti.h"
 
 #include "i2c/i2c_sysfs_i2c_info.h"
-#include "i2c/i2c_sysfs_sys_info.h"
+#include <i2c/i2c_sysfs_i2c_sys_info.h>
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
@@ -473,35 +473,7 @@ void dbgrpt_sys_bus_i2c(int depth) {
 }
 
 
-
-
-/** Return the bus numbers for all video adapter i2c buses, filtering out
- *  those, such as ones with SMBUS in their name, that are definitely not
- *  used for DDC/CI communication with a monitor.
- *
- *  The numbers are determined by examining /sys/bus/i2c.
- *
- *  This function looks only in /sys. It does not verify that the
- *  corresponding /dev/i2c-N devices exist.
- */
-Bit_Set_256 get_possible_ddc_ci_bus_numbers_using_i2c_sys_info() {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   Bit_Set_256 result = EMPTY_BIT_SET_256;
-   GPtrArray * allinfo = get_all_sysfs_i2c_info(true, -1);
-   for (int ndx = 0; ndx < allinfo->len; ndx++) {
-      Sysfs_I2C_Info* cur = g_ptr_array_index(allinfo, ndx);
-      if (!sysfs_is_ignorable_i2c_device(cur->busno))
-      // if (is_potential_i2c_display(cur))
-         result = bs256_insert(result, cur->busno);
-   }
-   // result = bs256_insert(result, 33); // for testing
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", bs256_to_string_t(result, "0x", ", "));
-   return result;
-}
-
-
-void init_i2c_sysfs_sys_info() {
+void init_i2c_sysfs_i2c_sys_info() {
    // I2C_Sys_Info
    RTTI_ADD_FUNC(read_i2cN_device_node);
    RTTI_ADD_FUNC(read_drm_dp_card_connector_node);
@@ -509,7 +481,7 @@ void init_i2c_sysfs_sys_info() {
    RTTI_ADD_FUNC(one_drm_card);
    RTTI_ADD_FUNC(read_pci_display_controller_node);
    RTTI_ADD_FUNC(get_i2c_sys_info);
-   RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers_using_i2c_sys_info);
+   RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info);
 
 }
 

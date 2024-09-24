@@ -6,6 +6,7 @@
 
 #include <assert.h>
 #include <i2c/i2c_sys_drm_connector.h>
+#include <i2c/i2c_sysfs_i2c_sys_info.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
@@ -24,8 +25,6 @@
 
 #include "core.h"
 #include "rtti.h"
-
-#include "i2c/i2c_sysfs_sys_info.h"
 
 #include "i2c_bus_base.h"
 

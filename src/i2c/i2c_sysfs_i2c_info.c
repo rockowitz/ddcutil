@@ -282,6 +282,34 @@ static bool is_potential_i2c_display(Sysfs_I2C_Info * info) {
 #endif
 
 
+
+/** Return the bus numbers for all video adapter i2c buses, filtering out
+ *  those, such as ones with SMBUS in their name, that are definitely not
+ *  used for DDC/CI communication with a monitor.
+ *
+ *  The numbers are determined by examining /sys/bus/i2c.
+ *
+ *  This function looks only in /sys. It does not verify that the
+ *  corresponding /dev/i2c-N devices exist.
+ */
+Bit_Set_256 get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   Bit_Set_256 result = EMPTY_BIT_SET_256;
+   GPtrArray * allinfo = get_all_sysfs_i2c_info(true, -1);
+   for (int ndx = 0; ndx < allinfo->len; ndx++) {
+      Sysfs_I2C_Info* cur = g_ptr_array_index(allinfo, ndx);
+      if (!sysfs_is_ignorable_i2c_device(cur->busno))
+      // if (is_potential_i2c_display(cur))
+         result = bs256_insert(result, cur->busno);
+   }
+   // result = bs256_insert(result, 33); // for testing
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", bs256_to_string_t(result, "0x", ", "));
+   return result;
+}
+
+
+
 void init_i2c_sysfs_i2c_info() {
    // Sysfs_I2C_Info
    RTTI_ADD_FUNC(best_driver_name_for_n_nnnn);
@@ -289,6 +317,7 @@ void init_i2c_sysfs_i2c_info() {
    RTTI_ADD_FUNC(get_i2c_info);
    RTTI_ADD_FUNC(get_single_i2c_info);
    RTTI_ADD_FUNC(get_all_sysfs_i2c_info);
+   RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info);
 }
 
 

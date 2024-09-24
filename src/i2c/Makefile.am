@@ -33,5 +33,5 @@ i2c_sys_drm_connector.c   \
 i2c_sysfs_base.c          \
 i2c_sysfs_conflicting_drivers.c \
 i2c_sysfs_i2c_info.c      \
-i2c_sysfs_sys_info.c      \
+i2c_sysfs_i2c_sys_info.c  \
 i2c_sysfs_top.c

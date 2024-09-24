@@ -6,12 +6,12 @@
  
 #include <glib-2.0/glib.h>
 #include <i2c/i2c_sys_drm_connector.h>
+#include <i2c/i2c_sysfs_i2c_sys_info.h>
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
 
 #include "i2c_sysfs_conflicting_drivers.h"
-#include "i2c_sysfs_sys_info.h"
 #include "i2c_sysfs_i2c_info.h"
 
 #include "i2c_sysfs_top.h"
@@ -36,7 +36,7 @@ void consolidated_i2c_sysfs_report(int depth) {
    rpt_nl();
 
    rpt_label(d0, "*** Sysfs I2C devices possibly associated with displays ***");
-   Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers_using_i2c_sys_info();
+   Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info();
    rpt_vstring(d0, "I2C buses to check: %s", bs256_to_string_t(buses, "x", " "));
    rpt_nl();
 
