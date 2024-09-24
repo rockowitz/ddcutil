@@ -21,10 +21,10 @@ char *      get_sys_drm_connector_name_by_connector_id(int connector_id);
 char *      get_sys_drm_connector_name_by_busno(int busno);
 bool        all_sys_drm_connectors_have_connector_id_direct();
 
-char *  get_driver_for_adapter(char * adapter_path, int depth);
-char *  find_adapter(char * path, int depth);
-char *  find_adapter_and_get_driver(char * path, int depth);
-char *  get_driver_for_busno(int busno);
+char *      get_driver_for_adapter(char * adapter_path, int depth);
+char *      find_adapter(char * path, int depth);
+char *      find_adapter_and_get_driver(char * path, int depth);
+char *      get_driver_for_busno(int busno);
 
 typedef struct {
    int    i2c_busno;
@@ -33,17 +33,16 @@ typedef struct {
    char * name;
 } Connector_Bus_Numbers;
 
-void dbgrpt_connector_bus_numbers(Connector_Bus_Numbers * cbn, int depth);
-void free_connector_bus_numbers(Connector_Bus_Numbers * cbn);
-void get_connector_bus_numbers(
-      const char *            dirname,    // <device>/drm/cardN
-      const char *            fn,         // card0-HDMI-1 etc
-      Connector_Bus_Numbers * cbn);
-
+void        dbgrpt_connector_bus_numbers(Connector_Bus_Numbers * cbn, int depth);
+void        free_connector_bus_numbers(Connector_Bus_Numbers * cbn);
+void        get_connector_bus_numbers(
+               const char *            dirname,    // <device>/drm/cardN
+               const char *            fn,         // card0-HDMI-1 etc
+               Connector_Bus_Numbers * cbn);
 
 typedef struct {
-   GPtrArray * all_connectors;
-   GPtrArray * connectors_having_edid;
+   GPtrArray *  all_connectors;
+   GPtrArray *  connectors_having_edid;
 } Sysfs_Connector_Names;
 
 Sysfs_Connector_Names get_sysfs_drm_connector_names();
