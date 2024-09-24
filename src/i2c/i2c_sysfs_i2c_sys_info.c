@@ -44,7 +44,7 @@
 #include "base/rtti.h"
 
 #include "i2c/i2c_sysfs_i2c_info.h"
-#include <i2c/i2c_sysfs_i2c_sys_info.h>
+#include "i2c/i2c_sysfs_i2c_sys_info.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
