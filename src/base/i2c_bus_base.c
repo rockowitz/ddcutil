@@ -5,8 +5,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
-#include <i2c/i2c_sys_drm_connector.h>
-#include <i2c/i2c_sysfs_i2c_sys_info.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
@@ -22,6 +20,9 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
+
+
+#include "i2c/i2c_sysfs_i2c_sys_info.h"
 
 #include "core.h"
 #include "rtti.h"
