@@ -997,7 +997,7 @@ main(int argc, char *argv[]) {
          else {
             DBGMSG("Watching for 10 hours");
             sleep(10*60*60);
-            DBGMSG("Terminating execution after 60 minutes");
+            DBGMSG("Terminating execution after 10 hours");
             ddc_stop_watch_displays(true, NULL);
             main_rc = EXIT_SUCCESS;
          }
