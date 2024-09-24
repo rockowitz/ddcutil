@@ -430,7 +430,7 @@ int search_all_businfo_record_by_connector_name(char *connector_name) {
    Connector_Bus_Numbers *cbn = calloc(1, sizeof(Connector_Bus_Numbers));
    get_connector_bus_numbers("/sys/class/drm", connector_name, cbn);
    int busno = cbn->i2c_busno;
-   free(cbn);
+   free_connector_bus_numbers(cbn);
    if (busno < 0) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Examining businfo records...");
       // look through all businfo records for one with the connector name
@@ -891,7 +891,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
                bool valid_number = str_to_int(cd->prop_connector, &connector_number, 10);
                assert(valid_number);
                cname = get_sys_drm_connector_name_by_connector_id(connector_number);
-               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                      "get_sys_drm_connector_name_by_connector_id() returned: %s", cname);
 
                if (debug_sysfs_state) {   // move debug statements out of mainline
