@@ -21,8 +21,7 @@
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
 
-
-#include "i2c/i2c_sysfs_i2c_sys_info.h"
+#include "i2c/i2c_sysfs_i2c_sys_info.h"    // TO FIX: forward ref into directory i2c
 
 #include "core.h"
 #include "rtti.h"
