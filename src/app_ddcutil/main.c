@@ -77,8 +77,7 @@
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sys_drm_connector.h"
-#include "i2c/i2c_sysfs_i2c_info.h"
-#include "i2c/i2c_sysfs_i2c_sys_info.h"
+// #include "i2c/i2c_sysfs_i2c_info.h"
 #include "i2c/i2c_sysfs_top.h"
 
 #ifdef ENABLE_USB
@@ -299,7 +298,8 @@ verify_i2c_access() {
    int buses_without_devices_ct = 0;
    int inaccessible_devices_ct = 0;
 
-   Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info();  //sysfs bus numbers, not dev-i2c
+   // Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info();  //sysfs bus numbers, not dev-i2c
+   Bit_Set_256 buses = i2c_detect_attached_buses_as_bitset();
    buses_ct = bs256_count(buses);
    DBGTRC(debug, TRACE_GROUP, "/sys/bus/i2c/devices to check: %s",
                               bs256_to_string_decimal_t(buses, "i2c-", ", "));
@@ -869,6 +869,7 @@ main(int argc, char *argv[]) {
          if (syslog_opened)
             syslog(LOG_ERR, "%s\n", cur->detail);
       }
+      ERRINFO_FREE(errs);
       goto bye;
    }
    if (preparse_verbose)
