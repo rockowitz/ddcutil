@@ -405,7 +405,10 @@ get_i2c_sys_info(
  *  @param  info   pointer to struct with relevant /sys information
  *  @param  depth  logical indentation depth, if < 0 perform no indentation
  */
+// used in i2c_bus_base.c, use eliminated 9/26/2024
 void dbgrpt_i2c_sys_info(I2C_Sys_Info * info, int depth) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "info=%p, depth=%d", info, depth);
    int d1 = (depth < 0) ? 0 : depth + 1;
    int d2 = (depth < 0) ? 0 : depth + 2;
    if (depth < 0)
@@ -439,6 +442,8 @@ void dbgrpt_i2c_sys_info(I2C_Sys_Info * info, int depth) {
       //    rpt_vstring(d1, "Not a DisplayPort connection");
       // }
    }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -465,10 +470,15 @@ static void report_one_bus_i2c(
    }
 }
 
-
+// used in query_sysenv_sysfs.c
 void dbgrpt_sys_bus_i2c(int depth) {
+   bool debug = FALSE;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+
    rpt_label(depth, "Examining /sys/bus/i2c/devices:");
    dir_ordered_foreach("/sys/bus/i2c/devices", NULL, i2c_compare, report_one_bus_i2c, NULL, depth);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -480,7 +490,8 @@ void init_i2c_sysfs_i2c_sys_info() {
    RTTI_ADD_FUNC(one_drm_card);
    RTTI_ADD_FUNC(read_pci_display_controller_node);
    RTTI_ADD_FUNC(get_i2c_sys_info);
-
+   RTTI_ADD_FUNC(dbgrpt_i2c_sys_info);
+   RTTI_ADD_FUNC(dbgrpt_sys_bus_i2c);
 }
 
 // *** End of I2C_Sys_Info
