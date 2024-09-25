@@ -1469,6 +1469,8 @@ parse_command(
       if (error) {
          // EMIT_PARSER_ERROR(errmsgs,  "%s option parsing failed: %s", mode_name, error->message);
          EMIT_PARSER_ERROR(errmsgs, "%s", error->message);
+         free(error->message);
+         free(error);
       }
       else
          EMIT_PARSER_ERROR(errmsgs,  "%s option parsing failed", mode_name);
