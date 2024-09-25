@@ -21,8 +21,6 @@
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
 
-#include "i2c/i2c_sysfs_i2c_sys_info.h"    // TO FIX: forward ref into directory i2c
-
 #include "core.h"
 #include "rtti.h"
 
@@ -192,8 +190,9 @@ char * i2c_get_drm_connector_name(I2C_Bus_Info * businfo) {
  */
 void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "businfo=%p, include_sysinfo=%s", businfo, SBOOL(include_sysinfo));
    assert(businfo);
+
    rpt_structure_loc("I2C_Bus_Info", businfo, depth);
    rpt_vstring(depth, "Flags:                   %s", i2c_interpret_bus_flags_t(businfo->flags));
    rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", businfo->busno, sbool(businfo->flags&I2C_BUS_EXISTS));
@@ -230,6 +229,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
       }
       rpt_vstring(depth, "last_checked_asleep:       %s", sbool(businfo->last_checked_dpms_asleep));
    }
+#ifdef OUT    // sole non-sysfs use of i2c_sysfs_i2c_sys_info.c:
 #ifndef TARGET_BSD
    if (include_sysinfo) {
       I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
@@ -237,7 +237,9 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
       free_i2c_sys_info(info);
    }
 #endif
-   DBGMSF(debug, "Done");
+#endif
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 //
@@ -623,6 +625,7 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_reset_bus_info);
    RTTI_ADD_FUNC(i2c_update_bus_info);
    RTTI_ADD_FUNC(i2c_remove_bus_info);
+   RTTI_ADD_FUNC(i2c_dbgrpt_bus_info);
 
    // connected_buses = EMPTY_BIT_SET_256;
 }
