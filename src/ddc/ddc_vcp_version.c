@@ -185,11 +185,11 @@ DDCA_MCCS_Version_Spec get_saved_vcp_version(
 DDCA_MCCS_Version_Spec get_vcp_version_by_dh(Display_Handle * dh) {
    assert(dh);
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dh=%s, dref=%s", dh_repr(dh), dref_repr_t(dh->dref));
+
    DDCA_MCCS_Version_Spec result = DDCA_VSPEC_UNKNOWN;
    // TMI
    if (debug) {
-      DBGMSG("Starting. dh=%s, dh->dref=%s", dh_repr(dh), dref_repr_t(dh->dref) );
-
       DBGMSG("          dh->dref->vcp_version_cmdline = %s", format_vspec_verbose(dh->dref->vcp_version_cmdline));
 
       if (dh->dref->dfr) {
@@ -288,4 +288,5 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
 void init_ddc_vcp_version() {
    RTTI_ADD_FUNC(set_vcp_version_xdf_by_dh);
    RTTI_ADD_FUNC(get_vcp_version_by_dref);
+   RTTI_ADD_FUNC(get_vcp_version_by_dh);
 }

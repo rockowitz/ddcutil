@@ -611,7 +611,7 @@ extract_version_feature_info_from_feature_table_entry(
       bool                       version_sensitive)
 {
    bool debug = false;
-   DBGMSF(debug, "vspec=%d.%d, version_sensitive=%s",
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "vspec=%d.%d, version_sensitive=%s",
                  vspec.major, vspec.minor, sbool(version_sensitive));
    assert(vfte);
    // DDCA_MCCS_Version_Id version_id = mccs_version_spec_to_id(vspec);
@@ -646,7 +646,7 @@ extract_version_feature_info_from_feature_table_entry(
    dfm->sl_values = copy_sl_value_table(sl_values);
    // dfm->latest_sl_values = copy_sl_value_table(get_highest_version_sl_values(vfte));
 
-   DBGMSF_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, dfm);
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, Display_Feature_Metadata, dbgrpt_display_feature_metadata, dfm);
    return dfm;
 }
 
@@ -4418,6 +4418,7 @@ static void init_func_name_table() {
    RTTI_ADD_FUNC(vcp_format_table_feature_detail);
    RTTI_ADD_FUNC(vcp_format_feature_detail);
    RTTI_ADD_FUNC(default_table_feature_detail_function);
+   RTTI_ADD_FUNC(extract_version_feature_info_from_feature_table_entry);
    RTTI_ADD_FUNC(format_feature_detail_x73_lut_size);
    RTTI_ADD_FUNC(format_feature_detail_debug_sl_sh);
    RTTI_ADD_FUNC(format_feature_detail_debug_continuous);
