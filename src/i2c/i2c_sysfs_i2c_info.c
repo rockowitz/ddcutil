@@ -260,12 +260,14 @@ GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
 }
 
 
+#ifdef UNUSED
 char * get_conflicting_drivers_for_bus(int busno) {
    Sysfs_I2C_Info * info = get_i2c_info(busno, -1);
    char * result = join_string_g_ptr_array(info->conflicting_driver_names, ", ");
    free_sysfs_i2c_info(info);
    return result;
 }
+#endif
 
 
 #ifdef UNUSED
