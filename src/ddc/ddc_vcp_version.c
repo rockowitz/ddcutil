@@ -209,7 +209,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dh(Display_Handle * dh) {
       assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
    }
 
-   DBGTRC(debug, DDCA_TRC_NONE, "Returning: %s", format_vspec_verbose(result));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %s", format_vspec_verbose(result));
    return result;
 }
 
