@@ -43,7 +43,6 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#include "i2c/i2c_sysfs_i2c_info.h"
 #include "i2c/i2c_sysfs_i2c_sys_info.h"
 
 // Trace class for this file
@@ -481,7 +480,6 @@ void init_i2c_sysfs_i2c_sys_info() {
    RTTI_ADD_FUNC(one_drm_card);
    RTTI_ADD_FUNC(read_pci_display_controller_node);
    RTTI_ADD_FUNC(get_i2c_sys_info);
-   RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info);
 
 }
 

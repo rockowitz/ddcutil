@@ -1390,8 +1390,19 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
+
+//
+// Attached buses
+//
+
 Bit_Set_256 attached_buses;
 
+
+/** Returns the bus numbers for /dev/i2c buses that could possibly be
+ *  connected to a monitor.
+ *
+ *  @return array of bus numbers
+ */
 Byte_Value_Array i2c_detect_attached_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
@@ -1413,6 +1424,11 @@ Byte_Value_Array i2c_detect_attached_buses() {
 }
 
 
+/** Returns the bus numbers for /dev/i2c buses that could possibly be
+ *  connected to a monitor.
+ *
+ *  @return bitset of bus numbers
+ */
 Bit_Set_256 i2c_detect_attached_buses_as_bitset() {
    Byte_Value_Array bva = i2c_detect_attached_buses();
    Bit_Set_256  cur_buses = bs256_from_bva(bva);
@@ -1421,6 +1437,7 @@ Bit_Set_256 i2c_detect_attached_buses_as_bitset() {
 }
 
 
+#ifdef UNUSED
 void i2c_check_attached_buses(
       Bit_Set_256* newly_attached_buses_loc,
       Bit_Set_256* newly_detached_buses_loc)
@@ -1435,6 +1452,7 @@ void i2c_check_attached_buses(
       *newly_detached_buses_loc = newly_detached_buses;
    }
 }
+#endif
 
 
 /** Detect all currently attached buses and checks each to see if a display
@@ -1494,33 +1512,6 @@ GPtrArray * i2c_detect_buses0() {
 }
 
 
-/** Creates a bit set in which the nth bit is set corresponding to the number
- *  of each bus in an array of #I2C_Bus_Info, possibly restricted to those buses
- *  for which a monitor is connected, i.e. for which an EDID is detected.
- *
- *  @param  buses   array of I2C_Bus_Info
- *  @param  only_connected if true, only include buses having EDID
- *  @return bit set
- */
-Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only_connected) {
-   bool debug = false;
-   assert(businfo_array);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo_array=%p, len=%d, only_connected=%s",
-         businfo_array, businfo_array->len, SBOOL(only_connected));
-
-   Bit_Set_256 result = EMPTY_BIT_SET_256;
-   for (int ndx = 0; ndx < businfo_array->len; ndx++) {
-      I2C_Bus_Info * businfo = g_ptr_array_index(businfo_array, ndx);
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "businfo=%p", businfo);
-      if (!only_connected || businfo->edid) {
-         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "EDID exists");
-         result = bs256_insert(result, businfo->busno);
-      }
-   }
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", bs256_to_string_decimal_t(result, "", ", "));
-   return result;
-}
 
 
 /** Detect buses if not already detected.
@@ -1568,6 +1559,37 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "busno=%d, returning: %p", busno, businfo);
    return businfo;
 }
+
+
+/** Creates a bit set in which the nth bit is set corresponding to the number
+ *  of each bus in an array of #I2C_Bus_Info, possibly restricted to those buses
+ *  for which a monitor is connected, i.e. for which an EDID is detected.
+ *
+ *  @param  buses   array of I2C_Bus_Info
+ *  @param  only_connected if true, only include buses having EDID
+ *  @return bit set
+ */
+Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only_connected) {
+   bool debug = false;
+   assert(businfo_array);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo_array=%p, len=%d, only_connected=%s",
+         businfo_array, businfo_array->len, SBOOL(only_connected));
+
+   Bit_Set_256 result = EMPTY_BIT_SET_256;
+   for (int ndx = 0; ndx < businfo_array->len; ndx++) {
+      I2C_Bus_Info * businfo = g_ptr_array_index(businfo_array, ndx);
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "businfo=%p", businfo);
+      if (!only_connected || businfo->edid) {
+         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "EDID exists");
+         result = bs256_insert(result, businfo->busno);
+      }
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", bs256_to_string_decimal_t(result, "", ", "));
+   return result;
+}
+
+
 
 
 //

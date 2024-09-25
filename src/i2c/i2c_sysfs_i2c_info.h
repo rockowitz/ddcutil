@@ -20,6 +20,7 @@ typedef struct {
    GPtrArray * conflicting_driver_names;
 } Sysfs_I2C_Info;
 
+void        free_sysfs_i2c_info(Sysfs_I2C_Info * info);
 GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth);
 void        dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
 char *      get_conflicting_drivers_for_bus(int busno);

@@ -611,8 +611,6 @@ int i2c_device_count() {
 }
 
 
-
-
 /** Module initialization. */
 void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_add_bus_info);

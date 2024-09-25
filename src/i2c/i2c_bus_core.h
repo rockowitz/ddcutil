@@ -38,11 +38,10 @@ extern bool verify_sysfs_edid;
 extern int  i2c_businfo_async_threshold;
 extern bool cross_instance_locks_enabled;
 
-
 Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices);
 
 // Lifecycle
-I2C_Bus_Info * remove_i2c_bus_info();
+I2C_Bus_Info *   remove_i2c_bus_info();
 
 // Bus open and close
 void             add_open_failures_reported(Bit_Set_256 failures);
@@ -59,6 +58,8 @@ Bit_Set_256      buses_bitset_from_businfo_array(GPtrArray * buses, bool only_co
 GPtrArray *      i2c_detect_buses0();
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
+Byte_Value_Array i2c_detect_attached_buses();
+Bit_Set_256      i2c_detect_attached_buses_as_bitset();
 
 // Reports
 void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
