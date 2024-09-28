@@ -18,13 +18,13 @@
 #include "sysfs_util.h"
  
 
-
-
 //
 // Store compiled regular expressions
 //
 
-GHashTable * regex_hash_table = NULL;
+static GHashTable * regex_hash_table = NULL;
+static GMutex       regex_hash_table_mutex;
+
 
 // GDestroyNotify void (*GDestroyNotify) (gpointer data);
 void destroy_regex(gpointer data) {
@@ -32,6 +32,7 @@ void destroy_regex(gpointer data) {
    regfree( (regex_t*) data );
    free(data);                      // ???
 }
+
 
 GHashTable* get_regex_hash_table() {
    // printf("(%s) Starting. regex_hash_table = %p\n", __func__, regex_hash_table);
@@ -78,7 +79,7 @@ void free_regex_hash_table() {
 }
 
 
-void save_compiled_regex(const char * pattern, regex_t * compiled_re) {
+static void save_compiled_regex(const char * pattern, regex_t * compiled_re) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. pattern = |%s|, compiled_re=%p\n",
@@ -90,7 +91,7 @@ void save_compiled_regex(const char * pattern, regex_t * compiled_re) {
 }
 
 
-regex_t * get_compiled_regex(const char * pattern) {
+static regex_t * get_compiled_regex(const char * pattern) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. pattern = |%s|\n", __func__, pattern);
@@ -129,7 +130,7 @@ bool eval_regex_with_matches(
 }
 // #endif
 
-bool eval_regex(regex_t * re, const char * value) {
+static bool eval_regex(regex_t * re, const char * value) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. re=%p, value=|%s|\n", __func__, (void*)re, value);
@@ -152,6 +153,7 @@ bool compile_and_eval_regex(const char * pattern, const char * value) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. pattern=|%s|, value=|%s|\n", __func__, pattern, value);
+   g_mutex_lock(&regex_hash_table_mutex);
    regex_t * re = get_compiled_regex(pattern);
    // printf("(%s) forcing re = NULL\n", __func__);
    // re = NULL;
@@ -166,6 +168,7 @@ bool compile_and_eval_regex(const char * pattern, const char * value) {
       }
       save_compiled_regex(pattern, re);
    }
+   g_mutex_unlock(&regex_hash_table_mutex);
    bool result = eval_regex(re, value);
    if (debug)
       printf("(%s) Done. Returning %s\n", __func__, sbool(result));
@@ -173,8 +176,6 @@ bool compile_and_eval_regex(const char * pattern, const char * value) {
 }
 
 
-//#ifdef FUTURE
-// to test
 bool compile_and_eval_regex_with_matches(
       const char * pattern,
       const char * value,
@@ -184,6 +185,7 @@ bool compile_and_eval_regex_with_matches(
    bool debug = false;
    if (debug)
       printf("(%s) Starting. pattern=|%s|, value=|%s|\n", __func__, pattern, value);
+   g_mutex_lock(&regex_hash_table_mutex);
    regex_t * re = get_compiled_regex(pattern);
    // printf("(%s) forcing re = NULL\n", __func__);
    // re = NULL;
@@ -198,11 +200,10 @@ bool compile_and_eval_regex_with_matches(
       }
       save_compiled_regex(pattern, re);
    }
+   g_mutex_unlock(&regex_hash_table_mutex);
    bool result = eval_regex_with_matches(re, value, max_matches, pm);
    if (debug)
       printf("(%s) Done. Returning %s\n", __func__, sbool(result));
    return result;
 }
-// #endif
-
 
