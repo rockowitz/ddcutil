@@ -76,11 +76,11 @@ void dbgrpt_rtti_func_name_table(int depth, bool show_internal) {
          }
          g_ptr_array_add(values, value);
       }
-
       g_ptr_array_sort(values, gaux_ptr_scomp);
       for (int ndx = 0; ndx < values->len; ndx++) {
          rpt_vstring(depth, "   %s", (char *) g_ptr_array_index(values, ndx));
       }
+      g_ptr_array_free(values, true);
    }
    else {
       if (!show_internal) {
