@@ -79,6 +79,10 @@ static FILE * flog = NULL;
 static DDCA_Stats_Type requested_stats = 0;
 static bool per_display_stats = false;
 static bool dsa_detail_stats;
+int    active_calls = 0;
+GMutex active_calls_mutex;
+bool   api_quiesced = false;
+GMutex api_quiesced_mutex;
 
 
 //
@@ -187,6 +191,55 @@ ddca_libddcutil_filename(void) {
       assert(p == fullname);
    }
    return p;
+}
+
+
+bool increment_active_api_calls() {
+   bool result = true;
+   g_mutex_lock(&api_quiesced_mutex);
+   g_mutex_lock(&active_calls_mutex);
+   if (api_quiesced)
+      result = false;
+   else
+      active_calls++;
+   g_mutex_unlock(&active_calls_mutex);
+   g_mutex_unlock(&api_quiesced_mutex);
+   return result;
+}
+
+void decrement_active_api_calls() {
+   g_mutex_lock(&active_calls_mutex);
+   active_calls--;
+   g_mutex_unlock(&active_calls_mutex);
+}
+
+void quiesce_api(bool quiesce) {
+   g_mutex_lock(&api_quiesced_mutex);
+   if (quiesce) {
+      g_mutex_lock(&active_calls_mutex);
+      if (active_calls > 0) {
+         int poll_max_millisec = 2000;       // move to parms.h
+         int poll_interval_millisec = 100;   // move to parms.h
+         int poll_max_nanosec = poll_max_millisec * 1000;
+         int poll_interval_nanosec = poll_interval_millisec * 1000;
+         int slept_nanosec = 0;
+         for (; slept_nanosec < poll_max_nanosec; slept_nanosec += poll_interval_nanosec) {
+            usleep(poll_interval_nanosec);
+            if (active_calls == 0)
+               break;
+         }
+         if (slept_nanosec >= poll_max_nanosec) {
+            // WHAT TO DO HERE?
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Quiescing API with %d calls active." active_calls);
+         }
+      }
+      api_quiesced = true;
+      g_mutex_unlock(&active_calls_mutex);
+   }
+   else {
+      api_quiesced = false;
+   }
+   g_mutex_unlock(&api_quiesced_mutex);
 }
 
 

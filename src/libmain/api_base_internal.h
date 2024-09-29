@@ -148,6 +148,19 @@ ddci_get_precondition_failure_mode();
 #endif
 
 
+//
+// API Quiesce Management
+//
+
+bool increment_active_api_calls();
+void decrement_active_api_calls();
+void quiesce_api(bool quiesce);
+
+
+//
+// Function prologs and epilogs
+//
+
 /** API function prolog for functions that don't return a status code.
  *
  *  Similar to API_PROLOGX(), except that there is no test if explicit
