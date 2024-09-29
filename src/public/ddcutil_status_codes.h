@@ -54,6 +54,7 @@
 #define DDCRC_DISCONNECTED           (-(RCRANGE_DDC_START+29) ) ///< display has been disconnected
 #define DDCRC_DPMS_ASLEEP            (-(RCRANGE_DDC_START+30) ) ///< display is in a DPMS sleep mode
 #define DDCRC_FLOCKED                (-(RCRANGE_DDC_START+31) ) ///< flock() failure, cross-process locking
+#define DDCRC_QUIESCED               (-(RCRANGE_DDC_START+32) ) ///< API temporarily disabled
 // #define DDCRC_CAP_FATAL              (-(RCRANGE_DDC_START+28) ) ///< invalid, unusable capabilities string"
 // #define DDCRC_CAP_WARNING            (-(RCRANGE_DDC_START+29) ) ///< capabilities string has errors but is beautiful
 
