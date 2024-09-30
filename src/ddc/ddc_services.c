@@ -172,12 +172,9 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
    }
 
    if (stats_to_syslog_only) {
-      char * result = end_capture();
-      Null_Terminated_String_Array lines = strsplit(result, "\n");
-      free(result);
+      Null_Terminated_String_Array lines = end_capture_as_ntsa();
       int len = ntsa_length(lines);
-      int ndx;
-      for (ndx=0; ndx<len; ndx++) {
+      for (int ndx=0; ndx<len; ndx++) {
          syslog(LOG_INFO, "%s", lines[ndx]);
          // printf("%s\n", lines[ndx]);
       }
