@@ -1127,6 +1127,15 @@ end_capture(void) {
 }
 
 
+Null_Terminated_String_Array
+end_capture_as_ntsa() {
+   char * result = end_capture();
+   Null_Terminated_String_Array lines = strsplit(result, "\n");
+   free(result);
+   return lines;
+}
+
+
 #ifdef UNUSED
 /** Returns the current size of the in-memory capture buffer.
  *

@@ -35,6 +35,7 @@
 #include "util/coredefs.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
+#include "util/string_util.h"
 
 #include "base/parms.h"      // ensure available to any file that includes core.h
 #include "base/core_per_thread_settings.h"
@@ -626,6 +627,7 @@ void base_errinfo_free_with_report(
 
 void   start_capture(DDCA_Capture_Option_Flags flags);
 char * end_capture(void);
+Null_Terminated_String_Array end_capture_as_ntsa();
 
 
 //
