@@ -152,9 +152,11 @@ ddci_get_precondition_failure_mode();
 // API Quiesce Management
 //
 
-bool increment_active_api_calls();
-void decrement_active_api_calls();
+bool increment_active_api_calls(const char * funcname);
+void decrement_active_api_calls(const char * funcname);
 void quiesce_api(bool quiesce);
+#define INCREMENT_API_CALLS true
+#define NOINCREMENT_API_CALLS false
 
 
 //
@@ -201,7 +203,7 @@ void quiesce_api(bool quiesce);
  *
  *  If profiling is enabled for this thread, start profiling for this function.
  */
-#define API_PROLOGX(debug_flag, format, ...) \
+#define API_PROLOGX(debug_flag, respect_quiesced, format, ...) \
    do { \
       if (library_initialization_failed) { \
          syslog(LOG_CRIT, "%s called after ddca_init2() or ddca_init() failure", __func__); \
@@ -213,6 +215,15 @@ void quiesce_api(bool quiesce);
       if (!library_initialized)  { \
          syslog(LOG_WARNING, "%s called before ddca_init2() or ddca_init(). Performing default initialization", __func__); \
          ddci_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE, NULL); \
+      } \
+      if (respect_quiesced) { \
+         if (!increment_active_api_calls(__func__)) { \
+            syslog(LOG_ERR, "library quiesced, %s temporarily unavailable", __func__); \
+            save_thread_error_detail( \
+                  new_ddca_error_detail(DDCRC_QUIESCED, \
+                                     "library quiesced, %s temporarily unavailable", __func__)); \
+            return DDCRC_QUIESCED; \
+         } \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
@@ -228,7 +239,7 @@ void quiesce_api(bool quiesce);
 /** For functions that return a DDCA_Status.  Perform the function return in
  *  the macro.
  */
-#define API_EPILOG(_debug_flag, _rc, _format, ...) \
+#define API_EPILOG(_debug_flag, _respect_quiesced, _rc, _format, ...) \
    do { \
         dbgtrc_ret_ddcrc( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
@@ -236,13 +247,14 @@ void quiesce_api(bool quiesce);
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
         if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
+        if (_respect_quiesced) decrement_active_api_calls(__func__); \
         return _rc; \
    } while(0)
 
 
 /** For functions that return a boolean.  Perform the return in the macro.
  */
-#define API_EPILOG_RET_BOOL(_debug_flag, _result, _format, ...) \
+#define API_EPILOG_RET_BOOL(_debug_flag, _respect_quiesced,  _result, _format, ...) \
    do { \
       dbgtrc_returning_expression( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
@@ -250,6 +262,7 @@ void quiesce_api(bool quiesce);
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
         if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
+        if (_respect_quiesced) decrement_active_api_calls(__func__); \
         return _result; \
    } while(0)
 
@@ -257,7 +270,7 @@ void quiesce_api(bool quiesce);
 /** For functions that return a DDCA_Status.  This variant reports the status code
  *  being returned, but leaves it to the caller to actually execute the return;
  */
-#define API_EPILOG_WO_RETURN(_debug_flag, _rc, _format, ...) \
+#define API_EPILOG_WO_RETURN(_debug_flag, _respect_quiesced, _rc, _format, ...) \
    do { \
         dbgtrc_ret_ddcrc( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
@@ -265,13 +278,14 @@ void quiesce_api(bool quiesce);
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
         if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
+        if (_respect_quiesced) decrement_active_api_calls(__func__); \
    } while(0)
 
 
 /** Emits a trace message that contains no return status information, and leaves
- *  it  to the caller for execute the return.
+ *  it to the caller for execute the return.
  */
-#define API_EPILOG_NO_RETURN(_debug_flag, _format, ...) \
+#define API_EPILOG_NO_RETURN(_debug_flag, _respect_quiesced, _format, ...) \
    do { \
         dbgtrc( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
@@ -279,6 +293,7 @@ void quiesce_api(bool quiesce);
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
         if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
+        if (_respect_quiesced) decrement_active_api_calls(__func__); \
    } while(0)
 
 #ifdef UNUSED
