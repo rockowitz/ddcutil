@@ -56,7 +56,7 @@ ddca_get_capabilities_string(
 {
    bool debug = false;
    free_thread_error_detail();
-   API_PROLOGX(debug, INCREMENT_API_CALLS, "ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
+   API_PROLOGX(debug, RESPECT_QUIESCE, "ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
    API_PRECOND_W_EPILOG(pcaps_loc);
    *pcaps_loc = NULL;
    Error_Info * ddc_excp = NULL;
@@ -78,7 +78,7 @@ ddca_get_capabilities_string(
       }
    );
 
-   API_EPILOG(debug, INCREMENT_API_CALLS, psc, "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
+   API_EPILOG(debug, RESPECT_QUIESCE, psc, "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
                      dh_repr((Display_Handle *) ddca_dh),
                      *pcaps_loc, *pcaps_loc );
 }
@@ -133,7 +133,7 @@ ddca_parse_capabilities_string(
 {
    bool debug = false;
    free_thread_error_detail();
-   API_PROLOGX(debug, NOINCREMENT_API_CALLS, "parsed_capabilities_loc=%p, capabilities_string: |%s|",
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "parsed_capabilities_loc=%p, capabilities_string: |%s|",
                      parsed_capabilities_loc, capabilities_string);
    API_PRECOND_W_EPILOG(parsed_capabilities_loc);
    DDCA_Status ddcrc = DDCRC_BAD_DATA;
@@ -210,7 +210,7 @@ ddca_parse_capabilities_string(
       free_parsed_capabilities(pcaps);
    }
    *parsed_capabilities_loc = result;
-   API_EPILOG_WO_RETURN(debug, NOINCREMENT_API_CALLS, ddcrc,
+   API_EPILOG_WO_RETURN(debug, NORESPECT_QUIESCE, ddcrc,
          "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
    ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
    // if ( IS_DBGTRC(debug, DDCA_TRC_API) && *parsed_capabilities_loc)
@@ -255,7 +255,7 @@ ddca_report_parsed_capabilities_by_dref(
    bool debug = false;
    DDCA_Status ddcrc = 0;
    free_thread_error_detail();
-   API_PROLOGX(debug, INCREMENT_API_CALLS, "Starting. p_caps=%p, ddca_dref=%s",
+   API_PROLOGX(debug, RESPECT_QUIESCE, "Starting. p_caps=%p, ddca_dref=%s",
                       p_caps, dref_repr_t((Display_Ref*) ddca_dref));
    API_PRECOND_W_EPILOG(p_caps);   // no need to check marker, DDCA_CAPABILITIES not opaque
 
@@ -345,7 +345,7 @@ ddca_report_parsed_capabilities_by_dref(
    }
 
 bye:
-   API_EPILOG(debug, INCREMENT_API_CALLS, ddcrc, "");
+   API_EPILOG(debug, RESPECT_QUIESCE, ddcrc, "");
 }
 
 
@@ -366,7 +366,7 @@ ddca_report_parsed_capabilities_by_dh(
 {
    bool debug = false;
    free_thread_error_detail();
-   API_PROLOGX(debug, INCREMENT_API_CALLS, "p_caps=%p, ddca_dh=%s, depth=%d",
+   API_PROLOGX(debug, RESPECT_QUIESCE, "p_caps=%p, ddca_dh=%s, depth=%d",
                       p_caps, ddca_dh_repr(ddca_dh), depth);
    DDCA_Status ddcrc = 0;
 
@@ -386,7 +386,7 @@ ddca_report_parsed_capabilities_by_dh(
    ddca_report_parsed_capabilities_by_dref(p_caps, dh->dref, depth);
 
 bye:
-   API_EPILOG(debug, INCREMENT_API_CALLS, ddcrc, "");
+   API_EPILOG(debug, RESPECT_QUIESCE, ddcrc, "");
 }
 
 
