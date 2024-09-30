@@ -79,10 +79,11 @@ static FILE * flog = NULL;
 static DDCA_Stats_Type requested_stats = 0;
 static bool per_display_stats = false;
 static bool dsa_detail_stats;
-int    active_calls = 0;
-GMutex active_calls_mutex;
-bool   api_quiesced = false;
-GMutex api_quiesced_mutex;
+static int    active_calls = 0;
+static int    max_active_calls = 0;
+static GMutex active_calls_mutex;
+static bool   api_quiesced = false;
+static GMutex api_quiesced_mutex;
 
 
 //
@@ -194,26 +195,48 @@ ddca_libddcutil_filename(void) {
 }
 
 
-bool increment_active_api_calls() {
+bool increment_active_api_calls(const char * funcname) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. funcname=%s, active_calls=%d", funcname, active_calls);
    bool result = true;
    g_mutex_lock(&api_quiesced_mutex);
    g_mutex_lock(&active_calls_mutex);
    if (api_quiesced)
       result = false;
-   else
+   else {
       active_calls++;
+      if (active_calls > max_active_calls)
+         max_active_calls = active_calls;
+   }
    g_mutex_unlock(&active_calls_mutex);
    g_mutex_unlock(&api_quiesced_mutex);
+   DBGMSF(debug, "funcname=%s, returning %s", funcname, SBOOL(result));
    return result;
 }
 
-void decrement_active_api_calls() {
+
+void decrement_active_api_calls(const char * funcname) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. funcname=%s, active_calls=%d", funcname, active_calls);
+   bool oops = false;
    g_mutex_lock(&active_calls_mutex);
-   active_calls--;
+   if (active_calls > 0) {
+      active_calls--;
+   }
+   else {
+      oops = true;
+   }
    g_mutex_unlock(&active_calls_mutex);
+   if (oops) {
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unmatched active call ct in %s", funcname);
+   }
+   DBGMSF(debug, "Done    funcname=%s, oops=%s", funcname, SBOOL(oops));
 }
 
+
 void quiesce_api(bool quiesce) {
+   bool debug = true;
+   DBGMSF(debug, "quiesce = %s", SBOOL(quiesce));
    g_mutex_lock(&api_quiesced_mutex);
    if (quiesce) {
       g_mutex_lock(&active_calls_mutex);
@@ -230,7 +253,7 @@ void quiesce_api(bool quiesce) {
          }
          if (slept_nanosec >= poll_max_nanosec) {
             // WHAT TO DO HERE?
-            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Quiescing API with %d calls active." active_calls);
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Quiescing API with %d calls active.", active_calls);
          }
       }
       api_quiesced = true;
@@ -842,7 +865,7 @@ ddca_init2(const char *     libopts,
 DDCA_Status
 ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
-   API_PROLOGX(debug, "Starting");
+   API_PROLOGX(debug, INCREMENT_API_CALLS, "Starting");
 
    if (enabled_classes == DDCA_EVENT_CLASS_ALL)
       enabled_classes = DDCA_EVENT_CLASS_DISPLAY_CONNECTION;
@@ -876,26 +899,26 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
       ddcrc = edet->status_code;
       save_thread_error_detail(edet);
    }
-   API_EPILOG(debug, ddcrc, "");
+   API_EPILOG(debug, INCREMENT_API_CALLS, ddcrc, "");
 }
 
 
 DDCA_Status
 ddca_stop_watch_displays(bool wait) {
    bool debug = false;
-   API_PROLOGX(debug, "Starting");
+   API_PROLOGX(debug, NOINCREMENT_API_CALLS, "Starting");
    DDCA_Display_Event_Class active_classes;
    DDCA_Status ddcrc = ddc_stop_watch_displays(wait, &active_classes);
-   API_EPILOG(debug, ddcrc, "");
+   API_EPILOG(debug, NOINCREMENT_API_CALLS, ddcrc, "");
 }
 
 
 DDCA_Status
 ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
    bool debug = false;
-   API_PROLOGX(debug, "Starting classes_loc=%p", classes_loc);
+   API_PROLOGX(debug, NOINCREMENT_API_CALLS, "Starting classes_loc=%p", classes_loc);
    DDCA_Status ddcrc = ddc_get_active_watch_classes(classes_loc);
-   API_EPILOG(debug, ddcrc, "*classes_loc=0x%02x", *classes_loc);
+   API_EPILOG(debug, NOINCREMENT_API_CALLS, ddcrc, "*classes_loc=0x%02x", *classes_loc);
 }
 
 
