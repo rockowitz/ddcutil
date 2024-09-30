@@ -50,11 +50,9 @@ Display_Ref* detect_display_by_businfo(I2C_Bus_Info * businfo);
 DDCA_Status  ddc_enable_usb_display_detection(bool onoff);
 bool         ddc_is_usb_display_detection_enabled();
 void         dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);
-bool         ddc_is_valid_display_ref(Display_Ref * dref);
-DDCA_Status  ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_asleep);
 
 typedef enum {
-   DREF_VALIDATE_BASIC_ONLY               = 0,
+   DREF_VALIDATE_BASIC_ONLY         = 0,
    DREF_VALIDATE_EDID               = 1,
    DREF_VALIDATE_AWAKE              = 2,
 } Dref_Validation_Options;
