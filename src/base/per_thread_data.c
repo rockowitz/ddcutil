@@ -514,11 +514,16 @@ static inline Function_Stats_Hash * ptd_profile_get_stats() {
 
 
 void ptd_profile_function_start(const char * func) {
-   // bool debug = false;
+   bool debug = false;
+   DBGMSF(debug, "Executing. func=%s", func);
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
+   // If profiling currently active, do not profile called functions
    if (!ptd->cur_func) {
       ptd->cur_func = strdup(func);
       ptd->cur_start = cur_realtime_nanosec();
+   }
+   else {
+      DBGMSF(debug, "Currently profiling %s, Ignoring called function %s", ptd->cur_func, func);
    }
 }
 
@@ -526,20 +531,27 @@ void ptd_profile_function_start(const char * func) {
 void ptd_profile_function_end(const char * func) {
    bool debug = false;
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
-   DBGF(debug, "Starting. func=%s, cur_func=%s", func, ptd->cur_func);
+   DBGMSF(debug, "Starting. func=%s, cur_func=%s", func, ptd->cur_func);
+   // Ignore called functions
    if (streq(ptd->cur_func, func)) {
       Function_Stats_Hash * stats_table = ptd_profile_get_stats();
       Per_Thread_Function_Stats * function_stats = g_hash_table_lookup(stats_table, func);
-      DBGF(debug, "       stats_table=%p, function_stats=%p", stats_table, function_stats);
+      // DBGMSF(debug, "       stats_table=%p, function_stats=%p", stats_table, function_stats);
       if (!function_stats) {
          function_stats = calloc(1, sizeof(Per_Thread_Function_Stats));
          function_stats->function = strdup(func);
          g_hash_table_insert(stats_table, strdup(func), function_stats);
       }
+      uint64_t elapsed_nanosec = cur_realtime_nanosec() - ptd->cur_start;
       function_stats->total_calls++;
-      function_stats->total_nanosec = (cur_realtime_nanosec() - ptd->cur_start);
+      function_stats->total_nanosec += elapsed_nanosec;
+      DBGMSF(debug, "Done.  func=%s, elapsed_nanosec=%jd, total_nanosec=%jd",
+            func, elapsed_nanosec, function_stats->total_nanosec);
       free(ptd->cur_func);
       ptd->cur_func = NULL;
+   }
+   else {
+      DBGMSF(debug, "Currently profiling %s, ignoring end of %s", ptd->cur_func, func);
    }
 }
 
