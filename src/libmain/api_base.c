@@ -513,7 +513,8 @@ void profile_report(FILE * dest, bool by_thread) {
    if (dest) {
       rpt_push_output_dest(dest);
    }
-   ptd_profile_report_all_threads(0);
+   if (by_thread)
+      ptd_profile_report_all_threads(0);
    ptd_profile_report_stats_summary(0);
    if (dest) {
       rpt_pop_output_dest();
@@ -1316,8 +1317,15 @@ ddca_is_force_slave_address_enabled(void) {
 
 void
 ddca_reset_stats(void) {
-   // DBGMSG("Executing");
+   DBGMSG("Executing");
+   g_mutex_lock(&api_quiesced_mutex);
+   g_mutex_lock(&active_calls_mutex);
+
    ddc_reset_stats_main();
+   max_active_calls = 0;
+
+   g_mutex_unlock(&active_calls_mutex);
+   g_mutex_unlock(&api_quiesced_mutex);
 }
 
 // TODO: Functions that return stats in data structures
@@ -1329,6 +1337,12 @@ ddca_show_stats(
 {
    if (stats_types)
       ddc_report_stats_main( stats_types, per_display_stats, per_display_stats, false, depth);
+
+   rpt_vstring(0, "Max concurrent API calls: %d", max_active_calls);
+   if (stats_types & DDCA_STATS_API) {
+      if (ptd_api_profiling_enabled)
+         profile_report(NULL, false);
+   }
 }
 
 void
