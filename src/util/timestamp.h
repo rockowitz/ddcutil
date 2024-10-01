@@ -23,4 +23,7 @@ char *   formatted_elapsed_time_t(guint precision); // printable elapsed time
 char *   formatted_time_t(uint64_t nanos);
 char *   formatted_epoch_time_t(time_t epoch_seconds);
 
+#define NANOS2MICROS( _nanosec ) ((_nanosec + 500)/1000)
+#define NANOS2MILLIS( _namosec ) ((_nanosec+500000)/1000000)
+
 #endif /* TIMESTAMP_H_ */
