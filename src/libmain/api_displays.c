@@ -1378,8 +1378,7 @@ ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
                        : DDCRC_INVALID_OPERATION;
  #endif
 
-
-   API_EPILOG(debug, RESPECT_QUIESCE, result, "");
+   API_EPILOG(debug, RESPECT_QUIESCE, result, "func=%p", func);
    return result;
 }
 
@@ -1392,7 +1391,7 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) 
 
    DDCA_Status result = ddc_unregister_display_status_callback(func);
 
-   API_EPILOG(debug, RESPECT_QUIESCE, result, "");
+   API_EPILOG(debug, RESPECT_QUIESCE, result, "func=%p", func);
    return result;
 }
 
