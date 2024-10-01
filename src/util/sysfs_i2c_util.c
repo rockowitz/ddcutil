@@ -23,6 +23,7 @@
 #include "subprocess_util.h"
 #include "sysfs_util.h"
 #include "sysfs_filter_functions.h"
+#include "timestamp.h"
 
 #include "sysfs_i2c_util.h"
 
@@ -302,13 +303,15 @@ void find_class_dirs(const char * dirname,
     bool found = RPT_ATTR_TEXT(-1, &result, dirname, simple_fn, "class");
     if (found) {
        DBGF(debug, "subdir=%s has attribute class = %s. Adding.", subdir, result);
-       g_ptr_array_add(accum, (char*) subdir);
+       free(result);
+       g_ptr_array_add(accum, g_strdup(subdir));
     }
     else {
        DBGF(debug, "subdir=%s does not have attribute class", subdir);
     }
     DBGF(debug, "Examining subdirs of %s", subdir);
     dir_foreach(subdir, predicate_starts_with_0, find_class_dirs, accumulator, depth+1);
+    free(subdir);
 }
 
 
@@ -332,12 +335,12 @@ GPtrArray *  get_video_adapter_devices2() {
       char * dirname =  g_ptr_array_index(class03_dirs, ndx);
       DBGF(debug, "dirname=%s", dirname);
       char * class = NULL;
-      int d = (debug) ? 1 : -1;
-      RPT_ATTR_TEXT(d, &class, dirname, "class");
+      RPT_ATTR_TEXT( (debug)?1:-1, &class, dirname, "class");
       assert(class);
       if ( !str_starts_with(class, "0x03") ) {
          g_ptr_array_remove_index(class03_dirs, ndx);
       }
+      free(class);
    }
 
    if (debug) {
@@ -357,26 +360,32 @@ GPtrArray *  get_video_adapter_devices2() {
  */
 GPtrArray * get_video_adapter_devices() {
    bool debug = false;
-   char * cmd = "find /sys/devices -name class | xargs grep x303 -l | sed 's|class||'";
+   // int64_t t0;
+#ifdef SLOW_DO_NOT_USE
+   t0 = cur_realtime_nanosec();
+   // 41 millisec
+   char * cmd = "find /sys/devices -name class | xargs grep x03 -l | sed 's|class||'";
    GPtrArray * result = execute_shell_cmd_collect(cmd);
+   DBGF(debug, "find command tool %jd microsec", NANOS2MICROS( cur_realtime_nanosec() - t0));
    // g_ptr_array_set_free_func(result, g_free);  // redundant
+#endif
 
-   bool compare_alt = false;
-   if (debug && compare_alt) {
-      // For testing:
-      GPtrArray* devices2 = get_video_adapter_devices2();
+   // t0 = cur_realtime_nanosec();
+   // 1 millisec
+   GPtrArray* devices2 = get_video_adapter_devices2();
+   if (debug) {
+      // DBG("get_video_adapter_devices2() took %jd microsec", NANOS2MICROS( cur_realtime_nanosec() - t0));
       DBG("get_video_adapter_devices2 returned %d directories:", devices2->len);
       for (int ndx = 0; ndx < devices2->len; ndx++)
          rpt_vstring(2, "%s", (char*) g_ptr_array_index(devices2, ndx));
-      g_ptr_array_free(devices2, true);
    }
 
    if (debug) {
-      DBG("Returning %d directories:", result->len);
-      for (int ndx = 0; ndx < result->len; ndx++)
-         rpt_vstring(2, "%s", (char*) g_ptr_array_index(result, ndx));
+      DBG("Returning %d directories:", devices2->len);
+      for (int ndx = 0; ndx < devices2->len; ndx++)
+         rpt_vstring(2, "%s", (char*) g_ptr_array_index(devices2, ndx));
    }
-   return result;
+   return devices2;
 }
 
 
