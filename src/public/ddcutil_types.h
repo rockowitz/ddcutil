@@ -151,6 +151,7 @@ typedef enum {
    DDCA_STATS_ERRORS   = 0x02,    ///< error statistics
    DDCA_STATS_CALLS    = 0x04,    ///< system calls
    DDCA_STATS_ELAPSED  = 0x08,    ///< total elapsed time
+   DDCA_STATS_API      = 0x10,    ///< API specific stats
    DDCA_STATS_ALL      = 0xFF     ///< indicates all statistics types
 } DDCA_Stats_Type;
 
