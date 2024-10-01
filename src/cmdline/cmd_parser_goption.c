@@ -108,6 +108,9 @@ stats_arg_func(const    gchar* option_name,
       else if ( is_abbrev(v2,"ELAPSED",3) || is_abbrev(v2, "TIME",3)) {
          stats_work |= DDCA_STATS_ELAPSED;
       }
+      else if ( streq(v2,"API") ){
+         stats_work |= DDCA_STATS_API;
+      }
       else
          ok = false;
       free(v2);
