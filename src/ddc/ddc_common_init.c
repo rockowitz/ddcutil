@@ -23,6 +23,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_i2c_util.h"
+#include "util/timestamp.h"
 #ifdef USE_LIBDRM
 #include "util/drm_common.h"
 #include "util/libdrm_util.h"
@@ -439,21 +440,28 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
 
-
+uint64_t t0;
+uint64_t t1;
 #ifdef USE_LIBDRM
    bool result1 = false;
    if (parsed_cmd->flags2&CMD_FLAG2_F13) {
       // For each file in /dev/dri, check that DRM is supported by using the drm api
+      t0 = cur_realtime_nanosec();
       result1 = all_displays_drm_using_drm_api();          // in drm_common.c
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_displays_drm_using drm_api() returned %s", sbool(result1));
+      t1 = cur_realtime_nanosec();
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_displays_drm_using drm_api() returned %s in %jd nanosec",
+             sbool(result1), NANOS2MICROS(t1-t0) );
    }
    else {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Do not use all_displays_drm_using_drm_api()");
    }
 
    // For each video adapter node in sysfs, check that subdirectories drm/cardN/cardN-xxx exist
+   t0 = cur_realtime_nanosec();
    bool result2 = check_all_video_adapters_implement_drm();  // in i2c_sysfs.c
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "check_all_video_adapters_implement_drm() returned %s", sbool(result2));
+   t1 = cur_realtime_nanosec();
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "check_all_video_adapters_implement_drm() returned %s in %jd microsec",
+                         sbool(result2), NANOS2MICROS(t1-t0));
 
 #ifdef OUT
    // Fails if nvidia driver, adapter path not filled in
