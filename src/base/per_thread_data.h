@@ -35,7 +35,7 @@ typedef struct {
    uint64_t  total_nanosec;
 } Per_Thread_Function_Stats;
 
-// key is function name, value is Per_Thread_Fuction_Stats *
+// key is function name, value is Per_Thread_Function_Stats *
 typedef GHashTable Function_Stats_Hash;
 
 typedef struct {
