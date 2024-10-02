@@ -1373,9 +1373,8 @@ ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
 
    DDCA_Status result = DDCRC_INVALID_OPERATION;
  #ifdef ENABLE_UDEV
-    result = (check_all_video_adapters_implement_drm())
-                       ? ddc_register_display_status_callback(func)
-                       : DDCRC_INVALID_OPERATION;
+    if (check_all_video_adapters_implement_drm())
+       result = ddc_register_display_status_callback(func);
  #endif
 
    API_EPILOG(debug, RESPECT_QUIESCE, result, "func=%p", func);
