@@ -1907,14 +1907,16 @@ bool bs256_store_bytehex_list(Bit_Set_256 * pbitset, char * start, int len) {
 
 /** Adds function to a set of registered callbacks
  *
- * @param  array of registered callbacks
+ * @param  registered_callback_loc  address of ptr to GPtrArray of registered callbacks
  * @param  function to add
- * @retval true  success
+ *
+ * If **registered_callcack_loc** is null on entry, a new GPtrArray is allocated and
+ * its address is returned in **registered_callback_loc**.
  *
  * @remark
  * It is not an error if the function is already registered.
  */
-bool generic_register_callback(GPtrArray** registered_callbacks_loc, void * func) {
+void generic_register_callback(GPtrArray** registered_callbacks_loc, void * func) {
    bool debug = false;
    DBGF(debug, "Starting. registered_callbacks=%p, func=%p", *registered_callbacks_loc, func);
 
@@ -1933,21 +1935,22 @@ bool generic_register_callback(GPtrArray** registered_callbacks_loc, void * func
       g_ptr_array_add(*registered_callbacks_loc, func);
    }
 
-   bool result = true;
-   DBGF(debug, "Done.     Returning %s", SBOOL(result));
-   return result;
+   // DBGF(debug, "Done.     Returning %s", SBOOL(new_registration));
+   // return new_registration;
+   DBGF(debug, "Done.     new_registration = %s", SBOOL(new_registration));
 }
 
 
 /** Unregisters a callback function
  *
- *  @param func function to remove
+ *  @param  func  function to remove
  *  @retval true  function deregistered
  *  @retval false function not found
  *   */
 bool generic_unregister_callback(GPtrArray* registered_callbacks, void *func) {
      bool debug = false;
      DBGF(debug, "Starting. registered_callbacks=%p, func=%p", registered_callbacks, func);
+
      bool found = false;
      if (registered_callbacks) {
         for (int ndx = 0; ndx < registered_callbacks->len; ndx++) {
@@ -1957,6 +1960,7 @@ bool generic_unregister_callback(GPtrArray* registered_callbacks, void *func) {
            }
         }
      }
+
      DBGF(debug, "Done.     Returning: %s", SBOOL(found));
      return found;
 }

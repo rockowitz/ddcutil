@@ -241,7 +241,6 @@ char*          bs32_to_string(Bit_Set_32 bitset, const char* value_prefix, const
 char*          bs32_to_string_decimal(Bit_Set_32 bitset, const char* value_prefix, const char* sepstr);
 
 
-
 //
 // Byte_Value_Array <-> Bit_Set_256 cross-compatibility functions
 //
@@ -262,9 +261,8 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
 // Callback registration
 //
 
-bool generic_register_callback(GPtrArray** registered_callbacks_loc, void * func);
+void generic_register_callback(GPtrArray** registered_callbacks_loc, void * func);
 bool generic_unregister_callback(GPtrArray* registered_callbacks, void *func);
-
 
 
 #ifdef __cplusplus
