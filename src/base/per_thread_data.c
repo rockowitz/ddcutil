@@ -476,6 +476,12 @@ void ptd_profile_function_stats_key_destroy(void * data) {   // GDestroyNotify
 }
 
 
+void free_per_thread_function_stats(Per_Thread_Function_Stats * stats) {
+   free(stats->function);
+   free(stats);
+}
+
+
 void ptd_profile_function_stats_value_destroy(void * data) {  // GDestroyNofify
    // value is Per_Thread_Function_Stats*
    Per_Thread_Function_Stats * stats = (Per_Thread_Function_Stats *) data;
@@ -633,7 +639,9 @@ void ptd_add_stats(Per_Thread_Data * ptd, void * data) {
  *  @return hash table with key = function name, value = Per_Thread_Function_Stats*
  */
 Function_Stats_Hash * summarize_per_thread_stats() {
-   Function_Stats_Hash * summary = g_hash_table_new(g_str_hash, g_str_equal);
+   Function_Stats_Hash * summary = g_hash_table_new_full(
+         g_str_hash, g_str_equal,
+         g_free, (GDestroyNotify) free_per_thread_function_stats);
    ptd_apply_all(ptd_add_stats, summary);   // ptd_apply_all manages locking
    return summary;
 }
@@ -751,8 +759,8 @@ void ptd_profile_report_stats_summary(int depth) {
    rpt_label(depth, "Count  Microsec  Function Name");
    Function_Stats_Hash * summary_stats = summarize_per_thread_stats();
    DBGMSF(debug, "    summary_stats=%p", summary_stats);
-   // g_hash_table_foreach(summary_stats, ptd_report_one_func, GINT_TO_POINTER(depth));
    ptd_profile_apply_all_sorted(summary_stats, ptd_report_one_func0, GINT_TO_POINTER(depth));
+   g_hash_table_destroy(summary_stats);
    DBGMSF(debug, "Done");
 }
 
@@ -761,5 +769,4 @@ void ptd_profile_report_stats_summary(int depth) {
 void init_per_thread_data() {
    per_thread_data_hash = g_hash_table_new_full(g_direct_hash, NULL, NULL, per_thread_data_destroy);
    // DBGMSG("per_thead_data_hash = %p", per_thread_data_hash);
-   // test_get_thread_id();
 }
