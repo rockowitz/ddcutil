@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.5] 2024-09-23
+## [2.1.5] 2024-10-02
 
 ### General
 
@@ -22,7 +22,7 @@
 - User Defined Features: 
   - Add XNC (Extended Non-Continous) like simple NC, but the SH byte is
     also reported.
-  - Allow SNC (Simple Non-Contuous) as alternative name for NC.
+  - Allow SNC (Simple Non-Continuous) as alternative name for NC.
   - Report user defined features as part of parsed capabilities.
   - Commands recognizing user defined features now fail if there's an error
     loading a user defined feature file.  These are **capabilities**, 
@@ -81,6 +81,7 @@
 - Convert CRLF line endings to LF
 - Use printf() formats %jd and %zd to portably print variables of type ssize_t, 
   time_t, so as to build  unchanged on architectures such as armel, armhf.
+- Memory leaks.
 
 ### Shared Library
 
@@ -102,6 +103,9 @@ file is libddcutil.so.5.1.3. (VERIFY)
   output is directed to the log, as with KDE Plasma
 - Most functions that specify a display ref now return status code 
   DDCRC_DISCONNECTED if the display reference is no longer valid.
+- Quiesce the API during **ddca_redetect_displays()**.  Operations that access
+  display state are not permitted, and return DDCRC_QUIESCED.
+- Add DDCA_STATS_API to enum DDCA_Stats_Type, for reporting API specific stats.
 
 #### Fixed
 
