@@ -45,11 +45,13 @@ DDCA_Status ddc_register_display_status_callback(DDCA_Display_Status_Callback_Fu
 
    DDCA_Status result = DDCRC_INVALID_OPERATION;
 #ifdef ENABLE_UDEV
-   if (check_all_video_adapters_implement_drm() &&
-       generic_register_callback(&display_detection_callbacks, func) )
-   {
+   // if (check_all_video_adapters_implement_drm()) {   // unnecessary, performed in caller
+      // uint64_t t0 = cur_realtime_nanosec();
+      generic_register_callback(&display_detection_callbacks, func);
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "generic_register_callback() took %"PRIu64" micoseconds",
+      //      NANOS2MICROS(cur_realtime_nanosec()-t0) );
       result = DDCRC_OK;
-   }
+   // }
 #endif
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
@@ -72,7 +74,7 @@ DDCA_Status ddc_unregister_display_status_callback(DDCA_Display_Status_Callback_
    DDCA_Status result = DDCRC_INVALID_OPERATION;
 #ifdef ENABLE_UDEV
    if (check_all_video_adapters_implement_drm()) {
-       result = generic_register_callback(&display_detection_callbacks, func);
+       result = generic_unregister_callback(display_detection_callbacks, func);
    }
 #endif
 
