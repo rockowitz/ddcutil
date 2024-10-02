@@ -1335,14 +1335,20 @@ ddca_show_stats(
       bool            per_display_stats,
       int             depth)
 {
-   if (stats_types)
+   if (stats_types) {
       ddc_report_stats_main( stats_types, per_display_stats, per_display_stats, false, depth);
+      rpt_nl();
+   }
 
    rpt_vstring(0, "Max concurrent API calls: %d", max_active_calls);
+#ifdef REDUNDANT
    if (stats_types & DDCA_STATS_API) {
-      if (ptd_api_profiling_enabled)
-         profile_report(NULL, false);
+      if (ptd_api_profiling_enabled) {
+         rpt_nl();
+         profile_report(NULL, false);  // redundant
+      }
    }
+#endif
 }
 
 void
