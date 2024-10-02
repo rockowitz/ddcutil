@@ -32,6 +32,7 @@
 #include "sysfs_filter_functions.h"
 #include "sysfs_i2c_util.h"
 #include "sysfs_util.h"
+#include "timestamp.h"
 
 #include "drm_common.h"
 
@@ -207,14 +208,17 @@ const char * drm_bus_type_name(uint8_t bus) {
  *  DRM is supported by using the drm api.
  *
  *  @return true if all adapters support DRM
+ *
+ *  @remark: unreliable on Wayland!?
  */
  bool all_displays_drm_using_drm_api() {
     bool debug = false;
     DBGF(debug,  "Starting");
 
     bool result = false;
+    // returns false on banner under Wayland!!!!
     int drm_available = drmAvailable();
-    // DBGF(debug, "drmAvailable() returned:  %d", drm_available);
+    DBGF(debug, "drmAvailable() returned:  %d", drm_available);
     if (drm_available) {
        GPtrArray * dev_names = get_dri_device_names_using_filesys();
        if (dev_names->len > 0)
@@ -340,7 +344,10 @@ bool card_connector_subdirs_exist(const char * adapter_dir) {
 bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
    bool debug = false;
    assert(adapter_devices);
-   // DBGF(debug, "adapter_devices->len=%d at %p", adapter_devices->len, adapter_devices);
+   uint64_t t0, t1;
+   if (debug)
+      t0 = cur_realtime_nanosec();
+   DBGF(debug, "adapter_devices->len=%d at %p", adapter_devices->len, adapter_devices);
    bool result = true;
    for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
       // char * subdir_name = NULL;
@@ -351,6 +358,10 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
          result = false;
          break;
       }
+   }
+   if (debug) {
+     t1 = cur_realtime_nanosec();
+     DBG("elapsed: %jd microsec",  NANOS2MICROS(t1-t0));
    }
    DBGF(debug, "Done.     Returning %s", sbool(result));
    return result;
@@ -369,20 +380,23 @@ bool check_all_video_adapters_implement_drm() {
    bool debug = false;
    DBGF(debug, "Starting");
 
-   GPtrArray * devices = NULL;
-   devices = get_video_adapter_devices();
-
-   // g_ptr_array_free(devices, true);
-   //   devices = get_video_adapter_devices2();   // FAILS
-
-    // DBGF(debug, "%d devices at %p:", devices->len, devices);
-    // for (int ndx = 0; ndx < devices->len; ndx++)
-    //    rpt_vstring(2, "%s", g_ptr_array_index(devices, ndx));
+   uint64_t t0 = cur_realtime_nanosec();
+   // DBGF(debug, "t0=%"PRIu64, t0);
+   GPtrArray * devices = get_video_adapter_devices();
+   uint64_t t1 = cur_realtime_nanosec();
+   // DBGF(debug, "t1=%"PRIu64, t1);
+   // DBGF(debug, "t1-t0=%"PRIu64, t1-t0);
+   DBGF(debug, "get_video_adapter_devices() took %jd microseconds", NANOS2MICROS(t1-t0));
 
    bool all_drm = check_video_adapters_list_implements_drm(devices);
+   uint64_t t2 = cur_realtime_nanosec();
+   // DBGF(debug, "t2=%"PRIu64, t2);
+   // DBGF(debug, "t2-t1=%"PRIu64, t2-t1);
+   DBGF(debug, "check_video_adapters_list_implements_drm() took %jd microseconds", NANOS2MICROS(t2-t1));
    g_ptr_array_free(devices, true);
 
-   DBGF(debug, "Done.  Returning %s", sbool(all_drm));
+   // DBGF(debug, "t2-t0=%"PRIu64, t2-t0);
+   DBGF(debug, "Done.  Returning %s.  elapsed=%jd microsec", sbool(all_drm), NANOS2MICROS(t2-t0));
    return all_drm;
 }
 
