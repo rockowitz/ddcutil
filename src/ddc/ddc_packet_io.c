@@ -14,6 +14,7 @@
 #include <config.h>
 
 #include <assert.h>
+#include <base/idisplay_lock.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -45,7 +46,6 @@
 #include "base/per_display_data.h"
 
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_display_lock.h"
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 

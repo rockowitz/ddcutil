@@ -32,7 +32,7 @@
  */
 
 #include <assert.h>
-
+#include <base/idisplay_lock.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
 
@@ -46,8 +46,6 @@
 #include "base/displays.h"
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
-
-#include "i2c/i2c_display_lock.h"
 
 #include "ddcutil_types.h"
 #include "ddcutil_status_codes.h"

@@ -1,0 +1,6 @@
+#!/bin/bash
+for (( i=0; i<999; i++))
+do
+  # src/ddcutil det --trcfunc i2c_detect_attached_buses --i2c-init-async-min 2  --trcfrom i2c_check_bus2 --trcfrom i2c_open_bus --trcfunc i2c_check_bus2 --trcfrom i2c_close_bus 
+  src/ddcutil det --trcfunc i2c_detect_attached_buses --i2c-init-async-min 2  --trcfunc flock_lock_by_fd --trcfunc i2c_open_bus --trcfunc i2c_check_bus2 --trcfunc i2c_close_bus --trcfunc flock_unlock_by_fd --trcfunc lock_display_by_dpath --trcfunc unlock_display_by_dpath --syslog debug
+done

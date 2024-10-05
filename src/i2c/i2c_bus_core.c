@@ -66,7 +66,7 @@
 #else
 #include "i2c/wrap_i2c-dev.h"
 #endif
-#include "i2c/i2c_display_lock.h"
+#include <base/idisplay_lock.h>
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs_base.h"

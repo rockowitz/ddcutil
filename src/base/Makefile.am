@@ -56,6 +56,7 @@ core_per_thread_settings.c \
 ddc_command_codes.c       \
 ddc_errno.c               \
 ddc_packets.c             \
+display_lock.c            \
 displays.c                \
 drm_connector_state.c     \
 dsa2.c                    \
