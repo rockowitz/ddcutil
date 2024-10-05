@@ -14,7 +14,7 @@
 #include <config.h>
 
 #include <assert.h>
-#include <base/idisplay_lock.h>
+#include <base/display_lock.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>

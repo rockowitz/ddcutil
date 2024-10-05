@@ -42,7 +42,7 @@
 
 #include "ddc/ddc_common_init.h"
 #include "ddc/ddc_display_selection.h"
-#include <base/idisplay_lock.h>
+#include <base/display_lock.h>
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
