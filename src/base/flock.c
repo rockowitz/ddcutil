@@ -170,6 +170,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       usleep(flock_poll_millisec*1000);
       total_wait_millisec += flock_poll_millisec;
    }
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "end of polling loop. flockrc = %d", flockrc);
 
    if (flockrc != 0) {
       if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
