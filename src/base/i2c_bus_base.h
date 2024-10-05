@@ -14,6 +14,7 @@
 #include "util/data_structures.h"
 #include "util/edid.h"
 
+#include "base/display_lock.h"
 
 // Retrieve and inspect bus information
 
@@ -55,6 +56,7 @@ struct {
    int              busno;              ///< I2C device number, i.e. N for /dev/i2c-N
    unsigned long    functionality;      ///< i2c bus functionality flags
    Parsed_Edid *    edid;               ///< parsed EDID, if slave address x50 active
+   Display_Lock_Record *   lock_record;        ///
    uint16_t         flags;              ///< I2C_BUS_* flags
    char *           driver;             ///< driver name
    int              open_errno;         ///< errno if open fails (!I2C_BUS_ACCESSIBLE)

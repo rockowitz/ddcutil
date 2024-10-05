@@ -15,6 +15,7 @@
 #include "util/coredefs.h"
 
 #include "base/core.h"
+#include "base/display_lock.h"
 #include "base/displays.h"
 #include "base/ddc_packets.h"
 
@@ -60,6 +61,7 @@ typedef struct usb_monitor_info {
    char                     marker[4];
    char *                   hiddev_device_name;
    Parsed_Edid *            edid;
+   Display_Lock_Record *    lock_rec;
    struct hiddev_devinfo *  hiddev_devinfo;
    // a flagrant waste of space, avoid premature optimization
    GPtrArray *              vcp_codes[256];   // array of Usb_Monitor_Vcp_Rec *
