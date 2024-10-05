@@ -179,8 +179,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    if (errinfo_accumulator->len > 0)
       result = errinfo_new_with_causes_gptr(
             DDCRC_CONFIG_ERROR, errinfo_accumulator, __func__, "Invalid trace option(s):");
-   else
-      g_ptr_array_free(errinfo_accumulator, true);
+   g_ptr_array_free(errinfo_accumulator, true);
 
    tracing_initialized = true;
    return result;
