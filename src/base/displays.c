@@ -393,6 +393,20 @@ DDCA_IO_Path i2c_io_path(int busno) {
 }
 
 
+/** A simple function allowing for the assignment of a value to a
+ *  #DDCA_IO_Path instance in a single line of code.
+ *
+ *  @parm   hiddev  USB device number
+ *  @return DDCA_IO_Path value
+ */
+DDCA_IO_Path usb_io_path(int hiddev_devno) {
+   DDCA_IO_Path path;
+   path.io_mode = DDCA_IO_USB;
+   path.path.hiddev_devno = hiddev_devno;
+   return path;
+}
+
+
 /** Thread safe function that returns a brief string representation of a #DDCA_IO_Path.
  *  The returned value is valid until the next call to this function on the current thread.
  *
