@@ -175,7 +175,7 @@ void include_open_failures_reported(int busno) {
  */
 Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, callopts=0x%02x=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "/dev/i2c-%d, callopts=0x%02x=%s",
          busno, callopts, interpret_call_options_t(callopts));
    ASSERT_WITH_BACKTRACE(busno >= 0);
    bool wait = callopts & CALLOPT_WAIT;
@@ -198,6 +198,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
    dpath.path.i2c_busno = busno;
    snprintf(filename, 20, "/dev/"I2C"-%d", busno);
    int tryctr = 0;
+
    while( *fd_loc < 0 && total_wait_millisec <= max_wait_millisec) {
       bool device_locked = false;
       bool device_flocked = false;
@@ -212,8 +213,11 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "lock_display_by_dpath(%s) returned %s", filename,
                          psc_desc(cur_error->status_code));
       }
-      else
+      else {
          device_locked = true;
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+               "lock_display_by_dpath(%s) succeeded", dpath_repr_t(&dpath));
+      }
 
       // 2) Open the device
       // TODO: wrap in mutex, since flock requires fd
@@ -237,10 +241,14 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
 
       // 3) create cross-instance lock
       if (!cur_error && cross_instance_locks_enabled) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Acquiring cross instance lock for %s", filename);
          Status_Errno flockrc = flock_lock_by_fd(*fd_loc, filename, wait );
          if (flockrc != 0) {
              DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Cross instance locking failed for %s", filename);
              cur_error = ERRINFO_NEW(flockrc, "flock_lock_by_fd(%s) returned %s", filename, psc_desc(flockrc));
+         }
+         else {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Cross instance locking succeeded for %s", filename);
          }
       }
 
@@ -249,6 +257,8 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
          continue;
 
       // Something failed.  Release attached resources.
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "something failed, %s, cur_error = %s", filename,
+            errinfo_summary(cur_error));
 
       assert (!device_flocked);  // it was the last thing attempted
 
@@ -286,12 +296,12 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
    }
    else {
 
-      // if all cuases have the same status code, replace the status code in the master error
+      // if all causes have the same status code, replace the status code in the master error
    }
 
    ASSERT_IFF(master_error, *fd_loc == -1);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, master_error,
-      "busno=%d, tryctr=%d, Set file descriptor *fd_loc = %d", busno, tryctr, *fd_loc);
+      "/dev/i2c-%d, tryctr=%d, Set file descriptor *fd_loc = %d", busno, tryctr, *fd_loc);
    return master_error;
 }
 
@@ -979,30 +989,30 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    master_err = i2c_open_bus(businfo->busno, CALLOPT_WAIT, &fd);
    if (master_err) {
       businfo->open_errno = master_err->status_code;
+      goto bye;
    }
-   else {
-      //open succeeded
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", businfo->busno);
-      businfo->flags |= I2C_BUS_ACCESSIBLE;
-      businfo->functionality = i2c_get_functionality_flags_by_fd(fd);  // is this really needed?
+
+   //open succeeded
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", businfo->busno);
+   businfo->flags |= I2C_BUS_ACCESSIBLE;
+   businfo->functionality = i2c_get_functionality_flags_by_fd(fd);  // is this really needed?
 #ifdef TEST_EDID_SMBUS
              if (EDID_Read_Uses_Smbus) {
                 // for the smbus hack
                 assert(businfo->functionality & I2C_FUNC_SMBUS_READ_BYTE_DATA);
              }
 #endif
-      if (!checked_connector_for_edid) {
-         DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid);
-         //DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
-         //              businfo->busno, psc_desc(ddcrc));
-         // NB It's quite possible that bus has no edid
-         if (ddcrc == 0) {
-            businfo->flags |= I2C_BUS_ADDR_0X50;
-         }
-         else {
-        //    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
-          //         businfo->busno, psc_desc(ddcrc));
-         }
+   if (!checked_connector_for_edid) {
+      DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid);
+      //DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
+      //              businfo->busno, psc_desc(ddcrc));
+      // NB It's quite possible that bus has no edid
+      if (ddcrc == 0) {
+         businfo->flags |= I2C_BUS_ADDR_0X50;
+      }
+      else {
+     //    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
+       //         businfo->busno, psc_desc(ddcrc));
       }
    }
 
@@ -1417,7 +1427,7 @@ Byte_Value_Array i2c_detect_attached_buses() {
 
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
       char * s = bva_as_string(i2c_bus_bva,  false,  ", ");
-      DBGTRC_EXECUTED(true, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
+      DBGTRC_DONE(true, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
       free(s);
    }
    return i2c_bus_bva;;
@@ -1791,6 +1801,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_check_businfo_connector);
    RTTI_ADD_FUNC(i2c_check_open_bus_alive);
    RTTI_ADD_FUNC(i2c_close_bus);
+   RTTI_ADD_FUNC(i2c_detect_attached_buses);
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_buses0);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
