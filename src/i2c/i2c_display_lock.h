@@ -30,12 +30,14 @@ typedef struct {
    intmax_t     linux_thread_id;
 } Display_Lock_Record;
 
-void                  init_i2c_display_lock(void);
+
 void                  terminate_i2c_display_lock();
 Error_Info *          lock_display(Display_Lock_Record * id, Display_Lock_Flags flags);
 Error_Info *          lock_display_by_dpath(DDCA_IO_Path dpath, Display_Lock_Flags flags);
 Error_Info *          unlock_display(Display_Lock_Record * id);
 Error_Info *          unlock_display_by_dpath(DDCA_IO_Path dpath);
 void                  dbgrpt_display_locks(int depth);
+char *                interpret_display_lock_flags_t(Display_Lock_Flags lock_flags);
+void                  init_i2c_display_lock(void);
 
 #endif /* DDC_DISPLAY_LOCK_H_ */

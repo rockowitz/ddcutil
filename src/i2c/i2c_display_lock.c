@@ -38,6 +38,7 @@
 
 #include "util/debug_util.h"
 #include "util/error_info.h"
+#include "util/glib_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -53,6 +54,18 @@
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
+
+char * interpret_display_lock_flags_t(Display_Lock_Flags lock_flags) {
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * buf = get_thread_fixed_buffer(&buf_key, 200);
+
+   if (lock_flags & DDISP_WAIT)
+      strcpy(buf, "DDISP_WAIT");
+   else
+      strcpy(buf, "DDISP_NONE");
+
+   return buf;
+}
 
 
 static bool lock_rec_matches_io_path(Display_Lock_Record * ddesc, DDCA_IO_Path path) {
@@ -92,6 +105,15 @@ lockrec_repr_t(Display_Lock_Record * ref) {
 }
 
 
+Display_Lock_Record * create_display_lock_record(DDCA_IO_Path io_path) {
+   Display_Lock_Record * new_desc = calloc(1, sizeof(Display_Lock_Record));
+   memcpy(new_desc->marker, DISPLAY_LOCK_MARKER, 4);
+   new_desc->io_path           = io_path;
+   g_mutex_init(&new_desc->display_mutex);
+   return new_desc;
+}
+
+
 static Display_Lock_Record *
 get_display_lock_record_by_dpath(DDCA_IO_Path io_path) {
    bool debug = false;
@@ -108,10 +130,7 @@ get_display_lock_record_by_dpath(DDCA_IO_Path io_path) {
       }
    }
    if (!result) {
-      Display_Lock_Record * new_desc = calloc(1, sizeof(Display_Lock_Record));
-      memcpy(new_desc->marker, DISPLAY_LOCK_MARKER, 4);
-      new_desc->io_path           = io_path;
-      g_mutex_init(&new_desc->display_mutex);
+      Display_Lock_Record * new_desc = create_display_lock_record(io_path);
       g_ptr_array_add(lock_records, new_desc);
       result = new_desc;
    }
@@ -152,13 +171,14 @@ lock_display(
       Display_Lock_Flags flags)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s, flags=%s",
+         ddesc, lockrec_repr_t(ddesc), interpret_display_lock_flags_t(flags));
 
    Error_Info * err = NULL;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    TRACED_ASSERT(memcmp(ddesc->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    bool self_thread = false;
-   g_mutex_lock(&master_display_lock_mutex);  //wrong - will hold lock during wait
+   g_mutex_lock(&master_display_lock_mutex);
    if (ddesc->display_mutex_thread == g_thread_self() )
       self_thread = true;
    g_mutex_unlock(&master_display_lock_mutex);
@@ -233,13 +253,13 @@ lock_display_by_dpath(
       Display_Lock_Flags flags)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dpath=%s, flags=0x%02x", dpath_repr_t(&dpath), flags);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dpath=%s, flags=0x%02x=%s",
+         dpath_repr_t(&dpath), flags, interpret_display_lock_flags_t(flags));
    Display_Lock_Record * lockid = get_display_lock_record_by_dpath(dpath);
    Error_Info * result = lock_display(lockid, flags);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "dpath=%s", dpath_repr_t(&dpath));
    return result;
 }
-
 
 
 /** Unlocks a distinct display.
