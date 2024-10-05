@@ -75,6 +75,8 @@ Error_Info * errinfo_new(
       const char *   detail,
       ...);
 
+Error_Info * errinfo_copy(Error_Info* old);
+
 #define ERRINFO_NEW(_status_code, _detail, ...) \
    errinfo_new(_status_code, __func__, _detail, ##__VA_ARGS__)
 

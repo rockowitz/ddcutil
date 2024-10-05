@@ -265,6 +265,29 @@ errinfo_set_detail(
 }
 
 
+/** Make a deep copy of a #Error_Info record.
+ *
+ *  @param  old  record to copy
+ *  @return copy of record
+ */
+Error_Info * errinfo_copy(Error_Info* old) {
+   Error_Info * new = calloc(1, sizeof(Error_Info));
+   memcpy(new->marker, old->marker, 4);
+   new->status_code = old->status_code;
+   if (old->func)
+    new->func = g_strdup(old->func);
+   if (old->detail)
+      new->detail = g_strdup(old->detail);
+   new->max_causes = old->max_causes;
+   new->cause_ct = old->cause_ct;
+   new->causes = calloc(new->max_causes+1, sizeof(Error_Info*));
+   for (int ndx = 0; ndx < new->cause_ct; ndx++) {
+      new->causes[ndx] = errinfo_copy(old->causes[ndx]);
+   }
+   return new;
+}
+
+
 /** Adds a cause to an existing #Error_Info instance
  *
  *  \param  parent instance to which cause will be added
@@ -476,9 +499,6 @@ errinfo_new_with_causes(
  *  instances specified as the causes. The collection is
  *  passed as a GPtrArray.
  *
- *  Note that the pointers in the **causes** array are copied to the new
- *  #Error_Info instance. The remainder of the GPtrArray is freed.
- *
  *  \param  code            status code of the new instance
  *  \param  causes          GPtrArray of #Error_Info instances
  *  \param  func            name of function creating the new #Error_Info
@@ -498,9 +518,8 @@ Error_Info * errinfo_new_with_causes_gptr(
    Error_Info * result = errinfo_newv(status_code, func, detail, ap);
    va_end(ap);
    for (int ndx = 0; ndx < causes->len; ndx++) {
-      errinfo_add_cause(result, g_ptr_array_index(causes,ndx));
+      errinfo_add_cause(result, errinfo_copy(g_ptr_array_index(causes,ndx)));
    }
-   g_ptr_array_free(causes, false);
    return result;
 }
 
