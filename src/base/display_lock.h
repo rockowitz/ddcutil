@@ -1,11 +1,11 @@
-/* @file i2c_display_lock.h
+/* @file display_lock.h
  */
 
 // Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DDC_DISPLAY_LOCK_H_
-#define DDC_DISPLAY_LOCK_H_
+#ifndef DISPLAY_LOCK_H_
+#define DISPLAY_LOCK_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,4 +40,4 @@ void                  dbgrpt_display_locks(int depth);
 char *                interpret_display_lock_flags_t(Display_Lock_Flags lock_flags);
 void                  init_i2c_display_lock(void);
 
-#endif /* DDC_DISPLAY_LOCK_H_ */
+#endif /* DISPLAY_LOCK_H_ */
