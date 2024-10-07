@@ -419,7 +419,7 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
 I2C_Bus_Info *
 i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int busno) {
    bool debug = false;
-   DBGMSF(debug, "Starting. busno=%d", busno);
+   DBGMSF(debug, "Starting. buses=%p, busno=%d", buses, busno);
 
    I2C_Bus_Info * result = NULL;
    for (int ndx = 0; ndx < buses->len; ndx++) {
