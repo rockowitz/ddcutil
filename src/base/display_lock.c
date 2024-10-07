@@ -73,19 +73,19 @@ char * interpret_display_lock_flags_t(Display_Lock_Flags lock_flags) {
 }
 
 
-static bool lock_rec_matches_io_path(Display_Lock_Record * ddesc, DDCA_IO_Path path) {
+static bool lock_rec_matches_io_path(Display_Lock_Record * dlr, DDCA_IO_Path path) {
    bool result = false;
    // i2c_busno and hiddev are same size, to following works for DDCA_IO_USB
-   if (ddesc->io_path.io_mode == path.io_mode && ddesc->io_path.path.i2c_busno == path.path.i2c_busno)
+   if (dlr->io_path.io_mode == path.io_mode && dlr->io_path.path.i2c_busno == path.path.i2c_busno)
       result = true;
    return result;
 }
 
 
 #ifdef UNUSED
-static bool lock_rec_matches_dref(Display_Lock_Record * ddesc, Display_Ref * dref) {
+static bool lock_rec_matches_dref(Display_Lock_Record * dlr, Display_Ref * dref) {
    bool result = false;
-   if (dpath_eq(ddesc->io_path, dref->io_path))
+   if (dpath_eq(dlr->io_path, dref->io_path))
       result = true;
    return result;
 }
@@ -163,7 +163,7 @@ get_display_lock_record_by_dref(Display_Ref * dref) {
 
 /** Locks a distinct display.
  *
- *  \param  ddesc              Display_Lock_Record distinct display identifier
+ *  \param  dlr              Display_Lock_Record distinct display identifier
  *  \param  flags              if **DDISP_WAIT** set, wait for locking
  *  \retval NULL               success
  *  \retval Error_Info(DDCRC_LOCKED)       locking failed, display already locked by another
@@ -172,19 +172,19 @@ get_display_lock_record_by_dref(Display_Ref * dref) {
  */
 Error_Info *
 lock_display(
-      Display_Lock_Record * ddesc,
+      Display_Lock_Record * dlr,
       Display_Lock_Flags flags)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s, flags=%s",
-         ddesc, lockrec_repr_t(ddesc), interpret_display_lock_flags_t(flags));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dlr=%p -> %s, flags=%s",
+         dlr, lockrec_repr_t(dlr), interpret_display_lock_flags_t(flags));
 
    Error_Info * err = NULL;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
-   TRACED_ASSERT(memcmp(ddesc->marker, DISPLAY_LOCK_MARKER, 4) == 0);
+   TRACED_ASSERT(memcmp(dlr->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    bool self_thread = false;
    g_mutex_lock(&master_display_lock_mutex);
-   if (ddesc->display_mutex_thread == g_thread_self() )
+   if (dlr->display_mutex_thread == g_thread_self() )
       self_thread = true;
    g_mutex_unlock(&master_display_lock_mutex);
    if (self_thread) {
@@ -196,22 +196,22 @@ lock_display(
 
    bool locked = true;
    if (flags & DDISP_WAIT) {
-      g_mutex_lock(&ddesc->display_mutex);
+      g_mutex_lock(&dlr->display_mutex);
    }
    else {
-      locked = g_mutex_trylock(&ddesc->display_mutex);
+      locked = g_mutex_trylock(&dlr->display_mutex);
       if (!locked)
          err = errinfo_new(DDCRC_LOCKED, __func__, "Locking failed");
    }
 
    if (locked) {  // note that this thread owns the lock
-       ddesc->display_mutex_thread = g_thread_self();
-       ddesc->linux_thread_id = get_thread_id();
+       dlr->display_mutex_thread = g_thread_self();
+       dlr->linux_thread_id = get_thread_id();
    }
 
 bye:
    // need a new DDC status code
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr=%p -> %s", dlr, lockrec_repr_t(dlr));
    if (err)
       show_backtrace(2);
    return err;
@@ -224,24 +224,24 @@ int      lockrec_max_wait_millisec = DEFAULT_FLOCK_MAX_WAIT_MILLISEC;
 
 Error_Info *
 lock_display2(
-      Display_Lock_Record * ddesc,
+      Display_Lock_Record * dlr,
       Display_Lock_Flags flags)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "device %s, flags=%s",
-         dpath_repr_t(&ddesc->io_path),  interpret_display_lock_flags_t(flags));
+         dpath_repr_t(&dlr->io_path),  interpret_display_lock_flags_t(flags));
    Error_Info * err = NULL;
-   TRACED_ASSERT(memcmp(ddesc->marker, DISPLAY_LOCK_MARKER, 4) == 0);
+   TRACED_ASSERT(memcmp(dlr->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    uint64_t lockrec_poll_microsec = 1000 * lockrec_poll_millisec;
 
-   //DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s, flags=%s",
-   //      ddesc, lockrec_repr_t(ddesc), interpret_display_lock_flags_t(flags));
+   //DBGTRC_STARTING(debug, TRACE_GROUP, "dlr=%p -> %s, flags=%s",
+   //      dlr, lockrec_repr_t(dlr), interpret_display_lock_flags_t(flags));
 
-   if (ddesc->display_mutex_thread == g_thread_self() ) {
+   if (dlr->display_mutex_thread == g_thread_self() ) {
       char buf[80];
       g_snprintf(buf, 80,
             "Attempting to lock device %s already locked by current thread %jd",
-            dpath_repr_t(&ddesc->io_path), get_thread_id());
+            dpath_repr_t(&dlr->io_path), get_thread_id());
       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, buf);
       err = ERRINFO_NEW(DDCRC_ALREADY_OPEN, buf);
       goto bye;
@@ -260,9 +260,9 @@ lock_display2(
        lock_call_ctr++;
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "Calling g_mutex_trylcock(), mutex=%p, device=%s, lock_call_ctr=%d, total_wait_millisec %d",
-             ddesc->display_mutex, dpath_repr_t(&ddesc->io_path), lock_call_ctr, total_wait_millisec);
+             dlr->display_mutex, dpath_repr_t(&dlr->io_path), lock_call_ctr, total_wait_millisec);
 
-       bool locked = g_mutex_trylock(&ddesc->display_mutex);
+       bool locked = g_mutex_trylock(&dlr->display_mutex);
        if (locked) {
            continue;
        }
@@ -275,18 +275,18 @@ lock_display2(
     if (locked) {
        DBGTRC(debug, DDCA_TRC_NONE, "Lock succeeded after %d tries and %d millisec",
              lock_call_ctr, total_wait_millisec);
-       ddesc->display_mutex_thread = g_thread_self();
-       ddesc->linux_thread_id = get_thread_id();
+       dlr->display_mutex_thread = g_thread_self();
+       dlr->linux_thread_id = get_thread_id();
     }
     else {
        // living dangerously, but it's an error msg
        MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
              "Max wait time for %s exceeded after %d g_mutex_lock() calls",
-             dpath_repr_t(&ddesc->io_path), lock_call_ctr);
+             dpath_repr_t(&dlr->io_path), lock_call_ctr);
        MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
-             "Lock currently held by thread %jd", ddesc->linux_thread_id);
+             "Lock currently held by thread %jd", dlr->linux_thread_id);
        err = ERRINFO_NEW(DDCRC_LOCKED, "Locking failed for %s. Apparently held by thread %jd",
-             dpath_repr_t(&ddesc->io_path), ddesc->linux_thread_id);
+             dpath_repr_t(&dlr->io_path), dlr->linux_thread_id);
     }
 
 
@@ -347,34 +347,34 @@ lock_display_by_dpath(
 
 
 Error_Info *
-unlock_display2(Display_Lock_Record * ddesc) {
+unlock_display2(Display_Lock_Record * dlr) {
    bool debug = false;
-   assert(ddesc);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p, device=%s", dpath_repr_t(&ddesc->io_path));
+   assert(dlr);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dlr=%p, device=%s", dpath_repr_t(&dlr->io_path));
    Error_Info * err = NULL;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
-   TRACED_ASSERT(memcmp(ddesc->marker, DISPLAY_LOCK_MARKER, 4) == 0);
+   TRACED_ASSERT(memcmp(dlr->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    char buf[80];
-   intmax_t lock_tid = ddesc->linux_thread_id;
+   intmax_t lock_tid = dlr->linux_thread_id;
    if (lock_tid != get_thread_id()) {
       if (lock_tid == 0) {
          g_snprintf(buf, 80, "Attempting to unlock device %s not currently locked",
-                             dpath_repr_t(&ddesc->io_path));
+                             dpath_repr_t(&dlr->io_path));
       }
       else {
          g_snprintf(buf, 80, "Attempting to unlock device %s locked by different thread %jd",
-                    dpath_repr_t(&ddesc->io_path), lock_tid);
+                    dpath_repr_t(&dlr->io_path), lock_tid);
       }
       SYSLOG2(DDCA_SYSLOG_ERROR, buf);
       err = ERRINFO_NEW(DDCRC_LOCKED, buf);
    }
    else {
-      ddesc->display_mutex_thread = NULL;
-      ddesc->linux_thread_id = 0;
-      g_mutex_unlock(&ddesc->display_mutex);
+      dlr->display_mutex_thread = NULL;
+      dlr->linux_thread_id = 0;
+      g_mutex_unlock(&dlr->display_mutex);
    }
 
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr=%p -> %s", dlr, lockrec_repr_t(dlr));
    return err;
 }
 
@@ -386,24 +386,24 @@ unlock_display2(Display_Lock_Record * ddesc) {
  *  \retval NULL   no error
  */
 Error_Info *
-unlock_display(Display_Lock_Record * ddesc) {
+unlock_display(Display_Lock_Record * dlr) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dlr=%p -> %s", dlr, lockrec_repr_t(dlr));
    Error_Info * err = NULL;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
-   TRACED_ASSERT(memcmp(ddesc->marker, DISPLAY_LOCK_MARKER, 4) == 0);
+   TRACED_ASSERT(memcmp(dlr->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    g_mutex_lock(&master_display_lock_mutex);
-   if (ddesc->display_mutex_thread != g_thread_self()) {
+   if (dlr->display_mutex_thread != g_thread_self()) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to unlock display lock owned by different thread");
       err = errinfo_new(DDCRC_LOCKED, __func__, "Attempting to unlock display lock owned by different thread");
    }
    else {
-      ddesc->display_mutex_thread = NULL;
-      ddesc->linux_thread_id = 0;
-      g_mutex_unlock(&ddesc->display_mutex);
+      dlr->display_mutex_thread = NULL;
+      dlr->linux_thread_id = 0;
+      g_mutex_unlock(&dlr->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr=%p -> %s", dlr, lockrec_repr_t(dlr));
    return err;
 }
 
