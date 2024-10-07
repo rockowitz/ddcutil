@@ -424,7 +424,9 @@ Usb_Monitor_Info * create_usb_monitor_info(const char * hiddev_name) {
    Usb_Monitor_Info * moninfo = calloc(1,sizeof(Usb_Monitor_Info));
    memcpy(moninfo->marker, USB_MONITOR_INFO_MARKER, 4);
    moninfo->hiddev_device_name = g_strdup(hiddev_name);
-   moninfo->lock_rec = create_display_lock_record(hiddev_name_to_number(hiddev_name));
+#ifdef ALT_LOCK_REC
+   moninfo->lock_rec = create_display_lock_record(usb_io_path(hiddev_name_to_number(hiddev_name)));
+   #endif
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", moninfo);
    return moninfo;
 }

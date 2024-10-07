@@ -6,12 +6,17 @@
 #ifndef USB_BASE_H_
 #define USB_BASE_H_
 
+#include <glib-2.0/glib.h>
 #include <linux/hiddev.h>
 #include <stdint.h>
 
 #include "util/coredefs.h"
 #include "util/data_structures.h"
+#include "util/edid.h"
 
+#ifdef ALT_LOCK_REC
+#include "base/display_lock.h"
+#endif
 #include "base/status_code_mgt.h"
 
 #ifdef UNUSED
@@ -28,6 +33,21 @@
          ddc_abort(errno); \
    } while(0)
 #endif
+
+/* Describes a USB connected monitor.  */
+#define USB_MONITOR_INFO_MARKER "UMNF"
+typedef struct usb_monitor_info {
+   char                     marker[4];
+   char *                   hiddev_device_name;
+   Parsed_Edid *            edid;
+#ifdef ALT_LOCK_REC
+   Display_Lock_Record *    lock_rec;
+#endif
+   struct hiddev_devinfo *  hiddev_devinfo;
+   // a flagrant waste of space, avoid premature optimization
+   GPtrArray *              vcp_codes[256];   // array of Usb_Monitor_Vcp_Rec *
+} Usb_Monitor_Info;
+
 
 
 int          usb_open_hiddev_device(char * hiddev_devname, Byte calloptions);

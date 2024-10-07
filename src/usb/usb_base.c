@@ -19,6 +19,9 @@
 #include "usb_util/hiddev_util.h"
 
 #include "base/core.h"
+#ifdef ALT_LOCK_REC
+#include "base/display_lock.h"
+#endif
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
 #include "base/rtti.h"
@@ -36,6 +39,34 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
 //
 // Basic USB HID Device Operations
 //
+
+#ifdef ALT_LOCK_REC
+Error_Info *
+lock_display_by_usb_monitor_info(
+      Usb_Monitor_Info * usbinfo,
+      Display_Lock_Flags flags)
+{
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "USB device %s, flags=%s",
+         usbinfo->hiddev_device_name, interpret_display_lock_flags_t(flags));
+   Display_Lock_Record * lockid = usbinfo->lock_rec;
+   Error_Info * result = lock_display(lockid, flags);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "device=%s", usbinfo->hiddev_device_name);
+   return result;
+}
+
+
+Error_Info *
+unlock_display_by_usb_monitor_info(Usb_Monitor_Info * usbinfo) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "USB device %s", usbinfo->hiddev_device_name);
+   Display_Lock_Record * lockid = usbinfo->lock_rec;
+   Error_Info * result = unlock_display(lockid);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "device=%s", usbinfo->hiddev_device_name);
+   return result;
+}
+#endif
+
 
 /** Open a USB device
  *

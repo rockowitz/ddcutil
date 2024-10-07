@@ -1,7 +1,7 @@
 /** @file usb_displays.h
  */
 
-// Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef USB_DISPLAYS_H_
@@ -18,6 +18,9 @@
 #include "base/display_lock.h"
 #include "base/displays.h"
 #include "base/ddc_packets.h"
+#ifdef ALT_DISPLAY_LOCK
+#include "base/display_lock.h"
+#endif
 
 #include "vcp/vcp_feature_values.h"
 
@@ -55,17 +58,6 @@ typedef struct usb_monitor_vcp_rec {
    struct hiddev_usage_ref   * uref;
 } Usb_Monitor_Vcp_Rec;
 
-/* Describes a USB connected monitor.  */
-#define USB_MONITOR_INFO_MARKER "UMNF"
-typedef struct usb_monitor_info {
-   char                     marker[4];
-   char *                   hiddev_device_name;
-   Parsed_Edid *            edid;
-   Display_Lock_Record *    lock_rec;
-   struct hiddev_devinfo *  hiddev_devinfo;
-   // a flagrant waste of space, avoid premature optimization
-   GPtrArray *              vcp_codes[256];   // array of Usb_Monitor_Vcp_Rec *
-} Usb_Monitor_Info;
 
 void        dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth);
 Usb_Monitor_Info *
