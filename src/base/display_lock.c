@@ -43,12 +43,19 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "ddcutil_types.h"
+#include "ddcutil_status_codes.h"
+
 #include "base/displays.h"
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
-#include "ddcutil_types.h"
-#include "ddcutil_status_codes.h"
+#ifdef ALT_LCOK_REC
+#include "usb/usb_displays.h"   // forward ref, need to split out usb_displays_base.h
+#endif
+
+#include "base/display_lock.h"
+
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
@@ -156,7 +163,7 @@ get_display_lock_record_by_dref(Display_Ref * dref) {
 
 /** Locks a distinct display.
  *
- *  \param  id                 distinct display identifier
+ *  \param  ddesc              Display_Lock_Record distinct display identifier
  *  \param  flags              if **DDISP_WAIT** set, wait for locking
  *  \retval NULL               success
  *  \retval Error_Info(DDCRC_LOCKED)       locking failed, display already locked by another
@@ -211,6 +218,84 @@ bye:
 }
 
 
+int      lockrec_poll_millisec = DEFAULT_FLOCK_POLL_MILLISEC;   // *** TEMP ***
+int      lockrec_max_wait_millisec = DEFAULT_FLOCK_MAX_WAIT_MILLISEC;
+
+
+Error_Info *
+lock_display2(
+      Display_Lock_Record * ddesc,
+      Display_Lock_Flags flags)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "device %s, flags=%s",
+         dpath_repr_t(&ddesc->io_path),  interpret_display_lock_flags_t(flags));
+   Error_Info * err = NULL;
+   TRACED_ASSERT(memcmp(ddesc->marker, DISPLAY_LOCK_MARKER, 4) == 0);
+   uint64_t lockrec_poll_microsec = 1000 * lockrec_poll_millisec;
+
+   //DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s, flags=%s",
+   //      ddesc, lockrec_repr_t(ddesc), interpret_display_lock_flags_t(flags));
+
+   if (ddesc->display_mutex_thread == g_thread_self() ) {
+      char buf[80];
+      g_snprintf(buf, 80,
+            "Attempting to lock device %s already locked by current thread %jd",
+            dpath_repr_t(&ddesc->io_path), get_thread_id());
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, buf);
+      err = ERRINFO_NEW(DDCRC_ALREADY_OPEN, buf);
+      goto bye;
+   }
+
+   int total_wait_millisec = 0;
+   uint64_t max_wait_millisec = (flags & DDISP_WAIT) ? lockrec_max_wait_millisec : 0;
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+          "flock_poll_millisec=%d, flock_max_wait_millisec=%d ",
+          lockrec_poll_millisec, lockrec_max_wait_millisec);
+
+    int lock_call_ctr = 0;
+    bool locked = false;
+
+    while(!locked && total_wait_millisec <= max_wait_millisec) {
+       lock_call_ctr++;
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+             "Calling g_mutex_trylcock(), mutex=%p, device=%s, lock_call_ctr=%d, total_wait_millisec %d",
+             ddesc->display_mutex, dpath_repr_t(&ddesc->io_path), lock_call_ctr, total_wait_millisec);
+
+       bool locked = g_mutex_trylock(&ddesc->display_mutex);
+       if (locked) {
+           continue;
+       }
+
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping for %d millisec", lockrec_poll_millisec);
+       g_usleep(lockrec_poll_microsec);
+       total_wait_millisec += lockrec_poll_millisec;
+    }
+
+    if (locked) {
+       DBGTRC(debug, DDCA_TRC_NONE, "Lock succeeded after %d tries and %d millisec",
+             lock_call_ctr, total_wait_millisec);
+       ddesc->display_mutex_thread = g_thread_self();
+       ddesc->linux_thread_id = get_thread_id();
+    }
+    else {
+       // living dangerously, but it's an error msg
+       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
+             "Max wait time for %s exceeded after %d g_mutex_lock() calls",
+             dpath_repr_t(&ddesc->io_path), lock_call_ctr);
+       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
+             "Lock currently held by thread %jd", ddesc->linux_thread_id);
+       err = ERRINFO_NEW(DDCRC_LOCKED, "Locking failed for %s. Apparently held by thread %jd",
+             dpath_repr_t(&ddesc->io_path), ddesc->linux_thread_id);
+    }
+
+
+bye:
+    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "");
+    return err;
+}
+
+
 #ifdef UNUSED
 /** Locks a display.
  *
@@ -257,6 +342,40 @@ lock_display_by_dpath(
    Error_Info * result = lock_display(lockid, flags);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "dpath=%s", dpath_repr_t(&dpath));
    return result;
+}
+
+
+
+Error_Info *
+unlock_display2(Display_Lock_Record * ddesc) {
+   bool debug = false;
+   assert(ddesc);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p, device=%s", dpath_repr_t(&ddesc->io_path));
+   Error_Info * err = NULL;
+   // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
+   TRACED_ASSERT(memcmp(ddesc->marker, DISPLAY_LOCK_MARKER, 4) == 0);
+   char buf[80];
+   intmax_t lock_tid = ddesc->linux_thread_id;
+   if (lock_tid != get_thread_id()) {
+      if (lock_tid == 0) {
+         g_snprintf(buf, 80, "Attempting to unlock device %s not currently locked",
+                             dpath_repr_t(&ddesc->io_path));
+      }
+      else {
+         g_snprintf(buf, 80, "Attempting to unlock device %s locked by different thread %jd",
+                    dpath_repr_t(&ddesc->io_path), lock_tid);
+      }
+      SYSLOG2(DDCA_SYSLOG_ERROR, buf);
+      err = ERRINFO_NEW(DDCRC_LOCKED, buf);
+   }
+   else {
+      ddesc->display_mutex_thread = NULL;
+      ddesc->linux_thread_id = 0;
+      g_mutex_unlock(&ddesc->display_mutex);
+   }
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
+   return err;
 }
 
 
@@ -379,6 +498,8 @@ init_i2c_display_lock(void) {
 
    RTTI_ADD_FUNC(get_display_lock_record_by_dpath);
    RTTI_ADD_FUNC(lock_display);
+   RTTI_ADD_FUNC(lock_display2);
+   RTTI_ADD_FUNC(unlock_display2);
    RTTI_ADD_FUNC(lock_display_by_dpath);
    RTTI_ADD_FUNC(unlock_display);
    RTTI_ADD_FUNC(unlock_display_by_dpath);
