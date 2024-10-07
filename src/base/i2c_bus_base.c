@@ -259,7 +259,9 @@ I2C_Bus_Info * i2c_new_bus_info(int busno) {
    I2C_Bus_Info * businfo = calloc(1, sizeof(I2C_Bus_Info));
    memcpy(businfo->marker, I2C_BUS_INFO_MARKER, 4);
    businfo->busno = busno;
+#ifdef ALT_LOCK_REC
    businfo->lock_record = create_display_lock_record(i2c_io_path(busno));
+#endif
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", businfo);
    return businfo;
 }

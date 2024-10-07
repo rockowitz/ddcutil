@@ -56,7 +56,9 @@ struct {
    int              busno;              ///< I2C device number, i.e. N for /dev/i2c-N
    unsigned long    functionality;      ///< i2c bus functionality flags
    Parsed_Edid *    edid;               ///< parsed EDID, if slave address x50 active
-   Display_Lock_Record *   lock_record;        ///
+#ifdef ALT_LOCK_REC
+   Display_Lock_Record * lock_record;   ///<
+#endif
    uint16_t         flags;              ///< I2C_BUS_* flags
    char *           driver;             ///< driver name
    int              open_errno;         ///< errno if open fails (!I2C_BUS_ACCESSIBLE)
