@@ -359,6 +359,11 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
          rpt_nl();
          int fd = -1;
          Error_Info * erec = i2c_open_bus(busno, CALLOPT_ERR_MSG, &fd);
+#ifdef ALT_LOCK_REC
+         char filename[80];
+         g_snprintf(filename, 80, "i2c-%d", busno);
+         Error_Info * erec = i2c_open_bus_basic(filename, CALLOPT_ERR_MSG, &fd);
+#endif
          if (erec) {
             ERRINFO_FREE(erec);
             continue;
@@ -460,6 +465,9 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
             edid = NULL;
          }
          i2c_close_bus(busno,fd, CALLOPT_ERR_MSG);
+#ifdef ALT_LOCK_REC
+         // todo
+#endif
       }
    }
 
