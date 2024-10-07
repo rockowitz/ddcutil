@@ -161,6 +161,51 @@ void include_open_failures_reported(int busno) {
 }
 
 
+#ifdef ALT_LOCK_RECORD
+Error_Info *
+lock_display_by_businfo(
+      I2C_Bus_Info *     businfo,
+      Display_Lock_Flags flags)
+{
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bus = BusInfo[/dev/i2c-%d]", businfo->busno);
+   Display_Lock_Record * lockid = businfo->lock_record;
+   Error_Info * result = lock_display2(lockid, flags);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "device=/dev/i2c-%d", businfo->busno);
+   return result;
+}
+
+
+Error_Info *
+unlock_display_by_businfo(I2C_Bus_Info * businfo) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bus = BusInfo[/dev/i2c-%d]", businfo->busno);
+   Display_Lock_Record * lockid = businfo->lock_record;
+   Error_Info * result = unlock_display2(lockid);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "device=/dev/i2c-%d", businfo->busno);
+   return result;
+}
+#endif
+
+
+Error_Info * i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
+   bool debug = false;
+   Error_Info * err = NULL;
+   RECORD_IO_EVENT(
+         -1,
+         IE_OPEN,
+         ( *fd_loc = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
+         );
+   // if successful returns file descriptor, if fail, returns -1 and errno is set
+   if (*fd_loc < 0) {
+      int errsv = -errno;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) failed. errno=%s", filename, psc_desc(errsv));
+      err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s", filename, psc_desc(errsv));
+   }
+
+   return err;
+}
+
 
 /** Open an I2C bus device.
  *
@@ -173,13 +218,28 @@ void include_open_failures_reported(int busno) {
  *  Call options recognized
  *  - CALLOPT_WAIT
  */
-Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
+Error_Info * i2c_open_bus(
+      int busno,
+#ifdef ALT_LOCK_RECORD
+      Display_Lock_Record * lockrec,
+#endif
+      Byte callopts,
+      int* fd_loc)
+{
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "/dev/i2c-%d, callopts=0x%02x=%s",
          busno, callopts, interpret_call_options_t(callopts));
    ASSERT_WITH_BACKTRACE(busno >= 0);
+#ifdef ALT_LOCK_REC
+   assert(lockrec);
+#endif
    bool wait = callopts & CALLOPT_WAIT;
-   wait = true;
+   wait = true;  // *** TEMP ***
+
+#ifdef ALT_LOCK_REC
+   I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
+   assert(businfo); // !!! fails, all_bus_info not yet set
+#endif
 
    int max_wait_millisec = 1000;    // hack
    int wait_interval_millisec = 100;
@@ -209,6 +269,9 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
 
       // 1) lock display within this ddcutil/libddcutil instance
       cur_error = lock_display_by_dpath(dpath, ddisp_flags);
+      #ifdef ALT_LOCK_REC
+      cur_error = lock_display2(businfo->lock_record, ddisp_flags);
+      #endif
       if (cur_error) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "lock_display_by_dpath(%s) returned %s", filename,
                          psc_desc(cur_error->status_code));
@@ -222,20 +285,10 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
       // 2) Open the device
       // TODO: wrap in mutex, since flock requires fd
       if (!cur_error) {
-         RECORD_IO_EVENT(
-               -1,
-               IE_OPEN,
-               ( *fd_loc = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
-               );
-         // if successful returns file descriptor, if fail, returns -1 and errno is set
-         if (*fd_loc < 0) {
-            int errsv = -errno;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) failed. errno=%s", filename, psc_desc(errsv));
-            cur_error = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s", filename, psc_desc(errsv));
-         }
-         else  {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) succeeded, tryctr=%d", filename, tryctr);
+         cur_error = i2c_open_bus_basic(filename, callopts, fd_loc);
+         if (!cur_error) {
             device_opened = true;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) succeeded, tryctr=%d", filename, tryctr);
          }
       }
 
@@ -306,6 +359,25 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
 }
 
 
+Status_Errno i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
+   int rc;
+   Status_Errno result = 0;
+   RECORD_IO_EVENT(fd, IE_CLOSE, ( rc = close(fd) ) );
+   assert( rc == 0 || rc == -1);   // per documentation
+   int errsv = errno;
+   if (rc < 0) {
+      // EBADF (9)  fd isn't a valid open file descriptor
+      // EINTR (4)  close() interrupted by a signal
+      // EIO   (5)  I/O error
+      if (callopts & CALLOPT_ERR_MSG)
+         f0printf(ferr(), "Close failed for %s, errno=%s\n",
+                          filename_for_fd_t(fd), linux_errno_desc(errsv));
+      result = -errsv;
+      // assert(rc == 0);     // don't bother with recovery for now
+   }
+   return result;
+}
+
 /** Closes an open I2C bus device.
  *
  * @param  busno     i2c_bus_number
@@ -321,8 +393,12 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
           "busno=%d, fd=%d - %s, callopts=%s",
           busno, fd, filename_for_fd_t(fd), interpret_call_options_t(callopts));
 
+#ifdef ALT_LOCK_BASIC
+   I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
+   assert(businfo);
+   #endif
+
    Status_Errno result = 0;
-   int rc = 0;
 
    // 3) release cross-instance lock
    if (cross_instance_locks_enabled) {
@@ -334,24 +410,16 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
    }
 
    // 2) Close the device
-   RECORD_IO_EVENT(fd, IE_CLOSE, ( rc = close(fd) ) );
-   assert( rc == 0 || rc == -1);   // per documentation
-   int errsv = errno;
-   if (rc < 0) {
-      // EBADF (9)  fd isn't a valid open file descriptor
-      // EINTR (4)  close() interrupted by a signal
-      // EIO   (5)  I/O error
-      if (callopts & CALLOPT_ERR_MSG)
-         f0printf(ferr(), "Close failed for %s, errno=%s\n",
-                          filename_for_fd_t(fd), linux_errno_desc(errsv));
-      result = -errsv;
-      assert(rc == 0);     // don't bother with recovery for now
-   }
+   result = i2c_close_bus_basic(busno, fd, callopts);
+   assert(result == 0);   // TODO; handle failure
 
    // 1) Release the cross-thread lock
    DDCA_IO_Path dpath;
    dpath.io_mode = DDCA_IO_I2C;
    dpath.path.i2c_busno = busno;
+#ifdef ALT_LOCK_REC
+   Error_Info * erec = unlock_display2(businfo->lock_record);
+#endif
    Error_Info * erec = unlock_display_by_dpath(dpath);
    if (erec) {
       char * s = g_strdup_printf("Unexpected error %s from unlock_display_by_dpath(%s)",
@@ -987,6 +1055,9 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_open_bus..");
    int fd = -1;
    master_err = i2c_open_bus(businfo->busno, CALLOPT_WAIT, &fd);
+#ifdef ALT_LOCK_REC
+   master_err = i2c_open_bus(businfo->busno, businfo->CALLOPT_WAIT, &fd);
+#endif
    if (master_err) {
       businfo->open_errno = master_err->status_code;
       goto bye;

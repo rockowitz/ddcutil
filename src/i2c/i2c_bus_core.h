@@ -46,7 +46,12 @@ I2C_Bus_Info *   remove_i2c_bus_info();
 // Bus open and close
 void             add_open_failures_reported(Bit_Set_256 failures);
 void             include_open_failures_reported(int busno);
+Error_Info *     open_bus_basic(const char * filename,  Byte callopts, int* fd_loc);
+Error_Info *     i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc);
 Error_Info *     i2c_open_bus(int busno, Byte callopts, int * fd_loc);
+#ifdef ALT_LOCK_REC
+Error_Info *     i2c_open_bus(int busno, Display_Lock_Record lockrec, Byte callopts, int * fd_loc);
+#endif
 Status_Errno     i2c_close_bus(int busno, int fd, Call_Options callopts);
 
 // Bus inspection
