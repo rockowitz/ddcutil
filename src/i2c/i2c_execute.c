@@ -3,7 +3,7 @@
  * Basic functions for writing to and reading from the I2C bus using
  * alternative mechanisms.
  */
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -464,7 +464,7 @@ i2c_ioctl_writer(
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
 
-   if (IS_TRACING())
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
       dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
 
    // per ioctl() man page:
@@ -481,22 +481,18 @@ i2c_ioctl_writer(
          );
    int errsv = errno;
    if (rc < 0) {
-      if (debug) {
-         REPORT_IOCTL_ERROR("I2C_RDWR", errno);
-      }
-   }
-   // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
-
-   if (rc >= 0) {
-      if (rc != 1)      // expected success value
-         DBGMSG("Unexpected: ioctl() write returned %d", rc);
-      rc = 0;
-   }
-   else if (rc < 0) {
+      if (rc != 1)
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
+               "Unexpected: ioctl(() write returned %d, errno=%d", rc, errsv);
       rc = -errsv;
    }
+   else {    // (rc >= 0) {
+      if (rc != 1)      // expected success value
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected: ioctl() write returned %d", rc);
+      rc = 0;
+   }
 
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "fh=%d, filename=%s", fd, filename_for_fd_t(fd));
    return rc;
 }
 
@@ -540,7 +536,7 @@ i2c_ioctl_reader1(
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
 
-   if (IS_TRACING())
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
       dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
 
    RECORD_IO_EVENT(
@@ -550,24 +546,18 @@ i2c_ioctl_reader1(
      );
    int errsv = errno;
    if (rc < 0) {
-      if (debug) {
-         REPORT_IOCTL_ERROR("I2C_RDWR", errno);
-      }
+      rc = -errno;
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error in ioctl() read, rc=%d, errno=%d", rc, errsv);
    }
-   // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
-   if (rc >= 0) {
-      // always see rc == 1
-      if (rc != 1) {
-         DBGMSG("Unexpected ioctl rc = %d, bytect =%d", rc, bytect);
-      }
+   else {
+      if (rc != -1)
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected ioctl rc = %d, bytect =%d", rc, bytect);
       rc = 0;
    }
-   else if (rc < 0)
-      rc = -errsv;
-
    free(messages);
-   // DBGMSG("readbuf=%p, bytect=%d", readbuf, bytect);
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
+   
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "fh=%d, filename=%s, readbuf: %s",
+         fd, filename_for_fd_t(fd), hexstring_t(readbuf, bytect));
    return rc;
 }
 
@@ -607,7 +597,8 @@ i2c_ioctl_reader(
       rc = i2c_ioctl_reader1(fd, slave_addr, bytect, readbuf);
    }
 
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "fh=%d, filename=%s, readbuf: %s",
+         fd, filename_for_fd_t(fd), hexstring_t(readbuf, bytect));
    return rc;
 }
 
