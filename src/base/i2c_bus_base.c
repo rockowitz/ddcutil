@@ -328,7 +328,7 @@ void i2c_free_bus_info(I2C_Bus_Info * businfo) {
                businfo->busno, businfo->edid, hexstring_t((Byte*) businfo->marker,4));
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "%s", msg);
          if (IS_DBGTRC(debug, TRACE_GROUP))
-            SYSLOG2(DDCA_SYSLOG_DEBUG, msg);
+            SYSLOG2(DDCA_SYSLOG_DEBUG, "%s", msg);
          free_parsed_edid(businfo->edid);
          businfo->edid = NULL;
       }
