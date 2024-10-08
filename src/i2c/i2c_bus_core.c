@@ -401,16 +401,21 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
    Status_Errno result = 0;
 
    // 3) release cross-instance lock
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calling flock() for /dev/i2c-%d...", busno);
    if (cross_instance_locks_enabled) {
       int rc = flock_unlock_by_fd(fd);
       if (rc < 0) {
-         DBGTRC_NOPREFIX(true, TRACE_GROUP, "Unexpected error from flock(..,LOCK_UN): %s",
-               psc_desc(rc));
+         DBGTRC_NOPREFIX(true, TRACE_GROUP,
+               "%/dev/i2c-%d. Unexpected error from flock(..,LOCK_UN): %s",
+               busno, psc_desc(rc));
       }
    }
 
    // 2) Close the device
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_close_bus for /dev/i2c-%d...", busno);
    result = i2c_close_bus_basic(busno, fd, callopts);
+   assert(result == 0);   // TODO; handle failure
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "/dev/i2c-%d.  i2c_close_bus() returned %d", busno, result);
    assert(result == 0);   // TODO; handle failure
 
    // 1) Release the cross-thread lock
@@ -420,6 +425,7 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
 #ifdef ALT_LOCK_REC
    Error_Info * erec = unlock_display2(businfo->lock_record);
 #endif
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling unlock_display_by_dpath(/dev/i2c-%d)...", busno);
    Error_Info * erec = unlock_display_by_dpath(dpath);
    if (erec) {
       char * s = g_strdup_printf("Unexpected error %s from unlock_display_by_dpath(%s)",
@@ -629,6 +635,7 @@ i2c_detect_x37(int fd) {
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"loopctr=%d", loopctr);
    return rc;
 }
+
 
 /** Tests if an open display handle is still
  *
@@ -1052,7 +1059,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
 
    // *** Open bus
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_open_bus..");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_open_bus for /dev/i2c-%d..", businfo->busno);
    int fd = -1;
    master_err = i2c_open_bus(businfo->busno, CALLOPT_WAIT, &fd);
 #ifdef ALT_LOCK_REC
@@ -1074,9 +1081,10 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
              }
 #endif
    if (!checked_connector_for_edid) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, calling i2c_get_parsed_edid", businfo->busno);
       DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid);
-      //DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
-      //              businfo->busno, psc_desc(ddcrc));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
+                    businfo->busno, psc_desc(ddcrc));
       // NB It's quite possible that bus has no edid
       if (ddcrc == 0) {
          businfo->flags |= I2C_BUS_ADDR_0X50;
@@ -1099,20 +1107,22 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
              businfo->drm_connector_name = conres.connector_name;
              businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
              businfo->drm_connector_id = res.connector_id;
-            // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Finding connector name for %s using EDID found: %s", dev_name, businfo->drm_connector_name);
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                   "Finding connector name for %s using EDID found: %s",
+                   dev_name, businfo->drm_connector_name);
          }
          else {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "Failed to find connector name for %s  using EDID %p",
-                  i2cN, businfo->edid->bytes);
+                  "busno=%d. Failed to find connector name for %s  using EDID %p",
+                  i2cN, businfo->edid->bytes, businfo->busno);
          }
-
       }
    }
 
 
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "WOLF 4: Bus %s: connector_name=%s, found by: %s",
-   //    dev_name, businfo->drm_connector_name, drm_connector_found_by_name(businfo->drm_connector_found_by));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "WOLF 4: Bus %s: connector_name=%s, found by: %s",
+         dev_name, businfo->drm_connector_name,
+        drm_connector_found_by_name(businfo->drm_connector_found_by));
 
     businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;   // ???
 
@@ -1156,6 +1166,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
        // Testing for slave address x37 turns out to be needed to avoid
        // trying to reload cached display information for a display no
        // longer present
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_detect() for /dev/i2c-%d...", businfo->busno);
        int rc = i2c_detect_x37(fd);
 #ifdef TEST
        if (rc == 0) {
@@ -1165,7 +1176,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
           }
        }
 #endif
-       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "i2c_detect_x37() returned %s", psc_desc(rc));
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s. i2c_detect_x37() returned %s", dev_name, psc_desc(rc));
        if (rc == 0)
           businfo->flags |= I2C_BUS_ADDR_0X37;
        // else if (rc == -EBUSY)
@@ -1181,11 +1192,11 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
     businfo->flags |= I2C_BUS_PROBED;
 bye:
    if ( IS_DBGTRC(debug, TRACE_GROUP)) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "flags = %s", i2c_interpret_bus_flags_t(businfo->flags));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, flags = %s", businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
 
       // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "businfo:");
       // i2c_dbgrpt_bus_info(businfo, 2);
-      DBGTRC_DONE(true, TRACE_GROUP, "");
+      DBGTRC_DONE(true, TRACE_GROUP, "busno=%d", businfo->busno);
    }
    ERRINFO_FREE_WITH_REPORT(master_err, true);
 }
