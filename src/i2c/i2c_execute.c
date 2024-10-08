@@ -481,7 +481,7 @@ i2c_ioctl_writer(
          );
    int errsv = errno;
    if (rc < 0) {
-      if (rc != 1)
+      if (rc != -1)
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
                "Unexpected: ioctl(() write returned %d, errno=%d", rc, errsv);
       rc = -errsv;
@@ -550,8 +550,8 @@ i2c_ioctl_reader1(
       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error in ioctl() read, rc=%d, errno=%d", rc, errsv);
    }
    else {
-      if (rc != -1)
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected ioctl rc = %d, bytect =%d", rc, bytect);
+      if (rc != 1)
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected ioctl() read rc = %d, bytect =%d", rc, bytect);
       rc = 0;
    }
    free(messages);
