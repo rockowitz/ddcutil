@@ -323,10 +323,12 @@ void i2c_free_bus_info(I2C_Bus_Info * businfo) {
       DBGTRC(debug, TRACE_GROUP, "marker = |%.4s|, busno = %d",  businfo->marker, businfo->busno);
    if (businfo && memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) {   // just ignore if already freed
       if (businfo->edid) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Calling free_parsed_edid for %p, marker=%s",
-               businfo->edid, hexstring_t((Byte*) businfo->marker,4));
-         SYSLOG2(DDCA_SYSLOG_DEBUG, "Calling free_parsed_edid for %p, marker=0x%s",
-                                    businfo->edid, hexstring_t((Byte*)businfo->marker,4));
+         char msg[100];
+         g_snprintf(msg, 100,  "Calling free_parsed_edid busno=%d, edid=%p, marker=%s",
+               businfo->busno, businfo->edid, hexstring_t((Byte*) businfo->marker,4));
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "%s", msg);
+         if (IS_DBGTRC(debug, TRACE_GROUP))
+            SYSLOG2(DDCA_SYSLOG_DEBUG, msg);
          free_parsed_edid(businfo->edid);
          businfo->edid = NULL;
       }
