@@ -242,7 +242,7 @@ lock_display2(
       g_snprintf(buf, 80,
             "Attempting to lock device %s already locked by current thread %jd",
             dpath_repr_t(&dlr->io_path), get_thread_id());
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, buf);
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", buf);
       err = ERRINFO_NEW(DDCRC_ALREADY_OPEN, buf);
       goto bye;
    }
@@ -366,7 +366,7 @@ unlock_display2(Display_Lock_Record * dlr) {
          g_snprintf(buf, 80, "Attempting to unlock device %s locked by different thread %jd",
                     dpath_repr_t(&dlr->io_path), lock_tid);
       }
-      SYSLOG2(DDCA_SYSLOG_ERROR, buf);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", buf);
       err = ERRINFO_NEW(DDCRC_LOCKED, buf);
    }
    else {
