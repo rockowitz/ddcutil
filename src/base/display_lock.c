@@ -176,8 +176,8 @@ lock_display(
       Display_Lock_Flags flags)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dlr=%p -> %s, flags=%s",
-         dlr, lockrec_repr_t(dlr), interpret_display_lock_flags_t(flags));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dlr->io_path=%s, dlr->linux_thread_id=%jd flags=%s",
+         dpath_short_name_t(&dlr->io_path), dlr->linux_thread_id, interpret_display_lock_flags_t(flags));
 
    Error_Info * err = NULL;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
@@ -211,7 +211,7 @@ lock_display(
 
 bye:
    // need a new DDC status code
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr=%p -> %s", dlr, lockrec_repr_t(dlr));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr->io_path=%s", dpath_short_name_t(&dlr->io_path));
    if (err)
       show_backtrace(2);
    return err;
@@ -350,7 +350,8 @@ Error_Info *
 unlock_display2(Display_Lock_Record * dlr) {
    bool debug = false;
    assert(dlr);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dlr=%p, device=%s", dpath_repr_t(&dlr->io_path));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dlr->io_path=%s, dlr->linux_thread_id=%jd ",
+         dpath_short_name_t(&dlr->io_path), dlr->linux_thread_id);
    Error_Info * err = NULL;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    TRACED_ASSERT(memcmp(dlr->marker, DISPLAY_LOCK_MARKER, 4) == 0);
@@ -374,7 +375,7 @@ unlock_display2(Display_Lock_Record * dlr) {
       g_mutex_unlock(&dlr->display_mutex);
    }
 
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr=%p -> %s", dlr, lockrec_repr_t(dlr));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr->io_path=%s", dpath_short_name_t(&dlr->io_path));
    return err;
 }
 
@@ -388,11 +389,15 @@ unlock_display2(Display_Lock_Record * dlr) {
 Error_Info *
 unlock_display(Display_Lock_Record * dlr) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dlr=%p -> %s", dlr, lockrec_repr_t(dlr));
+   // DBGTRC_STARTING(debug, TRACE_GROUP, "dlr=%p -> %s", dlr, lockrec_repr_t(dlr));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dlr->io_path=%s", dpath_short_name_t(&dlr->io_path));
    Error_Info * err = NULL;
+
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    TRACED_ASSERT(memcmp(dlr->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    g_mutex_lock(&master_display_lock_mutex);
+   intmax_t current_thread_id = dlr->linux_thread_id;
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old linux_thread_id = %jd", dlr->linux_thread_id);
    if (dlr->display_mutex_thread != g_thread_self()) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to unlock display lock owned by different thread");
       err = errinfo_new(DDCRC_LOCKED, __func__, "Attempting to unlock display lock owned by different thread");
@@ -400,10 +405,12 @@ unlock_display(Display_Lock_Record * dlr) {
    else {
       dlr->display_mutex_thread = NULL;
       dlr->linux_thread_id = 0;
+      current_thread_id = 0;
       g_mutex_unlock(&dlr->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr=%p -> %s", dlr, lockrec_repr_t(dlr));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr->io_path=%s, final linux_thread_id=%d",
+         dpath_repr_t(&dlr->io_path), current_thread_id);
    return err;
 }
 
