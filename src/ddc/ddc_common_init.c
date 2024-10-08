@@ -112,7 +112,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 {
    bool debug = false;
    Error_Info * result = NULL;
-   GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func(g_free);
+   GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func((GDestroyNotify) errinfo_free);
    DBGF(debug, "Starting.");
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)    // timestamps on debug and trace messages?
        dbgtrc_show_time = true;                         // extern in core.h
