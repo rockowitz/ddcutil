@@ -1,4 +1,4 @@
-/** @f error_info.c
+/** \f error_info.c
  *
  *  Struct for reporting errors.
  *
@@ -9,13 +9,12 @@
  *  error is retained for use by higher levels in the call stack.
  */
 
-// Copyright (C) 2017-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
 /** \cond */
 
-// #define _GNU_SOURCE     // for reallocarray() in stdlib.h
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdlib.h>
@@ -125,15 +124,13 @@ errinfo_all_causes_same_status(Error_Info * ddc_excp, int status_code) {
 #endif
 
 
-
 //
 // Instance destruction
 //
 
 /** Releases a #Error_Info instance, including all instances it points to.
  *
- *  \param erec pointer to #Error_Info instance,
- *              do nothing if NULL
+ *  \param erec pointer to #Error_Info instance, do nothing if NULL
  */
 void
 errinfo_free(Error_Info * erec){
@@ -227,6 +224,14 @@ errinfo_set_status(Error_Info * erec, int code) {
 }
 
 
+/** Sets the detail string in a existing #Error_Info instance.
+ *  If there is already a detail string in the instance, it is replaced.
+ *  The substitution values for the detail string are specified as a va_list.
+ *
+ *  \param  erec   pointer to instance
+ *  \param  detail detail format string
+ *  \param  args   arguments for detail string
+ */
 static void
 errinfo_set_detailv(
       Error_Info * erec,
@@ -244,7 +249,7 @@ errinfo_set_detailv(
  *
  *  \param  erec   pointer to instance
  *  \param  detail detail format string
- *  \param  ...    arguments for format string
+ *  \param  ...    arguments for detail format string
  */
 void
 errinfo_set_detail(
@@ -349,7 +354,7 @@ errinfo_add_cause(
 
 /** Creates a new #Error_Info instance with the specified status code,
  *  function name, and detail string.  The substitution values for the
- *  detail string are specified as an arg_list.
+ *  detail string are specified as a va_list.
  *
  *  \param  status_code  status code
  *  \param  func         name of function generating status code
@@ -403,6 +408,17 @@ errinfo_new(
 }
 
 
+/** Creates a new #Error_Info instance with a detail string, including a
+ * reference to another instance that is the cause of the current error.
+ *  The substitution values for the detail string are specified as a va_list.
+ *
+ *  \param  status_code  status code
+ *  \param  cause        pointer to another #Error_Info that is included as a cause
+ *  \param  func         name of function creating new instance
+ *  \param  detail_fmt   optional detail format string
+ *  \param  args         substitution value for detail_fmt
+ *  \return pointer to new instance
+ */
 static Error_Info *
 errinfo_new_with_causev(
       int            status_code,
@@ -416,6 +432,7 @@ errinfo_new_with_causev(
       errinfo_add_cause(erec, cause);
    return erec;
 }
+
 
 /** Creates a new #Error_Info instance with a detail string, including a
  * reference to another instance that is the cause of the current error.
@@ -585,42 +602,51 @@ default_status_code_desc(int rc) {
 }
 
 
+/** Appends a comma separated string of the status code names of the
+ *  causes in an array of #Error_Info to an existing string.
+ *  Multiple consecutive identical names are replaced with a
+ *  single name and a parenthesized instance count.
+ *
+ *  \param  erec     pointer to array of pointers to #Error_Info instances
+ *  \param  error_ct number of errors
+ *  \return modified comma separated string
+ */
 static GString *
 errinfo_array_summary_gs(
-      struct error_info **  errors,    ///<  pointer to array of pointers to Error_Info
+      struct error_info **  errors,    ///<  pointer to array of pointers to #Error_Info
       int                   error_ct,  ///<  number of causal errors
       GString *             gs)        ///<  append result here
 {
-      bool first = true;
+   bool first = true;
 
-      int ndx = 0;
-      while (ndx < error_ct) {
-         // printf("(%s) this error = %p\n", __func__, errors[ndx]);
-         int this_psc = errors[ndx]->status_code;
-         int cur_ct = 1;
+   int ndx = 0;
+   while (ndx < error_ct) {
+      // printf("(%s) this error = %p\n", __func__, errors[ndx]);
+      int this_psc = errors[ndx]->status_code;
+      int cur_ct = 1;
 
-         for (int i = ndx+1; i < error_ct; i++) {
-            if (errors[i]->status_code != this_psc)
-               break;
-            cur_ct++;
-         }
-
-         if (first)
-            first = false;
-         else
-            g_string_append(gs, ", ");
-         if (errinfo_name_func)
-            g_string_append(gs, errinfo_name_func(this_psc));
-         else {
-            char buf[20];
-            snprintf(buf, 20, "%d",this_psc);
-            buf[19] = '\0';
-            g_string_append(gs, buf);
-         }
-         if (cur_ct > 1)
-            g_string_append_printf(gs, "(%d)", cur_ct);
-         ndx += cur_ct;
+      for (int i = ndx+1; i < error_ct; i++) {
+         if (errors[i]->status_code != this_psc)
+            break;
+         cur_ct++;
       }
+
+      if (first)
+         first = false;
+      else
+         g_string_append(gs, ", ");
+      if (errinfo_name_func)
+         g_string_append(gs, errinfo_name_func(this_psc));
+      else {
+         char buf[20];
+         snprintf(buf, 20, "%d",this_psc);
+         buf[19] = '\0';
+         g_string_append(gs, buf);
+      }
+      if (cur_ct > 1)
+         g_string_append_printf(gs, "(%d)", cur_ct);
+      ndx += cur_ct;
+   }
 
    return gs;
 }
@@ -631,7 +657,8 @@ errinfo_array_summary_gs(
  *  Multiple consecutive identical names are replaced with a
  *  single name and a parenthesized instance count.
  *
- *  \param  erec  pointer to array of #Error_Info instances
+ *  \param  errors   pointer to array of pointers to #Error_Info instances
+ *  \param  error_ct number of instances
  *  \return comma separated string, caller is responsible for freeing
  */
 char *
@@ -776,12 +803,13 @@ errinfo_causes_string(Error_Info * erec) {
 #endif
 
 
-
-
-/** Emits a full report of the contents of the specified #Error_Info,
- *  using report functions.
+/** Creates a full report of the contents of the specified #Error_Info,
+ *  using report functions. if **collector** is non-null, the lines of
+ *  the report are appended to the array.  If it is null, the lines
+ *  are written the current report output destination.
  *
  *  \param  erec   pointer to #Error_Info
+ *  \param  collector collects lines of the report
  *  \param  depth  logical indentation depth
  */
 void
@@ -820,25 +848,24 @@ errinfo_report_collect(Error_Info * erec, GPtrArray* collector, int depth) {
 }
 
 
+/** Emits a full report of the contents of the specified #Error_Info,
+ *  using report functions.
+ *
+ *  \param  erec   pointer to #Error_Info
+ *  \param  depth  logical indentation depth
+ */
 void
 errinfo_report(Error_Info * erec, int depth) {
       errinfo_report_collect(erec, NULL, depth);
 }
 
 
-
-#ifdef NO
-void errinfo_free_with_report(
-      Error_Info *  erec,
-      bool          report,
-      const char *  func)
-{
-   (void) errinfo_free_with_report_collect(erec, report, func, false);
-}
-#endif
-
-
-
+/** Reports detail strings for a #Error_Info record and
+ *  each of its contained errors.
+ *
+ *  \param erec  pointer = #Error_Info instance
+ *  \param depth logical indentation depth
+ */
 void
 errinfo_report_details(Error_Info * erec, int depth) {
    assert(erec);
@@ -867,7 +894,7 @@ errinfo_report_details(Error_Info * erec, int depth) {
  *  The returned value is valid until the next call to this function in the
  *  current thread, and should not be freed by the caller.
  *
- *  \param erec  pointer to #Error_Info instance
+ *  \param  erec  pointer to #Error_Info instance
  *  \return string summary of error
  */
 char *
@@ -891,7 +918,7 @@ errinfo_summary(Error_Info * erec) {
       buf1 = g_strdup_printf("Error_Info[%s in %s]", desc, erec->func);
    }
    else {
-      char * causes   = errinfo_causes_string(erec);
+      char * causes = errinfo_causes_string(erec);
       buf1 = g_strdup_printf("Error_Info[%s in %s, causes: %s]", desc, erec->func, causes);
       free(causes);
    }
