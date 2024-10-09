@@ -378,7 +378,7 @@ ddc_close_display(Display_Handle * dh) {
                char * msg = g_strdup_printf("usb_close_bus returned %d, errno=%s",
                                             rc, psc_desc(errno) );
                MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
-               err = ERRINFO_NEW(rc, msg);
+               err = ERRINFO_NEW(rc, "%s", msg);
                free(msg);
                COUNT_STATUS_CODE(rc);
             }
