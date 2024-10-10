@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.5] 2024-10-02
+## [2.1.5] 2024-10-10
 
 ### General
 
@@ -106,6 +106,8 @@ file is libddcutil.so.5.1.3. (VERIFY)
 - Quiesce the API during **ddca_redetect_displays()**.  Operations that access
   display state are not permitted, and return DDCRC_QUIESCED.
 - Add DDCA_STATS_API to enum DDCA_Stats_Type, for reporting API specific stats.
+- Compile using option -Wformat-security. Issue #458.
+- Include thread id in messages written to syslog.
 
 #### Fixed
 
@@ -129,7 +131,8 @@ file is libddcutil.so.5.1.3. (VERIFY)
 - Protect hash table of open monitors to avoid a possible race condition.
 - Recover instead of abort when more than one non-removed display refs exist 
   for the same display.
-- Use mutexes to control access to corruptable data structures
+- Use mutexes to control access to corruptable data structures.
+- Memory leaks.
 
 #### Display Change Handling
 
@@ -248,7 +251,11 @@ file is libddcutil.so.5.1.1.
 - I2C bus examination during initialization can be parallelized, improving performance
   (This is distinct from the ddc protocol checking.) This is an experimental
   feature.  It can be enabled by using a low value as an argument to option 
-  ***--i2c-bus-checks-async-min***, e.g. ***--i2c-bus-checks-async-min 4***.
+  ***--i2c-init-async-min***, e.g. ***--i2c-init-async-min 4***.
+  THIS OPTION IS DISABLED BY DEFAULT AS IT OCCASIONALLY TRIGGERS A BUG IN
+  DRIVER amdgpu THAT CAN CAUSE THE MOUSE AND KEYBOARD TO BECOME UNRESPONSIVE.
+  See freedesktop.org bug report "lockup in dce_i2c_submit_command_hw" at
+  https://gitlab.freedesktop.org/drm/amd/-/issues.
 - Command detect: better messages when laptop display detected
   - do not report "DDC communication failed"
   - report "Is laptop display" instead of "Is eDP device" or "Is LVDS device"
