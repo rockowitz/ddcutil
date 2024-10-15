@@ -149,18 +149,17 @@ dyn_get_dynamic_feature_metadata(
 
 /** Free a #Dyn_Feature_Metadata record.
  *
- *  @param data pointer to record
+ *  @info data pointer to record
  *
- *  This function has signature GDestroyNotify()
+ *  This function can be cast to GDestroyNotify.
  */
 void
-free_feature_metadata(
-      gpointer data)    // i.e. Dyn_Feature_Metadata *
+dyn_free_feature_metadata(
+      Dyn_Feature_Metadata * info)    // i.e. Dyn_Feature_Metadata *
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting. Dyn_Feature_Metadata * data = %p", data);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting. Dyn_Feature_Metadata * data = %p", info);
 
-   Dyn_Feature_Metadata * info = (Dyn_Feature_Metadata*) data;
    assert(info && memcmp(info->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
    // compare vs ddca_free_metadata_contents()
 
@@ -428,8 +427,8 @@ create_dynamic_features_rec(
    frec->features = g_hash_table_new_full(
                               g_direct_hash,
                               g_direct_equal,
-                              NULL,                     // key_destroy_func
-                              free_feature_metadata);   // value_destroy_func
+                              NULL,                                     // key_destroy_func
+                              (GDestroyNotify) dyn_free_feature_metadata);  // value_destroy_func
 
    Dyn_Feature_Metadata * cur_feature_metadata = NULL;
    GArray * cur_feature_values = NULL;
@@ -633,7 +632,7 @@ create_dynamic_features_rec(
 void init_base_dynamic_features() {
    RTTI_ADD_FUNC(dyn_get_dynamic_feature_metadata);
    RTTI_ADD_FUNC(create_dynamic_features_rec);
-   RTTI_ADD_FUNC(free_feature_metadata);
+   RTTI_ADD_FUNC(dyn_free_feature_metadata);
    RTTI_ADD_FUNC(dfr_new);
    RTTI_ADD_FUNC(dfr_free);
 }

@@ -86,8 +86,8 @@ dyn_get_dynamic_feature_metadata(
 
 // satisfies glib signature
 void
-free_feature_metadata(
-      gpointer data);    // i.e. Dyn_Feature_Metadata *
+dyn_free_feature_metadata(
+      Dyn_Feature_Metadata* data);    // castable to GDestroyNotify
 
 void dbgrpt_dynamic_features_rec(
       Dynamic_Features_Rec*   dfr,
