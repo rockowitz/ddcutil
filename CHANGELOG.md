@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.5] 2024-10-10
+## [2.1.5] 2024-10-15
 
 ### General
 
@@ -61,11 +61,14 @@
   log when libddcutil used by clightd
 - Configuration file ddcutilrc: If there is a pound sign "#" on a line, 
   the remainder of the line is treated as a comment.
+- Add -Wformat-security to compiler options.  Addresses issue #458.
 
 #### Fixed
 
 - Rework laptop detection. A non-laptop display can have an eDP connector.
-  This is an i915 video driver bug that will not be fixed.
+  This is an i915 video driver bug that will not be fixed. See freedesktop.org 
+  issue "DRM connector for external monitor has name card1-eDP-1" 
+  https://gitlab.freedesktop.org/drm/i915/kernel/-/issues/10389
 - When processing environment variable user $XDG_DATA_DIRS, or $XDG_CONFIG_DIRS,  
   the final directory in the list was ignored.  Issue #438
 - When processing a user defined feature file, recognize any whitespace character
@@ -82,6 +85,7 @@
 - Use printf() formats %jd and %zd to portably print variables of type ssize_t, 
   time_t, so as to build  unchanged on architectures such as armel, armhf.
 - Memory leaks.
+- Fix compiler errors when built with -Wformat-security. Fixes issue #458.
 
 ### Shared Library
 
