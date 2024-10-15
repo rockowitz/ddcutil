@@ -483,7 +483,7 @@ i2c_ioctl_writer(
    if (rc < 0) {
       if (rc != -1)
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
-               "Unexpected: ioctl(() write returned %d, errno=%d", rc, errsv);
+               "Unexpected: ioctl(() write returned %d, errno=%s", rc, psc_desc(-errsv));
       rc = -errsv;
    }
    else {    // (rc >= 0) {
@@ -546,12 +546,14 @@ i2c_ioctl_reader1(
      );
    int errsv = errno;
    if (rc < 0) {
-      rc = -errno;
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error in ioctl() read, rc=%d, errno=%d", rc, errsv);
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error in ioctl() read, rc=%d, errno=%s, device=%s",
+            rc, psc_desc(-errsv), filename_for_fd_t(fd));
+      rc = -errsv;
    }
    else {
       if (rc != 1)
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected ioctl() read rc = %d, bytect =%d", rc, bytect);
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected ioctl() read rc = %d, bytect =%d, device=%s",
+               rc, bytect, filename_for_fd_t(fd));
       rc = 0;
    }
    free(messages);
