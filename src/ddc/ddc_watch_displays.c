@@ -65,7 +65,6 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
-bool             ddc_slow_watch = false;
 int              extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
 int              stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
 #ifdef SECONDARY_UDEV_RECEIVE
@@ -75,14 +74,6 @@ bool             use_sysfs_connector_id = true;
 bool             report_udev_events;
 int              udev_poll_loop_millisec = DEFAULT_UDEV_POLL_LOOP_MILLISEC;   // 2000;   // default sleep time on each loop
 
-STATIC
-void free_watch_displays_data(Watch_Displays_Data * wdd) {
-   if (wdd) {
-      assert( memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
-      wdd->marker[3] = 'x';
-      free(wdd);
-   }
-}
 
 
 void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
@@ -633,7 +624,7 @@ void debug_watch_state(int connector_number, char * cname) {
  *  @param data   #Watch_Displays_Data passed from creator thread
  */
 gpointer ddc_watch_displays_udev_i2c(gpointer data) {
-   bool debug = false;
+   bool debug = true;
    bool debug_sysfs_state = false;
    bool use_deferred_event_queue = false;
 

@@ -12,14 +12,6 @@
 #include "public/ddcutil_types.h"
 /** \endcond */
 
-
-typedef void (*Display_Change_Handler)(
-                 GPtrArray *          buses_removed,
-                 GPtrArray *          buses_added,
-                 GPtrArray *          connectors_removed,
-                 GPtrArray *          connectors_added);
-
-extern bool           ddc_slow_watch;
 extern int            extra_stabilization_millisec;
 extern int            stabilization_poll_millisec;
 extern bool           use_sysfs_connector_id;
@@ -31,17 +23,8 @@ extern int            udev_poll_loop_millisec;
 void         init_ddc_watch_displays();
 
 
-#define WATCH_DISPLAYS_DATA_MARKER "WDDM"
-typedef struct {
-   char                     marker[4];
-   pid_t                    main_process_id;
-   pid_t                    main_thread_id;
-   DDCA_Display_Event_Class event_classes;
-// #ifdef OLD_HOTPLUG_VERSION
-   Display_Change_Handler display_change_handler;
-   Bit_Set_32             drm_card_numbers;
-// #endif
-} Watch_Displays_Data;
+
+
 
 
 gpointer ddc_watch_displays_udev_i2c(gpointer data);

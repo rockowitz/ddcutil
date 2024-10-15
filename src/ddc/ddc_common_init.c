@@ -59,6 +59,7 @@
 #include "ddc_vcp.h"
 #include "ddc_watch_displays.h"
 #include "ddc_watch_displays_main.h"
+#include "ddc_watch_displays_common.h"
 
 #include "ddc_common_init.h"
 
@@ -278,7 +279,7 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
       threshold = parsed_cmd->i2c_bus_check_async_min;
    }
    i2c_businfo_async_threshold = threshold;
-   // DBGMSG("set i2c_businfo_async_threshold = %d", threshold);
+   DBGMSG("set i2c_businfo_async_threshold = %d", threshold);
 
    threshold = DEFAULT_DDC_CHECK_ASYNC_THRESHOLD;
    if (parsed_cmd->ddc_check_async_min >= 0) {
@@ -358,8 +359,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    // if (parsed_cmd->flags2 & CMD_FLAG2_F9)
    //    ddc_watch_mode = (ddc_watch_mode == Watch_Mode_Udev_Sysfs) ? Watch_Mode_Full_Poll
    //                                                                : Watch_Mode_Udev_Sysfs;
-   // if (parsed_cmd->flags2 & CMD_FLAG2_F16)
-   //    ddc_watch_mode = Watch_Mode_Udev_I2C;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F16)
+      ddc_watch_mode = Watch_Mode_Full_Poll;
 
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F10)

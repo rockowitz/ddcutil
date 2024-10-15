@@ -36,10 +36,13 @@ ddc_vcp_version.c           \
 ddc_try_data.c 
 
 if ENABLE_SHARED_LIB_COND
+if ENABLE_UDEV_COND
 libddc_la_SOURCES += \
   ddc_watch_displays_common.c \
   ddc_watch_displays_main.c \
+  ddc_watch_displays_poll.c \
   ddc_watch_displays.c
+endif
 endif
 
 # Rename to "all=local" for development 
