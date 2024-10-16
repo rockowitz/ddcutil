@@ -51,6 +51,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/display_lock.h"
 #include "base/flock.h"
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
@@ -66,7 +67,7 @@
 #else
 #include "i2c/wrap_i2c-dev.h"
 #endif
-#include <base/display_lock.h>
+#include "i2c/i2c_sysfs_i2c_info.h"
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs_base.h"
@@ -997,6 +998,13 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    g_snprintf(dev_name,   15, "/dev/%s", i2cN);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
 
+   Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, (debug) ? 1 : -1);
+   // TODO REVIEW
+   bool sysfs_unreliable =  streq(driver_info->driver, "nvidia") || str_starts_with(driver_info->name, "Nvidia");
+   DBGTRC_NOPREFIX(debug||true, DDCA_TRC_NONE, "sysfs_unreliable=%s, driver=%s, name=%s",
+         SBOOL(sysfs_unreliable), driver_info->driver, driver_info->name);
+   free_sysfs_i2c_info(driver_info);
+
    businfo->flags = 0;
    Error_Info *master_err = NULL;
 
@@ -1034,7 +1042,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    // skip if already set or flags & I2C_DRM_CONNECTOR_CHECKED?
    bool checked_connector_for_edid = false;
    if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
-      if (try_get_edid_from_sysfs_first  ||
+      if ((try_get_edid_from_sysfs_first && !sysfs_unreliable)  ||
             (businfo->flags&I2C_BUS_DISPLAYLINK))   // X50 can't be read for DisplayLink, must use sysfs
       {
          checked_connector_for_edid = true;
