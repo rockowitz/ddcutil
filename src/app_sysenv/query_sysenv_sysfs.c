@@ -13,8 +13,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
-#include <i2c/i2c_sys_drm_connector.h>
-#include <i2c/i2c_sysfs_i2c_sys_info.h>
 #include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
@@ -36,6 +34,8 @@
 /** \endcond */
 
 #include "i2c/i2c_sysfs_top.h"
+#include "i2c/i2c_sys_drm_connector.h"
+#include "i2c/i2c_sysfs_i2c_sys_info.h"
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs_common.h"
