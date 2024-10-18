@@ -38,6 +38,7 @@
 #define I2C_BUS_APPARENT_LAPTOP       0x2000
 #define I2C_BUS_LAPTOP                (I2C_BUS_LVDS_OR_EDP | I2C_BUS_APPARENT_LAPTOP)
 #define I2C_BUS_DISPLAYLINK           0x1000
+#define I2C_BUS_SYSFS_UNRELIABLE    0x010000
 
 typedef enum {
    DRM_CONNECTOR_NOT_CHECKED    = 0,    // ??? needed?

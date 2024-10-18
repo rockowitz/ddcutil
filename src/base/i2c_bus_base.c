@@ -55,6 +55,8 @@ Value_Name_Table i2c_bus_flags_table = {
       VN(I2C_BUS_DRM_CONNECTOR_CHECKED),
       VN(I2C_BUS_LVDS_OR_EDP),
       VN(I2C_BUS_APPARENT_LAPTOP),
+      VN(I2C_BUS_DISPLAYLINK),
+      VN(I2C_BUS_SYSFS_UNRELIABLE),
       VN_END
 };
 
