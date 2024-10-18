@@ -3,7 +3,7 @@
  *  Functions to get EDID for USB connected monitors
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -222,7 +222,7 @@ get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "model_name=|%s|, sn_ascii=|%s|", model_name, sn_ascii);
    Parsed_Edid * parsed_edid = NULL;
 
-   GPtrArray* edid_recs = get_x11_edids();
+   GPtrArray* edid_recs = get_x11_edids(/*use_screen_resources_current=*/ true);
    // puts("");
    // printf("EDIDs reported by X11 for connected xrandr outputs:\n");
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Got %d X11_Edid_Recs", edid_recs->len);
