@@ -71,8 +71,9 @@
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs_base.h"
-#include <i2c/i2c_sys_drm_connector.h>
+#include "i2c/i2c_sys_drm_connector.h"
 #include "i2c/i2c_sysfs_conflicting_drivers.h"
+#include "i2c/i2c_sysfs_top.h"
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_edid.h"
 
@@ -168,7 +169,7 @@ lock_display_by_businfo(
       I2C_Bus_Info *     businfo,
       Display_Lock_Flags flags)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "bus = BusInfo[/dev/i2c-%d]", businfo->busno);
    Display_Lock_Record * lockid = businfo->lock_record;
    Error_Info * result = lock_display2(lockid, flags);
@@ -179,7 +180,7 @@ lock_display_by_businfo(
 
 Error_Info *
 unlock_display_by_businfo(I2C_Bus_Info * businfo) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "bus = BusInfo[/dev/i2c-%d]", businfo->busno);
    Display_Lock_Record * lockid = businfo->lock_record;
    Error_Info * result = unlock_display2(lockid);
@@ -694,7 +695,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 
 #ifdef UNUSED
 Bit_Set_256 check_edids(GPtrArray * buses) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "buses=%p, len=%d", buses, buses->len);
    Bit_Set_256 result = EMPTY_BIT_SET_256;
    for (int ndx = 0; ndx < buses->len; ndx++) {
@@ -998,12 +999,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    g_snprintf(dev_name,   15, "/dev/%s", i2cN);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
 
-   Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, (debug) ? 1 : -1);
-   // TODO REVIEW
-   bool sysfs_unreliable =  streq(driver_info->driver, "nvidia") || str_starts_with(driver_info->name, "Nvidia");
-   DBGTRC_NOPREFIX(debug||true, DDCA_TRC_NONE, "sysfs_unreliable=%s, driver=%s, name=%s",
-         SBOOL(sysfs_unreliable), driver_info->driver, driver_info->name);
-   free_sysfs_i2c_info(driver_info);
+   bool sysfs_unreliable = is_sysfs_unreliable(businfo->busno);
 
    businfo->flags = 0;
    Error_Info *master_err = NULL;
@@ -1019,6 +1015,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
       businfo->flags |= I2C_BUS_DISPLAYLINK;
 
    // *** Try to find the drm connector by bus number
+
 
    businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
    // n. will fail for MST
