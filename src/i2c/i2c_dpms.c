@@ -27,8 +27,10 @@
 #include "base/displays.h"
 #include "base/rtti.h"
 
-#include <i2c/i2c_sys_drm_connector.h>
+// #include <i2c/i2c_sys_drm_connector.h>
 #include "i2c/i2c_dpms.h"
+#include "i2c/i2c_sysfs_top.h"  // for is_sysfs_unreliable
+
 
 
 // Trace class for this file
@@ -53,6 +55,50 @@ Value_Name_Table dpms_state_flags_table = {
 char * interpret_dpms_state_t(Dpms_State state) {
    return VN_INTERPRET_FLAGS_T(state, dpms_state_flags_table, "|");
 }
+
+
+bool dpms_is_x11_asleep() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   bool result = false;
+#ifdef USE_X11
+   char * xdg_session_type = getenv("XDG_SESSION_TYPE");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE = |%s|", xdg_session_type);
+
+// This is truly pathological. Symbol DPMSModeOn is defined in dpmsconst.h, which
+// is included if USE_X11 is set.  However we get an undefined symbol error.
+// So we defined DPMSModeOn locally. Yet eclipse greys out the conditional local
+// definition, indicating that DPMSModeOn is defined.  Moreover, if the
+// include of dpmsconst.h is not wrapped in a #ifdef USE_X11 blocked, the the
+// symbol is defined.
+#ifndef DPMSModeOn
+#define DPMSModeOn 0
+#endif
+
+   if (streq(xdg_session_type, "x11")) {
+      // state indicates whether or not DPMS is enabled (TRUE) or disabled (FALSE).
+      // power_level indicates the current power level (one of DPMSModeOn,
+      // DPMSModeStandby, DPMSModeSuspend, or DPMSModeOff.)
+      unsigned short power_level;
+      unsigned char state;
+      bool ok =get_x11_dpms_info(&power_level, &state);
+      if (ok) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "power_level=%d = %s, state=%s",
+            power_level, dpms_power_level_name(power_level), sbool(state));
+         result = (state && (power_level != DPMSModeOn) );
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "get_x11_dpms_info() failed.");
+         SYSLOG2(DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed");
+      }
+   }
+#endif
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
 
 
 #ifdef UNUSED
@@ -101,6 +147,8 @@ void dpms_check_x11_asleep() {
 #endif
 
 
+
+
 /** Checks if a display, specified by its DRM connector name, is in a DPMS
  *  sleep mode. The check is performed using the connector's dpms attribute.
  *
@@ -141,19 +189,37 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
 
    bool asleep = false;
    // ASSERT_IFF( !(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED), !businfo->drm_connector_found_by);
-
-   if (!(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED)) {
-      Sys_Drm_Connector * conn =  i2c_check_businfo_connector(businfo);
-      if (!conn) {
-        DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_check_businfo_connector() failed for bus %d", businfo->busno);
-        SYSLOG2(DDCA_SYSLOG_ERROR, "i2c_check_businfo_connector() failed for bus %d", businfo->busno);
-      }
-      else {
-        assert(businfo->drm_connector_name);
-      }
+   char * xdg_session_type = getenv("XDG_SESSION_TYPE");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE = |%s|", xdg_session_type);
+   if (streq(xdg_session_type, "x11")) {
+      asleep = dpms_is_x11_asleep();
    }
-   if (businfo->drm_connector_name) {
-      asleep = dpms_check_drm_asleep_by_connector(businfo->drm_connector_name);
+   else {
+      // can this ever be false?
+      assert(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED);
+#ifdef OUT
+      if (!(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED)) {
+         Sys_Drm_Connector * conn =  i2c_check_businfo_connector(businfo);
+         if (!conn) {
+           DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_check_businfo_connector() failed for bus %d", businfo->busno);
+           SYSLOG2(DDCA_SYSLOG_ERROR, "i2c_check_businfo_connector() failed for bus %d", businfo->busno);
+         }
+         else {
+           assert(businfo->drm_connector_name);
+         }
+      }
+#endif
+   }
+
+   bool sysfs_unreliable = is_sysfs_unreliable(businfo->busno);
+   if (sysfs_unreliable) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "is_sysfs_unreliable(%d) returned true. Assuming not asleep", businfo->busno);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "is_sysfs_unreliable(%d) true. Assuming not asleep", businfo->busno);
+   }
+   else {
+      if (businfo->drm_connector_name) {
+         asleep = dpms_check_drm_asleep_by_connector(businfo->drm_connector_name);
+      }
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, asleep, "");
@@ -165,7 +231,9 @@ bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
 
-   bool result = dpms_check_drm_asleep_by_businfo((I2C_Bus_Info*) dref->detail);
+   bool result = false;
+   if (dref->detail)
+      result = dpms_check_drm_asleep_by_businfo((I2C_Bus_Info*) dref->detail);
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
@@ -173,6 +241,7 @@ bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
 
 
 void init_i2c_dpms() {
+   RTTI_ADD_FUNC(dpms_is_x11_asleep);
    RTTI_ADD_FUNC(dpms_check_drm_asleep_by_businfo);
    RTTI_ADD_FUNC(dpms_check_drm_asleep_by_dref);
    RTTI_ADD_FUNC(dpms_check_drm_asleep_by_connector);

@@ -27,6 +27,7 @@ typedef Byte Dpms_State;
 extern Dpms_State dpms_state;
 
 char *           interpret_dpms_state_t(Dpms_State state);
+bool             dpms_is_x11_asleep();
 bool             dpms_check_drm_asleep_by_connector(const char * drm_connector_name);
 bool             dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo);
 bool             dpms_check_drm_asleep_by_dref(Display_Ref * dref);
