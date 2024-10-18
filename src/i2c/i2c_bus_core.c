@@ -999,7 +999,10 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    g_snprintf(dev_name,   15, "/dev/%s", i2cN);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
 
-   bool sysfs_unreliable = is_sysfs_unreliable(businfo->busno);
+   Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, (debug) ? 1 : -1);
+   businfo->driver = g_strdup(driver_info->driver);
+   free_sysfs_i2c_info(driver_info);
+
 
    businfo->flags = 0;
    Error_Info *master_err = NULL;
@@ -1014,8 +1017,12 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    if (is_displaylink_device(businfo->busno))
       businfo->flags |= I2C_BUS_DISPLAYLINK;
 
-   // *** Try to find the drm connector by bus number
+   bool sysfs_unreliable = is_sysfs_unreliable(businfo->busno);
+   if (sysfs_unreliable)
+      businfo->flags |= I2C_BUS_SYSFS_UNRELIABLE;
 
+
+   // *** Try to find the drm connector by bus number
 
    businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
    // n. will fail for MST
@@ -1039,7 +1046,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    // skip if already set or flags & I2C_DRM_CONNECTOR_CHECKED?
    bool checked_connector_for_edid = false;
    if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
-      if ((try_get_edid_from_sysfs_first && !sysfs_unreliable)  ||
+      if ((try_get_edid_from_sysfs_first && !(businfo->flags&I2C_BUS_SYSFS_UNRELIABLE))  ||
             (businfo->flags&I2C_BUS_DISPLAYLINK))   // X50 can't be read for DisplayLink, must use sysfs
       {
          checked_connector_for_edid = true;
