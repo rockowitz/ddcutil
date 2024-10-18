@@ -730,7 +730,7 @@ Preparsed_Cmd * preparse_command(
       Parser_Mode parser_mode,
       GPtrArray * errmsgs)
 {
-   bool debug = true;
+   bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_PARSE");
    if (s && strlen(s) > 0)
       debug = true;
