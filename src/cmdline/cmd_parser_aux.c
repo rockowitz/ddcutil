@@ -310,7 +310,7 @@ VCP_Feature_Subset find_subset(char * name, int cmd_id) {
 
 #ifdef OLD
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref) {
-   bool debug = true;
+   bool debug = false;
    bool ok = true;
    VCP_Feature_Subset subset_id = find_subset(val, cmd_id);
    if (subset_id != VCP_SUBSET_NONE)
@@ -331,7 +331,7 @@ bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref)
 }
 
 bool parse_feature_ids(char ** vals, int vals_ct, int cmd_id, Feature_Set_Ref * fsref) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. vals_ct=%d, cmd_id=%d, fsref=%p", vals_ct, cmd_id, fsref);
    bool ok = true;
    assert(cmd_id == CMDID_GETVCP || cmd_id == CMDID_VCPINFO);
