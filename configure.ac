@@ -287,14 +287,21 @@ AS_IF([test "x$enable_drm" = "xyes"],
 
 dnl *** configure option: --enable-x11
 AC_ARG_ENABLE([x11],
-              [ AS_HELP_STRING( [--enable-x11=@<:@no/yes@:>@], [Deprecated option X11 ignored.] )],
+              [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11@<:default=yes@:>@] )],
               [enable_x11=${enableval}],
               [enable_x11=yes] )
-enable_x11=no
- AS_IF([test "x$enable_x11" = "xyes"],
-       AC_MSG_NOTICE( [x11...              Deprecated option ignored]  ),
-       AC_MSG_NOTICE( [x11...              disabled] )
-      )              
+# enable_x11=no
+#  AS_IF([test "x$enable_x11" = "xyes"],
+#        AC_MSG_NOTICE( [x11...              Deprecated option ignored]  ),
+#       AC_MSG_NOTICE( [x11...              disabled] )
+#       )              
+
+AS_IF([test "x$enable_x11" = "xyes"],
+        AC_MSG_NOTICE( [x11...              enabled (provisional) ]  )
+      ,
+        AC_MSG_NOTICE( [x11...              disabled] )
+     )
+
 
 dnl *** configure option: --enable-static-functions-visible
 AC_ARG_ENABLE([static-functions-visible],
@@ -396,17 +403,17 @@ AS_IF([test "x$enable_install_lib_only" = "xyes" -a "x$enable_envcmds" = "xyes" 
 
 # --disable-envcmds => --disable-drm, --disable-x11
 
-AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_drm" = "xyes" ],
-       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-drm] )
-        enable_drm=no
-       ]
-   ) 
+# AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_drm" = "xyes" ],
+#       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-drm] )
+#        enable_drm=no
+#       ]
+#   ) 
 
-AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_x11" = "xyes" ],
-       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-x11] )
-        enable_x11=no
-       ]
-   ) 
+# AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_x11" = "xyes" ],
+#        [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-x11] )
+#         enable_x11=no
+#       ]
+#   ) 
 
 
 ###
@@ -708,9 +715,9 @@ AS_IF([test "x$enable_x11" = "xyes"],
 AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" = "xyes"] )
 AS_IF([test "x$enable_x11" = "xyes"],
         AC_DEFINE([USE_X11], [1], [Use X11])
-        AC_MSG_NOTICE( [x11...        enabled]  )
+        AC_MSG_NOTICE( [x11...        enabled1]  )
       ,
-        AC_MSG_NOTICE( [x11...        disabled] )
+        AC_MSG_NOTICE( [x11...        disabled1] )
      )
 
 dnl AS_IF([test "x$enable_x11" = "xyes"],
