@@ -642,7 +642,7 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
 #ifdef UNUSED
 bool dref_set_alive(Display_Ref * dref, bool alive) {
    assert(dref);
-   bool debug = true;
+   bool debug = false;
    bool old = dref->flags & DREF_ALIVE;
    if (old != alive)
       DBGTRC_EXECUTED(debug, DDCA_TRC_BASE, "dref=%s, alive changed: %s -> %s",
