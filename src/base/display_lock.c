@@ -455,7 +455,7 @@ unlock_display_by_dpath(
  *  BUG: DO NOT USE
  */
 void unlock_all_distinct_displays() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    g_mutex_lock(&master_display_lock_mutex);   // are both locks needed?
    g_mutex_lock(&descriptors_mutex);
