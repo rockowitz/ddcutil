@@ -110,7 +110,7 @@ void edid_recs_free_func(gpointer voidptr) {
  *
  * It is the responsibility of the caller to free the returned data structure
  */
-GPtrArray * get_x11_edids() {
+GPtrArray * get_x11_edids(bool use_screen_resources_current) {
    bool debug = false;
 
    GPtrArray * edid_recs = g_ptr_array_new();
@@ -166,7 +166,8 @@ GPtrArray * get_x11_edids() {
             if( version >= 0x0103 )
             {
               /* get cached resources if they are available */
-              rsrc = XRRGetScreenResourcesCurrent(disp, root);
+               if (use_screen_resources_current)
+                  rsrc = XRRGetScreenResourcesCurrent(disp, root);
             }
 
             if( NULL == rsrc )

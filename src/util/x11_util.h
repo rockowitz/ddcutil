@@ -19,7 +19,7 @@ typedef struct {
    Byte * edidbytes;     ///< pointer to 128 byte EDID
 } X11_Edid_Rec;
 
-GPtrArray * get_x11_edids();   // returns array of X11_Edid_Rec
+GPtrArray * get_x11_edids(bool use_screen_resources_current);   // returns array of X11_Edid_Rec
 void        free_x11_edids(GPtrArray * edidrecs);
 bool        get_x11_dpms_info(unsigned short * power_level, unsigned char * state);
 const char* dpms_power_level_name(unsigned short power_level);
