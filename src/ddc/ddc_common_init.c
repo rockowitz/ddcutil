@@ -49,7 +49,7 @@
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs_base.h"
-#include <i2c/i2c_sys_drm_connector.h>
+#include "i2c/i2c_sys_drm_connector.h"
 
 #include "ddc_displays.h"
 #include "ddc_multi_part_io.h"
