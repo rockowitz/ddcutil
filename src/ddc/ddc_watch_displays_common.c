@@ -48,7 +48,7 @@
 #include "i2c/i2c_sysfs_base.h"
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_dpms.h"
-#include <i2c/i2c_sys_drm_connector.h>
+#include "i2c/i2c_sys_drm_connector.h"
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
@@ -63,6 +63,40 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
 bool      terminate_watch_thread = false;
 bool      ddc_slow_watch;
+int              extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
+int              stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
+
+int split_sleep(int udev_poll_loop_millisec) {
+   int poll_loop_millisec = udev_poll_loop_millisec;
+   if (ddc_slow_watch)   // for testing
+      poll_loop_millisec *= 3;
+   const int max_sleep_microsec = poll_loop_millisec * 1000;
+   const int sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
+   int slept = 0;
+   for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
+      usleep(sleep_step_microsec);
+   return slept;
+}
+
+
+void terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid) {
+    // Doesn't work to detect client crash, main thread and process remains for some time.
+    // 11/2020: is this even needed since terminate_watch_thread check added?
+    // #ifdef DOESNT_WORK
+    bool pid_found = is_valid_thread_or_process(cur_pid);
+    if (!pid_found) {
+       DBGMSG("Process %d not found", cur_pid);
+    }
+    bool tid_found = is_valid_thread_or_process(cur_tid);
+    if (!pid_found || !tid_found) {
+       DBGMSG("Thread %d not found", cur_tid);
+    }
+    if (!pid_found || !tid_found) {
+       g_thread_exit(GINT_TO_POINTER(-1));
+    }
+}
+
+
 
 void free_watch_displays_data(Watch_Displays_Data * wdd) {
    if (wdd) {
@@ -203,6 +237,84 @@ Display_Ref * ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo) {
 }
 
 
+
+/** Compares the set of buses currently asleep with the previous list.
+ *  If differences exist, either emit events directly or place them on
+ *  the deferred events queue.
+ *
+ *  @param bs_active_bueses  bit set of all buses having edid
+ *  @param bs_sleepy_buses   bit set of buses currently asleep
+ *  @param events_queue      if null, emit events directly
+ *                           if non-null, put events on the queue
+ *  @return updated set of buses currently asleep
+ */
+Bit_Set_256 ddc_i2c_check_bus_asleep(
+      Bit_Set_256  bs_active_buses,
+      Bit_Set_256  bs_sleepy_buses,
+      GArray*      events_queue) // array of DDCA_Display_Status_Event
+{
+   bool debug = false;
+   // two lines so bs256_to_descimal_t() calls don't clobber private thread specific buffer
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bs_active_buses: %s", BS256_REPR(bs_active_buses));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_sleepy_buses: %s", BS256_REPR(bs_sleepy_buses));
+
+// #ifdef TEMP
+   // remove from the sleepy_connectors array any connector that is not currently active
+   // so that it will not be marked asleep when it becomes active
+   // i.e. turn off is asleep if connector no longer has a monitor
+   bs_sleepy_buses = bs256_and(bs_sleepy_buses, bs_active_buses);
+
+   if (bs256_count(bs_sleepy_buses) > 0)
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "bs_sleepy_buses after removing inactive buses: %s", BS256_REPR(bs_sleepy_buses));
+
+   Bit_Set_256_Iterator iter = bs256_iter_new(bs_active_buses);
+   int busno = bs256_iter_next(iter);
+   while (busno >= 0) {
+      I2C_Bus_Info * businfo = i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
+      if (!businfo->drm_connector_name) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Unable to find connector for bus /dev/i2c-%d", busno);
+         SEVEREMSG("Unable to find connector for bus /dev/i2c-%d", busno);
+      }
+      else {
+         bool is_dpms_asleep = dpms_check_drm_asleep_by_businfo(businfo);
+         bool last_checked_dpms_asleep = bs256_contains(bs_sleepy_buses, busno);
+         if (is_dpms_asleep != last_checked_dpms_asleep) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno = %d, last_checked_dpms_asleep=%s, is_dpms_asleep=%s",
+               busno, sbool (last_checked_dpms_asleep), sbool(is_dpms_asleep));
+            Display_Ref * dref = DDC_GET_DREF_BY_BUSNO(busno, /* ignore_invalid */ true);
+            DDCA_IO_Path iopath;
+            iopath.io_mode = DDCA_IO_I2C;
+            iopath.path.i2c_busno = busno;
+            DDCA_Display_Status_Event evt =
+                  ddc_create_display_status_event(
+                           (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE,
+                           businfo->drm_connector_name,
+                           dref,
+                           iopath);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Queueing %s", display_status_event_repr_t(evt));
+            g_array_append_val(events_queue,evt);
+
+            if (is_dpms_asleep) {
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding bus %d to sleepy_connectors", busno);
+               bs_sleepy_buses = bs256_insert(bs_sleepy_buses, busno);
+            }
+            else {
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing bus %d from sleepy_connectors", busno);
+               bs_sleepy_buses = bs256_remove(bs_sleepy_buses, busno);
+            }
+         }
+      }
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bottom of loop 2, active_connectors->len = %d, sleepy_connectors->len=%d",
+      //      bs256_count(bs_active_buses), bs256_count(*p_bs_sleepy_buses));
+      busno = bs256_iter_next(iter);
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: bs_sleepy_buses: %s",  BS256_REPR(bs_sleepy_buses));
+   return bs_sleepy_buses;
+}
+
+
+
 /** Updates persistent data structures for bus changes and
  *  either emits change events or queues them for later processing.
  *
@@ -304,7 +416,61 @@ bool ddc_i2c_hotplug_change_handler(
 }
 
 
+/** Repeatedly calls i2c_detect_buses0() until the value read equals the prior value.
+ *
+ *  @oaram prior                       initial array of I2C_Bus_Info for connected buses
+ *  @param some_displays_disconnected  if true, add delay to avoid bogus disconnect/connect sequence
+ *  @return stabilized array of Bus_Info for connected buses
+ */
+GPtrArray *
+ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "prior =%p, some_displays_disconnected=%s",
+         prior, SBOOL(some_displays_disconnected));
+   Bit_Set_256 bs_prior =  buses_bitset_from_businfo_array(prior, /* only_connected */ true);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_prior:", BS256_REPR(bs_prior));
+
+   // Special handling for case of apparently disconnected displays.
+   // It has been observed that in some cases (Samsung U32H750) a disconnect is followed a
+   // few seconds later by a connect. Wait a few seconds to avoid triggering events
+   // in this case.
+   if (some_displays_disconnected) {
+      if (extra_stabilization_millisec > 0) {
+         char * s = g_strdup_printf(
+               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", extra_stabilization_millisec);
+         DBGTRC(debug, TRACE_GROUP, "%s", s);
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+         free(s);
+         usleep(extra_stabilization_millisec * 1000);
+      }
+   }
+
+   int stablect = 0;
+   bool stable = false;
+   while (!stable) {
+      // DBGMSG("SLEEPING");
+      usleep(1000*stabilization_poll_millisec);
+      GPtrArray* latest = i2c_detect_buses0();
+      Bit_Set_256 bs_latest =  buses_bitset_from_businfo_array(latest, /* only_connected */ true);
+      if (bs256_eq(bs_latest, bs_prior))
+            stable = true;
+      i2c_discard_buses0(prior);
+      prior = latest;
+      stablect++;
+   }
+   if (stablect > 1) {
+      DBGTRC(debug || true, TRACE_GROUP,   "Required %d extra calls to i2c_get_buses0()", stablect+1);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_get_buses0()", __func__, stablect-1);
+   }
+
+   DBGTRC_RETURNING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
+   return prior;
+}
+
+
 void init_ddc_watch_displays_common() {
+   RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
+   RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
    RTTI_ADD_FUNC(ddc_i2c_emit_deferred_events);
    RTTI_ADD_FUNC(ddc_i2c_hotplug_change_handler);
 }
