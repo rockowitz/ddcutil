@@ -451,7 +451,7 @@ static void report_callstack() {
 
 static void push_callstack(const char * funcname) {
    // INIT_CALLSTACK();
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. funcname=%s, trace_callstack_call_depth=%d\n",
             __func__, funcname, trace_callstack_call_depth);
@@ -464,7 +464,7 @@ static void push_callstack(const char * funcname) {
 
 static void pop_callstack(const char * funcname) {
    // INIT_CALLSTACK();
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. funcname=%s, trace_callstack_call_depth=%d\n",
             __func__, funcname, trace_callstack_call_depth);
