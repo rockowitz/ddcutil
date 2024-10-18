@@ -60,7 +60,8 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
-#include <i2c/i2c_sys_drm_connector.h>
+#include "i2c/i2c_sys_drm_connector.h"
+#include "i2c/i2c_sysfs_top.h"  // for is_sysfs_unreliable()
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"
@@ -1785,11 +1786,17 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
          }
          if (ddcrc == 0 && (validation_options&DREF_VALIDATE_EDID)) {
             // may be wrong if bug in driver, edid persists after disconnection
-            if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
+            if (is_sysfs_unreliable(dref->io_path.path.i2c_busno)) {
+               MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "is_sysfs_unreliable(%d) returned true.  Assuming EDID exists",
+                     DREF_BUSNO(dref));
+            }
+            else {
+               if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
                    ddcrc = DDCRC_DISCONNECTED;
+            }
          }
          if (ddcrc == 0 && (validation_options&DREF_VALIDATE_AWAKE)) {
-            if (dpms_check_drm_asleep_by_connector(dref->drm_connector))
+            if (dpms_check_drm_asleep_by_dref(dref))
                ddcrc = DDCRC_DPMS_ASLEEP;
          }
       }
@@ -1983,12 +1990,14 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
  *  @return Display_Ref
  */
 Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
-   bool debug  = false;
+   bool debug  = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
    assert(all_display_refs);
 
    // DBGTRC_NOPREFIX(true, TRACE_GROUP, "All existing Bus_Info recs:");
    // i2c_dbgrpt_buses(/* report_all */ true, 2);
+
+   i2c_reset_bus_info(businfo);  // ???
 
    Display_Ref * dref = ddc_get_dref_by_busno_or_connector(businfo->busno, NULL, /*ignore_invalid*/ true);
    if (dref) {
