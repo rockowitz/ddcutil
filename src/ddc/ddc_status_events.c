@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <glib-2.0/glib.h>
-#include <i2c/i2c_sys_drm_connector.h>
 
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_c_api.h"
@@ -16,6 +15,8 @@
 
 #include "base/core.h"
 #include "base/rtti.h"
+
+#include "i2c/i2c_sys_drm_connector.h"
 
 #include "ddc_status_events.h"
 
@@ -200,7 +201,7 @@ void ddc_emit_or_queue_display_status_event(
       DDCA_IO_Path            io_path,
       GArray*                 queue)
 {
-   bool debug = false;
+   bool debug = true;
    if (dref) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
             dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),
