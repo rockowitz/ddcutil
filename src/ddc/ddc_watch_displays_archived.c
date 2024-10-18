@@ -23,7 +23,7 @@
  *  Does not handle displays using USB for communication
  */
 bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector = %s", drm_connector);
 
    // DBGTRC_NOPREFIX(true, TRACE_GROUP, "All existing Bus_Info recs:");
@@ -77,7 +77,7 @@ bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
 
 
 bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector_name = %s", drm_connector_name);
 
    bool ok = false;
@@ -191,7 +191,7 @@ void dummy_display_change_handler(
         GPtrArray *          removed,
         GPtrArray *          added)
 {
-   bool debug = true;
+   bool debug = false;
    // DBGTRC_STARTING(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
    if (removed && removed->len > 0) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
