@@ -407,7 +407,7 @@ get_i2c_sys_info(
  */
 // used in i2c_bus_base.c, use eliminated 9/26/2024
 void dbgrpt_i2c_sys_info(I2C_Sys_Info * info, int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "info=%p, depth=%d", info, depth);
    int d1 = (depth < 0) ? 0 : depth + 1;
    int d2 = (depth < 0) ? 0 : depth + 2;
