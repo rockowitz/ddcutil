@@ -46,7 +46,7 @@ lock_display_by_usb_monitor_info(
       Usb_Monitor_Info * usbinfo,
       Display_Lock_Flags flags)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "USB device %s, flags=%s",
          usbinfo->hiddev_device_name, interpret_display_lock_flags_t(flags));
    Display_Lock_Record * lockid = usbinfo->lock_rec;
@@ -58,7 +58,7 @@ lock_display_by_usb_monitor_info(
 
 Error_Info *
 unlock_display_by_usb_monitor_info(Usb_Monitor_Info * usbinfo) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "USB device %s", usbinfo->hiddev_device_name);
    Display_Lock_Record * lockid = usbinfo->lock_rec;
    Error_Info * result = unlock_display(lockid);
