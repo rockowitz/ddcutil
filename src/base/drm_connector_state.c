@@ -331,7 +331,7 @@ DDCA_Status get_connector_state_array(int fd, int cardno, GPtrArray* collector) 
                  }
               }
          } // for
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "calling drmModeFreeConnector(%p)", conn);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calling drmModeFreeConnector(%p)", conn);
          drmModeFreeConnector(conn);
          g_ptr_array_add(collector, connector_state);
       }
