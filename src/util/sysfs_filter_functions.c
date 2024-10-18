@@ -70,7 +70,7 @@ bool predicate_i2c_N(const char * value) {
 #ifdef FUTURE
 // untested
 int match_i2c_N(const char * value) {
-   bool debug = true;
+   bool debug = false;
    regmatch_t matchpos;
    int result = -1;
    if (compile_and_eval_regex(i2c_N_pattern, value, &matchpos)) {
@@ -85,7 +85,7 @@ int match_i2c_N(const char * value) {
 
 
 int match_dev_i2c_N(const char * value) {
-   bool debug = true;
+   bool debug = false;
    int result = -1;
    if (str_starts_with(value,  "/dev/")) {
       result = match_i2c_N(value+5);
