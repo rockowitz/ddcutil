@@ -138,7 +138,7 @@ void i2c_remove_bus_info(int busno) {
 
 // called if display removed, bus may or may not still exist
 void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
-   bool debug = false;
+   bool debug = true;
    assert(bus_info);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d", bus_info, bus_info->busno);
    bus_info->flags = I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
@@ -275,6 +275,20 @@ void i2c_add_bus_info(I2C_Bus_Info * businfo) {
 
    g_mutex_lock(&all_i2c_buses_mutex);
    g_ptr_array_add(all_i2c_buses, businfo);
+   g_mutex_unlock(&all_i2c_buses_mutex);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+void i2c_remove_bus_info_by_businfo(I2C_Bus_Info * businfo) {
+   assert(businfo);
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Removing businfo record for bus %d from all_i2c_buses", businfo->busno);
+   assert(businfo->busno != 255 && businfo->busno != -1);
+
+   g_mutex_lock(&all_i2c_buses_mutex);
+   g_ptr_array_remove(all_i2c_buses, businfo);
    g_mutex_unlock(&all_i2c_buses_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
