@@ -560,7 +560,7 @@ Failsim_Result fsim_check_failure(const char * fn, const char * funcname) {
 
 #ifdef OUT
 bool fsim_bool_injector(bool status, const char * fn, const char * funcname) {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting. status = %s, fn=%s, funcname=%s", SBOOL(status), fn, funcname);
 
    bool result = false;
