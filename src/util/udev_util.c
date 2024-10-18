@@ -213,7 +213,7 @@ bye:
  * @param  depth         logical indentation depth
  */
 void report_udev_device(struct udev_device * dev, int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting");
    int d1 = depth+1;
    int d2 = depth+2;
