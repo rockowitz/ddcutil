@@ -96,6 +96,7 @@ void             i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinf
 extern GPtrArray * all_i2c_buses;
 
 void             i2c_add_bus_info(I2C_Bus_Info * businfo);
+void             i2c_remove_bus_info_by_businfo(I2C_Bus_Info * businfo);
 void             i2c_discard_buses0(GPtrArray* buses);
 void             i2c_discard_buses();
 void             i2c_remove_bus_info(int busno);
