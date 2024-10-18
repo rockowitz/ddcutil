@@ -195,6 +195,7 @@ typedef struct _display_ref {
    uint64_t                 creation_timestamp;
 } Display_Ref;
 
+#define DREF_BUSNO(_dref) ((_dref)->io_path.path.i2c_busno)
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \
    assert(_dref && \
           memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) && \
