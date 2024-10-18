@@ -8,6 +8,8 @@
 
 #include <glib-2.0/glib.h>
 
+extern bool nvidia_driver_implies_sysfs_unreliable;
+
 // predicate functions
 // typedef Dir_Filter_Func
 bool is_drm_connector(const char * dirname, const char * simple_fn);
@@ -51,6 +53,8 @@ void                  free_sysfs_connector_names_contents(Sysfs_Connector_Names 
 void                  dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
 Sysfs_Connector_Names copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
 char *                find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
+
+bool                  is_sysfs_unreliable(int busno);
 
 void init_i2c_sysfs_base();
 

@@ -53,15 +53,3 @@ void consolidated_i2c_sysfs_report(int depth) {
    rpt_nl();
 }
 
-
-bool is_sysfs_unreliable(int busno) {
-   bool debug = false;
-   // TODO: eliminate use of Sysfs_I2C_Info, access sysfs directly
-   Sysfs_I2C_Info * driver_info = get_i2c_driver_info(busno, (debug) ? 1 : -1);
-   bool sysfs_unreliable =  streq(driver_info->driver, "nvidia"); //  || str_starts_with(driver_info->name, "NVIDIA");
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "sysfs_unreliable=%s, driver=%s, name=%s",
-         SBOOL(sysfs_unreliable), driver_info->driver, driver_info->name);
-   free_sysfs_i2c_info(driver_info);
-   return sysfs_unreliable;
-}
-

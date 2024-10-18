@@ -29,7 +29,7 @@
 
 // #include <i2c/i2c_sys_drm_connector.h>
 #include "i2c/i2c_dpms.h"
-#include "i2c/i2c_sysfs_top.h"  // for is_sysfs_unreliable
+#include "i2c/i2c_sysfs_base.h"  // for is_sysfs_unreliable
 
 
 

@@ -43,11 +43,16 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
+#include "i2c/i2c_sysfs_i2c_info.h"   // ugh
+
 #include "i2c/i2c_sysfs_base.h"
 
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 
+
+
+bool nvidia_driver_implies_sysfs_unreliable = false;
 
 //
 // Predicate functions
@@ -1044,6 +1049,27 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
 }
 
 
+bool is_sysfs_unreliable(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, nvidia_driver_implies_sysfs_unreliable=%s",
+         busno, SBOOL(nvidia_driver_implies_sysfs_unreliable));
+
+   bool sysfs_unreliable = false;
+   if (nvidia_driver_implies_sysfs_unreliable) {
+      // TODO: eliminate use of Sysfs_I2C_Info, access sysfs directly
+      Sysfs_I2C_Info * driver_info = get_i2c_driver_info(busno, (debug) ? 1 : -1);
+      sysfs_unreliable =  streq(driver_info->driver, "nvidia"); //  || str_starts_with(driver_info->name, "NVIDIA");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_unreliable=%s, driver=%s, name=%s",
+            SBOOL(sysfs_unreliable), driver_info->driver, driver_info->name);
+      free_sysfs_i2c_info(driver_info);
+   }
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, sysfs_unreliable, "");
+   return sysfs_unreliable;
+}
+
+
+
 void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(find_adapter);
    RTTI_ADD_FUNC(get_sys_video_devices);
@@ -1051,5 +1077,6 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
+   RTTI_ADD_FUNC(is_sysfs_unreliable);
 }
 
