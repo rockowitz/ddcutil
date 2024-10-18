@@ -17,6 +17,9 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/utsname.h>
+#ifdef USE_X11
+#include <X11/extensions/randr.h>
+#endif
 
 #include "util/data_structures.h"
 #include "util/edid.h"
@@ -308,21 +311,24 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
 
 /* Reports EDIDs known to X11
  *
- * Arguments:    none
+ * Arguments:   use_screen_resources_current
  *
  * Returns:      nothing
  */
-void query_x11() {
-   GPtrArray* edid_recs = get_x11_edids();
+void query_x11_0(bool use_screen_resources_current) {
+   GPtrArray* edid_recs = get_x11_edids(use_screen_resources_current);
    rpt_nl();
-   rpt_vstring(0,"*** EDIDs reported by X11 for connected xrandr outputs ***");
+   rpt_vstring(0,"EDIDs reported by X11 for connected xrandr outputs %susing XRRGetScreenResourcesCurrent",
+         (use_screen_resources_current) ? "" : "NOT ");
    // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
+   int d1 = 1;
+   int d2 = 2;
 
    for (int ndx=0; ndx < edid_recs->len; ndx++) {
       X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
       // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
       // hex_dump(prec->edid, 128);
-      rpt_vstring(1, "xrandr output: %s", prec->output_name);
+      rpt_vstring(d1, "xrandr output: %s", prec->output_name);
       Byte * edidbytes = prec->edidbytes;
 
 #ifdef SYSENV_TEST_IDENTICAL_EDIDS
@@ -333,7 +339,7 @@ void query_x11() {
       }
 #endif
 
-      rpt_label  (2, "Raw EDID:");
+      rpt_label  (d2, "Raw EDID:");
       rpt_hex_dump(edidbytes, 128, 2);
       Parsed_Edid * parsed_edid = create_parsed_edid2(edidbytes, "X11");
       if (parsed_edid) {
@@ -341,11 +347,11 @@ void query_x11() {
                parsed_edid,
                true,   // verbose
                false,  // show_hex
-               2);     // depth
+               d2);     // depth
          free_parsed_edid(parsed_edid);
       }
       else {
-         rpt_label(2, "Unable to parse EDID");
+         rpt_label(d2, "Unable to parse EDID");
          // printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
          // hex_dump(prec->edidbytes, 128);
       }
@@ -355,8 +361,8 @@ void query_x11() {
       if (xref) {
          xref->xrandr_name = strdup(prec->output_name);
          if (xref->ambiguous_edid) {
-            rpt_vstring(2, "Multiple displays have same EDID ...%s", xref->edid_tag);
-            rpt_vstring(2, "xrandr name in device cross reference table may be incorrect.");
+            rpt_vstring(d2, "Multiple displays have same EDID ...%s", xref->edid_tag);
+            rpt_vstring(d2, "xrandr name in device cross reference table may be incorrect.");
          }
       }
       else {
@@ -370,6 +376,18 @@ void query_x11() {
    // GPtrArray *  outputs = get_x11_connected_outputs(x11_disp);
    // close_x11_display(x11_disp);
 }
+
+
+void query_x11() {
+   rpt_nl();
+   rpt_label(0, "*** Querying X11 ***");
+   rpt_nl();
+   rpt_vstring(0, "randr_version: %d.%d", RANDR_MAJOR, RANDR_MINOR);
+
+   query_x11_0(false);
+   query_x11_0(true);
+}
+
 #endif
 
 
