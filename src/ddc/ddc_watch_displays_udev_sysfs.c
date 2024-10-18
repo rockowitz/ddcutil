@@ -49,7 +49,7 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_dpms.h"
-#include <i2c/i2c_sys_drm_connector.h>
+#include "i2c/i2c_sys_drm_connector.h"
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
