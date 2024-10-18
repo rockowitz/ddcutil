@@ -279,7 +279,7 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
       threshold = parsed_cmd->i2c_bus_check_async_min;
    }
    i2c_businfo_async_threshold = threshold;
-   DBGMSG("set i2c_businfo_async_threshold = %d", threshold);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "set i2c_businfo_async_threshold = %d", threshold);
 
    threshold = DEFAULT_DDC_CHECK_ASYNC_THRESHOLD;
    if (parsed_cmd->ddc_check_async_min >= 0) {
