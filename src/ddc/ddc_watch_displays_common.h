@@ -42,9 +42,11 @@ typedef struct {
 
 void free_watch_displays_data(Watch_Displays_Data * wdd);
 
+#ifdef OLD
 GPtrArray * ddc_i2c_stabilized_buses(
       GPtrArray* prior,
       bool       some_displays_disconnected);
+#endif
 
 #ifdef UNUSED
 typedef struct {

@@ -416,6 +416,7 @@ bool ddc_i2c_hotplug_change_handler(
 }
 
 
+#ifdef OLD
 /** Repeatedly calls i2c_detect_buses0() until the value read equals the prior value.
  *
  *  @oaram prior                       initial array of I2C_Bus_Info for connected buses
@@ -466,6 +467,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
    DBGTRC_RETURNING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
    return prior;
 }
+#endif
 
 
 Bit_Set_256
@@ -515,7 +517,8 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
 
 void init_ddc_watch_displays_common() {
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
-   RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
+   // RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
+   RTTI_ADD_FUNC(ddc_i2c_stabilized_buses_bs);
    RTTI_ADD_FUNC(ddc_i2c_emit_deferred_events);
    RTTI_ADD_FUNC(ddc_i2c_hotplug_change_handler);
 }
