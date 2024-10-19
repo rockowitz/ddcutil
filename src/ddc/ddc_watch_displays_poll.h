@@ -10,4 +10,6 @@
 
 gpointer ddc_watch_displays_using_poll(gpointer data);
 
+void init_ddc_watch_displays_poll();
+
 #endif /* DDC_WATCH_DISPLAYS_POLL_H_ */
