@@ -167,6 +167,10 @@ Sysfs_I2C_Info *  get_i2c_driver_info(int busno, int depth) {
 }
 
 
+Sysfs_I2C_Info * get_basic_i2c_driver_info(int busno) {
+   return get_i2c_driver_info(busno, -1);
+}
+
 
 /** Returns a newly allocated #Sysfs_I2c_Info struct describing
  *  a /sys/bus/i2c/devices/i2c-N instance, and optionally reports the
