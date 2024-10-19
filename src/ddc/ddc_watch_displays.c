@@ -223,8 +223,12 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bs_prev_buses_w_edid: %s", BS256_REPR(bs_prev_buses_w_edid));
 
+#ifdef OLD
    GPtrArray * new_buses = i2c_detect_buses0();
    Bit_Set_256 bs_new_buses_w_edid =  buses_bitset_from_businfo_array(new_buses, /* only_connected */ true);
+#endif
+   Bit_Set_256 bs_new_buses_w_edid = i2c_buses_w_edid_as_bitset();
+
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_new_buses_w_edid: %s", BS256_REPR(bs_new_buses_w_edid));
 
    if (!bs256_eq(bs_prev_buses_w_edid, bs_new_buses_w_edid)) {
@@ -235,11 +239,15 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
 
       if (detected_displays_removed_flag) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling ddc_i2c_stabilized_buses()");
+#ifdef OLD
          GPtrArray * stabilized_buses = ddc_i2c_stabilized_buses(new_buses, detected_displays_removed_flag);
          BS256 bs_stabilized_buses_w_edid = buses_bitset_from_businfo_array(stabilized_buses, /*only_connected*/ true);
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_stabilized_buses_w_edid: %s", BS256_REPR(bs_stabilized_buses_w_edid));
          // new_buses = stabilized_buses;  // unused
          bs_new_buses_w_edid = bs_stabilized_buses_w_edid;
+#endif
+
+         BS256 bs_new_buses_w_edid = ddc_i2c_stabilized_buses_bs(bs_new_buses_w_edid, detected_displays_removed_flag);
       }
    }
 
@@ -819,7 +827,6 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(search_all_businfo_record_by_connector_name);
    RTTI_ADD_FUNC(ddc_i2c_check_bus_changes);
    RTTI_ADD_FUNC(ddc_i2c_check_bus_changes_for_connector);
-   RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_bus_by_connector_id);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_single_bus_by_connector_name);
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
