@@ -1657,7 +1657,8 @@ Bit_Set_256 i2c_filter_buses_w_edid_as_bitset(BS256 bs_all_buses) {
    Bit_Set_256_Iterator iter =  bs256_iter_new(bs_all_buses);
    int bitno = bs256_iter_next(iter);
    while (bitno >= 0) {
-      bs_buses_w_edid = bs256_insert(bs_buses_w_edid, bitno);
+      if ( i2c_edid_exists(bitno))
+         bs_buses_w_edid = bs256_insert(bs_buses_w_edid, bitno);
       bitno = bs256_iter_next(iter);
    }
    return bs_buses_w_edid;
