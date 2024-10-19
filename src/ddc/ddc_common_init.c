@@ -350,10 +350,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F9)
       msg_to_syslog_only = true;
 
-
-
-   if (parsed_cmd->flags2 & CMD_FLAG2_F16)
-      ddc_watch_mode = Watch_Mode_Poll;
    nvidia_driver_implies_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F19;
 
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
