@@ -85,11 +85,23 @@ static GMutex    watch_thread_mutex;
  */
 Error_Info *
 ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p, event_clases=0x%02x, drm_enabled=%s",
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, drm_enabled=%s",
                                        ddc_watch_mode_name(ddc_watch_mode),
                                        watch_thread, event_classes, SBOOL(drm_enabled) );
    Error_Info * err = NULL;
+
+   if (ddc_watch_mode == Watch_Mode_Dynamic) {
+      ddc_watch_mode = Watch_Mode_Udev;
+      for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
+         I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
+         if (streq(businfo->driver, "nvidia")) {
+            ddc_watch_mode = Watch_Mode_Poll;
+            break;
+         }
+      }
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Driver nvidia in use. Set ddc_watch_mode = Watch_Mode_Poll");
+   }
 
 #ifdef ENABLE_UDEV
    if (!drm_enabled) {
