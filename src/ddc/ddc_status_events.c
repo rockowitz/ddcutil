@@ -201,7 +201,7 @@ void ddc_emit_or_queue_display_status_event(
       DDCA_IO_Path            io_path,
       GArray*                 queue)
 {
-   bool debug = true;
+   bool debug = false;
    if (dref) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
             dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),
