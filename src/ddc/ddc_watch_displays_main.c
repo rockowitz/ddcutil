@@ -100,7 +100,8 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
             break;
          }
       }
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Driver nvidia in use. Set ddc_watch_mode = Watch_Mode_Poll");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Driver nvidia %sin use. Set ddc_watch_mode = %s",
+            (ddc_watch_mode == Watch_Mode_Poll) ? "" : "NOT ", ddc_watch_mode_name(ddc_watch_mode));
    }
 
 #ifdef ENABLE_UDEV
