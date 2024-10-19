@@ -46,6 +46,17 @@ GPtrArray * ddc_i2c_stabilized_buses(
       GPtrArray* prior,
       bool       some_displays_disconnected);
 
+#ifdef UNUSED
+typedef struct {
+   Bit_Set_256 all_displays;
+   Bit_Set_256 displays_w_edid;
+}  Bit_Set_256_Pair;
+bool bs256_pair_eq(Bit_Set_256_Pair pair1, Bit_Set_256_Pair pair2);
+#endif
+
+Bit_Set_256
+ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected);
+
 Bit_Set_256 ddc_i2c_check_bus_asleep(
       Bit_Set_256  bs_active_buses,
       Bit_Set_256  bs_sleepy_buses,

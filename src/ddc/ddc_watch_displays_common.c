@@ -468,6 +468,51 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
 }
 
 
+Bit_Set_256
+ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "prior =%s, some_displays_disconnected=%s",
+         BS256_REPR(bs_prior), SBOOL(some_displays_disconnected));
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_prior:", BS256_REPR(bs_prior));
+
+   // Special handling for case of apparently disconnected displays.
+   // It has been observed that in some cases (Samsung U32H750) a disconnect is followed a
+   // few seconds later by a connect. Wait a few seconds to avoid triggering events
+   // in this case.
+   if (some_displays_disconnected) {
+      if (extra_stabilization_millisec > 0) {
+         char * s = g_strdup_printf(
+               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", extra_stabilization_millisec);
+         DBGTRC(debug, TRACE_GROUP, "%s", s);
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+         free(s);
+         usleep(extra_stabilization_millisec * 1000);
+      }
+   }
+
+   int stablect = 0;
+   bool stable = false;
+   while (!stable) {
+      // DBGMSG("SLEEPING");
+      usleep(1000*stabilization_poll_millisec);
+      BS256 bs_latest = i2c_buses_w_edid_as_bitset();
+      if (bs256_eq(bs_latest, bs_prior))
+            stable = true;
+      bs_prior = bs_latest;
+      stablect++;
+   }
+   if (stablect > 1) {
+      DBGTRC(debug || true, TRACE_GROUP,   "Required %d extra calls to i2c_buses_w_edid_as_bitset()", stablect+1);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_buses_w_edid_as_bitset()", __func__, stablect-1);
+   }
+
+   DBGTRC_RETURNING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
+   return bs_prior;
+}
+
+
+
+
 void init_ddc_watch_displays_common() {
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
