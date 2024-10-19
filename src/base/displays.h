@@ -267,4 +267,13 @@ typedef struct {
 } Bus_Open_Error;
 
 
+typedef enum {
+   Watch_Mode_Poll,
+   Watch_Mode_Udev,
+   Watch_Mode_Dynamic,
+} DDC_Watch_Mode;
+
+const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
+
+
 #endif /* DISPLAYS_H_ */

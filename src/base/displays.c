@@ -1023,6 +1023,19 @@ char * interpret_dref_flags_t(Dref_Flags flags) {
 }
 
 
+const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
+   char * result = NULL;
+   switch (mode) {
+   case Watch_Mode_Poll:     result = "Watch_Mode_Poll";     break;
+   case Watch_Mode_Udev:     result = "Watch_Mode_Udev";     break;
+   case Watch_Mode_Dynamic:  result = "Watch_Mode_Dynamic";  break;
+   }
+   return result;
+}
+
+
+
+
 void init_displays() {
    RTTI_ADD_FUNC(copy_display_ref);
    RTTI_ADD_FUNC(create_base_display_handle);
