@@ -41,7 +41,7 @@ libddc_la_SOURCES += \
   ddc_watch_displays_common.c \
   ddc_watch_displays_main.c \
   ddc_watch_displays_poll.c \
-  ddc_watch_displays.c
+  ddc_watch_displays_udev.c
 endif
 endif
 

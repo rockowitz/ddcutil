@@ -59,7 +59,7 @@
 #include "ddc/ddc_vcp.h"
 
 #include "ddc/ddc_watch_displays_common.h"
-#include "ddc/ddc_watch_displays.h"
+#include "ddc/ddc_watch_displays_udev.h"
 
 
 // Trace class for this file
@@ -817,7 +817,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
 #endif // ENABLE_UDEV
 
 
-void init_ddc_watch_displays() {
+void init_ddc_watch_displays_udev() {
 
 
 #ifdef ENABLE_UDEV

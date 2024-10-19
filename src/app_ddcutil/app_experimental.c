@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+
 #include <stdio.h>
 #include <strings.h>
 
@@ -12,7 +13,6 @@
 #include "util/timestamp.h"
 
 #include "base/parms.h"
-
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
@@ -20,7 +20,7 @@
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_watch_displays.h"
+// #include "ddc/ddc_watch_displays_udev.h"
 #include "ddc/ddc_watch_displays_common.h"
 #include "ddc/ddc_watch_displays_main.h"
 
