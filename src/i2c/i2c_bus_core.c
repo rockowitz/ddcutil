@@ -639,7 +639,7 @@ i2c_detect_x37(int fd) {
 }
 
 
-/** Tests if an open display handle is still
+/** Tests if an open display handle is still valid
  *
  *  @param  dh     display handle
  *  @retval NULL   ok
@@ -663,12 +663,12 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    bool edid_exists = false;
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
    if (businfo->drm_connector_name) {
-      edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
+      i2c_edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
       // edid_exists = i2c_check_bus_responsive_using_drm(businfo->drm_connector_name);  // fails for Nvidia
    }
    else {
       // read edid
-      edid_exists = i2c_check_edid_exists_by_dh(dh);
+      i2c_edid_exists = i2c_check_edid_exists_by_dh(dh);
    }
 #else
    edid_exists = i2c_check_edid_exists_by_dh(dh);
@@ -975,6 +975,106 @@ Byte * get_connector_edid(const char * connector_name) {
 
 
 
+ /** Checks if an I2C bus has an EDID
+  *
+  *  @param  busno
+  *  @return true/false
+  */
+ bool i2c_edid_exists(int busno) {
+    bool debug = false;
+    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
+    // int d = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 1 : -1;
+    assert(busno >= 0);
+    assert(busno != 255);
+    bool try_get_edid_from_sysfs_first = true;
+    // int busno = businfo->busno;
+    char sysfs_name[30];
+    char dev_name[15];
+    char i2cN[10];  // only need 8, but coverity complains
+    g_snprintf(i2cN, 10, "i2c-%d", busno);
+    g_snprintf(sysfs_name, 30, "/sys/bus/i2c/devices/%s", i2cN);
+    g_snprintf(dev_name,   15, "/dev/%s", i2cN);
+    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
+    bool edid_exists = false;
+
+    Error_Info *master_err = NULL;
+    if (!i2c_device_exists(busno)) {
+       goto bye;
+    }
+
+    if ( sysfs_is_ignorable_i2c_device(busno) ) {
+       goto bye;
+    }
+
+    bool is_displaylink = is_displaylink_device(busno);
+    bool sysfs_unreliable = is_sysfs_unreliable(busno);
+    char * drm_connector_name = NULL;
+
+
+    // *** Try to find the drm connector by bus number
+
+    // n. will fail for MST
+    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Finding DRM connector name for bus %s using busno", dev_name);
+    Find_Sys_Drm_Connector_Result res = find_sys_drm_connector_by_busno_or_edid(busno, NULL);
+    if (res.connector_name) {
+       drm_connector_name = strdup(res.connector_name);
+       free_find_sys_drm_connector_result_contents(res);
+    }
+    else {
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DRM connector not found by busno %d", busno);
+    }
+
+    // *** Possibly try to get the EDID from sysfs
+    bool checked_connector_for_edid = false;
+    if (drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
+       if ((try_get_edid_from_sysfs_first && !sysfs_unreliable)  ||
+             is_displaylink)   // X50 can't be read for DisplayLink, must use sysfs
+       {
+          checked_connector_for_edid = true;
+          Byte * edidbytes = get_connector_edid(drm_connector_name);
+          if (edidbytes) {
+             edid_exists = true;
+             free(edidbytes);
+          }
+          else {
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Failed to get edid using DRM connector %s", drm_connector_name);
+          }
+       }
+    }
+    if (checked_connector_for_edid)
+       goto bye;
+
+    // *** Open bus
+
+    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_open_bus for /dev/i2c-%d..", busno);
+    int fd = -1;
+    master_err = i2c_open_bus(busno, CALLOPT_WAIT, &fd);
+ #ifdef ALT_LOCK_REC
+    master_err = i2c_open_bus(businfo->busno, businfo->CALLOPT_WAIT, &fd);
+ #endif
+    if (master_err) {
+       goto bye;
+    }
+
+    //open succeeded
+    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", busno);
+    Buffer * rawedidbuf = buffer_new(EDID_BUFFER_SIZE, NULL);
+    Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
+    if (rc == 0) {
+       edid_exists = true;
+       buffer_free(rawedidbuf, NULL);
+    }
+
+    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
+     i2c_close_bus(busno, fd, CALLOPT_ERR_MSG);
+
+ bye:
+    ERRINFO_FREE_WITH_REPORT(master_err, true);
+    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, edid_exists, "");
+    return edid_exists;
+ }
+
+
 /** Inspects an I2C bus.
  *
  *  Takes the number of the bus to be inspected from the #I2C_Bus_Info struct passed
@@ -999,19 +1099,31 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    g_snprintf(dev_name,   15, "/dev/%s", i2cN);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
 
-   Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, (debug) ? 1 : -1);
-   businfo->driver = g_strdup(driver_info->driver);
-   free_sysfs_i2c_info(driver_info);
-
-
-   businfo->flags = 0;
    Error_Info *master_err = NULL;
-
    if (!i2c_device_exists(businfo->busno))
       goto bye;
 
-   businfo->flags = I2C_BUS_EXISTS |
-         I2C_BUS_HAS_VALID_NAME | I2C_BUS_VALID_NAME_CHECKED;   // still needed?
+   Sysfs_I2C_Info * driver_info = get_basic_i2c_driver_info(businfo->busno);
+   businfo->driver = g_strdup(driver_info->driver);
+   // perhaps save businfo->driver_version
+   assert(driver_info->adapter_class);
+   uint32_t cl2 = 0;
+   if (driver_info->adapter_class) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "class = %s", driver_info->adapter_class);
+      uint32_t i_class = 0;
+       /* bool ok =*/  str_to_int(driver_info->adapter_class, (int*) &i_class, 16);   // if fails, &result unchanged
+      cl2 = i_class & 0xffff0000;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cl2 = 0x%08x", cl2);
+   }
+   free_sysfs_i2c_info(driver_info);
+   if (cl2 != 0x030000 && cl2 != 0x0a0000 /* docking station*/ ) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Device class not a display driver: 0x%08x", cl2);
+      goto bye;
+   }
+
+   businfo->flags = I2C_BUS_EXISTS            |
+                    I2C_BUS_HAS_VALID_NAME    |
+                    I2C_BUS_VALID_NAME_CHECKED;   // still needed?
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "initial flags = %s", i2c_interpret_bus_flags_t(businfo->flags));
 
    if (is_displaylink_device(businfo->busno))
@@ -1539,6 +1651,24 @@ Bit_Set_256 i2c_detect_attached_buses_as_bitset() {
    bva_free(bva);
    return cur_buses;
 }
+
+Bit_Set_256 i2c_filter_buses_w_edid_as_bitset(BS256 bs_all_buses) {
+   BS256 bs_buses_w_edid = EMPTY_BIT_SET_256;
+   Bit_Set_256_Iterator iter =  bs256_iter_new(bs_all_buses);
+   int bitno = bs256_iter_next(iter);
+   while (bitno >= 0) {
+      bs_buses_w_edid = bs256_insert(bs_buses_w_edid, bitno);
+      bitno = bs256_iter_next(iter);
+   }
+   return bs_buses_w_edid;
+}
+
+
+Bit_Set_256 i2c_buses_w_edid_as_bitset() {
+   BS256 bs_all_buses = i2c_detect_attached_buses_as_bitset();
+   return i2c_filter_buses_w_edid_as_bitset(bs_all_buses);
+}
+
 
 
 #ifdef UNUSED
