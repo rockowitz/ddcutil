@@ -237,6 +237,7 @@ struct {
    DDCA_Stats_Type        stats_types;
    int16_t                i2c_bus_check_async_min;
    int16_t                ddc_check_async_min;
+   DDC_Watch_Mode         watch_mode;
 
    // Tracing and logging
    DDCA_Trace_Group       traced_groups;

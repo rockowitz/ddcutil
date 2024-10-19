@@ -141,6 +141,8 @@ Parsed_Cmd *  new_parsed_cmd() {
 #endif
    if (DEFAULT_ENABLE_CACHED_CAPABILITIES)
       parsed_cmd->flags |= CMD_FLAG_ENABLE_CACHED_CAPABILITIES;
+
+   parsed_cmd->watch_mode = Watch_Mode_Dynamic;
    return parsed_cmd;
 }
 
@@ -252,6 +254,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("quick",            NULL, parsed_cmd->flags & CMD_FLAG_QUICK,                    d1);
 
       RPT_CMDFLAG("watch hotplug events", CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS,                d1);
+      rpt_vstring(d1, "watch_mode                                               : %s",
+            ddc_watch_mode_name(parsed_cmd->watch_mode));
 
       rpt_nl();
       rpt_label(depth, "Display Selection");
@@ -322,6 +326,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("dsa2 enabled",      NULL, parsed_cmd->flags & CMD_FLAG_DSA2,                    d1);
       rpt_int("i2c_bus_check_async_min", NULL, parsed_cmd->i2c_bus_check_async_min,             d1);
       rpt_int("ddc_check_async_min", NULL, parsed_cmd->ddc_check_async_min,                     d1);
+
 
 
       rpt_bool("verbose stats:", NULL, parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS,              d1);

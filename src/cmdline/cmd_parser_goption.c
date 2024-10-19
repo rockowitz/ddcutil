@@ -126,7 +126,6 @@ stats_arg_func(const    gchar* option_name,
 }
 
 
-
 // Callback function for processing --discard-cache
 static gboolean
 discard_cache_arg_func(
@@ -163,7 +162,6 @@ discard_cache_arg_func(
    }
    return ok;
 }
-
 
 
 
@@ -472,6 +470,39 @@ static bool parse_sleep_multiplier(
       }
    }
    return arg_ok;
+}
+
+
+static bool parse_watch_mode(
+      const char * sval,
+      Parsed_Cmd* parsed_cmd,
+      GPtrArray* errmsgs)
+{
+   bool debug = false;
+   DBGMSF(debug,"sval=|%s|", sval);
+
+   bool ok = true;
+   if (sval) {
+      char * v2 = strdup_uc(sval);
+
+      if (     is_abbrev(v2, "POLL", 3))
+         parsed_cmd->watch_mode = Watch_Mode_Poll;
+      else if (is_abbrev(v2, "UDEV", 3))
+         parsed_cmd->watch_mode = Watch_Mode_Udev;
+      else if (is_abbrev(v2, "DYNAMIC", 3))
+         parsed_cmd->watch_mode = Watch_Mode_Dynamic;
+
+      else {
+         EMIT_PARSER_ERROR(errmsgs, "Invalid watch-mode: %s", sval);
+         ok = false;
+      }
+      free(v2);
+   }
+   else {
+      EMIT_PARSER_ERROR(errmsgs, "--watch-mode argument missing");
+      ok = false;
+   }
+   return ok;
 }
 
 
@@ -1001,6 +1032,7 @@ parse_command(
    char *   sleep_multiplier_work = NULL;
    char *   min_dynamic_sleep_work = NULL;
    char *   i2c_source_addr_work = NULL;
+   char *   watch_mode_work = NULL;
    gboolean skip_ddc_checks_flag = false;
 
    gboolean hidden_help_flag = false;
@@ -1183,7 +1215,8 @@ parse_command(
 //      {"enable-watch-displays",  '\0', 0, G_OPTION_ARG_NONE, &watch_displays_flag, "Watch for display hotplug events", NULL },
 //      {"disable-watch-displays", '\0', G_OPTION_FLAG_REVERSE,
 //                                G_OPTION_ARG_NONE, &watch_displays_flag, "Do not watch for display hotplug events", NULL },
-
+      {"watch-mode", '\0', G_OPTION_FLAG_HIDDEN,
+                           G_OPTION_ARG_STRING, &watch_mode_work, "How to watch for display changes",  "UDEV|POLL|DYNAMIC"},
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
@@ -1839,10 +1872,14 @@ parse_command(
    }
 
    if (min_dynamic_sleep_work) {
-      parsing_ok &= parse_sleep_multiplier(min_dynamic_sleep_work, &parsed_cmd->min_dynamic_multiplier, errmsgs);
+      parsing_ok  &= parse_sleep_multiplier(min_dynamic_sleep_work, &parsed_cmd->min_dynamic_multiplier, errmsgs);
       FREE(min_dynamic_sleep_work);
    }
 
+   if (watch_mode_work) {
+      parsing_ok &= parse_watch_mode(watch_mode_work, parsed_cmd, errmsgs);
+      FREE(watch_mode_work);
+   }
 
    DBGMSF(debug, "edid_read_size_work = %d", edid_read_size_work);
    if (edid_read_size_work !=  -1 &&
