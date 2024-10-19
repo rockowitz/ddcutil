@@ -65,20 +65,9 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
-DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Udev_I2C;
-
-const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
-   char * result = NULL;
-   switch (mode) {
-   case Watch_Mode_Full_Poll:   result = "Watch_Mode_Full_Poll";   break;
-   case Watch_Mode_Udev_Sysfs:  result = "Watch_Mode_Udev_Sysfs";  break;
-   case Watch_Mode_Udev_I2C:    result = "Watch_Mode_Udev_I2C";    break;
-   }
-   return result;
-}
+DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Dynamic;
 
 // some of these go elsewhere
-
 static GThread * watch_thread = NULL;
 static DDCA_Display_Event_Class active_classes = DDCA_EVENT_CLASS_NONE;
 static GMutex    watch_thread_mutex;
@@ -124,7 +113,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
       data->event_classes = event_classes;
 
-      GThreadFunc watch_thread_func = (ddc_watch_mode == Watch_Mode_Full_Poll)
+      GThreadFunc watch_thread_func = (ddc_watch_mode == Watch_Mode_Poll)
                                         ? ddc_watch_displays_using_poll
                                         : ddc_watch_displays_udev_i2c;
 
