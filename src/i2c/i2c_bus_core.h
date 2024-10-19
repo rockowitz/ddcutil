@@ -55,6 +55,7 @@ Error_Info *     i2c_open_bus(int busno, Display_Lock_Record lockrec, Byte callo
 Status_Errno     i2c_close_bus(int busno, int fd, Call_Options callopts);
 
 // Bus inspection
+bool             i2c_edid_exists(int busno);
 void             i2c_check_bus2(I2C_Bus_Info * businfo);
 Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 
@@ -65,6 +66,8 @@ int              i2c_detect_buses();            // creates internal array of Bus
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
 Byte_Value_Array i2c_detect_attached_buses();
 Bit_Set_256      i2c_detect_attached_buses_as_bitset();
+Bit_Set_256      i2c_filter_buses_w_edid_as_bitset(BS256 bs_all_buses) ;
+Bit_Set_256      i2c_buses_w_edid_as_bitset();
 
 // Reports
 void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
