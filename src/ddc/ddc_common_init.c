@@ -350,17 +350,10 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F9)
       msg_to_syslog_only = true;
 
-   switch(parsed_cmd->i6) {
-   case 1:  ddc_watch_mode = Watch_Mode_Udev_I2C;    break;
-   case 2:  ddc_watch_mode = Watch_Mode_Udev_Sysfs;  break;
-   case 3:  ddc_watch_mode = Watch_Mode_Full_Poll;   break;
-   default: ddc_watch_mode = Watch_Mode_Udev_I2C;    break;
-   }
-   // if (parsed_cmd->flags2 & CMD_FLAG2_F9)
-   //    ddc_watch_mode = (ddc_watch_mode == Watch_Mode_Udev_Sysfs) ? Watch_Mode_Full_Poll
-   //                                                                : Watch_Mode_Udev_Sysfs;
+
+
    if (parsed_cmd->flags2 & CMD_FLAG2_F16)
-      ddc_watch_mode = Watch_Mode_Full_Poll;
+      ddc_watch_mode = Watch_Mode_Poll;
    nvidia_driver_implies_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F19;
 
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
@@ -379,6 +372,23 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       verify_sysfs_edid = true;
 #endif
 
+   if (parsed_cmd->flags2 & CMD_FLAG2_F17)
+      use_sysfs_connector_id = false;
+
+   if (parsed_cmd->flags2 & CMD_FLAG2_F18)
+      report_udev_events = true;
+
+#ifdef SECONDARY_UNDEV_READ
+   if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
+      secondary_udev_receive_millisec = parsed_cmd->i7;
+#endif
+
+   if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
+      stabilization_poll_millisec = parsed_cmd->i7;
+
+   if (parsed_cmd->i8 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I8_SET)
+      udev_poll_loop_millisec = parsed_cmd->i8;
+
    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
       extra_stabilization_millisec = parsed_cmd->i1;
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
@@ -393,7 +403,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       if (parsed_cmd->i5 >= 1)
          max_setvcp_verify_tries = parsed_cmd->i5;
       else
-         rpt_vstring(0, "--i5 value must be greater than 0");
+         rpt_label(0, "--i5 value must be greater than 1");
    }
 }
 
@@ -482,22 +492,8 @@ drm_enabled = false;
          SBOOL(all_drm_connectors_have_connector_id));
    // all_drm_connectors_have_connector_id = all_drm_connectors_have_connector_id && (parsed_cmd->flags2 & CMD_FLAG2_F17);
 #endif
-   if (parsed_cmd->flags2 & CMD_FLAG2_F17)
-      use_sysfs_connector_id = false;
 
-   if (parsed_cmd->flags2 & CMD_FLAG2_F18)
-      report_udev_events = true;
-
-#ifdef SECONDARY_UNDEV_READ
-   if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
-      secondary_udev_receive_millisec = parsed_cmd->i7;
-#endif
-
-   if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
-      stabilization_poll_millisec = parsed_cmd->i7;
-
-   if (parsed_cmd->i8 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I8_SET)
-      udev_poll_loop_millisec = parsed_cmd->i8;
+   ddc_watch_mode = parsed_cmd->watch_mode;
 
    subinit_i2c_bus_core();
 
