@@ -61,7 +61,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(15, "Unused");
 #endif
    // REPORT_FLAG_OPTION(16, "Simple report /sys/class/drm");
-   REPORT_FLAG_OPTION(16, "Force  Watch_Mode_Full_Poll");
+   REPORT_FLAG_OPTION(16, "Unused");
    REPORT_FLAG_OPTION(17, "Do not use sysfs connector_id");
    REPORT_FLAG_OPTION(18, "Always report UDEV events");
    REPORT_FLAG_OPTION(19, "nvidia driver implies sysfs unreliable");
@@ -77,7 +77,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i3:          flock_poll_millisec (default = %d)", DEFAULT_FLOCK_POLL_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i5:          Max retries for setvcp verification failure");
-   rpt_vstring(depth+1, "Utility option --i6:          Watch Mode: 1=Udev_I2c, 2=Udev_Syfs, 3=Poll");
+   rpt_vstring(depth+1, "Utility option --i6:          Unused");
 #ifdef SECONDARY_UDEV_RECEIVE
    rpt_vstring(depth+1, "Utility option --i7:          Additional secondary udev receive millisec (default = %d)", DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC);
 #else
