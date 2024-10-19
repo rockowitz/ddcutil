@@ -320,13 +320,15 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
          continue;
       terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
 
-
-
-      // Bit_Set_256  bs_cur_attached_buses = i2c_detect_attached_buses_as_bitset();
-
+#ifdef OLD
       GPtrArray * cur_buses = i2c_detect_buses0();
       Bit_Set_256 bs_cur_buses_w_edid   = buses_bitset_from_businfo_array(cur_buses, true);
       Bit_Set_256 bs_cur_attached_buses = buses_bitset_from_businfo_array(cur_buses, false);
+#endif
+
+      Bit_Set_256 bs_cur_attached_buses = i2c_detect_attached_buses_as_bitset();
+      Bit_Set_256 bs_cur_buses_w_edid = i2c_filter_buses_w_edid_as_bitset(bs_cur_attached_buses);
+
       Bit_Set_256 bs_added_buses_w_edid     = bs256_and_not(bs_cur_buses_w_edid, bs_old_buses_w_edid);
       Bit_Set_256 bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_cur_buses_w_edid);
       Bit_Set_256 bs_added_attached_buses   = bs256_and_not(bs_cur_attached_buses, bs_old_attached_buses);
@@ -342,15 +344,22 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_cur_buses_w_edid: %s",
                                    bs256_to_string_decimal_t(bs_cur_buses_w_edid, "", ","));
 
+#ifdef OLD
          cur_buses = ddc_i2c_stabilized_buses(cur_buses, true);
          bs_cur_buses_w_edid   = buses_bitset_from_businfo_array(cur_buses, true);
          bs_cur_attached_buses = buses_bitset_from_businfo_array(cur_buses, false);
+#endif
+         bs_cur_buses_w_edid = ddc_i2c_stabilized_buses_bs(bs_cur_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
+
          bs_added_buses_w_edid     = bs256_and_not(bs_cur_buses_w_edid, bs_old_buses_w_edid);
+
          bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_cur_buses_w_edid);
          bs_added_attached_buses   = bs256_and_not(bs_cur_attached_buses, bs_old_attached_buses);
          bs_removed_attached_buses = bs256_and_not(bs_old_attached_buses, bs_cur_attached_buses);
       }
+#ifdef OLD
       g_ptr_array_free(cur_buses, true);
+#endif
       bs_old_buses_w_edid   = bs_cur_buses_w_edid;
       bs_old_attached_buses = bs_cur_attached_buses;
 
