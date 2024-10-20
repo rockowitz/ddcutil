@@ -196,8 +196,7 @@ static void store_property_value(
           fd, connector_state, connector_state->connector_id, prop_ptr, prop_ptr->prop_id, prop_value);
 
    int d1 = 1;
-   switch(prop_ptr->prop_id) {
-   case EDID_PROP_ID:
+   if (prop_ptr->prop_id == EDID_PROP_ID) {
       assert( prop_ptr->flags & DRM_MODE_PROP_BLOB);
       if (!edid_metadata) edid_metadata = prop_ptr;
       int blob_id = prop_value;
@@ -219,32 +218,29 @@ static void store_property_value(
 
           drmModeFreePropertyBlob(blob_ptr);
        }
-      break;
+   }
 
-   case SUBCONNECTOR_PROP_ID:
+   else if (prop_ptr->prop_id == SUBCONNECTOR_PROP_ID) {
       assert( prop_ptr->flags & DRM_MODE_PROP_ENUM);
       if (!subconn_metadata)
          subconn_metadata = drmModePropertyRes_to_enum_metadata(prop_ptr);
       connector_state->subconnector = prop_value;
-      break;
+   }
 
-   case DPMS_PROP_ID:
+   else if (prop_ptr->prop_id == DPMS_PROP_ID) {
       assert( prop_ptr->flags & DRM_MODE_PROP_ENUM);
       if (!dpms_metadata)
          dpms_metadata = drmModePropertyRes_to_enum_metadata(prop_ptr);
       connector_state->dpms = prop_value;
-      break;
+   }
 
-   case LINK_STATUS_PROP_ID:
+   else if (prop_ptr->prop_id == LINK_STATUS_PROP_ID) {
       assert( prop_ptr->flags & DRM_MODE_PROP_ENUM);
       if (!link_status_metadata)
          link_status_metadata = drmModePropertyRes_to_enum_metadata(prop_ptr);
       connector_state->link_status = prop_value;
-      break;
-
-   default:
-      break;
    }
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
