@@ -172,9 +172,11 @@ json_t* serialize_one_display(Display_Ref * dref) {
       json_object_set_new(jdisp, "actual_display_path", jtmp);
    }
 
+#ifdef OLD
    if (dref->driver_name) {
       json_object_set_new(jdisp, "driver_name", json_string(dref->driver_name));
    }
+#endif
 
    // json_decref(jdisp);
 
@@ -309,10 +311,12 @@ Display_Ref *  deserialize_one_display(json_t* disp_node) {
       memcpy(dref->actual_display_path, &actual_display_path, sizeof(DDCA_IO_Path));
    }
 
+#ifdef OLD
    jtmp = json_object_get(disp_node, "driver_name");
    if (jtmp) {
       dref->driver_name = g_strdup(json_string_value(jtmp));
    }
+#endif
 
    DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, Display_Ref, dbgrpt_display_ref0, dref);
    return dref;

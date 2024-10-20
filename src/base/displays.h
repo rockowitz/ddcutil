@@ -187,7 +187,9 @@ typedef struct _display_ref {
    uint64_t                 next_i2c_io_after;     // nanosec
    struct _display_ref *    actual_display;        // if dispno == -2
    DDCA_IO_Path *           actual_display_path;   // alt to actual_display
+#ifdef OLD
    char *                   driver_name;           //
+#endif
    struct Per_Display_Data* pdd;
    char *                   drm_connector;         // e.g. card0-HDMI-A-1  // REDUNDANT - IDENTICAL TO Bus_Info.drm_connector
    int                      drm_connector_id;      // identical to Bus_Info.drm_connector_id
@@ -214,9 +216,9 @@ DDCA_Status   free_display_ref(Display_Ref * dref);
 Display_Ref * copy_display_ref(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
-bool dref_eq(Display_Ref* this, Display_Ref* that);
+bool          dref_eq(Display_Ref* this, Display_Ref* that);
 
-const char * dref_get_i2c_driver(Display_Ref* dref);
+const char *  dref_get_i2c_driver(Display_Ref* dref);
 
 #ifdef UNUSED
 bool dref_set_alive(Display_Ref * dref, bool alive);
