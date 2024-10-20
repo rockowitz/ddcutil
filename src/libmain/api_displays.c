@@ -6,9 +6,7 @@
 #include "config.h"
 
 #include <assert.h>
-
 #include <errno.h>
-
 #include <string.h>
 #include <sys/stat.h>
 
@@ -32,15 +30,17 @@
 #include "i2c/i2c_sys_drm_connector.h"
 #include "i2c/i2c_dpms.h"
 
-#include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_display_selection.h"
-#include "ddc/ddc_status_events.h"
+#include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_watch_displays_udev.h"
+#include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_watch_displays_udev.h"
+
 #include "libmain/api_base_internal.h"
 #include "libmain/api_error_info_internal.h"
+
 #include "libmain/api_displays_internal.h"
 
 
