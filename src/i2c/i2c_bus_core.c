@@ -236,7 +236,7 @@ Error_Info * i2c_open_bus(
    assert(lockrec);
 #endif
    bool wait = callopts & CALLOPT_WAIT;
-   wait = true;  // *** TEMP ***
+   // wait = true;  // *** TEMP ***
 
 #ifdef ALT_LOCK_REC
    I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
@@ -291,6 +291,14 @@ Error_Info * i2c_open_bus(
          if (!cur_error) {
             device_opened = true;
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) succeeded, tryctr=%d", filename, tryctr);
+         }
+         else {
+            if (cur_error->status_code == -EACCES ||
+                cur_error->status_code == -ENOENT) 
+            {
+               // no point in retrying, force loop exit:
+               total_wait_millisec = max_wait_millisec + 1;
+            }
          }
       }
 
@@ -1321,8 +1329,11 @@ bye:
       // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "businfo:");
       // i2c_dbgrpt_bus_info(businfo, 2);
       DBGTRC_DONE(true, TRACE_GROUP, "busno=%d", businfo->busno);
+      ERRINFO_FREE_WITH_REPORT(master_err, true);
    }
-   ERRINFO_FREE_WITH_REPORT(master_err, true);
+   else {
+      ERRINFO_FREE_WITH_REPORT(master_err, false);
+   }
 }
 
 
