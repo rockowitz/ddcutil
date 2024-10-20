@@ -1245,6 +1245,7 @@ static void add_local_rtti_functions() {
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
    RTTI_ADD_FUNC(find_dref);
    RTTI_ADD_FUNC(verify_i2c_access);
+   RTTI_ADD_FUNC(verify_i2c_access_for_single_bus);
 #ifdef UNUSED
 #ifdef TARGET_LINUX
    RTTI_ADD_FUNC(validate_environment_using_libkmod);
