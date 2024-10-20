@@ -216,6 +216,8 @@ Display_Ref * copy_display_ref(Display_Ref * dref);
 // Do two Display_Ref's identify the same device?
 bool dref_eq(Display_Ref* this, Display_Ref* that);
 
+const char * dref_get_i2c_driver(Display_Ref* dref);
+
 #ifdef UNUSED
 bool dref_set_alive(Display_Ref * dref, bool alive);
 bool dref_get_alive(Display_Ref * dref);

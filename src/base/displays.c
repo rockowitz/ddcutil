@@ -639,6 +639,24 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
 }
 
 
+/** Gets the driver name for an I2C device.
+ *
+ *  @param dref display reference
+ *  @return driver name, caller SHOULD NOT free
+ *
+ *  Returns NULL if not a I2C device, or display ref is disconnected
+ */
+const char * dref_get_i2c_driver(Display_Ref* dref) {
+   char * result = NULL;
+   if (dref->io_path.io_mode == DDCA_IO_I2C) {
+      I2C_Bus_Info* businfo = dref->detail;
+      if (businfo)
+         result = businfo->driver;
+   }
+   return result;
+}
+
+
 #ifdef UNUSED
 bool dref_set_alive(Display_Ref * dref, bool alive) {
    assert(dref);
