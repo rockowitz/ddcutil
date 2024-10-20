@@ -287,6 +287,11 @@ validate_environment()
 }
 
 
+/** For each /dev/i2c device that possibly can be used for DDC/CI communication,
+ *  check that it is readable and writable.
+ *
+ *  @return number of possibly usable devices
+ */
 STATIC int
 verify_i2c_access() {
    bool debug = false;
@@ -352,6 +357,46 @@ verify_i2c_access() {
    return result;
 }
 
+
+/** Verify that a single /dev/i2c device is readable and writable.
+ *
+ *  @param busno
+ *  @return 1 if the device exists and is usable, 0 if not
+ */
+int verify_i2c_access_for_single_bus(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   int result = 0;
+
+   if (!i2c_device_exists(busno)) {
+      fprintf(stderr, "Bus /dev/i2c-%d does not exist.\n", busno);
+   }
+   else if (sysfs_is_ignorable_i2c_device(busno)) {
+      fprintf(stderr, "Bus /dev/i2c-%d cannot be used for DDC/CI communication.\n", busno);
+   }
+   else {
+       char fnbuf[20];   // oversize to avoid -Wformat-truncation error
+       snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
+       if ( access(fnbuf, R_OK|W_OK) < 0 ) {
+          int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
+          if (errsv == ENOENT) {
+             fprintf(stderr, "Device %s does not exist. Error = %s\n",
+                               fnbuf, linux_errno_desc(errsv));
+          }
+          else {
+             fprintf(stderr, "Device %s is not readable and writable.  Error = %s\n",
+                            fnbuf, linux_errno_desc(errsv) );
+             include_open_failures_reported(busno);
+          }
+       }
+       else
+          result = 1;
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d.", result);
+   return result;
+}
 
 /** Master initialization function
  *
@@ -1090,38 +1135,50 @@ main(int argc, char *argv[]) {
 
    // *** Commands that may require Display Identifier ***
    else {
-      verify_i2c_access();
+      Status_Errno_DDC  rc = 0;
+      int useful_bus_ct = 0;
       Display_Ref * dref = NULL;
-      Status_Errno_DDC  rc =
-      find_dref(parsed_cmd,
-               (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
-               &dref);
-      if (rc != DDCRC_OK) {
+      if (parsed_cmd->pdid && parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
+         useful_bus_ct = verify_i2c_access_for_single_bus(parsed_cmd->pdid->busno);
+      }
+      else {
+         useful_bus_ct = verify_i2c_access();
+      }
+      if (useful_bus_ct == 0) {
          main_rc = EXIT_FAILURE;
       }
       else {
-         Display_Handle * dh = NULL;
-         if (dref) {
-            DBGMSF(main_debug,
-                   "mainline - display detection complete, about to call ddc_open_display() for dref" );
-            Error_Info* err = ddc_open_display(dref, callopts, &dh);
-            ASSERT_IFF( !err, dh);
-            if (!dh) {
-               f0printf(ferr(), "Error opening %s: %s\n", dref_repr_t(dref), psc_name(err->status_code));
-               errinfo_free(err);
-               main_rc = EXIT_FAILURE;
-            }
-         }  // dref
+         rc = find_dref(parsed_cmd,
+               (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
+               &dref);
 
-         if (main_rc == EXIT_SUCCESS) {
-            main_rc = execute_cmd_with_optional_display_handle(parsed_cmd, dh);
+         if (rc != DDCRC_OK) {
+            main_rc = EXIT_FAILURE;
          }
+         else {
+            Display_Handle * dh = NULL;
+            if (dref) {
+               DBGMSF(main_debug,
+                      "mainline - display detection complete, about to call ddc_open_display() for dref" );
+               Error_Info* err = ddc_open_display(dref, callopts, &dh);
+               ASSERT_IFF( !err, dh);
+               if (!dh) {
+                  f0printf(ferr(), "Error opening %s: %s\n", dref_repr_t(dref), psc_name(err->status_code));
+                  errinfo_free(err);
+                  main_rc = EXIT_FAILURE;
+               }
+            }  // dref
 
-         if (dh) {
-            Error_Info * err = ddc_close_display(dh);
-            if (err) {
-               MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s: %s", err->detail, psc_desc(err->status_code));
-               errinfo_free(err);
+            if (main_rc == EXIT_SUCCESS) {
+               main_rc = execute_cmd_with_optional_display_handle(parsed_cmd, dh);
+            }
+
+            if (dh) {
+               Error_Info * err = ddc_close_display(dh);
+               if (err) {
+                  MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s: %s", err->detail, psc_desc(err->status_code));
+                  errinfo_free(err);
+               }
             }
          }
          if (dref && (dref->flags & DREF_TRANSIENT))
