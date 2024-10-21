@@ -677,7 +677,7 @@ char * get_driver_for_adapter(char * adapter_path, int depth) {
  */
 char *
 find_adapter_and_get_driver(char * path, int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "path=%s,  depth=%d", path, depth);
 
    char * result = NULL;
