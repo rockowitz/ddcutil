@@ -1106,15 +1106,16 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    g_snprintf(sysfs_name, 30, "/sys/bus/i2c/devices/%s", i2cN);
    g_snprintf(dev_name,   15, "/dev/%s", i2cN);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
+   // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
 
    Error_Info *master_err = NULL;
    if (!i2c_device_exists(businfo->busno))
       goto bye;
 
-   Sysfs_I2C_Info * driver_info = get_basic_i2c_driver_info(businfo->busno);
+   Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, -1);
    businfo->driver = g_strdup(driver_info->driver);
    // perhaps save businfo->driver_version
-   assert(driver_info->adapter_class);
+   // assert(driver_info->adapter_class);
    uint32_t cl2 = 0;
    if (driver_info->adapter_class) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "class = %s", driver_info->adapter_class);
@@ -1122,6 +1123,9 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
        /* bool ok =*/  str_to_int(driver_info->adapter_class, (int*) &i_class, 16);   // if fails, &result unchanged
       cl2 = i_class & 0xffff0000;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cl2 = 0x%08x", cl2);
+   }
+   else {
+      DBGMSG("driver_info->adapter_class == NULL");
    }
    free_sysfs_i2c_info(driver_info);
    if (cl2 != 0x030000 && cl2 != 0x0a0000 /* docking station*/ ) {
