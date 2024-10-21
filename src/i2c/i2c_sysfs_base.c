@@ -123,6 +123,7 @@ bool fn_any(const char * filename, const char * ignore) {
 char * find_adapter(char * path, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
+
    char * devpath = NULL;
    if ( RPT_ATTR_NOTE_INDIRECT_SUBDIR(depth, NULL, path, "device") ) {
        if ( RPT_ATTR_TEXT(depth, NULL, path, "device", "class") ) {
@@ -676,12 +677,17 @@ char * get_driver_for_adapter(char * adapter_path, int depth) {
  */
 char *
 find_adapter_and_get_driver(char * path, int depth) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "path=%s,  depth=%d", path, depth);
+
    char * result = NULL;
    char * adapter_path = find_adapter(path, depth);
    if (adapter_path) {
       result = get_driver_for_adapter(adapter_path, depth);
       free(adapter_path);
    }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE,"Returning: %s", result);
    return result;
 }
 
@@ -1071,12 +1077,13 @@ bool is_sysfs_unreliable(int busno) {
 
 
 void init_i2c_sysfs_base() {
-   RTTI_ADD_FUNC(find_adapter);
-   RTTI_ADD_FUNC(get_sys_video_devices);
    RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
-   RTTI_ADD_FUNC(get_connector_bus_numbers);
+   RTTI_ADD_FUNC(find_adapter_and_get_driver);
+   RTTI_ADD_FUNC(find_adapter);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
+   RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
+   RTTI_ADD_FUNC(get_sys_video_devices);
    RTTI_ADD_FUNC(is_sysfs_unreliable);
 }
 

@@ -146,6 +146,8 @@ void simple_one_n_nnnn(
 Sysfs_I2C_Info *  get_i2c_driver_info(int busno, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, depth=%d", busno, depth);
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE) && depth < 0)
+      depth = 2;
 
    char bus_path[40];
    g_snprintf(bus_path, 40, "/sys/bus/i2c/devices/i2c-%d", busno);
@@ -347,6 +349,7 @@ Bit_Set_256 get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info() {
 
 void init_i2c_sysfs_i2c_info() {
    // Sysfs_I2C_Info
+   RTTI_ADD_FUNC(get_i2c_driver_info);
    RTTI_ADD_FUNC(best_driver_name_for_n_nnnn);
    RTTI_ADD_FUNC(simple_one_n_nnnn);
    RTTI_ADD_FUNC(get_i2c_info);
