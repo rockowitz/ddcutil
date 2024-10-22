@@ -1362,7 +1362,9 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 
    dispno_max = 0;
    GPtrArray * bus_open_errors = g_ptr_array_new();
+   g_ptr_array_set_free_func(bus_open_errors, (GDestroyNotify) free_bus_open_error);
    GPtrArray * display_list = g_ptr_array_new();
+   g_ptr_array_set_free_func(display_list, (GDestroyNotify) free_display_ref);
 
    int busct = i2c_detect_buses();
    DBGTRC(debug, DDCA_TRC_NONE, "i2c_detect_buses() returned: %d", busct);
@@ -1603,7 +1605,7 @@ ddc_ensure_displays_detected() {
 /** Discards all detected displays.
  *
  *  - All open displays are closed
- *  - The list of open displays in #all_displays is discarded
+ *  - The list of open displays in #all_displays is discarded:1427
  *  - The list of errors in #display_open_errors is discarded
  *  - The list of detected I2C buses is discarded
  *  - The USB monitor list is discarded
@@ -1621,14 +1623,17 @@ ddc_discard_detected_displays() {
       for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
          dref->flags |= DREF_TRANSIENT;  // hack to allow all Display References to be freed
+#ifdef OUT
 #ifndef NDEBUG
          DDCA_Status ddcrc = free_display_ref(dref);
          TRACED_ASSERT(ddcrc==0);
 #else
          free_display_ref(dref);
 #endif
+#endif
       }
       g_mutex_lock(&all_display_refs_mutex);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calling g_ptr_array_free(all_display_refs, true)...");
       g_ptr_array_free(all_display_refs, true);
       g_mutex_unlock(&all_display_refs_mutex);
       all_display_refs = NULL;
