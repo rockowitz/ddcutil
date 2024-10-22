@@ -100,7 +100,7 @@ get_i2c_device_sysfs_name(int busno)
  *  Caller is responsible for freeing the returned value
  */
 char * sysfs_find_adapter(char * path) {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting. path=%s", path);
    int depth = (debug) ? 2 : -1;
 
@@ -153,7 +153,7 @@ char * sysfs_find_adapter(char * path) {
  */
 char *
 get_i2c_sysfs_driver_by_busno(int busno) {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting. busno=%d", busno);
    int depth = (debug) ? 2 : -1;
 
@@ -176,9 +176,8 @@ get_i2c_sysfs_driver_by_busno(int busno) {
       // RPT_ATTR_TEXT(             depth, &result->adapter_class,  adapter_path, "class");
       RPT_ATTR_REALPATH_BASENAME(depth, &driver_name,         adapter_path, "driver");
       // RPT_ATTR_TEXT(             depth, &result->driver_version, adapter_path, "driver/module/version");
+      free(adapter_path);
    }
-
-
 
    DBGF(debug, "Done. busno=%d, returning %s", busno, driver_name);
    return driver_name;
@@ -302,7 +301,7 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
  */
 bool
 sysfs_is_ignorable_i2c_device(int busno) {
-   bool debug = true;
+   bool debug = false;
    bool ignorable = false;
    DBGF(debug, "Starting.  busno=%d", busno);
 
