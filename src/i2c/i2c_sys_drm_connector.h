@@ -15,8 +15,6 @@
 #include "util/coredefs_base.h"
 #include "util/data_structures.h"
 #include "util/drm_common.h"
-// #include "util/drm_connector_state.h"   // /usr/include/xf86drmMode.h:43:10: fatal errorfatal error drm.h no such file
-
 
 #include "base/i2c_bus_base.h"
 
