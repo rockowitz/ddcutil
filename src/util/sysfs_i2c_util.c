@@ -141,9 +141,6 @@ char * sysfs_find_adapter(char * path) {
 }
 
 
-
-
-
 /** Gets the driver name of an I2C device,
  *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
  *
