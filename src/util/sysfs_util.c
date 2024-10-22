@@ -740,7 +740,7 @@ rpt_attr_note_subdir(
       const char * fn_segment,
       ...)
 {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "fn_segment=|%s|", fn_segment);
 
    char pb1[PATH_MAX];
