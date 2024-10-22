@@ -380,7 +380,7 @@ bool ddc_i2c_hotplug_change_handler(
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to list of buses", busno);
           // if (IS_DBGTRC(debug, DDCA_TRC_NONE))
           //    i2c_dbgrpt_buses(true /*report_all*/, true /*include_sysinfo*/, 2);
-          get_sys_drm_connectors(/*rescan*/ true);  // so that drm connector name picked up
+          // get_sys_drm_connectors(/*rescan*/ true);  // so that drm connector name picked up
           businfo = i2c_new_bus_info(busno);
           businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
           i2c_add_bus_info(businfo);

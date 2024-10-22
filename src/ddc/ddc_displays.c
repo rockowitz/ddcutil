@@ -1642,7 +1642,7 @@ ddc_discard_detected_displays() {
          display_open_errors = NULL;
       }
    }
-   free_sys_drm_connectors();
+   // free_sys_drm_connectors();
    i2c_discard_buses();
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -1668,7 +1668,7 @@ ddc_redetect_displays() {
       redetect_drm_connector_states();
 
    // init_sysfs_drm_connector_names();
-   get_sys_drm_connectors(/*rescan=*/true);
+   // get_sys_drm_connectors(/*rescan=*/true);
    if (dsa2_is_enabled()) {
       Error_Info * erec = dsa2_restore_persistent_stats();
       if (erec) {
