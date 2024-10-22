@@ -98,15 +98,20 @@ get_i2c_device_sysfs_name(int busno)
  */
 char *
 get_i2c_sysfs_driver_by_busno(int busno) {
+   bool debug = true;
+   DBGF(debug, "Starting. busno=%d", busno);
    char * driver_name = NULL;
    char workbuf[100];
    snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/driver/module", busno);
+   DBGF(debug, "workbuf(1) = %s", workbuf);
    driver_name = get_rpath_basename(workbuf);
    if (!driver_name) {
       snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/device/device/driver/module", busno);
+      DBGF(debug, "workbuf(2) = %s", workbuf);
       driver_name = get_rpath_basename(workbuf);
    }
-   // printf("(%s) busno=%d, returning %s\n", __func__, busno, driver_name);
+
+   DBGF(debug, "Done. busno=%d, returning %s", busno, driver_name);
    return driver_name;
 }
 
@@ -242,7 +247,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
    char * driver = get_i2c_sysfs_driver_by_busno(busno);
    if (name) {
       ignorable = ignorable_i2c_device_sysfs_name(name, driver);
-      DBGF(debug, "busno=%d, name=|%s|, ignoreable_i2c_sysfs_name() returned %s", busno, name, sbool(ignorable));
+      DBGF(debug, "   busno=%d, name=|%s|, ignorable_i2c_sysfs_name() returned %s", busno, name, sbool(ignorable));
    }
    free(name);    // safe if NULL
    free(driver);  // ditto
@@ -250,11 +255,11 @@ sysfs_is_ignorable_i2c_device(int busno) {
    if (!ignorable) {
       uint32_t class = get_i2c_device_sysfs_class(busno);
       if (class) {
-         DBGF(debug, "class = 0x%08x", class);
+         DBGF(debug, "   class = 0x%08x", class);
          uint32_t cl2 = class & 0xffff0000;
-         DBGF(debug, "cl2 = 0x%08x", cl2);
+         DBGF(debug, "   cl2 = 0x%08x", cl2);
          ignorable = (cl2 != 0x030000 &&
-                   cl2 != 0x0a0000);    // docking station
+                      cl2 != 0x0a0000);    // docking station
       }
    }
 
