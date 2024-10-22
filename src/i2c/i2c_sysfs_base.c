@@ -125,6 +125,7 @@ char * find_adapter(char * path, int depth) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
 
    char * devpath = NULL;
+// #ifdef OUT
    if ( RPT_ATTR_NOTE_SUBDIR(depth, NULL, path, "device") ) {
        if ( RPT_ATTR_TEXT(depth, NULL, path, "device", "class") ) {
           RPT_ATTR_REALPATH(depth, &devpath, path, "device");
@@ -135,6 +136,26 @@ char * find_adapter(char * path, int depth) {
            devpath = find_adapter(p2, depth);
        }
    }
+   else
+// #endif
+   {
+      char * rp1 = NULL;
+      char * rp2 = NULL;
+      RPT_ATTR_REALPATH(depth, &rp1, path);
+      if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
+          devpath = rp1;
+      }
+      else {
+         RPT_ATTR_REALPATH(depth, &rp2, rp1, "..");
+         free(rp1);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "rp2 = %s", rp2);
+         if ( RPT_ATTR_TEXT(depth, NULL, rp2, "../class"))
+            devpath = rp2;
+         else
+            free(rp2);
+      }
+   }
+
    DBGTRC_RETURNING(debug, TRACE_GROUP, devpath, "");
    return devpath;
 }
