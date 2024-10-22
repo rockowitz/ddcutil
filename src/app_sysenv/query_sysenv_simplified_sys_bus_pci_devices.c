@@ -147,7 +147,7 @@ void report_one_pci_device(
          NULL,
          depth);
 
-   if ( RPT_ATTR_NOTE_INDIRECT_SUBDIR(0, NULL, dirname, fn, "drm"))  {
+   if ( RPT_ATTR_NOTE_SUBDIR(0, NULL, dirname, fn, "drm"))  {
          char * drmdir = g_strdup_printf("%s/%s/drm", dirname, fn);
          dir_filtered_ordered_foreach(
                drmdir,

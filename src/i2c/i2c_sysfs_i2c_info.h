@@ -24,6 +24,7 @@ void             free_sysfs_i2c_info(Sysfs_I2C_Info * info);
 Sysfs_I2C_Info * get_i2c_driver_info(int busno, int depth);
 Sysfs_I2C_Info * get_basic_i2c_driver_info(int busno);
 GPtrArray *      get_all_sysfs_i2c_info(bool rescan, int depth);
+void             dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth);
 void             dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
 #ifdef UNUSED
 char *           get_conflicting_drivers_for_bus(int busno);

@@ -723,22 +723,22 @@ rpt_attr_single_subdir(
 }
 
 
-/** Reports whether an indirect directory exists.
+/** Reports whether a subdirectory exists.
  *
  *  \param  depth      logical indentation depth, if < 0, output nothing
  *  \param  value_loc  if non-NULL, *value_loc is always set = NULL
  *  \param  fn_segment first segment of directory name
- *  \param  ...        remaining segments of name (requires at least 2)
+ *  \param  ...        remaining segments of name (requires at least 1)
  *  \return true if subdirectory found, false if not
  */
 bool
-rpt_attr_note_indirect_subdir(
+rpt_attr_note_subdir(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
       ...)
 {
-   bool debug = false;
+   bool debug = true;
    DBGF(debug, "fn_segment=|%s|", fn_segment);
 
    char pb1[PATH_MAX];
@@ -746,6 +746,7 @@ rpt_attr_note_indirect_subdir(
    va_start(ap, fn_segment);
    assemble_sysfs_path2(pb1, PATH_MAX, fn_segment, ap);
    va_end(ap);
+   DBGF(debug, "pb1: %s", pb1);
 
    if (value_loc)
       *value_loc = NULL;

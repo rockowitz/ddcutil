@@ -125,7 +125,7 @@ char * find_adapter(char * path, int depth) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
 
    char * devpath = NULL;
-   if ( RPT_ATTR_NOTE_INDIRECT_SUBDIR(depth, NULL, path, "device") ) {
+   if ( RPT_ATTR_NOTE_SUBDIR(depth, NULL, path, "device") ) {
        if ( RPT_ATTR_TEXT(depth, NULL, path, "device", "class") ) {
           RPT_ATTR_REALPATH(depth, &devpath, path, "device");
        }
@@ -277,14 +277,14 @@ void get_connector_bus_numbers(
       // Examine ddc subdirectory.
       // Present: i915, amdgpu (normal)
       // Absent:  Nvidia, amdgpu(MST)
-      bool has_ddc_subdir = RPT_ATTR_NOTE_INDIRECT_SUBDIR(-1, NULL, dirname, fn, "ddc");
+      bool has_ddc_subdir = RPT_ATTR_NOTE_SUBDIR(-1, NULL, dirname, fn, "ddc");
       // char * ddc_dir_path;
       if (has_ddc_subdir) {
          // RPT_ATTR_REALPATH(-1, &ddc_dir_path,  dirname, fn, "ddc");
          // RPT_ATTR_TEXT(-1, &ddc_dir_name, ddc_dir_path, "name");
          RPT_ATTR_TEXT(-1, &ddc_dir_name, dirname, fn, "ddc", "name");
 
-         bool has_i2c_dev_subdir = RPT_ATTR_NOTE_INDIRECT_SUBDIR(-1, NULL, dirname, fn, "ddc", "i2c-dev");
+         bool has_i2c_dev_subdir = RPT_ATTR_NOTE_SUBDIR(-1, NULL, dirname, fn, "ddc", "i2c-dev");
          if (has_i2c_dev_subdir) {
             // looking for e.g. /sys/bus/drm/card0-DP-1/ddc/i2c-dev/i2c-1
             has_i2c_subdir =

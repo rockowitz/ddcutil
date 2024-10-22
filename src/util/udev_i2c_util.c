@@ -186,7 +186,7 @@ is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
  */
 Byte_Value_Array
 get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
-   bool debug = false;
+   bool debug = true;
    DBGF(debug, "Starting.");
 
    Byte_Value_Array bva = bva_create();

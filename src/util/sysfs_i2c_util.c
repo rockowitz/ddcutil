@@ -228,7 +228,7 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
  */
 bool
 sysfs_is_ignorable_i2c_device(int busno) {
-   bool debug = false;
+   bool debug = true;
    bool ignorable = false;
    DBGF(debug, "Starting.  busno=%d", busno);
 

@@ -162,7 +162,7 @@ Sysfs_I2C_Info *  get_i2c_driver_info(int busno, int depth) {
       RPT_ATTR_TEXT(             depth, &result->driver_version, adapter_path, "driver/module/version");
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", (void*) result);
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Sysfs_I2C_Infro", dbgrpt_sysfs_i2c_info, result);
    if (debug)
       rpt_nl();
    return result;
