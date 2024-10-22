@@ -2,7 +2,7 @@
  *  i2c specific /sys functions
  */
 
-// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SYSFS_I2C_UTIL_H_
@@ -11,6 +11,9 @@
 #include <stdbool.h>
 
 #include "data_structures.h"
+
+char *
+sysfs_find_adapter(char * path);
 
 char *
 get_i2c_sysfs_driver_by_busno(
