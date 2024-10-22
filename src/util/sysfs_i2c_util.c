@@ -86,6 +86,64 @@ get_i2c_device_sysfs_name(int busno)
 }
 
 
+/** Given a sysfs node, walk up the chain of device directory links
+ *  until an adapter node is found.
+ *
+ *  @param  path   e.g. /sys/bus/i2c/devices/i2c-5
+ *  @param  depth  logical indentation depth
+ *  @return sysfs path to adapter
+ *
+ *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
+ *  If depth >= 0, sysfs attributes are reported.
+ *  If depth <  0, there is no output
+ *
+ *  Caller is responsible for freeing the returned value
+ */
+char * sysfs_find_adapter(char * path) {
+   bool debug = true;
+   DBGF(debug, "Starting. path=%s", path);
+   int depth = (debug) ? 2 : -1;
+
+   char * devpath = NULL;
+// #ifdef OUT
+   if ( RPT_ATTR_NOTE_SUBDIR(depth, NULL, path, "device") ) {
+       if ( RPT_ATTR_TEXT(depth, NULL, path, "device", "class") ) {
+          RPT_ATTR_REALPATH(depth, &devpath, path, "device");
+       }
+       else {
+          char p2[PATH_MAX];
+           g_snprintf(p2, PATH_MAX, "%s/device", path);
+           devpath = sysfs_find_adapter(p2);
+       }
+   }
+   else
+// #endif
+   {
+      char * rp1 = NULL;
+      char * rp2 = NULL;
+      RPT_ATTR_REALPATH(depth, &rp1, path);
+      if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
+          devpath = rp1;
+      }
+      else {
+         RPT_ATTR_REALPATH(depth, &rp2, rp1, "..");
+         free(rp1);
+         DBGF(debug, "   rp2 = %s", rp2);
+         if ( RPT_ATTR_TEXT(depth, NULL, rp2, "../class"))
+            devpath = rp2;
+         else
+            free(rp2);
+      }
+   }
+
+   DBGF(debug,"Done.  Returning: %s", devpath);
+   return devpath;
+}
+
+
+
+
+
 /** Gets the driver name of an I2C device,
  *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
  *
@@ -100,8 +158,11 @@ char *
 get_i2c_sysfs_driver_by_busno(int busno) {
    bool debug = true;
    DBGF(debug, "Starting. busno=%d", busno);
+   int depth = (debug) ? 2 : -1;
+
    char * driver_name = NULL;
    char workbuf[100];
+#ifdef FAILS_FOR_NVIDIA
    snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/driver/module", busno);
    DBGF(debug, "workbuf(1) = %s", workbuf);
    driver_name = get_rpath_basename(workbuf);
@@ -110,6 +171,17 @@ get_i2c_sysfs_driver_by_busno(int busno) {
       DBGF(debug, "workbuf(2) = %s", workbuf);
       driver_name = get_rpath_basename(workbuf);
    }
+#endif
+   snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d", busno);
+   DBGF(debug, "workbuf(3) = %s", workbuf);
+   char * adapter_path  = sysfs_find_adapter(workbuf);
+   if (adapter_path) {
+      // RPT_ATTR_TEXT(             depth, &result->adapter_class,  adapter_path, "class");
+      RPT_ATTR_REALPATH_BASENAME(depth, &driver_name,         adapter_path, "driver");
+      // RPT_ATTR_TEXT(             depth, &result->driver_version, adapter_path, "driver/module/version");
+   }
+
+
 
    DBGF(debug, "Done. busno=%d, returning %s", busno, driver_name);
    return driver_name;
