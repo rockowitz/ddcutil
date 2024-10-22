@@ -154,7 +154,7 @@ Sysfs_I2C_Info *  get_i2c_driver_info(int busno, int depth) {
    Sysfs_I2C_Info * result = calloc(1, sizeof(Sysfs_I2C_Info));
    result->busno = busno;
    RPT_ATTR_TEXT(depth, &result->name, bus_path, "name");
-   char * adapter_path  = find_adapter(bus_path, depth);
+   char * adapter_path  = sysfs_find_adapter(bus_path);
    if (adapter_path) {
       result->adapter_path = adapter_path;
       RPT_ATTR_TEXT(             depth, &result->adapter_class,  adapter_path, "class");
