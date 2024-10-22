@@ -579,6 +579,8 @@ rpt_attr_realpath(
       const char * fn_segment,
       ...)
 {
+   bool debug = false;
+   DBGF(debug, "fn_segment=|%s|", fn_segment);
    if (value_loc)
       *value_loc = NULL;
    char pb1[PATH_MAX];
