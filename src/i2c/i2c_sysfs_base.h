@@ -24,7 +24,7 @@ char *      get_sys_drm_connector_name_by_busno(int busno);
 bool        all_sys_drm_connectors_have_connector_id_direct();
 
 char *      get_driver_for_adapter(char * adapter_path, int depth);
-char *      find_adapter(char * path, int depth);
+// char *      find_adapter(char * path, int depth); // MOVED
 char *      find_adapter_and_get_driver(char * path, int depth);
 char *      get_driver_for_busno(int busno);
 

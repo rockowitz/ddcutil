@@ -107,6 +107,8 @@ bool fn_any(const char * filename, const char * ignore) {
 // *** Common Functions
 //
 
+#ifdef MOVED
+
 /** Given a sysfs node, walk up the chain of device directory links
  *  until an adapter node is found.
  *
@@ -159,7 +161,7 @@ char * find_adapter(char * path, int depth) {
    DBGTRC_RETURNING(debug, TRACE_GROUP, devpath, "");
    return devpath;
 }
-
+#endif
 
 
 void add_video_device_to_array(
@@ -702,7 +704,7 @@ find_adapter_and_get_driver(char * path, int depth) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "path=%s,  depth=%d", path, depth);
 
    char * result = NULL;
-   char * adapter_path = find_adapter(path, depth);
+   char * adapter_path = sysfs_find_adapter(path);
    if (adapter_path) {
       result = get_driver_for_adapter(adapter_path, depth);
       free(adapter_path);
@@ -1100,7 +1102,6 @@ bool is_sysfs_unreliable(int busno) {
 void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
    RTTI_ADD_FUNC(find_adapter_and_get_driver);
-   RTTI_ADD_FUNC(find_adapter);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
