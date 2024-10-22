@@ -270,6 +270,7 @@ typedef struct {
    char * detail;
 } Bus_Open_Error;
 
+void free_bus_open_error(Bus_Open_Error * boe);
 
 typedef enum {
    Watch_Mode_Poll,
@@ -278,6 +279,5 @@ typedef enum {
 } DDC_Watch_Mode;
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
-
 
 #endif /* DISPLAYS_H_ */

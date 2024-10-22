@@ -1060,6 +1060,10 @@ const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
 }
 
 
+void free_bus_open_error(Bus_Open_Error * boe) {
+   free(boe->detail);
+   free(boe);
+}
 
 
 void init_displays() {
