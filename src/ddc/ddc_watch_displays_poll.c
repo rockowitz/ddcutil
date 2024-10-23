@@ -375,6 +375,33 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
       bs_old_buses_w_edid   = bs_cur_buses_w_edid;
       bs_old_attached_buses = bs_cur_attached_buses;
 
+      bool hotplug_change_handler_emitted = false;
+      // bool connected_buses_changed = !bs256_eq( bs_prev_buses_w_edid, bs_new_buses_w_edid);
+      bool connected_buses_w_edid_changed = bs256_count(bs_removed_buses_w_edid) > 0 ||
+                                          bs256_count(bs_added_buses_w_edid) > 0;
+
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "connected_buses_changed = %s", SBOOL(connected_buses_w_edid_changed));
+
+      if (connected_buses_w_edid_changed) {
+         // BS256 bs_buses_w_edid_removed = bs256_and_not(bs_prev_buses_w_edid, bs_new_buses_w_edid);
+         // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_removed: %s", BS256_REPR(bs_buses_w_edid_removed));
+
+         // BS256 bs_buses_w_edid_added = bs256_and_not(bs_new_buses_w_edid, bs_prev_buses_w_edid);
+         // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_added: %s", BS256_REPR(bs_buses_w_edid_added));
+
+         hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
+                                              bs_removed_buses_w_edid,
+                                              bs_added_buses_w_edid,
+                                              deferred_events);
+      }
+
+      if (hotplug_change_handler_emitted)
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "hotplug_change_handler_emitted = %s",
+               sbool (hotplug_change_handler_emitted));
+
+
+
+#ifdef OUT
       if ( bs256_count(bs_removed_buses_w_edid) > 0) {
          Bit_Set_256_Iterator iter = bs256_iter_new(bs_removed_buses_w_edid);
          int busno;
@@ -443,6 +470,7 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
                              businfo->drm_connector_name, dref, dref->io_path, NULL);
          }
       }
+#endif
 
       if (watch_dpms) {
          // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Before ddc_check_bus_asleep(), bs_sleepy_buses: %s",
