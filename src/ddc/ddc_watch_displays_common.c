@@ -364,11 +364,10 @@ bool ddc_i2c_hotplug_change_handler(
                dref->drm_connector, dref, dref->io_path, events_queue);
          event_emitted = true;
       }
-
-
       busno = bs256_iter_next(iter);
    }
    bs256_iter_free(iter);
+
 
    iter = bs256_iter_new(bs_buses_w_edid_added);
    busno = bs256_iter_next(iter);
