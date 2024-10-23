@@ -560,9 +560,9 @@ i2c_ioctl_reader1(
       if (rc != 1) {
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "(%s) Unexpected ioctl() read rc = %d, bytect =%d, device=%s",
                __func__, rc, bytect, filename_for_fd_t(fd));
-         rc = 0;
          show_backtrace(1);
       }
+      rc = 0;
    }
    free(messages);
    

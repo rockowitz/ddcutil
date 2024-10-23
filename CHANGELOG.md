@@ -1,5 +1,38 @@
 # Changelog
 
+display change detection
+alt algorithm w/o udev for nvidia
+
+nvidia sysfs unreliable
+
+algorithm for determining driver for bus
+
+replace 
+
+ise if/else if/else  instead of switch() 
+drm_connector.state.c
+
+do not maintain redudnance driver name in dref
+
+If option --bus specified, only check accessability for that bus.
+issue #461, avoids irrelevant warning messages
+
+--watch-mode = UDEV, POLL, DYNAMIC
+
+DYNAMIC resolves to udev or poll depending on wheter any display uses the nvidia driver
+
+reinsert X11 specific code, 
+default --enable-x11 changed?
+
+reenable option --enable-x11, default = ?
+
+for x11, query X11 as to sleep mode instead of using sysfs drm attribute, which 
+may be unreliable for nvidia
+
+do not rely on /sysfs drm connector if nvidis driver
+
+
+
 ## [2.1.5] 2024-10-15
 
 ### General
