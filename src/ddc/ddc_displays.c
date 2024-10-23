@@ -1986,7 +1986,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
-// #ifdef WATCH_DISPLAYS_USING_POLL
+#ifdef BAD
 /** Given a #I2C_Bus_Info instance, checks if there is a currently active #Display_Ref
  *  for that bus (i.e. one with the DREF_REMOVED flag not set).
  *  If found, sets the DREF_REMOVED flag.
@@ -2019,7 +2019,7 @@ Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref %s", dref_repr_t(dref));
    return dref;
 }
-// #endif
+#endif
 
 
 #ifdef UNUSED
@@ -2115,7 +2115,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(read_unsupported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
 
-#ifdef WATCH_DISPLAYS_USING_POLL
+#ifdef BAD
    RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
 #endif
 }
