@@ -634,7 +634,7 @@ i2c_detect_x37(int fd) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                    "invoke_%s_writer() for slave address x37 returned %s", s, psc_name_code(rc));
       if (rc != 0) {
-         Byte    readbuf[4];  //  4 byte buffer
+            Byte    readbuf[4];  //  4 byte buffer
          if (use_file_io)
             rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
          else

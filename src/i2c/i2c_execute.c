@@ -23,6 +23,7 @@
 /** \endcond */
 
 #include "util/coredefs.h"
+#include "util/debug_util.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -483,13 +484,15 @@ i2c_ioctl_writer(
    if (rc < 0) {
       if (rc != -1)
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
-               "Unexpected: ioctl(() write returned %d, errno=%s", rc, psc_desc(-errsv));
+               "Unexpected: (%s) ioctl() write returned %d, errno=%s", __func__, rc, psc_desc(-errsv));
       rc = -errsv;
+      show_backtrace(1);
    }
    else {    // (rc >= 0) {
       if (rc != 1)      // expected success value
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected: ioctl() write returned %d", rc);
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "(%s) Unexpected: ioctl() write returned %d", __func__, rc);
       rc = 0;
+      show_backtrace(1);
    }
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "fh=%d, filename=%s", fd, filename_for_fd_t(fd));
@@ -546,15 +549,17 @@ i2c_ioctl_reader1(
      );
    int errsv = errno;
    if (rc < 0) {
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error in ioctl() read, rc=%d, errno=%s, device=%s",
-            rc, psc_desc(-errsv), filename_for_fd_t(fd));
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "(%s) Error in ioctl() read, rc=%d, errno=%s, device=%s",
+            __func__, rc, psc_desc(-errsv), filename_for_fd_t(fd));
       rc = -errsv;
+      show_backtrace(1);
    }
    else {
       if (rc != 1)
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected ioctl() read rc = %d, bytect =%d, device=%s",
-               rc, bytect, filename_for_fd_t(fd));
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "(%s) Unexpected ioctl() read rc = %d, bytect =%d, device=%s",
+               __func__, rc, bytect, filename_for_fd_t(fd));
       rc = 0;
+      show_backtrace(1);
    }
    free(messages);
    
