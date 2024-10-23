@@ -342,9 +342,17 @@ Error_Info * i2c_open_bus(
           }
       }
 
+#ifdef OLD
       if (!master_error)
          master_error = ERRINFO_NEW(DDCRC_OTHER, "i2c_open_bus() failed");  // need an DDCRC_OPEN
+
       errinfo_add_cause(master_error, cur_error);
+#endif
+      if (!master_error)
+         master_error = cur_error;
+      else
+         errinfo_add_cause(master_error, cur_error);
+
       total_wait_millisec += wait_interval_millisec;
 
       if (total_wait_millisec > max_wait_millisec)
@@ -450,7 +458,6 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "busno=%d, fd=%d",busno, fd);
    return result;
 }
-
 
 
 //
@@ -981,8 +988,6 @@ Byte * get_connector_edid(const char * connector_name) {
 #endif
 
 
-
-
  /** Checks if an I2C bus has an EDID
   *
   *  @param  busno
@@ -995,7 +1000,6 @@ Byte * get_connector_edid(const char * connector_name) {
     assert(busno >= 0);
     assert(busno != 255);
     bool try_get_edid_from_sysfs_first = true;
-    // int busno = businfo->busno;
     char sysfs_name[30];
     char dev_name[15];
     char i2cN[10];  // only need 8, but coverity complains
@@ -1011,6 +1015,10 @@ Byte * get_connector_edid(const char * connector_name) {
     }
 
     if ( sysfs_is_ignorable_i2c_device(busno) ) {
+       goto bye;
+    }
+
+    if ( access(dev_name, R_OK|W_OK) < 0 ) {
        goto bye;
     }
 
@@ -1108,9 +1116,31 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
    // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
 
+   businfo->flags |= I2C_BUS_PROBED;
    Error_Info *master_err = NULL;
    if (!i2c_device_exists(businfo->busno))
       goto bye;
+
+   if ( access(dev_name, R_OK|W_OK) < 0 ) {
+      int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
+      char * s = NULL;
+      if (errsv == ENOENT) {
+        s = g_strdup_printf("access(%s) returned ENOENT", dev_name);
+        DBGMSG("%s", s);
+        // should never occur because of i2c_device_exists() check
+      }
+      else if (errsv == EACCES) {
+        s = g_strdup_printf("Device %s lacks R/W permissions", dev_name);
+        DBGMSG("%s", s);
+        SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+      }
+      else {
+        s = g_strdup_printf( "access() returned errno = %s", psc_desc(errsv));
+        SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+      }
+      free(s);
+      goto bye;
+   }
 
    Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, -1);
    businfo->driver = g_strdup(driver_info->driver);
@@ -1325,7 +1355,6 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
     // doesn't really belong here
     businfo->last_checked_dpms_asleep = dpms_check_drm_asleep_by_businfo(businfo);
 
-    businfo->flags |= I2C_BUS_PROBED;
 bye:
    if ( IS_DBGTRC(debug, TRACE_GROUP)) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, flags = %s", businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
@@ -2047,6 +2076,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_detect_x37);
    RTTI_ADD_FUNC(i2c_discard_buses);
+   RTTI_ADD_FUNC(i2c_edid_exists);
    RTTI_ADD_FUNC(i2c_enable_cross_instance_locks);
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_report_active_bus);
