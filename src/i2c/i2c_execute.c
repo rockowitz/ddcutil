@@ -482,17 +482,19 @@ i2c_ioctl_writer(
          );
    int errsv = errno;
    if (rc < 0) {
-      if (rc != -1)
+      if (rc != -1) {
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
-               "Unexpected: (%s) ioctl() write returned %d, errno=%s", __func__, rc, psc_desc(-errsv));
+               "Unexpected: (%s) ioctl() write returned %d", __func__, rc);
+         show_backtrace(1);
+      }
       rc = -errsv;
-      show_backtrace(1);
    }
    else {    // (rc >= 0) {
-      if (rc != 1)      // expected success value
+      if (rc != 1)   {   // expected success value
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "(%s) Unexpected: ioctl() write returned %d", __func__, rc);
+         show_backtrace(1);
+      }
       rc = 0;
-      show_backtrace(1);
    }
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "fh=%d, filename=%s", fd, filename_for_fd_t(fd));
@@ -551,15 +553,16 @@ i2c_ioctl_reader1(
    if (rc < 0) {
       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "(%s) Error in ioctl() read, rc=%d, errno=%s, device=%s",
             __func__, rc, psc_desc(-errsv), filename_for_fd_t(fd));
-      rc = -errsv;
       show_backtrace(1);
+      rc = -errsv;
    }
    else {
-      if (rc != 1)
+      if (rc != 1) {
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "(%s) Unexpected ioctl() read rc = %d, bytect =%d, device=%s",
                __func__, rc, bytect, filename_for_fd_t(fd));
-      rc = 0;
-      show_backtrace(1);
+         rc = 0;
+         show_backtrace(1);
+      }
    }
    free(messages);
    
