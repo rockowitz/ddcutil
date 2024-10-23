@@ -473,7 +473,7 @@ drm_enabled = false;
 #endif
 
    // rpt_nl();
-   get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
+   // get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
    if (use_drm_connector_states)
       redetect_drm_connector_states();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s, sys_drm_connectors = %p",
