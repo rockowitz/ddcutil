@@ -253,12 +253,12 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    DDCA_Output_Level output_level = get_output_level();
 
    if (output_level >= DDCA_OL_NORMAL) {
-
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
          char * drm_status  = NULL;
          char * drm_dpms    = NULL;
          char * drm_enabled = NULL;
-         char * drm_connector_name = i2c_get_drm_connector_name(businfo);
+         // char * drm_connector_name = i2c_get_drm_connector_name(businfo);
+         char * drm_connector_name = businfo->drm_connector_name;
          if (drm_connector_name) { // would be null for a non drm driver
             RPT_ATTR_TEXT(-1, &drm_dpms,    "/sys/class/drm", drm_connector_name, "dpms");
             RPT_ATTR_TEXT(-1, &drm_status,  "/sys/class/drm", drm_connector_name, "status");  // connected, disconnected
@@ -266,7 +266,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          }
 
          I2C_Bus_Info * bus_info = dref->detail;
-         if (!(bus_info->flags & I2C_BUS_LVDS_OR_EDP) && bus_info->flags & I2C_BUS_ADDR_0X37) {
+         if (!(bus_info->flags & I2C_BUS_LVDS_OR_EDP) && bus_info->flags & I2C_BUS_ADDR_X37) {
             rpt_vstring(d1, "DDC communication failed");
             if (output_level >= DDCA_OL_VERBOSE && dref->communication_error_summary) {
                rpt_vstring(d1, "Failure detail: getvcp of feature x10 returned %s",
@@ -302,7 +302,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                    msg = "This is a laptop display.  Laptop displays do not support DDC/CI.";
                 else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP)
                    msg = "This appears to be a laptop display.  Laptop displays do not support DDC/CI.";
-                else if (!(businfo->flags & I2C_BUS_ADDR_0X37)) {
+                else if (!(businfo->flags & I2C_BUS_ADDR_X37)) {
                    msg = "This monitor does not support DDC/CI. (I2C slave address x37 is unresponsive.)";
                    vmsg = "If the monitor's on screen display has a DDC/CI setting, check it is enabled.";
                 }
@@ -352,7 +352,11 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                report_drm_dpms_status(d1, businfo->drm_connector_name);
             }
          }
-      }         // communication not working
+         free(drm_dpms);
+         free(drm_status);
+         free(drm_enabled);
+      }  // communication not working
+
 
       else {    // communication working
          // if (dref->dispno == DISPNO_PHANTOM)
