@@ -664,26 +664,19 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "sysname is not i2c-n");
          }
          else {
-            bool new_businfo = false;
             I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
             if (businfo) {
                DBGMSG("Unexpected businfo record %p already exists for bus %d", businfo, busno);
                // TO DO: check for use in non-removed drefs
                i2c_reset_bus_info(businfo);
             }
-            if (!businfo) {
-               businfo = i2c_new_bus_info(busno);
-               new_businfo = true;
+            else {
+               businfo = i2c_get_and_check_bus_info(busno);
             }
-            i2c_check_bus2(businfo);
             // Error_Info * err = i2c_check_bus2(businfo);
             // ERRINFO_FREE_WITH_REPORT(err, debug || IS_TRACING() || report_freed_exceptions);
             i2c_dbgrpt_bus_info(businfo, /*include_sysinfo*/ true, 0);
 
-            if (new_businfo) {
-               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to list of buses", busno);
-               i2c_add_bus_info(businfo);
-            }
          }
       }
 
@@ -709,11 +702,11 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
                int busno = bs256_iter_next(iter);
                if (busno < 0)
                   break;
-               I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
-               i2c_check_bus2(businfo);
+               I2C_Bus_Info * businfo = i2c_get_and_check_bus_info(busno);
+               // I2C_Bus_Info * businfo = i2c_add_bus(busno);
+               // i2c_check_bus2(businfo);
                i2c_dbgrpt_bus_info(businfo, /* include_sysinfo */ true, 2);
                DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Adding businfo record for /dev/"I2C"-%d", busno);
-               i2c_add_bus_info(businfo);
             }
          }
       }
