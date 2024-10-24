@@ -350,8 +350,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F9)
       msg_to_syslog_only = true;
 
-   nvidia_driver_implies_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F19;
-
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F10)
       null_msg_adjustment_enabled = true;
@@ -378,6 +376,11 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
       secondary_udev_receive_millisec = parsed_cmd->i7;
 #endif
+
+   nvidia_driver_implies_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F19;
+
+   if (parsed_cmd->flags2 & CMD_FLAG2_F20)
+      use_x37_detection_table = false;
 
    if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
       stabilization_poll_millisec = parsed_cmd->i7;

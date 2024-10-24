@@ -1320,10 +1320,12 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
        // longer present
 
        X37_Detection_State x37_detection_state = X37_Not_Recorded;
-       x37_detection_state = i2c_query_x37_detected(businfo->busno, businfo->edid->bytes);
-       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Restored(1) %s", x37_detection_state_name(x37_detection_state));
-       if (x37_detection_state == X37_Detected) {
-          businfo->flags |= I2C_BUS_ADDR_X37;
+       if (use_x37_detection_table) {
+          x37_detection_state = i2c_query_x37_detected(businfo->busno, businfo->edid->bytes);
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Restored(1) %s", x37_detection_state_name(x37_detection_state));
+          if (x37_detection_state == X37_Detected) {
+             businfo->flags |= I2C_BUS_ADDR_X37;
+          }
        }
        else if (x37_detection_state != X37_Not_Detected) {
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_detect_x37() for /dev/i2c-%d...", businfo->busno);
@@ -1342,8 +1344,10 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
              businfo->flags |= I2C_BUS_ADDR_X37;
              detection_state = X37_Detected;
           }
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Recording %s", x37_detection_state_name(detection_state));
-          i2c_record_x37_detected(businfo->busno, businfo->edid->bytes, detection_state);
+          if (use_x37_detection_table) {
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Recording %s", x37_detection_state_name(detection_state));
+             i2c_record_x37_detected(businfo->busno, businfo->edid->bytes, detection_state);
+          }
 
           // else if (rc == -EBUSY)
           //    businfo->flags |= I2C_BUS_BUSY;
