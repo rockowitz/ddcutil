@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "config.h"
 
@@ -42,21 +43,22 @@ static GMutex all_i2c_buses_mutex;
 Value_Name_Table i2c_bus_flags_table = {
       VN(I2C_BUS_EXISTS),
       VN(I2C_BUS_ACCESSIBLE),
-      VN(I2C_BUS_ADDR_0X50),
-      VN(I2C_BUS_ADDR_0X37),
-      VN(I2C_BUS_ADDR_0X30),
+    //  VN(I2C_BUS_ADDR_0X50),
+      VN(I2C_BUS_ADDR_X37),
+      VN(I2C_BUS_ADDR_X30),
 //      VN(I2C_BUS_EDP),
 //      VN(I2C_BUS_LVDS),
       VN(I2C_BUS_PROBED),
-      VN(I2C_BUS_VALID_NAME_CHECKED),
-      VN(I2C_BUS_HAS_VALID_NAME),
+//      VN(I2C_BUS_VALID_NAME_CHECKED),
+//      VN(I2C_BUS_HAS_VALID_NAME),
       VN(I2C_BUS_SYSFS_EDID),
       VN(I2C_BUS_X50_EDID),
-      VN(I2C_BUS_DRM_CONNECTOR_CHECKED),
+//      VN(I2C_BUS_DRM_CONNECTOR_CHECKED),
       VN(I2C_BUS_LVDS_OR_EDP),
       VN(I2C_BUS_APPARENT_LAPTOP),
       VN(I2C_BUS_DISPLAYLINK),
       VN(I2C_BUS_SYSFS_UNRELIABLE),
+      VN(I2C_BUS_INITIAL_CHECK_DONE),
       VN_END
 };
 
@@ -107,7 +109,7 @@ const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
  */
 char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char * attribute) {
    assert(businfo);
-   assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
+   // assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
    assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
    char * result = NULL;
    if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
@@ -118,7 +120,7 @@ char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char 
 }
 
 
-void i2c_remove_bus_info(int busno) {
+void i2c_remove_bus_by_busno(int busno) {
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
    assert(busno);
@@ -139,24 +141,25 @@ void i2c_remove_bus_info(int busno) {
 
 
 // called if display removed, bus may or may not still exist
-void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
+void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
    bool debug = true;
-   assert(bus_info);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d", bus_info, bus_info->busno);
-   bus_info->flags = I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
-   if (i2c_device_exists(bus_info->busno))
-      bus_info->flags |= I2C_BUS_EXISTS;
-   if (bus_info->edid) {
+   assert(businfo);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d, flags=%s",
+         businfo, businfo->busno, i2c_interpret_bus_flags(businfo->flags));
+   if (i2c_device_exists(businfo->busno))
+      businfo->flags &= ~(I2C_BUS_ACCESSIBLE | I2C_BUS_ADDR_X30 | I2C_BUS_ADDR_X37 |
+             I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID );
+   if (businfo->edid) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Calling free_parsed_edid for %p, marker=%s",
-            bus_info->edid, hexstring_t((Byte*) bus_info->marker, 4));
+            businfo->edid, hexstring_t((Byte*) businfo->marker, 4));
       SYSLOG2(DDCA_SYSLOG_DEBUG, "Calling free_parsed_edid for %p, marker=%s",
-            bus_info->edid, hexstring_t((Byte*) bus_info->marker,4));
-      free_parsed_edid(bus_info->edid);
-      bus_info->edid = NULL;
+            businfo->edid, hexstring_t((Byte*) businfo->marker,4));
+      free_parsed_edid(businfo->edid);
+      businfo->edid = NULL;
    }
    if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Final bus_info:");
-      i2c_dbgrpt_bus_info(bus_info, true, 2);
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Final businfo:");
+      i2c_dbgrpt_bus_info(businfo, true, 2);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -171,9 +174,10 @@ char * i2c_get_drm_connector_name(I2C_Bus_Info * businfo) {
          businfo->drm_connector_name);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "flags: %s", i2c_interpret_bus_flags_t(businfo->flags) );
 
-   if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) ) {    // ??? when can this be false? ???
+
+  // if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) ) {    // ??? when can this be false? ???
       result = businfo->drm_connector_name;
-   }
+ //   }
 
    DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
    return result;
@@ -210,18 +214,18 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
       rpt_vstring(depth, "Valid bus name checked:  %s", sbool(businfo->flags & I2C_BUS_VALID_NAME_CHECKED));
       rpt_vstring(depth, "I2C bus has valid name:  %s", sbool(businfo->flags & I2C_BUS_HAS_VALID_NAME));
 #ifdef DETECT_SLAVE_ADDRS
-      rpt_vstring(depth, "Address 0x30 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X30));
+      rpt_vstring(depth, "Address 0x30 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_X30));
 #endif
-      rpt_vstring(depth, "Address 0x37 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(depth, "Address 0x37 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_X37));
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
       rpt_vstring(depth, "Device busy:             %s", sbool(businfo->flags & I2C_BUS_BUSY));
 #endif
       rpt_vstring(depth, "errno for open:          %s", psc_desc(businfo->open_errno));
 
-      rpt_vstring(depth, "Connector name checked:  %s", sbool(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
-      if (businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) {
-         rpt_vstring(depth, "drm_connector_found_by:  %s (%d)",
-            drm_connector_found_by_name(businfo->drm_connector_found_by), businfo->drm_connector_found_by);
+//      rpt_vstring(depth, "Connector name checked:  %s", sbool(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
+      rpt_vstring(depth, "drm_connector_found_by:  %s (%d)",
+         drm_connector_found_by_name(businfo->drm_connector_found_by), businfo->drm_connector_found_by);
+      if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED) {
          rpt_vstring(depth, "drm_connector_name:      %s", businfo->drm_connector_name);
          rpt_vstring(depth, "drm_connector_id:        %d", businfo->drm_connector_id);
       }
@@ -261,6 +265,7 @@ I2C_Bus_Info * i2c_new_bus_info(int busno) {
    I2C_Bus_Info * businfo = calloc(1, sizeof(I2C_Bus_Info));
    memcpy(businfo->marker, I2C_BUS_INFO_MARKER, 4);
    businfo->busno = busno;
+   businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_CHECKED;
 #ifdef ALT_LOCK_REC
    businfo->lock_record = create_display_lock_record(i2c_io_path(busno));
 #endif
@@ -269,6 +274,7 @@ I2C_Bus_Info * i2c_new_bus_info(int busno) {
 }
 
 
+#ifdef UNUSED
 void i2c_add_bus_info(I2C_Bus_Info * businfo) {
    assert(businfo);
    bool debug = true;
@@ -283,7 +289,37 @@ void i2c_add_bus_info(I2C_Bus_Info * businfo) {
 }
 
 
-void i2c_remove_bus_info_by_businfo(I2C_Bus_Info * businfo) {
+I2C_Bus_Info * i2c_add_bus(int busno) {
+   I2C_Bus_Info *  businfo = i2c_new_bus_info(busno);
+   businfo->flags = I2C_BUS_EXISTS;
+   i2c_add_bus_info(businfo);
+   return businfo;
+}
+#endif
+
+
+I2C_Bus_Info * i2c_get_bus_info(int busno, bool* new_info) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
+   *new_info = false;
+   g_mutex_lock(&all_i2c_buses_mutex);
+   I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
+   if (!businfo) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to set of buses", busno);
+      businfo = i2c_new_bus_info(busno);
+      businfo->flags = I2C_BUS_EXISTS;
+      g_ptr_array_add(all_i2c_buses, businfo);
+      *new_info = true;
+   }
+   g_mutex_unlock(&all_i2c_buses_mutex);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning businfo=%p for busno%d, *new_info=%s",
+         businfo, busno, SBOOL(*new_info));
+   return businfo;
+}
+
+
+
+void i2c_remove_bus_by_businfo(I2C_Bus_Info * businfo) {
    assert(businfo);
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Removing businfo record for bus %d from all_i2c_buses", businfo->busno);
@@ -399,13 +435,12 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
    else                    \
       _old->flags &= ~_bit;
 
-   COPY_BIT(existing, new, I2C_BUS_ADDR_0X50);
-   COPY_BIT(existing, new, I2C_BUS_ADDR_0X37);
-   COPY_BIT(existing, new, I2C_BUS_ADDR_0X30);
+   COPY_BIT(existing, new, I2C_BUS_ADDR_X37);
+   COPY_BIT(existing, new, I2C_BUS_ADDR_X30);
    COPY_BIT(existing, new, I2C_BUS_PROBED);
    COPY_BIT(existing, new, I2C_BUS_SYSFS_EDID);
    COPY_BIT(existing, new, I2C_BUS_X50_EDID);
-   COPY_BIT(existing, new, I2C_BUS_DRM_CONNECTOR_CHECKED);
+// COPY_BIT(existing, new, I2C_BUS_DRM_CONNECTOR_CHECKED);
 #undef COPY_BIT
 
    if (existing->drm_connector_name) {
@@ -413,15 +448,12 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
       existing->drm_connector_name = NULL;
       existing->drm_connector_id = -1;
    }
-   if (!existing->drm_connector_name) {
-      if (new->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) {
-         if (new->drm_connector_name)
-            existing->drm_connector_name = g_strdup_printf("%s", new->drm_connector_name);
-         existing->drm_connector_id = new->drm_connector_id;
-         existing->drm_connector_found_by = new->drm_connector_found_by;
-         existing->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
-      }
-   }
+   existing->drm_connector_found_by = new->drm_connector_found_by;
+   if (new->drm_connector_name)
+      existing->drm_connector_name = g_strdup_printf("%s", new->drm_connector_name);
+   existing->drm_connector_id = new->drm_connector_id;
+
+
    existing->last_checked_dpms_asleep = new->last_checked_dpms_asleep;
 
    if ( IS_DBGTRC(debug, DDCA_TRC_NONE)) {
@@ -575,7 +607,7 @@ void i2c_dbgrpt_buses_summary(int depth) {
       buses_all = bs256_insert(buses_all, busno);
       if ( (businfo->edid) ) {
          buses_w_edid = bs256_insert(buses_w_edid, busno);
-         if ( (businfo->flags & I2C_BUS_ADDR_0X37) ) {
+         if ( (businfo->flags & I2C_BUS_ADDR_X37) ) {
             buses_x37 = bs256_insert(buses_x37, busno);
          }
       }
@@ -637,20 +669,110 @@ int i2c_device_count() {
 }
 
 
+Error_Info * i2c_check_device_access(char * dev_name) {
+   Error_Info * err = NULL;
+   if ( access(dev_name, R_OK|W_OK) < 0 ) {
+      int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
+      char * s = NULL;
+      if (errsv == ENOENT) {
+        s = g_strdup_printf("access(%s) returned ENOENT", dev_name);
+        DBGMSG("%s", s);
+        err = ERRINFO_NEW(-ENOENT, "%s", s);
+        // should never occur because of i2c_device_exists() check
+      }
+      else if (errsv == EACCES) {
+        s = g_strdup_printf("Device %s lacks R/W permissions", dev_name);
+        DBGMSG("%s", s);
+        err = ERRINFO_NEW(-ENOENT, "%s", s);
+        SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+      }
+      else {
+        s = g_strdup_printf( "access() returned errno = %s", psc_desc(errsv));
+        SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+        err = ERRINFO_NEW(-ENOENT, "%s", s);
+      }
+      free(s);
+   }
+   return err;
+}
+
+
+const char * x37_detection_state_name(X37_Detection_State state) {
+   char * s = NULL;
+   switch(state) {
+   case X37_Not_Recorded:  s = "X37_Not_Recorded"; break;
+   case X37_Not_Detected:  s = "X37_Not_Detected"; break;
+   case X37_Detected:      s = "X37_Detected";     break;
+   }
+   return s;
+}
+
+
+static GHashTable * x37_detection_table = NULL;
+
+char * x37_detection_table_key(int busno, Byte* edidbytes) {
+   char * buf = g_strdup_printf("%s%d", hexstring_t(edidbytes,128), busno);
+   //guint key = g_str_hash(buf);
+   // free(buf);
+   return buf;
+}
+
+
+void  i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State detected) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "detected = %s, busno=%d, edidbytes = %s",
+         x37_detection_state_name(detected), busno, hexstring_t(edidbytes+120, 8));
+
+   if (!x37_detection_table)
+      x37_detection_table =  g_hash_table_new(g_str_hash, g_str_equal);
+   assert(detected != X37_Not_Recorded);
+   char * key = x37_detection_table_key(busno, edidbytes);
+   g_hash_table_replace(x37_detection_table, key, GINT_TO_POINTER(detected));
+   // free(key);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+}
+
+
+X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, edidbytes = ...%s",
+         busno, hexstring_t(edidbytes+120, 8));
+
+   char * key = x37_detection_table_key(busno, edidbytes);
+   gpointer pval = g_hash_table_lookup(x37_detection_table, key);
+   X37_Detection_State result = GPOINTER_TO_INT(pval);
+
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %s", x37_detection_state_name(result));
+   return result;
+}
+
+
 /** Module initialization. */
 void init_i2c_bus_base() {
-   RTTI_ADD_FUNC(i2c_add_bus_info);
+   // RTTI_ADD_FUNC(i2c_add_bus);
+   RTTI_ADD_FUNC(i2c_get_bus_info);
    RTTI_ADD_FUNC(i2c_discard_buses0);
    RTTI_ADD_FUNC(i2c_discard_buses);
    RTTI_ADD_FUNC(i2c_dbgrpt_buses);
    RTTI_ADD_FUNC(i2c_free_bus_info);
-   RTTI_ADD_FUNC(i2c_get_drm_connector_name);
+//   RTTI_ADD_FUNC(i2c_get_drm_connector_name);
    RTTI_ADD_FUNC(i2c_new_bus_info);
    RTTI_ADD_FUNC(i2c_reset_bus_info);
    RTTI_ADD_FUNC(i2c_update_bus_info);
-   RTTI_ADD_FUNC(i2c_remove_bus_info);
+   RTTI_ADD_FUNC(i2c_remove_bus_by_busno);
    RTTI_ADD_FUNC(i2c_dbgrpt_bus_info);
+   RTTI_ADD_FUNC(i2c_query_x37_detected);
+   RTTI_ADD_FUNC(i2c_record_x37_detected);
 
    // connected_buses = EMPTY_BIT_SET_256;
 }
+
+void terminate_i2c_bus_base() {
+   if (x37_detection_table) {
+      g_hash_table_destroy(x37_detection_table);
+   }
+}
+
 

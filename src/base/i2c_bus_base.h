@@ -13,6 +13,7 @@
 
 #include "util/data_structures.h"
 #include "util/edid.h"
+#include "util/error_info.h"
 
 #include "base/display_lock.h"
 
@@ -20,25 +21,34 @@
 
 // Keep in sync with i2c_bus_flags_table
 #define I2C_BUS_EXISTS                  0x08
-#define I2C_BUS_ACCESSIBLE              0x04
-#define I2C_BUS_ADDR_0X50               0x02      ///< detected I2C bus address 0x50, may or may not have valid EDID
-#define I2C_BUS_ADDR_0X37               0x01      ///< detected I2C bus address 0x37
-#define I2C_BUS_ADDR_0X30               0x80      ///< detected write-only addr to specify EDID block number
-// #define I2C_BUS_EDP                     0x40      ///< bus associated with eDP display
-// #define I2C_BUS_LVDS                    0x20      ///< bus associated with LVDS display
-// #define I2C_BUS_LAPTOP                  (I2C_BUS_EDP|I2C_BUS_LVDS) ///< bus associated with laptop display
-#define I2C_BUS_PROBED                  0x10      ///< has bus been checked?
-#define I2C_BUS_VALID_NAME_CHECKED    0x0800
-#define I2C_BUS_HAS_VALID_NAME        0x0400
-#define I2C_BUS_SYSFS_EDID            0x0100
-#define I2C_BUS_X50_EDID              0x0200
-#define I2C_BUS_HAS_EDID              (I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID)
-#define I2C_BUS_DRM_CONNECTOR_CHECKED 0x8000
+
+// #define I2C_BUS_VALID_NAME_CHECKED    0x0800
+// #define I2C_BUS_HAS_VALID_NAME        0x0400
+// #define I2C_BUS_DRM_CONNECTOR_CHECKED 0x8000
 #define I2C_BUS_LVDS_OR_EDP           0x4000
 #define I2C_BUS_APPARENT_LAPTOP       0x2000
 #define I2C_BUS_LAPTOP                (I2C_BUS_LVDS_OR_EDP | I2C_BUS_APPARENT_LAPTOP)
 #define I2C_BUS_DISPLAYLINK           0x1000
 #define I2C_BUS_SYSFS_UNRELIABLE    0x010000
+#define I2C_BUS_INITIAL_CHECK_DONE  0x020000
+
+// Flags that can change when monitor connected/disconnected
+#define I2C_BUS_ACCESSIBLE              0x04      ///< user could change permissions
+// #define I2C_BUS_ADDR_0X50               0x02      ///< detected I2C bus address 0x50, may or may not have valid EDID
+#define I2C_BUS_ADDR_X37               0x01      ///< detected I2C bus address 0x37
+#define I2C_BUS_ADDR_X30               0x80      ///< detected write-only addr to specify EDID block number
+// #define I2C_BUS_EDP                     0x40      ///< bus associated with eDP display
+// #define I2C_BUS_LVDS                    0x20      ///< bus associated with LVDS display
+// #define I2C_BUS_LAPTOP                  (I2C_BUS_EDP|I2C_BUS_LVDS) ///< bus associated with laptop display
+
+#define I2C_BUS_SYSFS_EDID            0x0100    ///< EDID was read from /sys
+#define I2C_BUS_X50_EDID              0x0200    ///< EDID was read using I2C
+#define I2C_BUS_HAS_EDID              (I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID)
+
+// affected by display connection/disconnection?
+#define I2C_BUS_PROBED                  0x10      ///< has bus been checked?
+
+
 
 typedef enum {
    DRM_CONNECTOR_NOT_CHECKED    = 0,    // ??? needed?
@@ -96,11 +106,13 @@ void             i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinf
 // Detected Buses
 extern GPtrArray * all_i2c_buses;
 
-void             i2c_add_bus_info(I2C_Bus_Info * businfo);
-void             i2c_remove_bus_info_by_businfo(I2C_Bus_Info * businfo);
+I2C_Bus_Info *   i2c_add_bus(int busno);
+// void             i2c_add_bus_info(I2C_Bus_Info * businfo);
+I2C_Bus_Info    * i2c_get_bus_info(int busno, bool* new_info);
+void             i2c_remove_bus_by_businfo(I2C_Bus_Info * businfo);
 void             i2c_discard_buses0(GPtrArray* buses);
 void             i2c_discard_buses();
-void             i2c_remove_bus_info(int busno);
+void             i2c_remove_bus_by_busno(int busno);
 
 I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
 I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
@@ -110,9 +122,21 @@ void             i2c_dbgrpt_buses_summary(int depth);
 // Basic I2C bus operations
 bool             i2c_device_exists(int busno); // Simple bus detection, no side effects
 int              i2c_device_count();           // simple /dev/i2c-n count, no side effects
+Error_Info *     i2c_check_device_access(char * dev_name);
 
+// Record display X37 status for reconnection
+typedef enum {
+   X37_Not_Recorded = 0,
+   X37_Not_Detected = 1,
+   X37_Detected = 2
+} X37_Detection_State;
+
+const char *         x37_detection_state_name(X37_Detection_State state);
+void                 i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State deteted);
+X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes);
 
 // Initialization
 void init_i2c_bus_base();
+void terminate_i2c_bus_base();
 
 #endif /* I2C_BUS_BASE_H_ */
