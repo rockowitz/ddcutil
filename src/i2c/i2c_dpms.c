@@ -196,8 +196,9 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
    }
    else {
       // can this ever be false?
-      assert(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED);
+      assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
 #ifdef OUT
+      assert(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED);
       if (!(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED)) {
          Sys_Drm_Connector * conn =  i2c_check_businfo_connector(businfo);
          if (!conn) {
