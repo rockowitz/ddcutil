@@ -380,7 +380,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    nvidia_driver_implies_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F19;
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F20)
-      use_x37_detection_table = false;
+      use_x37_detection_table = true;
 
    if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
       stabilization_poll_millisec = parsed_cmd->i7;
