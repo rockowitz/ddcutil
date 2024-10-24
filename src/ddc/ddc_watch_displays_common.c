@@ -203,31 +203,20 @@ Display_Ref * ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo) {
 
    i2c_reset_bus_info(businfo);
    int busno = businfo->busno;
+
    Display_Ref * dref = DDC_GET_DREF_BY_BUSNO(businfo->busno, /*ignore_invalid*/ true);
+   char buf[100];
+   g_snprintf(buf, 100, "Removing connected display, dref %s", dref_repr_t(dref));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
    if (dref) {
       assert(!(dref->flags & DREF_REMOVED));
       ddc_mark_display_ref_removed(dref);
-      // dref->detail = NULL;
-      char buf[100];
-      g_snprintf(buf, 100, "Removing connected display, dref %s", dref_repr_t(dref));
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
-#ifdef MAYBE
-            DDCA_Display_Status_Event evt = ddc_create_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
-                                            connector_name,
-                                            dref,
-                                            dref->io_path);
-#endif
-      if (!i2c_device_exists(busno)) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Device /dev/i2c-%d no longer exists.", busno);
-         i2c_remove_bus_info(busno);
-      }
-
-
+      dref->detail = NULL;
    }
    else {
       char s[80];
-      g_snprintf(s, 80, "Display_Ref not found for removed i2c bus: %d", busno);
+      g_snprintf(s, 80, "No Display_Ref found for i2c bus: %d", busno);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", s);
       SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
    }
@@ -314,7 +303,6 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
 }
 
 
-
 /** Updates persistent data structures for bus changes and
  *  either emits change events or queues them for later processing.
  *
@@ -335,7 +323,7 @@ bool ddc_i2c_hotplug_change_handler(
 {
    bool debug = false;
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "bs_buses_removed: %s",
+      DBGTRC_STARTING(debug, TRACE_GROUP, "bs_buses_w_edid_removed: %s",
             BS256_REPR(bs_buses_w_edid_removed));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_added: %s",
             BS256_REPR(bs_buses_w_edid_added));
@@ -347,16 +335,21 @@ bool ddc_i2c_hotplug_change_handler(
 
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       //  i2c_dbgrpt_buses(false, false, 1);
+      DBGMSG("buses before event processed:");
       i2c_dbgrpt_buses_summary(1);
-      rpt_nl();
+      DBGMSG("display references before event processed:");
       ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
                                       false,    // report_businfo
                                       1);       // depth
+      rpt_nl();
    }
 
    Bit_Set_256_Iterator iter = bs256_iter_new(bs_buses_w_edid_removed);
-   int busno = bs256_iter_next(iter);
-   while(busno >= 0) {
+   while(true) {
+      int busno = bs256_iter_next(iter);
+      if (busno < 0)
+         break;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing bus %d", busno);
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
       Display_Ref* dref = ddc_remove_display_by_businfo2(businfo);
       if (dref) {
@@ -364,26 +357,26 @@ bool ddc_i2c_hotplug_change_handler(
                dref->drm_connector, dref, dref->io_path, events_queue);
          event_emitted = true;
       }
-      busno = bs256_iter_next(iter);
+      if (i2c_device_exists(busno)) {
+         i2c_reset_bus_info(businfo);
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Device /dev/i2c-%d no longer exists.", busno);
+         i2c_remove_bus_by_busno(busno);
+      }
    }
    bs256_iter_free(iter);
 
 
    iter = bs256_iter_new(bs_buses_w_edid_added);
-   busno = bs256_iter_next(iter);
-   while (busno >= 0) {
-       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Added bus: %d", busno);
+   while (true) {
+      int busno = bs256_iter_next(iter);
+      if (busno < 0)
+         break;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding display ref for bus: %d", busno);
        // need to protect ?
-       I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
-       if (!businfo) {
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to list of buses", busno);
-          // if (IS_DBGTRC(debug, DDCA_TRC_NONE))
-          //    i2c_dbgrpt_buses(true /*report_all*/, true /*include_sysinfo*/, 2);
-          // get_sys_drm_connectors(/*rescan*/ true);  // so that drm connector name picked up
-          businfo = i2c_new_bus_info(busno);
-          businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
-          i2c_add_bus_info(businfo);
-       }
+      I2C_Bus_Info * businfo = i2c_get_and_check_bus_info(busno);
+
        char buf[100];
        g_snprintf(buf, 100, "Adding connected display with bus %d", busno);
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
@@ -395,7 +388,6 @@ bool ddc_i2c_hotplug_change_handler(
        ddc_emit_or_queue_display_status_event(
              DDCA_EVENT_DISPLAY_CONNECTED, businfo->drm_connector_name, dref, path, events_queue);
        event_emitted = true;
-       busno = bs256_iter_next(iter);
    }
    bs256_iter_free(iter);
 
@@ -404,7 +396,6 @@ bool ddc_i2c_hotplug_change_handler(
       rpt_label(0,"After buses added or removed:");
       // i2c_dbgrpt_buses(false, false, 1);
       i2c_dbgrpt_buses_summary(1);
-      rpt_nl();
       rpt_label(0,"After display refs added or marked disconnected:");
       ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
                                       false,    // report_businfo
@@ -510,8 +501,6 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
    DBGTRC_RETURNING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
    return bs_prior;
 }
-
-
 
 
 void init_ddc_watch_displays_common() {
