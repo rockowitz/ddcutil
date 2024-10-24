@@ -604,6 +604,7 @@ bool i2c_all_video_devices_drm() {
 #endif
 
 
+#ifdef UNUSED
 /** If possible, determines the drm connector for an I2C bus number.
  *  If insufficient fields exist in sysfs to do this with absolute
  *  assurance, EDID comparison is used.
@@ -641,6 +642,7 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
       DBGTRC_RETURNING(debug, TRACE_GROUP, NULL, "");
    return drm_connector;
 }
+#endif
 
 
 
