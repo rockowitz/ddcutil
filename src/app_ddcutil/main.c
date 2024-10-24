@@ -16,14 +16,14 @@
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <setjmp.h>
-#include <sys/stat.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <unistd.h>
-
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <syslog.h>
+#include <unistd.h>
 #include <unistd.h>
 
 #include "util/data_structures.h"
@@ -771,6 +771,14 @@ DDCA_Syslog_Level preparse_syslog_level(int argc, char** argv) {
    return result;
 }
 
+void interrupt_handler(int sig) {
+   printf("Handling interrupt\n");
+   // signal(sig, SIG_IGN);
+   DDCA_Display_Event_Class event_classes  = DDCA_EVENT_CLASS_ALL;
+   ddc_stop_watch_displays(false, &event_classes);
+   exit(0);
+}
+
 
 //
 // Mainline
@@ -1035,6 +1043,7 @@ main(int argc, char *argv[]) {
          main_rc = EXIT_FAILURE;
       }
       else {
+         signal(SIGINT, interrupt_handler);
          ddc_ensure_displays_detected();
          Error_Info * erec = ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
          if (erec) {
