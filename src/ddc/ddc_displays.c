@@ -96,7 +96,6 @@ bool skip_ddc_checks = false;
 bool debug_locks = false;
 
 
-
 void ddc_add_display_ref(Display_Ref * dref) {
    bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
@@ -106,6 +105,7 @@ void ddc_add_display_ref(Display_Ref * dref) {
    DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
 }
 
+
 void ddc_mark_display_ref_removed(Display_Ref* dref) {
    bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
@@ -114,8 +114,6 @@ void ddc_mark_display_ref_removed(Display_Ref* dref) {
    g_mutex_unlock(&all_display_refs_mutex);
    DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
 }
-
-
 
 
 //
@@ -175,6 +173,8 @@ static void explore_monitor_one_feature(Display_Handle * dh, Byte feature_code) 
 void explore_monitor_state(Display_Handle* dh) {
    rpt_nl();
    rpt_label(0, "-----------------------");
+
+#ifdef SYS_DRM_CONNECTOR_DEPENDENCY
    I2C_Bus_Info * businfo = (I2C_Bus_Info*) dh->dref->detail;
 
    char * connector_name = NULL;
@@ -187,6 +187,7 @@ void explore_monitor_state(Display_Handle* dh) {
             dh->dref->pedid->model_name, businfo->busno, connector_name);
    }
    rpt_nl();
+#endif
 
    rpt_vstring(0, "Environment Variables");
    char * xdg_session_desktop = getenv("XDG_SESSION_DESKTOP");
@@ -225,6 +226,7 @@ void explore_monitor_state(Display_Handle* dh) {
    rpt_nl();
    }
 
+#ifdef SYS_DRM_CONNECTOR_DEPENDENCY
    rpt_vstring(0, "Probing sysfs");
    if (connector_name) {
       RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", connector_name, "dpms");
@@ -236,6 +238,7 @@ void explore_monitor_state(Display_Handle* dh) {
       RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", connector_name, "power/runtime_suspended_time");
 #endif
    }
+#endif
 
    RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0", "name");
 #ifdef NO_USEFUL_INFO
@@ -485,7 +488,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
    Display_Ref * dref = dh->dref;
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
-      assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
+      // assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
+      assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
       // if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED)) {
       //    i2c_check_businfo_connector(businfo);
       // }
@@ -515,7 +519,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          DBGTRC(debug, TRACE_GROUP, "Laptop display definitely detected, not checking feature x10");
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       }
-      else if (!(businfo->flags & I2C_BUS_ADDR_0X37)) {
+      else if (!(businfo->flags & I2C_BUS_ADDR_X37)) {
          DBGTRC(debug, TRACE_GROUP, "Slave address x37 not responsive, not checking feature x10");
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       }
@@ -1378,7 +1382,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          Display_Ref * dref = NULL;
          // Do not restore serialized display ref if slave address x37 inactive
          // Prevents creating a display ref with stale contents
-         if (display_caching_enabled && (businfo->flags&I2C_BUS_ADDR_0X37) ) {
+         if (display_caching_enabled && (businfo->flags&I2C_BUS_ADDR_X37) ) {
             dref = copy_display_ref(
                        ddc_find_deserialized_display(businfo->busno, businfo->edid->bytes));
             if (dref)
@@ -1947,8 +1951,9 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
    // Sys_Drm_Connector * conrec = find_sys_drm_connector(-1, NULL, drm_connector_name);  // unused
 
-   businfo->flags &= ~I2C_BUS_PROBED;
-   i2c_check_bus2(businfo);
+   assert(businfo->flags & I2C_BUS_PROBED);
+   // businfo->flags &= ~I2C_BUS_PROBED;
+   // i2c_check_bus2(businfo);
    if (businfo->edid) {
       dref = create_bus_display_ref(businfo->busno);
       // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
