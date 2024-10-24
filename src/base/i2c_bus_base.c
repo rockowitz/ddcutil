@@ -741,10 +741,12 @@ X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, edidbytes = ...%s",
          busno, hexstring_t(edidbytes+120, 8));
 
-   char * key = x37_detection_table_key(busno, edidbytes);
-   gpointer pval = g_hash_table_lookup(x37_detection_table, key);
-   X37_Detection_State result = GPOINTER_TO_INT(pval);
-
+   X37_Detection_State result = X37_Not_Recorded;
+   if (x37_detection_table) {
+      char * key = x37_detection_table_key(busno, edidbytes);
+      gpointer pval = g_hash_table_lookup(x37_detection_table, key);
+      result = GPOINTER_TO_INT(pval);
+   }
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %s", x37_detection_state_name(result));
    return result;
