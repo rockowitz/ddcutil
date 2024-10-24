@@ -18,6 +18,7 @@ extern int       extra_stabilization_millisec;
 extern int       stabilization_poll_millisec;
 extern int       watch_loop_poll_multiplier;
 
+void set_poll_loop_multiplier(int multiplier);
 int split_sleep(int poll_loop_millisec);
 
 void terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid);

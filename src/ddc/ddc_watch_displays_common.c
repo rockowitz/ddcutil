@@ -67,11 +67,18 @@ int       extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
 int       stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
 int       watch_loop_poll_multiplier = 1;
 
+void set_poll_loop_multiplier(int multiplier) {
+   watch_loop_poll_multiplier = multiplier;
+   DBGMSG("Set watch_loop_poll_multiplier = %d", watch_loop_poll_multiplier);
+}
+
 int split_sleep(int udev_poll_loop_millisec) {
    int poll_loop_millisec = udev_poll_loop_millisec;
    if (ddc_slow_watch)   // for testing
       poll_loop_millisec *= 3;
-   poll_loop_millisec *= watch_loop_poll_multiplier;
+   if (watch_loop_poll_multiplier > 1) {
+      poll_loop_millisec *= watch_loop_poll_multiplier;
+   }
    const int max_sleep_microsec = poll_loop_millisec * 1000;
    const int sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
    int slept = 0;

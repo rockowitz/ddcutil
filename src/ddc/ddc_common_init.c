@@ -405,7 +405,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
          rpt_label(0, "--i5 value must be greater than 1");
    }
    if (parsed_cmd->flags2 & CMD_FLAG2_I6_SET)
-      watch_loop_poll_multiplier = parsed_cmd->i6;
+      set_poll_loop_multiplier( watch_loop_poll_multiplier = parsed_cmd->i6 );
 }
 
 
