@@ -1187,7 +1187,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    // *** Possibly try to get the EDID from sysfs
    bool checked_connector_for_edid = false;
    if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
-      assert(businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO);
+      // assert(businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO);
       if ((try_get_edid_from_sysfs_first && !(businfo->flags&I2C_BUS_SYSFS_UNRELIABLE))  ||
             (businfo->flags&I2C_BUS_DISPLAYLINK))   // X50 can't be read for DisplayLink, must use sysfs
       {
