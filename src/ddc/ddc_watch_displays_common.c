@@ -63,13 +63,15 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
 bool      terminate_watch_thread = false;
 bool      ddc_slow_watch;
-int              extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
-int              stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
+int       extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
+int       stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
+int       watch_loop_poll_multiplier = 1;
 
 int split_sleep(int udev_poll_loop_millisec) {
    int poll_loop_millisec = udev_poll_loop_millisec;
    if (ddc_slow_watch)   // for testing
       poll_loop_millisec *= 3;
+   poll_loop_millisec *= watch_loop_poll_multiplier;
    const int max_sleep_microsec = poll_loop_millisec * 1000;
    const int sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
    int slept = 0;
