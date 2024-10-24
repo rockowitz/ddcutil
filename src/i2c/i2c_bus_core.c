@@ -1949,7 +1949,7 @@ GPtrArray * i2c_detect_buses0() {
 
 
 I2C_Bus_Info * i2c_get_and_check_bus_info(int busno) {
-   bool debug = true;
+   bool debug  = false;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d", busno);
 
    bool new_info = false;
