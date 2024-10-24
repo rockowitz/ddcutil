@@ -83,7 +83,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 #else
    rpt_vstring(depth+1, "Utility option --i7           Stabilization poll millisec (default=%d)", DEFAULT_STABILIZATION_POLL_MILLISEC);
 #endif
-   rpt_vstring(depth+1, "Utility option --i8:          Udev polling loop millisec (default = %d)", DEFAULT_UDEV_POLL_LOOP_MILLISEC);
+   rpt_vstring(depth+1, "Utility option --i8:          Display watch polling loop millisec (default = %d)", DEFAULT_UDEV_POLL_LOOP_MILLISEC);
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");
    rpt_vstring(depth+1, "Utility option --s2:          Unused");
