@@ -8,6 +8,8 @@
 
 #include <glib-2.0/glib.h>
 
+extern int  nonudev_poll_loop_millisec;
+
 gpointer ddc_watch_displays_using_poll(gpointer data);
 
 void init_ddc_watch_displays_poll();

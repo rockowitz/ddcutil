@@ -123,7 +123,7 @@ char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char 
 
 
 void i2c_remove_bus_by_busno(int busno) {
-   bool debug = true;
+   bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
    assert(busno);
    g_mutex_lock(&all_i2c_buses_mutex);
@@ -144,7 +144,7 @@ void i2c_remove_bus_by_busno(int busno) {
 
 // called if display removed, bus may or may not still exist
 void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
-   bool debug = true;
+   bool debug  = false;
    assert(businfo);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d, flags=%s",
          businfo, businfo->busno, i2c_interpret_bus_flags(businfo->flags));
@@ -279,7 +279,7 @@ I2C_Bus_Info * i2c_new_bus_info(int busno) {
 #ifdef UNUSED
 void i2c_add_bus_info(I2C_Bus_Info * businfo) {
    assert(businfo);
-   bool debug = true;
+   bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Adding businfo record for bus %d to all_i2c_buses", businfo->busno);
    assert(businfo->busno != 255 && businfo->busno != -1);
 
@@ -301,7 +301,7 @@ I2C_Bus_Info * i2c_add_bus(int busno) {
 
 
 I2C_Bus_Info * i2c_get_bus_info(int busno, bool* new_info) {
-   bool debug = true;
+   bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
    *new_info = false;
    g_mutex_lock(&all_i2c_buses_mutex);
@@ -323,7 +323,7 @@ I2C_Bus_Info * i2c_get_bus_info(int busno, bool* new_info) {
 
 void i2c_remove_bus_by_businfo(I2C_Bus_Info * businfo) {
    assert(businfo);
-   bool debug = true;
+   bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Removing businfo record for bus %d from all_i2c_buses", businfo->busno);
    assert(businfo->busno != 255 && businfo->busno != -1);
 
@@ -721,7 +721,7 @@ char * x37_detection_table_key(int busno, Byte* edidbytes) {
 
 
 void  i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State detected) {
-   bool debug = true;
+   bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "detected = %s, busno=%d, edidbytes = %s",
          x37_detection_state_name(detected), busno, hexstring_t(edidbytes+120, 8));
 
@@ -737,7 +737,7 @@ void  i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State d
 
 
 X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes) {
-   bool debug = true;
+   bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, edidbytes = ...%s",
          busno, hexstring_t(edidbytes+120, 8));
 

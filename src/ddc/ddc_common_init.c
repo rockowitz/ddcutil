@@ -58,6 +58,7 @@
 #include "ddc_try_data.h"
 #include "ddc_vcp.h"
 #include "ddc/ddc_watch_displays_udev.h"
+#include "ddc/ddc_watch_displays_poll.h"
 #include "ddc_watch_displays_main.h"
 #include "ddc_watch_displays_common.h"
 
@@ -385,8 +386,11 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
       stabilization_poll_millisec = parsed_cmd->i7;
 
-   if (parsed_cmd->i8 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I8_SET)
+   if (parsed_cmd->i8 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I8_SET) {
+      // for now, use one utility var to set polling time for both kinds of loops
       udev_poll_loop_millisec = parsed_cmd->i8;
+      nonudev_poll_loop_millisec = parsed_cmd->i8;
+   }
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
       extra_stabilization_millisec = parsed_cmd->i1;

@@ -207,7 +207,7 @@ void ddc_i2c_emit_deferred_events(GArray * deferred_events) {
 
 
 Display_Ref * ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo) {
-   bool debug = true;
+   bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p", businfo);
 
    i2c_reset_bus_info(businfo);
