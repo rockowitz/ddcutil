@@ -616,7 +616,7 @@ i2c_detect_x37(int fd) {
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = 0;
-   int max_tries = 1;   // ***TEMP*** 3;
+   int max_tries = 2;   // ***TEMP*** 3;
    bool use_file_io = false;
    int poll_wait_millisec = 400;
    char * s = (use_file_io) ? "i2c" : "ioctl";
@@ -670,7 +670,6 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    assert( (businfo->flags & I2C_BUS_EXISTS) &&
            (businfo->flags & I2C_BUS_PROBED)
          );
-   assert(sys_drm_connectors);
 
    Error_Info * result = NULL;
    bool edid_exists = false;
