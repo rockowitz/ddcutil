@@ -1,39 +1,4 @@
-# Changelog
-
-display change detection
-alt algorithm w/o udev for nvidia
-
-nvidia sysfs unreliable
-
-algorithm for determining driver for bus
-
-replace 
-
-ise if/else if/else  instead of switch() 
-drm_connector.state.c
-
-do not maintain redudnance driver name in dref
-
-If option --bus specified, only check accessability for that bus.
-issue #461, avoids irrelevant warning messages
-
---watch-mode = UDEV, POLL, DYNAMIC
-
-DYNAMIC resolves to udev or poll depending on wheter any display uses the nvidia driver
-
-reinsert X11 specific code, 
-default --enable-x11 changed?
-
-reenable option --enable-x11, default = ?
-
-for x11, query X11 as to sleep mode instead of using sysfs drm attribute, which 
-may be unreliable for nvidia
-
-do not rely on /sysfs drm connector if nvidis driver
-
-
-
-## [2.1.5] 2024-10-15
+## [2.1.5] 2024-10-25
 
 ### General
 
@@ -95,6 +60,9 @@ do not rely on /sysfs drm connector if nvidis driver
 - Configuration file ddcutilrc: If there is a pound sign "#" on a line, 
   the remainder of the line is treated as a comment.
 - Add -Wformat-security to compiler options.  Addresses issue #458.
+- If option --bus specified, only check accessability for that bus, avoiding
+  irrelevant warning messages regarding other buses.  Addresses issue #461.
+
 
 #### Fixed
 
@@ -119,6 +87,16 @@ do not rely on /sysfs drm connector if nvidis driver
   time_t, so as to build  unchanged on architectures such as armel, armhf.
 - Memory leaks.
 - Fix compiler errors when built with -Wformat-security. Fixes issue #458.
+- Avoid compiler warning possible depending on compiler configuration when
+  a switch() construct is used.  Replaced with if/else if/else.
+  Resolves issue #?
+
+### Building 
+- Re-enable autoconf/configure option --enable-x11/--disable-x11.
+  X11 specific code is used in display change detection.
+  the default is --enable-x11.   
+  Use x11 code to test for sleep mode instead of using /sys, which 
+  is unreliable for nvidia driver. 
 
 ### Shared Library
 
@@ -173,9 +151,34 @@ file is libddcutil.so.5.1.3. (VERIFY)
 
 #### Display Change Handling
 
-- handle MST hub devices
-- use udev events for display detection
-- use /sys to get edid if possible
+- Extensively reworked display change detection
+  - improved performance using UDEV
+  - /sys to get EDID if possible
+  - handle MST hub devices if driver/device allow
+    - not all drivers work
+- Work around deficiencies of nvidia driver
+  - /sys file system does not reflect display changes
+  - non-standard use of sys
+  - does not generate udev events 
+  - alternate, much less efficient algorithm for nvidia
+    - doesn't use udev
+    - doesn't rely on /sys 
+    - reads EDIDs in polling loop
+display change detection
+alt algorithm w/o udev for nvidia
+  - --watch-mode UDEV, POLL, DYNAMIC
+
+--watch-mode = UDEV, POLL, DYNAMIC
+  - DYNAMIC resolves to udev or poll depending on whether any display uses the nvidia driver
+  - always use POLL algorithm if nvidia driver detected
+
+rework watch display code for nvidia
+
+use hash table for recording x37 responsiveness across disconnection/connection
+
+
+
+
 - most functions that return a status code now may return 
   DDCRC_    
 api display ref and handle
