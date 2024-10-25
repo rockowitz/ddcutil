@@ -1011,6 +1011,7 @@ Byte * get_connector_edid(const char * connector_name) {
     g_snprintf(dev_name,   15, "/dev/%s", i2cN);
     DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
     bool edid_exists = false;
+    char * drm_connector_name = NULL;
 
     Error_Info *master_err = NULL;
     if (!i2c_device_exists(busno)) {
@@ -1033,8 +1034,6 @@ Byte * get_connector_edid(const char * connector_name) {
 
     bool is_displaylink = is_displaylink_device(busno);
     bool sysfs_unreliable = is_sysfs_unreliable(busno);
-    char * drm_connector_name = NULL;
-
 
     // *** Try to find the drm connector by bus number
 
@@ -1094,6 +1093,7 @@ Byte * get_connector_edid(const char * connector_name) {
      i2c_close_bus(busno, fd, CALLOPT_ERR_MSG);
 
  bye:
+    free(drm_connector_name);
     ERRINFO_FREE_WITH_REPORT(master_err, true);
     DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, edid_exists, "");
     return edid_exists;
