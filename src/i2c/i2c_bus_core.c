@@ -1884,6 +1884,7 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
             "Calling i2c_check_bus() synchronously for bus %d", businfo->busno);
       i2c_check_bus2(businfo);
    }
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 

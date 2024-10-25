@@ -483,8 +483,8 @@ drm_enabled = false;
    // get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
    if (use_drm_connector_states)
       redetect_drm_connector_states();
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s, sys_drm_connectors = %p",
-         sbool(use_drm_connector_states), sbool(drm_enabled), sys_drm_connectors);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s",
+         sbool(use_drm_connector_states), sbool(drm_enabled));
 
 #ifdef NOT_HERE
    // adding or removing MST device can change whether all drm connectors have connector_id

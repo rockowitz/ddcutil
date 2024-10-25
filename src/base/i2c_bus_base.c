@@ -147,7 +147,7 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
    bool debug  = false;
    assert(businfo);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d, flags=%s",
-         businfo, businfo->busno, i2c_interpret_bus_flags(businfo->flags));
+         businfo, businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
    if (i2c_device_exists(businfo->busno))
       businfo->flags &= ~(I2C_BUS_ACCESSIBLE | I2C_BUS_ADDR_X30 | I2C_BUS_ADDR_X37 |
              I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID );
@@ -699,6 +699,10 @@ Error_Info * i2c_check_device_access(char * dev_name) {
 }
 
 
+//
+// x37 detection table - Records x37 responsiveness to avoid recheck
+//
+
 const char * x37_detection_state_name(X37_Detection_State state) {
    char * s = NULL;
    switch(state) {
@@ -726,7 +730,7 @@ void  i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State d
          x37_detection_state_name(detected), busno, hexstring_t(edidbytes+120, 8));
 
    if (!x37_detection_table)
-      x37_detection_table =  g_hash_table_new(g_str_hash, g_str_equal);
+      x37_detection_table =  g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
    assert(detected != X37_Not_Recorded);
    char * key = x37_detection_table_key(busno, edidbytes);
    g_hash_table_replace(x37_detection_table, key, GINT_TO_POINTER(detected));
@@ -775,10 +779,15 @@ void init_i2c_bus_base() {
 }
 
 void terminate_i2c_bus_base() {
-   DBGMSG("Executing.  x37_detection_table = %p", x37_detection_table);
+   // DBGMSG("Executing.  x37_detection_table = %p", x37_detection_table);
    if (x37_detection_table) {
       g_hash_table_destroy(x37_detection_table);
    }
-}
 
+   if (all_i2c_buses) {
+      // i2c_free_bus_info() already set as free function
+      g_ptr_array_free(all_i2c_buses, true);
+      free (all_i2c_buses);
+   }
+}
 
