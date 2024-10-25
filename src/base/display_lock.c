@@ -232,7 +232,7 @@ lock_display2(
          dpath_repr_t(&dlr->io_path),  interpret_display_lock_flags_t(flags));
    Error_Info * err = NULL;
    TRACED_ASSERT(memcmp(dlr->marker, DISPLAY_LOCK_MARKER, 4) == 0);
-   uint64_t lockrec_poll_microsec = 1000 * lockrec_poll_millisec;
+   uint64_t lockrec_poll_microsec = 1000 * (uint64_t) lockrec_poll_millisec;
 
    //DBGTRC_STARTING(debug, TRACE_GROUP, "dlr=%p -> %s, flags=%s",
    //      dlr, lockrec_repr_t(dlr), interpret_display_lock_flags_t(flags));
