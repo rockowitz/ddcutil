@@ -70,7 +70,7 @@ struct {
 #ifdef ALT_LOCK_REC
    Display_Lock_Record * lock_record;   ///<
 #endif
-   uint16_t         flags;              ///< I2C_BUS_* flags
+   uint32_t         flags;              ///< I2C_BUS_* flags
    char *           driver;             ///< driver name
    int              open_errno;         ///< errno if open fails (!I2C_BUS_ACCESSIBLE)
    char *           drm_connector_name; ///< from /sys
