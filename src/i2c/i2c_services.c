@@ -3,6 +3,8 @@
 // Copyright (C) 2022-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "base/i2c_bus_base.h"
+
 #include "i2c_bus_core.h"
 #include "i2c_dpms.h"
 #include "i2c_edid.h"
@@ -31,4 +33,5 @@ void init_i2c_services() {
 
 void terminate_i2c_services() {
    terminate_i2c_sysfs_i2c_info();
+   terminate_i2c_bus_base();
 }
