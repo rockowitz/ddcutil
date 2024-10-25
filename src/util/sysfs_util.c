@@ -514,11 +514,9 @@ rpt_attr_edid(
        ...)
  {
     bool debug = false;
-    if (debug) {
-       printf("(%s) Starting.  depth=%d, value_loc=%p, fn_segment=|%s|\n", __func__, depth, value_loc, fn_segment);
-       if (debug && depth < 0)
+    DBGF(debug, "Starting.  depth=%d, value_loc=%p, fn_segment=|%s|", depth, value_loc, fn_segment);
+    if (debug && depth < 0)
           depth=1;
-    }
 
     char pb1[PATH_MAX];
     va_list ap;
@@ -544,11 +542,10 @@ rpt_attr_edid(
     }
 
     if (debug) {
-       printf("(%s) Returning %s. *value_loc=%p\n", __func__, SBOOL(found), *value_loc);
-       if (*value_loc) {
+       DBG("Returning %s.", SBOOL(found));
+       if (value_loc) {
           GByteArray * gba = *value_loc;
-          printf("(%s)               data=%p, len=%d\n",
-                 __func__, (void*) gba->data, gba->len);
+          DBG("               data=%p, len=%d\n", (void*) gba->data, gba->len);
        }
     }
 
