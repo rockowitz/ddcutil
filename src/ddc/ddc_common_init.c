@@ -346,8 +346,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       use_drm_connector_states = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F7)
       detect_phantom_displays = false;
-   if (parsed_cmd->flags2 & CMD_FLAG2_F8)
-      ddc_slow_watch = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F9)
       msg_to_syslog_only = true;
 

@@ -62,7 +62,6 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
 bool      terminate_watch_thread = false;
-bool      ddc_slow_watch;
 int       extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
 int       stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
 int       watch_loop_poll_multiplier = 1;
@@ -74,8 +73,6 @@ void set_poll_loop_multiplier(int multiplier) {
 
 int split_sleep(int udev_poll_loop_millisec) {
    int poll_loop_millisec = udev_poll_loop_millisec;
-   if (ddc_slow_watch)   // for testing
-      poll_loop_millisec *= 3;
    if (watch_loop_poll_multiplier > 1) {
       poll_loop_millisec *= watch_loop_poll_multiplier;
    }

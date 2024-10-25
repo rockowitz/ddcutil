@@ -725,8 +725,6 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
       }
       while ( !dev ) {
          int sleep_secs = 2;   // default sleep time on each loop
-         if (ddc_slow_watch)   // for testing
-            sleep_secs *= 3;
          if (debug)
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Sleeping for %d seconds", sleep_secs);
          const int max_sleep_microsec = sleep_secs * 1000000;

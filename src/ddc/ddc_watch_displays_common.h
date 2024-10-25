@@ -13,7 +13,6 @@
 #include "util/linux_util.h"
 
 extern bool      terminate_watch_thread;
-extern bool      ddc_slow_watch;
 extern int       extra_stabilization_millisec;
 extern int       stabilization_poll_millisec;
 extern int       watch_loop_poll_multiplier;
