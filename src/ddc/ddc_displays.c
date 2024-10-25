@@ -481,7 +481,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    TRACED_ASSERT(dh && dh->dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s",interpret_dref_flags_t(dh->dref->flags));
-   I2C_Bus_Info * businfo = (I2C_Bus_Info*) dh->dref->detail;
+   I2C_Bus_Info * businfo = dh->dref->detail;
    Per_Display_Data * pdd = dh->dref->pdd;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusted sleep-multiplier = %5.2f",
                                        pdd_get_adjusted_sleep_multiplier(pdd));
@@ -1541,7 +1541,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       Display_Ref * dref = g_ptr_array_index(display_list, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
-         DBGMSG("dref=%s, DREV_DDC_COMMUNICATON_WORKING not set", dref_repr_t(dref));
+         DBGMSG("dref=%s, DREF_DDC_COMMUNICATON_WORKING not set", dref_repr_t(dref));
       // if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
       //    dref->dispno = DISPNO_INVALID;  // does this need to be different?
       if (dref->flags & DREF_DDC_BUSY)
