@@ -101,7 +101,8 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          }
       }
    }
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Using watch mode %s.", ddc_watch_mode_name(ddc_watch_mode));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Using watch mode %s. watch_loop_poll_multiplier=%d",
+         ddc_watch_mode_name(ddc_watch_mode), watch_loop_poll_multiplier);
 
 #ifdef ENABLE_UDEV
    if (!drm_enabled) {
