@@ -684,8 +684,8 @@ Error_Info * i2c_check_device_access(char * dev_name) {
       }
       else if (errsv == EACCES) {
         s = g_strdup_printf("Device %s lacks R/W permissions", dev_name);
-        DBGMSG("%s", s);
-        err = ERRINFO_NEW(-ENOENT, "%s", s);
+        // DBGMSG("%s", s);
+        err = ERRINFO_NEW(-EACCES, "%s", s);
         SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
       }
       else {
@@ -746,6 +746,7 @@ X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes) {
       char * key = x37_detection_table_key(busno, edidbytes);
       gpointer pval = g_hash_table_lookup(x37_detection_table, key);
       result = GPOINTER_TO_INT(pval);
+      free(key);
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %s", x37_detection_state_name(result));
@@ -774,6 +775,7 @@ void init_i2c_bus_base() {
 }
 
 void terminate_i2c_bus_base() {
+   DBGMSG("Executing.  x37_detection_table = %p", x37_detection_table);
    if (x37_detection_table) {
       g_hash_table_destroy(x37_detection_table);
    }
