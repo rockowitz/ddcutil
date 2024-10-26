@@ -385,8 +385,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 
    if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET)) {
       // for now, use one utility var to set polling time for both kinds of loops
-      udev_poll_loop_millisec = parsed_cmd->i8;
-      nonudev_poll_loop_millisec = parsed_cmd->i8;
+      explicit_udev_poll_loop_millisec = parsed_cmd->i8;
+      explicit_nonudev_poll_loop_millisec = parsed_cmd->i8;
    }
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
@@ -441,9 +441,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
    i2c_enable_cross_instance_locks(parsed_cmd->flags & CMD_FLAG_FLOCK);
-#ifdef GET_EDID_USING_SYSFS
-   force_read_edid = !(parsed_cmd->flags2 & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS);  // extern in i2c_bus_core.h
-#endif
+   try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
    setvcp_verify_default = parsed_cmd->flags & CMD_FLAG_VERIFY;  // for new threads
    ddc_set_verify_setvcp(setvcp_verify_default);                 // set current thread
    set_output_level(parsed_cmd->output_level);  // current thread

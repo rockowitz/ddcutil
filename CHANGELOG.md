@@ -13,7 +13,7 @@
   log. If reproducible builds are required, use **configure** option 
   ***--disable-build-timestamp***. (For reproducible builds, building typically
   is performed using a script or build system, so it's not inconvenient to 
-  specify ***--disable-build-timestamp*** in this case.)
+  specify ***--disable-build-timestamp*** in this situation.)
 
 #### Changed
 
