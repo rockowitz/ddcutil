@@ -1,9 +1,11 @@
-// ddc_watch_displays_poll.c
+/** @file_watch_displays_poll.c
+ *
+ *  Watch for display changes without using UDEV
+ */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
- 
 
 #define _GNU_SOURCE    // for usleep()
 

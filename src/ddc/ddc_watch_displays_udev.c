@@ -1,6 +1,6 @@
-/** @file ddc_watch_displays.c
+/** @file ddc_watch_displays_udev.c
  *
- *  Watch for monitor addition and removal
+ *  Watch for monitor addition and removal using UDEV
  */
 
 // Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
