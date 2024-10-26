@@ -80,6 +80,8 @@ typedef enum {
    CMD_FLAG_ENABLE_UDF             = 0x100000,
    CMD_FLAG_ENABLE_USB             = 0x200000,
 
+   CMD_FLAG_TRY_GET_EDID_FROM_SYSFS
+                                 = 0x10000000,
    CMD_FLAG_FLOCK                = 0x40000000,
    CMD_FLAG_DEFER_SLEEPS         = 0x80000000,
 
@@ -129,9 +131,6 @@ typedef enum {
 } Parsed_Cmd_Flags;
 
 typedef enum {
-   CMD_FLAG_TRY_GET_EDID_FROM_SYSFS =
-                                  0x0100000000,
-
    CMD_FLAG2_F1                   = 0x00000001,
    CMD_FLAG2_F2                   = 0x00000002,
    CMD_FLAG2_F3                   = 0x00000004,
