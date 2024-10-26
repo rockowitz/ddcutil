@@ -108,6 +108,7 @@
 
 /** How frequently libddcutil watches for changes to connected displays */
 #define DEFAULT_UDEV_POLL_LOOP_MILLISEC 500
+#define DEFAULT_NONUDEV_POLL_LOOP_MILLISEC 2000
 // Once a UDEV DRM event is received that possibly indicates a display change,
 // libddcutil repeatedly checks /sys/class/drm until the reported displays
 // stabilize
@@ -116,17 +117,13 @@
 /** Polling interval between stabilization checks */
 #define DEFAULT_STABILIZATION_POLL_MILLISEC 1000
 
-#ifdef UDEV_I2C_DEV
-#define DEFAULT_SECONDARY_UDEV_RECEIVE_MILLISEC 100
-#endif
-
 
 //
 // *** Miscellaneous
 //
 
 // EDID in /sys can have stale data
-#define DEFAULT_TRY_GET_EDID_FROM_SYSFS  false
+#define DEFAULT_TRY_GET_EDID_FROM_SYSFS  true
 
 #define DEFAULT_FLOCK_POLL_MILLISEC      100
 #define DEFAULT_FLOCK_MAX_WAIT_MILLISEC 3000
