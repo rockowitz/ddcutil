@@ -590,7 +590,7 @@ gpointer ddc_watch_displays_udev_i2c(gpointer data) {
          }
          else {     // skip polling loop sleep if deferred events were output
             if (!skip_next_sleep) {
-               slept = split_sleep(udev_poll_loop_millisec);
+               slept = split_sleep();
             }
          }
          skip_next_sleep = false;

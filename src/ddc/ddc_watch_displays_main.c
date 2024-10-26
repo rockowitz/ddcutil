@@ -77,6 +77,7 @@ static GMutex    watch_thread_mutex;
 // Common to all variants
 //
 
+
 /** Starts thread that watches for changes in display connection status.
  *
  *  \return  Error_Info struct if error:
@@ -86,11 +87,15 @@ static GMutex    watch_thread_mutex;
 Error_Info *
 ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, drm_enabled=%s",
-                                       ddc_watch_mode_name(ddc_watch_mode),
-                                       watch_thread, event_classes, SBOOL(drm_enabled) );
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+      "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, drm_enabled=%s",
+      ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(drm_enabled));
    Error_Info * err = NULL;
 
+
+#ifndef ENABLE_UDEV
+   ddc_watch_mode = Watch_Mode_Poll;
+#endif
    if (ddc_watch_mode == Watch_Mode_Dynamic) {
       ddc_watch_mode = Watch_Mode_Udev;
       for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
@@ -101,14 +106,17 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          }
       }
    }
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Using watch mode %s. watch_loop_poll_multiplier=%d",
-         ddc_watch_mode_name(ddc_watch_mode), watch_loop_poll_multiplier);
 
-#ifdef ENABLE_UDEV
    if (!drm_enabled) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
       goto bye;
    }
+
+   int calculated_watch_loop_millisec = calc_poll_loop_millisec(ddc_watch_mode);
+
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
+         "Watching for display connection changes, watch mode = %s, poll loop interval = %d millisec",
+         ddc_watch_mode_name(ddc_watch_mode), calculated_watch_loop_millisec);
 
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
@@ -138,7 +146,6 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil watch thread started");
    }
    g_mutex_unlock(&watch_thread_mutex);
-#endif
 
 bye:
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "watch_thread=%p", watch_thread);

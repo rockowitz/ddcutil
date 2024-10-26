@@ -65,19 +65,44 @@ bool      terminate_watch_thread = false;
 int       extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
 int       stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
 int       watch_loop_poll_multiplier = 1;
+int       explicit_udev_poll_loop_millisec = 0;
+int       explicit_nonudev_poll_loop_millisec = 0;
+int       calculated_watch_loop_millisec = 0;
+
+
+
+int calc_poll_loop_millisec(DDC_Watch_Mode watch_mode) {
+   assert(watch_mode != Watch_Mode_Dynamic);
+   int final_answer = 0;
+
+   if (watch_mode == Watch_Mode_Udev) {
+      if (explicit_udev_poll_loop_millisec)
+         final_answer = explicit_udev_poll_loop_millisec;
+      else
+         final_answer = watch_loop_poll_multiplier * DEFAULT_UDEV_POLL_LOOP_MILLISEC;
+   }
+   else {
+      if (explicit_nonudev_poll_loop_millisec)
+         final_answer = explicit_nonudev_poll_loop_millisec;
+      else {
+         final_answer = watch_loop_poll_multiplier * DEFAULT_NONUDEV_POLL_LOOP_MILLISEC;
+      }
+   }
+   calculated_watch_loop_millisec = final_answer;
+   return final_answer;
+}
+
+
 
 void set_poll_loop_multiplier(int multiplier) {
    watch_loop_poll_multiplier = multiplier;
    DBGMSG("Set watch_loop_poll_multiplier = %d", watch_loop_poll_multiplier);
 }
 
-int split_sleep(int udev_poll_loop_millisec) {
-   int poll_loop_millisec = udev_poll_loop_millisec;
-   if (watch_loop_poll_multiplier > 1) {
-      poll_loop_millisec *= watch_loop_poll_multiplier;
-   }
-   const int max_sleep_microsec = poll_loop_millisec * 1000;
-   const int sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
+int split_sleep() {
+   assert(calculated_watch_loop_millisec > 0);
+   uint64_t max_sleep_microsec = calculated_watch_loop_millisec * (uint64_t)1000;
+   uint64_t sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
    int slept = 0;
    for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
       usleep(sleep_step_microsec);
