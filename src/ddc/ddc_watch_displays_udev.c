@@ -497,7 +497,7 @@ void debug_watch_state(int connector_number, char * cname) {
  *
  *  @param data   #Watch_Displays_Data passed from creator thread
  */
-gpointer ddc_watch_displays_udev_i2c(gpointer data) {
+gpointer ddc_watch_displays_udev(gpointer data) {
    bool debug = false;
    bool debug_sysfs_state = false;
    bool use_deferred_event_queue = false;
@@ -823,6 +823,6 @@ void init_ddc_watch_displays_udev() {
    RTTI_ADD_FUNC(ddc_i2c_stabilized_bus_by_connector_id);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_single_bus_by_connector_name);
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
-   RTTI_ADD_FUNC(ddc_watch_displays_udev_i2c);
+   RTTI_ADD_FUNC(ddc_watch_displays_udev);
 #endif
 }

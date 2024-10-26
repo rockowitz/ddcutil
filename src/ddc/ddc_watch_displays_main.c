@@ -135,8 +135,8 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       data->event_classes = event_classes;
 
       GThreadFunc watch_thread_func = (ddc_watch_mode == Watch_Mode_Poll)
-                                        ? ddc_watch_displays_using_poll
-                                        : ddc_watch_displays_udev_i2c;
+                                        ? ddc_watch_displays_without_udev
+                                        : ddc_watch_displays_udev;
 
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name

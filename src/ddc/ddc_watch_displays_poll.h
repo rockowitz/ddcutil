@@ -10,7 +10,7 @@
 
 extern int  nonudev_poll_loop_millisec;
 
-gpointer ddc_watch_displays_using_poll(gpointer data);
+gpointer ddc_watch_displays_without_udev(gpointer data);
 
 void init_ddc_watch_displays_poll();
 

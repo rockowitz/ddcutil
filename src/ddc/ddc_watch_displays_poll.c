@@ -252,7 +252,7 @@ void ddc_poll_recheck_bus(
 #endif
 
 
-gpointer ddc_watch_displays_using_poll(gpointer data) {
+gpointer ddc_watch_displays_without_udev(gpointer data) {
    bool debug = false;
    // bool debug_sysfs_state = false;
    bool use_deferred_event_queue = false;
@@ -525,5 +525,5 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
 
 
 void init_ddc_watch_displays_poll() {
-      RTTI_ADD_FUNC(ddc_watch_displays_using_poll);
+      RTTI_ADD_FUNC(ddc_watch_displays_without_udev);
 }

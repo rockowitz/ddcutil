@@ -19,7 +19,7 @@ extern int            secondary_udev_receive_millisec;
 extern int            udev_poll_loop_millisec;
 
 // bool     is_watch_thread_executing();
-gpointer    ddc_watch_displays_udev_i2c(gpointer data);
+gpointer    ddc_watch_displays_udev(gpointer data);
 
 void        init_ddc_watch_displays_udev();
 
