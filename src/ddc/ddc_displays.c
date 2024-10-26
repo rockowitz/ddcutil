@@ -680,20 +680,24 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
    bool skip_ddc_checks0 = skip_ddc_checks;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       businfo = dref->detail;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "I2C_BUS_DDC_CHECKS_IGNORABLE is set: %s",
+           SBOOL(businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE) );
       if (businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE)
          skip_ddc_checks0 = true;
    }
+
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "skip_ddc_checks0 = %s", SBOOL(skip_ddc_checks0));
 
    if (skip_ddc_checks0) {
       dref->flags |= (DREF_DDC_COMMUNICATION_CHECKED |
                       DREF_DDC_COMMUNICATION_WORKING |
                       DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "dref=%s, skipping initial ddc checks", dref_repr_t(dref));
-      DBGTRC_NOPREFIX(true, TRACE_GROUP, "Skipping initial ddc checks");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Skipping initial ddc checks");
       result = true;
    }
    else {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Performing initial ddc checks");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Performing initial ddc checks");
    // if (!(dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)) {
       Display_Handle * dh = NULL;
 
@@ -723,13 +727,10 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
             // DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED is not automatically set:
             (dref->flags & DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED);
 
-      if (last_ddc_check_ok)
-         businfo->flags |= I2C_BUS_DDC_CHECKS_IGNORABLE;
-      else
-         businfo->flags &= ~I2C_BUS_DDC_CHECKS_IGNORABLE;
+      SETCLR_BIT(businfo->flags, I2C_BUS_DDC_CHECKS_IGNORABLE, last_ddc_check_ok);
 
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "%s flag I2C_BUS_LAST_DDC_CHECK_OK",
-            (businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE) ? "SET" : "CLEARED");
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "I2C_BUS_DDC_CHECKS_IGNORABLE is set: %s",
+      //       SBOOL(businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE));
    }
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Final flags: %s", interpret_dref_flags_t(dref->flags));
