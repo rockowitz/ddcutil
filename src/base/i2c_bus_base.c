@@ -61,7 +61,7 @@ Value_Name_Table i2c_bus_flags_table = {
       VN(I2C_BUS_DISPLAYLINK),
       VN(I2C_BUS_SYSFS_UNRELIABLE),
       VN(I2C_BUS_INITIAL_CHECK_DONE),
-      VN(I2C_BUS_LAST_DDC_CHECK_OK),
+      VN(I2C_BUS_DDC_CHECKS_IGNORABLE),
       VN_END
 };
 

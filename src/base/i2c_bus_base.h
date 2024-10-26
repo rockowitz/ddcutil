@@ -45,7 +45,7 @@
 #define I2C_BUS_SYSFS_EDID            0x0100    ///< EDID was read from /sys
 #define I2C_BUS_X50_EDID              0x0200    ///< EDID was read using I2C
 #define I2C_BUS_HAS_EDID              (I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID)
-#define I2C_BUS_LAST_DDC_CHECK_OK       0x040000
+#define I2C_BUS_DDC_CHECKS_IGNORABLE       0x040000
 
 // affected by display connection/disconnection?
 #define I2C_BUS_PROBED                  0x10      ///< has bus been checked?
