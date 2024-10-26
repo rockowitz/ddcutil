@@ -1227,6 +1227,7 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
          first_x37_check=false;
       }
    }
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "first_x37_check = %s", SBOOL(first_x37_check));
    if (x37_detection_state != X37_Detected) {
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_detect_x37() for /dev/i2c-%d...", businfo->busno);
        int rc = i2c_detect_x37(fd);
@@ -1258,10 +1259,11 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
        if (first_x37_check) {
           businfo->flags &= ~I2C_BUS_DDC_CHECKS_IGNORABLE;
        }
-
    }
    bool result = (x37_detection_state == X37_Detected);
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "I2C_DDC_CHECKS_IGNORABLE is set: %s",
+                            SBOOL(businfo->flags&I2C_BUS_DDC_CHECKS_IGNORABLE) );
    return result;
 }
 
@@ -2359,6 +2361,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
    RTTI_ADD_FUNC(is_adapter_class_display_controller);
    RTTI_ADD_FUNC(get_connector_edid);
+   RTTI_ADD_FUNC(check_x37_for_businfo);
 }
 
 
