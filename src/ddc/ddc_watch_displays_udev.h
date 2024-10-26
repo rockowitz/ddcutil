@@ -15,10 +15,8 @@
 
 extern bool           use_sysfs_connector_id;
 extern bool           report_udev_events;
-extern int            secondary_udev_receive_millisec;
 extern int            udev_poll_loop_millisec;
 
-// bool     is_watch_thread_executing();
 gpointer    ddc_watch_displays_udev(gpointer data);
 
 void        init_ddc_watch_displays_udev();
