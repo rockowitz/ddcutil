@@ -335,6 +335,32 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
 
 
 STATIC void
+init_display_watch_options(Parsed_Cmd* parsed_cmd) {
+   ddc_watch_mode = parsed_cmd->watch_mode;
+   try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
+
+   if (parsed_cmd->flags2 & CMD_FLAG2_F17)
+       use_sysfs_connector_id = false;
+    if (parsed_cmd->flags2 & CMD_FLAG2_F18)
+       report_udev_events = true;
+    nvidia_driver_implies_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F19;
+    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
+
+    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
+       extra_stabilization_millisec = parsed_cmd->i1;
+    if (parsed_cmd->flags2 & CMD_FLAG2_I6_SET)
+       set_poll_loop_multiplier( watch_loop_poll_multiplier = parsed_cmd->i6 );
+    if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))
+       stabilization_poll_millisec = parsed_cmd->i7;
+    if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET)) {
+       // for now, use one utility var to set polling time for both kinds of loops
+       explicit_udev_poll_loop_millisec = parsed_cmd->i8;
+       explicit_nonudev_poll_loop_millisec = parsed_cmd->i8;
+    }
+}
+
+
+STATIC void
 init_experimental_options(Parsed_Cmd* parsed_cmd) {
    suppress_se_post_read = parsed_cmd->flags2 & CMD_FLAG2_F1;
    ddc_never_uses_null_response_for_unsupported = parsed_cmd->flags2 & CMD_FLAG2_F3;
@@ -356,6 +382,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       monitor_state_tests = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F14)
       debug_flock = true;
+
 #ifdef TEST_EDID_SMBUS
    if (parsed_cmd->flags & CMD_FLAG_F13)
       EDID_Read_Uses_Smbus = true;
@@ -365,32 +392,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       verify_sysfs_edid = true;
 #endif
 
-   if (parsed_cmd->flags2 & CMD_FLAG2_F17)
-      use_sysfs_connector_id = false;
 
-   if (parsed_cmd->flags2 & CMD_FLAG2_F18)
-      report_udev_events = true;
-
-#ifdef SECONDARY_UNDEV_READ
-   if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
-      secondary_udev_receive_millisec = parsed_cmd->i7;
-#endif
-
-   nvidia_driver_implies_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F19;
-
-   use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
-
-   if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))
-      stabilization_poll_millisec = parsed_cmd->i7;
-
-   if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET)) {
-      // for now, use one utility var to set polling time for both kinds of loops
-      explicit_udev_poll_loop_millisec = parsed_cmd->i8;
-      explicit_nonudev_poll_loop_millisec = parsed_cmd->i8;
-   }
-
-   if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
-      extra_stabilization_millisec = parsed_cmd->i1;
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
    if (parsed_cmd->flags2 & CMD_FLAG2_I3_SET)
@@ -405,8 +407,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       else
          rpt_label(0, "--i5 value must be greater than 1");
    }
-   if (parsed_cmd->flags2 & CMD_FLAG2_I6_SET)
-      set_poll_loop_multiplier( watch_loop_poll_multiplier = parsed_cmd->i6 );
 }
 
 
@@ -441,7 +441,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
    i2c_enable_cross_instance_locks(parsed_cmd->flags & CMD_FLAG_FLOCK);
-   try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
+
    setvcp_verify_default = parsed_cmd->flags & CMD_FLAG_VERIFY;  // for new threads
    ddc_set_verify_setvcp(setvcp_verify_default);                 // set current thread
    set_output_level(parsed_cmd->output_level);  // current thread
@@ -476,26 +476,25 @@ drm_enabled = false;
       drm_enabled = false;
 #endif
 
+   subinit_i2c_bus_core();
+
    // rpt_nl();
    // get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
+
    if (use_drm_connector_states)
       redetect_drm_connector_states();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s",
          sbool(use_drm_connector_states), sbool(drm_enabled));
 
 #ifdef NOT_HERE
-   // adding or removing MST device can change whether all drm connectors have connector_id
-   all_drm_connectors_have_connector_id = all_sys_drm_connectors_have_connector_id(false);
-   bool all2 =                            all_sys_drm_connectors_have_connector_id_direct();
-   assert(all2 == all_drm_connectors_have_connector_id);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_drm_connectors_have_connector_id = %s",
-         SBOOL(all_drm_connectors_have_connector_id));
-   // all_drm_connectors_have_connector_id = all_drm_connectors_have_connector_id && (parsed_cmd->flags2 & CMD_FLAG2_F17);
+  // adding or removing MST device can change whether all drm connectors have connector_id
+  all_drm_connectors_have_connector_id = all_sys_drm_connectors_have_connector_id(false);
+  bool all2 =                            all_sys_drm_connectors_have_connector_id_direct();
+  assert(all2 == all_drm_connectors_have_connector_id);
+  DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_drm_connectors_have_connector_id = %s",
+        SBOOL(all_drm_connectors_have_connector_id));
+  // all_drm_connectors_have_connector_id = all_drm_connectors_have_connector_id && (parsed_cmd->flags2 & CMD_FLAG2_F17);
 #endif
-
-   ddc_watch_mode = parsed_cmd->watch_mode;
-
-   subinit_i2c_bus_core();
 
    init_max_tries(parsed_cmd);
    enable_mock_data = parsed_cmd->flags & CMD_FLAG_MOCK;
@@ -510,6 +509,7 @@ drm_enabled = false;
    init_performance_options(parsed_cmd);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
    skip_ddc_checks = parsed_cmd->flags & CMD_FLAG_SKIP_DDC_CHECKS;
+   init_display_watch_options(parsed_cmd);
    init_experimental_options(parsed_cmd);
 
 bye:
