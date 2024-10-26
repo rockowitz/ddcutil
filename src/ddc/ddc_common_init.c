@@ -378,13 +378,12 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 
    nvidia_driver_implies_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F19;
 
-   if (parsed_cmd->flags2 & CMD_FLAG2_F20)
-      use_x37_detection_table = true;
+   use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
 
-   if (parsed_cmd->i7 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I7_SET)
+   if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))
       stabilization_poll_millisec = parsed_cmd->i7;
 
-   if (parsed_cmd->i8 >= 0 && parsed_cmd->flags2 & CMD_FLAG2_I8_SET) {
+   if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET)) {
       // for now, use one utility var to set polling time for both kinds of loops
       udev_poll_loop_millisec = parsed_cmd->i8;
       nonudev_poll_loop_millisec = parsed_cmd->i8;
