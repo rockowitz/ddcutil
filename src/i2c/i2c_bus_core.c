@@ -1135,7 +1135,7 @@ Byte * get_connector_edid(const char * connector_name) {
   }
 
 
- bool is_video_driver_adapter_class(const char * adapter_class) {
+ bool is_adapter_class_display_controller(const char * adapter_class) {
     bool debug = false;
     DBGTRC_STARTING(debug, DDCA_TRC_NONE, "class = %s", adapter_class);
 
@@ -1305,7 +1305,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    // assert(driver_info->adapter_class);
    bool is_video_driver = false;
    if (driver_info->adapter_class) {
-      is_video_driver = is_video_driver_adapter_class(driver_info->adapter_class);
+      is_video_driver = is_adapter_class_display_controller(driver_info->adapter_class);
    }
    free_sysfs_i2c_info(driver_info);
    if (!is_video_driver)
@@ -2349,7 +2349,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_non_async_scan);
    RTTI_ADD_FUNC(i2c_async_scan);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
-   RTTI_ADD_FUNC(is_video_driver_adapter_class);
+   RTTI_ADD_FUNC(is_adapter_class_display_controller);
    RTTI_ADD_FUNC(get_connector_edid);
 }
 
