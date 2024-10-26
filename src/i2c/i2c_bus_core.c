@@ -85,10 +85,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 bool drm_enabled = false;
 bool use_drm_connector_states = false;
-// #ifdef GET_EDID_USING_SYSFS
-bool force_read_edid = true;
-bool verify_sysfs_edid = false;
-// #endif
+bool try_get_edid_from_sysfs_first = true;
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 
 
@@ -1002,7 +999,6 @@ Byte * get_connector_edid(const char * connector_name) {
     // int d = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 1 : -1;
     assert(busno >= 0);
     assert(busno != 255);
-    bool try_get_edid_from_sysfs_first = true;
     char sysfs_name[30];
     char dev_name[15];
     char i2cN[10];  // only need 8, but coverity complains
