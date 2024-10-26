@@ -32,6 +32,7 @@
 #define I2C_BUS_SYSFS_UNRELIABLE    0x010000
 #define I2C_BUS_INITIAL_CHECK_DONE  0x020000
 
+
 // Flags that can change when monitor connected/disconnected
 #define I2C_BUS_ACCESSIBLE              0x04      ///< user could change permissions
 // #define I2C_BUS_ADDR_0X50               0x02      ///< detected I2C bus address 0x50, may or may not have valid EDID
@@ -44,6 +45,7 @@
 #define I2C_BUS_SYSFS_EDID            0x0100    ///< EDID was read from /sys
 #define I2C_BUS_X50_EDID              0x0200    ///< EDID was read using I2C
 #define I2C_BUS_HAS_EDID              (I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID)
+#define I2C_BUS_LAST_DDC_CHECK_OK       0x040000
 
 // affected by display connection/disconnection?
 #define I2C_BUS_PROBED                  0x10      ///< has bus been checked?
