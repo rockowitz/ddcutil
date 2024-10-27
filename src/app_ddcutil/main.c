@@ -772,10 +772,12 @@ DDCA_Syslog_Level preparse_syslog_level(int argc, char** argv) {
 }
 
 void interrupt_handler(int sig) {
-   printf("Handling interrupt\n");
+   printf("\nHandling interrupt\n");
    // signal(sig, SIG_IGN);
    DDCA_Display_Event_Class event_classes  = DDCA_EVENT_CLASS_ALL;
-   ddc_stop_watch_displays(false, &event_classes);
+   ddc_stop_watch_displays(true, &event_classes);
+   printf("ddc_stop_watch_displays() returned\n");
+   printf("Calling exit()\n");
    exit(0);
 }
 
