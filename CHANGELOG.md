@@ -63,7 +63,6 @@
 - If option --bus specified, only check accessability for that bus, avoiding
   irrelevant warning messages regarding other buses.  Addresses issue #461.
 
-
 #### Fixed
 
 - Rework laptop detection. A non-laptop display can have an eDP connector.
@@ -85,13 +84,12 @@
 - Convert CRLF line endings to LF
 - Use printf() formats %jd and %zd to portably print variables of type ssize_t, 
   time_t, so as to build  unchanged on architectures such as armel, armhf.
-- Memory leaks.
-- Fix compiler errors when built with -Wformat-security. Fixes issue #458.
 - Avoid compiler warning possible depending on compiler configuration when
-  a switch() construct is used.  Replaced with if/else if/else.
-  Resolves issue #?
+  a switch() construct is used. Replaced with if/else if/else. Resolves issue #458.
+- Memory leaks.
 
 ### Building 
+
 - Re-enable autoconf/configure option --enable-x11/--disable-x11.
   X11 specific code is used in display change detection.
   the default is --enable-x11.   
@@ -102,7 +100,7 @@
 
 The shared library **libddcutil** is backwardly compatible with the one in 
 ddcutil 2.1.0. The SONAME is unchanged as libddcutil.so.5. The released library
-file is libddcutil.so.5.1.3. (VERIFY)
+file is libddcutil.so.5.1.3. 
 
 #### Changed
 
@@ -129,7 +127,6 @@ file is libddcutil.so.5.1.3. (VERIFY)
 - **ddca_start_watch_displays()**: 
   Fixed segfault that occured with driver nvidia when checking if all video
   adapters implement drm. Issue #390. 
-- Rework display change detection.
 - Ignore phantom displays when searching for a display reference. Issue #412. 
 - **ddca_get_display_refs()**, **ddca_get_display_info_list2()** always
   return 0, even if an error occured when examining a particular monitor. 
@@ -153,9 +150,11 @@ file is libddcutil.so.5.1.3. (VERIFY)
 
 - Extensively reworked display change detection
   - improved performance using UDEV
-  - /sys to get EDID if possible
+  - use /sys to get EDID if possible
   - handle MST hub devices if driver/device allow
     - not all drivers work
+  - only perform stabilization for removed display
+  - not checking for asleep
 - Work around deficiencies of nvidia driver
   - /sys file system does not reflect display changes
   - non-standard use of sys
@@ -164,33 +163,28 @@ file is libddcutil.so.5.1.3. (VERIFY)
     - doesn't use udev
     - doesn't rely on /sys 
     - reads EDIDs in polling loop
-display change detection
-alt algorithm w/o udev for nvidia
-  - --watch-mode UDEV, POLL, DYNAMIC
-
---watch-mode = UDEV, POLL, DYNAMIC
-  - DYNAMIC resolves to udev or poll depending on whether any display uses the nvidia driver
-  - always use POLL algorithm if nvidia driver detected
-
-rework watch display code for nvidia
-
-use hash table for recording x37 responsiveness across disconnection/connection
-
-
-
-
-- most functions that return a status code now may return 
-  DDCRC_    
-api display ref and handle
-only perform stabilization for removed display
-- not checking for asleep
-
+- Named options affecting display change detection:
+  - --watch-mode UDEV, POLL, DYNAMIC (default DYNAMIC)
+      DYNAMIC resolves to UDEV or POLL depending on whether any display uses the
+      nvidia driver
+  - --enable-try-get-edid-from-sysfs (default)
+  - --disable-try-get-edid-from-sysfs
+- Utility options affecting display change detection.  Some of these will become 
+  named options, others will be removed once testing is finished. 
+  - --f17  do not use sysfs connector_id  (default is to use it)
+  - --f18  always report UDEV events
+  - --f19  disable "nvidia driver implies sysfs unreliable" (by default it is enabled)
+  - --f20  do not try to avoid rechecking DDC responsiveness when a display is
+           reconnected (default is to remember prior checks)
+  - --i6   watch loop sleep multiplier (multiply default watch loop settings)
+  - --i7   extra stabilization milliseconds after apparent disconnection
+  - --i8   explicit poll loop milliseconds (takes precedence over --i6)
 
 ## [2.1.4] 2024-02-17
 
 ### Shared Library
 
-- Reinstall previously deprecated and removed  ddca_create_display_ref(), 
+- Reinstall previously deprecated and removed **ddca_create_display_ref()**, 
   allowing existing clients to build unchanged.
 
 

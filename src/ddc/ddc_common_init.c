@@ -353,9 +353,10 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
     if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))
        stabilization_poll_millisec = parsed_cmd->i7;
     if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET)) {
-       // for now, use one utility var to set polling time for both kinds of loops
        explicit_udev_poll_loop_millisec = parsed_cmd->i8;
-       explicit_nonudev_poll_loop_millisec = parsed_cmd->i8;
+    }
+    if (parsed_cmd->i9 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I9_SET)) {
+       explicit_nonudev_poll_loop_millisec = parsed_cmd->i9;
     }
 }
 
