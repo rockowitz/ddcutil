@@ -47,6 +47,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
 #include "base/rtti.h"
+#include "base/sleep.h"
 /** \endcond */
 
 #include "i2c/i2c_sysfs_base.h"
@@ -150,7 +151,8 @@ ddc_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool 
    int stablect = 0;
    bool stable = false;
    while (!stable) {
-      usleep(1000*stabilization_poll_millisec);
+      // usleep(1000*stabilization_poll_millisec);
+      sleep_millis(stabilization_poll_millisec);
 
       char * s = g_strdup_printf("/sys/class/drm/%s/edid", drm_connector_name);
       // DBGF(debug, "reading: %s", s);

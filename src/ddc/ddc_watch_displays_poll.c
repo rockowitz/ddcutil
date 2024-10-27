@@ -47,6 +47,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
 #include "base/rtti.h"
+#include "base/sleep.h"
 /** \endcond */
 
 #include "i2c/i2c_bus_core.h"
@@ -273,7 +274,8 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
    // may need to wait on startup
    while (!all_i2c_buses) {
       DBGMSF(debug, "Waiting 1 sec for all_i2c_buses");
-      usleep(1000*1000);
+      // usleep(1000*1000);
+      sleep_millis(1000*1000);
    }
 
    bool watch_dpms = wdd->event_classes & DDCA_EVENT_CLASS_DPMS;

@@ -43,6 +43,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
 #include "base/rtti.h"
+#include "base/sleep.h"
 /** \endcond */
 
 #include "i2c/i2c_sysfs_base.h"
@@ -517,7 +518,8 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
    bool stable = false;
    while (!stable) {
       // DBGMSG("SLEEPING");
-      usleep(1000*stabilization_poll_millisec);
+      // usleep(1000*stabilization_poll_millisec);
+      sleep_millis(stabilization_poll_millisec);
       BS256 bs_latest = i2c_buses_w_edid_as_bitset();
       if (bs256_eq(bs_latest, bs_prior))
             stable = true;
