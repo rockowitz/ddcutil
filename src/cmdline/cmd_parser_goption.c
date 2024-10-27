@@ -1658,7 +1658,8 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
    SET_CMDFLAG(CMD_FLAG_FLOCK,             enable_flock_flag);
 
-   SET_CLR_CMDFLAG2(CMD_FLAG_TRY_GET_EDID_FROM_SYSFS,    try_get_edid_from_sysfs);
+
+   SET_CLR_CMDFLAG(CMD_FLAG_TRY_GET_EDID_FROM_SYSFS,    try_get_edid_from_sysfs);
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 // #ifdef REMOVED
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_DISPLAYS, enable_cd_flag);
