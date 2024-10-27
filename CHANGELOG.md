@@ -1,4 +1,4 @@
-## [2.1.5] 2024-10-25
+## [2.1.5] 2024-10-27
 
 ### General
 
@@ -156,9 +156,12 @@ file is libddcutil.so.5.1.3.
   - only perform stabilization for removed display
   - not checking for asleep
 - Work around deficiencies of nvidia driver
-  - /sys file system does not reflect display changes
-  - non-standard use of sys
-  - does not generate udev events 
+  - The nvidia driver does not use /sys in the same way
+    as amdgpu, i915, nouveau and probably other drm 
+    supporting drivers that are part of the Linux 
+    kernel. 
+    - /sys file system does not reflect display changes
+    - does not generate udev events 
   - alternate, much less efficient algorithm for nvidia
     - doesn't use udev
     - doesn't rely on /sys 
@@ -167,8 +170,7 @@ file is libddcutil.so.5.1.3.
   - --watch-mode UDEV, POLL, DYNAMIC (default DYNAMIC)
       DYNAMIC resolves to UDEV or POLL depending on whether any display uses the
       nvidia driver
-  - --enable-try-get-edid-from-sysfs (default)
-  - --disable-try-get-edid-from-sysfs
+  - --enable/disable-try-get-edid-from-sysfs (default is --enable-try-get-edid-from-sysfs)
 - Utility options affecting display change detection.  Some of these will become 
   named options, others will be removed once testing is finished. 
   - --f17  do not use sysfs connector_id  (default is to use it)
@@ -178,7 +180,8 @@ file is libddcutil.so.5.1.3.
            reconnected (default is to remember prior checks)
   - --i6   watch loop sleep multiplier (multiply default watch loop settings)
   - --i7   extra stabilization milliseconds after apparent disconnection
-  - --i8   explicit poll loop milliseconds (takes precedence over --i6)
+  - --i8   explicit udev poll loop milliseconds (takes precedence over --i6)
+  - --i9   explicit non-udev poll loop milllisec (takes precedence over --i6)
 
 ## [2.1.4] 2024-02-17
 
