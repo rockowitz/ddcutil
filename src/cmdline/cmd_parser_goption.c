@@ -1025,6 +1025,14 @@ parse_command(
    char *   i6_work         = NULL;
    char *   i7_work         = NULL;
    char *   i8_work         = NULL;
+   char *   i9_work         = NULL;
+   char *   i10_work         = NULL;
+   char *   i11_work         = NULL;
+   char *   i12_work         = NULL;
+   char *   i13_work         = NULL;
+   char *   i14_work         = NULL;
+   char *   i15_work         = NULL;
+   char *   i16_work         = NULL;
    char *   fl1_work        = NULL;
    char *   fl2_work        = NULL;
    char *   failsim_fn_work = NULL;
@@ -1303,7 +1311,15 @@ parse_command(
       {"i5",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i5_work,         "Special integer 5", "decimal or hex number" },
       {"i6",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i6_work,         "Special integer 6", "decimal or hex number" },
       {"i7",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i7_work,         "Special integer 7", "decimal or hex number" },
-      {"i8",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i8_work,         "Special integer 9", "decimal or hex number" },
+      {"i8",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i8_work,         "Special integer 8", "decimal or hex number" },
+      {"i9",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i9_work,         "Special integer 9", "decimal or hex number" },
+      {"i10",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i10_work,        "Special integer 10", "decimal or hex number" },
+      {"i11",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i11_work,        "Special integer 11", "decimal or hex number" },
+      {"i12",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i12_work,        "Special integer 12", "decimal or hex number" },
+      {"i13",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i13_work,        "Special integer 13", "decimal or hex number" },
+      {"i14",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i14_work,        "Special integer 14", "decimal or hex number" },
+      {"i15",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i15_work,        "Special integer 15", "decimal or hex number" },
+      {"i16",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i16_work,        "Special integer 16", "decimal or hex number" },
       {"fl1",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl1_work,        "Special floating point number 1", "floating point number" },
       {"fl2",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl2_work,        "Special floating point number 2", "floating point number" },
       {"f1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
@@ -1807,6 +1823,14 @@ parse_command(
    SET_CMDFLAG_I(6);
    SET_CMDFLAG_I(7);
    SET_CMDFLAG_I(8);
+   SET_CMDFLAG_I(9);
+   SET_CMDFLAG_I(10);
+   SET_CMDFLAG_I(11);
+   SET_CMDFLAG_I(12);
+   SET_CMDFLAG_I(13);
+   SET_CMDFLAG_I(14);
+   SET_CMDFLAG_I(15);
+   SET_CMDFLAG_I(16);
 
 #undef SET_CMDFLAG_I
 

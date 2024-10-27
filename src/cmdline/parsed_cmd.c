@@ -436,6 +436,13 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_IVAL(6,d1);
       RPT_IVAL(7,d1);
       RPT_IVAL(8,d1);
+      RPT_IVAL(9,d1);
+      RPT_IVAL(11,d1);
+      RPT_IVAL(12,d1);
+      RPT_IVAL(13,d1);
+      RPT_IVAL(14,d1);
+      RPT_IVAL(15,d1);
+      RPT_IVAL(16,d1);
 
 #undef RPT_IVAL
 

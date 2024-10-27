@@ -164,9 +164,17 @@ typedef enum {
    CMD_FLAG2_I6_SET           = 0x200000000000,
    CMD_FLAG2_I7_SET           = 0x400000000000,
    CMD_FLAG2_I8_SET           = 0x800000000000,
+   CMD_FLAG2_I9_SET         = 0x01000000000000,
+   CMD_FLAG2_I10_SET        = 0x02000000000000,
+   CMD_FLAG2_I11_SET        = 0x04000000000000,
+   CMD_FLAG2_I12_SET        = 0x08000000000000,
+   CMD_FLAG2_I13_SET        = 0x10000000000000,
+   CMD_FLAG2_I14_SET        = 0x20000000000000,
+   CMD_FLAG2_I15_SET        = 0x40000000000000,
+   CMD_FLAG2_I16_SET        = 0x80000000000000,
+   CMD_FLAG2_FL1_SET      = 0x1000000000000000,
+   CMD_FLAG2_FL2_SET      = 0x2000000000000000,
 
-   CMD_FLAG2_FL1_SET        = 0x10000000000000,
-   CMD_FLAG2_FL2_SET        = 0x20000000000000,
 } Parsed_Cmd_Flags2;
 
 #define IGNORED_VID_PID_MAX 4
@@ -259,6 +267,14 @@ struct {
    int                    i6;         // for temporary use
    int                    i7;         // for temporary use
    int                    i8;         // for temporary use
+   int                    i9;         // for temporary use
+   int                   i10;         // for temporary use
+   int                   i11;         // for temporary use
+   int                   i12;         // for temporary use
+   int                   i13;         // for temporary use
+   int                   i14;         // for temporary use
+   int                   i15;         // for temporary use
+   int                   i16;         // for temporary use
    char *                 s1;         // for temporary use
    char *                 s2;         // for temporary use
    char *                 s3;         // for temporary use
