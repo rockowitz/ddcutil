@@ -33,7 +33,7 @@
 #define I2C_BUS_SYSFS_UNRELIABLE    0x010000
 #endif
 #define I2C_BUS_INITIAL_CHECK_DONE  0x020000
-#define I2C_BUS_SYSFS_KNOWN_RELIABLE            0x040000
+#define I2C_BUS_SYSFS_KNOWN_RELIABLE            0x010000
 
 // Flags that can change when monitor connected/disconnected
 #define I2C_BUS_ACCESSIBLE              0x04      ///< user could change permissions
