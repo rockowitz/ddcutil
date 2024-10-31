@@ -8,14 +8,15 @@
 
 #include <glib-2.0/glib.h>
 
-extern bool nvidia_driver_implies_sysfs_unreliable;
+extern bool force_sysfs_unreliable;
+extern bool force_sysfs_reliable;
 
 // predicate functions
 // typedef Dir_Filter_Func
-bool is_drm_connector(const char * dirname, const char * simple_fn);
-bool fn_equal(const char * filename, const char * val);
-bool fn_starts_with(const char * filename, const char * val);
-bool is_n_nnnn(const char * dirname, const char * simple_fn);
+bool        is_drm_connector(const char * dirname, const char * simple_fn);
+bool        fn_equal(const char * filename, const char * val);
+bool        fn_starts_with(const char * filename, const char * val);
+bool        is_n_nnnn(const char * dirname, const char * simple_fn);
 
 GPtrArray * get_sys_video_devices();
 void        dbgrpt_sysfs_basic_connector_attributes(int depth);
@@ -47,14 +48,18 @@ typedef struct {
    GPtrArray *  connectors_having_edid;
 } Sysfs_Connector_Names;
 
-Sysfs_Connector_Names get_sysfs_drm_connector_names();
-bool                  sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);
-void                  free_sysfs_connector_names_contents(Sysfs_Connector_Names names_struct);
-void                  dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
-Sysfs_Connector_Names copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
-char *                find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
+Sysfs_Connector_Names
+            get_sysfs_drm_connector_names();
+bool        sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);
+void        free_sysfs_connector_names_contents(Sysfs_Connector_Names names_struct);
+void        dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
+Sysfs_Connector_Names
+            copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
+char *      find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
 
-bool                  is_sysfs_unreliable(int busno);
+void        check_drm_reliability();
+bool        is_sysfs_reliable_by_driver(const char * driver);
+bool        is_sysfs_reliable_by_busno(int busno);
 
 void init_i2c_sysfs_base();
 

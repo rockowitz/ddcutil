@@ -51,9 +51,6 @@
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 
 
-
-bool nvidia_driver_implies_sysfs_unreliable = false;
-
 //
 // Predicate functions
 //
@@ -662,7 +659,6 @@ bool all_sys_drm_connectors_have_connector_id_direct() {
 }
 
 
-
 // Driver related functions
 
 /** Given the sysfs path to an adapter of some sort, returns
@@ -728,9 +724,6 @@ char * get_driver_for_busno(int busno) {
    char * result = find_adapter_and_get_driver(path, -1);
    return result;
 }
-
-
-
 
 
 #ifdef OLD
@@ -1078,6 +1071,8 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
 }
 
 
+
+#ifdef OLD
 bool is_sysfs_unreliable(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, nvidia_driver_implies_sysfs_unreliable=%s",
@@ -1096,7 +1091,125 @@ bool is_sysfs_unreliable(int busno) {
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, sysfs_unreliable, "");
    return sysfs_unreliable;
 }
+#endif
 
+
+
+typedef struct {
+   bool known_good_driver_seen;
+   bool other_driver_seen;
+   uint8_t  nvidia_connector_ct;
+   uint8_t  nvidia_connector_w_edid_ct;
+   uint8_t  nvidia_connector_w_edid_and_connected_ct;
+} Sysfs_Reliability_Accumulator;
+
+
+bool known_reliable_driver(const char * driver) {
+   return streq(driver, "i915")   ||
+          streq(driver, "amdgpu") ||
+          streq(driver, "radeon") ||
+          streq(driver, "nouveau");
+}
+
+
+static
+void check_connector_reliability(
+            const char *  dirname,
+            const char *  fn,
+            void *        accumulator,
+            int           depth)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dirname=|%s|, fn=|%s|", dirname, fn);
+   int debug_depth = (debug) ? 1 : -1;
+
+   Sysfs_Reliability_Accumulator * accum = accumulator;
+
+   char buf[PATH_MAX];
+   g_strdup_printf(buf, PATH_MAX, "%s/%s", dirname, fn);
+   char * driver = find_adapter_and_get_driver(buf, depth);
+   if (known_reliable_driver(driver))
+   {
+      accum->known_good_driver_seen = true;
+   }
+   else if (streq(driver, "nvidia")) {
+      accum->nvidia_connector_ct++;
+      GByteArray * edid_byte_array = NULL;
+      RPT_ATTR_EDID(debug_depth, &edid_byte_array, dirname, fn, "edid");   // e.g. /sys/class/drm/card0-DP-1/edid
+      // DBGMSG("edid_byte_array=%p", (void*)edid_byte_array);
+      if (edid_byte_array) {
+         accum->nvidia_connector_w_edid_ct++;
+         g_byte_array_free(edid_byte_array,true);
+
+         char * status = NULL;
+         RPT_ATTR_TEXT(debug_depth, &status,  dirname, fn, "status"); // e.g. /sys/class/drm/card0-DP-1/status
+         if (status) {
+            if (streq(status, "connected"))
+               accum->nvidia_connector_w_edid_and_connected_ct++;
+            free(status);
+         }
+      }
+   }
+   else {
+      accum->other_driver_seen = true;
+   }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+}
+
+static bool drm_reliability_checked = false;
+static bool nvidia_connectors_reliable = false;
+static bool nvidia_connectors_exist = false;
+
+
+void check_drm_reliability() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+
+   Sysfs_Reliability_Accumulator * accum = calloc(1, sizeof(Sysfs_Reliability_Accumulator));
+   int depth=0;
+   dir_foreach(
+         "/sys/class/drm",
+         predicate_cardN_connector,       // filter function
+         check_connector_reliability,
+         &accum,
+         depth);
+
+   drm_reliability_checked = true;
+   nvidia_connectors_exist = accum->nvidia_connector_ct > 0;
+   // known_good_driver_seen > 0;
+   nvidia_connectors_reliable =
+         accum->nvidia_connector_w_edid_ct > 0 &&
+         accum->nvidia_connector_w_edid_ct == accum->nvidia_connector_w_edid_and_connected_ct;
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "nvidia_connectors_exist=%s, nvidia_connectors_reliable=%s",
+         sbool(nvidia_connectors_exist), sbool(nvidia_connectors_reliable));
+}
+
+bool force_sysfs_unreliable = false;
+bool force_sysfs_reliable = false;
+
+
+bool is_sysfs_reliable_by_driver(const char * driver) {
+   bool result = false;
+   if (force_sysfs_unreliable)
+      result = false;
+   else if (force_sysfs_reliable)
+      result = true;
+   else {
+      if (streq(driver, "nvidia"))
+         result = nvidia_connectors_reliable;
+      else
+         result = known_reliable_driver(driver);
+   }
+   return result;
+}
+
+
+bool is_sysfs_reliable_by_busno(int busno) {
+   char * driver = get_driver_for_busno(busno);
+   return is_sysfs_reliable_by_driver(driver);
+}
 
 
 void init_i2c_sysfs_base() {
@@ -1106,6 +1219,9 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
    RTTI_ADD_FUNC(get_sys_video_devices);
+#ifdef OLD
    RTTI_ADD_FUNC(is_sysfs_unreliable);
+#endif
+   RTTI_ADD_FUNC(check_drm_reliability);
 }
 
