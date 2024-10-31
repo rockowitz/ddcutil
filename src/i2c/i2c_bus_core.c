@@ -603,9 +603,9 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
 
 
 static Status_Errno_DDC
-i2c_detect_x37(int fd) {
+i2c_detect_x37(int fd, char * driver) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s", fd, filename_for_fd_t(fd) );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s, driver=%s", fd, filename_for_fd_t(fd), driver );
 
    // Quirks
    // - i2c_set_addr() Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
@@ -642,9 +642,12 @@ i2c_detect_x37(int fd) {
       if (rc == 0)
          break;
 
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-            "sleeping for %d millisec", poll_wait_millisec);
-            usleep(poll_wait_millisec*1000);
+      int wait = poll_wait_millisec;
+      if (streq(driver, "nvidia"))
+         wait = 2000;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "driver=%s, sleeping for %d millisec", driver, wait);
+            // usleep(poll_wait_millisec*1000);
+      sleep_millis(wait);
    }
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"loopctr=%d", loopctr);
    return rc;
@@ -688,7 +691,8 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
                "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
    }
    else {
-      int ddcrc = i2c_detect_x37(dh->fd);
+      char * driver = businfo->driver;
+      int ddcrc = i2c_detect_x37(dh->fd, driver);
       if (ddcrc)
          result = ERRINFO_NEW(DDCRC_OTHER, "Slave address x37 unresponsive. io status = %s", psc_desc(ddcrc));
    }
@@ -1029,7 +1033,6 @@ Byte * get_connector_edid(const char * connector_name) {
     }
 
     bool is_displaylink = is_displaylink_device(busno);
-    bool sysfs_unreliable = is_sysfs_unreliable(busno);
 
     // *** Try to find the drm connector by bus number
 
@@ -1047,7 +1050,7 @@ Byte * get_connector_edid(const char * connector_name) {
     // *** Possibly try to get the EDID from sysfs
     bool checked_connector_for_edid = false;
     if (drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
-       if ((try_get_edid_from_sysfs_first && !sysfs_unreliable)  ||
+       if ((try_get_edid_from_sysfs_first && is_sysfs_reliable_by_busno(busno))  ||
              is_displaylink)   // X50 can't be read for DisplayLink, must use sysfs
        {
           checked_connector_for_edid = true;
@@ -1226,7 +1229,7 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "first_x37_check = %s", SBOOL(first_x37_check));
    if (x37_detection_state != X37_Detected) {
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_detect_x37() for /dev/i2c-%d...", businfo->busno);
-       int rc = i2c_detect_x37(fd);
+       int rc = i2c_detect_x37(fd, businfo->driver);
        // if (rc == -EBUSY)
        //    businfo->flags |= I2C_BUS_BUSY;
    #ifdef TEST
@@ -1323,8 +1326,13 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    if (is_displaylink_device(businfo->busno))
       businfo->flags |= I2C_BUS_DISPLAYLINK;
 
+#ifdef OLD
    if (is_sysfs_unreliable(businfo->busno))
       businfo->flags |= I2C_BUS_SYSFS_UNRELIABLE;
+#endif
+
+   if (is_sysfs_reliable_by_busno(businfo->busno))
+      businfo->flags |= I2C_BUS_SYSFS_KNOWN_RELIABLE;
 
    // *** Try to find the drm connector by bus number
 
@@ -1350,7 +1358,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    bool checked_connector_for_edid = false;
    if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
       // assert(businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO);
-      if ((try_get_edid_from_sysfs_first && !(businfo->flags&I2C_BUS_SYSFS_UNRELIABLE))  ||
+      if ((try_get_edid_from_sysfs_first && businfo->flags&I2C_BUS_SYSFS_KNOWN_RELIABLE)  ||
             (businfo->flags&I2C_BUS_DISPLAYLINK))   // X50 can't be read for DisplayLink, must use sysfs
       {
          Parsed_Edid * edid = get_parsed_edid_for_businfo_using_sysfs(businfo);
