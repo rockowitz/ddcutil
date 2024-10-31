@@ -79,6 +79,7 @@
 #include "i2c/i2c_sys_drm_connector.h"
 // #include "i2c/i2c_sysfs_i2c_info.h"
 #include "i2c/i2c_sysfs_top.h"
+#include "i2c/i2c_sysfs_base.h"
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"
@@ -1046,6 +1047,7 @@ main(int argc, char *argv[]) {
       }
       else {
          signal(SIGINT, interrupt_handler);
+         check_drm_reliability();
          ddc_ensure_displays_detected();
          Error_Info * erec = ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
          if (erec) {
