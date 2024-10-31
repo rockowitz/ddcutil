@@ -27,7 +27,6 @@ typedef struct {
    int    i2c_busno;
    int    connector_id;
    char * name;
-   //  char * dev;
    char * ddc_dir_path;
    bool   is_aux_channel;
    int    base_busno;
@@ -41,7 +40,6 @@ typedef struct {
 
 // Functions that use the persistent array of Sys_Drm_Connector:
 GPtrArray*          get_sys_drm_connectors(bool rescan);
-// GPtrArray*       get_sys_drm_connectors_sysinfo(bool rescan);
 void                report_sys_drm_connectors(bool verbose, int depth);
 Sys_Drm_Connector * find_sys_drm_connector(int busno, Byte * raw_edid, const char * connector_name);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_id(int connector_number);
@@ -58,13 +56,12 @@ char *              get_drm_connector_name_by_edid(Byte * edid_bytes);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
 
-
 // Functions that access sysfs connector dirs directly, instead of using the
 // persistent array of Sys_Drm_Connector:
 Sys_Drm_Connector * one_drm_connector0(const char * dirname, const char * fn, int depth);
 Sys_Drm_Connector * get_drm_connector(const char * fn, int depth);
 
+// Initialization
 void init_i2c_sysfs();
-
 
 #endif /* I2C_SYS_DRM_CONNECTOR_H_ */
