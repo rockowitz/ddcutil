@@ -29,9 +29,11 @@
 #define I2C_BUS_APPARENT_LAPTOP       0x2000
 #define I2C_BUS_LAPTOP                (I2C_BUS_LVDS_OR_EDP | I2C_BUS_APPARENT_LAPTOP)
 #define I2C_BUS_DISPLAYLINK           0x1000
+#ifdef OLD
 #define I2C_BUS_SYSFS_UNRELIABLE    0x010000
+#endif
 #define I2C_BUS_INITIAL_CHECK_DONE  0x020000
-
+#define I2C_BUS_SYSFS_KNOWN_RELIABLE            0x040000
 
 // Flags that can change when monitor connected/disconnected
 #define I2C_BUS_ACCESSIBLE              0x04      ///< user could change permissions

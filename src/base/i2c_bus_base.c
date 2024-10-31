@@ -59,9 +59,12 @@ Value_Name_Table i2c_bus_flags_table = {
       VN(I2C_BUS_LVDS_OR_EDP),
       VN(I2C_BUS_APPARENT_LAPTOP),
       VN(I2C_BUS_DISPLAYLINK),
+#ifdef OLD
       VN(I2C_BUS_SYSFS_UNRELIABLE),
+#endif
       VN(I2C_BUS_INITIAL_CHECK_DONE),
       VN(I2C_BUS_DDC_CHECKS_IGNORABLE),
+      VN(I2C_BUS_SYSFS_KNOWN_RELIABLE),
       VN_END
 };
 
