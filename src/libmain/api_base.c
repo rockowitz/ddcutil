@@ -31,6 +31,7 @@
 #include "base/build_info.h"
 #include "base/build_timestamp.h"
 #include "base/core_per_thread_settings.h"
+#include "base/display_lock.h"
 #include "base/core.h"
 #include "base/dsa2.h"
 #include "base/parms.h"
@@ -44,8 +45,8 @@
 #include "cmdline/parsed_cmd.h"
 
 #include "i2c/i2c_bus_core.h"   // for testing watch_devices
-#include <base/display_lock.h>
 #include "i2c/i2c_execute.h"    // for i2c_set_addr()
+#include "i2c/i2c_sysfs_base.h"
 
 #include "ddc/ddc_common_init.h"
 #include "ddc/ddc_displays.h"
@@ -479,6 +480,7 @@ _libddcutil_constructor(void) {
    init_base_services();    // initializes tracing related modules
    init_ddc_services();     // initializes i2c, usb, ddc, vcp, dynvcp
    init_api_services();     // other files in directory libmain
+   check_drm_reliability();
 
 #ifdef TESTING_CLEANUP
    // int atexit_rc = atexit(done);   // TESTING CLEANUP
