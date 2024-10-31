@@ -1818,15 +1818,18 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
          if (!dref->drm_connector) {
             ddcrc = DDCRC_INTERNAL_ERROR;
          }
-         if (ddcrc == 0 && (validation_options&DREF_VALIDATE_EDID)) {
-            // may be wrong if bug in driver, edid persists after disconnection
-            if (is_sysfs_unreliable(dref->io_path.path.i2c_busno)) {
-               MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "is_sysfs_unreliable(%d) returned true.  Assuming EDID exists",
-                     DREF_BUSNO(dref));
-            }
-            else {
-               if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
-                   ddcrc = DDCRC_DISCONNECTED;
+         else {
+            if (ddcrc == 0 && (validation_options&DREF_VALIDATE_EDID)) {
+               if (is_sysfs_reliable_by_busno(dref->io_path.path.i2c_busno)) {
+                  if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
+                     ddcrc = DDCRC_DISCONNECTED;
+               }
+               else {
+                  // may be wrong if bug in driver, edid persists after disconnection
+                  MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+                        "is_sysfs_reliable_by_busno(%d) returned false.  Assuming EDID exists",
+                        DREF_BUSNO(dref));
+               }
             }
          }
          if (ddcrc == 0 && (validation_options&DREF_VALIDATE_AWAKE)) {
