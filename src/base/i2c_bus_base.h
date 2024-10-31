@@ -20,37 +20,39 @@
 // Retrieve and inspect bus information
 
 // Keep in sync with i2c_bus_flags_table
-#define I2C_BUS_EXISTS                  0x08
+#define I2C_BUS_EXISTS                     0x08
 
 // #define I2C_BUS_VALID_NAME_CHECKED    0x0800
 // #define I2C_BUS_HAS_VALID_NAME        0x0400
 // #define I2C_BUS_DRM_CONNECTOR_CHECKED 0x8000
-#define I2C_BUS_LVDS_OR_EDP           0x4000
-#define I2C_BUS_APPARENT_LAPTOP       0x2000
-#define I2C_BUS_LAPTOP                (I2C_BUS_LVDS_OR_EDP | I2C_BUS_APPARENT_LAPTOP)
-#define I2C_BUS_DISPLAYLINK           0x1000
+
+#define I2C_BUS_LVDS_OR_EDP              0x4000
+#define I2C_BUS_APPARENT_LAPTOP          0x2000
+// #define I2C_BUS_EDP                     0x40    ///< bus associated with eDP display
+// #define I2C_BUS_LVDS                    0x20    ///< bus associated with LVDS display
+// #define I2C_BUS_LAPTOP                  (I2C_BUS_EDP|I2C_BUS_LVDS) ///< bus associated with laptop display
+#define I2C_BUS_LAPTOP                  (I2C_BUS_LVDS_OR_EDP | I2C_BUS_APPARENT_LAPTOP)
+#define I2C_BUS_DISPLAYLINK              0x1000
 #ifdef OLD
-#define I2C_BUS_SYSFS_UNRELIABLE    0x010000
+#define I2C_BUS_SYSFS_UNRELIABLE       0x010000
 #endif
-#define I2C_BUS_INITIAL_CHECK_DONE  0x020000
-#define I2C_BUS_SYSFS_KNOWN_RELIABLE            0x010000
+#define I2C_BUS_SYSFS_KNOWN_RELIABLE   0x010000
+#define I2C_BUS_INITIAL_CHECK_DONE     0x020000
+
 
 // Flags that can change when monitor connected/disconnected
-#define I2C_BUS_ACCESSIBLE              0x04      ///< user could change permissions
-// #define I2C_BUS_ADDR_0X50               0x02      ///< detected I2C bus address 0x50, may or may not have valid EDID
-#define I2C_BUS_ADDR_X37               0x01      ///< detected I2C bus address 0x37
-#define I2C_BUS_ADDR_X30               0x80      ///< detected write-only addr to specify EDID block number
-// #define I2C_BUS_EDP                     0x40      ///< bus associated with eDP display
-// #define I2C_BUS_LVDS                    0x20      ///< bus associated with LVDS display
-// #define I2C_BUS_LAPTOP                  (I2C_BUS_EDP|I2C_BUS_LVDS) ///< bus associated with laptop display
+#define I2C_BUS_ACCESSIBLE                 0x04    ///< user could change permissions
+// #define I2C_BUS_ADDR_0X50               0x02    ///< detected I2C bus address 0x50, may or may not have valid EDID
+#define I2C_BUS_SYSFS_EDID               0x0100    ///< EDID was read from /sys
+#define I2C_BUS_X50_EDID                 0x0200    ///< EDID was read using I2C
+#define I2C_BUS_HAS_EDID                 (I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID)
+#define I2C_BUS_ADDR_X37                   0x01    ///< detected I2C bus address 0x37
+#define I2C_BUS_ADDR_X30                   0x80    ///< detected write-only addr to specify EDID block number
 
-#define I2C_BUS_SYSFS_EDID            0x0100    ///< EDID was read from /sys
-#define I2C_BUS_X50_EDID              0x0200    ///< EDID was read using I2C
-#define I2C_BUS_HAS_EDID              (I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID)
-#define I2C_BUS_DDC_CHECKS_IGNORABLE       0x040000
+#define I2C_BUS_DDC_CHECKS_IGNORABLE   0x040000
 
 // affected by display connection/disconnection?
-#define I2C_BUS_PROBED                  0x10      ///< has bus been checked?
+#define I2C_BUS_PROBED                     0x10      ///< has bus been checked?
 
 
 
