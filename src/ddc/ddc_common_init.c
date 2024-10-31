@@ -343,7 +343,9 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
        use_sysfs_connector_id = false;
     if (parsed_cmd->flags2 & CMD_FLAG2_F18)
        report_udev_events = true;
-    nvidia_driver_implies_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F19;
+    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
+    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
+
     use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
 
     if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)

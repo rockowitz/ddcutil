@@ -64,10 +64,10 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(16, "Unused");
    REPORT_FLAG_OPTION(17, "Do not use sysfs connector_id");
    REPORT_FLAG_OPTION(18, "Always report UDEV events");
-   REPORT_FLAG_OPTION(19, "nvidia driver implies sysfs unreliable");
+   REPORT_FLAG_OPTION(19, "Unused");
    REPORT_FLAG_OPTION(20, "DO NOT use x37 detection state hash");
-   REPORT_FLAG_OPTION(21, "Unused");
-   REPORT_FLAG_OPTION(22, "Unused");
+   REPORT_FLAG_OPTION(21, "Force sysfs unreliable");
+   REPORT_FLAG_OPTION(22, "Force sysfs reliable");
    REPORT_FLAG_OPTION(23, "Unused");
    REPORT_FLAG_OPTION(24, "Unused");
 
