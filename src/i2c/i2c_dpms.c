@@ -212,10 +212,10 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
 #endif
    }
 
-   bool sysfs_unreliable = is_sysfs_unreliable(businfo->busno);
-   if (sysfs_unreliable) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "is_sysfs_unreliable(%d) returned true. Assuming not asleep", businfo->busno);
-      SYSLOG2(DDCA_SYSLOG_ERROR, "is_sysfs_unreliable(%d) true. Assuming not asleep", businfo->busno);
+   bool sysfs_reliable = is_sysfs_reliable_by_busno(businfo->busno);
+   if (!sysfs_reliable) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "is_sysfs_reliable(%d) returned false. Assuming not asleep", businfo->busno);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "is_sysfs_reliable(%d) false. Assuming not asleep", businfo->busno);
    }
    else {
       if (businfo->drm_connector_name) {
