@@ -119,7 +119,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          ddc_watch_mode_name(ddc_watch_mode), calculated_watch_loop_millisec);
 
    DBGMSG("use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
-   DBGMSG("nvidia_driver_implies_sysfs_unreliable: %s", SBOOL(nvidia_driver_implies_sysfs_unreliable));   // checking if edid exists, dpms
+   DBGMSG("force_sysfs_reliable=%s, force_sysfs_unreliable=%s", sbool(force_sysfs_reliable), sbool(force_sysfs_unreliable));
    DBGMSG("use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
    DBGMSG("try_get_edid_from_sysfs_first:          %s", SBOOL(try_get_edid_from_sysfs_first));  // i2c_edid_exists()
    DBGMSG("extra_stailization_millisec:            %d", extra_stabilization_millisec);
