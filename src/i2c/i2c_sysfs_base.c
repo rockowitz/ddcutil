@@ -1162,7 +1162,7 @@ static bool nvidia_connectors_reliable = false;
 static bool nvidia_connectors_exist = false;
 
 
-void check_drm_reliability() {
+void check_sysfs_reliability() {
    bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
 
@@ -1222,6 +1222,6 @@ void init_i2c_sysfs_base() {
 #ifdef OLD
    RTTI_ADD_FUNC(is_sysfs_unreliable);
 #endif
-   RTTI_ADD_FUNC(check_drm_reliability);
+   RTTI_ADD_FUNC(check_sysfs_reliability);
 }
 

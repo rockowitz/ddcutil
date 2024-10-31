@@ -480,7 +480,7 @@ _libddcutil_constructor(void) {
    init_base_services();    // initializes tracing related modules
    init_ddc_services();     // initializes i2c, usb, ddc, vcp, dynvcp
    init_api_services();     // other files in directory libmain
-   check_drm_reliability();
+   check_sysfs_reliability();
 
 #ifdef TESTING_CLEANUP
    // int atexit_rc = atexit(done);   // TESTING CLEANUP

@@ -57,7 +57,7 @@ Sysfs_Connector_Names
             copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
 char *      find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
 
-void        check_drm_reliability();
+void        check_sysfs_reliability();
 bool        is_sysfs_reliable_by_driver(const char * driver);
 bool        is_sysfs_reliable_by_busno(int busno);
 
