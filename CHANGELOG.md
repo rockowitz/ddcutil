@@ -1,4 +1,4 @@
-## [2.1.5] 2024-10-27
+## [2.1.5] 2024-11-01
 
 ### General
 
@@ -160,8 +160,8 @@ file is libddcutil.so.5.1.3.
     as amdgpu, i915, nouveau and probably other drm 
     supporting drivers that are part of the Linux 
     kernel. 
-    - /sys file system does not reflect display changes
-    - does not generate udev events 
+    - Depending on driver version the /sys file system does not
+      reflect display changes and does not generate udev events
   - alternate, much less efficient algorithm for nvidia
     - doesn't use udev
     - doesn't rely on /sys 
@@ -169,15 +169,18 @@ file is libddcutil.so.5.1.3.
 - Named options affecting display change detection:
   - --watch-mode UDEV, POLL, DYNAMIC (default DYNAMIC)
       DYNAMIC resolves to UDEV or POLL depending on whether any display uses the
-      nvidia driver
+      nvidia driver, and for the nvidia driver depending on the driver appears to 
+      change the connector edid and status value when displays are connected
+      or disconnected
   - --enable/disable-try-get-edid-from-sysfs (default is --enable-try-get-edid-from-sysfs)
 - Utility options affecting display change detection.  Some of these will become 
   named options, others will be removed once testing is finished. 
   - --f17  do not use sysfs connector_id  (default is to use it)
   - --f18  always report UDEV events
-  - --f19  disable "nvidia driver implies sysfs unreliable" (by default it is enabled)
   - --f20  do not try to avoid rechecking DDC responsiveness when a display is
            reconnected (default is to remember prior checks)
+  - --f21  always treat sysfs as unreliable
+  - --f22  never treat sysfs as unreliable
   - --i6   watch loop sleep multiplier (multiply default watch loop settings)
   - --i7   extra stabilization milliseconds after apparent disconnection
   - --i8   explicit udev poll loop milliseconds (takes precedence over --i6)
