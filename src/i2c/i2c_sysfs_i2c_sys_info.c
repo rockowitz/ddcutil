@@ -248,6 +248,7 @@ one_drm_card(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=%s", dirname, fn);
+
    char buf[PATH_MAX];
    g_snprintf(buf, PATH_MAX, "%s/%s", dirname, fn);
    dir_ordered_foreach(
@@ -257,6 +258,7 @@ one_drm_card(
          read_drm_nondp_card_connector_node,
          info,
          depth);
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
