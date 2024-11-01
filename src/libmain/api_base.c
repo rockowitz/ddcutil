@@ -238,6 +238,7 @@ void decrement_active_api_calls(const char * funcname) {
 void quiesce_api(bool quiesce) {
    bool debug = true;
    DBGMSF(debug, "quiesce = %s", SBOOL(quiesce));
+
    g_mutex_lock(&api_quiesced_mutex);
    if (quiesce) {
       g_mutex_lock(&active_calls_mutex);
