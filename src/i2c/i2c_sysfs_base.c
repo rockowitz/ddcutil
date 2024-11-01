@@ -698,6 +698,8 @@ char *
 find_adapter_and_get_driver(char * path, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "path=%s,  depth=%d", path, depth);
+   assert(path);
+   assert(strlen(path)>0);
 
    char * result = NULL;
    char * adapter_path = sysfs_find_adapter(path);
@@ -1126,8 +1128,8 @@ void check_connector_reliability(
    Sysfs_Reliability_Accumulator * accum = accumulator;
 
    char buf[PATH_MAX];
-   g_strdup_printf(buf, PATH_MAX, "%s/%s", dirname, fn);
-   char * driver = find_adapter_and_get_driver(buf, depth);
+   g_snprintf(buf, PATH_MAX, "%s/%s", dirname, fn);
+   char * driver = find_adapter_and_get_driver(buf, debug_depth);
    if (known_reliable_driver(driver))
    {
       accum->known_good_driver_seen = true;
@@ -1163,7 +1165,7 @@ static bool nvidia_connectors_exist = false;
 
 
 void check_sysfs_reliability() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
 
    Sysfs_Reliability_Accumulator * accum = calloc(1, sizeof(Sysfs_Reliability_Accumulator));
@@ -1172,15 +1174,16 @@ void check_sysfs_reliability() {
          "/sys/class/drm",
          predicate_cardN_connector,       // filter function
          check_connector_reliability,
-         &accum,
+         accum,
          depth);
 
    drm_reliability_checked = true;
-   nvidia_connectors_exist = accum->nvidia_connector_ct > 0;
-   // known_good_driver_seen > 0;
+   nvidia_connectors_exist = (accum->nvidia_connector_ct > 0);
+   // known_good_driver_seen = > 0;
    nvidia_connectors_reliable =
          accum->nvidia_connector_w_edid_ct > 0 &&
          accum->nvidia_connector_w_edid_ct == accum->nvidia_connector_w_edid_and_connected_ct;
+   free(accum);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "nvidia_connectors_exist=%s, nvidia_connectors_reliable=%s",
          sbool(nvidia_connectors_exist), sbool(nvidia_connectors_reliable));
@@ -1223,5 +1226,6 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(is_sysfs_unreliable);
 #endif
    RTTI_ADD_FUNC(check_sysfs_reliability);
+   RTTI_ADD_FUNC(check_connector_reliability);
 }
 
