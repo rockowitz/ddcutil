@@ -60,6 +60,7 @@ char *      find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, By
 void        check_sysfs_reliability();
 bool        is_sysfs_reliable_by_driver(const char * driver);
 bool        is_sysfs_reliable_by_busno(int busno);
+bool        is_sysfs_reliable();
 
 void init_i2c_sysfs_base();
 

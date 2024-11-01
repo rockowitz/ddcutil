@@ -1098,8 +1098,8 @@ bool is_sysfs_unreliable(int busno) {
 
 
 typedef struct {
-   bool known_good_driver_seen;
-   bool other_driver_seen;
+   bool     known_good_driver_seen;
+   bool     other_driver_seen;
    uint8_t  nvidia_connector_ct;
    uint8_t  nvidia_connector_w_edid_ct;
    uint8_t  nvidia_connector_w_edid_and_connected_ct;
@@ -1160,6 +1160,7 @@ void check_connector_reliability(
 }
 
 static bool drm_reliability_checked = false;
+static bool other_drivers_seen = false;
 static bool nvidia_connectors_reliable = false;
 static bool nvidia_connectors_exist = false;
 
@@ -1183,6 +1184,7 @@ void check_sysfs_reliability() {
    nvidia_connectors_reliable =
          accum->nvidia_connector_w_edid_ct > 0 &&
          accum->nvidia_connector_w_edid_ct == accum->nvidia_connector_w_edid_and_connected_ct;
+   other_drivers_seen = accum->other_driver_seen;
    free(accum);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "nvidia_connectors_exist=%s, nvidia_connectors_reliable=%s",
@@ -1194,7 +1196,12 @@ bool force_sysfs_reliable = false;
 
 
 bool is_sysfs_reliable_by_driver(const char * driver) {
+   bool debug = true;
+
    bool result = false;
+   if (!drm_reliability_checked)
+      check_sysfs_reliability();
+
    if (force_sysfs_unreliable)
       result = false;
    else if (force_sysfs_reliable)
@@ -1205,6 +1212,8 @@ bool is_sysfs_reliable_by_driver(const char * driver) {
       else
          result = known_reliable_driver(driver);
    }
+
+   DBGF(debug, "Executed. Returning %s, driver=%s", SBOOL(result), driver);
    return result;
 }
 
@@ -1212,6 +1221,34 @@ bool is_sysfs_reliable_by_driver(const char * driver) {
 bool is_sysfs_reliable_by_busno(int busno) {
    char * driver = get_driver_for_busno(busno);
    return is_sysfs_reliable_by_driver(driver);
+}
+
+
+bool is_sysfs_reliable() {
+   bool debug = true;
+
+   if (!drm_reliability_checked)
+      check_sysfs_reliability();
+
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "force_sysfs_unreliable=%s, force_sysfs_reliable=%s",
+         sbool(force_sysfs_unreliable), sbool(force_sysfs_reliable));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "other_drivers_seen=%s, nvidia_connectors_exist=%s",
+         sbool(other_drivers_seen), sbool(nvidia_connectors_exist));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "nvdia_connectors_reliable=%s",
+         SBOOL(nvidia_connectors_reliable));
+
+   bool result = true;
+   if (force_sysfs_unreliable)
+      result = false;
+   else if (force_sysfs_reliable)
+      result = true;
+   else if (other_drivers_seen)
+      result = false;
+   else if (nvidia_connectors_exist)
+      result = nvidia_connectors_reliable;
+
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "Returning %s", SBOOL(result));
+   return result;
 }
 
 
@@ -1227,5 +1264,6 @@ void init_i2c_sysfs_base() {
 #endif
    RTTI_ADD_FUNC(check_sysfs_reliability);
    RTTI_ADD_FUNC(check_connector_reliability);
+   RTTI_ADD_FUNC(is_sysfs_reliable);
 }
 
