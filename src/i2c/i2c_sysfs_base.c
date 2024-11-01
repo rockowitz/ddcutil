@@ -520,6 +520,7 @@ bool check_connector_id(
    return terminate;
 }
 
+
 static
 bool check_busno(
       const char *  dirname,
@@ -546,7 +547,6 @@ bool check_busno(
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, terminate, "accum->connector_name = |%s|", accum->connector_name);
    return terminate;
 }
-
 
 
 /** Given a DRM connector id, return the sysfs connector name
@@ -579,6 +579,12 @@ char * get_sys_drm_connector_name_by_connector_id(int connector_id) {
 }
 
 
+/** Given a I2C bus number, return the name of the
+ *  connector for that bus number.
+ *
+ *  @param  busno  i2c bus number
+ *  @return connector name
+ */
 char * get_sys_drm_connector_name_by_busno(int busno) {
    bool debug = false;
    int depth = 0;
@@ -639,7 +645,6 @@ bool check_connector_id_present(
  *  /remark
  *  returns true if there are no drm_connectors
  */
-
 bool all_sys_drm_connectors_have_connector_id_direct() {
    bool debug = false;
    int depth = 0;
@@ -895,7 +900,7 @@ GPtrArray * get_sysfs_drm_displays() {
   *  @param  data       pointer to Sysfs_Connector_Names instance
   *  @param  depth      if >= 0, emits a report with this logical indentation depth
   */
-// static
+static
 void get_sysfs_drm_add_one_connector_name(
       const char * dirname,     // <device>/drm/cardN
       const char * simple_fn,   // card0-HDMI-1 etc
@@ -1073,7 +1078,6 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
 }
 
 
-
 #ifdef OLD
 bool is_sysfs_unreliable(int busno) {
    bool debug = false;
@@ -1096,6 +1100,19 @@ bool is_sysfs_unreliable(int busno) {
 #endif
 
 
+/* i915, amdgpu, radeon, nouveau and (likely) other video drivers that share
+ * the kernel's DRM code can be relied on to maintain the edid,
+ * status, and enabled attributes as displays are connected and
+ * disconnected.
+ *
+ * Unfortunately depending version, the nvidia driver does not.
+ * Attribute enabled is always "disabled".  It may be the case
+ * that the edid value is that of the monitor initially connected.
+ * What has been observed is that if the driver does change the
+ * edid attribute, it also properly sets status to "connected" or
+ * disconnected.  If it does not, status is always "disconnected",
+ * whether or not a monitor is connected.
+ */
 
 typedef struct {
    bool     known_good_driver_seen;
@@ -1106,6 +1123,7 @@ typedef struct {
 } Sysfs_Reliability_Accumulator;
 
 
+static
 bool known_reliable_driver(const char * driver) {
    return streq(driver, "i915")   ||
           streq(driver, "amdgpu") ||
@@ -1196,7 +1214,7 @@ bool force_sysfs_reliable = false;
 
 
 bool is_sysfs_reliable_by_driver(const char * driver) {
-   bool debug = true;
+   bool debug = false;
 
    bool result = false;
    if (!drm_reliability_checked)
@@ -1225,13 +1243,13 @@ bool is_sysfs_reliable_by_busno(int busno) {
 
 
 bool is_sysfs_reliable() {
-   bool debug = true;
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "force_sysfs_unreliable=%s, force_sysfs_reliable=%s",
+         sbool(force_sysfs_unreliable), sbool(force_sysfs_reliable));
 
    if (!drm_reliability_checked)
       check_sysfs_reliability();
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "force_sysfs_unreliable=%s, force_sysfs_reliable=%s",
-         sbool(force_sysfs_unreliable), sbool(force_sysfs_reliable));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "other_drivers_seen=%s, nvidia_connectors_exist=%s",
          sbool(other_drivers_seen), sbool(nvidia_connectors_exist));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "nvdia_connectors_reliable=%s",
