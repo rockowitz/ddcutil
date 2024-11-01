@@ -485,6 +485,9 @@ dir_foreach(
       void *               accumulator,
       int                  depth)
 {
+   // bool debug = true;
+   // DBGF(debug, "Starting. accumulator=%p", accumulator);
+
    struct dirent *dent;
    DIR           *d;
    d = opendir(dirname);
@@ -502,6 +505,8 @@ dir_foreach(
       }
       closedir(d);
    }
+
+   // DBGF(debug, "Done.  accumlator=%p", accumulator);
 }
 
 
