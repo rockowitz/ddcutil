@@ -102,6 +102,7 @@ get_i2c_device_sysfs_name(int busno)
 char * sysfs_find_adapter(char * path) {
    bool debug = false;
    DBGF(debug, "Starting. path=%s", path);
+   assert(path);
    int depth = (debug) ? 2 : -1;
 
    char * devpath = NULL;
