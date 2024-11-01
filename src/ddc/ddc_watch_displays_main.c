@@ -92,25 +92,22 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(drm_enabled));
    Error_Info * err = NULL;
 
-
-#ifndef ENABLE_UDEV
-   ddc_watch_mode = Watch_Mode_Poll;
-#endif
-   if (ddc_watch_mode == Watch_Mode_Dynamic) {
-      ddc_watch_mode = Watch_Mode_Udev;
-      for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
-         I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
-         if (streq(businfo->driver, "nvidia")) {
-            ddc_watch_mode = Watch_Mode_Poll;
-            break;
-         }
-      }
-   }
-
    if (!drm_enabled) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
       goto bye;
    }
+
+   bool sysfs_fully_reliable = false;
+#ifndef ENABLE_UDEV
+   ddc_watch_mode = Watch_Mode_Poll;
+#else
+   if (ddc_watch_mode == Watch_Mode_Dynamic) {
+      ddc_watch_mode = Watch_Mode_Udev;
+      sysfs_fully_reliable = is_sysfs_reliable();
+      if (!sysfs_fully_reliable)
+         ddc_watch_mode = Watch_Mode_Poll;
+   }
+#endif
 
    int calculated_watch_loop_millisec = calc_poll_loop_millisec(ddc_watch_mode);
 
@@ -120,6 +117,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
    DBGMSG("use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
    DBGMSG("force_sysfs_reliable=%s, force_sysfs_unreliable=%s", sbool(force_sysfs_reliable), sbool(force_sysfs_unreliable));
+   DBGMSG("sysfs_fully_reliable:                   %s", SBOOL(sysfs_fully_reliable));
    DBGMSG("use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
    DBGMSG("try_get_edid_from_sysfs_first:          %s", SBOOL(try_get_edid_from_sysfs_first));  // i2c_edid_exists()
    DBGMSG("extra_stailization_millisec:            %d", extra_stabilization_millisec);
