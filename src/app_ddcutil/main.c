@@ -1047,7 +1047,6 @@ main(int argc, char *argv[]) {
       }
       else {
          signal(SIGINT, interrupt_handler);
-         check_sysfs_reliability();
          ddc_ensure_displays_detected();
          Error_Info * erec = ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
          if (erec) {
