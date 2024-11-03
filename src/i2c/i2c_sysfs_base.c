@@ -98,67 +98,9 @@ bool fn_any(const char * filename, const char * ignore) {
 #endif
 
 
-
-
 //
 // *** Common Functions
 //
-
-#ifdef MOVED
-
-/** Given a sysfs node, walk up the chain of device directory links
- *  until an adapter node is found.
- *
- *  @param  path   e.g. /sys/bus/i2c/devices/i2c-5
- *  @param  depth  logical indentation depth
- *  @return sysfs path to adapter
- *
- *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
- *  If depth >= 0, sysfs attributes are reported.
- *  If depth <  0, there is no output
- *
- *  Caller is responsible for freeing the returned value
- */
-char * find_adapter(char * path, int depth) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
-
-   char * devpath = NULL;
-// #ifdef OUT
-   if ( RPT_ATTR_NOTE_SUBDIR(depth, NULL, path, "device") ) {
-       if ( RPT_ATTR_TEXT(depth, NULL, path, "device", "class") ) {
-          RPT_ATTR_REALPATH(depth, &devpath, path, "device");
-       }
-       else {
-          char p2[PATH_MAX];
-           g_snprintf(p2, PATH_MAX, "%s/device", path);
-           devpath = find_adapter(p2, depth);
-       }
-   }
-   else
-// #endif
-   {
-      char * rp1 = NULL;
-      char * rp2 = NULL;
-      RPT_ATTR_REALPATH(depth, &rp1, path);
-      if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
-          devpath = rp1;
-      }
-      else {
-         RPT_ATTR_REALPATH(depth, &rp2, rp1, "..");
-         free(rp1);
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "rp2 = %s", rp2);
-         if ( RPT_ATTR_TEXT(depth, NULL, rp2, "../class"))
-            devpath = rp2;
-         else
-            free(rp2);
-      }
-   }
-
-   DBGTRC_RETURNING(debug, TRACE_GROUP, devpath, "");
-   return devpath;
-}
-#endif
 
 
 void add_video_device_to_array(
@@ -324,17 +266,6 @@ void get_connector_bus_numbers(
 
       DBGTRC(debug, DDCA_TRC_NONE, "connector: %s, aux_dir_name: |%s|, i2cN_dir_name: |%s|, ddc_dir_name: |%s|",
                fn, aux_dir_name, i2cN_dir_name, ddc_dir_name);
-#ifdef REWRITE
-         if (validate_name) {
-            if (aux_dir_name && i2cN_dir_name) {
-            char * buf = NULL;
-            RPT_ATTR_TEXT(d0, &buf, dirname, fn, i2cN_buf, "i2c-dev", i2cN_buf, "name");
-            if (!streq(cbn->name, buf) && d0 >= 0 )
-               rpt_vstring(d0, "Unexpected: %s/name and i2c-dev/%s/name do not match",
-                       drm_dp_aux_dir, i2cN_buf);
-            free(buf);
-         }
-#endif
       if (aux_dir_name)
          cbn->name = strdup(aux_dir_name);
       else if (i2cN_dir_name)
@@ -733,164 +664,6 @@ char * get_driver_for_busno(int busno) {
 }
 
 
-#ifdef OLD
-/** Gets a list of all displays known to DRM.
- *
- *  \param sysfs_drm_cards
- *  \bool  verbose
- *  \return GPtrArray of connector names for DRM displays
- *
- *  \remark
- *  The caller is responsible for freeing the returned #GPtrArray.
- */
-GPtrArray * get_sysfs_drm_displays_old(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
-{
-   bool debug = false;
-   int  depth = 0;
-   int  d1    = depth+1;
-   int  d2    = depth+2;
-
-   struct dirent *dent;
-   DIR           *dir1;
-   char          *dname;
-   char          dnbuf[90];
-   const int     cardname_sz = 20;
-   char          cardname[cardname_sz];
-
-   GPtrArray * connected_displays = g_ptr_array_new();
-   g_ptr_array_set_free_func(connected_displays, g_free);
-
-#ifdef TARGET_BSD
-   dname = "/compat/linux/sys/class/drm";
-#else
-   dname = "/sys/class/drm";
-#endif
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s...", dname);
-   Byte_Bit_Flags iter = bbf_iter_new(sysfs_drm_cards);
-   int cardno = -1;
-   while ( (cardno = bbf_iter_next(iter)) >= 0) {
-      snprintf(cardname, cardname_sz, "card%d", cardno);
-      snprintf(dnbuf, 80, "%s/%s", dname, cardname);
-      dir1 = opendir(dnbuf);
-      DBGMSF(debug, "dnbuf=%s", dnbuf);
-      if (!dir1) {
-         // rpt_vstring(d1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
-         break;
-      }
-      else {
-         while ((dent = readdir(dir1)) != NULL) {
-            // DBGMSG("%s", dent->d_name);
-            // char cur_fn[100];
-            if (str_starts_with(dent->d_name, cardname)) {
-               if (verbose)
-                  rpt_vstring(d1, "Found connector: %s", dent->d_name);
-               char cur_dir_name[PATH_MAX];
-               g_snprintf(cur_dir_name, PATH_MAX, "%s/%s", dnbuf, dent->d_name);
-               char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
-               // rpt_vstring(d2, "%s/status: %s", cur_dir_name, s_status);
-               if (verbose)
-                  rpt_vstring(d2, "Display: %s, status=%s", dent->d_name, s_status);
-               // edid present iff status == "connected"
-               if (streq(s_status, "connected")) {
-                  if (verbose) {
-                     GByteArray * gba_edid = read_binary_sysfs_attr(
-                           cur_dir_name, "edid", 128, /*verbose=*/ true);
-                     if (gba_edid) {
-                        rpt_vstring(d2, "%s/edid:", cur_dir_name);
-                        rpt_hex_dump(gba_edid->data, gba_edid->len, d2);
-                        g_byte_array_free(gba_edid, true);
-                     }
-                     else {
-                        rpt_vstring(d2, "Reading %s/edid failed.", cur_dir_name);
-                     }
-                  }
-
-                  g_ptr_array_add(connected_displays, g_strdup(dent->d_name));
-               }
-               free(s_status);
-               if (verbose)
-                  rpt_nl();
-            }
-         }
-         closedir(dir1);
-      }
-   }
-   bbf_iter_free(iter);
-   g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Connected displays: %s",
-                              join_string_g_ptr_array_t(connected_displays, ", "));
-   return connected_displays;
-}
-#endif
-
-
-#ifdef OLD_HOTPLUG_VERSION
-/** Examines a single connector, e.g. card0-HDMI-1, in a directory /sys/class/drm/cardN
- *  to determine if it is has a monitor connected.  If so, appends the simple
- *  connector name to the list of active connectors
- *
- *  @param  dirname    directory to examine, <device>/drm/cardN
- *  @param  simple_fn  filename to examine
- *  @param  data       GPtrArray of connected monitors
- *  @param  depth      if >= 0, emits a report with this logical indentation depth
- *
- *  @remark
- *  Move get_sysfs_drm_examine_one_connector(), get_sysfs_drm_displays()
- * to sysfs_i2c_util.c?
- */
-static
-void get_sysfs_drm_examine_one_connector(
-      const char * dirname,     // <device>/drm/cardN
-      const char * simple_fn,   // card0-HDMI-1 etc
-      void *       data,        // GPtrArray collecting connector names
-      int          depth)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
-   GPtrArray * connected_displays = (GPtrArray *) data;
-
-   char * status = NULL;
-   bool found_status = RPT_ATTR_TEXT(-1, &status, dirname, simple_fn, "status");
-   if (found_status && streq(status,"connected")) {
-         g_ptr_array_add(connected_displays, g_strdup(simple_fn));
-      }
-   g_free(status);
-
-   DBGMSF(debug, "Added connector %s", simple_fn);
-}
-
-
-/**Checks /sys/class/drm for connectors with active displays.
- *
- * @return newly allocated GPtrArray of DRM connector names, sorted
- */
-static
-GPtrArray * get_sysfs_drm_displays() {
-   bool debug = false;
-   char * dname =
- #ifdef TARGET_BSD
-              "/compat/linux/sys/class/drm";
- #else
-              "/sys/class/drm";
- #endif
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s", dname);
-   GPtrArray * connected_displays = g_ptr_array_new_with_free_func(g_free);
-   dir_filtered_ordered_foreach(
-                 dname,
-                 is_card_connector_dir,   // filter function
-                 NULL,                    // ordering function
-                 get_sysfs_drm_examine_one_connector,
-                 connected_displays,      // accumulator
-                 0);
-   g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning Connected displays: %s",
-                              join_string_g_ptr_array_t(connected_displays, ", "));
-   return connected_displays;
- }
-#endif
-
-
-
  /** Adds a single connector name, e.g. card0-HDMI-1, to the accumulated
   *  list of all connections, and if the connector has a valid EDID, to
   *  the accumulated list of connectors having a valid EDID.
@@ -1025,27 +798,7 @@ Sysfs_Connector_Names copy_sysfs_connector_names_struct(Sysfs_Connector_Names or
 }
 
 
-#ifdef OUT
-// Wrong!  On amdgpu, for DP device realpath is connector with EDID, for HDMI and DVI device is adapter
-char * find_sysfs_drm_connector_name_by_busno(GPtrArray* connector_names, int busno) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "connector_names=%p, busno=%d", connector_names, busno);
-
-   char * result = NULL;
-   char buf[80];
-   g_snprintf(buf, 80, "/sys/bus/i2c/devices/i2c-%d/device", busno);
-   DBGMSF(debug, "buf = |%s|", buf);
-   char * fq_connector = realpath(buf,NULL);
-   DBGMSF(debug, "fq_connector = |%s|", fq_connector);
-   if (fq_connector) {
-      result = g_path_get_basename(fq_connector);
-      free(fq_connector);
-   }
-
-   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning %s", result);
-   return result;
-}
-#endif
+// Note: On amdgpu, for DP device realpath is connector with EDID, for HDMI and DVI device is adapter
 
 
 /** Searches connectors for one with matching EDID
@@ -1076,28 +829,6 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
    DBGTRC_RETURNING(debug, DDCA_TRC_I2C, result, "");
    return result;
 }
-
-
-#ifdef OLD
-bool is_sysfs_unreliable(int busno) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, nvidia_driver_implies_sysfs_unreliable=%s",
-         busno, SBOOL(nvidia_driver_implies_sysfs_unreliable));
-
-   bool sysfs_unreliable = false;
-   if (nvidia_driver_implies_sysfs_unreliable) {
-      // TODO: eliminate use of Sysfs_I2C_Info, access sysfs directly
-      Sysfs_I2C_Info * driver_info = get_i2c_driver_info(busno, (debug) ? 1 : -1);
-      sysfs_unreliable =  streq(driver_info->driver, "nvidia"); //  || str_starts_with(driver_info->name, "NVIDIA");
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_unreliable=%s, driver=%s, name=%s",
-            SBOOL(sysfs_unreliable), driver_info->driver, driver_info->name);
-      free_sysfs_i2c_info(driver_info);
-   }
-
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, sysfs_unreliable, "");
-   return sysfs_unreliable;
-}
-#endif
 
 
 /* i915, amdgpu, radeon, nouveau and (likely) other video drivers that share
@@ -1277,9 +1008,6 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
    RTTI_ADD_FUNC(get_sys_video_devices);
-#ifdef OLD
-   RTTI_ADD_FUNC(is_sysfs_unreliable);
-#endif
    RTTI_ADD_FUNC(check_sysfs_reliability);
    RTTI_ADD_FUNC(check_connector_reliability);
    RTTI_ADD_FUNC(is_sysfs_reliable);
