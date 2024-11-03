@@ -1820,7 +1820,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
          }
          else {
             if (ddcrc == 0 && (validation_options&DREF_VALIDATE_EDID)) {
-               if (is_sysfs_reliable_by_busno(dref->io_path.path.i2c_busno)) {
+               if (is_sysfs_reliable_for_busno(dref->io_path.path.i2c_busno)) {
                   if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
                      ddcrc = DDCRC_DISCONNECTED;
                }

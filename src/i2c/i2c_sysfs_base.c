@@ -913,7 +913,7 @@ static bool other_drivers_seen = false;
 static bool nvidia_connectors_reliable = false;
 static bool nvidia_connectors_exist = false;
 
-
+static
 void check_sysfs_reliability() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
@@ -944,7 +944,7 @@ bool force_sysfs_unreliable = false;
 bool force_sysfs_reliable = false;
 
 
-bool is_sysfs_reliable_by_driver(const char * driver) {
+bool is_sysfs_reliable_for_driver(const char * driver) {
    bool debug = false;
 
    bool result = false;
@@ -967,9 +967,9 @@ bool is_sysfs_reliable_by_driver(const char * driver) {
 }
 
 
-bool is_sysfs_reliable_by_busno(int busno) {
+bool is_sysfs_reliable_for_busno(int busno) {
    char * driver = get_driver_for_busno(busno);
-   return is_sysfs_reliable_by_driver(driver);
+   return is_sysfs_reliable_for_driver(driver);
 }
 
 
