@@ -944,6 +944,12 @@ bool force_sysfs_unreliable = false;
 bool force_sysfs_reliable = false;
 
 
+/** Reports whether sysfs attributes for DRM connectors using the given video
+ *  driver reliably reflect display connection and disconnection.
+ *
+ *  @param  driver  name of driver
+ *  @return true if reliable, false if not
+ */
 bool is_sysfs_reliable_for_driver(const char * driver) {
    bool debug = false;
 
@@ -967,12 +973,23 @@ bool is_sysfs_reliable_for_driver(const char * driver) {
 }
 
 
+/** Reports whether sysfs attributes for the DRM connector associated with an
+ *  I2C bus number reliably reflect display connection and disconnection.
+ *
+ *  @param  busno  I2C bus number
+ *  @return true if reliable, false if not
+ */
 bool is_sysfs_reliable_for_busno(int busno) {
    char * driver = get_driver_for_busno(busno);
    return is_sysfs_reliable_for_driver(driver);
 }
 
 
+/** Reports whether sysfs attributes for all DRM connectors reliably reflect
+ *  display connection and disconnection.
+ *
+ *  @return true if reliable, false if not
+ */
 bool is_sysfs_reliable() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "force_sysfs_unreliable=%s, force_sysfs_reliable=%s",
