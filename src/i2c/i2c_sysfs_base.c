@@ -102,7 +102,8 @@ bool fn_any(const char * filename, const char * ignore) {
 // *** Common Functions
 //
 
-
+#ifdef UNUSED
+static
 void add_video_device_to_array(
       const char * dirname,     //
       const char * fn,
@@ -137,8 +138,12 @@ GPtrArray * get_sys_video_devices() {
    DBGTRC_DONE(debug, TRACE_GROUP,"Returning array with %d video devices", video_devices->len);
    return video_devices;
 }
+#endif
 
 
+//
+// Extract bus numbers connetor_id, and name from card-connector directories
+//
 
 void dbgrpt_connector_bus_numbers(Connector_Bus_Numbers * cbn, int depth) {
    rpt_structure_loc("Connector_Bus_Numbers", cbn, depth);
@@ -148,6 +153,7 @@ void dbgrpt_connector_bus_numbers(Connector_Bus_Numbers * cbn, int depth) {
    rpt_vstring(d1, "connector_id: %d", cbn->connector_id);
    rpt_vstring(d1, "name:         %s", cbn->name);
 }
+
 
 void free_connector_bus_numbers(Connector_Bus_Numbers * cbn) {
    free(cbn->name);
@@ -201,9 +207,7 @@ void get_connector_bus_numbers(
    if (found)
       cbn->connector_id = connector_id;
 
-
    if (is_dp_connector) {  // DP  // was has_i2c_subdir
-
       // name attribute exists in multiple location
       char * aux_dir_name = NULL;
       char * i2cN_dir_name = NULL;
@@ -263,9 +267,9 @@ void get_connector_bus_numbers(
       free(i2cN_buf);
       free(i2cN_buf2);
 
-
-      DBGTRC(debug, DDCA_TRC_NONE, "connector: %s, aux_dir_name: |%s|, i2cN_dir_name: |%s|, ddc_dir_name: |%s|",
-               fn, aux_dir_name, i2cN_dir_name, ddc_dir_name);
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+      //      "connector: %s, aux_dir_name: |%s|, i2cN_dir_name: |%s|, ddc_dir_name: |%s|",
+      //      fn, aux_dir_name, i2cN_dir_name, ddc_dir_name);
       if (aux_dir_name)
          cbn->name = strdup(aux_dir_name);
       else if (i2cN_dir_name)
@@ -281,7 +285,6 @@ void get_connector_bus_numbers(
    } // DP
 
    else {   // not DP
-
       // Examine ddc subdirectory
       // Not present: Nvidia
       char * ddc_dir_path = NULL;
@@ -324,6 +327,9 @@ void get_connector_bus_numbers(
 }
 
 
+//
+// Debug Reports
+//
 
 static
 void simple_report_one_connector0(
@@ -378,6 +384,8 @@ void simple_report_one_connector0(
    DBGMSF(debug, "Done");
 }
 
+
+static
 void simple_report_one_connector(
       const char * dirname,     // <device>/drm/cardN
       const char * simple_fn,   // card0-HDMI-1 etc
@@ -411,6 +419,9 @@ void dbgrpt_sysfs_basic_connector_attributes(int depth) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
+
+//
+// Get DRM connector name given an I2C bus number or connector id.
 
 typedef struct {
    int    connector_id;
@@ -537,6 +548,10 @@ char * get_sys_drm_connector_name_by_busno(int busno) {
 }
 
 
+//
+// Checks whether connector_id exists
+//
+
 typedef struct {
    bool   all_connectors_have_connector_id;
 } Check_Connector_Id_Present_Accumulator;
@@ -595,7 +610,9 @@ bool all_sys_drm_connectors_have_connector_id_direct() {
 }
 
 
-// Driver related functions
+//
+// Driver inquiry functions
+//
 
 /** Given the sysfs path to an adapter of some sort, returns
  *  the name of its driver.
@@ -663,6 +680,9 @@ char * get_driver_for_busno(int busno) {
    return result;
 }
 
+//
+// Sysfs_Connector_Names functions
+//
 
  /** Adds a single connector name, e.g. card0-HDMI-1, to the accumulated
   *  list of all connections, and if the connector has a valid EDID, to
@@ -1019,14 +1039,17 @@ bool is_sysfs_reliable() {
 
 
 void init_i2c_sysfs_base() {
+   RTTI_ADD_FUNC(check_connector_reliability);
+   RTTI_ADD_FUNC(check_sysfs_reliability);
    RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
    RTTI_ADD_FUNC(find_adapter_and_get_driver);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
-   RTTI_ADD_FUNC(get_sys_video_devices);
-   RTTI_ADD_FUNC(check_sysfs_reliability);
-   RTTI_ADD_FUNC(check_connector_reliability);
    RTTI_ADD_FUNC(is_sysfs_reliable);
+#ifdef UNUSED
+   RTTI_ADD_FUNC(get_sys_video_devices);
+#endif
+
 }
 
