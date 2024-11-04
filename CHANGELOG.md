@@ -179,8 +179,8 @@ file is libddcutil.so.5.1.3.
   - --f18  always report UDEV events
   - --f20  do not try to avoid rechecking DDC responsiveness when a display is
            reconnected (default is to remember prior checks)
-  - --f21  always treat sysfs as unreliable
-  - --f22  never treat sysfs as unreliable
+  - --f21  always treat sysfs as unreliable for reporting display changes
+  - --f22  never treat sysfs as unreliable for reporting display changes
   - --i6   watch loop sleep multiplier (multiply default watch loop settings)
   - --i7   extra stabilization milliseconds after apparent disconnection
   - --i8   explicit udev poll loop milliseconds (takes precedence over --i6)
