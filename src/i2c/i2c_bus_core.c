@@ -1180,8 +1180,10 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
 }
 
 
-bool check_laptop_for_businfo(I2C_Bus_Info * businfo) {
+bool is_laptop_for_businfo(I2C_Bus_Info * businfo) {
    bool debug  = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
+
    bool is_laptop = false;
    if (businfo->drm_connector_name) {
       if ( is_laptop_drm_connector_name(businfo->drm_connector_name) ) {
@@ -1424,7 +1426,7 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    // *** Check if laptop
    bool is_laptop = false;
    if (businfo->edid && !(businfo->flags&I2C_BUS_DISPLAYLINK)) {
-      is_laptop = check_laptop_for_businfo(businfo);
+      is_laptop = is_laptop_for_businfo(businfo);
    }
 
    // *** Check x37
@@ -2360,6 +2362,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_threaded_initial_checks_by_businfo);
    RTTI_ADD_FUNC(i2c_non_async_scan);
    RTTI_ADD_FUNC(i2c_async_scan);
+   RTTI_ADD_FUNC(is_laptop_for_businfo);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
    RTTI_ADD_FUNC(is_adapter_class_display_controller);
    RTTI_ADD_FUNC(get_connector_edid);
