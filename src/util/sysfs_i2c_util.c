@@ -185,6 +185,7 @@ get_i2c_sysfs_driver_by_busno(int busno) {
 }
 
 
+#ifdef UNUSED
 /** Gets the name of the driver for a /dev/i2c-N device,
  *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
  *
@@ -209,8 +210,10 @@ get_i2c_sysfs_driver_by_device_name(char * device_name) {
       printf("(%s) Done. Returning: %s", __func__, driver_name);
    return driver_name;
 }
+#endif
 
 
+#ifdef UNUSED
 /** Gets the name of the driver for a /dev/i2c-N device, specified by its file descriptor.
  *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
  *
@@ -233,6 +236,7 @@ get_i2c_sysfs_driver_by_fd(int fd) {
       printf("(%s) fd=%d, returning %s\n", __func__, fd, driver_name);
    return driver_name;
 }
+#endif
 
 
 /** Gets the class of an I2C device,
@@ -347,6 +351,7 @@ bool not_ata(const char * simple_fn) {
 }
 #endif
 
+
 bool is_pci_dir(const char * simple_fn) {
    bool debug = false;
    bool result = str_starts_with(simple_fn, "pci0");
@@ -387,6 +392,7 @@ void find_class_dirs(const char * dirname,
     }
     free(subdir);
 }
+
 
 void find_class03_dirs(const char * dirname,
                        const char * simple_fn,
