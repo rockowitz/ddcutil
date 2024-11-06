@@ -430,7 +430,7 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_close_bus for /dev/i2c-%d...", busno);
    result = i2c_close_bus_basic(busno, fd, callopts);
    assert(result == 0);   // TODO; handle failure
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "/dev/i2c-%d.  i2c_close_bus() returned %d", busno, result);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "/dev/i2c-%d.  i2c_close_bus_basic() returned %d", busno, result);
    assert(result == 0);   // TODO; handle failure
 
    // 1) Release the cross-thread lock
@@ -1276,8 +1276,9 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
  *  as an argument.
  *
  *  @param  businfo  pointer to #I2C_Bus_Info struct in which information will be set
+ *  @return status code
  */
-void i2c_check_bus2(I2C_Bus_Info * businfo) {
+Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
    bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p",
          businfo->busno, businfo );
@@ -1299,14 +1300,16 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
 
    businfo->flags |= I2C_BUS_PROBED;
    Error_Info *master_err = NULL;
-   if (!i2c_device_exists(businfo->busno))
+   if (!i2c_device_exists(businfo->busno)) {
+      master_err = ERRINFO_NEW(-ENOENT, "Device does not exist: /dev/i2c-%d", businfo->busno);
       goto bye;
+   }
 
-   Error_Info * err = i2c_check_device_access(dev_name);
-   if (err != NULL) {
+   master_err = i2c_check_device_access(dev_name);
+   if (master_err != NULL) {
       // if (err->status_code != -ENOENT)
-      businfo->open_errno = err->status_code;
-      errinfo_free(err);   // for now
+      businfo->open_errno = master_err->status_code;
+      // errinfo_free(err);   // for now
       goto bye;
    }
 
@@ -1318,9 +1321,13 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
    if (driver_info->adapter_class) {
       is_video_driver = is_adapter_class_display_controller(driver_info->adapter_class);
    }
-   free_sysfs_i2c_info(driver_info);
-   if (!is_video_driver)
+   if (!is_video_driver) {
+      master_err = ERRINFO_NEW(DDCRC_OTHER, "Display controller for bus %d has class %s",
+            businfo->busno, driver_info->adapter_class);
+      free_sysfs_i2c_info(driver_info);
       goto bye;
+   }
+   free_sysfs_i2c_info(driver_info);
 
    businfo->flags |= I2C_BUS_EXISTS;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "initial flags = %s", i2c_interpret_bus_flags_t(businfo->flags));
@@ -1459,17 +1466,29 @@ void i2c_check_bus2(I2C_Bus_Info * businfo) {
     businfo->flags |= I2C_BUS_INITIAL_CHECK_DONE;
 
 bye:
+   int ddcrc = 0;
    if ( IS_DBGTRC(debug, TRACE_GROUP)) {
       DBGTRC_DONE(true, TRACE_GROUP, "busno=%d, flags = %s",
             businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
 
       // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "businfo:");
       // i2c_dbgrpt_bus_info(businfo, 2);
-      ERRINFO_FREE_WITH_REPORT(master_err, true);
+      if (master_err) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "businfo:");
+         i2c_dbgrpt_bus_info(businfo, /* include_sysinfo */ true, 2);
+         ddcrc = master_err->status_code;
+         ERRINFO_FREE_WITH_REPORT(master_err, true);
+      }
    }
    else {
-      ERRINFO_FREE_WITH_REPORT(master_err, false);
+      if (master_err) {
+         ddcrc = master_err->status_code;
+         ERRINFO_FREE_WITH_REPORT(master_err, false);
+      }
    }
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
 }
 
 
