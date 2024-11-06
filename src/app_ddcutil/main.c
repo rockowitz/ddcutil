@@ -52,6 +52,7 @@
 #include "public/ddcutil_types.h"
 
 #include "base/build_info.h"
+#include "base/build_timestamp.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
@@ -176,6 +177,10 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     DBGMSF(debug, "Executing...");
 
     show_ddcutil_version();
+    if (streq(BUILD_DATE, "Not set"))
+       fprintf(stdout, "Build timestamp:            Not set\n");
+    else
+       fprintf(stdout, "Build timestamp:            %s at %s\n", BUILD_DATE, BUILD_TIME);
     rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file:",
                          (config_fn) ? config_fn : "(none)");
     if (config_fn)
