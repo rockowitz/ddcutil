@@ -143,6 +143,37 @@ const char *         x37_detection_state_name(X37_Detection_State state);
 void                 i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State deteted);
 X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes);
 
+
+// moved from sysfs_i2c_util.h:
+
+char *
+sysfs_find_adapter(char * path);
+
+char *
+get_i2c_sysfs_driver_by_busno(
+      int busno);
+
+char *
+get_i2c_sysfs_driver_by_device_name(
+      char * device_name);
+
+char *
+get_i2c_sysfs_driver_by_fd(
+      int fd);
+
+uint32_t
+get_i2c_device_sysfs_class(
+      int busno);
+
+char *
+get_i2c_device_sysfs_name(
+      int busno);
+
+bool
+sysfs_is_ignorable_i2c_device(
+      int busno);
+
+
 // Initialization
 void init_i2c_bus_base();
 void terminate_i2c_bus_base();

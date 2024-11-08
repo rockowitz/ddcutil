@@ -12,36 +12,12 @@
 
 #include "data_structures.h"
 
-char *
-sysfs_find_adapter(char * path);
-
-char *
-get_i2c_sysfs_driver_by_busno(
-      int busno);
-
-char *
-get_i2c_sysfs_driver_by_device_name(
-      char * device_name);
-
-char *
-get_i2c_sysfs_driver_by_fd(
-      int fd);
-
-uint32_t
-get_i2c_device_sysfs_class(
-      int busno);
 
 bool
 is_module_loaded_using_sysfs(
       const char * module_name);
 
-char *
-get_i2c_device_sysfs_name(
-      int busno);
 
-bool
-sysfs_is_ignorable_i2c_device(
-      int busno);
 
 GPtrArray *
 get_video_adapter_devices();

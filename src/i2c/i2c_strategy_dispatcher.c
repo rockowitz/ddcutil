@@ -3,7 +3,7 @@
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
  
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -21,6 +21,7 @@
 #include "util/sysfs_i2c_util.h"
 
 #include "base/core.h"
+#include "base/i2c_bus_base.h"
 #include "base/parms.h"
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
