@@ -1215,6 +1215,10 @@ parse_command(
             '\0', 0, G_OPTION_ARG_NONE,     &enable_flock_flag,   enable_flock_expl,     NULL},
       {"disable-cross-instance-locks", '\0', G_OPTION_FLAG_REVERSE,
                      G_OPTION_ARG_NONE,     &enable_flock_flag,   disable_flock_expl ,   NULL},
+      {"enable-flock",
+            '\0', 0, G_OPTION_ARG_NONE,     &enable_flock_flag,   enable_flock_expl,     NULL},
+      {"disable-flock", '\0', G_OPTION_FLAG_REVERSE,
+                       G_OPTION_ARG_NONE,     &enable_flock_flag,   disable_flock_expl ,   NULL},
 
       {"enable-try-get-edid-from-sysfs", '\0', 0,
                             G_OPTION_ARG_NONE,    &try_get_edid_from_sysfs,   enable_tgefs_expl, NULL},
