@@ -1081,7 +1081,7 @@ get_i2c_device_sysfs_name(int busno)
  */
 char * sysfs_find_adapter(char * path) {
    bool debug = false;
-   DBGF(debug, "Starting. path=%s", path);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
    assert(path);
    int depth = (debug) ? 2 : -1;
 
@@ -1117,7 +1117,7 @@ char * sysfs_find_adapter(char * path) {
       }
    }
 
-   DBGF(debug,"Done.  Returning: %s", devpath);
+   DBGTRC_DONE(debug,TRACE_GROUP, "Returning: %s", devpath);
    return devpath;
 }
 
@@ -1135,7 +1135,8 @@ char * sysfs_find_adapter(char * path) {
 char *
 get_i2c_sysfs_driver_by_busno(int busno) {
    bool debug = false;
-   DBGF(debug, "Starting. busno=%d", busno);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
+
    int depth = (debug) ? 2 : -1;
 
    char * driver_name = NULL;
@@ -1160,7 +1161,7 @@ get_i2c_sysfs_driver_by_busno(int busno) {
       free(adapter_path);
    }
 
-   DBGF(debug, "Done. busno=%d, returning %s", busno, driver_name);
+   DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning %s", busno, driver_name);
    return driver_name;
 }
 
@@ -1229,6 +1230,9 @@ get_i2c_sysfs_driver_by_fd(int fd) {
  */
 uint32_t
 get_i2c_device_sysfs_class(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d");
+
    uint32_t result = 0;
    char workbuf[100];
    snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device", busno);
@@ -1246,7 +1250,8 @@ get_i2c_device_sysfs_class(int busno) {
    else{
       // printf("(%s) class for bus %d not found\n", __func__, busno);
    }
-   // printf("(%s) busno=%d, returning 0x%08x\n", __func__, busno, result);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning 0x%08x", busno, result);
    return result;
 }
 
@@ -1322,10 +1327,10 @@ sysfs_is_ignorable_i2c_device(int busno) {
 
 
 
-
-
-
 void init_i2c_sysfs_base() {
+   RTTI_ADD_FUNC(sysfs_find_adapter);
+   RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
+   RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
    RTTI_ADD_FUNC(check_connector_reliability);
    RTTI_ADD_FUNC(check_sysfs_reliability);
    RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
