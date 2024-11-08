@@ -26,6 +26,7 @@
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
+#include "i2c_sysfs_base.h"
 #include "i2c_strategy_dispatcher.h"
 
 
