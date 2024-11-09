@@ -179,35 +179,6 @@ is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
 #endif
 
 
-/** Gets the numbers of I2C devices
- *
- *  \param  include_ignorable_devices  if true, do not exclude SMBus and other ignorable devices
- *  \return sorted #Byte_Value_Array of I2C device numbers, caller is responsible for freeing
- */
-Byte_Value_Array
-get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
-   bool debug = false;
-   DBGF(debug, "Starting.");
-
-   Byte_Value_Array bva = bva_create();
-
-   GPtrArray * summaries = get_i2c_devices_using_udev();
-   if (summaries) {
-      for (int ndx = 0; ndx < summaries->len; ndx++) {
-         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
-         int busno = udev_i2c_device_summary_busno(summary);
-         assert(busno >= 0);
-         assert(busno <= 127);
-         if ( include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno) )
-            bva_append(bva, busno);
-      }
-      free_udev_device_summaries(summaries);
-   }
-
-   if (debug)
-      bva_report(bva, "Returning I2c bus numbers:");
-   return bva;
-}
 
 
 /** Gets the bus numbers of I2C devices reported by UDEV,

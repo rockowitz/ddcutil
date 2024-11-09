@@ -28,8 +28,6 @@ report_i2c_udev_device_summaries(
       int         depth) ;
 
 
-Byte_Value_Array                // one byte for each I2C bus number
-get_i2c_device_numbers_using_udev(bool include_ignorable_devices);
 
 /** Signature of function that tests sys attribute name */
 typedef bool (*Sysattr_Name_Filter)(const char * sysattr_name);

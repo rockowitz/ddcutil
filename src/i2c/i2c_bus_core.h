@@ -60,6 +60,11 @@ Status_Errno     i2c_check_bus2(I2C_Bus_Info * businfo);
 Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 
 // Bus inventory - detect and probe buses
+
+Byte_Value_Array                // one byte for each I2C bus number
+get_i2c_device_numbers_using_udev(bool include_ignorable_devices);
+
+
 Bit_Set_256      buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 GPtrArray *      i2c_detect_buses0();
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
