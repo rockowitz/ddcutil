@@ -1940,7 +1940,7 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
 Byte_Value_Array
 get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
    bool debug = false;
-   DBGF(debug, "Starting.");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "include_ignorable_devices=%s", SBOOL(include_ignorable_devices));
 
    Byte_Value_Array bva = bva_create();
 
@@ -1957,8 +1957,12 @@ get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
       free_udev_device_summaries(summaries);
    }
 
-   if (debug)
-      bva_report(bva, "Returning I2c bus numbers:");
+   if (IS_DBGTRC(debug,TRACE_GROUP)) {
+      char * s = bva_as_string(bva, /*as_hex*/ false, ",");
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning I2C bus numbers: %s", s);
+      free(s);
+      // bva_report(bva, "Returning I2c bus numbers:");
+   }
    return bva;
 }
 
@@ -2421,6 +2425,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(is_adapter_class_display_controller);
    RTTI_ADD_FUNC(get_connector_edid);
    RTTI_ADD_FUNC(check_x37_for_businfo);
+   RTTI_ADD_FUNC(get_i2c_device_numbers_using_udev);
 }
 
 
