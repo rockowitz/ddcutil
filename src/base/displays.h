@@ -165,6 +165,7 @@ char * interpret_dref_flags_t(Dref_Flags flags);
 #define DISPNO_PHANTOM -2
 #define DISPNO_REMOVED -3
 #define DISPNO_BUSY    -4
+#define DISPNO_API_DISABLED -5
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
