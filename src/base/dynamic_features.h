@@ -21,7 +21,8 @@
 
 typedef enum {
    DFR_FLAGS_NONE      = 0,
-   DFR_FLAGS_NOT_FOUND = 1
+   DFR_FLAGS_NOT_FOUND = 1,
+   DFR_FLAG_EXCLUDE_FROM_API = 2,
 } DFR_Flags;
 
 // Replaces use of DDCA_Feature_Metadata for representing dynamic spec read from file
