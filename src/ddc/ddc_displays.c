@@ -677,6 +677,19 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
    Error_Info * err = NULL;
    I2C_Bus_Info * businfo = NULL;
 
+
+   // Monitor_Model_Key mmk0 = monitor_model_key_value_from_edid(dref->pedid);
+   Monitor_Model_Key* mmk = dref->mmid;
+   // DBG("mmk0 = %s", mmk_repr(mmk0));
+   // DBG("mmk = %p -> %s", mmk, mmk_repr(*mmk));
+   // assert(monitor_model_key_eq(mmk0, *mmk));
+   bool disabled_mmk = is_disabled_mmk(*mmk);
+   if (disabled_mmk) {
+      dref->flags |= DREF_DDC_DISABLED;
+      dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+      goto bye;
+   }
+
    bool skip_ddc_checks0 = skip_ddc_checks;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       businfo = dref->detail;
@@ -733,6 +746,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
       //       SBOOL(businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE));
    }
 
+bye:
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Final flags: %s", interpret_dref_flags_t(dref->flags));
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dref = %s", dref_repr_t(dref) );
    if (err)
@@ -1565,11 +1579,14 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    for (int ndx = 0; ndx < display_list->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(display_list, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      // DBGMSG("dref->flags: %s", interpret_dref_flags_t(dref->flags));
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
-         DBGMSG("dref=%s, DREF_DDC_COMMUNICATON_WORKING not set", dref_repr_t(dref));
+         DBGTRC(debug, DDCA_TRC_NONE,"dref=%s, DREF_DDC_COMMUNICATON_WORKING not set", dref_repr_t(dref));
       // if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
       //    dref->dispno = DISPNO_INVALID;  // does this need to be different?
-      if (dref->flags & DREF_DDC_BUSY)
+      if (dref->flags & DREF_DDC_DISABLED)
+         dref->dispno = DISPNO_DDC_DISABLED;
+      else if (dref->flags & DREF_DDC_BUSY)
          dref->dispno = DISPNO_BUSY;
       else if (dref->flags & DREF_DDC_COMMUNICATION_WORKING)
          dref->dispno = ++dispno_max;
