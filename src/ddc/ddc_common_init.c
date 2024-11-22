@@ -189,7 +189,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 
 
 STATIC Error_Info * init_disabled_displays(Parsed_Cmd * parsed_cmd) {
-   bool debug = true;
+   bool debug = false;
    Error_Info * errinfo = NULL;
    GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func((GDestroyNotify) errinfo_free);
    if (parsed_cmd->ddc_disabled) {
@@ -213,7 +213,6 @@ STATIC Error_Info * init_disabled_displays(Parsed_Cmd * parsed_cmd) {
    g_ptr_array_free(errinfo_accumulator, true);
    return errinfo;
 }
-
 
 
 STATIC Error_Info *
