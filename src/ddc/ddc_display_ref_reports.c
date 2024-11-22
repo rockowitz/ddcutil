@@ -212,6 +212,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    TRACED_ASSERT(businfo && memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
 
    switch(dref->dispno) {
+   case DISPNO_DDC_DISABLED:
+      rpt_vstring(depth, "DDC_disabled");
+      break;
    case DISPNO_BUSY:       // -4
       rpt_vstring(depth, "Busy display");
       break;
@@ -251,6 +254,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    TRACED_ASSERT(dref->flags & (DREF_DDC_COMMUNICATION_CHECKED|DREF_DPMS_SUSPEND_STANDBY_OFF));
 
    DDCA_Output_Level output_level = get_output_level();
+   Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
+   // DBGMSG("mmk = %s", mmk_repr(mmk) );
 
    if (output_level >= DDCA_OL_NORMAL) {
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
@@ -287,6 +292,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                msg = "Use non-phantom device";
             }
          }
+         else if (businfo->flags & I2C_BUS_DDC_DISABLED)
+            msg = "DDC communication disabled";
          else { // non-phantom
             if (dref->io_path.io_mode == DDCA_IO_I2C)
             {
@@ -298,6 +305,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                 else if ( is_laptop_parsed_edid(dref->pedid) )
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
 #endif
+
                 if (businfo->flags & I2C_BUS_LVDS_OR_EDP)
                    msg = "This is a laptop display.  Laptop displays do not support DDC/CI.";
                 else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP)
@@ -423,8 +431,6 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             // }
          }
 
-         Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
-         // DBGMSG("mmk = %s", mmk_repr(mmk) );
          Monitor_Quirk_Data * quirk = get_monitor_quirks(&mmk);
          if (quirk) {
             char * msg = NULL;
@@ -443,19 +449,19 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             if (msg)
                rpt_vstring(d1, msg);
          }
-
-         if (output_level >= DDCA_OL_VERBOSE) {
-            char * simple_fn = model_id_string(mmk.mfg_id, mmk.model_name, mmk.product_code);
-            char * fqfn = dfr_find_feature_def_file(simple_fn);
-            if (fqfn) {
-               rpt_vstring(d1, "Uses feature definition file: %s", fqfn);
-               free(fqfn);
-            }
-            else {
-               rpt_vstring(d1, "Feature definition file %s not found.", simple_fn);
-            }
-            free(simple_fn);
+      }
+      if (output_level >= DDCA_OL_VERBOSE) {
+         char * smmk = model_id_string(mmk.mfg_id, mmk.model_name, mmk.product_code);
+         rpt_vstring(d1, "Monitor Model Id:  %s", smmk);
+         char * fqfn = dfr_find_feature_def_file(smmk);
+         if (fqfn) {
+            rpt_vstring(d1, "Uses feature definition file: %s", fqfn);
+            free(fqfn);
          }
+         else {
+            rpt_vstring(d1, "Feature definition file %s.mccs not found.", smmk);
+         }
+         free(smmk);
       }
    }
 
