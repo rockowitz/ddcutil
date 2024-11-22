@@ -224,6 +224,7 @@ struct {
    // Behavior Modification
    uint8_t                explicit_i2c_source_addr;
    int                    edid_read_size;
+   gchar **               ddc_disabled;
 
    // Display Selection
    Display_Identifier*    pdid;
