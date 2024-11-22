@@ -20,6 +20,7 @@
 #include "feature_metadata.h"
 #include "i2c_bus_base.h"
 #include "linux_errno.h"
+#include "monitor_model_key.h"
 #include "per_display_data.h"
 #include "per_thread_data.h"
 #include "rtti.h"
@@ -35,6 +36,7 @@ void init_base_services() {
    DBGF(debug, "Starting.");
    errinfo_init(psc_name, psc_desc);
    init_core();
+   init_monitor_model_key();
    init_base_dynamic_features();
    init_ddc_packets();
    init_dsa2();
