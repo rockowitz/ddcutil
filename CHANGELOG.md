@@ -1,4 +1,4 @@
-## [2.1.5] 2024-11-01
+## [2.1.5] 2024-11-22
 
 ### General
 
@@ -14,6 +14,15 @@
   ***--disable-build-timestamp***. (For reproducible builds, building typically
   is performed using a script or build system, so it's not inconvenient to 
   specify ***--disable-build-timestamp*** in this situation.)
+- Add ***--enable-flock*** and ***--disable-flock*** as aliases for 
+  ***--enable-cross-instance-locks*** and ***--disable-cross-instance-locks***
+- Add option ***--disable-ddc***, which takes a Monitor Model Id, 
+  e.g. SAM-U32H75x-3587 as an argument. Indicates that DDC/CI communication is 
+  disabled for monitors with this id.  Typically, this will be added to the
+  [libddcutil] section of configuration file ddcutilrc. It can also be included 
+  in the options string passed in the opts argument to ddca_init2(). 
+  Addresses issue #446.
+   
 
 #### Changed
 
@@ -62,6 +71,9 @@
 - Add -Wformat-security to compiler options.  Addresses issue #458.
 - If option --bus specified, only check accessability for that bus, avoiding
   irrelevant warning messages regarding other buses.  Addresses issue #461.
+- Return DDCRC_CONFIG_ERROR instead of DDCRC_BAD_DATA for User Defined Feature File
+  errors.
+- Report the Monitor Model Id in the ***--verbose*** output to **ddcutil detect**. 
 
 #### Fixed
 
