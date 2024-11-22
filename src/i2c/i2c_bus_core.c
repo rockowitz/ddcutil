@@ -55,6 +55,7 @@
 #include "base/flock.h"
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
+#include "base/monitor_model_key.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
 #include "base/rtti.h"
@@ -1436,25 +1437,34 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
       is_laptop = is_laptop_for_businfo(businfo);
    }
 
+
    // *** Check x37
    if (is_laptop) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Laptop display detected, not checking x37");
    }
    else  if (businfo->edid) {  // start, x37 check
-      // The check here for slave address x37 had previously been removed.
-      // It was commented out in commit 78fb4b on 4/29/2013, and the code
-      // finally delete by commit f12d7a on 3/20/2020, with the following
-      // comments:
-      //    have seen case where laptop display reports addr 37 active, but
-      //    it doesn't respond to DDC
-      // 8/2017: If DDC turned off on U3011 monitor, addr x37 still detected
-      // DDC checking was therefore moved entirely to the DDC layer.
-      // 6/25/2023:
-      // Testing for slave address x37 turns out to be needed to avoid
-      // trying to reload cached display information for a display no
-      // longer present
 
-      check_x37_for_businfo(fd,businfo);
+      Monitor_Model_Key mmk = monitor_model_key_value_from_edid(businfo->edid);
+      bool disabled_mmk = is_disabled_mmk(mmk);
+      if (disabled_mmk) {
+         businfo->flags |= I2C_BUS_DDC_DISABLED;
+      }
+      else {
+         // The check here for slave address x37 had previously been removed.
+         // It was commented out in commit 78fb4b on 4/29/2013, and the code
+         // finally delete by commit f12d7a on 3/20/2020, with the following
+         // comments:
+         //    have seen case where laptop display reports addr 37 active, but
+         //    it doesn't respond to DDC
+         // 8/2017: If DDC turned off on U3011 monitor, addr x37 still detected
+         // DDC checking was therefore moved entirely to the DDC layer.
+         // 6/25/2023:
+         // Testing for slave address x37 turns out to be needed to avoid
+         // trying to reload cached display information for a display no
+         // longer present
+
+         check_x37_for_businfo(fd,businfo);
+      }
    }
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
