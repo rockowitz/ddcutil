@@ -1371,7 +1371,7 @@ Display_Ref * detect_display_by_businfo(I2C_Bus_Info * businfo) {
          dref->drm_connector = g_strdup(businfo->drm_connector_name);
       }
       dref->pedid = copy_parsed_edid(businfo->edid);    // needed?
-      dref->mmid  = monitor_model_key_new(dref->pedid->mfg_id,
+      dref->mmid  = mmk_new(dref->pedid->mfg_id,
                                           dref->pedid->model_name,
                                           dref->pedid->product_code);
       dref->detail = businfo;
@@ -1435,7 +1435,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             }
             dref->drm_connector_id = businfo->drm_connector_id;
             dref->pedid = copy_parsed_edid(businfo->edid);
-            dref->mmid  = monitor_model_key_new(dref->pedid->mfg_id,
+            dref->mmid  = mmk_new(dref->pedid->mfg_id,
                                                 dref->pedid->model_name,
                                                 dref->pedid->product_code);
             dref->detail = businfo;
@@ -1490,12 +1490,12 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          dref->dispno = DISPNO_INVALID;   // -1
          dref->pedid = copy_parsed_edid(curmon->edid);
          if (dref->pedid)
-            dref->mmid  = monitor_model_key_new(
+            dref->mmid  = mmk_new(
                              dref->pedid->mfg_id,
                              dref->pedid->model_name,
                              dref->pedid->product_code);
          else
-            dref->mmid = monitor_model_key_new("UNK", "UNK", 0);
+            dref->mmid = mmk_new("UNK", "UNK", 0);
          // drec->detail.usb_detail = curmon;
          dref->detail = curmon;
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
@@ -2004,7 +2004,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
       dref->dispno = 99;   // dispno not used in libddcutil except to indicate invalid
       dref->pedid = copy_parsed_edid(businfo->edid);
-      dref->mmid  = monitor_model_key_new(
+      dref->mmid  = mmk_new(
                        dref->pedid->mfg_id,
                        dref->pedid->model_name,
                        dref->pedid->product_code);

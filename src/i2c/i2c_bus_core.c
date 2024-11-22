@@ -1444,7 +1444,7 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
    }
    else  if (businfo->edid) {  // start, x37 check
 
-      Monitor_Model_Key mmk = monitor_model_key_value_from_edid(businfo->edid);
+      Monitor_Model_Key mmk = mmk_value_from_edid(businfo->edid);
       bool disabled_mmk = is_disabled_mmk(mmk);
       if (disabled_mmk) {
          businfo->flags |= I2C_BUS_DDC_DISABLED;

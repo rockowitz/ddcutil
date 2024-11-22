@@ -334,7 +334,7 @@ char * get_persistent_capabilities(Monitor_Model_Key* mmk)
             }
          }
          assert(capabilities_hash);
-         char * mms = g_strdup(monitor_model_string(mmk));
+         char * mms = g_strdup(mmk_string(mmk));
          if (debug) {
             DBGMSG("Hash table before lookup:");
             dbgrpt_capabilities_hash0(2, NULL);
@@ -367,7 +367,7 @@ void set_persistent_capabilites(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_cache_enabled=%s. mmk->%s, capabilities = %s",
-          sbool(capabilities_cache_enabled), monitor_model_string(mmk), capabilities);
+          sbool(capabilities_cache_enabled), mmk_string(mmk), capabilities);
 
    g_mutex_lock(&persistent_capabilities_mutex);
    if (capabilities_cache_enabled) {
@@ -376,10 +376,10 @@ void set_persistent_capabilites(
                          "Not saving capabilities for non-unique Monitor_Model_Key.");
          SYSLOG2(DDCA_SYSLOG_WARNING,
                "Not saving capabilities for non-unique Monitor_Model_Key: %s",
-               monitor_model_string(mmk));
+               mmk_string(mmk));
       }
       else {
-         char * mms = g_strdup(monitor_model_string(mmk));
+         char * mms = g_strdup(mmk_string(mmk));
          g_hash_table_insert(capabilities_hash, mms, g_strdup(capabilities));
          if (debug || IS_TRACING())
             dbgrpt_capabilities_hash0(2, "Capabilities hash after insert and before saving");

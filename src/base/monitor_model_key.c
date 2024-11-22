@@ -31,7 +31,7 @@
 
 /** Returns a Monitor_Model_Key on the stack. */
 Monitor_Model_Key
-monitor_model_key_value(
+mmk_value(
       const char *   mfg_id,
       const char *   model_name,
       uint16_t       product_code)
@@ -56,7 +56,7 @@ monitor_model_key_value(
 
 /** Returns an "undefined" Monitor_Model_Key on the stack. */
 Monitor_Model_Key
-monitor_model_key_undefined_value() {
+mmk_undefined_value() {
    Monitor_Model_Key result;
    memset(&result, 0, sizeof(result));
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
@@ -67,7 +67,7 @@ monitor_model_key_undefined_value() {
 /** Returns a Monitor Model Key on the stack with values obtained
  *  from an EDID */
 Monitor_Model_Key
-monitor_model_key_value_from_edid(Parsed_Edid * edid) {
+mmk_value_from_edid(Parsed_Edid * edid) {
    Monitor_Model_Key result;
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
    /* coverity[OVERRUN] */             (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
@@ -87,7 +87,7 @@ monitor_model_key_value_from_edid(Parsed_Edid * edid) {
 
 /** Allocates and initializes a new Monitor_Model_Key on the heap. */
 Monitor_Model_Key *
-monitor_model_key_new(
+mmk_new(
       const char *   mfg_id,
       const char *   model_name,
       uint16_t       product_code)
@@ -121,7 +121,7 @@ mmk_value_from_string(const char * sval) {
          4,   //       max_matches,
          matches);
 
-   Monitor_Model_Key result = monitor_model_key_undefined_value();
+   Monitor_Model_Key result = mmk_undefined_value();
 
    if (ok) {
       // for (int kk = 0; kk < 4; kk++) {
@@ -142,7 +142,7 @@ mmk_value_from_string(const char * sval) {
       assert(ok);
       DBGF(debug, "product_code: %d", product_code);
 
-      result = monitor_model_key_value(mfg_id, model_name, product_code);
+      result = mmk_value(mfg_id, model_name, product_code);
 
       free(mfg_id);
       free(model_name);
@@ -163,7 +163,7 @@ mmk_new_from_value(Monitor_Model_Key mmk) {
    if (mmk.defined) {
       result = calloc(1, sizeof(Monitor_Model_Key));
       memcpy(result, &mmk, sizeof(Monitor_Model_Key));
-      Monitor_Model_Key * result2 = monitor_model_key_new(
+      Monitor_Model_Key * result2 = mmk_new(
             mmk.mfg_id,
             mmk.model_name,
             mmk.product_code);
@@ -200,7 +200,7 @@ bool is_valid_mmk(const char * sval) {
 
 
 Monitor_Model_Key *
-monitor_model_key_new_from_edid(
+mmk_new_from_edid(
       Parsed_Edid * edid)
 {
    Monitor_Model_Key * result = NULL;
@@ -218,7 +218,7 @@ monitor_model_key_new_from_edid(
 
 /** Frees a Monitor_Model_Key */
 void
-monitor_model_key_free(
+mmk_free(
       Monitor_Model_Key * mmk)
 {
    free(mmk);
@@ -285,7 +285,7 @@ bool monitor_model_key_is_defined(Monitor_Model_Key mmk) {
  *  \return  key string (caller must free or save in persistent data structure)
  */
 char *
-model_id_string(
+mmk_model_id_string(
       const char *  mfg,
       const char *  model_name,
       uint16_t      product_code)
@@ -318,7 +318,7 @@ model_id_string(
  *  the current thread.  Caller should not free.
  */
 char *
-monitor_model_string(Monitor_Model_Key * model_id) {
+mmk_string(Monitor_Model_Key * model_id) {
    static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
    const int bufsz = 100;
    char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
@@ -326,7 +326,7 @@ monitor_model_string(Monitor_Model_Key * model_id) {
    char * result = NULL;
    // perhaps use thread safe buffer so caller doesn't have to free
    if (model_id) {
-      char * s  = model_id_string(
+      char * s  = mmk_model_id_string(
                          model_id->mfg_id,
                          model_id->model_name,
                          model_id->product_code);

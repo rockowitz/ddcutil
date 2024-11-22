@@ -521,7 +521,7 @@ dyn_report_cap_features(
    assert(dref);
 
    if (!(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED)) {
-      Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
+      Monitor_Model_Key mmk = mmk_value_from_edid(dref->pedid);
       Error_Info * erec = dfr_load_by_mmk(mmk, &dref->dfr);
       if (erec) {
          if (erec->status_code != DDCRC_NOT_FOUND || debug)

@@ -251,7 +251,7 @@ Monitor_Model_Key * deserialize_mmid(json_t* jpath) {
    const char * mfg_id = json_string_value( json_object_get(jpath, "mfg_id"));
    const char * model_name = json_string_value( json_object_get(jpath, "model_name"));
    int          product_code = json_integer_value( json_object_get(jpath, "product_code"));
-   Monitor_Model_Key*  mmk = monitor_model_key_new(mfg_id, model_name, product_code);
+   Monitor_Model_Key*  mmk = mmk_new(mfg_id, model_name, product_code);
 
    DBGMSF(debug, "Executed. Returning: %s", mmk_repr(*mmk) );
    return mmk;

@@ -510,7 +510,7 @@ find_dref(
             dref = create_bus_display_ref(busno);
             dref->dispno = DISPNO_INVALID;      // or should it be DISPNO_NOT_SET?
             dref->pedid = copy_parsed_edid(businfo->edid);
-            dref->mmid  = monitor_model_key_new(
+            dref->mmid  = mmk_new(
                              dref->pedid->mfg_id,
                              dref->pedid->model_name,
                              dref->pedid->product_code);

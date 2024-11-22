@@ -254,7 +254,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    TRACED_ASSERT(dref->flags & (DREF_DDC_COMMUNICATION_CHECKED|DREF_DPMS_SUSPEND_STANDBY_OFF));
 
    DDCA_Output_Level output_level = get_output_level();
-   Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
+   Monitor_Model_Key mmk = mmk_value_from_edid(dref->pedid);
    // DBGMSG("mmk = %s", mmk_repr(mmk) );
 
    if (output_level >= DDCA_OL_NORMAL) {
@@ -451,7 +451,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          }
       }
       if (output_level >= DDCA_OL_VERBOSE) {
-         char * smmk = model_id_string(mmk.mfg_id, mmk.model_name, mmk.product_code);
+         char * smmk = mmk_model_id_string(mmk.mfg_id, mmk.model_name, mmk.product_code);
          rpt_vstring(d1, "Monitor Model Id:  %s", smmk);
          char * fqfn = dfr_find_feature_def_file(smmk);
          if (fqfn) {
