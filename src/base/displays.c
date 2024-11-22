@@ -1171,7 +1171,6 @@ bool is_disabled_mmk(Monitor_Model_Key mmk) {
 }
 
 
-
 void init_displays() {
    RTTI_ADD_FUNC(copy_display_ref);
    RTTI_ADD_FUNC(create_base_display_handle);
