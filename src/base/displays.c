@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "util/data_structures.h"
+#include "util/debug_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -1065,6 +1066,110 @@ void free_bus_open_error(Bus_Open_Error * boe) {
    free(boe->detail);
    free(boe);
 }
+
+
+static GPtrArray  * ddc_disabled_table = NULL;
+
+
+/** Adds a Monitor Model Id to the list of monitors for which DDC is disabled
+ *
+ *  @param  mmid  monitor model key string
+ *  @return true  if mmid is defined, false if not
+ *
+ *  @remark
+ *  If the **ddc_disabled_table** does not already exist, it is created.
+ */
+bool add_disabled_display(Monitor_Model_Key * p_mmk) {
+   bool debug = true;
+   char * repr = NULL;
+   if (debug) {
+      repr = mmk_repr(*p_mmk);
+      DBG("Starting. mmk=|%s|", repr);
+   }
+
+   bool result = false;
+   bool missing = true;
+   if (p_mmk->defined) {  // if it's a valid monitor model id string
+      DBGF(debug, "%s is valid:", repr);
+      if (!ddc_disabled_table)
+         ddc_disabled_table = g_ptr_array_new();
+      // n. g_ptr_array_find_with_equal_func() requires glib 2.54
+      for (int ndx = 0; ndx < ddc_disabled_table->len; ndx++) {
+         Monitor_Model_Key* p = g_ptr_array_index(ddc_disabled_table, ndx);
+         if (monitor_model_key_eq(*p_mmk, *p)) {
+            missing = false;
+            break;
+         }
+      }
+      if (missing)
+         g_ptr_array_add(ddc_disabled_table, p_mmk);
+      result = true;
+   }
+
+   DBGF(debug, "Done. mmk=%s, missing=%s, returning: %s", repr,
+               sbool(missing), sbool(result));
+   return result;
+}
+
+
+bool add_disabled_mmk_by_string(const char * mmid) {
+   bool result = false;
+   Monitor_Model_Key* p_mmk = mmk_new_from_string(mmid);
+   if (p_mmk) {
+      add_disabled_display(p_mmk);
+      result = true;
+   }
+   return result;
+}
+
+
+void dbgrpt_ddc_disabled_table(int depth) {
+   const char * table_name = "ddc_disabled_table";
+   GPtrArray* table = ddc_disabled_table;
+   if (table) {
+      if (table->len == 0)
+         rpt_vstring(depth, "%s: empty", table_name);
+      else {
+         rpt_vstring(depth, "%s:", table_name);
+         for (int ndx = 0; ndx < table->len; ndx++) {
+             rpt_vstring(depth+1, mmk_repr(* (Monitor_Model_Key*) g_ptr_array_index(table, ndx)));
+         }
+      }
+   }
+   else {
+      rpt_vstring(depth, "%s: NULL", table_name);
+   }
+}
+
+
+
+/** Checks if DDC is disabled
+ *
+ *  @param mmk  monitor-model-id
+ *  @return **true** if the display type is disabled, **false** if not
+ */
+bool is_disabled_mmk(Monitor_Model_Key mmk) {
+   bool debug = true;
+   DBGF(debug, "Starting. mmk=%s", mmk_repr(mmk));
+
+  // dbgrpt_ddc_disabled_table(2);
+
+   bool result = false;
+   if (ddc_disabled_table) {
+      for (int ndx = 0; ndx < ddc_disabled_table->len; ndx++) {
+         Monitor_Model_Key* p = g_ptr_array_index(ddc_disabled_table, ndx);
+         DBGF(debug, "Comparing vs p = %p -> %s", p, mmk_repr(*p));
+         if (monitor_model_key_eq(mmk, *p)) {
+            result = true;
+            break;
+         }
+      }
+   }
+
+   DBGF(debug, "mmid=|%s|, returning: %s", mmk_repr(mmk), SBOOL(result));
+   return result;
+}
+
 
 
 void init_displays() {

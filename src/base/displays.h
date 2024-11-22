@@ -282,4 +282,11 @@ typedef enum {
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
 
+
+bool add_disabled_display(Monitor_Model_Key * mmk);
+bool add_disabled_mmk_by_string(const char * mmid);
+void dbgrpt_ddc_disabled_table(int depth);
+bool is_disabled_mmk(Monitor_Model_Key mmk);
+
+
 #endif /* DISPLAYS_H_ */
