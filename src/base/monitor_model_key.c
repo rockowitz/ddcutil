@@ -108,7 +108,7 @@ mmk_new(
 
 Monitor_Model_Key
 mmk_value_from_string(const char * sval) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "sval = |%s|", sval);
 
    static const char * mmk_pattern = "^([A-Z]{3})-(.{0,13})-([0-9]*)$";
@@ -140,7 +140,7 @@ mmk_value_from_string(const char * sval) {
       ok = str_to_int(product_code_s, &ival, 10);
       product_code = (uint16_t) ival;
       assert(ok);
-      DBGF(debug, "product_code: %d", product_code);
+      // DBGF(debug, "product_code: %d", product_code);
 
       result = mmk_value(mfg_id, model_name, product_code);
 
@@ -149,14 +149,14 @@ mmk_value_from_string(const char * sval) {
       free(product_code_s);
    }
 
-   DBGTRC_DONE(true, DDCA_TRC_NONE, "Returning: %s", mmk_repr(result));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %s", mmk_repr(result));
    return result;
 }
 
 
 Monitor_Model_Key *
 mmk_new_from_value(Monitor_Model_Key mmk) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "mmk=%s", mmk_repr(mmk));
 
    Monitor_Model_Key * result = NULL;
@@ -178,7 +178,7 @@ mmk_new_from_value(Monitor_Model_Key mmk) {
 
 Monitor_Model_Key *
 mmk_new_from_string(const char * s) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "s=|s|", s);
 
    Monitor_Model_Key * result = NULL;
