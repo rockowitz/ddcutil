@@ -261,7 +261,7 @@ dfr_free(
  *  @param caller   function creating the error message
  *  @param fmt      message format string
  *  @param ..       substitution values
- *  @return newly allocated #Error_Info struct, with status code DDCRC_BAD_DATA
+ *  @return newly allocated #Error_Info struct, with status code DDCRC_CONFIG_ERROR
  */
 static void
 add_error(
@@ -289,7 +289,7 @@ add_error(
       else {
          final_detail = detail;
       }
-      Error_Info *  err = errinfo_new(DDCRC_BAD_DATA, caller, final_detail);
+      Error_Info *  err = errinfo_new(DDCRC_CONFIG_ERROR, caller, final_detail);
       g_ptr_array_add(errors, err);
       va_end(args);
 }
@@ -404,7 +404,7 @@ finalize_feature(
  *  @param  dynamic_features_loc where to return pointer to newly allocated #Dynamic_Features_Rec,
  *                               NULL if an #Error_Info struct is returned
  *  @return pointer to #Error_Info, NULL if no error
- *          The #Error_Info, and all of its causes, have status code DDCRC_BAD_DATA
+ *          The #Error_Info, and all of its causes, have status code DDCRC_CONFIG_ERROR
  */
 Error_Info *
 create_dynamic_features_rec(
@@ -600,7 +600,7 @@ create_dynamic_features_rec(
    if (errors->len > 0) {
       char * detail = g_strdup_printf("Error(s) processing monitor definition file: %s", filename);
       master_err = errinfo_new_with_causes(
-                            DDCRC_BAD_DATA,
+                            DDCRC_CONFIG_ERROR,
                             (Error_Info**) errors->pdata,
                             errors->len,
                             __func__,
