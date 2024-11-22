@@ -1080,7 +1080,7 @@ static GPtrArray  * ddc_disabled_table = NULL;
  *  If the **ddc_disabled_table** does not already exist, it is created.
  */
 bool add_disabled_display(Monitor_Model_Key * p_mmk) {
-   bool debug = true;
+   bool debug = false;
    char * repr = NULL;
    if (debug) {
       repr = mmk_repr(*p_mmk);
@@ -1149,7 +1149,7 @@ void dbgrpt_ddc_disabled_table(int depth) {
  *  @return **true** if the display type is disabled, **false** if not
  */
 bool is_disabled_mmk(Monitor_Model_Key mmk) {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting. mmk=%s", mmk_repr(mmk));
 
   // dbgrpt_ddc_disabled_table(2);
