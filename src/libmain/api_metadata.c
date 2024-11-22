@@ -22,7 +22,6 @@
 #include "base/rtti.h"
 
 #include "vcp/vcp_feature_codes.h"
-#include "dynvcp/vcp_feature_set.h"
 
 #include "ddc/ddc_vcp_version.h"
 
