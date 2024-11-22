@@ -188,6 +188,34 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 }
 
 
+STATIC Error_Info * init_disabled_displays(Parsed_Cmd * parsed_cmd) {
+   bool debug = true;
+   Error_Info * errinfo = NULL;
+   GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func((GDestroyNotify) errinfo_free);
+   if (parsed_cmd->ddc_disabled) {
+    for (int ndx = 0; ndx < ntsa_length(parsed_cmd->ddc_disabled); ndx++) {
+          // DBGF(debug, "Adding disabled_mmid: %s", parsed_cmd->ddc_disabled[ndx]);
+          char * cur_mmid = parsed_cmd->ddc_disabled[ndx];
+          bool found = add_disabled_mmk_by_string(cur_mmid);
+          if (!found) {
+             Error_Info * err = errinfo_new(DDCRC_CONFIG_ERROR, "Invalid mmid: %s", cur_mmid);
+             g_ptr_array_add(errinfo_accumulator, err);
+          }
+       }
+    }
+
+   if (debug)
+      dbgrpt_ddc_disabled_table(2);
+
+   if (errinfo_accumulator->len > 0)
+      errinfo = errinfo_new_with_causes_gptr(
+            DDCRC_CONFIG_ERROR, errinfo_accumulator, __func__, "Invalid mmid(s):");
+   g_ptr_array_free(errinfo_accumulator, true);
+   return errinfo;
+}
+
+
+
 STATIC Error_Info *
 init_failsim(Parsed_Cmd * parsed_cmd) {
    Error_Info * result = NULL;
@@ -429,6 +457,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    final_result = init_failsim(parsed_cmd);
    if (final_result)
       goto bye;      // main_rc == EXIT_FAILURE
+
+   final_result = init_disabled_displays(parsed_cmd);
 
    if (parsed_cmd->flags & CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE) {
       DBGMSF(debug, "setting simulate_null_msg_means_unspported = true");
