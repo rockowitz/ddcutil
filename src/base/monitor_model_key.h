@@ -3,7 +3,7 @@
  *  model name, and product code, as listed in the EDID.
  */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef MONITOR_MODEL_KEY_H_
@@ -46,6 +46,16 @@ Monitor_Model_Key *
 monitor_model_key_new_from_edid(
       Parsed_Edid * edid);
 
+Monitor_Model_Key
+mmk_value_from_string(const char * sval);
+
+Monitor_Model_Key *
+mmk_new_from_value(Monitor_Model_Key mmk);
+
+Monitor_Model_Key *
+mmk_new_from_string(const char * s);
+
+
 #ifdef UNUSED
 Monitor_Model_Key *
 monitor_model_key_undefined_new();
@@ -61,10 +71,6 @@ model_id_string(
       const char *  model_name,
       uint16_t      product_code);
 
-// needed at API level?
-Monitor_Model_Key
-monitor_model_key_assign(Monitor_Model_Key old);
-
 bool
 monitor_model_key_eq(
       Monitor_Model_Key mmk1,
@@ -79,5 +85,7 @@ monitor_model_string(
       Monitor_Model_Key * model_id);
 
 char * mmk_repr(Monitor_Model_Key mmk);
+
+void init_monitor_model_key();
 
 #endif /* MONITOR_MODEL_KEY_H_ */
