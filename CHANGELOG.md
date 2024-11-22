@@ -38,8 +38,7 @@
   - Give logged on user r/w access to /dev/dri/cardN, needed
     to allow logged on user to probe connectors using DRM.
 - Do not install /usr/lib/udev/rules.d/60-ddcutil-usb.rules, delete it
-  if previously installed.
-  Addresses issues #405, #428, #437
+  if previously installed. Addresses issues #405, #428, #437
 - Command **ddcutil chkusbmon**:  
   - Skip processing and always return 1 (failure) if option ***--disable-usb***
     is in effect.
