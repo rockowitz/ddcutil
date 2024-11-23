@@ -66,6 +66,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
 DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Dynamic;
+bool             enable_watch_displays = true;
 
 // some of these go elsewhere
 static GThread * watch_thread = NULL;
@@ -94,6 +95,11 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
    if (!drm_enabled) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
+      goto bye;
+   }
+
+   if (!enable_watch_displays) {
+      err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Watching for display changes disabled");
       goto bye;
    }
 
