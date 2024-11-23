@@ -22,6 +22,8 @@
   [libddcutil] section of configuration file ddcutilrc. It can also be included 
   in the options string passed in the opts argument to ddca_init2(). 
   Addresses issue #446.
+- Add libddcutil only option ***--disable-watch-displays***, blocks
+  ddca_start_watch_displays(). 
    
 
 #### Changed
