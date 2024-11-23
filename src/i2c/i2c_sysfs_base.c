@@ -1079,7 +1079,8 @@ get_i2c_device_sysfs_name(int busno)
  *
  *  Caller is responsible for freeing the returned value
  */
-char * sysfs_find_adapter(char * path) {
+#ifdef OLD
+char * sysfs_find_adapter_old(char * path) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
    assert(path);
@@ -1116,6 +1117,37 @@ char * sysfs_find_adapter(char * path) {
             free(rp2);
       }
    }
+
+   DBGTRC_DONE(debug,TRACE_GROUP, "Returning: %s", devpath);
+   return devpath;
+}
+#endif
+
+
+char * sysfs_find_adapter(char * path) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
+   assert(path);
+   int depth = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 2 : -1;
+
+   char * devpath = NULL;
+   char * rp1 = strdup(path);
+   char * rp2 = NULL;
+
+   // strlen(rp1) > 1  shuld be unnecessary, but just in case:
+   while(!devpath && strlen(rp1) > 0 && !streq(rp1, "/")) {
+      if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
+          devpath = rp1;
+      }
+      else {
+         RPT_ATTR_REALPATH(depth, &rp2, rp1, "..");
+         free(rp1);
+         rp1 = rp2;
+         rp2 = NULL;
+      }
+   }
+   if (!devpath)
+      free(rp1);
 
    DBGTRC_DONE(debug,TRACE_GROUP, "Returning: %s", devpath);
    return devpath;
