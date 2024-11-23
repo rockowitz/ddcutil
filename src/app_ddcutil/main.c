@@ -658,7 +658,7 @@ execute_cmd_with_optional_display_handle(
       {
          assert(dh);
          if (app_check_dynamic_features(dh->dref)) {
-            ensure_vcp_version_set(dh);
+            // ensure_vcp_version_set(dh);
 
             int rc = app_setvcp(parsed_cmd, dh);
             main_rc = (rc == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
