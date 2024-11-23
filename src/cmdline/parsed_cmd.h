@@ -119,7 +119,7 @@ typedef enum {
    CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR
                         =  0x0400000000000000,
 
-   CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS
+   CMD_FLAG_WATCH_DISPLAY_EVENTS
                         =  0x8000000000000000,
 
 #ifdef OLD

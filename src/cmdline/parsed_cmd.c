@@ -253,7 +253,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
                                           SBOOL(parsed_cmd->flags& CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES));
       rpt_bool("quick",            NULL, parsed_cmd->flags & CMD_FLAG_QUICK,                    d1);
 
-      RPT_CMDFLAG("watch hotplug events", CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS,                d1);
+      RPT_CMDFLAG("watch hotplug events", CMD_FLAG_WATCH_DISPLAY_EVENTS,                d1);
       rpt_vstring(d1, "watch_mode                                               : %s",
             ddc_watch_mode_name(parsed_cmd->watch_mode));
 
