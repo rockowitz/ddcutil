@@ -279,7 +279,7 @@ DDCA_Status get_connector_state_array(int fd, int cardno, GPtrArray* collector) 
          drmModeConnector * conn = drmModeGetConnector(fd, res->connectors[i]);
          if (!conn) {
             rpt_vstring(d1, "Cannot retrieve DRM connector id %d errno=%s",
-                            res->connectors[i], strerrorname_np(errno));
+                            res->connectors[i], linux_errno_name(errno));
             continue;
          }
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "got drmModeConnector conn = %p", conn);
@@ -442,7 +442,7 @@ DDCA_Status get_drm_connector_states_by_fd(int fd, int cardno, GPtrArray* collec
    }
    else {
       if (verbose || debug)
-         rpt_vstring(1, "Error calling drmGetBusid().  errno=%s", strerrorname_np(errno));
+         rpt_vstring(1, "Error calling drmGetBusid().  errno=%s", linux_errno_name(errno));
    }
 
    if (replace_fd) {
@@ -536,7 +536,7 @@ Drm_Connector_State * get_drm_connector_state_by_devname(const char * devname, i
    int fd  = open(devname,O_RDWR | O_CLOEXEC);
    if (fd < 0) {
       rpt_vstring(1, "Error opening device %s using open(), errno=%s",
-                                 devname, strerrorname_np(errno));
+                                 devname, linux_errno_name(errno));
       return NULL;
    }
 
@@ -580,7 +580,7 @@ get_drm_connector_states_by_devname(
    if (fd < 0) {
       int errsv = errno;
       SEVEREMSG("Error opening device %s using open(), errno=%s",
-                                 devname, strerrorname_np(errsv));
+                                 devname, linux_errno_name(errsv));
       result = -errsv;
       goto bye;
    }
