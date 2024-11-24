@@ -1270,7 +1270,6 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
 }
 
 
-
 /** Inspects an I2C bus.
  *
  *  Takes the number of the bus to be inspected from the #I2C_Bus_Info struct passed
@@ -1299,6 +1298,7 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
    // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
 
+   int ddcrc = 0;
    businfo->flags |= I2C_BUS_PROBED;
    Error_Info *master_err = NULL;
    if (!i2c_device_exists(businfo->busno)) {
@@ -1476,7 +1476,6 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
     businfo->flags |= I2C_BUS_INITIAL_CHECK_DONE;
 
 bye:
-   int ddcrc = 0;
    if ( IS_DBGTRC(debug, TRACE_GROUP)) {
       DBGTRC_DONE(true, TRACE_GROUP, "busno=%d, flags = %s",
             businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
