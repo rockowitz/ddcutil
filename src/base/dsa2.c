@@ -1,11 +1,8 @@
 /** @file dsa2.c Dynamic sleep algorithm 2
  */
 
-// Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-#define _GNU_SOURCE    // for localtime_r()
-#define __ISOC99_SOURCE
 
 #include <assert.h>
 #include <errno.h>

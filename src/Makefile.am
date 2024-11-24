@@ -173,6 +173,8 @@ endif
 
 AM_CFLAGS += -fPIC
 
+AM_CFLAGS += -D_GNU_SOURCE
+
 # unnessary, will use AM_CFLAGS if xxx_CFLAGS undefined
 # ddcutil_CFLAGS          = $(AM_CFLAGS)
 # libcommon_la_CFLAGS     = $(AM_CFLAGS)

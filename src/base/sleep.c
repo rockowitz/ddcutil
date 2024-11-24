@@ -5,10 +5,8 @@
  * tracing and and maintain sleep statistics.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-#define _GNU_SOURCE  // for usleep()
 
 /** \cond */
 #include <glib-2.0/glib.h>

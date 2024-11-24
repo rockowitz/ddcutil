@@ -3,10 +3,8 @@
  * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-#define _GNU_SOURCE   // for asprintf() in stdio.h
 
 /** \cond */
 #include <assert.h>

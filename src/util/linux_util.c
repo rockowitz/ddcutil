@@ -9,7 +9,6 @@
 #include "config.h"
 
 /** \cond */
-#define _GNU_SOURCE    // for syscall()
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>

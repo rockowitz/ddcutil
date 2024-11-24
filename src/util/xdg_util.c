@@ -16,7 +16,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#define _GNU_SOURCE
 #include <stdio.h>
 
 #include "xdg_util.h"

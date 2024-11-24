@@ -1,11 +1,8 @@
 // ddc_watch_displays_udev_sysfs.c
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
- 
-
-#define _GNU_SOURCE    // for usleep()
 
 #include "config.h"
 #include "public/ddcutil_types.h"

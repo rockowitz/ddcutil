@@ -18,8 +18,6 @@
 
 #include "config.h"
 
-#define _GNU_SOURCE    // for syscall(), localtime_r()
-
 //* \cond */
 #include <glib-2.0/glib.h>
 #include <errno.h>

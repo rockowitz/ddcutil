@@ -4,8 +4,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  
-#define _GNU_SOURCE
-
 /** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>

@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#define _GNU_SOURCE 1
-#include <assert.h>
 #include <dlfcn.h>     // _GNU_SOURCE for dladdr()
 #include <errno.h>
 #include <glib-2.0/glib.h>
