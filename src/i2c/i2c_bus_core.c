@@ -112,7 +112,6 @@ char * edid_summary_from_bytes(Byte * edidbytes) {
 }
 
 
-
 /** Gets a list of all /dev/i2c devices by checking the file system
  *  if devices named /dev/i2c-N exist.
  *
@@ -283,7 +282,6 @@ Error_Info * i2c_open_bus(
       }
 
       // 2) Open the device
-      // TODO: wrap in mutex, since flock requires fd
       if (!cur_error) {
          cur_error = i2c_open_bus_basic(filename, callopts, fd_loc);
          if (!cur_error) {
@@ -1051,7 +1049,7 @@ Byte * get_connector_edid(const char * connector_name) {
     // *** Possibly try to get the EDID from sysfs
     bool checked_connector_for_edid = false;
     if (drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
-       if ((try_get_edid_from_sysfs_first && is_sysfs_reliable_for_busno(busno))  ||
+       if ((try_get_edid_from_sysfs_first && is_sysfs_reliable_for_busno(busno) && !primitive_sysfs ) ||
              is_displaylink)   // X50 can't be read for DisplayLink, must use sysfs
        {
           checked_connector_for_edid = true;
@@ -1280,8 +1278,8 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
  */
 Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
    bool debug  = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p",
-         businfo->busno, businfo );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p, primitive_sysfs=%s",
+         businfo->busno, businfo, SBOOL(primitive_sysfs) );
    assert(businfo && ( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
    // show_backtrace(1);
    // int d = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 1 : -1;
@@ -1314,21 +1312,23 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
       goto bye;
    }
 
-   Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, -1);
-   businfo->driver = g_strdup(driver_info->driver);  // ** LEAKY
-   // perhaps save businfo->driver_version
-   // assert(driver_info->adapter_class);
-   bool is_video_driver = false;
-   if (driver_info->adapter_class) {
-      is_video_driver = is_adapter_class_display_controller(driver_info->adapter_class);
-   }
-   if (!is_video_driver) {
-      master_err = ERRINFO_NEW(DDCRC_OTHER, "Display controller for bus %d has class %s",
-            businfo->busno, driver_info->adapter_class);
+   if (!primitive_sysfs) {
+      Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, -1);
+      businfo->driver = g_strdup(driver_info->driver);  // ** LEAKY
+      // perhaps save businfo->driver_version
+      // assert(driver_info->adapter_class);
+      bool is_video_driver = false;
+      if (driver_info->adapter_class) {
+         is_video_driver = is_adapter_class_display_controller(driver_info->adapter_class);
+      }
+      if (!is_video_driver) {
+         master_err = ERRINFO_NEW(DDCRC_OTHER, "Display controller for bus %d has class %s",
+               businfo->busno, driver_info->adapter_class);
+         free_sysfs_i2c_info(driver_info);
+         goto bye;
+      }
       free_sysfs_i2c_info(driver_info);
-      goto bye;
    }
-   free_sysfs_i2c_info(driver_info);
 
    businfo->flags |= I2C_BUS_EXISTS;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "initial flags = %s", i2c_interpret_bus_flags_t(businfo->flags));

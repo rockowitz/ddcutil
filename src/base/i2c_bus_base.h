@@ -17,6 +17,8 @@
 
 #include "base/display_lock.h"
 
+extern bool primitive_sysfs;
+
 // Retrieve and inspect bus information
 
 // Keep in sync with i2c_bus_flags_table
@@ -142,10 +144,7 @@ const char *         x37_detection_state_name(X37_Detection_State state);
 void                 i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State deteted);
 X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes);
 
-
-
-
-// Initialization
+// Initialization and termination
 void init_i2c_bus_base();
 void terminate_i2c_bus_base();
 

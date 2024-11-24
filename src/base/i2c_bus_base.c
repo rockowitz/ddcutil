@@ -36,6 +36,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 GPtrArray * all_i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
 bool use_x37_detection_table = false;
 static GMutex all_i2c_buses_mutex;
+bool primitive_sysfs = true;
 
 
 //
