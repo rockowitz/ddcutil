@@ -430,6 +430,10 @@ bool check_all_video_adapters_implement_drm() {
 #endif
 
 
+#ifndef DRM_MODE_CONNECTOR_USB
+// not defined in debian 11 (bullseye)
+#define DRM_MODE_CONNECTOR_USB      20
+#endif
 
 
  Value_Name_Title drm_connector_type_table[] = {
@@ -450,6 +454,10 @@ bool check_all_video_adapters_implement_drm() {
     VNT(DRM_MODE_CONNECTOR_eDP         , "eDP"        ), // 14
     VNT(DRM_MODE_CONNECTOR_VIRTUAL     , "Virtual"    ), // 15
     VNT(DRM_MODE_CONNECTOR_DSI         , "DSI"        ), // 16  Display Signal Interface, used on Raspberry Pi
+    VNT(DRM_MODE_CONNECTOR_DPI         , "DPI"        ), // 17
+    VNT(DRM_MODE_CONNECTOR_WRITEBACK   , "WRITEBACK"  ), // 18
+    VNT(DRM_MODE_CONNECTOR_SPI         , "SPI"        ), // 19
+    VNT(DRM_MODE_CONNECTOR_USB         , "USB"        ), // 20
     VNT_END
  };
 
@@ -470,8 +478,6 @@ bool check_all_video_adapters_implement_drm() {
  char * drm_connector_type_title(Byte val) {
     return vnt_title(drm_connector_type_table, val);
  }
-
-
 
 
 // For getting the DRM connector type from the DRM connector name
