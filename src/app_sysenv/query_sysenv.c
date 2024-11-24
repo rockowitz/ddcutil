@@ -949,7 +949,6 @@ void query_sysenv(bool quick_env) {
       }
 
       if (probe_what & Probe_Class_Most) {
-
          rpt_vstring(0, "Checking display manager environment variables...");
          char * s = getenv("DISPLAY");
          rpt_vstring(1, "DISPLAY=%s", (s) ? s : "(not set)");
@@ -974,7 +973,6 @@ void query_sysenv(bool quick_env) {
       }
 
       if (probe_what & Probe_Class_I2cdetect) {
-
          if (sysfs_quick_test)
             DBGMSG("!!! Skipping i2cdetect and get-edid|parse-edid to speed up testing !!!");
          else {
@@ -982,8 +980,9 @@ void query_sysenv(bool quick_env) {
                                       "i2cdetect -y %d",   // command to issue
                                       "i2cdetect");        // command name for error message
             rpt_nl();
+            // -i option may not exist
             query_using_shell_command(accumulator->dev_i2c_device_numbers,
-                                      "get-edid -b %d -i | parse-edid",   // command to issue
+                                      "get-edid -b %d | parse-edid",   // command to issue
                                       "get-edid | parse-edid");        // command name for error message
          }
       }
@@ -1003,12 +1002,10 @@ void query_sysenv(bool quick_env) {
 #ifdef ENABLE_UDEV
          probe_i2c_devices_using_udev();
 #endif
-
          // temp
          // get_i2c_smbus_devices_using_udev();
 
          probe_config_files(accumulator);
-
       }
 
       if (probe_what & Probe_Class_Logs) {
