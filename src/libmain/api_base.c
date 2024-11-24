@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <string.h>
 #include <syslog.h>
+#include <unistd.h>
 
 #include "public/ddcutil_c_api.h"
 
