@@ -1403,7 +1403,7 @@ bool format_feature_detail_sh_sl_bytes(
     DBGMSF(debug, "vcp_code=0x%02x, sh=0x%02x, sl=0x%02x",
                   code_info->vcp_code, code_info->sh, code_info->sl);
 
-    g_snprintf(buffer, bufsz, "Value: sh=0x%02xm sl=0x%02x", code_info->sh, code_info->sl);
+    g_snprintf(buffer, bufsz, "Value: sh=0x%02x sl=0x%02x", code_info->sh, code_info->sl);
 
     DBGMSF(debug, "Returning true, buffer=%s", buffer);
     return true;
