@@ -94,8 +94,8 @@
    - Remove "-i" option on get-edid command. Does not exist on some versions.
 - Fix display not found on Raspberry Pi. Do not rely on /sys/class/drm to read 
   EDID, which is not valid for some drivers.  Addresses issue #403
-- Fix DDC communication failed on Raspberry Pi.  Do not check adapter class.
-  Resolves issue #413.
+- Fix DDC communication failed on Raspberry Pi. Do not rely on sysfs attributes
+  that do not exist for ARM devices. Resolves issue #413.
 - User Define Features file: fix error msg when nothing follow VALUE
 - Convert CRLF line endings to LF
 - Use printf() formats %jd and %zd to portably print variables of type ssize_t, 
