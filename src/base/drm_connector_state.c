@@ -337,7 +337,6 @@ DDCA_Status get_connector_state_array(int fd, int cardno, GPtrArray* collector) 
 }
 
 
-
 void dbgrpt_connector_state(Drm_Connector_State * state, int depth) {
    rpt_structure_loc("Drm_Connector_State", state, depth);
    int d1 = depth+1;
