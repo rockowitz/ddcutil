@@ -1,4 +1,4 @@
-## [2.1.5] 2024-11-22
+## [2.1.5] 2024-11-25
 
 ### General
 
@@ -72,7 +72,9 @@
   irrelevant warning messages regarding other buses.  Addresses issue #461.
 - Return DDCRC_CONFIG_ERROR instead of DDCRC_BAD_DATA for User Defined Feature File
   errors.
-- Report the Monitor Model Id in the ***--verbose*** output to **ddcutil detect**. 
+- Report the Monitor Model Id in the ***--verbose*** output to **ddcutil detect**.
+- Command **setvcp**: Do not report "Interpretation may not be accurate.", which
+  is irrelevant for this command. Partially addresses issue #454.
 
 #### Fixed
 
@@ -89,14 +91,21 @@
    - Simple getvcp test was not reporting the bytes of the response packet.
    - If no device with class x03 was found, the user's home directory
      was dumped. Issue #413.
+   - Remove "-i" option on get-edid command. Does not exist on some versions.
 - Fix display not found on Raspberry Pi. Do not rely on /sys/class/drm to read 
   EDID, which is not valid for some drivers.  Addresses issue #403
+- Fix DDC communication failed on Raspberry Pi.  Do not check adapter class.
+  Resolves issue #413.
 - User Define Features file: fix error msg when nothing follow VALUE
 - Convert CRLF line endings to LF
 - Use printf() formats %jd and %zd to portably print variables of type ssize_t, 
   time_t, so as to build  unchanged on architectures such as armel, armhf.
 - Avoid compiler warning possible depending on compiler configuration when
   a switch() construct is used. Replaced with if/else if/else. Resolves issue #458.
+- Do not use function strerrrorname_np(). Requires glibc >= 2.32.
+- Miscellaneous changes to allow for building on raspbian (debian bullseye).
+- Replace function sysfs_find_adapter().  Fixes display detection problem part
+  of issue #465.
 - Memory leaks.
 
 ### Building 
@@ -132,8 +141,9 @@ file is libddcutil.so.5.1.3.
 - Add DDCA_STATS_API to enum DDCA_Stats_Type, for reporting API specific stats.
 - Compile using option -Wformat-security. Issue #458.
 - Include thread id in messages written to syslog.
-- Add libddcutil only option ***--disable-watch-displays***, which blocks
-  ddca_start_watch_displays(). 
+- Add libddcutil only option ***--disable-watch-displays***, which unconditionally
+  blocks **ddca_start_watch_displays()** from starting the thread that watches
+  for display changes. Workaround for issue #470.
 
 #### Fixed
 
