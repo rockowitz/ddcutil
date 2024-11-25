@@ -22,6 +22,7 @@
 #endif
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/subprocess_util.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/timestamp.h"
 #ifdef USE_LIBDRM
@@ -33,6 +34,7 @@
 #include "base/display_retry_data.h"
 #include "base/dsa2.h"
 #include "base/flock.h"
+#include "base/i2c_bus_base.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
 #include "base/per_thread_data.h"
@@ -423,6 +425,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       verify_sysfs_edid = true;
 #endif
 
+   if (parsed_cmd->flags2 & CMD_FLAG2_F23)
+      primitive_sysfs = true;
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
@@ -483,6 +487,31 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // TMI:
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
+
+   // -------
+   char * expected_architectures[] = {"x86_64", "i386", "i686", "armv7l", "aarch64", "ppc64",  NULL};
+   char * architecture   = execute_shell_cmd_one_line_result("uname -m");
+   // char * distributor_id = execute_shell_cmd_one_line_result("lsb_release -s -i");  // e.g. Ubuntu, Raspbian
+
+      if ( ntsa_find(expected_architectures, architecture) >= 0) {
+         DBGMSF(true, "Found a known architecture: %s", architecture);
+      }
+      else {
+         DBGMSG("Unexpected architecture %s.  Please report.", architecture);
+      }
+
+     // bool is_raspbian = distributor_id && streq(distributor_id, "Raspbian");
+      bool is_arm      = architecture   &&
+                           ( str_starts_with(architecture, "arm") ||
+                             str_starts_with(architecture, "aarch")
+                           );
+      free(architecture);
+      // free(distributor_id);
+
+      if (is_arm)
+         primitive_sysfs = true;
+
+   // ---------
 
 uint64_t t0;
 uint64_t t1;
