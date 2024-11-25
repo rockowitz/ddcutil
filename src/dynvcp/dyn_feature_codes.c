@@ -208,7 +208,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                      result->nontable_formatter = format_feature_detail_sl_lookup_with_sh;
                   }
                   else {
-                     //  DBGMSG("format_feature_detail_sl_byte");
+                     //  DBGMSG("format_feature_detail_sh_sl_bytes");
                      result->nontable_formatter = format_feature_detail_sh_sl_bytes;
                   }
                }
