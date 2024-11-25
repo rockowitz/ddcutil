@@ -68,7 +68,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(20, "DO NOT use x37 detection state hash");
    REPORT_FLAG_OPTION(21, "Force sysfs unreliable");
    REPORT_FLAG_OPTION(22, "Force sysfs reliable");
-   REPORT_FLAG_OPTION(23, "Unused");
+   REPORT_FLAG_OPTION(23, "Set global primitive_sysfs");
    REPORT_FLAG_OPTION(24, "Unused");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZATION_MILLISEC);
