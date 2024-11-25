@@ -494,10 +494,11 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // char * distributor_id = execute_shell_cmd_one_line_result("lsb_release -s -i");  // e.g. Ubuntu, Raspbian
 
       if ( ntsa_find(expected_architectures, architecture) >= 0) {
-         DBGMSF(true, "Found a known architecture: %s", architecture);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_DDC, "Found a known architecture: %s", architecture);
       }
       else {
-         DBGMSG("Unexpected architecture %s.  Please report.", architecture);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_DDC, "Unexpected architecture %s.  Please report.", architecture);
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Unexpected architecture %s.", architecture);
       }
 
      // bool is_raspbian = distributor_id && streq(distributor_id, "Raspbian");
