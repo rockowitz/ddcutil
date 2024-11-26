@@ -136,13 +136,13 @@ dyn_get_dynamic_feature_metadata(
       uint8_t                feature_code)
 {
    bool debug = false;
-   DBGMSF(debug, "dfr=%s, feature_code=0x%02x", dfr_repr_t(dfr), feature_code);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dfr=%s, feature_code=0x%02x", dfr_repr_t(dfr), feature_code);
 
    Dyn_Feature_Metadata * result = NULL;
    if (dfr && dfr->features)
       result = g_hash_table_lookup(dfr->features, GINT_TO_POINTER(feature_code));
 
-   DBGMSF(debug, "Returning %p", result);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", result);
    return result;
 }
 
@@ -630,7 +630,7 @@ create_dynamic_features_rec(
 
 
 void init_base_dynamic_features() {
-   RTTI_ADD_FUNC(dyn_get_dynamic_feature_metadata);
+   RTTI_ADD_FUNC(dyn_get_dynamic_feature_metadata)
    RTTI_ADD_FUNC(create_dynamic_features_rec);
    RTTI_ADD_FUNC(dyn_free_feature_metadata);
    RTTI_ADD_FUNC(dfr_new);
