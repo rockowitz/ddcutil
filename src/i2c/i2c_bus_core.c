@@ -946,6 +946,30 @@ Find_Sys_Drm_Connector_Result find_sys_drm_connector_by_busno_or_edid(
 }
 
 
+#ifdef FUTURE
+
+// too many cases of READ_ATTR_EDID() in which this may not work
+
+bool write_detect_to_status = false;
+
+void maybe_write_detect_to_status(char * driver, char * drm_connector_name) {
+   if (driver && streq(driver, "nvidia") && write_detect_to_status) {
+      char fq_status_attr[100];
+      g_snprintf(fq_status_attr, 100, "/sys/class/drm/%s/status", drm_connector_name);
+      // redundant, fopen() is sufficient
+      // int access_rc = access(fq_status_attr, R_OK|W_OK);
+      // if (access_rc == 0) {
+         FILE* f = fopen(fq_status_attr, "w");
+         if (f) {
+            puts("detect", f);
+            close(f);
+         }
+      // }
+   }
+}
+#endif
+
+
 /** Returns the value of the edid attribute for a DRM connector.
  *
  *  @param  connector_name
@@ -956,6 +980,9 @@ Byte * get_connector_edid(const char * connector_name) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_name = %s", connector_name);
    int d = (debug) ? 1 : -1;
+
+   // char * driver =  get_i2c_sysfs_driver_by_busno(busno);    // where to get busno;
+   // maybe_write_detect_to_status("nvidia", connector_name);     // lie
 
    Byte * result = NULL;
    GByteArray*  edid_bytes = NULL;
@@ -1109,6 +1136,9 @@ Byte * get_connector_edid(const char * connector_name) {
      DBGTRC_STARTING(debug, DDCA_TRC_NONE, "businfo = %p, businfo->busno=%d", businfo, businfo->busno);
 
      Parsed_Edid * pedid = NULL;
+
+     // maybe_write_detect_to_status(businfo->driver, businfo->drm_connector_name);
+
      Byte * edidbytes = get_connector_edid(businfo->drm_connector_name);
      if (edidbytes) {
         pedid = create_parsed_edid2(edidbytes, "SYSFS");
