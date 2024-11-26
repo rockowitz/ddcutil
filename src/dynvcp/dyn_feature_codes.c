@@ -167,7 +167,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                               : vcp_find_feature_by_hexid(feature_code);
          if (pentry) {
             result = extract_version_feature_info_from_feature_table_entry(pentry, vspec, /*version_sensitive*/ true);
-            if (debug)
+            if (IS_DBGTRC(debug, DDCA_TRC_NONE))
                dbgrpt_vcp_entry(pentry, 2);
 
             if (result->feature_flags & DDCA_TABLE) {
