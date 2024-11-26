@@ -133,8 +133,6 @@ void dir_foreach_terminatable(
       int                   depth);
 
 
-
-
 void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
       char **     filter_terms,
