@@ -1117,11 +1117,18 @@ vcp_find_feature_by_hexid(DDCA_Vcp_Feature_Code id) {
  */
 VCP_Feature_Table_Entry *
 vcp_find_feature_by_hexid_w_default(DDCA_Vcp_Feature_Code id) {
-   // DBGMSG("Starting. id=0x%02x ", id );
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "id=0x%02x", id);
+
    VCP_Feature_Table_Entry * result = vcp_find_feature_by_hexid(id);
-   if (!result)
+   if (!result) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Creating dummy feature");
       result = vcp_create_dummy_feature_for_hexid(id);
-   // DBGMSG("Done.  ndx=%d. returning %p", ndx, result);
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "returning %p", result);
+   if (IS_DBGTRC(debug, TRACE_GROUP))
+      dbgrpt_vcp_entry(result, 1);
    return result;
 }
 
@@ -4446,6 +4453,7 @@ static void init_func_name_table() {
    RTTI_ADD_FUNC(format_feature_detail_x6c_application_enable_key);
    RTTI_ADD_FUNC(format_feature_detail_xc8_display_controller_type);
    RTTI_ADD_FUNC(format_feature_detail_xc9_xdf_version);
+   RTTI_ADD_FUNC(vcp_find_feature_by_hexid_w_default);
 }
 
 
