@@ -122,14 +122,14 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          "Watching for display connection changes, watch mode = %s, poll loop interval = %d millisec",
          ddc_watch_mode_name(ddc_watch_mode), calculated_watch_loop_millisec);
 
-   DBGMSG("use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
-   DBGMSG("force_sysfs_reliable=%s, force_sysfs_unreliable=%s", sbool(force_sysfs_reliable), sbool(force_sysfs_unreliable));
-   DBGMSG("sysfs_fully_reliable:                   %s", SBOOL(sysfs_fully_reliable));
-   DBGMSG("use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
-   DBGMSG("try_get_edid_from_sysfs_first:          %s", SBOOL(try_get_edid_from_sysfs_first));  // i2c_edid_exists()
-   DBGMSG("extra_stailization_millisec:            %d", extra_stabilization_millisec);
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"force_sysfs_reliable=%s, force_sysfs_unreliable=%s", sbool(force_sysfs_reliable), sbool(force_sysfs_unreliable));
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"sysfs_fully_reliable:                   %s", SBOOL(sysfs_fully_reliable));
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"try_get_edid_from_sysfs_first:          %s", SBOOL(try_get_edid_from_sysfs_first));  // i2c_edid_exists()
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"extra_stailization_millisec:            %d", extra_stabilization_millisec);
                                                // ddc_i2c_stabilized_single_bus_by_connector_id, i2c_stabilized_buses_bitset()  (both)
-   DBGMSG("stabilization_poll_millisec:            %d", stabilization_poll_millisec);  // same
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"stabilization_poll_millisec:            %d", stabilization_poll_millisec);  // same
 
    extern int       extra_stabilization_millisec;
    extern int       stabilization_poll_millisec;
