@@ -101,7 +101,9 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   bool sysfs_fully_reliable = false;
+   bool sysfs_fully_reliable = true;
+#ifdef WATCH_MODE_DYNAMIC_NOT_SUPPORTED
+   sysfs_fully_reliable = false;
 #ifndef ENABLE_UDEV
    ddc_watch_mode = Watch_Mode_Poll;
 #else
@@ -111,6 +113,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       if (!sysfs_fully_reliable)
          ddc_watch_mode = Watch_Mode_Poll;
    }
+#endif
 #endif
 
    int calculated_watch_loop_millisec = calc_poll_loop_millisec(ddc_watch_mode);
