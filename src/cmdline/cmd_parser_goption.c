@@ -489,8 +489,8 @@ static bool parse_watch_mode(
          parsed_cmd->watch_mode = Watch_Mode_Poll;
       else if (is_abbrev(v2, "UDEV", 3))
          parsed_cmd->watch_mode = Watch_Mode_Udev;
-      else if (is_abbrev(v2, "DYNAMIC", 3))
-         parsed_cmd->watch_mode = Watch_Mode_Dynamic;
+      // else if (is_abbrev(v2, "DYNAMIC", 3))
+       //   parsed_cmd->watch_mode = Watch_Mode_Dynamic;
 
       else {
          EMIT_PARSER_ERROR(errmsgs, "Invalid watch-mode: %s", sval);
@@ -1228,7 +1228,7 @@ parse_command(
       {"disable-watch-displays", '\0', G_OPTION_FLAG_REVERSE,
                                 G_OPTION_ARG_NONE, &enable_watch_displays, "Do not watch for display change events", NULL },
       {"watch-mode", '\0', G_OPTION_FLAG_HIDDEN,
-                           G_OPTION_ARG_STRING, &watch_mode_work, "How to watch for display changes",  "UDEV|POLL|DYNAMIC"},
+                           G_OPTION_ARG_STRING, &watch_mode_work, "How to watch for display changes",  "UDEV|POLL"},
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
