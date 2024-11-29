@@ -109,8 +109,11 @@ interpret_dfr_flags_symbolic_t(DFR_Flags flags) {
 }
 
 
-
-
+/** Emits a debug report of a #Dynamic_Features_Rec.
+ *
+ *  @param  dfr value to report
+ *  @param  depth logical indentation depth
+ */
 void
 dbgrpt_dynamic_features_rec(
       Dynamic_Features_Rec*   dfr,
