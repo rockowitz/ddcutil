@@ -75,6 +75,42 @@ first_word(char * s) {
 
 // Dynamic_Features_Rec
 
+
+/** Create a string representation of the flags set in a #DFR_Flags value.
+ *
+ *  @param  value to interpret
+ *  @return string representation
+ *
+ *  The returned value is valid until the next call to this function in
+ *  the current thread.  Do not free.
+ */
+const char *
+interpret_dfr_flags_symbolic_t(DFR_Flags flags) {
+   bool debug = true;
+
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * buffer = get_thread_fixed_buffer(&buf_key, 100);
+
+   if (flags == DFR_FLAGS_NONE)
+      strcpy(buffer, "DFR_FLAGS_NONE");
+   else {
+      g_snprintf(buffer, 100, "%s%s",
+         (flags & DFR_FLAGS_NOT_FOUND)       ? "DFR_FLAGS_NOT_FOUND|"    : "",
+         (flags & DFR_FLAG_EXCLUDE_FROM_API) ? "DFR_FLAG_EXCLUDE_FROM_API|" : ""
+      );
+      // remove final comma and blank
+      if (strlen(buffer) > 0)
+         buffer[strlen(buffer)-1] = '\0';
+   }
+
+   DBGMSF(debug, "flags=0x%04x, returning %s", flags, buffer);
+
+   return buffer;
+}
+
+
+
+
 void
 dbgrpt_dynamic_features_rec(
       Dynamic_Features_Rec*   dfr,
@@ -89,7 +125,7 @@ dbgrpt_dynamic_features_rec(
    rpt_vstring(d1, "product_code:   %u", dfr->product_code);
    rpt_vstring(d1, "filename:       %s", dfr->filename);
    rpt_vstring(d1, "MCCS vspec:     %d.%d", dfr->vspec.major, dfr->vspec.minor);
-   rpt_vstring(d1, "flags:          0x%02x %s", dfr->flags, interpret_ddca_feature_flags_symbolic_t(dfr->flags));
+   rpt_vstring(d1, "flags:          0x%02x %s", dfr->flags, interpret_dfr_flags_symbolic_t(dfr->flags));
    if (dfr->features) {
       rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
       for (int ndx = 1; ndx < 256; ndx++) {
@@ -464,9 +500,12 @@ create_dynamic_features_rec(
             }
             else if (streq(t1.word, "MODEL")) {
                model_name_seen = true;
-               if ( !streq(t1.rest, model_name) ) {
+               char * s = strdup(t1.rest);
+               FIXUP_MODEL_NAME(s);
+               if ( !streq(s, model_name) ) {
                   ADD_ERROR(linectr, "Unexpected model name \"%s\", expected \"%s\"", t1.rest, model_name);
                }
+               free(s);
             }
             else if (streq(t1.word, "MCCS_VERSION") || streq(t1.word, "VCP_VERSION") ) {
                // mccs_version_seen = true;   // not required for now
