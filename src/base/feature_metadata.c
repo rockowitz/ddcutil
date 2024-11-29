@@ -154,7 +154,6 @@ interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
    return buffer;
 }
 
-
 const char *
 interpret_ddca_global_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
    bool debug = false;
@@ -396,9 +395,9 @@ dbgrpt_dyn_feature_metadata(
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
    rpt_vstring(d1, "Global feature flags:     0x%04x", md->global_feature_flags);
-   rpt_vstring(d1, "Interpreted flags: %s", interpret_ddca_global_feature_flags_symbolic_t(md->global_feature_flags));
+   rpt_vstring(d1, "Interpreted global feature flags: %s", interpret_ddca_global_feature_flags_symbolic_t(md->global_feature_flags));
    rpt_vstring(d1, "Version feature flags:     0x%04x", md->version_feature_flags);
-   rpt_vstring(d1, "Interpreted flags: %s", interpret_ddca_version_feature_flags_symbolic_t(md->version_feature_flags));
+   rpt_vstring(d1, "Interpreted version feature flags: %s", interpret_ddca_version_feature_flags_symbolic_t(md->version_feature_flags));
    dbgrpt_sl_value_table(md->sl_values, "Feature values", d1);
 }
 
