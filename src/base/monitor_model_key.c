@@ -22,12 +22,6 @@
 
 #include "monitor_model_key.h"
 
-#define FIXUP_MODEL_NAME(_name) \
-   for (int i=0; _name[i] && i < EDID_MODEL_NAME_FIELD_SIZE; i++) { \
-      if (!isalnum(_name[i])) \
-         _name[i] = '_'; \
-   }
-
 
 /** Returns a Monitor_Model_Key on the stack. */
 Monitor_Model_Key

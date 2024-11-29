@@ -15,6 +15,13 @@
 
 #include "util/edid.h"
 
+#define FIXUP_MODEL_NAME(_name) \
+   for (int i=0; _name[i] && i < EDID_MODEL_NAME_FIELD_SIZE; i++) { \
+      if (!isalnum(_name[i])) \
+         _name[i] = '_'; \
+   }
+
+
 /** Identifies a monitor model */
 typedef struct {
    char                mfg_id[DDCA_EDID_MFG_ID_FIELD_SIZE];
