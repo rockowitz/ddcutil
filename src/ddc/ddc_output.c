@@ -166,7 +166,7 @@ get_raw_value_for_feature_metadata(
    Error_Info * ddc_excp = NULL;
    char * feature_name = frec->feature_name;
    Byte feature_code = frec->feature_code;
-   bool is_table_feature = frec->feature_flags & DDCA_TABLE;
+   bool is_table_feature = frec->version_feature_flags & DDCA_TABLE;
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
    DDCA_Any_Vcp_Value * valrec = NULL;
@@ -576,8 +576,10 @@ ddc_get_formatted_value_for_dfm(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "suppress_unsupported=%s", sbool(suppress_unsupported));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dfm->feature_flags = %s",
-         interpret_ddca_feature_flags_symbolic_t(dfm->feature_flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dfm->global_feature_flags = %s",
+         interpret_ddca_feature_flags_symbolic_t(dfm->global_feature_flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dfm->version_feature_flags = %s",
+         interpret_ddca_feature_flags_symbolic_t(dfm->version_feature_flags));
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp;
@@ -588,7 +590,7 @@ ddc_get_formatted_value_for_dfm(
    // DDCA_Feature_Metadata* extmeta = dfm_to_ddca_feature_metadata(dfm);
    Byte feature_code = dfm->feature_code;
    char * feature_name = dfm->feature_name;
-   bool is_table_feature = dfm->feature_flags & DDCA_TABLE;
+   bool is_table_feature = dfm->version_feature_flags & DDCA_TABLE;
 #ifndef NDEBUG
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
 #endif
@@ -640,7 +642,7 @@ ddc_get_formatted_value_for_dfm(
             free(hexbuf);
          }
          else {                                // OL_TERSE, not table feature
-            DDCA_Version_Feature_Flags vflags = dfm->feature_flags;
+            DDCA_Version_Feature_Flags vflags = dfm->version_feature_flags;
             // =   get_version_sensitive_feature_flags(vcp_entry, vspec);
             char buf[200];
             assert(vflags & (DDCA_CONT | DDCA_SIMPLE_NC | DDCA_EXTENDED_NC | DDCA_COMPLEX_NC | DDCA_NC_CONT));
@@ -774,11 +776,11 @@ show_feature_set_values2_dfm(
       Display_Feature_Metadata * dfm = dyn_get_feature_set_entry(feature_set, ndx);
       // DDCA_Feature_Metadata * extmeta = ifm->external_metadata;
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, dfm->feature_code);
-      if ( !(dfm->feature_flags & DDCA_READABLE) ) {
+      if ( !(dfm->version_feature_flags & DDCA_READABLE) ) {
          // confuses the output if suppressing unsupported
          if (show_unsupported) {
             char * feature_name =  dfm->feature_name;
-            char * msg = (dfm->feature_flags & DDCA_DEPRECATED) ? "Deprecated" : "Write-only feature";
+            char * msg = (dfm->version_feature_flags & DDCA_DEPRECATED) ? "Deprecated" : "Write-only feature";
             f0printf(outf, FMT_CODE_NAME_DETAIL_W_NL,
                           dfm->feature_code, feature_name, msg);
          }

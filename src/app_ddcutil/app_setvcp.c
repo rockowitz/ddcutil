@@ -107,13 +107,13 @@ app_set_vcp_value(
       goto bye;
    }
 
-   if (!(dfm->feature_flags & DDCA_WRITABLE)) {
+   if (!(dfm->version_feature_flags & DDCA_WRITABLE)) {
       ddc_excp = ERRINFO_NEW(DDCRC_INVALID_OPERATION,
                  "Feature 0x%02x (%s) is not writable", feature_code, dfm->feature_name);
       goto bye;
    }
 
-   if (dfm->feature_flags & DDCA_TABLE) {
+   if (dfm->version_feature_flags & DDCA_TABLE) {
       if (value_type != VALUE_TYPE_ABSOLUTE) {
          ddc_excp = ERRINFO_NEW(DDCRC_INVALID_OPERATION,
                                  "Relative VCP values valid only for Continuous VCP features");
@@ -142,7 +142,7 @@ app_set_vcp_value(
       }
 
       if (value_type != VALUE_TYPE_ABSOLUTE) {
-         if ( !(dfm->feature_flags & DDCA_CONT) ) {
+         if ( !(dfm->version_feature_flags & DDCA_CONT) ) {
             ddc_excp = ERRINFO_NEW(DDCRC_INVALID_OPERATION,
                            "Relative VCP values valid only for Continuous VCP features");
             goto bye;

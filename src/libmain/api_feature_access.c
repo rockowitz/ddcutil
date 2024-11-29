@@ -524,10 +524,10 @@ ddci_format_any_vcp_value(
       *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
       goto bye;
    }
-   DDCA_Feature_Flags flags = dfm->feature_flags;
+   DDCA_Version_Feature_Flags version_flags = dfm->version_feature_flags;
 
-   if (!(flags & DDCA_READABLE)) {
-      if (flags & DDCA_DEPRECATED)
+   if (!(version_flags & DDCA_READABLE)) {
+      if (version_flags & DDCA_DEPRECATED)
          *formatted_value_loc = g_strdup_printf("Feature %02x is deprecated in MCCS %d.%d",
                                            feature_code, vspec.major, vspec.minor);
       else
@@ -539,7 +539,7 @@ ddci_format_any_vcp_value(
 
    // Version_Feature_Flags flags = feature_info->internal_feature_flags;
    // n. will default to NON_TABLE_VCP_VALUE if not a known code
-   DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE)
+   DDCA_Vcp_Value_Type call_type = (version_flags & DDCA_TABLE)
                                         ? DDCA_TABLE_VCP_VALUE
                                         : DDCA_NON_TABLE_VCP_VALUE;
    if (call_type != anyval->value_type) {

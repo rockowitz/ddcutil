@@ -63,10 +63,10 @@ app_show_single_vcp_value_by_dfm(
    DDCA_Status            ddcrc      = 0;
    DDCA_Vcp_Feature_Code  feature_id = dfm->feature_code;
 
-   if (!(dfm->feature_flags & DDCA_READABLE)) {
+   if (!(dfm->version_feature_flags & DDCA_READABLE)) {
       char * feature_name =  dfm->feature_name;
 
-      DDCA_Feature_Flags vflags = dfm->feature_flags;
+      DDCA_Feature_Flags vflags = dfm->version_feature_flags;
       // should get vcp version from metadata
       if (vflags & DDCA_DEPRECATED)
          printf("Feature %02x (%s) is deprecated in MCCS %d.%d\n",

@@ -84,21 +84,21 @@ dyn_create_dynamic_feature_from_dfr_metadata(Dyn_Feature_Metadata * dfr_metadata
    DBGMSF(debug, "Starting. id=0x%02x", dfr_metadata->feature_code);
    Display_Feature_Metadata * dfm = dfm_from_dyn_feature_metadata(dfr_metadata);
 
-   if (dfr_metadata->feature_flags & DDCA_SIMPLE_NC) {
+   if (dfr_metadata->version_feature_flags & DDCA_SIMPLE_NC) {
       if (dfr_metadata->sl_values)
          dfm->nontable_formatter_sl = dyn_format_feature_detail_sl_lookup;  // HACK
       else
          dfm->nontable_formatter = format_feature_detail_sl_byte;
    }
-   else if (dfr_metadata->feature_flags & DDCA_EXTENDED_NC) {
+   else if (dfr_metadata->version_feature_flags & DDCA_EXTENDED_NC) {
       if (dfr_metadata->sl_values)
          dfm->nontable_formatter_sl = dyn_format_feature_detail_sl_lookup_with_sh;  // HACK
       else
          dfm->nontable_formatter = format_feature_detail_sh_sl_bytes;
    }
-   else if (dfr_metadata->feature_flags & DDCA_STD_CONT)
+   else if (dfr_metadata->version_feature_flags & DDCA_STD_CONT)
       dfm->nontable_formatter = format_feature_detail_standard_continuous;
-   else if (dfr_metadata->feature_flags & DDCA_TABLE)
+   else if (dfr_metadata->version_feature_flags & DDCA_TABLE)
       dfm->table_formatter = default_table_feature_detail_function;
    else
       dfm->nontable_formatter = format_feature_detail_debug_bytes;
@@ -146,15 +146,15 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
    free_ddca_feature_metadata(meta);
    free(meta);
 
-   if (dfm->feature_flags & DDCA_SIMPLE_NC) {
+   if (dfm->version_feature_flags & DDCA_SIMPLE_NC) {
       if (dfm->sl_values)
          dfm->nontable_formatter_sl = dyn_format_feature_detail_sl_lookup;
       else
          dfm->nontable_formatter = format_feature_detail_sl_byte;
    }
-   else if (dfm->feature_flags & DDCA_STD_CONT)
+   else if (dfm->version_feature_flags & DDCA_STD_CONT)
       dfm->nontable_formatter = format_feature_detail_standard_continuous;
-   else if (dfm->feature_flags & DDCA_TABLE)
+   else if (dfm->version_feature_flags & DDCA_TABLE)
       dfm->table_formatter = default_table_feature_detail_function;
    else
       dfm->nontable_formatter = format_feature_detail_debug_bytes;
@@ -506,10 +506,10 @@ dyn_create_feature_set(
              // which does not apply in this context
              bool include = true;
              //     Feature_Set_Flags                     //DDCA_Feature_Flags
-             if ( ((feature_set_flags & FSF_NOTABLE) &&  (feature_metadata->feature_flags & DDCA_TABLE)) ||
-                  ((feature_set_flags & FSF_RO_ONLY) && !(feature_metadata->feature_flags & DDCA_RO)   ) ||
-                  ((feature_set_flags & FSF_RW_ONLY) && !(feature_metadata->feature_flags & DDCA_RW)   ) ||
-                  ((feature_set_flags & FSF_WO_ONLY) && !(feature_metadata->feature_flags & DDCA_WO)   )
+             if ( ((feature_set_flags & FSF_NOTABLE) &&  (feature_metadata->version_feature_flags & DDCA_TABLE)) ||
+                  ((feature_set_flags & FSF_RO_ONLY) && !(feature_metadata->version_feature_flags & DDCA_RO)   ) ||
+                  ((feature_set_flags & FSF_RW_ONLY) && !(feature_metadata->version_feature_flags & DDCA_RW)   ) ||
+                  ((feature_set_flags & FSF_WO_ONLY) && !(feature_metadata->version_feature_flags & DDCA_WO)   )
                 )
                 include = false;
              if (include) {
@@ -544,16 +544,16 @@ dyn_create_feature_set(
                                               feature_set_flags & FSF_CHECK_UDF,
                                               true);    // with_default
           bool showit = true;
-          if (!(dfm->feature_flags & DDCA_READABLE)) {
+          if (!(dfm->version_feature_flags & DDCA_READABLE)) {
              showit = false;
           }
 #ifdef OUT
            if (feature_set_flags & FSF_RO_ONLY) {
-              if ( !(dfm->feature_flags & DDCA_READABLE) )
+              if ( !(dfm->version_feature_flags & DDCA_READABLE) )
                  showit = false;
            }
 #endif
-          if ((dfm->feature_flags & DDCA_TABLE) && exclude_table_features) {
+          if ((dfm->version_feature_flags & DDCA_TABLE) && exclude_table_features) {
              //if ( /* get_output_level() < DDCA_OL_VERBOSE || */ exclude_table_features) {
              showit = false;
           }
@@ -599,7 +599,7 @@ dyn_create_feature_set(
                               subset_id,
                               feature_set_flags,
                               dfm->vcp_spec_groups,
-                              dfm->feature_flags,
+                              dfm->version_feature_flags,
                               dfm->vcp_subsets);
              if (showit) {
                 DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding feature 0x%02x", dfm->feature_code);

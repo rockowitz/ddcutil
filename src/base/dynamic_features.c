@@ -306,7 +306,7 @@ attr_keyword(
    bool debug = false;
    DBGMSF(debug, "keyword=|%s|", keyword);
    bool ok = true;
-   DDCA_Feature_Flags * pflags = &cur_feature_metadata->feature_flags;
+   DDCA_Feature_Flags * pflags = &cur_feature_metadata->version_feature_flags;
    if (streq(keyword, "RW"))
       *pflags |= DDCA_RW;
    else if (streq(keyword, "RO"))
@@ -365,23 +365,23 @@ finalize_feature(
       cur_feature_metadata->sl_values = (DDCA_Feature_Value_Entry*) cur_feature_values->data;
    }
 
-   if ( cur_feature_metadata->feature_flags & (DDCA_RW | DDCA_RO | DDCA_WO) )
-      cur_feature_metadata->feature_flags |= DDCA_RW;
+   if ( cur_feature_metadata->version_feature_flags & (DDCA_RW | DDCA_RO | DDCA_WO) )
+      cur_feature_metadata->version_feature_flags |= DDCA_RW;
 
    if (cur_feature_metadata->sl_values) {
-      if (cur_feature_metadata->feature_flags & DDCA_COMPLEX_NC) {
-         if ( cur_feature_metadata->feature_flags & DDCA_WO)
-            switch_bits(&cur_feature_metadata->feature_flags, DDCA_COMPLEX_NC, DDCA_WO_NC);
+      if (cur_feature_metadata->version_feature_flags & DDCA_COMPLEX_NC) {
+         if ( cur_feature_metadata->version_feature_flags & DDCA_WO)
+            switch_bits(&cur_feature_metadata->version_feature_flags, DDCA_COMPLEX_NC, DDCA_WO_NC);
          else
-            switch_bits(&cur_feature_metadata->feature_flags, DDCA_COMPLEX_NC, DDCA_SIMPLE_NC);
+            switch_bits(&cur_feature_metadata->version_feature_flags, DDCA_COMPLEX_NC, DDCA_SIMPLE_NC);
       }
 
-      else if ( cur_feature_metadata->feature_flags & (DDCA_COMPLEX_CONT | DDCA_STD_CONT | DDCA_TABLE))
+      else if ( cur_feature_metadata->version_feature_flags & (DDCA_COMPLEX_CONT | DDCA_STD_CONT | DDCA_TABLE))
           ADD_ERROR(-1,  "Feature values specified for Continuous or Table feature");
    }
 
-   if (cur_feature_metadata->feature_flags & DDCA_NORMAL_TABLE & DDCA_WO)
-      switch_bits(&cur_feature_metadata->feature_flags, DDCA_NORMAL_TABLE, DDCA_WO_TABLE);
+   if (cur_feature_metadata->version_feature_flags & DDCA_NORMAL_TABLE & DDCA_WO)
+      switch_bits(&cur_feature_metadata->version_feature_flags, DDCA_NORMAL_TABLE, DDCA_WO_TABLE);
 
    // For now, to revisit
   //  cur_feature_metadata->vspec = frec->vspec;
@@ -512,7 +512,7 @@ create_dynamic_features_rec(
 
                cur_feature_metadata = calloc(1, sizeof(Dyn_Feature_Metadata));
                memcpy(cur_feature_metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4);
-               cur_feature_metadata->feature_flags = DDCA_USER_DEFINED | DDCA_PERSISTENT_METADATA;
+               cur_feature_metadata->global_feature_flags = DDCA_USER_DEFINED | DDCA_PERSISTENT_METADATA;
 
                char * feature_code = t2.word;
                char * feature_name = t2.rest;

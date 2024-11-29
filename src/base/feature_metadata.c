@@ -155,6 +155,69 @@ interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
 }
 
 
+const char *
+interpret_ddca_global_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
+   bool debug = false;
+
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * buffer = get_thread_fixed_buffer(&buf_key, 100);
+
+   g_snprintf(buffer, 100, "%s%s%s%s",
+
+
+       // Lifecycle in DDCA_Global_Feature_Flags:
+       flags & DDCA_PERSISTENT_METADATA ? "DDCA_PERSISTENT_METADATA|"    : "",
+       flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY
+                                        ? "DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY|" : "",
+       // Provenance in DDCA_Global_Feature_Flags:
+       flags & DDCA_USER_DEFINED        ? "DDCA_USER_DEFINED|"   : "",
+       flags & DDCA_SYNTHETIC           ? "DDCA_SYNTHESIZED|"    : ""
+
+   );
+   // remove final comma and blank
+   if (strlen(buffer) > 0)
+      buffer[strlen(buffer)-1] = '\0';
+
+   DBGF(debug, "flags=0x%04x, returning %s", flags, buffer);
+
+   return buffer;
+}
+
+
+const char *
+interpret_ddca_version_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
+   bool debug = false;
+
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * buffer = get_thread_fixed_buffer(&buf_key, 100);
+
+   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s",
+       // Exactly 1 of the following should be set in DDCA_Version_Feature_Flags:
+       flags & DDCA_RO                  ? "DDCA_RO|"             : "",
+       flags & DDCA_WO                  ? "DDCA_WO|"             : "",
+       flags & DDCA_RW                  ? "DDCA_RW|"             : "",
+       // Exactly 1 of the following should be set in DDCA_Version_Feature_Flags:
+       flags & DDCA_STD_CONT            ? "DDCA_STD_CONT|"       : "",
+       flags & DDCA_COMPLEX_CONT        ? "DDCA_COMPLEX_CONT|"   : "",
+       flags & DDCA_SIMPLE_NC           ? "DDCA_SIMPLE_NC|"      : "",
+       flags & DDCA_EXTENDED_NC         ? "DDCA_EXTENDED_NC|"    : "",
+       flags & DDCA_COMPLEX_NC          ? "DDCA_COMPLEX_NC|"     : "",
+       flags & DDCA_NC_CONT             ? "DDCA_NC_CONT|"        : "",
+       flags & DDCA_WO_NC               ? "DDCA_WO_CONT|"        : "",
+       flags & DDCA_NORMAL_TABLE        ? "DDCA_NORMAL_TABLE|"   : "",
+       flags & DDCA_WO_TABLE            ? "DDCA_WO_TABLE|"       : "",
+       flags & DDCA_DEPRECATED          ? "DDCA_DEPRECATED|"     : ""
+   );
+   // remove final comma and blank
+   if (strlen(buffer) > 0)
+      buffer[strlen(buffer)-1] = '\0';
+
+   DBGF(debug, "flags=0x%04x, returning %s", flags, buffer);
+
+   return buffer;
+}
+
+
 // SL value tables
 
 /** Returns the number of entries in a feature value table, including the
@@ -315,7 +378,6 @@ sl_value_table_lookup(
 
 
 
-
 /** Output a debug report of a #Dyn_Feature_Metadata instance
  *
  *  @param  md     instance to report
@@ -333,8 +395,10 @@ dbgrpt_dyn_feature_metadata(
    rpt_vstring(d1, "MCCS version:      %d.%d",  md->vcp_version.major, md->vcp_version.minor);
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
-   rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
-   rpt_vstring(d1, "Interpreted flags: %s", interpret_ddca_feature_flags_symbolic_t(md->feature_flags));
+   rpt_vstring(d1, "Global feature flags:     0x%04x", md->global_feature_flags);
+   rpt_vstring(d1, "Interpreted flags: %s", interpret_ddca_global_feature_flags_symbolic_t(md->global_feature_flags));
+   rpt_vstring(d1, "Version feature flags:     0x%04x", md->version_feature_flags);
+   rpt_vstring(d1, "Interpreted flags: %s", interpret_ddca_version_feature_flags_symbolic_t(md->version_feature_flags));
    dbgrpt_sl_value_table(md->sl_values, "Feature values", d1);
 }
 
@@ -364,8 +428,10 @@ dbgrpt_display_feature_metadata(
                       meta->vcp_version.major, meta->vcp_version.minor, format_vspec(meta->vcp_version));
       rpt_vstring(d1, "feature_name:    %s", meta->feature_name);
       rpt_vstring(d1, "feature_desc:    %s", meta->feature_desc);
-      const char * s = interpret_ddca_feature_flags_symbolic_t(meta->feature_flags);
-      rpt_vstring(d1, "flags:           0x%04x = %s", meta->feature_flags, s);
+      const char * s = interpret_ddca_global_feature_flags_symbolic_t(meta->global_feature_flags);
+      rpt_vstring(d1, "global flags:    0x%04x = %s", meta->global_feature_flags, s);
+      const char * t = interpret_ddca_version_feature_flags_symbolic_t(meta->version_feature_flags);
+      rpt_vstring(d1, "version flags:    0x%04x = %s", meta->version_feature_flags, t);
       dbgrpt_sl_value_table(meta->sl_values, "Feature values", d1);
       rpt_vstring(d1, "nontable_formatter:           %p - %s",
                       meta->nontable_formatter,
@@ -447,7 +513,7 @@ void dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_
 /** Converts a #Dyn_Feature_Metadata record, representing user supplied
  *  metadata, to a #Display_Feature_Metadata.
  *
- *  @param ddca_meta  instance to convert
+ *  @param  dyn_meta  instance to convert
  *  @result newly created #Display_Feature_Metadata
  *
  *  @remark
@@ -455,26 +521,35 @@ void dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_
  */
 Display_Feature_Metadata *
 dfm_from_dyn_feature_metadata(
-      Dyn_Feature_Metadata * ddca_meta)
+      Dyn_Feature_Metadata * dyn_meta)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddc_meta=%p", ddca_meta);
-   assert(ddca_meta);
-   assert(memcmp(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddc_meta=%p", dyn_meta);
+   assert(dyn_meta);
+   assert(memcmp(dyn_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
    if (debug)
-      dbgrpt_dyn_feature_metadata(ddca_meta, 2);
+      dbgrpt_dyn_feature_metadata(dyn_meta, 2);
 
-   Display_Feature_Metadata * dfm = dfm_new(ddca_meta->feature_code);
+   Display_Feature_Metadata * dfm = dfm_new(dyn_meta->feature_code);
    dfm->display_ref = NULL;
-   dfm->feature_desc = (ddca_meta->feature_desc) ? g_strdup(ddca_meta->feature_desc) : NULL;
-   dfm->feature_name = (ddca_meta->feature_name) ? g_strdup(ddca_meta->feature_name) : NULL;
-   // dfm->feature_flags = ddca_meta->feature_flags & ~DDCA_SYNTHETIC_DDCA_FEATURE_METADATA;
-   dfm->feature_flags = ddca_meta->feature_flags & ~DDCA_PERSISTENT_METADATA;
+   dfm->feature_desc = (dyn_meta->feature_desc) ? g_strdup(dyn_meta->feature_desc) : NULL;
+   dfm->feature_name = (dyn_meta->feature_name) ? g_strdup(dyn_meta->feature_name) : NULL;
+
+   // ensure global flag values also defined as version flag values are not used:
+   assert(!(dyn_meta->global_feature_flags & DDCA_SYNTHETIC));
+   assert(!(dyn_meta->global_feature_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY));
+
+   assert(dyn_meta->global_feature_flags & DDCA_USER_DEFINED);
+   assert(dyn_meta->global_feature_flags & DDCA_PERSISTENT_METADATA);
+
+   dfm->global_feature_flags = dyn_meta->global_feature_flags;
+   dfm->version_feature_flags =  dyn_meta->version_feature_flags;
+
    dfm->nontable_formatter = NULL;
    dfm->nontable_formatter_sl = NULL;
    dfm->table_formatter = NULL;
    dfm->vcp_version =  DDCA_VSPEC_UNQUERIED;
-   dfm->sl_values = copy_sl_value_table(ddca_meta->sl_values);
+   dfm->sl_values = copy_sl_value_table(dyn_meta->sl_values);
    // dfm->latest_sl_values = copy_sl_value_table(ddca_meta->latest_sl_values);
 
    if (debug)
@@ -532,9 +607,11 @@ dfm_to_ddca_feature_metadata(
    memcpy(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4);
    ddca_meta->feature_code  = dfm->feature_code;
    ddca_meta->vcp_version   = dfm->vcp_version;
-   ddca_meta->feature_flags = dfm->feature_flags;
-   ddca_meta->feature_flags &= ~DDCA_PERSISTENT_METADATA;
-   ddca_meta->feature_flags &= ~DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY;
+   ddca_meta->feature_flags = dfm->version_feature_flags;
+   if (dfm->global_feature_flags & DDCA_PERSISTENT_METADATA)
+      ddca_meta->feature_flags |= DDCA_PERSISTENT_METADATA;
+   // ddca_meta->feature_flags &= ~DDCA_PERSISTENT_METADATA;
+   // ddca_meta->feature_flags &= ~DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY;
    ddca_meta->feature_name = (dfm->feature_name) ? g_strdup(dfm->feature_name) : NULL;
    ddca_meta->feature_desc = (dfm->feature_desc) ? g_strdup(dfm->feature_desc) : NULL;
    DBGMSF(debug, "** dfm->sl_values = %p", dfm->sl_values);

@@ -454,8 +454,10 @@ ddca_get_feature_flags_by_vspec(
             false,                       // with_default
             true);                       // false => version specific, true=> version sensitive
       if (dfm) {
-         *feature_flags = dfm->feature_flags;
-//          free_version_feature_info(full_info);
+         *feature_flags = dfm->version_feature_flags;
+         // if (dfm->global_feature_flags & DDCA_PERSISTENT_METADATA)
+         //    *feature_flags |= DDCA_PERSISTENT_METADATA;
+         // free_version_feature_info(full_info);
          dfm_free(dfm);
          psc = 0;
       }

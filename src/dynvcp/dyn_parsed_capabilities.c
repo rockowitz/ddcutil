@@ -332,7 +332,7 @@ dyn_report_one_cap_feature(
    if (dfr_metadata) {
       rpt_vstring(d0, "Feature: %02X (UDF:%s)",
                      vfr->feature_id, dfr_metadata->feature_name);
-      if ((dfr_metadata->feature_flags & (DDCA_SIMPLE_NC|DDCA_EXTENDED_NC)) && dfr_metadata->sl_values) {
+      if ((dfr_metadata->version_feature_flags & (DDCA_SIMPLE_NC|DDCA_EXTENDED_NC)) && dfr_metadata->sl_values) {
          rpt_label(d1 , "UDF Values:");
          DDCA_Feature_Value_Entry * cur = dfr_metadata->sl_values;
          while (cur->value_name) {

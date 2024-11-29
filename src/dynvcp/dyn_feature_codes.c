@@ -137,21 +137,21 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
           result = dfm_from_dyn_feature_metadata(dfr_metadata);
           result->vcp_version = vspec;    // ??
 
-          if (dfr_metadata->feature_flags & DDCA_SIMPLE_NC) {
+          if (dfr_metadata->version_feature_flags & DDCA_SIMPLE_NC) {
              if (dfr_metadata->sl_values)
                 result->nontable_formatter_sl = dyn_format_feature_detail_sl_lookup;  // HACK
              else
                 result->nontable_formatter = format_feature_detail_sl_byte;
           }
-          else if (dfr_metadata->feature_flags & DDCA_EXTENDED_NC) {
+          else if (dfr_metadata->version_feature_flags & DDCA_EXTENDED_NC) {
              if (dfr_metadata->sl_values)
                 result->nontable_formatter_sl = dyn_format_feature_detail_sl_lookup_with_sh;  // HACK
              else
                 result->nontable_formatter = format_feature_detail_sl_byte;
           }
-          else if (dfr_metadata->feature_flags & DDCA_STD_CONT)
+          else if (dfr_metadata->version_feature_flags & DDCA_STD_CONT)
              result->nontable_formatter = format_feature_detail_standard_continuous;
-          else if (dfr_metadata->feature_flags & DDCA_TABLE)
+          else if (dfr_metadata->version_feature_flags & DDCA_TABLE)
              result->table_formatter = default_table_feature_detail_function;
           else
              result->nontable_formatter = format_feature_detail_debug_bytes;
@@ -170,29 +170,29 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
             if (IS_DBGTRC(debug, DDCA_TRC_NONE))
                dbgrpt_vcp_entry(pentry, 2);
 
-            if (result->feature_flags & DDCA_TABLE) {
+            if (result->version_feature_flags & DDCA_TABLE) {
                if (pentry->table_formatter)
                   result->table_formatter = pentry->table_formatter;
                else {
-                  if (result->feature_flags & DDCA_NORMAL_TABLE) {
+                  if (result->version_feature_flags & DDCA_NORMAL_TABLE) {
                      result->table_formatter = default_table_feature_detail_function;
                   }
-                  else if (result->feature_flags & DDCA_WO_TABLE) {
+                  else if (result->version_feature_flags & DDCA_WO_TABLE) {
                      // program logic error?
                      result->table_formatter = NULL;
                   }
                   else {
                      PROGRAM_LOGIC_ERROR(""
-                           "Neither DDCA_NORMAL_TABLE or DDCA_WO_TABLE set in meta->feature_flags");
+                           "Neither DDCA_NORMAL_TABLE or DDCA_WO_TABLE set in meta->version_feature_flags");
                   }
                }
             }
-            else if (result->feature_flags & DDCA_NON_TABLE)  {
-               if (result->feature_flags & DDCA_STD_CONT) {
+            else if (result->version_feature_flags & DDCA_NON_TABLE)  {
+               if (result->version_feature_flags & DDCA_STD_CONT) {
                   result->nontable_formatter = format_feature_detail_standard_continuous;
                   // DBGMSG("DDCA_STD_CONT");
                }
-               else if (result->feature_flags & DDCA_SIMPLE_NC) {
+               else if (result->version_feature_flags & DDCA_SIMPLE_NC) {
                   if (result->sl_values) {
                      // DBGMSG("format_feature_detail_sl_lookup");
                      result->nontable_formatter = format_feature_detail_sl_lookup;
@@ -202,7 +202,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                      result->nontable_formatter = format_feature_detail_sl_byte;
                   }
                }
-               else if (result->feature_flags & DDCA_EXTENDED_NC) {
+               else if (result->version_feature_flags & DDCA_EXTENDED_NC) {
                   if (result->sl_values) {
                      // DBGMSG("format_feature_detail_sl_lookup_with_sh");
                      result->nontable_formatter = format_feature_detail_sl_lookup_with_sh;
@@ -212,12 +212,12 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                      result->nontable_formatter = format_feature_detail_sh_sl_bytes;
                   }
                }
-               else if (result->feature_flags & DDCA_WO_NC) {
+               else if (result->version_feature_flags & DDCA_WO_NC) {
                   result->nontable_formatter = NULL;      // but should never be called for this case
                }
 
                else {
-                  assert(result->feature_flags & (DDCA_COMPLEX_CONT | DDCA_COMPLEX_NC | DDCA_NC_CONT));
+                  assert(result->version_feature_flags & (DDCA_COMPLEX_CONT | DDCA_COMPLEX_NC | DDCA_NC_CONT));
                   if (pentry->nontable_formatter)
                      result->nontable_formatter = pentry->nontable_formatter;
                   else
@@ -226,7 +226,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
             }  // DDCA_NON_TABLE
 
             else {
-               assert (result->feature_flags & DDCA_DEPRECATED);
+               assert (result->version_feature_flags & DDCA_DEPRECATED);
                result->nontable_formatter = format_feature_detail_debug_bytes;   // ??
             }
 

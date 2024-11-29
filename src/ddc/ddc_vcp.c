@@ -550,7 +550,7 @@ is_rereadable_feature(
             dyn_get_feature_metadata_by_dh(opcode, dh, /*check_udf=*/ true, /*with_default*/false);
       // if not found, assume readable  ??
       if (dfm) {
-         result = dfm->feature_flags & DDCA_READABLE;
+         result = dfm->version_feature_flags & DDCA_READABLE;
          dfm_free(dfm);
       }
    }

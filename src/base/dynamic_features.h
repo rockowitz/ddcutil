@@ -34,7 +34,10 @@ struct {
    char                                  marker[4];      /**< always "DMET" */
    DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
    DDCA_MCCS_Version_Spec                vcp_version;    /**< MCCS version    */
-   DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
+   // DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
+   DDCA_Global_Feature_Flags             global_feature_flags;
+   DDCA_Version_Feature_Flags            version_feature_flags;
+
    DDCA_Feature_Value_Entry *            sl_values;      /**< valid when DDCA_SIMPLE_NC set */
    void *                                unused;         /** no longer used, was latest_sl_values */
    char *                                feature_name;   /**< feature name */

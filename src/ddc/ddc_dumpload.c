@@ -261,7 +261,7 @@ create_dumpload_data_from_g_ptr_array(
                                                    data->vcp_version,
                                                    true,    /* check_udf */
                                                    /*with_default=*/ true);
-                     bool is_table_feature = dfm->feature_flags & DDCA_NORMAL_TABLE;
+                     bool is_table_feature = dfm->version_feature_flags & DDCA_NORMAL_TABLE;
 
                      if (is_table_feature) {
                         // s2 is hex string

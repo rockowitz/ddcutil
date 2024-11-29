@@ -627,7 +627,7 @@ extract_version_feature_info_from_feature_table_entry(
    // info->version_id   = mccs_version_spec_to_id(vspec);
    dfm->vcp_version        = vspec;
 
-   dfm->feature_flags = (version_sensitive)
+   dfm->version_feature_flags = (version_sensitive)
          ? get_version_sensitive_feature_flags(vfte, vspec)
          : get_version_specific_feature_flags(vfte, vspec);
 
@@ -638,7 +638,7 @@ extract_version_feature_info_from_feature_table_entry(
            : get_version_specific_feature_name(vfte, vspec);
    dfm->feature_name = g_strdup(feature_name);
 
-   dfm->feature_flags |= vfte->vcp_global_flags;
+   dfm->global_feature_flags |= vfte->vcp_global_flags;
    DDCA_Feature_Value_Entry * sl_values = (version_sensitive)
          ? get_version_sensitive_sl_values(vfte, vspec)
          // ? get_highest_version_sl_values(vfte)
@@ -1089,7 +1089,9 @@ vcp_create_table_dummy_feature_for_hexid(DDCA_Vcp_Feature_Code id) {
  */
 VCP_Feature_Table_Entry *
 vcp_find_feature_by_hexid(DDCA_Vcp_Feature_Code id) {
-   // DBGMSG("Starting. id=0x%02x ", id );
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "id=0x%02x", id);
+
    int ndx = 0;
    VCP_Feature_Table_Entry * result = NULL;
 
@@ -1099,7 +1101,11 @@ vcp_find_feature_by_hexid(DDCA_Vcp_Feature_Code id) {
          break;
       }
    }
-   // DBGMSG("Done.  ndx=%d. returning %p", ndx, result);
+   // DBGMSG("ndx= %d", ndx);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ndx=%d", ndx);
+
+
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "VCP_Feature_Table_Entry", dbgrpt_vcp_entry, result);
    return result;
 }
 
@@ -4454,6 +4460,7 @@ static void init_func_name_table() {
    RTTI_ADD_FUNC(format_feature_detail_xc8_display_controller_type);
    RTTI_ADD_FUNC(format_feature_detail_xc9_xdf_version);
    RTTI_ADD_FUNC(vcp_find_feature_by_hexid_w_default);
+   RTTI_ADD_FUNC(vcp_find_feature_by_hexid);
 }
 
 
