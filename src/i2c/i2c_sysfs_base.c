@@ -924,6 +924,7 @@ void check_connector_reliability(
    else {
       accum->other_driver_seen = true;
    }
+   free(driver);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
@@ -1001,7 +1002,9 @@ bool is_sysfs_reliable_for_driver(const char * driver) {
  */
 bool is_sysfs_reliable_for_busno(int busno) {
    char * driver = get_driver_for_busno(busno);
-   return is_sysfs_reliable_for_driver(driver);
+   bool result = is_sysfs_reliable_for_driver(driver);
+   free(driver);
+   return result;
 }
 
 
