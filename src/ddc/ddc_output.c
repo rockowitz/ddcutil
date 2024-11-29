@@ -577,9 +577,9 @@ ddc_get_formatted_value_for_dfm(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "suppress_unsupported=%s", sbool(suppress_unsupported));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dfm->global_feature_flags = %s",
-         interpret_ddca_feature_flags_symbolic_t(dfm->global_feature_flags));
+         interpret_ddca_global_feature_flags_symbolic_t(dfm->global_feature_flags));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dfm->version_feature_flags = %s",
-         interpret_ddca_feature_flags_symbolic_t(dfm->version_feature_flags));
+         interpret_ddca_version_feature_flags_symbolic_t(dfm->version_feature_flags));
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp;
