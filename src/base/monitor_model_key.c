@@ -157,15 +157,22 @@ mmk_new_from_value(Monitor_Model_Key mmk) {
    if (mmk.defined) {
       result = calloc(1, sizeof(Monitor_Model_Key));
       memcpy(result, &mmk, sizeof(Monitor_Model_Key));
+#ifdef ALTERNATIVE
       Monitor_Model_Key * result2 = mmk_new(
             mmk.mfg_id,
             mmk.model_name,
             mmk.product_code);
       assert(monitor_model_key_eq(*result, *result2));
+      mmk_free(result2);
+#endif
+
       assert(monitor_model_key_eq(mmk, *result));
    }
 
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %p -> %s", result, mmk_repr(*result));
+   if (result)
+      DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %p -> %s", result, mmk_repr(*result));
+   else
+      DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: NULL");
    return result;
 }
 
