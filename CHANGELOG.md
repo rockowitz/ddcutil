@@ -1,4 +1,4 @@
-## [2.1.5] 2024-11-25
+## [2.1.5] 2024-11-30
 
 ### General
 
@@ -190,11 +190,7 @@ file is libddcutil.so.5.1.3.
     - doesn't rely on /sys 
     - reads EDIDs in polling loop
 - Named options affecting display change detection:
-  - --watch-mode UDEV, POLL, DYNAMIC (default DYNAMIC)
-      DYNAMIC resolves to UDEV or POLL depending on whether any display uses the
-      nvidia driver, and for the nvidia driver depending on the driver appears to 
-      change the connector edid and status value when displays are connected
-      or disconnected
+  - --watch-mode UDEV, POLL
   - --enable/disable-try-get-edid-from-sysfs (default is --enable-try-get-edid-from-sysfs)
 - Utility options affecting display change detection.  Some of these will become 
   named options, others will be removed once testing is finished. 
