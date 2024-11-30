@@ -100,7 +100,6 @@ char *           i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, c
 // Lifecycle
 I2C_Bus_Info *   i2c_new_bus_info(int busno);
 void             i2c_free_bus_info(I2C_Bus_Info * businfo);
-void             i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new_info);
 void             i2c_reset_bus_info(I2C_Bus_Info * bus_info);
 
 // Generalized Bus_Info retrieval
