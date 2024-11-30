@@ -410,6 +410,7 @@ void i2c_gdestroy_bus_info(void * data) {
 #endif
 
 
+#ifdef UNUSED
 /** Updates an existing #I2C_Bus_Info struct with recent
  *  data from a source sruct.  Modifies those fields which
  *  can change.
@@ -471,6 +472,7 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
+#endif
 
 
 //
@@ -777,7 +779,7 @@ void init_i2c_bus_base() {
 //   RTTI_ADD_FUNC(i2c_get_drm_connector_name);
    RTTI_ADD_FUNC(i2c_new_bus_info);
    RTTI_ADD_FUNC(i2c_reset_bus_info);
-   RTTI_ADD_FUNC(i2c_update_bus_info);
+//   RTTI_ADD_FUNC(i2c_update_bus_info);
    RTTI_ADD_FUNC(i2c_remove_bus_by_busno);
    RTTI_ADD_FUNC(i2c_dbgrpt_bus_info);
    RTTI_ADD_FUNC(i2c_query_x37_detected);
