@@ -90,6 +90,7 @@ errinfo_all_causes_same_status(
 {
    bool debug = false;
    DBGF(debug, "Starting. status_code=%d, erec=%s", status_code, errinfo_summary(erec));
+
    bool all_same = false;
    if (erec) {
       VALID_ERROR_INFO_PTR(erec);
@@ -105,6 +106,7 @@ errinfo_all_causes_same_status(
          }
       }
    }
+
    DBGF(debug, "Returning: %s", SBOOL(all_same));
    return all_same;
 }
@@ -136,9 +138,9 @@ void
 errinfo_free(Error_Info * erec){
    bool debug = false;
    if (debug) {
-      printf("(%s) Starting. erec=%p\n", __func__, (void*)erec);
-      show_backtrace(2);
-      errinfo_report(erec, 2);
+      DBG("Starting. erec=%p", (void*)erec);
+      // show_backtrace(2);
+      // errinfo_report(erec, 2);
    }
    if (erec) {
       VALID_ERROR_INFO_PTR(erec);
@@ -152,9 +154,11 @@ errinfo_free(Error_Info * erec){
          free(erec->detail);
 
       if (erec->cause_ct > 0) {
+         DBGF(debug, "Freeing causes...");
          for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
             errinfo_free(erec->causes[ndx]);
          }
+         DBGF(debug, "Freeing erec->causes = %p", erec->causes);
          free(erec->causes);
       }
 #ifdef ALT
@@ -169,8 +173,8 @@ errinfo_free(Error_Info * erec){
       erec->marker[3] = 'x';
       free(erec);
    }
-   if (debug)
-      printf("(%s) Done.\n", __func__);
+
+   DBGF(debug, "Done.  Free'd: %p", (void*) erec);
 }
 
 
@@ -276,6 +280,9 @@ errinfo_set_detail(
  *  @return copy of record
  */
 Error_Info * errinfo_copy(Error_Info* old) {
+   bool debug = false;
+   DBGF(debug, "Starting. old=%p", (void*) old);
+
    Error_Info * new = calloc(1, sizeof(Error_Info));
    memcpy(new->marker, old->marker, 4);
    new->status_code = old->status_code;
@@ -285,10 +292,17 @@ Error_Info * errinfo_copy(Error_Info* old) {
       new->detail = g_strdup(old->detail);
    new->max_causes = old->max_causes;
    new->cause_ct = old->cause_ct;
-   new->causes = calloc(new->max_causes+1, sizeof(Error_Info*));
+   if (new->cause_ct == 0)
+      new->causes = empty_list;
+   else {
+      new->causes = calloc(new->max_causes+1, sizeof(Error_Info*));
+      DBGF(debug, "Allocated new->causes=%p, new->cause_ct=%d", (void*) new->causes, new->cause_ct);
+   }
    for (int ndx = 0; ndx < new->cause_ct; ndx++) {
       new->causes[ndx] = errinfo_copy(old->causes[ndx]);
    }
+
+   DBGF(debug, "Done.  Returning %p", (void*) new);
    return new;
 }
 
@@ -303,12 +317,13 @@ errinfo_add_cause(
       Error_Info * parent,
       Error_Info * cause)
 {
-   // printf("(%s) cause=%p\n", __func__, cause);
+   bool debug = false;
+   DBGF(debug, "parent=%p, cause=%p", parent, cause);
    VALID_ERROR_INFO_PTR(parent);
    VALID_ERROR_INFO_PTR(cause);
+   DBGF(debug, "parent->cause_ct = %d, parent->max_causes = %d",
+               parent->cause_ct, parent->max_causes);
 
-   // printf("(%s) parent->cause_ct = %d, parent->max_causes = %d\n",
-   //         __func__, parent->cause_ct, parent->max_causes);
    if (parent->cause_ct == parent->max_causes) {
       int new_max = parent->max_causes + CAUSE_ALLOC_INCREMENT;
 #ifdef ALT
@@ -318,11 +333,10 @@ errinfo_add_cause(
       parent->causes = new_causes;
 #endif
       if (parent->causes == empty_list) {
-         // printf("(%s) empty_list\n", __func__);
+         DBGF(debug, "empty_list");
          parent->causes = calloc(new_max+1, sizeof(Error_Info *) );
       }
       else {
-         // printf("(%s) realloc\n", __func__);
          // works, but requires _GNU_SOURCE feature test macro:
          // parent->causes = reallocarray(parent->causes, new_max+1, sizeof(Error_Info*) );
          void * new_causes = calloc(new_max+1, sizeof(Error_Info*) );
@@ -332,9 +346,9 @@ errinfo_add_cause(
       }
       parent->max_causes = new_max;
    }
-   // printf("(%s) parent->causes = %p\n", __func__, parent->causes);
-   // printf("(%s) cause_ct=%d\n", __func__, parent->cause_ct);
-   // printf("(%s) %p", __func__, &parent->causes[parent->cause_ct]);
+
+   DBGF(debug, "causes = %p, cause_ct=%d", parent->causes, parent->cause_ct);
+   // DBGF(debug, "%p", &parent->causes[parent->cause_ct]);
 
    parent->causes[parent->cause_ct++] = cause;
 
@@ -345,6 +359,8 @@ errinfo_add_cause(
    }
    g_ptr_array_add(parent->causes_alt, cause);
 #endif
+
+   DBGF(debug, "Done. causes = %p, cause_ct=%d", parent->causes, parent->cause_ct);
 }
 
 
@@ -369,6 +385,9 @@ errinfo_newv(
       const char *   detail,
       va_list        args)
 {
+   bool debug = false;
+   DBGF(debug, "Starting. status_code=%d, func=%s, detail=%s", status_code, func, detail);
+
    Error_Info * erec = calloc(1, sizeof(Error_Info));
    memcpy(erec->marker, ERROR_INFO_MARKER, 4);
    erec->status_code = status_code;
@@ -378,6 +397,8 @@ errinfo_newv(
    if (detail) {
       erec->detail = g_strdup_vprintf(detail, args);
    }
+
+   DBGF(debug, "Done:    Returning %p", erec);
    return erec;
 }
 
@@ -512,9 +533,10 @@ errinfo_new_with_causes(
 }
 
 
-/** Creates a new #Error_Info instance with a collection of
- *  instances specified as the causes. The collection is
- *  passed as a GPtrArray.
+/** Creates a new #Error_Info instance with a collection of instances specified
+ *  as the causes. The collection is passed as a GPtrArray.  A deep copy is
+ *  made of each instance in the collection, and the causes collection
+ *  is unchanged.
  *
  *  \param  code            status code of the new instance
  *  \param  causes          GPtrArray of #Error_Info instances
@@ -530,13 +552,18 @@ Error_Info * errinfo_new_with_causes_gptr(
       char *         detail,
       ...)
 {
+   bool debug = false;
+   DBGF(debug, "Starting.  status_code-%d, detail=%s", status_code, detail);
+
    va_list ap;
    va_start(ap, detail);
    Error_Info * result = errinfo_newv(status_code, func, detail, ap);
    va_end(ap);
    for (int ndx = 0; ndx < causes->len; ndx++) {
-      errinfo_add_cause(result, errinfo_copy(g_ptr_array_index(causes,ndx)));
+         errinfo_add_cause(result, errinfo_copy(g_ptr_array_index(causes,ndx)));
    }
+
+   DBGF(debug, "Returning: %p", (void*) result);
    return result;
 }
 
