@@ -198,8 +198,9 @@ ddca_libddcutil_filename(void) {
 bool increment_active_api_calls(const char * funcname) {
    bool debug = false;
    DBGMSF(debug, "Starting. funcname=%s, active_calls=%d", funcname, active_calls);
+
    bool result = true;
-   g_mutex_lock(&api_quiesced_mutex);
+   g_mutex_lock(&api_quiesced_mutex);  // blocks API calls from starting
    g_mutex_lock(&active_calls_mutex);
    if (api_quiesced)
       result = false;
@@ -210,6 +211,7 @@ bool increment_active_api_calls(const char * funcname) {
    }
    g_mutex_unlock(&active_calls_mutex);
    g_mutex_unlock(&api_quiesced_mutex);
+
    DBGMSF(debug, "funcname=%s, returning %s", funcname, SBOOL(result));
    return result;
 }
@@ -218,6 +220,7 @@ bool increment_active_api_calls(const char * funcname) {
 void decrement_active_api_calls(const char * funcname) {
    bool debug = false;
    DBGMSF(debug, "Starting. funcname=%s, active_calls=%d", funcname, active_calls);
+
    bool oops = false;
    g_mutex_lock(&active_calls_mutex);
    if (active_calls > 0) {
@@ -230,19 +233,28 @@ void decrement_active_api_calls(const char * funcname) {
    if (oops) {
       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unmatched active call ct in %s", funcname);
    }
+
    DBGMSF(debug, "Done    funcname=%s, oops=%s", funcname, SBOOL(oops));
 }
 
 
+/** Quiesce or unquiesce the API.
+ *
+ *  When quiesced, API calls that can affect monitor state terminate immediately with status DDCRC_QUIESCED.
+ *
+ *  @param quiesce  if true, quiece the API, if fallse unquiesce it
+ */
 void quiesce_api(bool quiesce) {
-   bool debug = true;
-   DBGMSF(debug, "quiesce = %s", SBOOL(quiesce));
+   bool debug = false;
+   DBGMSF(debug, "Starting. quiesce = %s", SBOOL(quiesce));
 
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s libddcutil API...", (quiesce) ? "Quiescing" : "Unquiescing");
+   bool oops = false;
    g_mutex_lock(&api_quiesced_mutex);
    if (quiesce) {
       g_mutex_lock(&active_calls_mutex);
       if (active_calls > 0) {
-         int poll_max_millisec = 2000;       // move to parms.h
+         int poll_max_millisec = 3000;       // move to parms.h
          int poll_interval_millisec = 100;   // move to parms.h
          int poll_max_nanosec = poll_max_millisec * 1000;
          int poll_interval_nanosec = poll_interval_millisec * 1000;
@@ -251,10 +263,10 @@ void quiesce_api(bool quiesce) {
             usleep(poll_interval_nanosec);
             if (active_calls == 0)
                break;
-         }
-         if (slept_nanosec >= poll_max_nanosec) {
-            // WHAT TO DO HERE?
-            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Quiescing API with %d calls active.", active_calls);
+            if (slept_nanosec >= poll_max_nanosec) {
+               oops = true;
+               break;
+            }
          }
       }
       api_quiesced = true;
@@ -264,6 +276,14 @@ void quiesce_api(bool quiesce) {
       api_quiesced = false;
    }
    g_mutex_unlock(&api_quiesced_mutex);
+   if (oops) {
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error queiescing libdducitl API. %d active API calls outstanding.", active_calls);
+   }
+   else {
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s libddcutil API complete", (quiesce) ? "Quiescing" : "Unquiescing");
+   }
+
+   DBGMSF(debug, "Done.     Terminating with %d active API calls outstanding.", active_calls);
 }
 
 
@@ -1328,6 +1348,7 @@ ddca_reset_stats(void) {
    g_mutex_unlock(&active_calls_mutex);
    g_mutex_unlock(&api_quiesced_mutex);
 }
+
 
 // TODO: Functions that return stats in data structures
 void
