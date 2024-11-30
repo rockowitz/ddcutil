@@ -857,6 +857,7 @@ ddc_set_verified_vcp_value_with_retry(
          erec = errinfo_new_with_causes_gptr(DDCRC_VERIFY, verification_failures, __func__,
                "Maximum setvcp verification failures (%d)", max_setvcp_verify_tries);
       }
+      g_ptr_array_set_free_func(verification_failures, (GDestroyNotify) errinfo_free);
       g_ptr_array_free(verification_failures, true);
    }
    else {
