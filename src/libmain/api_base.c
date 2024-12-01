@@ -1042,13 +1042,20 @@ ddca_set_ferr_to_default(void) {
 
 void
 ddca_start_capture(DDCA_Capture_Option_Flags flags) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "flags=0x%02x", flags);
    start_capture(flags);
+
 }
 
 
 char *
 ddca_end_capture(void) {
-   return end_capture();
+   bool debug = false;
+   // DBGTRC_STARTING(debug, DDCA_TRC_API, "");
+   char * result = end_capture();
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %p", result);
+   return result;
 }
 
 
@@ -1387,6 +1394,8 @@ void init_api_base() {
    RTTI_ADD_FUNC(ddca_start_watch_displays);
    RTTI_ADD_FUNC(ddca_stop_watch_displays);
    RTTI_ADD_FUNC(ddca_get_active_watch_classes);
+   RTTI_ADD_FUNC(ddca_start_capture);
+   RTTI_ADD_FUNC(ddca_end_capture);
 #ifdef REMOVED
    RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
    RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);

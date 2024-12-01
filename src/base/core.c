@@ -1113,7 +1113,7 @@ end_capture(void) {
       SEVEREMSG("fclose() failed. errno=%d", errno);
       return result;
    }
-   // free(fdesc->in_memory_file); // double free, fclose() frees in memory file
+   free(fdesc->in_memory_bufstart);
    fdesc->in_memory_file = NULL;
    set_fout_to_default();
    if (fdesc->flags & DDCA_CAPTURE_STDERR)
