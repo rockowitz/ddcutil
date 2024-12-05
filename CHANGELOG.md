@@ -1,4 +1,4 @@
-## [2.1.5] 2024-11-30
+## [2.1.5] 2024-12-05
 
 ### General
 
@@ -227,7 +227,7 @@ file is libddcutil.so.5.1.3.
 
 The shared library **libddcutil** is backwardly compatible with the one in 
 ddcutil 2.1.0. The SONAME is unchanged as libddcutil.so.5. The released library
-file is libddcutil.so.5.1.2.
+file is libddcutil.so.5.2.0.
 
 ### Fixed
 
