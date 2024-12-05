@@ -246,10 +246,10 @@ void decrement_active_api_calls(const char * funcname) {
  */
 void quiesce_api(bool quiesce) {
    bool debug = false;
-   DBGMSF(debug, "Starting. quiesce = %s", SBOOL(quiesce));
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "quiesce = %s", SBOOL(quiesce));
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "%s libddcutil API...", (quiesce) ? "Quiescing" : "Unquiescing");
-   bool oops = false;
+   bool oops = true;
    g_mutex_lock(&api_quiesced_mutex);
    if (quiesce) {
       g_mutex_lock(&active_calls_mutex);
@@ -261,10 +261,8 @@ void quiesce_api(bool quiesce) {
          int slept_nanosec = 0;
          for (; slept_nanosec < poll_max_nanosec; slept_nanosec += poll_interval_nanosec) {
             usleep(poll_interval_nanosec);
-            if (active_calls == 0)
-               break;
-            if (slept_nanosec >= poll_max_nanosec) {
-               oops = true;
+            if (active_calls == 0) {
+               oops = false;
                break;
             }
          }
@@ -283,7 +281,7 @@ void quiesce_api(bool quiesce) {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s libddcutil API complete", (quiesce) ? "Quiescing" : "Unquiescing");
    }
 
-   DBGMSF(debug, "Done.     Terminating with %d active API calls outstanding.", active_calls);
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Terminating with %d active API calls outstanding.", active_calls);
 }
 
 
@@ -1396,6 +1394,7 @@ void init_api_base() {
    RTTI_ADD_FUNC(ddca_get_active_watch_classes);
    RTTI_ADD_FUNC(ddca_start_capture);
    RTTI_ADD_FUNC(ddca_end_capture);
+   RTTI_ADD_FUNC(quiesce_api);
 #ifdef REMOVED
    RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
    RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);
