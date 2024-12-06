@@ -154,7 +154,8 @@ ddci_get_precondition_failure_mode();
 
 bool increment_active_api_calls(const char * funcname);
 void decrement_active_api_calls(const char * funcname);
-void quiesce_api(bool quiesce);
+void quiesce_api();
+void unquiesce_api();
 #define RESPECT_QUIESCE true
 #define NORESPECT_QUIESCE false
 

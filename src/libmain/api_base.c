@@ -238,51 +238,65 @@ void decrement_active_api_calls(const char * funcname) {
 }
 
 
-/** Quiesce or unquiesce the API.
+/** Quiesce the API.
  *
  *  When quiesced, API calls that can affect monitor state terminate immediately with status DDCRC_QUIESCED.
- *
- *  @param quiesce  if true, quiece the API, if fallse unquiesce it
  */
-void quiesce_api(bool quiesce) {
+void quiesce_api() {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_API, "quiesce = %s", SBOOL(quiesce));
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "");
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s libddcutil API...", (quiesce) ? "Quiescing" : "Unquiescing");
-   bool oops = true;
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Quiescing libddcutil API...");
+   bool oops = false;
+   int slept_nanosec = 0;
+
    g_mutex_lock(&api_quiesced_mutex);
-   if (quiesce) {
-      g_mutex_lock(&active_calls_mutex);
-      if (active_calls > 0) {
-         int poll_max_millisec = 3000;       // move to parms.h
-         int poll_interval_millisec = 100;   // move to parms.h
-         int poll_max_nanosec = poll_max_millisec * 1000;
-         int poll_interval_nanosec = poll_interval_millisec * 1000;
-         int slept_nanosec = 0;
-         for (; slept_nanosec < poll_max_nanosec; slept_nanosec += poll_interval_nanosec) {
-            usleep(poll_interval_nanosec);
-            if (active_calls == 0) {
-               oops = false;
-               break;
-            }
+
+   g_mutex_lock(&active_calls_mutex);
+   if (active_calls > 0) {
+      int poll_max_millisec = 3000;       // move to parms.h
+      int poll_interval_millisec = 100;   // move to parms.h
+      int poll_max_nanosec = poll_max_millisec * 1000;
+      int poll_interval_nanosec = poll_interval_millisec * 1000;
+      oops = true;
+      for (; slept_nanosec < poll_max_nanosec; slept_nanosec += poll_interval_nanosec) {
+         usleep(poll_interval_nanosec);
+         if (active_calls == 0) {
+            oops = false;
+            break;
          }
       }
-      api_quiesced = true;
-      g_mutex_unlock(&active_calls_mutex);
    }
-   else {
-      api_quiesced = false;
-   }
+   g_mutex_unlock(&active_calls_mutex);
+
+   api_quiesced = true;
    g_mutex_unlock(&api_quiesced_mutex);
+
    if (oops) {
       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error queiescing libdducitl API. %d active API calls outstanding.", active_calls);
    }
    else {
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s libddcutil API complete", (quiesce) ? "Quiescing" : "Unquiescing");
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Qiesce libddcutil API complete");
    }
 
-   DBGTRC_DONE(debug, DDCA_TRC_API, "Terminating with %d active API calls outstanding.", active_calls);
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Terminating with %d active API calls outstanding. Waited %d millisec", active_calls, slept_nanosec/1000);
 }
+
+
+/** Unquiesce the API.
+ */
+void unquiesce_api() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "");
+
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Unquiescing libddcutil API...");
+   g_mutex_lock(&api_quiesced_mutex);
+   api_quiesced = false;
+   g_mutex_unlock(&api_quiesced_mutex);
+
+   DBGTRC_DONE(debug, DDCA_TRC_API, "");
+}
+
 
 
 Error_Info* perform_parse(
@@ -1395,6 +1409,7 @@ void init_api_base() {
    RTTI_ADD_FUNC(ddca_start_capture);
    RTTI_ADD_FUNC(ddca_end_capture);
    RTTI_ADD_FUNC(quiesce_api);
+   RTTI_ADD_FUNC(unquiesce_api);
 #ifdef REMOVED
    RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
    RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);

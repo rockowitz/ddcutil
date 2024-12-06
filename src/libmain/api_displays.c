@@ -393,9 +393,9 @@ DDCA_Status
 ddca_redetect_displays() {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "");
-   quiesce_api(true);
+   quiesce_api();
    ddc_redetect_displays();
-   quiesce_api(false);
+   unquiesce_api();
    API_EPILOG(debug, NORESPECT_QUIESCE, 0, "");
 }
 
