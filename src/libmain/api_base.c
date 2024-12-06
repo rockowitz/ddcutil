@@ -276,7 +276,7 @@ void quiesce_api() {
       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error queiescing libdducitl API. %d active API calls outstanding.", active_calls);
    }
    else {
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Qiesce libddcutil API complete");
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Quiesce libddcutil API complete");
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_API, "Terminating with %d active API calls outstanding. Waited %d millisec", active_calls, slept_nanosec/1000);
