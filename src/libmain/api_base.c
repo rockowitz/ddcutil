@@ -273,7 +273,7 @@ void quiesce_api() {
    g_mutex_unlock(&api_quiesced_mutex);
 
    if (oops) {
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error queiescing libdducitl API. %d active API calls outstanding.", active_calls);
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error queiscing libdducitl API. %d active API calls outstanding.", active_calls);
    }
    else {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Quiesce libddcutil API complete");
