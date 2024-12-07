@@ -65,10 +65,12 @@ bool bs256_pair_eq(Bit_Set_256_Pair pair1, Bit_Set_256_Pair pair2);
 Bit_Set_256
 ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected);
 
+#ifdef WATCH_ASLEEP
 Bit_Set_256 ddc_i2c_check_bus_asleep(
       Bit_Set_256  bs_active_buses,
       Bit_Set_256  bs_sleepy_buses,
       GArray*      events_queue);
+#endif
 
 void ddc_i2c_emit_deferred_events(GArray * deferred_events);
 

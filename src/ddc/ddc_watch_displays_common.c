@@ -256,7 +256,7 @@ Display_Ref * ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo) {
 }
 
 
-
+#ifdef WATCH_ASLEEP
 /** Compares the set of buses currently asleep with the previous list.
  *  If differences exist, either emit events directly or place them on
  *  the deferred events queue.
@@ -331,6 +331,7 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: bs_sleepy_buses: %s",  BS256_REPR(bs_sleepy_buses));
    return bs_sleepy_buses;
 }
+#endif
 
 
 /** Updates persistent data structures for bus changes and
@@ -535,7 +536,9 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
 
 
 void init_ddc_watch_displays_common() {
+#ifdef WATCH_ASLEEP
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
+#endif
    // RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_buses_bs);
    RTTI_ADD_FUNC(ddc_i2c_emit_deferred_events);

@@ -275,13 +275,17 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
       sleep_millis(1000*1000);
    }
 
+#ifdef WATCH_ASLEEP
    bool watch_dpms = wdd->event_classes & DDCA_EVENT_CLASS_DPMS;
+#endif
 
    pid_t cur_pid = getpid();
    pid_t cur_tid = get_thread_id();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Our process id: %d, our thread id: %d", cur_pid, cur_tid);
 
+#ifdef WATCH_ASLEEP
    BS256 bs_sleepy_buses   = EMPTY_BIT_SET_256;
+#endif
    BS256 bs_old_attached_buses = buses_bitset_from_businfo_array(all_i2c_buses, false);
    BS256 bs_old_buses_w_edid   = buses_bitset_from_businfo_array(all_i2c_buses, true);
 
@@ -473,6 +477,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
       }
 #endif
 
+#ifdef WATCH_ASLEEP
       if (watch_dpms) {
          // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Before ddc_check_bus_asleep(), bs_sleepy_buses: %s",
          //      BS256_REPR(bs_sleepy_buses));
@@ -482,6 +487,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
          // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After ddc_check_bus_asleep(), bs_sleepy_buses: %s",
          //       BS256_REPR(bs_sleepy_buses));
       }
+#endif
 
 #ifdef ALT
       if (watch_dpms) {

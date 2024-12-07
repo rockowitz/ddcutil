@@ -611,6 +611,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
             assert(false);    // avoid clang warning re wdd use after free
          }
 
+#ifdef WATCH_ASLEEP
          if (watch_dpms) {
             // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Before ddc_check_bus_asleep(), bs_sleepy_buses: %s",
             //      BS256_REPR(bs_sleepy_buses));
@@ -620,6 +621,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
             // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After ddc_check_bus_asleep(), bs_sleepy_buses: %s",
             //       BS256_REPR(bs_sleepy_buses));
          }
+#endif
 
          terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
 
@@ -822,7 +824,9 @@ void init_ddc_watch_displays_udev() {
    RTTI_ADD_FUNC(ddc_i2c_check_bus_changes_for_connector);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_bus_by_connector_id);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_single_bus_by_connector_name);
+#ifdef WATCH_ASLEEP
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
+#endif
    RTTI_ADD_FUNC(ddc_watch_displays_udev);
 #endif
 }
