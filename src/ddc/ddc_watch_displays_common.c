@@ -54,7 +54,6 @@
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp.h"
 
-
 #include "ddc_watch_displays_common.h"
 
 // Trace class for this file
@@ -67,7 +66,6 @@ int       watch_loop_poll_multiplier = 1;
 int       explicit_udev_poll_loop_millisec = 0;
 int       explicit_nonudev_poll_loop_millisec = 0;
 int       calculated_watch_loop_millisec = 0;
-
 
 
 int calc_poll_loop_millisec(DDC_Watch_Mode watch_mode) {
@@ -92,11 +90,11 @@ int calc_poll_loop_millisec(DDC_Watch_Mode watch_mode) {
 }
 
 
-
 void set_poll_loop_multiplier(int multiplier) {
    watch_loop_poll_multiplier = multiplier;
    DBGMSG("Set watch_loop_poll_multiplier = %d", watch_loop_poll_multiplier);
 }
+
 
 int split_sleep() {
    assert(calculated_watch_loop_millisec > 0);
@@ -127,7 +125,6 @@ void terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid) {
 }
 
 
-
 void free_watch_displays_data(Watch_Displays_Data * wdd) {
    if (wdd) {
       assert( memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
@@ -135,7 +132,6 @@ void free_watch_displays_data(Watch_Displays_Data * wdd) {
       free(wdd);
    }
 }
-
 
 
 #ifdef UNUSED
@@ -206,6 +202,7 @@ void ddc_i2c_filter_sleep_events(GArray * events) {
 
 void ddc_i2c_emit_deferred_events(GArray * deferred_events) {
    bool debug = false;
+
 
 #ifdef TEMPORARY_SIMPLIFICATION
    if (deferred_events->len > 1) {  // FUTURE ENHANCMENT, filter out meaningless events
@@ -397,7 +394,6 @@ bool ddc_i2c_hotplug_change_handler(
       }
    }
    bs256_iter_free(iter);
-
 
    iter = bs256_iter_new(bs_buses_w_edid_added);
    while (true) {
