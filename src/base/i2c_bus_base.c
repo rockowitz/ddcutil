@@ -238,7 +238,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
          rpt_vstring(depth, "drm_connector_name:      %s", businfo->drm_connector_name);
          rpt_vstring(depth, "drm_connector_id:        %d", businfo->drm_connector_id);
          if (businfo->drm_connector_name) {
-            possibly_write_detect_to_status_by_businfo(businfo);
+            // possibly_write_detect_to_status_by_businfo(businfo); // in i2c/i2c_sysfs_base.h
             RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm", businfo->drm_connector_name, "enabled");
             RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm", businfo->drm_connector_name, "status");
             RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm", businfo->drm_connector_name, "dpms");
