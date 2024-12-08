@@ -1845,6 +1845,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
             for (int ndx=0; lines[ndx]; ndx++) {
                LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
             }
+            ntsa_free(lines, true);
             // ddcrc = DDCRC_INTERNAL_ERROR;
             ddcrc = DDCRC_OK;
          }

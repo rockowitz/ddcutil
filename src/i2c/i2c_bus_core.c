@@ -1216,6 +1216,7 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
        for (int ndx=0; lines[ndx]; ndx++) {
           LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
        }
+       ntsa_free(lines, true);
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE,"");
 }
