@@ -237,6 +237,12 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
       if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED) {
          rpt_vstring(depth, "drm_connector_name:      %s", businfo->drm_connector_name);
          rpt_vstring(depth, "drm_connector_id:        %d", businfo->drm_connector_id);
+         if (businfo->drm_connector_name) {
+            RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm", businfo->drm_connector_name, "enabled");
+            RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm", businfo->drm_connector_name, "status");
+            RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm", businfo->drm_connector_name, "dpms");
+            RPT_ATTR_EDID(depth, NULL, "/sys/class/drm", businfo->drm_connector_name, "edid");
+         }
       }
       // not useful and clutters the output
       // i2c_report_functionality_flags(businfo->functionality, /* maxline */ 90, depth);
