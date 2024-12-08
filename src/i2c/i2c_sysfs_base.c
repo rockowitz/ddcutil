@@ -1106,7 +1106,6 @@ bool is_sysfs_reliable_for_busno(int busno) {
 }
 
 
-#ifdef UNUSED
 /** Reports whether sysfs attributes for all DRM connectors reliably reflect
  *  display connection and disconnection.
  *
@@ -1138,7 +1137,6 @@ bool is_sysfs_reliable() {
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "Returning %s", SBOOL(result));
    return result;
 }
-#endif
 
 
 // moved from sysfs_i2c_util.c:
@@ -1474,8 +1472,8 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
-#ifdef UNUSED
    RTTI_ADD_FUNC(is_sysfs_reliable);
+#ifdef UNUSED
    RTTI_ADD_FUNC(get_sys_video_devices);
 #endif
 
