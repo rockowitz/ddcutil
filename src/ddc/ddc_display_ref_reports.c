@@ -30,6 +30,7 @@
 #include "base/rtti.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_sysfs_base.h"
 #include "i2c/i2c_sysfs_top.h"
 #include "i2c/i2c_sysfs_conflicting_drivers.h"
 #include "i2c/i2c_sys_drm_connector.h"
@@ -163,6 +164,7 @@ get_controller_mfg_string_t(Display_Handle * dh) {
 
 static void report_drm_dpms_status(int depth, const char * connector_name) {
    char * drm_dpms = NULL;
+   possibly_write_detect_to_status_by_connector_name(connector_name);
    RPT_ATTR_TEXT(-1, &drm_dpms, "/sys/class/drm", connector_name, "dpms");
    if (drm_dpms && !streq(drm_dpms,"On")) {
       rpt_vstring(1, "DRM reports the monitor is in a DPMS sleep state (%s).", drm_dpms);
@@ -264,6 +266,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          char * drm_enabled = NULL;
          // char * drm_connector_name = i2c_get_drm_connector_name(businfo);
          char * drm_connector_name = businfo->drm_connector_name;
+         possibly_write_detect_to_status_by_businfo(businfo);
          if (drm_connector_name) { // would be null for a non drm driver
             RPT_ATTR_TEXT(-1, &drm_dpms,    "/sys/class/drm", drm_connector_name, "dpms");
             RPT_ATTR_TEXT(-1, &drm_status,  "/sys/class/drm", drm_connector_name, "status");  // connected, disconnected

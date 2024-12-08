@@ -43,6 +43,8 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
+#include "i2c/i2c_sysfs_base.h"
+
 #include "i2c/i2c_sysfs_i2c_sys_info.h"
 
 // Trace class for this file
@@ -180,6 +182,7 @@ read_drm_dp_card_connector_node(
       free(drm_dp_aux_dir);
    }
 
+   possibly_write_detect_to_status_by_connector_path(connector_path);
    RPT_ATTR_EDID(d0, NULL, connector_path, "edid");
    RPT_ATTR_TEXT(d0, NULL, connector_path, "enabled");
    RPT_ATTR_TEXT(d0, NULL, connector_path, "status");
@@ -223,6 +226,7 @@ read_drm_nondp_card_connector_node(
    bool found_i2c = RPT_ATTR_SINGLE_SUBDIR(depth, NULL, streq, i2cN, dirname, connector, "ddc/i2c-dev");
    if (found_i2c) {
       info->connector = g_strdup(connector);
+      possibly_write_detect_to_status_by_connector_name(connector);
       RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc", "name");
       RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "dev");
       RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "name");

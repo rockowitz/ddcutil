@@ -10,6 +10,7 @@
 
 extern bool force_sysfs_unreliable;
 extern bool force_sysfs_reliable;
+extern bool enable_write_detect_to_status;
 
 // predicate functions
 // typedef Dir_Filter_Func
@@ -28,6 +29,14 @@ char *      get_driver_for_adapter(char * adapter_path, int depth);
 // char *      find_adapter(char * path, int depth); // MOVED
 char *      find_adapter_and_get_driver(char * path, int depth);
 char *      get_driver_for_busno(int busno);
+
+
+void possibly_write_detect_to_status(const char * driver, const char * connector);
+void possibly_write_detect_to_status_by_connector_name(const char * connector);
+void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo);
+void possibly_write_detect_to_status_by_dref(Display_Ref * dref);
+void possibly_write_detect_to_status_by_connector_path(const char * path);
+
 
 typedef struct {
    int    i2c_busno;

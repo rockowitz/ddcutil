@@ -69,7 +69,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(21, "Force sysfs unreliable");
    REPORT_FLAG_OPTION(22, "Force sysfs reliable");
    REPORT_FLAG_OPTION(23, "Set global primitive_sysfs");
-   REPORT_FLAG_OPTION(24, "Unused");
+   REPORT_FLAG_OPTION(24, "Write detect to status if nvidia driver");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZATION_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");

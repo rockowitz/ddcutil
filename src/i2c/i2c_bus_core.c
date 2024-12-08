@@ -921,6 +921,7 @@ Find_Sys_Drm_Connector_Result find_sys_drm_connector_by_busno_or_edid(
          // don't bother if we already have the answer
          if (result.found_by != DRM_CONNECTOR_FOUND_BY_BUSNO) {
             GByteArray*  edid_bytes_array = NULL;
+            possibly_write_detect_to_status_by_connector_name(cname);
             RPT_ATTR_EDID(d, &edid_bytes_array, "/sys/class/drm", cname, "edid");
             if (edid_bytes_array && edid_bytes_array->len >= 128) {
                 DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Got edid from sysfs: %s", edid_summary_from_bytes(edid_bytes_array->data));
@@ -986,6 +987,7 @@ Byte * get_connector_edid(const char * connector_name) {
 
    Byte * result = NULL;
    GByteArray*  edid_bytes = NULL;
+   possibly_write_detect_to_status_by_connector_name(connector_name);
    RPT_ATTR_EDID(d, &edid_bytes, "/sys/class/drm", connector_name, "edid");
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "edid_bytes=%p", edid_bytes);
    if (edid_bytes && edid_bytes->len >= 128) {

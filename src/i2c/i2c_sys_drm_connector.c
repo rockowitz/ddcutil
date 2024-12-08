@@ -199,6 +199,7 @@ Sys_Drm_Connector * one_drm_connector0(
    RPT_ATTR_REALPATH(d0, &cur->connector_path, dirname, fn);
 
    GByteArray * edid_byte_array = NULL;
+   possibly_write_detect_to_status_by_connector_path(cur->connector_path);
    RPT_ATTR_EDID(d0, &edid_byte_array, dirname, fn, "edid");   // e.g. /sys/class/drm/card0-DP-1/edid
    // DBGMSG("edid_byte_array=%p", (void*)edid_byte_array);
    if (edid_byte_array) {
@@ -213,6 +214,7 @@ Sys_Drm_Connector * one_drm_connector0(
    cur->i2c_busno = cbn->i2c_busno;
    cur->connector_id = cbn->connector_id;
    free_connector_bus_numbers(cbn);
+   possibly_write_detect_to_status_by_connector_name(fn);
    RPT_ATTR_TEXT(d0, &cur->enabled, dirname, fn, "enabled");   // e.g. /sys/class/drm/card0-DP-1/enabled
    RPT_ATTR_TEXT(d0, &cur->status,  dirname, fn, "status"); // e.g. /sys/class/drm/card0-DP-1/status
 

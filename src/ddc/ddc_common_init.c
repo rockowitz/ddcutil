@@ -429,6 +429,9 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F23)
       primitive_sysfs = true;
 
+   if (parsed_cmd->flags2 & CMD_FLAG2_F24)
+      enable_write_detect_to_status = true;
+
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
    if (parsed_cmd->flags2 & CMD_FLAG2_I3_SET)

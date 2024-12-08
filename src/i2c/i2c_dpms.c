@@ -166,6 +166,7 @@ bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
    char * enabled = NULL;
    char * status  = NULL;
    int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
+   possibly_write_detect_to_status_by_connector_name(drm_connector_name);
    RPT_ATTR_TEXT(d, &dpms,    "/sys/class/drm", drm_connector_name, "dpms");
    RPT_ATTR_TEXT(d, &enabled, "/sys/class/drm", drm_connector_name, "enabled");
    RPT_ATTR_TEXT(d, &status,  "/sys/class/drm", drm_connector_name, "status");

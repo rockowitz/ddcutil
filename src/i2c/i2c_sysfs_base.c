@@ -349,6 +349,7 @@ void simple_report_one_connector0(
    char * status       = NULL;
    char * connector_id = NULL;
    char * enabled      = NULL;
+   possibly_write_detect_to_status_by_connector_name(simple_fn);
    GET_ATTR_TEXT(&connector_id,    dirname, simple_fn, "connector_id");
    GET_ATTR_TEXT(&status,          dirname, simple_fn, "status");
    GET_ATTR_TEXT(&enabled,         dirname, simple_fn, "enabled");
@@ -680,6 +681,96 @@ char * get_driver_for_busno(int busno) {
    return result;
 }
 
+
+//
+// Possibly write "detect" to attribute status before reading connector attributes
+// with nvidia driver
+//
+
+void possibly_write_detect_to_status(const char * driver, const char * connector) {
+   bool debug = false;
+   assert(driver);
+   assert(connector);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "driver=%s, connector=%s", driver, connector);
+   bool wrote_detect_to_status = false;
+
+   bool do_driver = streq(driver, "nvidia");
+   if (enable_write_detect_to_status && do_driver && connector) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Writing detect to status");
+      char path[50];
+      g_snprintf(path, 50, "/sys/class/drm/%s/status", connector);
+      FILE * f = fopen(path, "w");
+      if (f) {
+         fputs("detect", f);
+         fclose(f);
+         wrote_detect_to_status = true;
+      }
+      else {
+         DBGTRC(debug, DDCA_TRC_NONE, "fopen() failed. connector=%s,  errno=%d", connector, errno);
+      }
+   }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "wrote detect to status: %s",
+               SBOOL(wrote_detect_to_status));
+}
+
+
+void possibly_write_detect_to_status_by_connector_path(const char * connector_path) {
+   bool debug = false;
+    int d = (debug) ? 1 : -1;
+    if (enable_write_detect_to_status) {
+       char * driver = find_adapter_and_get_driver((char*) connector_path, d);
+       if (driver) {
+          possibly_write_detect_to_status(driver, connector_path);
+         free(driver);
+       }
+    }
+}
+
+
+void possibly_write_detect_to_status_by_connector_name(const char * connector) {
+   bool debug = false;
+   int d = (debug) ? 1 : -1;
+   if (enable_write_detect_to_status) {
+      char path[50];
+      g_snprintf(path, 50, "/sys/class/drm/%s", connector);
+      char * driver = find_adapter_and_get_driver(path, d);
+      if (driver) {
+         possibly_write_detect_to_status(driver, connector);
+        free(driver);
+      }
+   }
+}
+
+
+void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo) {
+   if (enable_write_detect_to_status) {
+      if (businfo->driver)
+         possibly_write_detect_to_status(businfo->driver, businfo->drm_connector_name);
+      else {
+         char * driver = get_driver_for_busno(businfo->busno);
+         possibly_write_detect_to_status(businfo->driver, businfo->drm_connector_name);
+         free(driver);
+      }
+   }
+}
+
+
+void possibly_write_detect_to_status_by_dref(Display_Ref * dref) {
+   if (enable_write_detect_to_status) {
+      if (dref->io_path.io_mode == DDCA_IO_I2C) {
+         I2C_Bus_Info * businfo = dref->detail;
+         possibly_write_detect_to_status_by_businfo(businfo);
+      }
+      else {
+         if (dref->drm_connector) {
+            possibly_write_detect_to_status_by_connector_name(dref->drm_connector);
+         }
+      }
+   }
+}
+
+
 //
 // Sysfs_Connector_Names functions
 //
@@ -705,6 +796,7 @@ void get_sysfs_drm_add_one_connector_name(
    DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
 
    g_ptr_array_add(accum->all_connectors, strdup(simple_fn));
+   possibly_write_detect_to_status_by_connector_name(simple_fn);
    bool collect = GET_ATTR_EDID(NULL, dirname, simple_fn, "edid");
    if (collect) {
       g_ptr_array_add(accum->connectors_having_edid, g_strdup(simple_fn));
@@ -836,6 +928,7 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
       char * connector_name = g_ptr_array_index(connector_names, ndx);
       GByteArray * sysfs_edid;
       int depth = (debug) ? 1 : -1;
+      possibly_write_detect_to_status_by_connector_name(connector_name);
       RPT_ATTR_EDID(depth, &sysfs_edid, "/sys/class/drm", connector_name, "edid");
       if (sysfs_edid) {
          if (sysfs_edid->len >= 128 && memcmp(sysfs_edid->data, edid, 128) == 0)
@@ -877,6 +970,7 @@ typedef struct {
 static
 bool known_reliable_driver(const char * driver) {
    return streq(driver, "i915")   ||
+          streq(driver, "xe") ||
           streq(driver, "amdgpu") ||
           streq(driver, "radeon") ||
           streq(driver, "nouveau");
@@ -904,8 +998,11 @@ void check_connector_reliability(
       accum->known_good_driver_seen = true;
    }
    else if (streq(driver, "nvidia")) {
+      // Per Michael Hamilton, testing that status == "connected" for any connector with EDID
+      // does not guarantee that DRM connector is updated when a display is connected/disconnected
       accum->nvidia_connector_ct++;
       GByteArray * edid_byte_array = NULL;
+      possibly_write_detect_to_status_by_connector_name(fn);
       RPT_ATTR_EDID(debug_depth, &edid_byte_array, dirname, fn, "edid");   // e.g. /sys/class/drm/card0-DP-1/edid
       // DBGMSG("edid_byte_array=%p", (void*)edid_byte_array);
       if (edid_byte_array) {
@@ -963,6 +1060,7 @@ void check_sysfs_reliability() {
 
 bool force_sysfs_unreliable = false;
 bool force_sysfs_reliable = false;
+bool enable_write_detect_to_status = false;
 
 
 /** Reports whether sysfs attributes for DRM connectors using the given video
@@ -1008,6 +1106,7 @@ bool is_sysfs_reliable_for_busno(int busno) {
 }
 
 
+#ifdef UNUSED
 /** Reports whether sysfs attributes for all DRM connectors reliably reflect
  *  display connection and disconnection.
  *
@@ -1039,6 +1138,7 @@ bool is_sysfs_reliable() {
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "Returning %s", SBOOL(result));
    return result;
 }
+#endif
 
 
 // moved from sysfs_i2c_util.c:
@@ -1363,6 +1463,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
 
 
 void init_i2c_sysfs_base() {
+   RTTI_ADD_FUNC(possibly_write_detect_to_status);
    RTTI_ADD_FUNC(sysfs_find_adapter);
    RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
    RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
@@ -1373,8 +1474,8 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
-   RTTI_ADD_FUNC(is_sysfs_reliable);
 #ifdef UNUSED
+   RTTI_ADD_FUNC(is_sysfs_reliable);
    RTTI_ADD_FUNC(get_sys_video_devices);
 #endif
 

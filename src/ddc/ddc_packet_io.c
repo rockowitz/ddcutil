@@ -216,6 +216,7 @@ ddc_open_display(
        dref->drm_connector &&
        strlen(dref->drm_connector) > 0)
    {
+      possibly_write_detect_to_status_by_dref(dref);
       char * status;
       RPT_ATTR_TEXT(-1, &status, "/sys/class/drm", dref->drm_connector, "status");
       if (streq(status, "disconnected"))
