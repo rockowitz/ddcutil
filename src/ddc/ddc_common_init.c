@@ -520,7 +520,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
 uint64_t t0;
 uint64_t t1;
-drm_enabled = false;
+all_video_adapters_implement_drm = false;
 #ifdef USE_LIBDRM
    // For each video adapter node in sysfs, check that subdirectories drm/cardN/cardN-xxx exist
    t0 = cur_realtime_nanosec();
@@ -538,9 +538,9 @@ drm_enabled = false;
    DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "all_sysfs_i2c_info_drm() returned %s", sbool(result3));
 #endif
 
-   drm_enabled = result2;
+   all_video_adapters_implement_drm = result2;
    if (parsed_cmd->flags2 & CMD_FLAG2_F12)
-      drm_enabled = false;
+      all_video_adapters_implement_drm = false;
 #endif
 
    subinit_i2c_bus_core();
@@ -551,7 +551,7 @@ drm_enabled = false;
    if (use_drm_connector_states)
       redetect_drm_connector_states();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s",
-         sbool(use_drm_connector_states), sbool(drm_enabled));
+         sbool(use_drm_connector_states), sbool(all_video_adapters_implement_drm));
 
 #ifdef NOT_HERE
   // adding or removing MST device can change whether all drm connectors have connector_id

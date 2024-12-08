@@ -88,10 +88,10 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
       "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, drm_enabled=%s",
-      ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(drm_enabled));
+      ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    Error_Info * err = NULL;
 
-   if (!drm_enabled) {
+   if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
       goto bye;
    }

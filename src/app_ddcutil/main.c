@@ -1046,7 +1046,7 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_C1) {
       DBGMSG("Executing temporarily defined command C1: watch for display connection/disconnection");
-      if (!drm_enabled) {
+      if (!all_video_adapters_implement_drm) {
          DBGMSG("Requires DRM capable video drivers.");
          main_rc = EXIT_FAILURE;
       }

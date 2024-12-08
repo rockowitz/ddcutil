@@ -31,7 +31,7 @@
 #define I2C_SLAVE_ADDR_MAX 128
 
 extern bool i2c_force_bus;
-extern bool drm_enabled;
+extern bool all_video_adapters_implement_drm;
 extern bool use_drm_connector_states;
 extern bool try_get_edid_from_sysfs_first;
 extern int  i2c_businfo_async_threshold;

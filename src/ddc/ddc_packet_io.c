@@ -48,6 +48,7 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+#include "i2c/i2c_sysfs_base.h"
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"
@@ -147,8 +148,6 @@ ddc_validate_display_handle2(Display_Handle * dh) {
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
    return result;
 }
-
-
 
 
 void ddc_dbgrpt_valid_display_handles(int depth) {

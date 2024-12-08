@@ -906,7 +906,7 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
 
    DDCA_Error_Detail * edet = NULL;
 #ifdef ENABLE_UDEV
-   if (!drm_enabled) {
+   if (!all_video_adapters_implement_drm) {
       edet = new_ddca_error_detail(DDCRC_INVALID_OPERATION,
                "Display hotplug detection requires DRM enabled video drivers");
    }

@@ -496,21 +496,21 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
       char * drm_dpms = NULL;
       char * drm_status = NULL;
-      char * drm_enabled = NULL;
+      char * all_video_adapters_implement_drm = NULL;
       int    drm_connector_id = -1;
       int depth = (debug) ? 1 : -1;
       if (businfo->drm_connector_name) {
          possibly_write_detect_to_status_by_connector_name(businfo->drm_connector_name);
          RPT_ATTR_TEXT(depth, &drm_dpms,   "/sys/class/drm",businfo->drm_connector_name, "dpms");
          RPT_ATTR_TEXT(depth, &drm_status, "/sys/class/drm",businfo->drm_connector_name, "status");
-         RPT_ATTR_TEXT(depth, &drm_enabled,"/sys/class/drm",businfo->drm_connector_name, "enabled");
+         RPT_ATTR_TEXT(depth, &all_video_adapters_implement_drm,"/sys/class/drm",businfo->drm_connector_name, "enabled");
          RPT_ATTR_INT (depth, &drm_connector_id,
                                            "/sys/class/drm",businfo->drm_connector_name, "drm_connector_id");
       }
       // not currently used, just free
       free(drm_dpms);
       free(drm_status);
-      free(drm_enabled);
+      free(all_video_adapters_implement_drm);
 
       // DBGMSG("monitor_state_tests = %s", SBOOL(monitor_state_tests));
       if (monitor_state_tests)
@@ -1800,7 +1800,7 @@ ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_a
    //    ddcrc = DDCRC_ARG;
    else if (dref->flags & DREF_REMOVED)
       ddcrc = DDCRC_DISCONNECTED;
-   else if (drm_enabled && dref->drm_connector && !basic_only) {
+   else if (all_video_adapters_implement_drm && dref->drm_connector && !basic_only) {
       // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
       // if (!dref->drm_connector)
       //   ddcrc = DDCRC_INTERNAL_ERROR;
@@ -1833,7 +1833,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
       int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
       if (dref->flags & DREF_REMOVED)
          ddcrc = DDCRC_DISCONNECTED;
-      else if (drm_enabled) {
+      else if (all_video_adapters_implement_drm) {
          if (!dref->drm_connector) {
             start_capture(DDCA_CAPTURE_STDERR);
             rpt_vstring(0, "Internal error in %s at line %d in file %s. dref->drm_connector == NULL",

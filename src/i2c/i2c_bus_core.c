@@ -84,7 +84,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
-bool drm_enabled = false;
+bool all_video_adapters_implement_drm = false;
 bool use_drm_connector_states = false;
 bool try_get_edid_from_sysfs_first = true;
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
