@@ -1203,9 +1203,19 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
                businfo->busno, businfo->drm_connector_name);
    }
    else {
-       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
              "Failed to find connector name for /dev/i2c-%d using EDID %p",
              businfo->busno, businfo->edid->bytes);
+       start_capture(DDCA_CAPTURE_STDERR);
+       rpt_vstring(0, "Failed to find connector name for /dev/i2c-%d, %s at line %d in file %s. ",
+             businfo->busno,  __func__, __LINE__, __FILE__);
+       i2c_dbgrpt_bus_info(businfo, /*include_sysinfo*/ true, 1);
+       rpt_nl();
+       report_sys_drm_connectors(true, 1);
+       Null_Terminated_String_Array lines = end_capture_as_ntsa();
+       for (int ndx=0; lines[ndx]; ndx++) {
+          LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
+       }
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE,"");
 }
