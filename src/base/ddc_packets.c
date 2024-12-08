@@ -1020,6 +1020,7 @@ create_ddc_typed_response_packet(
       default:
          rc = DDCRC_INTERNAL_ERROR;
          DBGMSG("Unhandled case. expected_type=%d", expected_type);
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Unhandled case in %s. expected_type=%d", __func__, expected_type);
          break;
       }
    }
