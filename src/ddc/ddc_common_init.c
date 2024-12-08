@@ -524,11 +524,11 @@ all_video_adapters_implement_drm = false;
 #ifdef USE_LIBDRM
    // For each video adapter node in sysfs, check that subdirectories drm/cardN/cardN-xxx exist
    t0 = cur_realtime_nanosec();
-   bool result2 = check_all_video_adapters_implement_drm();  // in i2c_sysfs.c
+   bool all_video_adapters_implement_drm = check_all_video_adapters_implement_drm();  // in i2c_sysfs.c
    t1 = cur_realtime_nanosec();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "check_all_video_adapters_implement_drm() returned %s in %"PRIu64" microsec",
-         sbool(result2), NANOS2MICROS(t1-t0));
+         sbool(all_video_adapters_implement_drm), NANOS2MICROS(t1-t0));
 
 #ifdef OUT
    // Fails if nvidia driver, adapter path not filled in
@@ -538,7 +538,6 @@ all_video_adapters_implement_drm = false;
    DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "all_sysfs_i2c_info_drm() returned %s", sbool(result3));
 #endif
 
-   all_video_adapters_implement_drm = result2;
    if (parsed_cmd->flags2 & CMD_FLAG2_F12)
       all_video_adapters_implement_drm = false;
 #endif
