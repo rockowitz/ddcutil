@@ -1833,11 +1833,21 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
          ddcrc = DDCRC_DISCONNECTED;
       else if (drm_enabled) {
          if (!dref->drm_connector) {
+            start_capture(DDCA_CAPTURE_STDERR);
+            rpt_vstring(0, "Internal error in %s at line %d in file %s. dref->drm_connector == NULL",
+                         __func__, __LINE__, __FILE__);
+            dbgrpt_display_ref(dref, true, 1);
+            rpt_nl();
+            report_sys_drm_connectors(true, 1);
+            Null_Terminated_String_Array lines = end_capture_as_ntsa();
+            for (int ndx=0; lines[ndx]; ndx++) {
+               LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
+            }
             ddcrc = DDCRC_INTERNAL_ERROR;
          }
          else {
             if (ddcrc == 0 && (validation_options&DREF_VALIDATE_EDID)) {
-               if (is_sysfs_reliable_for_busno(dref->io_path.path.i2c_busno)) {
+               if (is_sysfs_reliable_for_busno(DREF_BUSNO(dref))) {
                   if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
                      ddcrc = DDCRC_DISCONNECTED;
                }
