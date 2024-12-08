@@ -102,7 +102,6 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    }
 
    bool sysfs_fully_reliable = true;
-#ifdef WATCH_MODE_DYNAMIC_NOT_SUPPORTED
    sysfs_fully_reliable = false;
 #ifndef ENABLE_UDEV
    ddc_watch_mode = Watch_Mode_Poll;
@@ -114,7 +113,6 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          ddc_watch_mode = Watch_Mode_Poll;
    }
 #endif
-#endif
 
    int calculated_watch_loop_millisec = calc_poll_loop_millisec(ddc_watch_mode);
 
@@ -124,9 +122,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"force_sysfs_reliable=%s, force_sysfs_unreliable=%s", sbool(force_sysfs_reliable), sbool(force_sysfs_unreliable));
-#ifdef UNUSED
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"sysfs_fully_reliable:                   %s", SBOOL(sysfs_fully_reliable));
-#endif
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"try_get_edid_from_sysfs_first:          %s", SBOOL(try_get_edid_from_sysfs_first));  // i2c_edid_exists()
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"extra_stailization_millisec:            %d", extra_stabilization_millisec);
