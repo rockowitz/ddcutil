@@ -489,8 +489,8 @@ static bool parse_watch_mode(
          parsed_cmd->watch_mode = Watch_Mode_Poll;
       else if (is_abbrev(v2, "UDEV", 3))
          parsed_cmd->watch_mode = Watch_Mode_Udev;
-      // else if (is_abbrev(v2, "DYNAMIC", 3))
-       //   parsed_cmd->watch_mode = Watch_Mode_Dynamic;
+      else if (is_abbrev(v2, "DYNAMIC", 3))
+         parsed_cmd->watch_mode = Watch_Mode_Dynamic;
 
       else {
          EMIT_PARSER_ERROR(errmsgs, "Invalid watch-mode: %s", sval);
