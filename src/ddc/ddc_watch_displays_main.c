@@ -117,7 +117,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    int calculated_watch_loop_millisec = calc_poll_loop_millisec(ddc_watch_mode);
 
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
-         "Watching for display connection changes, watch mode = %s, poll loop interval = %d millisec",
+         "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          ddc_watch_mode_name(ddc_watch_mode), calculated_watch_loop_millisec);
 
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
