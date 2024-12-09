@@ -34,8 +34,10 @@ rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
 void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
+#ifdef UNUSED
    char buf0[80];
    g_snprintf(buf0, 80, "Use non-default watch mode (default = %s)", ddc_watch_mode_name(ddc_watch_mode));
+#endif
    char buf5[80];
    g_snprintf(buf5, 80, "Use non-default value for EDID read uses I2C layer (default=%s)", SBOOL(DEFAULT_EDID_READ_USES_I2C_LAYER));
 
