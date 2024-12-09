@@ -1048,6 +1048,7 @@ void check_sysfs_reliability() {
    drm_reliability_checked = true;
    nvidia_connectors_exist = (accum->nvidia_connector_ct > 0);
    // known_good_driver_seen = > 0;
+   // This appears to be a necessary, but not sufficient, condition
    nvidia_connectors_reliable =
          accum->nvidia_connector_w_edid_ct > 0 &&
          accum->nvidia_connector_w_edid_ct == accum->nvidia_connector_w_edid_and_connected_ct;
