@@ -524,7 +524,7 @@ all_video_adapters_implement_drm = false;
 #ifdef USE_LIBDRM
    // For each video adapter node in sysfs, check that subdirectories drm/cardN/cardN-xxx exist
    t0 = cur_realtime_nanosec();
-   bool all_video_adapters_implement_drm = check_all_video_adapters_implement_drm();  // in i2c_sysfs.c
+   all_video_adapters_implement_drm = check_all_video_adapters_implement_drm();  // in i2c_sysfs.c
    t1 = cur_realtime_nanosec();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "check_all_video_adapters_implement_drm() returned %s in %"PRIu64" microsec",
