@@ -1239,7 +1239,9 @@ parse_command(
       {"ignore-usb-vid-pid", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored_vid_pid, "USB device to ignore","vid:pid" },
       {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
 #endif
-      {"disable-ddc",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
+      {"disable-ddc",   '\0', G_OPTION_FLAG_HIDDEN,
+                                 G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
+      {"ignore-mmid",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
 
 #ifdef FUTURE
       {"force-slave-address",
