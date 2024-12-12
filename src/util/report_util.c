@@ -11,7 +11,7 @@
  * - destination stack
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 /** \endcond */
 
@@ -31,6 +32,7 @@
 
 #include "report_util.h"
 
+bool redirect_reports_to_syslog = false;
 
 #define DEFAULT_INDENT_SPACES_PER_DEPTH 3
 #define INDENT_SPACES_STACK_SIZE  16
@@ -244,14 +246,18 @@ void rpt_change_output_dest(FILE* new_dest) {
 
 // should not be needed, for diagnosing a problem
 void rpt_flush() {
-   fflush(rpt_cur_output_dest());
+   if (!redirect_reports_to_syslog)
+      fflush(rpt_cur_output_dest());
 }
 
 
 /** Writes a newline to the current output destination.
  */
 void rpt_nl() {
-   f0printf(rpt_cur_output_dest(), "\n");
+   if (redirect_reports_to_syslog)
+      syslog(LOG_NOTICE, "\n");
+   else
+      f0printf(rpt_cur_output_dest(), "\n");
 }
 
 
@@ -278,7 +284,10 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
       g_ptr_array_add(collector, g_strdup_printf("%*s%s\n", rpt_get_indent(depth), "", title));
    }
    else {
-      f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_get_indent(depth), "", title);
+      if (redirect_reports_to_syslog)
+         syslog(LOG_NOTICE, "%*s%s\n", rpt_get_indent(depth), "", title);
+      else
+         f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_get_indent(depth), "", title);
    }
 }
 
