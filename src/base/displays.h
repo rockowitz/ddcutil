@@ -22,6 +22,8 @@
 #include "monitor_model_key.h"
 #include "vcp_version.h"
 
+extern bool      terminate_watch_thread;
+
 
 /** \file
 Display Specification
@@ -276,6 +278,7 @@ void free_bus_open_error(Bus_Open_Error * boe);
 
 typedef enum {
    Watch_Mode_Poll,
+   Watch_Mode_Xevent,
    Watch_Mode_Udev,
    Watch_Mode_Dynamic,
 } DDC_Watch_Mode;

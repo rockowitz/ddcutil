@@ -39,6 +39,8 @@
 #include "displays.h"
 
 
+bool      terminate_watch_thread = false;
+
 // *** DDCA_IO_Path ***
 
 /** Tests 2 #DDCA_IO_Path instances for equality
@@ -1055,6 +1057,7 @@ const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
    char * result = NULL;
    switch (mode) {
    case Watch_Mode_Poll:     result = "Watch_Mode_Poll";     break;
+   case Watch_Mode_Xevent:     result = "Watch_Mode_Xorg";     break;
    case Watch_Mode_Udev:     result = "Watch_Mode_Udev";     break;
    case Watch_Mode_Dynamic:  result = "Watch_Mode_Dynamic";  break;
    }
