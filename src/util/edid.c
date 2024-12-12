@@ -10,7 +10,7 @@
  *  to **ddcutil** are interpreted.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -627,6 +627,7 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
  */
 bool is_laptop_parsed_edid(Parsed_Edid * parsed_edid) {
    assert(parsed_edid);
+   // 12/10/2024: seen laptop screen w. model name but not serial_ascii
    bool result = streq(parsed_edid->model_name,  "") &&
                  streq(parsed_edid->serial_ascii,"");
    return result;
