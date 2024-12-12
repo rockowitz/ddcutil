@@ -109,11 +109,19 @@ print_simple_title_value(int          offset_start_to_title,
                          int          offset_title_start_to_value,
                          const char * value)
 {
-   f0printf(fout(), "%.*s%-*s%s\n",
+   if (redirect_reports_to_syslog) {
+      syslog(LOG_NOTICE, "%.*s%-*s%s\n",
             offset_start_to_title,"",
             offset_title_start_to_value, title,
             value);
-   fflush(fout());
+   }
+   else {
+      f0printf(fout(), "%.*s%-*s%s\n",
+               offset_start_to_title,"",
+               offset_title_start_to_value, title,
+               value);
+      fflush(fout());
+   }
 }
 
 
@@ -311,10 +319,15 @@ bool logable_msg(DDCA_Syslog_Level log_level,
    va_start(args, format);
    char * buffer = g_strdup_vprintf(format, args);
    // vsnprintf(buffer, 500, format, args);
-   f0printf(fout(), "%s\n", buffer);
-   if (test_emit_syslog(log_level)) {
-      int importance = syslog_importance_from_ddcutil_syslog_level(log_level);
-      syslog(importance, "%s", buffer);
+    if (redirect_reports_to_syslog) {
+       syslog(LOG_NOTICE, "%s", buffer);
+    }
+    else {
+      f0printf(fout(), "%s\n", buffer);
+      if (test_emit_syslog(log_level)) {
+         int importance = syslog_importance_from_ddcutil_syslog_level(log_level);
+         syslog(importance, "%s", buffer);
+      }
    }
    fflush(fout());
    va_end(args);
@@ -622,8 +635,12 @@ static bool vdbgtrc(
             syslog(LOG_ERR, "%s", syslog_msg);
             free(syslog_msg);
          }
+         else if (redirect_reports_to_syslog) {
+            syslog(LOG_NOTICE, "%s(%-30s) %s%s",
+                  elapsed_prefix, funcname, retval_info, base_msg);
+         }
 
-         if (!dbgtrc_trace_to_syslog_only && !stdout_stderr_redirected) {
+         if (!dbgtrc_trace_to_syslog_only && !stdout_stderr_redirected && !redirect_reports_to_syslog) {
             FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
                               ? thread_settings->ferr
                               : thread_settings->fout;
@@ -1055,6 +1072,7 @@ typedef struct {
    size_t in_memory_bufsize;
    DDCA_Capture_Option_Flags flags;
    bool   in_memory_capture_active;
+   bool   saved_rpt_to_syslog;
 } In_Memory_File_Desc;
 
 
@@ -1084,6 +1102,8 @@ start_capture(DDCA_Capture_Option_Flags flags) {
    if (!fdesc->in_memory_file) {
       fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
    }
+   fdesc->saved_rpt_to_syslog = redirect_reports_to_syslog;
+   redirect_reports_to_syslog = false;
    set_fout(fdesc->in_memory_file);   // n. ddca_set_fout() is thread specific
    fdesc->flags = flags;
    if (flags & DDCA_CAPTURE_STDERR)
@@ -1118,6 +1138,7 @@ end_capture(void) {
    set_fout_to_default();
    if (fdesc->flags & DDCA_CAPTURE_STDERR)
       set_ferr_to_default();
+   redirect_reports_to_syslog = fdesc->saved_rpt_to_syslog;
    fdesc->in_memory_capture_active = false;
 
    // printf("(%s) Done. result=%p\n", __func__, result);
@@ -1176,7 +1197,7 @@ base_errinfo_free_with_report(
 {
    if (erec) {
       if (report || report_freed_exceptions) {
-         if ( dbgtrc_trace_to_syslog_only) {
+         if ( dbgtrc_trace_to_syslog_only || redirect_reports_to_syslog) {
             GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
             rpt_vstring_collect(0, collector, "(%s) Freeing exception:", func);
             for (int ndx = 0; ndx < collector->len; ndx++) {
