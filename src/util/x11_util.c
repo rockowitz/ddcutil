@@ -128,7 +128,6 @@ GPtrArray * get_x11_edids(bool use_screen_resources_current) {
      && XRRQueryVersion(disp, &maj, &min) )
     {
       int version = (maj << 8) | min;
-
       if( version >= 0x0102 )
       {
         size_t atom_avail = 0;
@@ -240,18 +239,19 @@ GPtrArray * get_x11_edids(bool use_screen_resources_current) {
     XCloseDisplay(disp);
   }
 
-if (debug) {
-  int ndx = 0;
-  printf("Returning %d X11_Edid_Recs\n", edid_recs->len);
-  for (; ndx < edid_recs->len; ndx++) {
-     X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
-     printf(" Output name: %s -> %p\n", prec->output_name, prec->edidbytes);
-     hex_dump(prec->edidbytes, 128);
+  if (debug) {
+     int ndx = 0;
+     printf("Returning %d X11_Edid_Recs\n", edid_recs->len);
+     for (; ndx < edid_recs->len; ndx++) {
+        X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
+        printf(" Output name: %s -> %p\n", prec->output_name, prec->edidbytes);
+        hex_dump(prec->edidbytes, 128);
+     }
   }
-}
 
   return edid_recs;
 }
+
 
 /** Frees the data structure returned by get_x11_edids()
  *
@@ -259,8 +259,8 @@ if (debug) {
  */
 void free_x11_edids(GPtrArray * edidrecs) {
    g_ptr_array_free(edidrecs, true);
-
 }
+
 
 bool get_x11_dpms_info(unsigned short * power_level, unsigned char * state) {
    Display *disp = XOpenDisplay(NULL);
