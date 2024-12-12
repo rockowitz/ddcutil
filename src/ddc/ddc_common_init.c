@@ -462,6 +462,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    DBGTRC_STARTING(debug, DDCA_TRC_DDC, "parsed_cmd = %p", parsed_cmd);
    Error_Info * final_result = NULL;
 
+   redirect_reports_to_syslog = parsed_cmd->flags2 & CMD_FLAG2_F8;
+
    final_result = init_failsim(parsed_cmd);
    if (final_result)
       goto bye;      // main_rc == EXIT_FAILURE
