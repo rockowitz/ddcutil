@@ -53,6 +53,7 @@
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_watch_displays_common.h"
+#include "ddc/ddc_watch_displays_xevent.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp.h"
@@ -311,12 +312,15 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
                                      sizeof(DDCA_Display_Status_Event));
    bool skip_next_sleep = false;
    int slept = 0;   // will contain length of final sleep
+   if (wdd->watch_mode == Watch_Mode_Xevent) {
+   }
+
    while (!terminate_watch_thread) {
       if (deferred_events && deferred_events->len > 0) {
          ddc_i2c_emit_deferred_events(deferred_events);
       }
       else {     // skip polling loop sleep if deferred events were output
-         if (!skip_next_sleep) {
+         if (!skip_next_sleep && wdd->watch_mode != Watch_Mode_Xevent) {
             slept = split_sleep();
          }
       }
@@ -324,6 +328,12 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
       if (terminate_watch_thread)
          continue;
       terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
+
+      if (wdd->watch_mode == Watch_Mode_Xevent && wdd->evdata) {
+         bool event_found = ddc_detect_xevent_screen_change(wdd->evdata,  /* poll_interval*/ 500);
+         if (!event_found)
+            continue;
+      }
 
 #ifdef OLD
       GPtrArray * cur_buses = i2c_detect_buses0();

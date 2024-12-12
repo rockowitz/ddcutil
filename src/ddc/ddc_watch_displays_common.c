@@ -20,6 +20,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+
+
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
@@ -53,19 +55,22 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_watch_displays_xevent.h"
 
 #include "ddc_watch_displays_common.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
-bool      terminate_watch_thread = false;
+
 int       extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
 int       stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
 int       watch_loop_poll_multiplier = 1;
 int       explicit_udev_poll_loop_millisec = 0;
 int       explicit_nonudev_poll_loop_millisec = 0;
 int       calculated_watch_loop_millisec = 0;
+
+int       explicit_xevent_loop_millisec = 500;   // temp
 
 
 int calc_poll_loop_millisec(DDC_Watch_Mode watch_mode) {
@@ -77,6 +82,13 @@ int calc_poll_loop_millisec(DDC_Watch_Mode watch_mode) {
          final_answer = explicit_udev_poll_loop_millisec;
       else
          final_answer = watch_loop_poll_multiplier * DEFAULT_UDEV_POLL_LOOP_MILLISEC;
+   }
+   else if (watch_mode == Watch_Mode_Xevent) {
+      if (explicit_xevent_loop_millisec)
+         final_answer = explicit_nonudev_poll_loop_millisec;
+      else {
+         final_answer = watch_loop_poll_multiplier * DEFAULT_NONUDEV_POLL_LOOP_MILLISEC;
+      }
    }
    else {
       if (explicit_nonudev_poll_loop_millisec)
@@ -529,7 +541,6 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
    DBGTRC_RETURNING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
    return bs_prior;
 }
-
 
 void init_ddc_watch_displays_common() {
 #ifdef WATCH_ASLEEP

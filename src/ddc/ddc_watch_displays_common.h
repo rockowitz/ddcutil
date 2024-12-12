@@ -12,7 +12,11 @@
 #include "util/data_structures.h"
 #include "util/linux_util.h"
 
-extern bool      terminate_watch_thread;
+#include "base/displays.h"
+
+#include "ddc/ddc_watch_displays_xevent.h"
+
+
 extern int       extra_stabilization_millisec;
 extern int       stabilization_poll_millisec;
 
@@ -40,6 +44,8 @@ typedef struct {
    pid_t                    main_process_id;
    pid_t                    main_thread_id;
    DDCA_Display_Event_Class event_classes;
+   DDC_Watch_Mode           watch_mode;
+   XEvent_Data *            evdata;
 #ifdef OLD_HOTPLUG_VERSION
    Display_Change_Handler display_change_handler;
    Bit_Set_32             drm_card_numbers;
@@ -78,6 +84,7 @@ bool ddc_i2c_hotplug_change_handler(
       Bit_Set_256    bs_buses_w_edid_removed,
       Bit_Set_256    bs_buses_w_edid_added,
       GArray * events_queue);
+
 
 void init_ddc_watch_displays_common();
 

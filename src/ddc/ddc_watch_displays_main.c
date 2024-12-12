@@ -33,6 +33,7 @@
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
 #include "util/udev_util.h"
+#include "util/x11_util.h"
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -54,8 +55,9 @@
 #include "ddc/ddc_vcp.h"
 
 #include "ddc_watch_displays_common.h"
-#include "ddc/ddc_watch_displays_udev.h"
+#include "ddc_watch_displays_udev.h"
 #include "ddc_watch_displays_poll.h"
+#include "ddc_watch_displays_xevent.h"
 
 #include "ddc_watch_displays_main.h"
 
@@ -91,6 +93,8 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    Error_Info * err = NULL;
 
+   // register_for_x11_screen_change_notification();
+
    if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
       goto bye;
@@ -101,17 +105,27 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
+   XEvent_Data * xev_data = ddc_init_xevent_screen_change_notification();
+   if (ddc_watch_mode == Watch_Mode_Xevent && !xev_data) {
+      err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "X11 API unavailable. Watching for display changes disabled");
+      goto bye;
+   }
+
+
    bool sysfs_fully_reliable = true;
    sysfs_fully_reliable = false;
 #ifndef ENABLE_UDEV
    ddc_watch_mode = Watch_Mode_Poll;
 #else
    if (ddc_watch_mode == Watch_Mode_Dynamic) {
+      // TODO: incorporate Watch_Mode_Xevent into algorithm
       ddc_watch_mode = Watch_Mode_Udev;
       sysfs_fully_reliable = is_sysfs_reliable();
       if (!sysfs_fully_reliable)
          ddc_watch_mode = Watch_Mode_Poll;
    }
+   // if (xev_data && ddc_watch_mode == Watch_Mode_Xevent)
+   //    ddc_watch_mode = Watch_Mode_Poll;
 #endif
 
    int calculated_watch_loop_millisec = calc_poll_loop_millisec(ddc_watch_mode);
@@ -148,8 +162,11 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       data->main_thread_id = get_thread_id();  // alt = syscall(SYS_gettid);
       // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
       data->event_classes = event_classes;
+      data->watch_mode = ddc_watch_mode;
+      if (xev_data)
+         data->evdata = xev_data;
 
-      GThreadFunc watch_thread_func = (ddc_watch_mode == Watch_Mode_Poll)
+      GThreadFunc watch_thread_func = (ddc_watch_mode == Watch_Mode_Poll || ddc_watch_mode == Watch_Mode_Xevent)
                                         ? ddc_watch_displays_without_udev
                                         : ddc_watch_displays_udev;
 
