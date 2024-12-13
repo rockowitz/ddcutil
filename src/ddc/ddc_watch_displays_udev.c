@@ -64,8 +64,9 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
+// globals
 bool    use_sysfs_connector_id = true;
-bool    report_udev_events;
+bool    report_udev_events = false;
 
 
 void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
@@ -455,16 +456,6 @@ void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth) {
    rpt_vstring(d1, "sysname:         %s", detail->sysname);
    rpt_vstring(d1, "attr_name:       %s", detail->attr_name);
 }
-
-
-void xxx(char * msg) {
-   if (msg)
-      DBGMSG(msg);
-   execute_shell_cmd("ls -l /sys/bus/i2c/devices/i2c* | grep 02:00");
-   execute_shell_cmd("ls -l /sys/class/drm/card2-*");
-}
-
-
 
 
 void debug_watch_state(int connector_number, char * cname) {
