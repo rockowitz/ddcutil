@@ -107,8 +107,9 @@
 //
 
 /** How frequently libddcutil watches for changes to connected displays */
-#define DEFAULT_UDEV_POLL_LOOP_MILLISEC 500
-#define DEFAULT_NONUDEV_POLL_LOOP_MILLISEC 2000
+#define DEFAULT_UDEV_WATCH_LOOP_MILLISEC 500
+#define DEFAULT_POLL_WATCH_LOOP_MILLISEC 2000
+#define DEFAULT_XEVENT_WATCH_LOOP_MILLISEC 300
 // Once a UDEV DRM event is received that possibly indicates a display change,
 // libddcutil repeatedly checks /sys/class/drm until the reported displays
 // stabilize
