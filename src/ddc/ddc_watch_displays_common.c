@@ -65,52 +65,41 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
 int       extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
 int       stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
-int       watch_loop_poll_multiplier = 1;
-int       explicit_udev_poll_loop_millisec = 0;
-int       explicit_nonudev_poll_loop_millisec = 0;
-int       calculated_watch_loop_millisec = 0;
-
-int       explicit_xevent_loop_millisec = 500;   // temp
+int       udev_watch_loop_millisec     = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
+int       poll_watch_loop_millisec     = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
+int       xevent_watch_loop_millisec   = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 
 
-int calc_poll_loop_millisec(DDC_Watch_Mode watch_mode) {
+int calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
    assert(watch_mode != Watch_Mode_Dynamic);
    int final_answer = 0;
 
    if (watch_mode == Watch_Mode_Udev) {
-      if (explicit_udev_poll_loop_millisec)
-         final_answer = explicit_udev_poll_loop_millisec;
+      if (udev_watch_loop_millisec)
+         final_answer = udev_watch_loop_millisec;
       else
-         final_answer = watch_loop_poll_multiplier * DEFAULT_UDEV_POLL_LOOP_MILLISEC;
+         final_answer = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
    }
    else if (watch_mode == Watch_Mode_Xevent) {
-      if (explicit_xevent_loop_millisec)
-         final_answer = explicit_nonudev_poll_loop_millisec;
-      else {
-         final_answer = watch_loop_poll_multiplier * DEFAULT_NONUDEV_POLL_LOOP_MILLISEC;
-      }
+      if (xevent_watch_loop_millisec)
+         final_answer = xevent_watch_loop_millisec;
+      else
+         final_answer = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
    }
    else {
-      if (explicit_nonudev_poll_loop_millisec)
-         final_answer = explicit_nonudev_poll_loop_millisec;
-      else {
-         final_answer = watch_loop_poll_multiplier * DEFAULT_NONUDEV_POLL_LOOP_MILLISEC;
-      }
+      if (poll_watch_loop_millisec)
+         final_answer = poll_watch_loop_millisec;
+      else
+         final_answer = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
    }
-   calculated_watch_loop_millisec = final_answer;
+   // calculated_watch_loop_millisec = final_answer;
    return final_answer;
 }
 
 
-void set_poll_loop_multiplier(int multiplier) {
-   watch_loop_poll_multiplier = multiplier;
-   DBGMSG("Set watch_loop_poll_multiplier = %d", watch_loop_poll_multiplier);
-}
-
-
-int split_sleep() {
-   assert(calculated_watch_loop_millisec > 0);
-   uint64_t max_sleep_microsec = calculated_watch_loop_millisec * (uint64_t)1000;
+int split_sleep(int watch_loop_millisec) {
+   assert(watch_loop_millisec > 0);
+   uint64_t max_sleep_microsec = watch_loop_millisec * (uint64_t)1000;
    uint64_t sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
    int slept = 0;
    for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
