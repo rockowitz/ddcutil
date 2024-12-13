@@ -65,7 +65,7 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
-int  nonudev_poll_loop_millisec = DEFAULT_UDEV_POLL_LOOP_MILLISEC;   // 2000;   // default sleep time on each loop
+int  nonudev_poll_loop_millisec = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;   // 2000;   // default sleep time on each loop
 
 #ifdef OLD
 //
@@ -321,7 +321,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
       }
       else {     // skip polling loop sleep if deferred events were output
          if (!skip_next_sleep && wdd->watch_mode != Watch_Mode_Xevent) {
-            slept = split_sleep();
+            slept = split_sleep(wdd->watch_loop_millisec);
          }
       }
       skip_next_sleep = false;
