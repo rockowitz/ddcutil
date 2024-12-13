@@ -88,9 +88,9 @@ static GMutex    watch_thread_mutex;
 Error_Info *
 ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP,
-      "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, drm_enabled=%s",
-      ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
+   DBGTRC_STARTING(debug, TRACE_GROUP, 
+        "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
+        ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    Error_Info * err = NULL;
 
    // register_for_x11_screen_change_notification();
@@ -111,41 +111,47 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-
-   bool sysfs_fully_reliable = true;
-   sysfs_fully_reliable = false;
 #ifndef ENABLE_UDEV
    ddc_watch_mode = Watch_Mode_Poll;
 #else
    if (ddc_watch_mode == Watch_Mode_Dynamic) {
-      // TODO: incorporate Watch_Mode_Xevent into algorithm
-      ddc_watch_mode = Watch_Mode_Udev;
-      sysfs_fully_reliable = is_sysfs_reliable();
-      if (!sysfs_fully_reliable)
-         ddc_watch_mode = Watch_Mode_Poll;
+      ddc_watch_mode = Watch_Mode_Poll;    // always works, may be slow
+      char * xdg_session_type = getenv("XDG_SESSION_TYPE");
+      if (xdg_session_type &&         // can xdg_session_type ever not be set
+          (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
+      {
+         ddc_watch_mode = Watch_Mode_Xevent;
+      }
+      else {
+         // assert xdg_session_type == "tty"  ?
+         char * display = getenv("DISPLAY");
+         // possibility of coming in on ssh with a x11 proxy running
+         // see https://stackoverflow.com/questions/45536141/how-i-can-find-out-if-a-linux-system-uses-wayland-or-x11
+         if (display) {
+            ddc_watch_mode = Watch_Mode_Xevent;
+         }
+      }
+
+      //     ddc_watch_mode = Watch_Mode_Udev;
+      // sysfs_fully_reliable = is_sysfs_reliable();
+      // if (!sysfs_fully_reliable)
+      //    ddc_watch_mode = Watch_Mode_Poll;
    }
-   // if (xev_data && ddc_watch_mode == Watch_Mode_Xevent)
-   //    ddc_watch_mode = Watch_Mode_Poll;
 #endif
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "final ddc_watch_mode = %s", ddc_watch_mode_name(ddc_watch_mode));
 
-   int calculated_watch_loop_millisec = calc_poll_loop_millisec(ddc_watch_mode);
-
+   int calculated_watch_loop_millisec = calc_watch_loop_millisec(ddc_watch_mode);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          ddc_watch_mode_name(ddc_watch_mode), calculated_watch_loop_millisec);
 
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"force_sysfs_reliable=%s, force_sysfs_unreliable=%s", sbool(force_sysfs_reliable), sbool(force_sysfs_unreliable));
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"sysfs_fully_reliable:                   %s", SBOOL(sysfs_fully_reliable));
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"try_get_edid_from_sysfs_first:          %s", SBOOL(try_get_edid_from_sysfs_first));  // i2c_edid_exists()
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"extra_stailization_millisec:            %d", extra_stabilization_millisec);
+// MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
+// MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"try_get_edid_from_sysfs_first:          %s", SBOOL(try_get_edid_from_sysfs_first));  // i2c_edid_exists()
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"extra_stabilization_millisec:           %d", extra_stabilization_millisec);
                                                // ddc_i2c_stabilized_single_bus_by_connector_id, i2c_stabilized_buses_bitset()  (both)
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"stabilization_poll_millisec:            %d", stabilization_poll_millisec);  // same
-
-   extern int       extra_stabilization_millisec;
-   extern int       stabilization_poll_millisec;
-
 
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
@@ -163,6 +169,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
       data->event_classes = event_classes;
       data->watch_mode = ddc_watch_mode;
+      data->watch_loop_millisec = calculated_watch_loop_millisec;
       if (xev_data)
          data->evdata = xev_data;
 
@@ -211,8 +218,8 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
       // usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
       if (wait)
          g_thread_join(watch_thread);
-
-      g_thread_unref(watch_thread);
+      else
+         g_thread_unref(watch_thread);
       watch_thread = NULL;
       if (enabled_classes_loc)
          *enabled_classes_loc = active_classes;
