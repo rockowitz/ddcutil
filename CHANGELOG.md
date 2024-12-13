@@ -1,4 +1,4 @@
-## [2.1.5] 2024-12-05
+## [2.2.0] 2024-12-13
 
 ### General
 
@@ -16,12 +16,12 @@
   specify ***--disable-build-timestamp*** in this situation.)
 - Add ***--enable-flock*** and ***--disable-flock*** as aliases for 
   ***--enable-cross-instance-locks*** and ***--disable-cross-instance-locks***
-- Add option ***--disable-ddc***, which takes a Monitor Model Id, 
-  e.g. SAM-U32H75x-3587 as an argument. Indicates that DDC/CI communication is 
-  disabled for monitors with this id.  Typically, this will be added to the
-  [libddcutil] section of configuration file ddcutilrc. It can also be included 
-  in the options string passed in the opts argument to ddca_init2(). 
-  Addresses issue #446.
+- Add option ***--ignore-mmid*** to ignore problematic monitor models.
+  Takes a Monitor Model Id, e.g. SAM-U32H75x-3587 as an argument. 
+  Indicates that DDC/CI communication is disabled for monitors with this id.  
+  Typically, this will be added to the [libddcutil] section of configuration 
+  file ddcutilrc. It can also be included in the options string passed in the
+  opts argument to ddca_init2(). Addresses issue #446.
    
 
 #### Changed
@@ -171,26 +171,35 @@ file is libddcutil.so.5.1.3.
 
 #### Display Change Handling
 
+- Alternative algorithms for detecting display changes,
+  specified by option --watch-mode
+  - watch mode UDEV, the original algorithm 
+    - Does not always work for proprietary nvidia driver.
+      The nvidia driver does not use /sys in the same way
+      as amdgpu, i915, nouveau and probably other drm 
+      supporting drivers that are part of the Linux 
+      kernel. 
+      - Depending on driver version the /sys file system does not
+      reflect display changes and does not generate udev events
+  - watch mode POLL
+    - doesn't use udev
+    - doesn't rely on /sys 
+    - reads EDIDs in polling loop
+    - can consume a significant amount of CPU time on older machines
+  - watch mode XEVENT
+    - similar to POLL, but scans for changes only when a X11 
+      change notification occurs. X11 API extension RANDR is 
+      implemented on Wayland as well
+  - watch mode DYNAMIC
+    - resolves to XEVENT on X11 or Wayland, otherwise to POLL
 - Extensively reworked display change detection
-  - improved performance using UDEV
   - use /sys to get EDID if possible
   - handle MST hub devices if driver/device allow
     - not all drivers work
   - only perform stabilization for removed display
   - not checking for asleep
-- Work around deficiencies of nvidia driver
-  - The nvidia driver does not use /sys in the same way
-    as amdgpu, i915, nouveau and probably other drm 
-    supporting drivers that are part of the Linux 
-    kernel. 
-    - Depending on driver version the /sys file system does not
-      reflect display changes and does not generate udev events
-  - alternate, much less efficient algorithm for nvidia
-    - doesn't use udev
-    - doesn't rely on /sys 
-    - reads EDIDs in polling loop
 - Named options affecting display change detection:
-  - --watch-mode UDEV, POLL
+  - --watch-mode UDEV, POLL, XEVENT, DYNAMIC
   - --enable/disable-try-get-edid-from-sysfs (default is --enable-try-get-edid-from-sysfs)
 - Utility options affecting display change detection.  Some of these will become 
   named options, others will be removed once testing is finished. 
@@ -200,10 +209,10 @@ file is libddcutil.so.5.1.3.
            reconnected (default is to remember prior checks)
   - --f21  always treat sysfs as unreliable for reporting display changes
   - --f22  never treat sysfs as unreliable for reporting display changes
-  - --i6   watch loop sleep multiplier (multiply default watch loop settings)
   - --i7   extra stabilization milliseconds after apparent disconnection
-  - --i8   explicit udev poll loop milliseconds (takes precedence over --i6)
-  - --i9   explicit non-udev poll loop milllisec (takes precedence over --i6)
+  - --i8   explicit loop interval in millisec for watch-mode POLL
+  - --i9   explicit loop interval in millisec for watch-mode UDEV
+  - --i10  explicit loop interval in millisec for watch-mode XEVENT
 
 ## [2.1.4] 2024-02-17
 
