@@ -387,6 +387,15 @@ void query_x11() {
 
    query_x11_0(false);
    query_x11_0(true);
+   rpt_nl();
+
+   unsigned short power_level;
+   unsigned char state;
+   bool got_dpms = get_x11_dpms_info(&power_level, &state);
+   rpt_vstring(0, "Extension DPMS is%s supported. get_x11_dpms_info() returned %s",
+         (got_dpms) ? "" : " NOT",
+         SBOOL(got_dpms));
+   rpt_nl();
 }
 
 #endif
