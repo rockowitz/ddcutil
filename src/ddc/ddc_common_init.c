@@ -381,16 +381,14 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
 
     if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
        extra_stabilization_millisec = parsed_cmd->i1;
-    if (parsed_cmd->flags2 & CMD_FLAG2_I6_SET)
-       set_poll_loop_multiplier( watch_loop_poll_multiplier = parsed_cmd->i6 );
     if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))
        stabilization_poll_millisec = parsed_cmd->i7;
-    if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET)) {
-       explicit_udev_poll_loop_millisec = parsed_cmd->i8;
-    }
-    if (parsed_cmd->i9 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I9_SET)) {
-       explicit_nonudev_poll_loop_millisec = parsed_cmd->i9;
-    }
+    if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET))
+       udev_watch_loop_millisec = parsed_cmd->i8;
+    if (parsed_cmd->i9 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I9_SET))
+       poll_watch_loop_millisec = parsed_cmd->i9;
+    if (parsed_cmd->i10 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I10_SET))
+       xevent_watch_loop_millisec = parsed_cmd->i10;
 }
 
 
