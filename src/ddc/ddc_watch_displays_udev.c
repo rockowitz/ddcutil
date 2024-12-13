@@ -66,7 +66,6 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
 bool    use_sysfs_connector_id = true;
 bool    report_udev_events;
-int     udev_poll_loop_millisec = DEFAULT_UDEV_POLL_LOOP_MILLISEC;   // 2000;   // default sleep time on each loop
 
 
 void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
@@ -590,7 +589,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
          }
          else {     // skip polling loop sleep if deferred events were output
             if (!skip_next_sleep) {
-               slept = split_sleep();
+               slept = split_sleep(wdd->watch_loop_millisec);
             }
          }
          skip_next_sleep = false;
