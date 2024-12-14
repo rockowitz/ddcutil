@@ -73,6 +73,7 @@ void init_api_base();
 
 bool library_initialized = false;
 bool library_initialization_failed = false;
+bool library_disabled = false;
 static bool client_opened_syslog = false;
 static bool enable_init_msgs = false;
 static FILE * flog = NULL;
@@ -743,6 +744,12 @@ ddci_init(const char *      libopts,
    enable_init_msgs = opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS;
    // enable_init_msgs = true;  // *** TEMP ***
    DBGF(debug, "enable_init_msgs=%s", SBOOL(enable_init_msgs));
+
+   if (library_disabled) {
+      master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil disabled");
+      syslog(LOG_ERR, "libddcutil disabled");
+      goto bye;
+   }
 
    if (library_initialized) {
       master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil already initialized");
