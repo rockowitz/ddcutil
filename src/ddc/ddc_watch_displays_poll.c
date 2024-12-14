@@ -330,7 +330,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
       terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
 
       if (wdd->watch_mode == Watch_Mode_Xevent && wdd->evdata) {
-         bool event_found = ddc_detect_xevent_screen_change(wdd->evdata,  /* poll_interval*/ 500);
+         bool event_found = ddc_detect_xevent_screen_change(wdd->evdata,  wdd->watch_loop_millisec);
          if (!event_found)
             continue;
       }
