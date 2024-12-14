@@ -3,7 +3,7 @@
  * Functions for debugging
  */
 
-// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
 #ifdef UNUSED
@@ -30,6 +31,7 @@
 
 /** \endcond */
 
+#include "report_util.h"
 #include "string_util.h"
 
 #include "debug_util.h"
@@ -196,19 +198,43 @@ GPtrArray * get_backtrace(int stack_adjust) {
 }
 
 void show_backtrace(int stack_adjust) {
+   int depth = 0;
    GPtrArray * callstack = get_backtrace(stack_adjust+2); // +2 for get_backtrace(), backtrace()
    if (!callstack) {
       perror("backtrace unavailable");
    }
    else {
-      printf("Current call stack:\n");
+      rpt_label(depth, "Current call stack:\n");
       for (int ndx = 0; ndx < callstack->len; ndx++) {
-         printf("   %s\n", (char *) g_ptr_array_index(callstack, ndx));
+         rpt_vstring(depth, "   %s", (char *) g_ptr_array_index(callstack, ndx));
       }
       g_ptr_array_set_free_func(callstack, g_free);
       g_ptr_array_free(callstack, true);
    }
 }
+
+#ifdef FUTURE
+void gptrarray_to_syslog(int priority, GPtrArray* lines) {
+}
+#endif
+
+
+void backtrace_to_syslog(int priority, int stack_adjust) {
+   GPtrArray * callstack = get_backtrace(stack_adjust+2); // +2 for get_backtrace(), backtrace()
+   if (!callstack) {
+      syslog(LOG_PERROR|LOG_ERR, "backtrace unavailable");
+   }
+   else {
+      syslog(priority, "Current call stack:");
+
+      for (int ndx = 0; ndx < callstack->len; ndx++) {
+         syslog(priority, "   %s", (char *) g_ptr_array_index(callstack, ndx));
+      }
+      g_ptr_array_set_free_func(callstack, g_free);
+      g_ptr_array_free(callstack, true);
+   }
+}
+
 
 static int min_funcname_size = 32;
 
@@ -245,8 +271,10 @@ bool simple_dbgmsg(
 
       char * buf2 = g_strdup_printf("(%-*s) %s", min_funcname_size, funcname, buffer);
 
-      f0puts(buf2, stdout);
-      f0putc('\n', stdout);
+      // f0puts(buf2, stdout);
+      // f0putc('\n', stdout);
+      rpt_vstring(0, "%s", buf2);
+      rpt_nl();
       fflush(stdout);
       free(buffer);
       free(buf2);

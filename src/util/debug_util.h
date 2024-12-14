@@ -27,6 +27,7 @@ do { \
 
 GPtrArray * get_backtrace(int stack_adjust);
 void show_backtrace(int stack_adjust);
+void backtrace_to_syslog(int priority, int stack_adjust);
 
 void set_simple_dbgmsg_min_funcname_size(int new_size);
 
