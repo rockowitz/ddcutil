@@ -217,7 +217,7 @@ cirb_logical_to_physical_index(Circular_Invocation_Result_Buffer *cirb, int logi
                        ? logical
                        : (cirb->nextpos +logical) % cirb->size;
    }
-   DBGTRC(debug, TRACE_GROUP,
+   DBGTRC(debug, DDCA_TRC_NONE,
          "Executing logical=%2d, cirb->ct=%2d, cirb->size=%2d, cirb->nextpos=%2d, Returning: physical=%2d",
          logical, cirb->ct, cirb->size, cirb->nextpos, physical);
    return physical;
