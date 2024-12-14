@@ -293,7 +293,9 @@ if ASAN_COND
    libddcutil_la_LDFLAGS += -fsanitize=address
    # needed? 
    libddcutil_la_LDFLAGS += -fsanitize-address-use-after-scope -fno-omit-frame-pointer
-   libddcutil_la_LIBADD += -lasan
+   # doesn't work:
+   # libddcutil_la_LDFLAGS += -static-libasan 
+   libddcutil_la_LIBADD += -lasan 
 endif
 
 # doesn't prevent creation of .la 
