@@ -189,13 +189,13 @@ cirb_free(Circular_Invocation_Result_Buffer * cirb) {
 static void
 cirb_add(Circular_Invocation_Result_Buffer* cirb, Successful_Invocation value) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "cirb=%p, cirb->nextpos=%2d, cirb->ct=%2d, value=%s",
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "cirb=%p, cirb->nextpos=%2d, cirb->ct=%2d, value=%s",
          cirb, cirb->nextpos, cirb->ct, si_repr_t(value));
     cirb->values[cirb->nextpos] = value;
     cirb->nextpos = (cirb->nextpos+1) % cirb->size;
     if (cirb->ct < cirb->size)
        cirb->ct++;
-    DBGTRC_DONE(debug, TRACE_GROUP, "cirb=%p, cirb->nextpos=%2d, cirb->ct=%2d",
+    DBGTRC_DONE(debug, DDCA_TRC_NONE, "cirb=%p, cirb->nextpos=%2d, cirb->ct=%2d",
           cirb, cirb->nextpos, cirb->ct);
 }
 
