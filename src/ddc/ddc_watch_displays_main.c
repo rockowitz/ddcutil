@@ -78,7 +78,6 @@ static GMutex    watch_thread_mutex;
 // Common to all variants
 //
 
-
 /** Starts thread that watches for changes in display connection status.
  *
  *  \return  Error_Info struct if error:
@@ -92,8 +91,6 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
         "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
         ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    Error_Info * err = NULL;
-
-   // register_for_x11_screen_change_notification();
 
    if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
