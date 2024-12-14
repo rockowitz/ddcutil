@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <sys/file.h>
+#include <syslog.h>
 #include <unistd.h>
 
 #include "public/ddcutil_types.h"
@@ -175,7 +176,9 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
          DBGMSG("Flock diagnostics:");
          show_flock(filename);
-         ASSERT_WITH_BACKTRACE(false);
+         show_backtrace(2);
+         backtrace_to_syslog(LOG_ERR, 0);
+         //  ASSERT_WITH_BACKTRACE(false);
       }
    }
 
