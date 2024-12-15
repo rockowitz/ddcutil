@@ -475,7 +475,7 @@ char * find_drm_connector_name_by_busno(int busno) {
    if (drm_connector) {
       result = g_strdup(drm_connector->connector_name);
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -507,7 +507,7 @@ char * get_drm_connector_name_by_edid(Byte * edid_bytes) {
    if (connector_rec) {
       result = g_strdup(connector_rec->connector_name);
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -641,7 +641,7 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    if (businfo->drm_connector_name)
       DBGTRC_DONE(debug, TRACE_GROUP, "Returning: SYS_Drm_Connector for %s", businfo->drm_connector_name);
    else
-      DBGTRC_RETURNING(debug, TRACE_GROUP, NULL, "");
+      DBGTRC_RETURNING_STRING(debug, TRACE_GROUP, NULL, "");
    return drm_connector;
 }
 #endif

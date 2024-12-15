@@ -441,7 +441,7 @@ char * ddc_serialize_displays_and_buses() {
 #endif
    char * result = json_dumps(root, JSON_INDENT(3));
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, result, "");
    json_decref(root);
    return result;
 }

@@ -188,7 +188,7 @@ char * i2c_get_drm_connector_name(I2C_Bus_Info * businfo) {
       result = businfo->drm_connector_name;
  //   }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, result, "");
    return result;
 }
 

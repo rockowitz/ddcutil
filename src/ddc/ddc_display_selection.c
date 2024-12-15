@@ -243,7 +243,7 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
    free(criteria);   // do not free pointers in criteria, they are owned by Display_Identifier
 
-   DBGTRC_RETURNING(debug, DDCA_TRC_NONE, dref_repr_t(result), "");
+   DBGTRC_RET_STRING(debug, DDCA_TRC_NONE, dref_repr_t(result), "");
    return result;
 }
 

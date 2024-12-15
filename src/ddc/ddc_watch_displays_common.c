@@ -482,7 +482,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_get_buses0()", __func__, stablect-1);
    }
 
-   DBGTRC_RETURNING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
+   DBGTRC_RET_STRING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
    return prior;
 }
 #endif
@@ -527,7 +527,7 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_buses_w_edid_as_bitset()", __func__, stablect-1);
    }
 
-   DBGTRC_RETURNING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
+   DBGTRC_RET_STRING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
    return bs_prior;
 }
 

@@ -349,7 +349,7 @@ bool dbgtrc_returning_string(
     dbgtrc( (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
-#define DBGTRC_RETURNING(debug_flag, trace_group, _result, format, ...) \
+#define DBGTRC_RET_STRING(debug_flag, trace_group, _result, format, ...) \
     dbgtrc_returning_string( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_DONE, \

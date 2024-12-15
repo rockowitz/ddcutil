@@ -939,7 +939,7 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
       }
    }
 
-   DBGTRC_RETURNING(debug, DDCA_TRC_I2C, result, "");
+   DBGTRC_RET_STRING(debug, DDCA_TRC_I2C, result, "");
    return result;
 }
 
