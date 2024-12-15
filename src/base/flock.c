@@ -135,7 +135,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       flock_call_ctr++;
       flockrc = flock(fd, operation);
       if (flockrc == 0)  {
-         DBGTRC_NOPREFIX(debug || debug_flock /* (flock_call_ctr > 1 && debug_flock) */, DDCA_TRC_NONE,
+         DBGTRC_NOPREFIX(debug || debug_flock /* || (flock_call_ctr > 1  && debug_flock) */, DDCA_TRC_NONE,
                "flock succeeded, filename=%s, flock_call_ctr=%d", filename, flock_call_ctr);
 #ifdef EXPLORING
          explore_flock(fd, filename);
@@ -182,6 +182,16 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       }
    }
 
+   if (flock_call_ctr > 1) {
+      if (flockrc == 0) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock for %s failed on %d calls", filename, flock_call_ctr);
+         SYSLOG2(DDCA_SYSLOG_ERROR, "flock for %s failed on %d calls", filename, flock_call_ctr);
+      }
+   }
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE,flockrc, "filename=%s", filename);
    return flockrc;
 }
