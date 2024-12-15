@@ -214,7 +214,7 @@ bool dbgtrc_ret_ddcrc(
         ...);
 
 #ifdef UNNECESSARY
-// use dbgtrc_returning_expression()
+// use ddbgtrc_returning_string()
 bool dbgtrc_ret_bool(
         DDCA_Trace_Group trace_group,
         Dbgtrc_Options   options,
@@ -236,7 +236,7 @@ bool dbgtrc_returning_errinfo(
         char *           format,
         ...);
 
-bool dbgtrc_returning_expression(
+bool dbgtrc_returning_string(
         DDCA_Trace_Group trace_group,
         Dbgtrc_Options   options,
         const char *     funcname,
@@ -350,7 +350,7 @@ bool dbgtrc_returning_expression(
             __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
 #define DBGTRC_RETURNING(debug_flag, trace_group, _result, format, ...) \
-    dbgtrc_returning_expression( \
+    dbgtrc_returning_string( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, _result, format, ##__VA_ARGS__)
@@ -455,7 +455,7 @@ bool dbgtrc_returning_expression(
 // can only pass a variable, not an expression or constant, to DBGTRC_RET_BOOL()
 // because failure simulation may assign a new value to the variable
 #define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
-    dbgtrc_returning_expression( \
+    dbgtrc_returning_string( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)

@@ -869,7 +869,7 @@ bool dbgtrc_returning_errinfo(
 
 /** dbgtrc() variant that reports a return value specified as a string.
  */
-bool dbgtrc_returning_expression(
+bool dbgtrc_returning_string(
         DDCA_Trace_Group  trace_group,
         Dbgtrc_Options    options,
         const char *      funcname,
