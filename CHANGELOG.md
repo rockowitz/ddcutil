@@ -1,4 +1,4 @@
-## [2.2.0] 2024-12-13
+## [2.2.0] 2024-12-15
 
 ### General
 
@@ -75,6 +75,8 @@
 - Report the Monitor Model Id in the ***--verbose*** output to **ddcutil detect**.
 - Command **setvcp**: Do not report "Interpretation may not be accurate.", which
   is irrelevant for this command. Partially addresses issue #454.
+- rpt...() functions can redirect output to syslog, making lines coming from 
+  multiple threads more coherent
 
 #### Fixed
 
@@ -104,15 +106,17 @@
   a switch() construct is used. Replaced with if/else if/else. Resolves issue #458.
 - Do not use function strerrrorname_np(). Requires glibc >= 2.32.
 - Miscellaneous changes to allow for building on raspbian (debian bullseye).
-- Replace function sysfs_find_adapter().  Fixes display detection problem part
+- Replace function sysfs_find_adapter().  Fixes display detection problem aspect
   of issue #465.
+- Dump information to syslog instead of asserting failure if unable to get flock
+  on /dev/i2c device.
 - Memory leaks.
 
 ### Building 
 
 - Re-enable autoconf/configure option --enable-x11/--disable-x11.
-  X11 specific code is used in display change detection.
-  the default is --enable-x11.   
+  X11 specific code is used in display change and sleep state detection.
+  The default is --enable-x11.   
   Use x11 code to test for sleep mode instead of using /sys, which 
   is unreliable for nvidia driver. 
 
@@ -144,6 +148,7 @@ file is libddcutil.so.5.1.3.
 - Add libddcutil only option ***--disable-watch-displays***, which unconditionally
   blocks **ddca_start_watch_displays()** from starting the thread that watches
   for display changes. Workaround for issue #470.
+- Add libddutil option ***--f16***, which disables API.
 
 #### Fixed
 
@@ -174,13 +179,11 @@ file is libddcutil.so.5.1.3.
 - Alternative algorithms for detecting display changes,
   specified by option --watch-mode
   - watch mode UDEV, the original algorithm 
-    - Does not always work for proprietary nvidia driver.
-      The nvidia driver does not use /sys in the same way
-      as amdgpu, i915, nouveau and probably other drm 
-      supporting drivers that are part of the Linux 
-      kernel. 
-      - Depending on driver version the /sys file system does not
-      reflect display changes and does not generate udev events
+    - Does not always work for proprietary nvidia driver. which does not use
+      /sys in the same way as amdgpu, i915, nouveau and other drm supporting 
+      drivers that are part of the Linux kernel. 
+      - Depending on driver version the /sys file system does not reflect 
+        display changes and does not generate udev events.
   - watch mode POLL
     - doesn't use udev
     - doesn't rely on /sys 
@@ -188,9 +191,9 @@ file is libddcutil.so.5.1.3.
     - can consume a significant amount of CPU time on older machines
   - watch mode XEVENT
     - similar to POLL, but scans for changes only when a X11 
-      change notification occurs. X11 API extension RANDR is 
-      implemented on Wayland as well
-  - watch mode DYNAMIC
+      change notification occurs. (Uses X11 API extension RANDR, which is 
+      also implemented on Wayland.)
+  - watch mode DYNAMIC (the default)
     - resolves to XEVENT on X11 or Wayland, otherwise to POLL
 - Extensively reworked display change detection
   - use /sys to get EDID if possible
