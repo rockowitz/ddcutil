@@ -60,7 +60,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 #ifdef GET_EDID_USING_SYSFS
    REPORT_FLAG_OPTION(15, "Verify sysfs EDID reads");
 #else
-   REPORT_FLAG_OPTION(15, "Unused");
+   REPORT_FLAG_OPTION(15, "Disable API");
 #endif
    // REPORT_FLAG_OPTION(16, "Simple report /sys/class/drm");
    REPORT_FLAG_OPTION(16, "Unused");

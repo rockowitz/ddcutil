@@ -25,7 +25,7 @@
 
 extern bool library_initialized;
 extern bool library_initialization_failed;
-extern bool library_disabled;
+
 
 #define DDCI_PRECOND_STDERR 0x01
 #define DDCI_PRECOND_RETURN 0x02

@@ -60,6 +60,7 @@
 #include "base/core.h"
 
 bool tracing_initialized = false;
+bool library_disabled = false;
 
 //
 // Standard call options

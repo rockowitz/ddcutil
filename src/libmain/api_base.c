@@ -73,7 +73,6 @@ void init_api_base();
 
 bool library_initialized = false;
 bool library_initialization_failed = false;
-bool library_disabled = false;
 static bool client_opened_syslog = false;
 static bool enable_init_msgs = false;
 static FILE * flog = NULL;
@@ -203,7 +202,7 @@ bool increment_active_api_calls(const char * funcname) {
    bool result = true;
    g_mutex_lock(&api_quiesced_mutex);  // blocks API calls from starting
    g_mutex_lock(&active_calls_mutex);
-   if (api_quiesced)
+   if (api_quiesced || library_disabled)
       result = false;
    else {
       active_calls++;

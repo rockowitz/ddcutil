@@ -130,6 +130,7 @@ void free_watch_displays_data(Watch_Displays_Data * wdd) {
    if (wdd) {
       assert( memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
       wdd->marker[3] = 'x';
+      free(wdd->evdata);
       free(wdd);
    }
 }

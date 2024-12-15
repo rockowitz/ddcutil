@@ -59,6 +59,7 @@
 
 // Indicates that all tracing facilities have been configured
 extern bool tracing_initialized;
+extern bool library_disabled;
 
 
 //
