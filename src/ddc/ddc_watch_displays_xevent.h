@@ -18,6 +18,7 @@ typedef struct {
    int      screen_change_eventno;
 } XEvent_Data;
 
+void          dbgrpt_xevent_data(XEvent_Data* evdata, int depth);
 void          ddc_free_xevent_data(XEvent_Data * evdata);
 XEvent_Data * ddc_init_xevent_screen_change_notification();
 bool          ddc_detect_xevent_screen_change(XEvent_Data * evdata,  int poll_interval);

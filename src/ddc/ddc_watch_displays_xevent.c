@@ -7,12 +7,25 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
 
+#include "util/report_util.h"
+
 #include "base/core.h"
 #include "base/displays.h"     // for terminate_watch_thread
 #include "base/rtti.h"
 #include "base/sleep.h"
 
 #include "ddc_watch_displays_xevent.h"
+
+
+
+void  dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
+   rpt_structure_loc("XEvent_Data", evdata, depth);
+   int d1 = depth+1;
+   rpt_vstring(d1, "dpy:                   %p", evdata->dpy);
+   rpt_vstring(d1, "screen:                %d", evdata->screen);
+   rpt_vstring(d1, "w:                     %p", evdata->w);
+   rpt_vstring(d1, "screen_change_eventno: %d", evdata->screen_change_eventno);
+}
 
 
 void ddc_free_xevent_data(XEvent_Data * evdata) {
@@ -23,7 +36,7 @@ void ddc_free_xevent_data(XEvent_Data * evdata) {
 
 
 XEvent_Data * ddc_init_xevent_screen_change_notification() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
 
    bool ok = false;
@@ -36,11 +49,18 @@ XEvent_Data * ddc_init_xevent_screen_change_notification() {
    evdata->w = RootWindow(evdata->dpy, evdata->screen);
 
    bool have_rr = XRRQueryExtension(evdata->dpy, &evdata->rr_event_base, &evdata->rr_error_base);
+   if (have_rr) {
+      int maj = 0;
+      int min = 0;
+      XRRQueryVersion(evdata->dpy, &maj, &min);
+      int version = (maj << 8) | min;
+      if (version < 0x0102)     // is this the right version check?
+         have_rr = false;
+   }
    if (!have_rr) {
       DBGTRC(true, DDCA_TRC_NONE, "XRR Extension unavailable");
       goto bye;
    }
-   // TODO: additional checks
 
    evdata->screen_change_eventno = evdata->rr_event_base + RRScreenChangeNotify;
    XRRSelectInput(evdata->dpy, evdata->w, RRScreenChangeNotifyMask);
@@ -58,7 +78,7 @@ bye:
 
 
 _Bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "evdata=%p, poll_interval=%d", evdata, poll_interval);
    bool found = false;
    XEvent event;
