@@ -74,9 +74,68 @@ static DDCA_Display_Event_Class active_classes = DDCA_EVENT_CLASS_NONE;
 static GMutex    watch_thread_mutex;
 
 
+
 //
 // Common to all variants
 //
+
+
+DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "initial_mode=%s xev_data_loc=%p", ddc_watch_mode_name(initial_mode), xev_data_loc);
+
+   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
+   *xev_data_loc = NULL;
+
+
+#ifndef ENABLE_UDEV
+   if (initial_mode == Watch_Mode_Udev)
+      initial_mode = Watch_Mode_Poll;
+#endif
+
+   if (initial_mode == Watch_Mode_Dynamic) {
+      resolved_watch_mode = Watch_Mode_Poll;    // always works, may be slow
+      char * xdg_session_type = getenv("XDG_SESSION_TYPE");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE=|%s|", xdg_session_type);
+      if (xdg_session_type &&         // can xdg_session_type ever not be set
+          (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
+      {
+         resolved_watch_mode = Watch_Mode_Xevent;
+      }
+      else {
+         // assert xdg_session_type == "tty"  ?
+         char * display = getenv("DISPLAY");
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "xdg_session_type=|%s|, display=|%s|", xdg_session_type, display);
+         // possibility of coming in on ssh with a x11 proxy running
+         // see https://stackoverflow.com/questions/45536141/how-i-can-find-out-if-a-linux-system-uses-wayland-or-x11
+         if (display) {
+            resolved_watch_mode = Watch_Mode_Xevent;
+         }
+      }
+
+      //     ddc_watch_mode = Watch_Mode_Udev;
+      // sysfs_fully_reliable = is_sysfs_reliable();
+      // if (!sysfs_fully_reliable)
+      //    ddc_watch_mode = Watch_Mode_Poll;
+   }
+
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "initially resolved watch mode = %s", ddc_watch_mode_name(resolved_watch_mode));
+
+   if (resolved_watch_mode == Watch_Mode_Xevent) {
+      *xev_data_loc  = ddc_init_xevent_screen_change_notification();
+      if (!xev_data_loc) {
+         ddc_watch_mode = Watch_Mode_Poll;
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR api unavailable. Switching to Watch_Mode_Poll");
+      }
+   }
+
+   if (*xev_data_loc) {
+      dbgrpt_xevent_data(*xev_data_loc,  0);
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "resolved_watch_mode: %s. *xev_data_loc: %p",
+         ddc_watch_mode_name(resolved_watch_mode),  *xev_data_loc);
+   return resolved_watch_mode;
+}
 
 /** Starts thread that watches for changes in display connection status.
  *
@@ -87,10 +146,11 @@ static GMutex    watch_thread_mutex;
 Error_Info *
 ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, 
+   DBGTRC_STARTING(debug, TRACE_GROUP,
         "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
         ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    Error_Info * err = NULL;
+   XEvent_Data * xev_data = NULL;
 
    if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
@@ -102,48 +162,13 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-#ifndef ENABLE_UDEV
-   ddc_watch_mode = Watch_Mode_Poll;
-#else
-   if (ddc_watch_mode == Watch_Mode_Dynamic) {
-      ddc_watch_mode = Watch_Mode_Poll;    // always works, may be slow
-      char * xdg_session_type = getenv("XDG_SESSION_TYPE");
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE=|%s|", xdg_session_type);
-      if (xdg_session_type &&         // can xdg_session_type ever not be set
-          (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
-      {
-         ddc_watch_mode = Watch_Mode_Xevent;
-      }
-      else {
-         // assert xdg_session_type == "tty"  ?
-         char * display = getenv("DISPLAY");
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "xdg_session_type=|%s|, display=|%s|", xdg_session_type, display);
-         // possibility of coming in on ssh with a x11 proxy running
-         // see https://stackoverflow.com/questions/45536141/how-i-can-find-out-if-a-linux-system-uses-wayland-or-x11
-         if (display) {
-            ddc_watch_mode = Watch_Mode_Xevent;
-         }
-      }
+   DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(ddc_watch_mode, &xev_data);
 
-      //     ddc_watch_mode = Watch_Mode_Udev;
-      // sysfs_fully_reliable = is_sysfs_reliable();
-      // if (!sysfs_fully_reliable)
-      //    ddc_watch_mode = Watch_Mode_Poll;
-   }
-#endif
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "final ddc_watch_mode = %s", ddc_watch_mode_name(ddc_watch_mode));
-
-   XEvent_Data * xev_data = ddc_init_xevent_screen_change_notification();
-   if (ddc_watch_mode == Watch_Mode_Xevent && !xev_data) {
-      err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "X11 API unavailable. Watching for display changes disabled");
-      goto bye;
-   }
-
-   int calculated_watch_loop_millisec = calc_watch_loop_millisec(ddc_watch_mode);
+   int calculated_watch_loop_millisec = calc_watch_loop_millisec(resolved_watch_mode);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
-         ddc_watch_mode_name(ddc_watch_mode), calculated_watch_loop_millisec);
+         ddc_watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
 
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
 // MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
@@ -167,12 +192,12 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       data->main_thread_id = get_thread_id();  // alt = syscall(SYS_gettid);
       // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
       data->event_classes = event_classes;
-      data->watch_mode = ddc_watch_mode;
+      data->watch_mode = resolved_watch_mode;
       data->watch_loop_millisec = calculated_watch_loop_millisec;
       if (xev_data)
          data->evdata = xev_data;
 
-      GThreadFunc watch_thread_func = (ddc_watch_mode == Watch_Mode_Poll || ddc_watch_mode == Watch_Mode_Xevent)
+      GThreadFunc watch_thread_func = (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
                                         ? ddc_watch_displays_without_udev
                                         : ddc_watch_displays_udev;
 
@@ -264,6 +289,7 @@ void init_ddc_watch_displays_main() {
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
    RTTI_ADD_FUNC(ddc_get_active_watch_classes);
+   RTTI_ADD_FUNC(resolve_watch_mode);
 }
 
 
