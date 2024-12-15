@@ -51,8 +51,6 @@ static bool vcp_feature_codes_initialized = false;
 //
 
 
-
-
 /* Appends a string to an existing string in a buffer.
  * If the length of the existing string is greater than 0,
  * append ", " first.
@@ -67,7 +65,7 @@ static bool vcp_feature_codes_initialized = false;
  * Note: No check is made that buf contains a valid string.
  */
 static char * str_comma_cat_r(char * val, char * buf, int bufsz) {
-   int cursz = strlen(buf);
+   size_t cursz = strlen(buf);
    assert(cursz + 2 + strlen(val) + 1 <= bufsz);
    if (cursz > 0)
       strcat(buf, ", ");
@@ -98,7 +96,6 @@ char * spec_group_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufs
       str_comma_cat_r("Window", buf, bufsz);
    return buf;
 }
-
 
 
 char *
@@ -1783,7 +1780,7 @@ format_feature_detail_x72_gamma(
       char   sgamma[10];
       char   sgamma2[10];
       g_snprintf (sgamma, 10, "%d", igamma);
-      int slen = strlen(sgamma);
+      uint slen = strlen(sgamma);
       char * a =  substr(sgamma, 0, slen-2);
       char * b = substr(sgamma, slen-2, 2);
       g_snprintf(sgamma2, 10, "%s.%s",a, b);

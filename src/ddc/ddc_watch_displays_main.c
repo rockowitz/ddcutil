@@ -102,18 +102,13 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   XEvent_Data * xev_data = ddc_init_xevent_screen_change_notification();
-   if (ddc_watch_mode == Watch_Mode_Xevent && !xev_data) {
-      err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "X11 API unavailable. Watching for display changes disabled");
-      goto bye;
-   }
-
 #ifndef ENABLE_UDEV
    ddc_watch_mode = Watch_Mode_Poll;
 #else
    if (ddc_watch_mode == Watch_Mode_Dynamic) {
       ddc_watch_mode = Watch_Mode_Poll;    // always works, may be slow
       char * xdg_session_type = getenv("XDG_SESSION_TYPE");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE=|%s|", xdg_session_type);
       if (xdg_session_type &&         // can xdg_session_type ever not be set
           (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
       {
@@ -122,6 +117,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       else {
          // assert xdg_session_type == "tty"  ?
          char * display = getenv("DISPLAY");
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "xdg_session_type=|%s|, display=|%s|", xdg_session_type, display);
          // possibility of coming in on ssh with a x11 proxy running
          // see https://stackoverflow.com/questions/45536141/how-i-can-find-out-if-a-linux-system-uses-wayland-or-x11
          if (display) {
@@ -136,6 +132,12 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    }
 #endif
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "final ddc_watch_mode = %s", ddc_watch_mode_name(ddc_watch_mode));
+
+   XEvent_Data * xev_data = ddc_init_xevent_screen_change_notification();
+   if (ddc_watch_mode == Watch_Mode_Xevent && !xev_data) {
+      err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "X11 API unavailable. Watching for display changes disabled");
+      goto bye;
+   }
 
    int calculated_watch_loop_millisec = calc_watch_loop_millisec(ddc_watch_mode);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
