@@ -144,6 +144,9 @@ AM_CFLAGS = -Wall -std=c11 -Werror=unused-result -Wformat-security
 # AM_CFLAGS += -H
 # Report header file dependencies
 
+# see https://community.ibm.com/community/user/ibmz-and-linuxone/blogs/colton-cox1/2020/03/12/ztpf-cc-performance-hints
+AM_CFLAGS += -fno-common
+
 AM_CFLAGS += -Wimplicit-function-declaration
 
 # Will flag glib's use of _Static_assert, which is not in the C99 standard, 
@@ -155,6 +158,15 @@ AM_CFLAGS += -Wimplicit-function-declaration
 # The "-Wno-" option form is ignored by gcc, but should be respected when compiling
 # in an environment, e.g. termux, where this option is enabled by default. 
 AM_CFLAGS += -Wno-compound-token-split-by-macro
+
+# https://github.com/ossf/wg-best-practices-os-developers/blob/main/docs/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++
+# AM_CFLAGS += -Wformat -Wformat=2  
+AM_CFLAGS += -Wimplicit-fallthrough
+# too many errors to be worth fixing
+# AM_CFLAGS += -Wconversion
+AM_CFLAGS += -D_GLIBCXX_ASSERTIONS
+AM_CFLAGS += -Werror=implicit -Werror=incompatible-pointer-types
+AM_CFLAGS += -Werror=int-conversion
 
 if ENABLE_CALLGRAPH_COND
 AM_CFLAGS += -fdump-rtl-expand
