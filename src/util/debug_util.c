@@ -274,7 +274,6 @@ bool simple_dbgmsg(
       // f0puts(buf2, stdout);
       // f0putc('\n', stdout);
       rpt_vstring(0, "%s", buf2);
-      rpt_nl();
       fflush(stdout);
       free(buffer);
       free(buf2);
