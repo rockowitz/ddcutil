@@ -848,18 +848,23 @@ ddc_get_all_display_refs() {
 /** Gets a list of all detected displays, optionally excluding those
  *  that are invalid.
  *
+ *  @param  include_invalid_displays  i.e. displays having EDID but not DDC
+ *  @param  include_removed_drefs
  *  @return **GPtrArray of #Display_Ref instances
  */
 GPtrArray *
-ddc_get_filtered_display_refs(bool include_invalid_displays) {
+ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_removed_drefs) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "include_invalid_displays=%s", sbool(include_invalid_displays));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "include_invalid_displays=%s, include_removed_drefs=%s",
+         sbool(include_invalid_displays), sbool(include_removed_drefs));
    TRACED_ASSERT(all_display_refs);
 
    GPtrArray * result = g_ptr_array_sized_new(all_display_refs->len);
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
-      if (include_invalid_displays || cur->dispno > 0) {
+      if ((include_invalid_displays || cur->dispno > 0) &&
+          (!(cur->flags&DREF_REMOVED) || include_removed_drefs) )
+      {
          g_ptr_array_add(result, cur);
       }
    }
@@ -870,17 +875,21 @@ ddc_get_filtered_display_refs(bool include_invalid_displays) {
    return result;
 }
 
+
+#ifdef UNUSED
 void ddc_dbgrpt_display_refs(bool include_invalid_displays, bool report_businfo, int depth) {
-   GPtrArray * drefs = ddc_get_filtered_display_refs(include_invalid_displays);
+   GPtrArray * drefs = ddc_get_filtered_display_refs(include_invalid_displays, true);
    rpt_vstring(depth, "Reporting %d display refs", drefs->len);
    for (int ndx = 0; ndx < drefs->len; ndx++) {
       dbgrpt_display_ref(g_ptr_array_index(drefs, ndx), false, depth+1);
    }
    g_ptr_array_free(drefs,true);
 }
+#endif
+
 
 void ddc_dbgrpt_display_refs_summary(bool include_invalid_displays, bool report_businfo, int depth) {
-   GPtrArray * drefs = ddc_get_filtered_display_refs(include_invalid_displays);
+   GPtrArray * drefs = ddc_get_filtered_display_refs(include_invalid_displays, true);
    // rpt_vstring(depth, "Reporting %d display refs", drefs->len);
    for (int ndx = 0; ndx < drefs->len; ndx++) {
       dbgrpt_display_ref_summary(g_ptr_array_index(drefs, ndx), report_businfo, depth);

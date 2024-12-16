@@ -972,7 +972,9 @@ ddca_get_display_refs(
    int dref_ct = 0;
    DDCA_Status ddcrc = 0;
    ddc_ensure_displays_detected();
-   GPtrArray * filtered_displays = ddc_get_filtered_display_refs(include_invalid_displays);  // array of Display_Ref
+   GPtrArray * filtered_displays = ddc_get_filtered_display_refs(
+                                      include_invalid_displays,
+                                      false);  // include_removed_drefs
    DDCA_Display_Ref * result_list = calloc(filtered_displays->len + 1,sizeof(DDCA_Display_Ref));
    DDCA_Display_Ref * cur_ddca_dref = result_list;
    for (int ndx = 0; ndx < filtered_displays->len; ndx++) {
@@ -1019,8 +1021,9 @@ ddca_get_display_info_list2(
 
    DDCA_Status ddcrc = 0;
    ddc_ensure_displays_detected();
-   GPtrArray * filtered_displays = ddc_get_filtered_display_refs(include_invalid_displays);  // array of Display_Ref
-
+   GPtrArray * filtered_displays = ddc_get_filtered_display_refs(
+                                      include_invalid_displays,
+                                      false);  // include_removed_drefs
    filtered_ct = filtered_displays->len;
 
    int reqd_size =   offsetof(DDCA_Display_Info_List,info) + filtered_ct * sizeof(DDCA_Display_Info);
