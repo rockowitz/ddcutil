@@ -744,12 +744,6 @@ ddci_init(const char *      libopts,
    // enable_init_msgs = true;  // *** TEMP ***
    DBGF(debug, "enable_init_msgs=%s", SBOOL(enable_init_msgs));
 
-   if (library_disabled) {
-      master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil disabled");
-      syslog(LOG_ERR, "libddcutil disabled");
-      goto bye;
-   }
-
    if (library_initialized) {
       master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil already initialized");
       syslog(LOG_ERR, "libddcutil already initialized");
@@ -852,6 +846,12 @@ ddci_init(const char *      libopts,
          report_parse_errors(master_error);
       }
       // errinfo_free(master_error);
+      library_initialization_failed = true;
+   }
+   else if (library_disabled) {
+      DBGF(debug, "libddcutil disabled");
+      master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil disabled");
+      syslog(LOG_ERR, "libddcutil disabled");
       library_initialization_failed = true;
    }
    else {
