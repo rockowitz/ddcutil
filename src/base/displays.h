@@ -47,6 +47,7 @@ For I2C displays, the device must be opened.  Display_Handle then contains the o
 // *** Initialization ***
 
 void init_displays();
+void terminate_displays();
 
 
 // *** DDCA_IO_Path ***
@@ -175,6 +176,7 @@ char * interpret_dref_flags_t(Dref_Flags flags);
  */
 typedef struct _display_ref {
    char                     marker[4];
+   uint                     dref_id;
    DDCA_IO_Path             io_path;
    int                      usb_bus;
    int                      usb_device;

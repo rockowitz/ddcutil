@@ -462,12 +462,66 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 
 // *** Display_Ref ***
 
+static uint max_dref_id = 0;
+static GMutex max_dref_id_mutex;
+static GHashTable * dref_hash = NULL;
+
+
+void init_dref_hash() {
+   dref_hash = g_hash_table_new(g_direct_hash, NULL);
+}
+
+void dbgrpt_dref_hash(const char * msg, int depth) {
+    if (msg)
+       rpt_vstring(depth, "%s: dref_hash_contents:", msg);
+    else
+       rpt_label(depth, "dref_hash contents: ");
+
+    GHashTableIter iter;
+    gpointer key, value;
+    g_hash_table_iter_init (&iter, dref_hash);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+       uint dref_id1 = GPOINTER_TO_UINT(key);
+       rpt_vstring(depth+1, "dref_id1 = %d", dref_id1);
+       Display_Ref * dref = (Display_Ref *) value;
+       rpt_vstring(depth+1, "%s", dref_reprx_t(dref));
+    }
+}
+
+
+static uint next_dref_id(Display_Ref * dref) {
+   bool debug = false;
+   g_mutex_lock (&max_dref_id_mutex);
+   guint nextid = ++max_dref_id;
+   g_hash_table_insert(dref_hash, GUINT_TO_POINTER(nextid), dref);
+   if (debug) {
+      char msgbuf[100];
+      g_snprintf(msgbuf, 100, "After dref %s inserted", dref_reprx_t(dref));
+      dbgrpt_dref_hash(msgbuf, 0);
+   }
+   g_mutex_unlock(&max_dref_id_mutex);
+   return nextid;
+}
+
+
+static void delete_dref_id(uint dref_id) {
+   bool debug = false;
+   g_hash_table_remove(dref_hash, GUINT_TO_POINTER(dref_id));
+   if (debug) {
+      char msgbuf[50];
+      g_snprintf(msgbuf, 50, "After dref_id %d removed", dref_id);
+      dbgrpt_dref_hash(msgbuf, 0);
+   }
+}
+
+
 Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "io_path=%s", dpath_repr_t(&io_path));
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
    dref->io_path = io_path;
+   dref->dref_id = next_dref_id(dref);
    dref->vcp_version_xdf = DDCA_VSPEC_UNQUERIED;
    dref->vcp_version_cmdline = DDCA_VSPEC_UNQUERIED;
    dref->creation_timestamp = cur_realtime_nanosec();
@@ -528,12 +582,6 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    dref->usb_device  = usb_device;
    dref->usb_hiddev_name = g_strdup(hiddev_devname);
 
-#ifdef OLD
-   if (debug) {
-      DBGMSG("Done.  Constructed USB display ref:");
-      dbgrpt_display_ref(dref,0);
-   }
-#endif
    DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref0, dref);
    // DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
    return dref;
@@ -549,6 +597,7 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
       DDCA_IO_Path iopath = dref->io_path;
       copy = create_base_display_ref(iopath);
       copy->usb_bus = dref->usb_bus;
+      copy->dref_id = next_dref_id(copy);
       copy->usb_device = dref->usb_device;
       copy->usb_hiddev_name = g_strdup(dref->usb_hiddev_name);
       copy->vcp_version_xdf = dref->vcp_version_xdf;
@@ -602,6 +651,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             ddcrc = DDCRC_LOCKED;
          }
          else {
+            uint dref_id = dref->dref_id;
             free(dref->usb_hiddev_name);        // private copy
             free(dref->capabilities_string);    // private copy
             free(dref->mmid);                   // private copy
@@ -617,6 +667,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             free(dref->communication_error_summary);
             dref->marker[3] = 'x';
             free(dref);
+            delete_dref_id(dref_id);
          }
       }
    }
@@ -698,6 +749,7 @@ void dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth) {
    int d2 = depth+2;
 
    rpt_structure_loc("Display_Ref", dref, depth);
+   rpt_vstring(d1, "dref_id           %d", dref->dref_id);
    rpt_vstring(d1, "io_path:          %s", dpath_repr_t(&(dref->io_path)));
    if (dref->io_path.io_mode == DDCA_IO_USB) {
       rpt_int("usb_bus",         NULL, dref->usb_bus,         d1);
@@ -817,9 +869,10 @@ char * dref_reprx_t(Display_Ref * dref) {
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    if (dref)
-      g_snprintf(buf, 100, "Display_Ref[%s%s @%p]",
+      g_snprintf(buf, 100, "Display_Ref[%s%s %d@%p]",
             (dref->flags & DREF_REMOVED) ? "Disconnected:" : "",
             dpath_short_name_t(&dref->io_path),
+            dref->dref_id,
             (void*) dref);
    else
       strcpy(buf, "Display_Ref[NULL]");
@@ -1071,6 +1124,10 @@ void free_bus_open_error(Bus_Open_Error * boe) {
 }
 
 
+//
+// Monitor models for which DDC is disabled
+//
+
 static GPtrArray  * ddc_disabled_table = NULL;
 
 
@@ -1145,8 +1202,7 @@ void dbgrpt_ddc_disabled_table(int depth) {
 }
 
 
-
-/** Checks if DDC is disabled
+/** Checks if DDC is disabled for a monitor model
  *
  *  @param mmk  monitor-model-id
  *  @return **true** if the display type is disabled, **false** if not
@@ -1185,5 +1241,11 @@ void init_displays() {
    RTTI_ADD_FUNC(dbgrpt_display_ref);
    RTTI_ADD_FUNC(free_display_handle);
    RTTI_ADD_FUNC(free_display_ref);
+
+   init_dref_hash();
 }
 
+
+void terminate_displays() {
+   g_hash_table_destroy(dref_hash);
+}

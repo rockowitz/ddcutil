@@ -62,5 +62,6 @@ void terminate_base_services() {
    terminate_per_display_data();
    terminate_execution_stats();
    terminate_dsa2();
+   terminate_displays();
    terminate_rtti();
 }
