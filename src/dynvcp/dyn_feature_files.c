@@ -325,6 +325,22 @@ dfr_check_by_dref(
 }
 
 
+Error_Info *
+dfr_check_by_dh(
+      Display_Handle * dh)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, enable_dynamic_features=%s",
+                 dh_repr_p(dh), sbool(enable_dynamic_features));
+
+   Display_Ref * dref = dh->dref;
+   Error_Info * errs = dfr_check_by_dref(dref);
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, errs, "dh->dref->drf=%p", dh->dref->dfr);
+   return errs;
+}
+
+
 #ifdef UNUSED
 Error_Info *
 dfr_check_by_mmk(
