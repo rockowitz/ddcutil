@@ -973,6 +973,7 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
             }
       }
    );
+
    API_EPILOG(debug, RESPECT_QUIESCE, psc, "");
 }
 
@@ -983,13 +984,22 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
    bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "ddca_dh=%p", ddca_dh);
+
    DDCA_Status psc = 0;
    WITH_VALIDATED_DH3(ddca_dh, psc,
       {
-            DBGMSF(debug, "dref=%s", dh_repr(dh));
-            psc = ddca_dfr_check_by_dref(dh->dref);
+            DBGMSF(debug, "dh=%s", dh_repr_p(dh));
+            Error_Info * ddc_excp = dfr_check_by_dh(dh);
+            if (ddc_excp) {
+               if (ddc_excp->status_code != DDCRC_NOT_FOUND) {
+                  psc = ddc_excp->status_code;
+                  save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+               }
+               errinfo_free(ddc_excp);
+           }
       }
    );
+
    API_EPILOG(debug, RESPECT_QUIESCE, psc, "ddca_dh=%p->%s.",
           ddca_dh, dh_repr(ddca_dh) );
 }
