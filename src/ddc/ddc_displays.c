@@ -1839,22 +1839,22 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
          ddcrc = DDCRC_ARG;
    }
    else {
-      int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
+      // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
       if (dref->flags & DREF_REMOVED)
          ddcrc = DDCRC_DISCONNECTED;
       else if (all_video_adapters_implement_drm) {
          if (!dref->drm_connector) {
-            start_capture(DDCA_CAPTURE_STDERR);
+       //     start_capture(DDCA_CAPTURE_STDERR);
             rpt_vstring(0, "Internal error in %s at line %d in file %s. dref->drm_connector == NULL",
                          __func__, __LINE__, __FILE__);
             dbgrpt_display_ref(dref, true, 1);
             rpt_nl();
             report_sys_drm_connectors(true, 1);
-            Null_Terminated_String_Array lines = end_capture_as_ntsa();
-            for (int ndx=0; lines[ndx]; ndx++) {
-               LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
-            }
-            ntsa_free(lines, true);
+      //      Null_Terminated_String_Array lines = end_capture_as_ntsa();
+      //      for (int ndx=0; lines[ndx]; ndx++) {
+      //         LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
+      //      }
+      //      ntsa_free(lines, true);
             // ddcrc = DDCRC_INTERNAL_ERROR;
             ddcrc = DDCRC_OK;
          }
@@ -1862,7 +1862,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
             if (ddcrc == 0 && (validation_options&DREF_VALIDATE_EDID)) {
                if (is_sysfs_reliable_for_busno(DREF_BUSNO(dref))) {
                   possibly_write_detect_to_status_by_dref(dref);
-                  if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
+                  if (!RPT_ATTR_EDID(-1, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
                      ddcrc = DDCRC_DISCONNECTED;
                }
                else {
