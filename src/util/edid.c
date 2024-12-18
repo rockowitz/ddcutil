@@ -432,6 +432,13 @@ void report_parsed_edid_base(
       printf("(%s) Starting. edid=%p, verbose_synopsis=%s, show_raw=%s\n",
              __func__, (void*)edid, SBOOL(verbose_synopsis), sbool(show_raw));
 
+   if (debug) {
+      show_backtrace(2);
+      if (redirect_reports_to_syslog)
+         backtrace_to_syslog(LOG_NOTICE, 2);
+   }
+
+
    int d1 = depth+1;
    int d2 = depth+2;
    // verbose = true;
@@ -590,7 +597,7 @@ void report_parsed_edid_base(
    }
 
    if (debug)
-      printf("(%s) Done.", __func__);
+      printf("(%s) Done.\n", __func__);
 }
 
 
