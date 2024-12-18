@@ -116,7 +116,7 @@ char * display_status_event_repr(DDCA_Display_Status_Event evt) {
       formatted_time_t(evt.timestamp_nanos),   // will this clobber a wrapping DBGTRC?
       ddc_display_event_type_name(evt.event_type),
       evt.connector_name,
-      dref_repr_t(evt.dref),
+      ddca_dref_repr_t(evt.dref),
       evt.io_path.path.i2c_busno);
    return s;
 }
@@ -145,7 +145,7 @@ ddc_create_display_status_event(
    DBGMSF(debug, "sizeof(DDCA_Display_Status_Event) = %d, sizeof(evt) = %d",
          sizeof(DDCA_Display_Status_Event), sizeof(evt));
    evt.timestamp_nanos = elapsed_time_nanosec();
-   evt.dref = (DDCA_Display_Ref) dref;
+   evt.dref = dref_to_ddca_dref(dref);
    evt.event_type = event_type;
    if (connector_name)
       g_snprintf(evt.connector_name, sizeof(evt.connector_name), "%s", connector_name);
