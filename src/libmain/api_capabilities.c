@@ -255,14 +255,16 @@ ddca_report_parsed_capabilities_by_dref(
    bool debug = false;
    DDCA_Status ddcrc = 0;
    free_thread_error_detail();
-   API_PROLOGX(debug, RESPECT_QUIESCE, "Starting. p_caps=%p, ddca_dref=%s",
-                      p_caps, dref_repr_t((Display_Ref*) ddca_dref));
+   API_PROLOGX(debug, RESPECT_QUIESCE, "Starting. p_caps=%p", //  ddca_dref=%s",
+                      p_caps);      // , dref_repr_t((Display_Ref*) ddca_dref));
    API_PRECOND_W_EPILOG(p_caps);   // no need to check marker, DDCA_CAPABILITIES not opaque
 
    Display_Ref * dref = NULL;
    // dref may be NULL, but if not it must be valid
    if (ddca_dref) {
-      ddcrc = ddci_validate_ddca_display_ref2(ddca_dref, DREF_VALIDATE_BASIC_ONLY, &dref);
+      dref = dref_from_ddca_dref(ddca_dref);
+      // DREF_VALIDAT_BASIC_ONLY?
+      ddcrc = (dref) ? ddc_validate_display_ref2(dref, DREF_VALIDATE_BASIC_ONLY) : DDCRC_ARG;
       if (ddcrc != 0) {
          goto bye;
       }
@@ -303,7 +305,7 @@ ddca_report_parsed_capabilities_by_dref(
       Display_Feature_Metadata * dfm =
          dyn_get_feature_metadata_by_dref(
                cur_vcp->feature_code,
-               ddca_dref,
+               dref,
                true,     // check_udf
                true);    // create_default_if_not_found);
       assert(dfm);
@@ -369,8 +371,6 @@ ddca_report_parsed_capabilities_by_dh(
    API_PROLOGX(debug, RESPECT_QUIESCE, "p_caps=%p, ddca_dh=%s, depth=%d",
                       p_caps, ddca_dh_repr(ddca_dh), depth);
    DDCA_Status ddcrc = 0;
-
-
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 ) {
       ddcrc = DDCRC_ARG;
