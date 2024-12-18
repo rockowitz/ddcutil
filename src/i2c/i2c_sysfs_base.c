@@ -784,7 +784,7 @@ void possibly_write_detect_to_status_by_dref(Display_Ref * dref) {
   *  @param  data       pointer to Sysfs_Connector_Names instance
   *  @param  depth      if >= 0, emits a report with this logical indentation depth
   */
-static
+STATIC
 void get_sysfs_drm_add_one_connector_name(
       const char * dirname,     // <device>/drm/cardN
       const char * simple_fn,   // card0-HDMI-1 etc
