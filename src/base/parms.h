@@ -15,9 +15,12 @@
 
 // if defined, DDCA_Display_Ref contains display ref id number instead of Display_Ref *
 #define FUTURE_NUMERIC_DDCA_DISPLAY_REF
+// #undef FUTURE_NUMERIC_DDCA_DISPLAY_REF
 
-#define STATIC_FUNCTIONS_VISIBLE
-// Remove static function qualifier to make it visible to asan, valgrind, backtrace
+// #define STATIC_FUNCTIONS_VISIBLE
+#undef STATIC_FUNCTIONS_VISIBLE
+// If defined, remove static function qualifier on many functions to
+// make them visible to asan, valgrind, backtrace
 #ifdef STATIC_FUNCTIONS_VISIBLE
 #define STATIC
 #else
