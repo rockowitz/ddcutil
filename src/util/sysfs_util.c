@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 /** \endcond */
 
 #include "coredefs_base.h"
@@ -513,6 +514,11 @@ rpt_attr_edid(
  {
     bool debug = false;
     DBGF(debug, "Starting.  depth=%d, value_loc=%p, fn_segment=|%s|", depth, value_loc, fn_segment);
+    if (debug) {
+       show_backtrace(2);
+       if (redirect_reports_to_syslog)
+          backtrace_to_syslog(LOG_NOTICE, 2);
+    }
     if (debug && depth < 0)
           depth=1;
 
@@ -530,8 +536,17 @@ rpt_attr_edid(
     found = rpt_attr_binary(depth, &edid, pb1, NULL);
     ASSERT_IFF(found, edid);
     if (edid) {
-       if (!rpt2_silent && depth >= 0)
-          rpt_hex_dump(edid->data, edid->len, depth+4);
+       if (!rpt2_silent && depth >= 0) {
+          if (redirect_reports_to_syslog) {
+             GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
+             hex_dump_indented_collect(collector, edid->data, edid->len, depth+4);
+             for (int ndx = 0; ndx < collector->len; ndx++) {
+                syslog(LOG_NOTICE, "%s", (char*) g_ptr_array_index(collector, ndx));
+             }
+          }
+          else
+             rpt_hex_dump(edid->data, edid->len, depth+4);
+       }
        if (value_loc)
           *value_loc = edid;
        else {
@@ -541,7 +556,7 @@ rpt_attr_edid(
 
     if (debug) {
        DBG("Returning %s.", SBOOL(found));
-       if (value_loc) {
+       if (value_loc && *value_loc) {
           GByteArray * gba = *value_loc;
           DBG("               data=%p, len=%d\n", (void*) gba->data, gba->len);
        }
