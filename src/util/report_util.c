@@ -456,7 +456,16 @@ void rpt_g_ptr_array(int depth, GPtrArray * strings) {
  *  @param depth logical indentation depth
  */
 void rpt_hex_dump(const Byte * data, int size, int depth) {
-   fhex_dump_indented(rpt_cur_output_dest(), data, size, rpt_get_indent(depth));
+   if (redirect_reports_to_syslog) {
+      GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
+      hex_dump_indented_collect(collector, data, size,  rpt_get_indent(depth));
+      for (int ndx = 0; ndx < collector->len; collector++) {
+         syslog(LOG_NOTICE, "%s", (char*) g_ptr_array_index(collector, ndx));
+      }
+      g_ptr_array_free(collector, true);
+   }
+   else
+      fhex_dump_indented(rpt_cur_output_dest(), data, size, rpt_get_indent(depth));
 }
 
 
