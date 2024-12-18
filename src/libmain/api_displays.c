@@ -71,17 +71,33 @@ DDCA_Status ddci_validate_ddca_display_ref(
 #endif
 
 
+/** Validates an opaque #DDCA_Display_Ref, returning the corresponding
+ *  #Display_Ref if successful.
+ *
+ *  @param  ddca_dref DDCA_Display_Ref
+ *  @param  dh_loc    address at which to return the underlying Display_Handle.
+ *  @return
+ */
 DDCA_Status ddci_validate_ddca_display_ref2(
       DDCA_Display_Ref        ddca_dref,
       Dref_Validation_Options validation_options,
       Display_Ref**           dref_loc)
 {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref=%p, validation_options=0x%02x, dref_loc=%p",
+                                         ddca_dref, validation_options, dref_loc);
    if (dref_loc)
       *dref_loc = NULL;
-   Display_Ref * dref = (Display_Ref *) ddca_dref;
-   DDCA_Status result = ddc_validate_display_ref2(dref, validation_options);
+   Display_Ref * dref = dref_from_ddca_dref(ddca_dref);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref_from_ddca_dref() returned %s", dref_reprx_t(dref));
+   DDCA_Status result =  (dref) ? ddc_validate_display_ref2(dref, validation_options) : DDCRC_ARG;
    if (result == DDCRC_OK && dref_loc)
       *dref_loc = dref;
+
+   if (*dref_loc)
+      DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "*dref_loc=%p -> %s", *dref_loc, dref_reprx_t(*dref_loc));
+   else
+      DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "*dref_loc=%p", *dref_loc);
    return result;
 }
 
@@ -403,15 +419,11 @@ ddca_redetect_displays() {
 const char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
-   DBGMSF(debug, "Starting.  ddca_dref = %p", ddca_dref);
-   char * result = NULL;
-   Display_Ref * dref = (Display_Ref *) ddca_dref;
-   if (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) {
-      // else if (dref->dispno < 0)   // cause of ddcui issue  #55
-      //    ddcrc = DDCRC_ARG;
-      result = dref_repr_t(dref);
-   }
-   DBGMSF(debug, "Done.     Returning: %s", result);
+
+   Display_Ref * dref = dref_from_ddca_dref(ddca_dref);
+   char * result = (dref) ? dref_repr_t(dref) : "Invalid DDCA_Display_Ref";
+
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning: %s", ddca_dref, result);
    return result;
 }
 
@@ -848,7 +860,7 @@ ddca_get_display_info_list(void)
 
 // STATIC
  void ddci_init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "dref=%s, curinfo=%p", dref_repr_t(dref),curinfo);
    memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
    curinfo->dispno        = dref->dispno;
@@ -879,7 +891,7 @@ ddca_get_display_info_list(void)
 #endif
    curinfo->product_code  = dref->pedid->product_code;
    curinfo->vcp_version    = vspec;
-   curinfo->dref           = dref;
+   curinfo->dref           = dref_to_ddca_dref(dref);
 
 #ifdef MMID
    curinfo->mmid = monitor_model_key_value(
@@ -902,7 +914,7 @@ ddca_get_display_info(
       DDCA_Display_Ref  ddca_dref,
       DDCA_Display_Info ** dinfo_loc)
 {
-   bool debug = false;
+   bool debug = true;
    // causes return DDCRC_UNITIALIZED: called after explicit ddca_init()/init2() call failed
    API_PROLOGX(debug, RESPECT_QUIESCE, "ddca_dref=%p", ddca_dref);
    // causes return DDCRC_ARG if dinfo_loc == NULL
@@ -958,7 +970,6 @@ set_ddca_error_detail_from_open_errors() {
 }
 
 
-
 DDCA_Status
 ddca_get_display_refs(
       bool                include_invalid_displays,
@@ -979,7 +990,7 @@ ddca_get_display_refs(
    DDCA_Display_Ref * cur_ddca_dref = result_list;
    for (int ndx = 0; ndx < filtered_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(filtered_displays, ndx);
-         *cur_ddca_dref = (DDCA_Display_Ref*) dref;
+         *cur_ddca_dref = dref_to_ddca_dref(dref);
          cur_ddca_dref++;
    }
    *cur_ddca_dref = NULL; // terminating NULL ptr, redundant since calloc()
@@ -987,10 +998,10 @@ ddca_get_display_refs(
 
    dref_ct = 0;
    if (IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
-      DBGMSG("          *drefs_loc=%p");
+      DBGMSG("          *drefs_loc=%p", drefs_loc);
       DDCA_Display_Ref * cur_ddca_dref = result_list;
       while (*cur_ddca_dref) {
-         Display_Ref * dref = (Display_Ref*) *cur_ddca_dref;
+         Display_Ref * dref = dref_from_ddca_dref(*cur_ddca_dref);
          DBGMSG("          DDCA_Display_Ref %p -> display %d", *cur_ddca_dref, dref->dispno);
          cur_ddca_dref++;
          dref_ct++;
@@ -1101,7 +1112,8 @@ ddca_report_display_info(
       int                 depth)
 {
    bool debug = false;
-   API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting. dinfo=%p, dinfo->dispno=%d, depth=%d", dinfo, dinfo->dispno, depth);
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "dinfo=%p, dinfo->dispno=%d, depth=%d",
+                                         dinfo, dinfo->dispno, depth);
    DDCA_Status rc = 0;
    API_PRECOND_W_EPILOG(dinfo);
    API_PRECOND_W_EPILOG(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
@@ -1138,7 +1150,8 @@ ddca_report_display_info(
       if (edid) {     // should never fail, but being ultra-cautious
          // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
          // useful for differentiating displays that share a generic ASCII "serial number"
-         rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)", edid->serial_binary, edid->serial_binary);
+         rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)",
+                        edid->serial_binary, edid->serial_binary);
          free_parsed_edid(edid);
       }
 
@@ -1154,11 +1167,18 @@ ddca_report_display_info(
       // rpt_vstring(d2, "Model name:       %s", dinfo->mmid.model_name);
       // rpt_vstring(d2, "Product code:     %d", dinfo->mmid.product_code);
       rpt_vstring(d1, "EDID:");
-      rpt_hex_dump(dinfo->edid_bytes, 128, d2);
+      GPtrArray * edid_lines = g_ptr_array_new_with_free_func(g_free);
+      hex_dump_indented_collect(edid_lines, dinfo->edid_bytes, 128, 0);
+      for (int ndx = 0; ndx < edid_lines->len; ndx++) {
+         rpt_vstring(d2, "%s", (char *) g_ptr_array_index(edid_lines, ndx));
+      }
+      g_ptr_array_free(edid_lines, true);
+
+      // OLD: rpt_hex_dump(dinfo->edid_bytes, 128, d2);
+
       // rpt_vstring(d1, "dref:                %p", dinfo->dref);
       rpt_vstring(d1, "VCP Version:          %s", format_vspec(dinfo->vcp_version));
-   // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
-
+      // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
 
       if (dinfo->dispno == DISPNO_BUSY) {
    #ifdef OLD
@@ -1211,6 +1231,7 @@ dbgrpt_display_info(
    }
    DBGMSF(debug, "Done.");
 }
+
 
 void
 ddca_report_display_info_list(
