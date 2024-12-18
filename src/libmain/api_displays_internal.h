@@ -15,14 +15,11 @@
 #include "base/displays.h"
 #include "ddc/ddc_displays.h"    // for Dref_Validation_Options
 
-#ifdef OLD
-DDCA_Status ddci_validate_ddca_display_ref(DDCA_Display_Ref ddca_dref,bool basic_only, bool require_not_alseep, Display_Ref** dref_loc);
-#endif
+DDCA_Status      ddci_validate_ddca_display_ref2(
+      DDCA_Display_Ref        ddca_dref,
+      Dref_Validation_Options validation_options,
+      Display_Ref**           dref_loc);
 
-DDCA_Status ddci_validate_ddca_display_ref2(DDCA_Display_Ref ddca_dref, Dref_Validation_Options validation_options, Display_Ref** dref_loc);
-#ifdef UNUSED
-Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
-#endif
 DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc);
 
 #ifdef UNUSED
