@@ -43,6 +43,9 @@
 #include "base/status_code_mgt.h"
 #include "base/trace_control.h"  // so don't need to repeatedly include trace_control.h
 
+// for testing
+// #define FUTURE_NUMERIC_DDCA_DISPLAY_REF
+
 //
 // Common macros
 //
