@@ -10,6 +10,22 @@
 #define PARMS_H_
 
 //
+// *** Build options that are not otherwise set
+//
+
+// if defined, DDCA_Display_Ref contains display ref id number instead of Display_Ref *
+#define FUTURE_NUMERIC_DDCA_DISPLAY_REF
+
+#define STATIC_FUNCTIONS_VISIBLE
+// Remove static function qualifier to make it visible to asan, valgrind, backtrace
+#ifdef STATIC_FUNCTIONS_VISIBLE
+#define STATIC
+#else
+#define STATIC static
+#endif
+
+
+//
 // *** Timeout values
 //
 
