@@ -16,9 +16,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 /** \endcond */
 
 #include "glib_util.h"
+#include "debug_util.h"  // temp
 
 #include "string_util.h"
 
@@ -1529,6 +1531,74 @@ char * hexstring_t(
 
 
 /** Dump a region of memory as hex characters and their ASCII values.
+ *  The output is indented by the specified number of spaces, and
+ *  collected in a GPtrArray.
+ *
+ *  @param collector  line of output are added to this array
+ *  @param data       start of region to show
+ *  @param size       length of region
+ *  @param indents    number of spaces to indent the output
+ */
+void hex_dump_indented_collect(GPtrArray * collector, const Byte* data, int size, int indents)
+{
+   bool debug = false;
+   DBGF(debug, "Starting. indents=%d", indents);
+   assert(collector);
+   if (debug) {
+      show_backtrace(2);
+      backtrace_to_syslog(LOG_NOTICE, 2);
+   }
+
+   int i; // index in data...
+   int j; // index in line...
+   char temp[10];    // was 8, compiler complains that too small
+   char buffer[128];
+   char *ascii;
+   char indentation[100];
+
+   memset(buffer, 0, 128);
+
+   // Printing the ruler...
+   char * line = g_strdup_printf(
+           "%s        +0          +4          +8          +c            0   4   8   c   ",
+           indentation);
+   g_ptr_array_add(collector, line);
+
+   ascii = buffer + 58;
+   memset(buffer, ' ', 58 + 16);
+   buffer[58 + 16] = '\0';
+   buffer[0] = '+';
+   buffer[1] = '0';
+   buffer[2] = '0';
+   buffer[3] = '0';
+   buffer[4] = '0';
+   for (i = 0, j = 0; i < size; i++, j++) {
+      if (j == 16) {
+         char * line = g_strdup_printf("%s%s", indentation, buffer);
+         g_ptr_array_add(collector, line);
+         memset(buffer, ' ', 58 + 16);
+         sprintf(temp, "+%04x", i);
+         memcpy(buffer, temp, 5);
+         j = 0;
+      }
+
+      sprintf(temp, "%02x", 0xff & data[i]);
+      memcpy(buffer + 8 + (j * 3), temp, 2);
+      if ((data[i] > 31) && (data[i] < 127))
+         ascii[j] = data[i];
+      else
+         ascii[j] = '.';
+   }
+
+   if (j != 0) {
+      char * line = g_strdup_printf("%s%s", indentation, buffer);
+      g_ptr_array_add(collector, line);
+   }
+   DBGF(debug, "Done");
+}
+
+
+/** Dump a region of memory as hex characters and their ASCII values.
  *  The output is indented by the specified number of spaces.
  *
  *  @param fh       where to write output, if NULL, write nothing
@@ -1538,51 +1608,12 @@ char * hexstring_t(
  */
 void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents)
 {
-   if (fh) {
-      int i; // index in data...
-      int j; // index in line...
-      char temp[10];    // was 8, compiler complains that too small
-      char buffer[128];
-      char *ascii;
-      char indentation[100];
-      snprintf(indentation, 100, "%*s", indents, "");
-
-      memset(buffer, 0, 128);
-
-      // printf("\n");
-      // Printing the ruler...
-      fprintf(fh,
-              "%s        +0          +4          +8          +c            0   4   8   c   \n",
-              indentation);
-      ascii = buffer + 58;
-      memset(buffer, ' ', 58 + 16);
-      buffer[58 + 16] = '\n';
-      buffer[58 + 17] = '\0';
-      buffer[0] = '+';
-      buffer[1] = '0';
-      buffer[2] = '0';
-      buffer[3] = '0';
-      buffer[4] = '0';
-      for (i = 0, j = 0; i < size; i++, j++) {
-         if (j == 16) {
-            fprintf(fh, "%s%s", indentation, buffer);
-            memset(buffer, ' ', 58 + 16);
-            sprintf(temp, "+%04x", i);
-            memcpy(buffer, temp, 5);
-            j = 0;
-         }
-
-         sprintf(temp, "%02x", 0xff & data[i]);
-         memcpy(buffer + 8 + (j * 3), temp, 2);
-         if ((data[i] > 31) && (data[i] < 127))
-            ascii[j] = data[i];
-         else
-            ascii[j] = '.';
-      }
-
-      if (j != 0)
-         fprintf(fh, "%s%s", indentation, buffer);
+   GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
+   hex_dump_indented_collect(collector, data, size, indents);
+   for (int ndx = 0; ndx < collector->len; ndx++) {
+      fprintf(fh, "%s\n", (char*) g_ptr_array_index(collector, ndx));
    }
+   g_ptr_array_free(collector, true);
 }
 
 

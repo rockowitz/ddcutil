@@ -127,6 +127,7 @@ char * hexstring3_t(
           uint8_t               hunk_size,  // separator string frequency
           bool                  uppercase); // use upper case hex characters
 
+void hex_dump_indented_collect(GPtrArray * collector, const Byte* data, int size, int indents);
 void fhex_dump_indented(FILE * fh, const Byte* data,  int size, int indents);
 void fhex_dump(         FILE * fh, const Byte* bytes, int size);
 void hex_dump(                     const Byte* bytes, int size);
