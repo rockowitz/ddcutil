@@ -467,11 +467,11 @@ static GMutex max_dref_id_mutex;
 static GHashTable * dref_hash = NULL;
 
 
-void init_dref_hash() {
+static void init_dref_hash() {
    dref_hash = g_hash_table_new(g_direct_hash, NULL);
 }
 
-void dbgrpt_dref_hash(const char * msg, int depth) {
+static void dbgrpt_dref_hash(const char * msg, int depth) {
     if (msg)
        rpt_vstring(depth, "%s: dref_hash_contents:", msg);
     else
@@ -513,6 +513,60 @@ static void delete_dref_id(uint dref_id) {
       dbgrpt_dref_hash(msgbuf, 0);
    }
 }
+
+
+#ifdef UNUSED
+Display_Ref * dref_id_to_ptr(guint dref_id) {
+   bool debug = false;
+   if (debug)
+      dbgrpt_dref_hash("Before g_hash_table_lookup", 2);
+
+   Display_Ref * dref = g_hash_table_lookup(dref_hash, GUINT_TO_POINTER(dref_id));
+   return dref;
+}
+#endif
+
+
+
+Display_Ref * dref_from_ddca_dref(DDCA_Display_Ref ddca_dref) {
+   bool debug = false;
+#ifdef FUTURE_NUMERIC_DDCA_DISPLAY_REF
+   guint id = GPOINTER_TO_UINT(ddca_dref);
+   Display_Ref * dref = g_hash_table_lookup(dref_hash, GUINT_TO_POINTER(id));
+   DBGMSG("dref=%p -> %s", dref, dref_reprx_t(dref));
+   if (dref)
+      assert (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+#else
+   Display_Ref * dref = (Display_Ref*) ddca_dref;
+   if (dref) {
+      if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0)
+         dref = NULL;
+   }
+#endif
+   if (dref)
+      DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning %p -> %s", ddca_dref, dref, dref_reprx_t(dref));
+   else
+      DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning %p", ddca_dref, dref);
+   return dref;
+}
+
+
+DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref) {
+   bool debug = false;
+#ifdef FUTURE_NUMERIC_DDCA_DISPLAY_REF
+   DDCA_Display_Ref * ddca_dref = GUINT_TO_POINTER(dref->dref_id);
+#else
+   DDCA_Display_Ref  ddca_dref = (void*) dref;
+#endif
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "dref=%p, dref->dref_id=%d, retuning %p",
+                                         dref, dref->dref_id, ddca_dref);
+   return ddca_dref;
+}
+
+
+
+
+
 
 
 Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
@@ -878,6 +932,28 @@ char * dref_reprx_t(Display_Ref * dref) {
       strcpy(buf, "Display_Ref[NULL]");
    return buf;
 }
+
+char * ddca_dref_repr_t(DDCA_Display_Ref * ddca_dref) {
+   static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
+#ifdef FUTURE_NUMERIC_DDCA_DISPLAY_REF
+   g_snprintf(buf, 100, "DDCA_Display_Ref[%p]", ddca_dref);
+#else
+   if (ddca_dref) {
+      Display_Ref * dref = (Display_Ref*) ddca_dref;
+#ifdef WITH_ADDR
+      g_snprintf(buf, 100, "DDCA_Display_Ref[%s @%p]", dpath_short_name_t(&dref->io_path), (void*)dref);
+#else
+      g_snprintf(buf, 100, "DDCA_Display_Ref[%s]", dpath_short_name_t(&dref->io_path));
+   }
+#endif
+   else
+      strcpy(buf, "DDCA_Display_Ref[NULL]");
+#endif
+   return buf;
+}
+
 
 
 // *** Display_Handle ***

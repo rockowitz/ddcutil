@@ -203,6 +203,13 @@ typedef struct _display_ref {
    uint64_t                 creation_timestamp;
 } Display_Ref;
 
+
+Display_Ref * dref_id_to_ptr(guint dref_id);
+
+Display_Ref *    dref_from_ddca_dref(DDCA_Display_Ref ddca_dref);
+DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref);
+
+
 #define DREF_BUSNO(_dref) ((_dref)->io_path.path.i2c_busno)
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \
    assert(_dref && \
@@ -218,6 +225,7 @@ void          dbgrpt_display_ref_summary(Display_Ref * dref, bool include_businf
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
 char *        dref_reprx_t(Display_Ref * dref);  // value valid until next call
+char *        ddca_dref_repr_t(DDCA_Display_Ref * ddca_dref);  // value valid until next call
 DDCA_Status   free_display_ref(Display_Ref * dref);
 Display_Ref * copy_display_ref(Display_Ref * dref);
 
