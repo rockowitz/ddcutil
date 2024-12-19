@@ -533,7 +533,7 @@ Display_Ref * dref_from_ddca_dref(DDCA_Display_Ref ddca_dref) {
 #ifdef FUTURE_NUMERIC_DDCA_DISPLAY_REF
    guint id = GPOINTER_TO_UINT(ddca_dref);
    Display_Ref * dref = g_hash_table_lookup(dref_hash, GUINT_TO_POINTER(id));
-   DBGMSG("dref=%p -> %s", dref, dref_reprx_t(dref));
+   DBGMSF(debug, "dref=%p -> %s", dref, dref_reprx_t(dref));
    if (dref)
       assert (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
 #else
