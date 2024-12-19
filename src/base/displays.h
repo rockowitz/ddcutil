@@ -204,8 +204,6 @@ typedef struct _display_ref {
 } Display_Ref;
 
 
-Display_Ref * dref_id_to_ptr(guint dref_id);
-
 Display_Ref *    dref_from_ddca_dref(DDCA_Display_Ref ddca_dref);
 DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref);
 
