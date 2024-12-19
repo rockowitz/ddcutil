@@ -432,8 +432,6 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
       goto bye;
 #endif
 
-   if (!init_experimental_options(parsed_cmd))
-      goto bye;
    ok = true;
 
 bye:
