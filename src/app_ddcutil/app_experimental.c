@@ -104,23 +104,6 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 #undef REPORT_FLAG_OPTION
 
 
-bool init_experimental_options(Parsed_Cmd* parsed_cmd)
-{
-#ifdef CMD_FLAG_F6_FORCE_i2C_BUS
-   // HACK FOR TESTING
-   if (parsed_cmd->flags & CMD_FLAG_F6) {
-      fprintf(stdout, "Setting i2c_force_bus\n");
-      if ( !(parsed_cmd->pdid) || parsed_cmd->pdid->id_type != DISP_ID_BUSNO) {
-         fprintf(stdout, "bus number required, use --busno\n");
-         return false;
-      }
-      i2c_force_bus = true;
-   }
-#endif
-   return true;
-}
-
-
 //
 // Test display detection variants
 //
