@@ -62,12 +62,13 @@ DDCA_Status  ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Optio
 // Display Status Change
 Display_Ref* ddc_add_display_by_businfo(I2C_Bus_Info * businfo);
 Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);    // for poll
+// Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
 Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connector, bool ignore_invalid);
 #define      DDC_GET_DREF_BY_BUSNO(_busno, _ignore) \
              ddc_get_dref_by_busno_or_connector(_busno,NULL, (_ignore))
 #define      DDC_GET_DREF_BY_CONNECTOR(_connector_name, _ignore_invalid) \
              ddc_get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
-// Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
+
 
 void         ddc_add_display_ref(Display_Ref * dref);
 void         ddc_mark_display_ref_removed(Display_Ref* dref);
