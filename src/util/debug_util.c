@@ -219,16 +219,16 @@ void gptrarray_to_syslog(int priority, GPtrArray* lines) {
 #endif
 
 
-void backtrace_to_syslog(int priority, int stack_adjust) {
+void backtrace_to_syslog(int syslog_priority, int stack_adjust) {
    GPtrArray * callstack = get_backtrace(stack_adjust+2); // +2 for get_backtrace(), backtrace()
    if (!callstack) {
       syslog(LOG_PERROR|LOG_ERR, "backtrace unavailable");
    }
    else {
-      syslog(priority, "Current call stack:");
+      syslog(syslog_priority, "Current call stack:");
 
       for (int ndx = 0; ndx < callstack->len; ndx++) {
-         syslog(priority, "   %s", (char *) g_ptr_array_index(callstack, ndx));
+         syslog(syslog_priority, "   %s", (char *) g_ptr_array_index(callstack, ndx));
       }
       g_ptr_array_set_free_func(callstack, g_free);
       g_ptr_array_free(callstack, true);
