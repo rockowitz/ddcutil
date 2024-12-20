@@ -624,7 +624,8 @@ _ddca_terminate(void) {
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
       DDCA_Display_Event_Class active_classes;
-      ddc_stop_watch_displays(/*wait=*/ false, &active_classes);   // in case it was started
+      if (is_watch_displays_executing())
+         ddc_stop_watch_displays(/*wait=*/ false, &active_classes);   // in case it was started
       terminate_ddc_services();
       terminate_base_services();
       free_regex_hash_table();
