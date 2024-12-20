@@ -204,7 +204,11 @@ typedef struct _display_ref {
 } Display_Ref;
 
 
-Display_Ref *    dref_from_ddca_dref(DDCA_Display_Ref ddca_dref);
+void dbgrpt_published_dref_hash(const char * msg, int depth);
+void init_published_dref_hash();
+void reset_published_dref_hash();
+void add_published_dref_id_by_dref(Display_Ref * dref);
+Display_Ref *    dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref);
 DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref);
 
 
