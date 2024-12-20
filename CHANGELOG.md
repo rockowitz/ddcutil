@@ -151,7 +151,10 @@ file is libddcutil.so.5.1.3.
 - Opaque pointer DDCA_Display_Ref now contains a display reference id instead
   of an actual pointer. It's type continues to be void* so client program use
   of this type is unchanged.
-- Add libddutil option ***--f16***, which disables API.
+- Add libddutil option ***--disable-api***, which completely disables the API.
+  Useful for testing whether libddcutil contributes to a system problem.
+- Whan a display is connected, the display number assigned is one greater than
+  the highest already assigned, instead of 99.  
 
 #### Fixed
 
@@ -177,6 +180,7 @@ file is libddcutil.so.5.1.3.
 - Do not call ddca_stop_watch_displays() at library termination if client has
   already called it. 
 - Use mutexes to control access to corruptable data structures.
+- Consistently write output to system log instead of terminal if  ??? --f8 --f9
 - Memory leaks.
 
 #### Display Change Handling
