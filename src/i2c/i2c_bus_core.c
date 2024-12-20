@@ -727,6 +727,7 @@ Bit_Set_256 check_edids(GPtrArray * buses) {
 // I2C Bus Inspection - Fill in and report Bus_Info
 //
 
+#ifdef UNUSED
 /** The EDID can be read in several ways.  This function exists to
  *  verify that these methods obtain the same value.  It should be
  *  used only for test purposes.
@@ -746,7 +747,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
    // 2a - does value read from drm match directly read value?
    // 2b - does value now read from sysfs match directly read value?
 
-   bool debug = true;
+   bool debug =  true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", businfo->busno);
 
    Parsed_Edid * true_i2c_edid;
@@ -845,6 +846,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
+#endif
 
 
 bool is_displaylink_device(int busno) {
