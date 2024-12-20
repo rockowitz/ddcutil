@@ -1840,6 +1840,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s, validation_options=x%02x",
          dref, dref_reprx_t(dref), validation_options);
    assert(all_display_refs);
+   int d = (debug) ? 1 : -1;
 
    DDCA_Status ddcrc = DDCRC_OK;
    if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
@@ -1872,7 +1873,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
             if (ddcrc == 0 && (validation_options&DREF_VALIDATE_EDID)) {
                if (is_sysfs_reliable_for_busno(DREF_BUSNO(dref))) {
                   possibly_write_detect_to_status_by_dref(dref);
-                  if (!RPT_ATTR_EDID(1, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
+                  if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
                      ddcrc = DDCRC_DISCONNECTED;
                }
                else {
