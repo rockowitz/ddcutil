@@ -201,7 +201,7 @@ ddc_open_display(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, callopts=%s, dh_loc=%p",
-                      dref_repr_t(dref), interpret_call_options_t(callopts), dh_loc );
+                      dref_reprx_t(dref), interpret_call_options_t(callopts), dh_loc );
    TRACED_ASSERT(dh_loc);
    // TRACED_ASSERT(1==5);    // for testing
 
