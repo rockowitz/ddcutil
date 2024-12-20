@@ -97,7 +97,8 @@ bool debug_locks = false;
 
 
 void ddc_add_display_ref(Display_Ref * dref) {
-   bool debug = false || debug_locks;
+   bool debug = false ;
+   debug = debug || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
    g_mutex_lock(&all_display_refs_mutex);
    g_ptr_array_add(all_display_refs, dref);
@@ -107,9 +108,14 @@ void ddc_add_display_ref(Display_Ref * dref) {
 
 
 void ddc_mark_display_ref_removed(Display_Ref* dref) {
-   bool debug = false || debug_locks;
+   bool debug = false;
+   debug = debug || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
    g_mutex_lock(&all_display_refs_mutex);
+   if (IS_DBGTRC(debug, debug)) {
+      show_backtrace(2);
+      backtrace_to_syslog(LOG_NOTICE, 2);
+   }
    dref->flags |= DREF_REMOVED;
    g_mutex_unlock(&all_display_refs_mutex);
    DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
@@ -953,7 +959,8 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
       bool         ignore_invalid)
 {
    ASSERT_IFF(busno >= 0, !connector);
-   bool debug = false || debug_locks;
+   bool debug = false;
+   debug = debug || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d, connector = %s, ignore_invalid=%s",
                                        busno, connector, SBOOL(ignore_invalid));
    assert(all_display_refs);
@@ -1829,16 +1836,19 @@ ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_a
 
 DDCA_Status
 ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation_options) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s, validation_options=x%02x",
-         dref, dref_repr_t(dref), validation_options);
+         dref, dref_reprx_t(dref), validation_options);
    assert(all_display_refs);
 
    DDCA_Status ddcrc = DDCRC_OK;
    if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Invalid marker");
          ddcrc = DDCRC_ARG;
    }
    else {
+      if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+         dbgrpt_display_ref(dref, /*include_businfo*/ false, 1);
       // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
       if (dref->flags & DREF_REMOVED)
          ddcrc = DDCRC_DISCONNECTED;
@@ -1880,7 +1890,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
       }
    }
 
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p=%s", dref, dref_reprx_t(dref));
    return ddcrc;
 }
 
@@ -2005,6 +2015,8 @@ ddc_is_usb_display_detection_enabled() {
  *  @param businfo  I2C_Bus_Info record for the bus
  *  @return         true Display_Ref added, false if not.
  *
+ *  @remark
+ *  Called only when ddc_watch_displays_common.c handling display change
  */
 Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
@@ -2022,7 +2034,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
    assert(businfo->flags & I2C_BUS_PROBED);
    // businfo->flags &= ~I2C_BUS_PROBED;
-   // i2c_check_bus2(businfo);
+   i2c_check_bus2(businfo);  // if display on bus was previously removed, into in businfo, particuarly EDID, will be stale
    if (businfo->edid) {
       dref = create_bus_display_ref(businfo->busno);
       // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
