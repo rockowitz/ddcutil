@@ -261,6 +261,11 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
 }
 
 
+bool is_watch_displays_executing() {
+   return watch_thread;
+}
+
+
 /** If the watch thread is currently executing, returns the
  *  currently active display event classes as a bit flag.
  *
