@@ -262,7 +262,7 @@ ddca_report_parsed_capabilities_by_dref(
    Display_Ref * dref = NULL;
    // dref may be NULL, but if not it must be valid
    if (ddca_dref) {
-      dref = dref_from_ddca_dref(ddca_dref);
+      dref = dref_from_published_ddca_dref(ddca_dref);
       // DREF_VALIDAT_BASIC_ONLY?
       ddcrc = (dref) ? ddc_validate_display_ref2(dref, DREF_VALIDATE_BASIC_ONLY) : DDCRC_ARG;
       if (ddcrc != 0) {
