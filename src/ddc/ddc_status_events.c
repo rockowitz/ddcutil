@@ -201,7 +201,7 @@ void ddc_emit_or_queue_display_status_event(
       DDCA_IO_Path            io_path,
       GArray*                 queue)
 {
-   bool debug = true;
+   bool debug = false;
    if (dref) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
             dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),
@@ -224,17 +224,14 @@ void ddc_emit_or_queue_display_status_event(
          connector_name,
          dref,
          io_path);
-
    // SYSLOG2(DDCA_SYSLOG_NOTICE, "event: %s", display_status_event_repr(evt));
 
-   if (queue) {
+   if (queue)
       g_array_append_val(queue,evt);
-   }
    else
       ddc_emit_display_status_record(evt);
 
    add_published_dref_id_by_dref(dref);
-
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }

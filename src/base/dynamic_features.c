@@ -86,7 +86,7 @@ first_word(char * s) {
  */
 const char *
 interpret_dfr_flags_symbolic_t(DFR_Flags flags) {
-   bool debug = true;
+   bool debug = false;
 
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
    char * buffer = get_thread_fixed_buffer(&buf_key, 100);
