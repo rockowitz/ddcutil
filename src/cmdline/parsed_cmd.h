@@ -121,6 +121,7 @@ typedef enum {
 
    CMD_FLAG_WATCH_DISPLAY_EVENTS
                         =  0x8000000000000000,
+   CMD_FLAG_DISABLE_API =  0x4000000000000000,
 
 #ifdef OLD
    CMD_FLAG_TIMEOUT_I2C_IO         = 0x400000,  // UNUSED  --timeout-i2c-io

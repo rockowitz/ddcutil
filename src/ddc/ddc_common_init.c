@@ -415,11 +415,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F14)
       debug_flock = true;
 
-#ifdef BUILD_SHARED_LIB
-   if (parsed_cmd->flags2 & CMD_FLAG2_F16)
-      library_disabled = true;
-#endif
-
 #ifdef TEST_EDID_SMBUS
    if (parsed_cmd->flags & CMD_FLAG_F13)
       EDID_Read_Uses_Smbus = true;
@@ -580,6 +575,9 @@ all_video_adapters_implement_drm = false;
    init_performance_options(parsed_cmd);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
    skip_ddc_checks = parsed_cmd->flags & CMD_FLAG_SKIP_DDC_CHECKS;
+#ifdef BUILD_SHARED_LIB
+   library_disabled = parsed_cmd->flags & CMD_FLAG_DISABLE_API;
+#endif
    init_display_watch_options(parsed_cmd);
    init_experimental_options(parsed_cmd);
 

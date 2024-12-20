@@ -979,6 +979,7 @@ parse_command(
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
    gboolean enable_watch_displays = true;
+   gboolean disable_api_flag = false;
    gboolean discard_cached_capabilities_flag = false;
    gboolean discard_dsa_cache_flag = false;
 
@@ -1055,6 +1056,8 @@ parse_command(
 
 #ifdef OLD
    GOptionEntry libddcutil_only_options[] = {
+         {"disable-api", '\0', G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_NONE, &disable_api, "Completely disable API", NULL },
          {NULL},
    };
 #endif
@@ -1229,6 +1232,8 @@ parse_command(
 //      {"enable-watch-displays",  '\0', 0, G_OPTION_ARG_NONE, &watch_displays_flag, "Watch for display hotplug events", NULL },
       {"disable-watch-displays", '\0', G_OPTION_FLAG_REVERSE,
                                 G_OPTION_ARG_NONE, &enable_watch_displays, "Do not watch for display change events", NULL },
+      {"disable-api", '\0', G_OPTION_FLAG_HIDDEN,
+                      G_OPTION_ARG_NONE, &disable_api_flag, "Completely disable API", NULL },
       {"watch-mode", '\0', G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_STRING, &watch_mode_work, "How to watch for display changes",  "UDEV|POLL|XEVENT|DYNAMIC"},
 #ifdef ENABLE_USB
@@ -1584,6 +1589,7 @@ parse_command(
       LIBDDCUTIL_ONLY_OPTION("--profile-api",           profile_api_flag);
       LIBDDCUTIL_ONLY_OPTION("--libddcutil-trace-file", parsed_cmd->trace_destination);
       LIBDDCUTIL_ONLY_OPTION("--disable-watch-displays", !enable_watch_displays);
+      LIBDDCUTIL_ONLY_OPTION("--disable-api",           disable_api_flag);
    }
 
 #undef LIBDDCUTIL_ONLY_OPTION
@@ -1653,6 +1659,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
 
    SET_CMDFLAG(CMD_FLAG_WATCH_DISPLAY_EVENTS,    enable_watch_displays);
+   SET_CMDFLAG(CMD_FLAG_DISABLE_API,       disable_api_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_FILEIO,     i2c_io_fileio_flag);
