@@ -129,7 +129,7 @@ DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** x
       }
    }
 
-   if (*xev_data_loc) {
+   if (*xev_data_loc && IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       dbgrpt_xevent_data(*xev_data_loc,  0);
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "resolved_watch_mode: %s. *xev_data_loc: %p",
