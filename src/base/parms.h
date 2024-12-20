@@ -17,8 +17,8 @@
 #define FUTURE_NUMERIC_DDCA_DISPLAY_REF
 // #undef FUTURE_NUMERIC_DDCA_DISPLAY_REF
 
-// #define STATIC_FUNCTIONS_VISIBLE
-#undef STATIC_FUNCTIONS_VISIBLE
+#define STATIC_FUNCTIONS_VISIBLE
+// #undef STATIC_FUNCTIONS_VISIBLE
 // If defined, remove static function qualifier on many functions to
 // make them visible to asan, valgrind, backtrace
 #ifdef STATIC_FUNCTIONS_VISIBLE
