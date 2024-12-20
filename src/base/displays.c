@@ -464,18 +464,18 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 
 static uint max_dref_id = 0;
 static GMutex max_dref_id_mutex;
-static GHashTable * dref_hash = NULL;
+static GHashTable * published_dref_hash = NULL;
 static GMutex dref_hash_mutex;
 
 
 void init_published_dref_hash() {
-   dref_hash = g_hash_table_new(g_direct_hash, NULL);
+   published_dref_hash = g_hash_table_new(g_direct_hash, NULL);
 }
 
 
 void reset_published_dref_hash() {
-   if (dref_hash)
-      g_hash_table_destroy(dref_hash);
+   if (published_dref_hash)
+      g_hash_table_destroy(published_dref_hash);
    init_published_dref_hash();
 }
 
@@ -488,7 +488,7 @@ void dbgrpt_published_dref_hash(const char * msg, int depth) {
 
     GHashTableIter iter;
     gpointer key, value;
-    g_hash_table_iter_init (&iter, dref_hash);
+    g_hash_table_iter_init (&iter, published_dref_hash);
     while (g_hash_table_iter_next (&iter, &key, &value)) {
        uint dref_id = GPOINTER_TO_UINT(key);
        Display_Ref * dref = (Display_Ref *) value;
@@ -502,7 +502,7 @@ static uint next_dref_id(Display_Ref * dref) {
    guint nextid = ++max_dref_id;
 #ifdef NOT_HERE
    bool debug = false;
-   g_hash_table_insert(dref_hash, GUINT_TO_POINTER(nextid), dref);
+   g_hash_table_insert(published_dref_hash, GUINT_TO_POINTER(nextid), dref);
    if (debug) {
       char msgbuf[100];
       g_snprintf(msgbuf, 100, "After dref %s inserted", dref_reprx_t(dref));
@@ -517,7 +517,7 @@ static uint next_dref_id(Display_Ref * dref) {
 void add_published_dref_id_by_dref(Display_Ref * dref) {
    bool debug = false;
    g_mutex_lock (&dref_hash_mutex);
-   g_hash_table_insert(dref_hash, GUINT_TO_POINTER(dref->dref_id), dref);
+   g_hash_table_insert(published_dref_hash, GUINT_TO_POINTER(dref->dref_id), dref);
    if (debug) {
       char msgbuf[100];
       g_snprintf(msgbuf, 100, "After dref %s inserted", dref_reprx_t(dref));
@@ -530,7 +530,7 @@ void add_published_dref_id_by_dref(Display_Ref * dref) {
 static void delete_published_dref_id(uint dref_id) {
    bool debug = false;
    g_mutex_lock (&dref_hash_mutex);
-   g_hash_table_remove(dref_hash, GUINT_TO_POINTER(dref_id));
+   g_hash_table_remove(published_dref_hash, GUINT_TO_POINTER(dref_id));
    if (debug) {
       char msgbuf[50];
       g_snprintf(msgbuf, 50, "After dref_id %d removed", dref_id);
@@ -546,7 +546,7 @@ Display_Ref * dref_id_to_ptr(guint dref_id) {
    if (debug)
       dbgrpt_published_dref_hash("Before g_hash_table_lookup", 2);
 
-   Display_Ref * dref = g_hash_table_lookup(dref_hash, GUINT_TO_POINTER(dref_id));
+   Display_Ref * dref = g_hash_table_lookup(published_dref_hash, GUINT_TO_POINTER(dref_id));
    return dref;
 }
 #endif
@@ -561,7 +561,7 @@ Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
    // if (debug)
    //    dbgrpt_published_dref_hash(__func__, 1);
    guint id = GPOINTER_TO_UINT(ddca_dref);
-   Display_Ref * dref = g_hash_table_lookup(dref_hash, GUINT_TO_POINTER(id));
+   Display_Ref * dref = g_hash_table_lookup(published_dref_hash, GUINT_TO_POINTER(id));
    // DBGMSF(debug, "ddca_dref=%p -> %s", ddca_dref, dref_reprx_t(dref));
    if (dref)
       assert (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
@@ -1350,5 +1350,5 @@ void init_displays() {
 
 
 void terminate_displays() {
-   g_hash_table_destroy(dref_hash);
+   g_hash_table_destroy(published_dref_hash);
 }
