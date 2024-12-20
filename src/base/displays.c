@@ -557,7 +557,7 @@ Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref = %p");
 
-#ifdef FUTURE_NUMERIC_DDCA_DISPLAY_REF
+#ifdef NUMERIC_DDCA_DISPLAY_REF
    // if (debug)
    //    dbgrpt_published_dref_hash(__func__, 1);
    guint id = GPOINTER_TO_UINT(ddca_dref);
@@ -583,7 +583,7 @@ Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
 
 DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref) {
    bool debug = false;
-#ifdef FUTURE_NUMERIC_DDCA_DISPLAY_REF
+#ifdef NUMERIC_DDCA_DISPLAY_REF
    DDCA_Display_Ref * ddca_dref = GUINT_TO_POINTER(dref->dref_id);
 #else
    DDCA_Display_Ref  ddca_dref = (void*) dref;
@@ -964,7 +964,7 @@ char * ddca_dref_repr_t(DDCA_Display_Ref * ddca_dref) {
    static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
-#ifdef FUTURE_NUMERIC_DDCA_DISPLAY_REF
+#ifdef NUMERIC_DDCA_DISPLAY_REF
    g_snprintf(buf, 100, "DDCA_Display_Ref[%p]", ddca_dref);
 #else
    if (ddca_dref) {
