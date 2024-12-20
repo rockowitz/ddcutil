@@ -50,6 +50,7 @@ DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Ha
    } while(0);
 #endif
 
+
 #define WITH_VALIDATED_DR4(_ddca_dref, _ddcrc, _validation_options, _action) \
    do { \
       assert(library_initialized); \
@@ -61,8 +62,6 @@ DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Ha
          (_action); \
       } \
    } while(0);
-
-
 
 
 #ifdef UNUSED
