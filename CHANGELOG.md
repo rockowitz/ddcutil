@@ -148,6 +148,9 @@ file is libddcutil.so.5.1.3.
 - Add libddcutil only option ***--disable-watch-displays***, which unconditionally
   blocks **ddca_start_watch_displays()** from starting the thread that watches
   for display changes. Workaround for issue #470.
+- Opaque pointer DDCA_Display_Ref now contains a display reference id instead
+  of an actual pointer. It's type continues to be void* so client program use
+  of this type is unchanged.
 - Add libddutil option ***--f16***, which disables API.
 
 #### Fixed
@@ -171,6 +174,8 @@ file is libddcutil.so.5.1.3.
 - Protect hash table of open monitors to avoid a possible race condition.
 - Recover instead of abort when more than one non-removed display refs exist 
   for the same display.
+- Do not call ddca_stop_watch_displays() at library termination if client has
+  already called it. 
 - Use mutexes to control access to corruptable data structures.
 - Memory leaks.
 
@@ -216,6 +221,13 @@ file is libddcutil.so.5.1.3.
   - --i8   explicit loop interval in millisec for watch-mode POLL
   - --i9   explicit loop interval in millisec for watch-mode UDEV
   - --i10  explicit loop interval in millisec for watch-mode XEVENT
+
+#### Building 
+
+- If macro STATIC_FUNCTIONS_VISIBLE is defined in src/base/parms.h, the static
+  qualifier is removed from many functions to improve reports from valgrind, 
+  asan, and internally defined backtrace functions. 
+
 
 ## [2.1.4] 2024-02-17
 
