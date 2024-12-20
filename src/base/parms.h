@@ -14,8 +14,8 @@
 //
 
 // if defined, DDCA_Display_Ref contains display ref id number instead of Display_Ref *
-#define FUTURE_NUMERIC_DDCA_DISPLAY_REF
-// #undef FUTURE_NUMERIC_DDCA_DISPLAY_REF
+#define NUMERIC_DDCA_DISPLAY_REF
+// #undef NUMERIC_DDCA_DISPLAY_REF
 
 #define STATIC_FUNCTIONS_VISIBLE
 // #undef STATIC_FUNCTIONS_VISIBLE
