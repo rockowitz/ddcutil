@@ -25,5 +25,6 @@ char *   formatted_epoch_time_t(time_t epoch_seconds);
 
 #define NANOS2MICROS( _nanosec ) (((_nanosec) + 500)/1000)
 #define NANOS2MILLIS( _namosec ) (((_nanosec)+500000)/1000000)
+#define MILLIS2NANOS( _millisec) (_millisec*1000000)
 
 #endif /* TIMESTAMP_H_ */
