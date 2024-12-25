@@ -528,7 +528,7 @@ bool is_laptop_drm_connector_name(const char * connector_name) {
  *  @param  dh  display handle
  *  @return true if the EDID can be read, false if not
  */
-static bool
+STATIC bool
 i2c_check_edid_exists_by_dh(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dh = %s", dh_repr(dh));
@@ -672,18 +672,22 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 
    Error_Info * result = NULL;
    bool edid_exists = false;
+   for (int tryctr = 0; !edid_exists && tryctr < 3; tryctr++) {
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
-   if (businfo->drm_connector_name) {
-      i2c_edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
-      // edid_exists = i2c_check_bus_responsive_using_drm(businfo->drm_connector_name);  // fails for Nvidia
-   }
-   else {
-      // read edid
-      i2c_edid_exists = i2c_check_edid_exists_by_dh(dh);
-   }
+      if (businfo->drm_connector_name) {
+         i2c_edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
+         // edid_exists = i2c_check_bus_responsive_using_drm(businfo->drm_connector_name);  // fails for Nvidia
+      }
+      else {
+         // read edid
+         i2c_edid_exists = i2c_check_edid_exists_by_dh(dh);
+      }
 #else
-   edid_exists = i2c_check_edid_exists_by_dh(dh);
+      edid_exists = i2c_check_edid_exists_by_dh(dh);
 #endif
+      DBGMSG("Retrying i2c_check_edid_exists, tryctr = %d", tryctr);
+      sleep(1);   // hack
+   }
 
    if (!edid_exists) {
       result = ERRINFO_NEW(DDCRC_DISCONNECTED,
@@ -1380,11 +1384,6 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
 
    if (is_displaylink_device(businfo->busno))
       businfo->flags |= I2C_BUS_DISPLAYLINK;
-
-#ifdef OLD
-   if (is_sysfs_unreliable(businfo->busno))
-      businfo->flags |= I2C_BUS_SYSFS_UNRELIABLE;
-#endif
 
    if (is_sysfs_reliable_for_busno(businfo->busno))
       businfo->flags |= I2C_BUS_SYSFS_KNOWN_RELIABLE;
@@ -2167,6 +2166,8 @@ I2C_Bus_Info * i2c_get_and_check_bus_info(int busno) {
 
    bool new_info = false;
    I2C_Bus_Info* businfo =  i2c_get_bus_info(busno, &new_info);
+   if (!new_info)
+      i2c_reset_bus_info(businfo);
    i2c_check_bus2(businfo);
 #ifdef OLD
    if (new_info | !(businfo->flags&I2C_BUS_INITIAL_CHECK_DONE)) {
@@ -2465,7 +2466,6 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_detect_buses0);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_detect_x37);
-   RTTI_ADD_FUNC(i2c_discard_buses);
    RTTI_ADD_FUNC(i2c_edid_exists);
    RTTI_ADD_FUNC(i2c_enable_cross_instance_locks);
    RTTI_ADD_FUNC(i2c_open_bus);
