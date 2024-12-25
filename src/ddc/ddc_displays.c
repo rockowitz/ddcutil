@@ -1854,7 +1854,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
       }
       else if (all_video_adapters_implement_drm) {
          if (!dref->drm_connector) {
-       //     start_capture(DDCA_CAPTURE_STDERR);
+            // start_capture(DDCA_CAPTURE_STDERR);
             rpt_vstring(0, "Internal error in %s at line %d in file %s. dref->drm_connector == NULL",
                          __func__, __LINE__, __FILE__);
             SYSLOG2(DDCA_SYSLOG_ERROR,
@@ -1863,11 +1863,11 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
             dbgrpt_display_ref(dref, true, 1);
             rpt_nl();
             report_sys_drm_connectors(true, 1);
-      //      Null_Terminated_String_Array lines = end_capture_as_ntsa();
-      //      for (int ndx=0; lines[ndx]; ndx++) {
-      //         LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
-      //      }
-      //      ntsa_free(lines, true);
+            // Null_Terminated_String_Array lines = end_capture_as_ntsa();
+            // for (int ndx=0; lines[ndx]; ndx++) {
+            //    LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
+            // }
+            // ntsa_free(lines, true);
             // ddcrc = DDCRC_INTERNAL_ERROR;
             ddcrc = DDCRC_OK;
          }
