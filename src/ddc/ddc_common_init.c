@@ -406,6 +406,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       detect_phantom_displays = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F9)
       msg_to_syslog_only = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F16)
+      msg_to_syslog_only = prefix_report_output = true;
 
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F10)
