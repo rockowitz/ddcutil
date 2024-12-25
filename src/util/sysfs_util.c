@@ -403,11 +403,13 @@ rpt_attr_int(
       printf("(%s) pb1=%s\n", __func__, pb1);
 
    bool found = false;
-   *value_loc = -1;
+   if (value_loc)
+      *value_loc = -1;
 
+   int ival = -1;
    char * sval = read_sysfs_attr0(pb1, false);
    if (sval) {
-      found = str_to_int(sval, value_loc, 10);
+      found = str_to_int(sval, &ival, 10);
       if (!found) {
          char buf[40];
          g_strdup_printf(buf, 40, "Not an integer: %s", sval);
@@ -415,6 +417,8 @@ rpt_attr_int(
       }
       else {
          rpt_attr_output(depth, pb1, "=", sval);
+         if (value_loc)
+            *value_loc = ival;
       }
       free(sval);
    }
