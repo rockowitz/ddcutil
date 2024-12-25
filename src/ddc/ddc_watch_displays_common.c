@@ -20,8 +20,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-
-
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
@@ -68,6 +66,7 @@ int       stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
 int       udev_watch_loop_millisec     = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
 int       poll_watch_loop_millisec     = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 int       xevent_watch_loop_millisec   = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+bool      terminate_using_x11_event    = false;
 
 
 int calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
@@ -368,9 +367,10 @@ bool ddc_i2c_hotplug_change_handler(
       DBGMSG("buses before event processed:");
       i2c_dbgrpt_buses_summary(1);
       DBGMSG("display references before event processed:");
-      ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
-                                      false,    // report_businfo
-                                      1);       // depth
+      // ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
+      //                                 false,    // report_businfo
+      //                                 1);       // depth
+      ddc_dbgrpt_display_refs_terse(true, 1);
       rpt_nl();
    }
 
@@ -414,6 +414,7 @@ bool ddc_i2c_hotplug_change_handler(
        path.io_mode = DDCA_IO_I2C;
        path.path.i2c_busno = busno;
        Display_Ref* dref = ddc_add_display_by_businfo(businfo);
+       add_published_dref_id_by_dref(dref);
        ddc_emit_or_queue_display_status_event(
              DDCA_EVENT_DISPLAY_CONNECTED, businfo->drm_connector_name, dref, path, events_queue);
        event_emitted = true;
@@ -426,9 +427,10 @@ bool ddc_i2c_hotplug_change_handler(
       // i2c_dbgrpt_buses(false, false, 1);
       i2c_dbgrpt_buses_summary(1);
       rpt_label(0,"After display refs added or marked disconnected:");
-      ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
-                                      false,    // report_businfo
-                                      1);       // depth
+      // ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
+      //                                 false,    // report_businfo
+      //                                 1);       // depth
+      ddc_dbgrpt_display_refs_terse(true, 1);
    }
    DBGTRC_RET_BOOL(debug, TRACE_GROUP,event_emitted, "");
    return event_emitted;

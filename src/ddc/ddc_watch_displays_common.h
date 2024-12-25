@@ -22,10 +22,12 @@ extern int       udev_watch_loop_millisec;
 extern int       poll_watch_loop_millisec;
 extern int       xevent_watch_loop_millisec;
 extern int       calculated_watch_loop_millisec;
+extern bool      terminate_using_x11_event;
 
 int  calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);
 int  split_sleep(int watch_loop_millisec);
 void terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid);
+
 
 typedef void (*Display_Change_Handler)(
                  GPtrArray *          buses_removed,
@@ -42,11 +44,7 @@ typedef struct {
    DDC_Watch_Mode           watch_mode;
    int                      watch_loop_millisec;
    XEvent_Data *            evdata;
-#ifdef OLD_HOTPLUG_VERSION
-   Display_Change_Handler display_change_handler;
-   Bit_Set_32             drm_card_numbers;
-#endif
-} Watch_Displays_Data;
+  } Watch_Displays_Data;
 
 void free_watch_displays_data(Watch_Displays_Data * wdd);
 
