@@ -33,6 +33,7 @@ glib_util.c                \
 glib_string_util.c         \
 i2c_util.c                 \
 linux_util.c               \
+msg_util.c                 \
 multi_level_map.c          \
 pnp_ids.c                  \
 regex_util.c               \

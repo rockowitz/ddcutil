@@ -148,12 +148,6 @@ void show_output_level() {
  *
  */
 
-bool dbgtrc_show_time      =  false;  ///< include elapsed time in debug/trace output
-bool dbgtrc_show_wall_time =  false;  ///< include wall time in debug/trace output
-bool dbgtrc_show_thread_id =  false;  ///< include thread id in debug/trace output
-bool dbgtrc_show_process_id = false;  ///< include process id in debug/trace output
-bool dbgtrc_trace_to_syslog_only = false; ///< send trace output only to system log
-bool stdout_stderr_redirected = false;
 
 
 #ifdef UNUSED
@@ -364,28 +358,6 @@ void show_ddcutil_version() {
 void show_reporting() {
    show_output_level();
    show_ddcmsg();
-}
-
-
-/** Returns the wall time as a formatted string.
- *
- *  The string is built in a thread specific private buffer.  The returned
- *  string is valid until the next call of this function in the same thread.
- *
- *  @return formatted wall time
- */
-static char * formatted_wall_time() {
-   static GPrivate  formatted_wall_time_key = G_PRIVATE_INIT(g_free);
-   char * time_buf = get_thread_fixed_buffer(&formatted_wall_time_key, 40);
-
-   time_t epoch_seconds = time(NULL);
-   struct tm broken_down_time;
-   localtime_r(&epoch_seconds, &broken_down_time);
-
-   strftime(time_buf, 40, "%b %d %T", &broken_down_time);
-
-   // printf("(%s) |%s|\n", __func__, time_buf);
-   return time_buf;
 }
 
 
