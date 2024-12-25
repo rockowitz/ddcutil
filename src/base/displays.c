@@ -555,11 +555,11 @@ Display_Ref * dref_id_to_ptr(guint dref_id) {
 
 Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref = %p");
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref = %p", ddca_dref);
 
 #ifdef NUMERIC_DDCA_DISPLAY_REF
-   // if (debug)
-   //    dbgrpt_published_dref_hash(__func__, 1);
+    if (debug)
+       dbgrpt_published_dref_hash(__func__, 1);
    guint id = GPOINTER_TO_UINT(ddca_dref);
    Display_Ref * dref = g_hash_table_lookup(published_dref_hash, GUINT_TO_POINTER(id));
    // DBGMSF(debug, "ddca_dref=%p -> %s", ddca_dref, dref_reprx_t(dref));
@@ -879,6 +879,7 @@ void dbgrpt_display_ref_summary(Display_Ref * dref, bool include_businfo, int de
 
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
    rpt_vstring(depth, "%s", dref_reprx_t(dref));
+   rpt_vstring(d1, "dref_id              %d", dref->dref_id);
    // rpt_vstring(d1, "io_path:          %s", dpath_repr_t(&(dref->io_path)));
    rpt_vstring(d1, "flags:               %s", interpret_dref_flags_t(dref->flags) );
    rpt_vstring(d1, "mmid:                %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
@@ -1213,7 +1214,7 @@ const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
    char * result = NULL;
    switch (mode) {
    case Watch_Mode_Poll:     result = "Watch_Mode_Poll";     break;
-   case Watch_Mode_Xevent:     result = "Watch_Mode_Xorg";     break;
+   case Watch_Mode_Xevent:   result = "Watch_Mode_Xevent";   break;
    case Watch_Mode_Udev:     result = "Watch_Mode_Udev";     break;
    case Watch_Mode_Dynamic:  result = "Watch_Mode_Dynamic";  break;
    }
