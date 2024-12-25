@@ -40,7 +40,7 @@ void add_trace_groups(DDCA_Trace_Group trace_flags);
 
 void report_tracing(int depth);
 
-/** Checks if tracking is currently active for the globally defined TRACE_GROUP value,
+/** Checks if tracing is currently active for the globally defined TRACE_GROUP value,
  *  current file and function.
  *
  *  Wrappers call to **is_tracing()**, using the current **TRACE_GROUP** value,
