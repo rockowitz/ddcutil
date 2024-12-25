@@ -141,6 +141,8 @@ ddc_create_display_status_event(
       DDCA_IO_Path            io_path)
 {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "event_type=%d, connector_name=%s, dref=%s, io_path=%s",
+         event_type, connector_name, dref_reprx_t(dref) );
    DDCA_Display_Status_Event evt;
    DBGMSF(debug, "sizeof(DDCA_Display_Status_Event) = %d, sizeof(evt) = %d",
          sizeof(DDCA_Display_Status_Event), sizeof(evt));
@@ -154,6 +156,8 @@ ddc_create_display_status_event(
    evt.io_path = (dref) ? dref->io_path : io_path;
    evt.unused[0] = 0;
    evt.unused[1] = 0;
+
+   DBGTRC_RET_STRING(debug, DDCA_TRC_NONE, display_status_event_repr_t(evt), "");
    return evt;
 }
 
@@ -204,11 +208,11 @@ void ddc_emit_or_queue_display_status_event(
    bool debug = false;
    if (dref) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
-            dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),
+            dref, dref_reprx_t(dref), SBOOL(dref->flags&DREF_REMOVED),
             event_type, ddc_display_event_type_name(event_type), connector_name);
 #ifdef NEW
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
-            dref, dref_repr_t(dref),
+            dref, dref_reprx_t(dref),
             event_type, ddc_display_event_type_name(event_type));
 #endif
    }
@@ -230,8 +234,6 @@ void ddc_emit_or_queue_display_status_event(
       g_array_append_val(queue,evt);
    else
       ddc_emit_display_status_record(evt);
-
-   add_published_dref_id_by_dref(dref);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
