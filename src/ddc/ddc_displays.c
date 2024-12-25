@@ -500,23 +500,16 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       //    i2c_check_businfo_connector(businfo);
       // }
 
-      char * drm_dpms = NULL;
-      char * drm_status = NULL;
-      char * all_video_adapters_implement_drm = NULL;
-      int    drm_connector_id = -1;
       int depth = (debug) ? 1 : -1;
       if (businfo->drm_connector_name) {
          possibly_write_detect_to_status_by_connector_name(businfo->drm_connector_name);
-         RPT_ATTR_TEXT(depth, &drm_dpms,   "/sys/class/drm",businfo->drm_connector_name, "dpms");
-         RPT_ATTR_TEXT(depth, &drm_status, "/sys/class/drm",businfo->drm_connector_name, "status");
-         RPT_ATTR_TEXT(depth, &all_video_adapters_implement_drm,"/sys/class/drm",businfo->drm_connector_name, "enabled");
-         RPT_ATTR_INT (depth, &drm_connector_id,
-                                           "/sys/class/drm",businfo->drm_connector_name, "drm_connector_id");
+         rpt_label(0, "Current sysfs attributes:");
+         RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "dpms");
+         RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "status");
+         RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "enabled");
+         RPT_ATTR_INT (depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "drm_connector_id");
+         RPT_ATTR_EDID(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
       }
-      // not currently used, just free
-      free(drm_dpms);
-      free(drm_status);
-      free(all_video_adapters_implement_drm);
 
       // DBGMSG("monitor_state_tests = %s", SBOOL(monitor_state_tests));
       if (monitor_state_tests)
@@ -684,13 +677,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
    Error_Info * err = NULL;
    I2C_Bus_Info * businfo = NULL;
 
-
-   // Monitor_Model_Key mmk0 = monitor_model_key_value_from_edid(dref->pedid);
-   Monitor_Model_Key* mmk = dref->mmid;
-   // DBG("mmk0 = %s", mmk_repr(mmk0));
-   // DBG("mmk = %p -> %s", mmk, mmk_repr(*mmk));
-   // assert(monitor_model_key_eq(mmk0, *mmk));
-   bool disabled_mmk = is_disabled_mmk(*mmk);
+   bool disabled_mmk = is_disabled_mmk(*dref->mmid); // is this monitor model disabled?
    if (disabled_mmk) {
       dref->flags |= DREF_DDC_DISABLED;
       dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
@@ -705,9 +692,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
       if (businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE)
          skip_ddc_checks0 = true;
    }
-
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "skip_ddc_checks0 = %s", SBOOL(skip_ddc_checks0));
-
    if (skip_ddc_checks0) {
       dref->flags |= (DREF_DDC_COMMUNICATION_CHECKED |
                       DREF_DDC_COMMUNICATION_WORKING |
@@ -895,10 +880,20 @@ void ddc_dbgrpt_display_refs(bool include_invalid_displays, bool report_businfo,
 
 
 void ddc_dbgrpt_display_refs_summary(bool include_invalid_displays, bool report_businfo, int depth) {
-   GPtrArray * drefs = ddc_get_filtered_display_refs(include_invalid_displays, true);
+   GPtrArray * drefs = ddc_get_filtered_display_refs(include_invalid_displays, /* include removed */ true);
    // rpt_vstring(depth, "Reporting %d display refs", drefs->len);
    for (int ndx = 0; ndx < drefs->len; ndx++) {
       dbgrpt_display_ref_summary(g_ptr_array_index(drefs, ndx), report_businfo, depth);
+   }
+   g_ptr_array_free(drefs,true);
+}
+
+
+void ddc_dbgrpt_display_refs_terse(bool include_invalid_displays, int depth) {
+   GPtrArray * drefs = ddc_get_filtered_display_refs(include_invalid_displays, /* include removed */ true);
+   // rpt_vstring(depth, "Reporting %d display refs", drefs->len);
+   for (int ndx = 0; ndx < drefs->len; ndx++) {
+      rpt_vstring(depth, "%s", dref_reprx_t(g_ptr_array_index(drefs, ndx)));
    }
    g_ptr_array_free(drefs,true);
 }
@@ -1720,7 +1715,9 @@ ddc_redetect_displays() {
    DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
    DDCA_Status active_rc = ddc_get_active_watch_classes(&enabled_classes);
    if (active_rc == DDCRC_OK) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling ddc_stop_watch_displays()");
       DDCA_Status rc = ddc_stop_watch_displays(/*wait*/ true, &enabled_classes);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Called ddc_stop_watch_displays()");
       assert(rc == DDCRC_OK);
    }
    ddc_discard_detected_displays();
@@ -1851,13 +1848,18 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
       if (IS_DBGTRC(debug, DDCA_TRC_NONE))
          dbgrpt_display_ref(dref, /*include_businfo*/ false, 1);
       // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
-      if (dref->flags & DREF_REMOVED)
+      if (dref->flags & DREF_REMOVED) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Already marked removed");
          ddcrc = DDCRC_DISCONNECTED;
+      }
       else if (all_video_adapters_implement_drm) {
          if (!dref->drm_connector) {
        //     start_capture(DDCA_CAPTURE_STDERR);
             rpt_vstring(0, "Internal error in %s at line %d in file %s. dref->drm_connector == NULL",
                          __func__, __LINE__, __FILE__);
+            SYSLOG2(DDCA_SYSLOG_ERROR,
+                  "Internal error in %s at line %d in file %s. dref->drm_connector == NULL",
+                  __func__, __LINE__, __FILE__);
             dbgrpt_display_ref(dref, true, 1);
             rpt_nl();
             report_sys_drm_connectors(true, 1);
@@ -1869,12 +1871,26 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
             // ddcrc = DDCRC_INTERNAL_ERROR;
             ddcrc = DDCRC_OK;
          }
+
          else {
             if (ddcrc == 0 && (validation_options&DREF_VALIDATE_EDID)) {
                if (is_sysfs_reliable_for_busno(DREF_BUSNO(dref))) {
-                  possibly_write_detect_to_status_by_dref(dref);
-                  if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
-                     ddcrc = DDCRC_DISCONNECTED;
+                  int maxtries = 4;
+                  int sleep_millis = 500;
+                  for (int tryctr = 0; tryctr < maxtries; tryctr++) {
+                     if (tryctr > 0)
+                        usleep(MILLIS2NANOS(sleep_millis));
+                     possibly_write_detect_to_status_by_dref(dref);
+                     if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") ) {
+                        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "RPT_ATTR_EDID failed. tryctr=%d", tryctr);
+                        ddcrc = DDCRC_DISCONNECTED;
+                     }
+                     else {
+                        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "RPT_ATTR_EDID succeeded. tryctr=%d", tryctr);
+                        ddcrc = DDCRC_OK;
+                        break;
+                     }
+                  }
                }
                else {
                   // may be wrong if bug in driver, edid persists after disconnection
