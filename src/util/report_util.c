@@ -28,11 +28,14 @@
 
 #include "coredefs_base.h"
 #include "file_util_base.h"
+#include "msg_util.h"
 #include "string_util.h"
 
 #include "report_util.h"
 
 bool redirect_reports_to_syslog = false;
+bool prefix_report_output = false;
+
 
 #define DEFAULT_INDENT_SPACES_PER_DEPTH 3
 #define INDENT_SPACES_STACK_SIZE  16
@@ -280,14 +283,18 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
    if (debug)
       printf("(%s) Writing to %p\n", __func__, (void*)rpt_cur_output_dest());
 
+   char prefix[80] = {0};
+   if (prefix_report_output)
+      get_msg_decoration(prefix, 80, redirect_reports_to_syslog);
+
    if (collector) {
       g_ptr_array_add(collector, g_strdup_printf("%*s%s\n", rpt_get_indent(depth), "", title));
    }
    else {
       if (redirect_reports_to_syslog)
-         syslog(LOG_NOTICE, "%*s%s\n", rpt_get_indent(depth), "", title);
+         syslog(LOG_NOTICE, "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
       else
-         f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_get_indent(depth), "", title);
+         f0printf(rpt_cur_output_dest(), "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
    }
 }
 
