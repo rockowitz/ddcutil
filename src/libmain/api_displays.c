@@ -92,7 +92,16 @@ DDCA_Status ddci_validate_ddca_display_ref2(
       dbgrpt_published_dref_hash("published_dref_hash", 1);
    Display_Ref * dref = dref_from_published_ddca_dref(ddca_dref);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref_from_ddca_dref() returned %s", dref_reprx_t(dref));
-   DDCA_Status result =  (dref) ? ddc_validate_display_ref2(dref, validation_options) : DDCRC_ARG;
+   // should be redundant with ddc_validate_display_ref2(), but something not being caught
+   DDCA_Status result = DDCRC_OK;
+   if (dref->flags & DREF_REMOVED) {
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_REMOVED set!");
+      result = DDCRC_DISCONNECTED;
+   }
+   else {
+      result =  (dref) ? ddc_validate_display_ref2(dref, validation_options) : DDCRC_ARG;
+   }
+
    if (result == DDCRC_OK && dref_loc)
       *dref_loc = dref;
 
@@ -421,6 +430,7 @@ ddca_redetect_displays() {
 const char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref=%p", ddca_dref);
 
    Display_Ref * dref = dref_from_published_ddca_dref(ddca_dref);
    char * result = (dref) ? dref_reprx_t(dref) : "Invalid DDCA_Display_Ref";
