@@ -252,6 +252,7 @@ void init_ddc_services() {
 void terminate_ddc_services() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
+   ddc_stop_watch_displays(true,NULL);
    terminate_ddc_serialize();
    terminate_ddc_displays();  // must be called before terminate_ddc_packet_io()
    terminate_ddc_packet_io();
