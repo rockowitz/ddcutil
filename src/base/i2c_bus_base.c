@@ -155,9 +155,11 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
    assert(businfo);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d, flags=%s",
          businfo, businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
-   if (i2c_device_exists(businfo->busno))
-      businfo->flags &= ~(I2C_BUS_ACCESSIBLE | I2C_BUS_ADDR_X30 | I2C_BUS_ADDR_X37 |
-             I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID );
+   if (i2c_device_exists(businfo->busno)) {
+      //businfo->flags &= ~(I2C_BUS_ACCESSIBLE | I2C_BUS_ADDR_X30 | I2C_BUS_ADDR_X37 |
+      //       I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID );
+      businfo->flags = 0;
+   }
    if (businfo->edid) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Calling free_parsed_edid for %p, marker=%s",
             businfo->edid, hexstring_t((Byte*) businfo->marker, 4));
@@ -315,6 +317,18 @@ I2C_Bus_Info * i2c_add_bus(int busno) {
 #endif
 
 
+/** Gets the I2C_Bus_Info struct for the specified bus.
+ *  If the struct does not already exist, and the bus exists,
+ *  a new struct is allocated.
+ *
+ *  @param busno    I2C bus number
+ *  @param new_info location at which to return a flag
+ *                  indicating whether the struct returned
+ *                  is to a newly allocated instance
+ *  @return pointer to struct for the spscified bus
+ *                  NULL if no existing struct found and the
+ *                  bus does not exist
+ */
 I2C_Bus_Info * i2c_get_bus_info(int busno, bool* new_info) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
@@ -333,7 +347,6 @@ I2C_Bus_Info * i2c_get_bus_info(int busno, bool* new_info) {
          businfo, busno, SBOOL(*new_info));
    return businfo;
 }
-
 
 
 void i2c_remove_bus_by_businfo(I2C_Bus_Info * businfo) {
