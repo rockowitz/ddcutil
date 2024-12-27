@@ -2053,6 +2053,18 @@ ddc_enable_usb_display_detection(bool onoff) {
 }
 
 
+#ifdef UNUSED
+/** Indicates whether USB displays are to be detected
+ *
+ *  @return true/false
+ */
+bool
+ddc_is_usb_display_detection_enabled() {
+   return detect_usb_displays;
+}
+#endif
+
+
 /** If a display is present on a specified bus adds a Display_Ref
  *  for that display.
  *
