@@ -510,19 +510,29 @@ static bool vdbgtrc(
 {
    bool debug = false;
    if (debug) {
-      DBG("Starting. trace_group=0x%04x, options=0x%02x, funcname=%s, filename=%s,"
-          " lineno=%d, thread=%jd, fout() %s sysout, pre_prefix=|%s|, format=|%s|",
+      printf("Starting. trace_group=0x%04x, options=0x%02x, funcname=%s, filename=%s,"
+          " lineno=%d, thread=%jd, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
           trace_group, options, funcname, filename, lineno, get_thread_id(),
           (fout() == stdout) ? "==" : "!=",
           retval_info, format);
-      DBG("trace_api_call_depth=%d", trace_api_call_depth);
+      printf("trace_api_call_depth=%d\n", trace_api_call_depth);
+      printf("traced_function_stack_enabled = %s\n", sbool(traced_function_stack_enabled));
+   }
+   if (traced_function_stack_enabled && (options&DBGTRC_OPTIONS_STARTING)) {
+      // printf("(vdbgtrc) pushing %s\n", funcname);
+      push_traced_function(funcname);
+   }
+   if (traced_function_stack_enabled && (options&DBGTRC_OPTIONS_DONE)) {
+      // printf("(vdbgtrc) popping\n");
+      pop_traced_function(funcname);
    }
 
    bool msg_emitted = false;
 
    if (trace_api_call_depth > 0 || trace_callstack_call_depth > 0)
       trace_group = DDCA_TRC_ALL;
-   DBGF(debug, "Adjusted trace_group == 0x%02x", trace_group);
+   if (debug)
+      printf("Adjusted trace_group == 0x%02x\n", trace_group);
 
    bool perform_emit = true;
 // #ifndef ENABLE_TRACE
@@ -536,8 +546,8 @@ static bool vdbgtrc(
       if ( is_tracing(trace_group, filename, funcname)  ) {
          char * base_msg = g_strdup_vprintf(format, ap);
          if (debug) {
-            DBG("base_msg=%p->|%s|", base_msg, base_msg);
-            DBG("retval_info=%p->|%s|", retval_info, retval_info);
+            printf("base_msg=%p->|%s|\n", base_msg, base_msg);
+            printf("retval_info=%p->|%s|\n", retval_info, retval_info);
          }
          char elapsed_prefix[20]  = "";
          char walltime_prefix[20] = "";
@@ -563,7 +573,8 @@ static bool vdbgtrc(
                    : g_strdup_printf("%s%s%s%s(%-30s) %s%s",
                           process_prefix, thread_prefix, walltime_prefix, elapsed_prefix, funcname,
                           retval_info, base_msg);
-         DBGF(debug, "decorated_msg=%p->|%s|", decorated_msg, decorated_msg);
+         if (debug)
+            printf("decorated_msg=%p->|%s|\n", decorated_msg, decorated_msg);
 
 #ifdef NO
          if (trace_destination) {
@@ -629,7 +640,8 @@ static bool vdbgtrc(
       }
    }
 
-   DBGF(debug, "Done.   Returning %s", sbool(msg_emitted));
+   if (debug)
+      printf("Done.   Returning %s\n", sbool(msg_emitted));
    return msg_emitted;
 }
 
