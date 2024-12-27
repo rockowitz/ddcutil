@@ -607,6 +607,7 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    dref->creation_timestamp = cur_realtime_nanosec();
    // Per_Display_Data * pdd = pdd_get_per_display_data(io_path, true);
    // dref->pdd = pdd;
+   g_mutex_init(&dref->access_mutex);
    // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
    DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
    return dref;
@@ -745,6 +746,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
 #endif
             free(dref->drm_connector);
             free(dref->communication_error_summary);
+            g_mutex_clear(&dref->access_mutex);
             dref->marker[3] = 'x';
             free(dref);
             delete_published_dref_id(dref_id);
@@ -754,6 +756,29 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE, ddcrc, "");
    return ddcrc;
 }
+
+
+void dref_lock(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "locking dref %s ...", dref_reprx_t(dref));
+   bool was_locked = !g_mutex_trylock(&(dref->access_mutex));
+   if (was_locked ) {
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "dref %s is locked,  waiting ... ", dref_reprx_t(dref));
+      g_mutex_lock(&(dref->access_mutex));
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "dref %s", dref_reprx_t(dref));
+}
+
+
+void dref_unlock(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "unlocking dref %s ...", dref_reprx_t(dref));
+
+   g_mutex_unlock(&dref->access_mutex);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "dref %s unlocked", dref_reprx_t(dref));
+}
+
 
 #ifdef UNNEEDED
 // wraps free_display_ref() as GDestroyNotify()
@@ -1345,6 +1370,8 @@ void init_displays() {
    RTTI_ADD_FUNC(dbgrpt_display_ref);
    RTTI_ADD_FUNC(free_display_handle);
    RTTI_ADD_FUNC(free_display_ref);
+   RTTI_ADD_FUNC(dref_lock);
+   RTTI_ADD_FUNC(dref_unlock);
 
    init_published_dref_hash();
 }

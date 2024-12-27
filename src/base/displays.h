@@ -201,6 +201,7 @@ typedef struct _display_ref {
    int                      drm_connector_id;      // identical to Bus_Info.drm_connector_id
    char *                   communication_error_summary;
    uint64_t                 creation_timestamp;
+   GMutex                   access_mutex;
 } Display_Ref;
 
 
@@ -230,6 +231,8 @@ char *        dref_reprx_t(Display_Ref * dref);  // value valid until next call
 char *        ddca_dref_repr_t(DDCA_Display_Ref * ddca_dref);  // value valid until next call
 DDCA_Status   free_display_ref(Display_Ref * dref);
 Display_Ref * copy_display_ref(Display_Ref * dref);
+void          dref_lock(Display_Ref * dref);
+void          dref_unlock(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
 bool          dref_eq(Display_Ref* this, Display_Ref* that);
@@ -296,7 +299,6 @@ typedef enum {
 } DDC_Watch_Mode;
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
-
 
 bool add_disabled_display(Monitor_Model_Key * mmk);
 bool add_disabled_mmk_by_string(const char * mmid);
