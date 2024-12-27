@@ -348,7 +348,8 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
 bool ddc_i2c_hotplug_change_handler(
       Bit_Set_256    bs_buses_w_edid_removed,
       Bit_Set_256    bs_buses_w_edid_added,
-      GArray * events_queue)
+      GArray * events_queue,
+      GPtrArray* drefs_to_recheck)
 {
    bool debug = false;
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
@@ -415,6 +416,10 @@ bool ddc_i2c_hotplug_change_handler(
        path.path.i2c_busno = busno;
        Display_Ref* dref = ddc_add_display_by_businfo(businfo);
        add_published_dref_id_by_dref(dref);
+       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) && drefs_to_recheck) {
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
+          g_ptr_array_add(drefs_to_recheck, dref);
+       }
        ddc_emit_or_queue_display_status_event(
              DDCA_EVENT_DISPLAY_CONNECTED, businfo->drm_connector_name, dref, path, events_queue);
        event_emitted = true;
@@ -505,7 +510,8 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
    if (some_displays_disconnected) {
       if (extra_stabilization_millisec > 0) {
          char * s = g_strdup_printf(
-               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", extra_stabilization_millisec);
+               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...",
+               extra_stabilization_millisec);
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
