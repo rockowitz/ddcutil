@@ -21,6 +21,7 @@
 #include "util/ddcutil_config_file.h"
 #include "util/debug_util.h"
 #include "util/file_util.h"
+#include "util/msg_util.h"
 #include "util/regex_util.h"
 #include "util/report_util.h"
 #include "util/sysfs_filter_functions.h"
@@ -611,7 +612,7 @@ init_library_trace_file(char * library_trace_file, bool debug) {
  */
 void __attribute__ ((destructor))
 _ddca_terminate(void) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "library_initialized = %s", SBOOL(library_initialized));
    if (library_initialized) {
       if (debug)
@@ -1068,8 +1069,8 @@ void
 ddca_start_capture(DDCA_Capture_Option_Flags flags) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "flags=0x%02x", flags);
+   msg_decoration_suspended = true;
    start_capture(flags);
-
 }
 
 
@@ -1078,6 +1079,7 @@ ddca_end_capture(void) {
    bool debug = false;
    // DBGTRC_STARTING(debug, DDCA_TRC_API, "");
    char * result = end_capture();
+   msg_decoration_suspended = false;
    DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %p", result);
    return result;
 }
