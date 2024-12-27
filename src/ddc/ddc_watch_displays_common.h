@@ -77,7 +77,8 @@ void ddc_i2c_emit_deferred_events(GArray * deferred_events);
 bool ddc_i2c_hotplug_change_handler(
       Bit_Set_256    bs_buses_w_edid_removed,
       Bit_Set_256    bs_buses_w_edid_added,
-      GArray * events_queue);
+      GArray * events_queue,
+      GPtrArray * drefs_to_recheck);
 
 
 void init_ddc_watch_displays_common();
