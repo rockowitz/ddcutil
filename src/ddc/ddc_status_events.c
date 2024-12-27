@@ -103,7 +103,7 @@ const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    case DDCA_EVENT_DISPLAY_DISCONNECTED: result = "DDCA_EVENT_DISPLAY_DISCONNECTED"; break;
    case DDCA_EVENT_DPMS_AWAKE:           result = "DDCA_EVENT_DPMS_AWAKE";           break;
    case DDCA_EVENT_DPMS_ASLEEP:          result = "DDCA_EVENT_DPMS_ASLEEP";          break;
-   case DDCA_EVENT_UNUSED1:              result = "DDCA_EVENT_UNUSED1";              break;
+   case DDCA_EVENT_DDC_ENABLED:          result = "DDCA_EVENT_DDC_ENABLED";          break;
    case DDCA_EVENT_UNUSED2:              result = "DDCA_EVENT_UNUSED2";              break;
    }
    return result;
@@ -142,7 +142,7 @@ ddc_create_display_status_event(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "event_type=%d, connector_name=%s, dref=%s, io_path=%s",
-         event_type, connector_name, dref_reprx_t(dref) );
+         event_type, connector_name, dref_reprx_t(dref), dpath_short_name_t(&io_path) );
    DDCA_Display_Status_Event evt;
    DBGMSF(debug, "sizeof(DDCA_Display_Status_Event) = %d, sizeof(evt) = %d",
          sizeof(DDCA_Display_Status_Event), sizeof(evt));
@@ -207,8 +207,8 @@ void ddc_emit_or_queue_display_status_event(
 {
    bool debug = false;
    if (dref) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
-            dref, dref_reprx_t(dref), SBOOL(dref->flags&DREF_REMOVED),
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, dispno=%d, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
+            dref, dref_reprx_t(dref), dref->dispno, SBOOL(dref->flags&DREF_REMOVED),
             event_type, ddc_display_event_type_name(event_type), connector_name);
 #ifdef NEW
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
@@ -217,10 +217,11 @@ void ddc_emit_or_queue_display_status_event(
 #endif
    }
    else {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, io_path=%s, event_type=%d=%s",
+      DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, io_path=%s, event_type=%d=%s, dispno=%d",
             connector_name,
             dpath_repr_t(&io_path),
-            event_type, ddc_display_event_type_name(event_type));
+            event_type, ddc_display_event_type_name(event_type),
+            dref->dispno);
    }
 
    DDCA_Display_Status_Event evt = ddc_create_display_status_event(
@@ -228,6 +229,7 @@ void ddc_emit_or_queue_display_status_event(
          connector_name,
          dref,
          io_path);
+   DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "event: %s", display_status_event_repr(evt));
    // SYSLOG2(DDCA_SYSLOG_NOTICE, "event: %s", display_status_event_repr(evt));
 
    if (queue)
@@ -240,6 +242,7 @@ void ddc_emit_or_queue_display_status_event(
 
 
 void init_ddc_status_events() {
+   RTTI_ADD_FUNC(ddc_create_display_status_event);
    RTTI_ADD_FUNC(ddc_emit_or_queue_display_status_event);
    RTTI_ADD_FUNC(ddc_emit_display_status_record);
    RTTI_ADD_FUNC(ddc_register_display_status_callback);
