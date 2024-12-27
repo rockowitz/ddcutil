@@ -506,8 +506,8 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
 
 #endif
 
-
-bool is_laptop_drm_connector_name(const char * connector_name) {
+STATIC bool
+is_laptop_drm_connector_name(const char * connector_name) {
    bool debug = false;
    bool result = strstr(connector_name, "-eDP-") ||
                  strstr(connector_name, "-LVDS-");
@@ -672,7 +672,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 
    Error_Info * result = NULL;
    bool edid_exists = false;
-   for (int tryctr = 0; !edid_exists && tryctr < 3; tryctr++) {
+   for (int tryctr = 1; !edid_exists && tryctr <= 3; tryctr++) {
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
       if (businfo->drm_connector_name) {
          i2c_edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
@@ -685,13 +685,15 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 #else
       edid_exists = i2c_check_edid_exists_by_dh(dh);
 #endif
-      DBGMSG("Retrying i2c_check_edid_exists, tryctr = %d", tryctr);
+      DBGMSG("!!! Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
+      SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists, tryctr = %d", tryctr);
       sleep(1);   // hack
    }
 
    if (!edid_exists) {
-      result = ERRINFO_NEW(DDCRC_DISCONNECTED,
-               "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "!!! Checking EDID failed");
+      DBGMSG("!!! Checking EDID failed");
+      result = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d", businfo->busno);
    }
    else {
       char * driver = businfo->driver;
@@ -2457,8 +2459,13 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 
 
 static void init_i2c_bus_core_func_name_table() {
+   RTTI_ADD_FUNC(check_x37_for_businfo);
+   RTTI_ADD_FUNC(get_connector_edid);
+   RTTI_ADD_FUNC(get_i2c_device_numbers_using_udev);
+   RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
+   RTTI_ADD_FUNC(i2c_async_scan);
    RTTI_ADD_FUNC(i2c_check_bus2);
-   RTTI_ADD_FUNC(i2c_get_and_check_bus_info);
+   RTTI_ADD_FUNC(i2c_check_edid_exists_by_dh);
    RTTI_ADD_FUNC(i2c_check_open_bus_alive);
    RTTI_ADD_FUNC(i2c_close_bus);
    RTTI_ADD_FUNC(i2c_detect_attached_buses);
@@ -2468,18 +2475,14 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_detect_x37);
    RTTI_ADD_FUNC(i2c_edid_exists);
    RTTI_ADD_FUNC(i2c_enable_cross_instance_locks);
+   RTTI_ADD_FUNC(i2c_get_and_check_bus_info);
+   RTTI_ADD_FUNC(i2c_non_async_scan);
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_report_active_bus);
-   RTTI_ADD_FUNC(is_laptop_drm_connector_name);
    RTTI_ADD_FUNC(i2c_threaded_initial_checks_by_businfo);
-   RTTI_ADD_FUNC(i2c_non_async_scan);
-   RTTI_ADD_FUNC(i2c_async_scan);
-   RTTI_ADD_FUNC(is_laptop_for_businfo);
-   RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
    RTTI_ADD_FUNC(is_adapter_class_display_controller);
-   RTTI_ADD_FUNC(get_connector_edid);
-   RTTI_ADD_FUNC(check_x37_for_businfo);
-   RTTI_ADD_FUNC(get_i2c_device_numbers_using_udev);
+   RTTI_ADD_FUNC(is_laptop_drm_connector_name);
+   RTTI_ADD_FUNC(is_laptop_for_businfo);
 }
 
 
