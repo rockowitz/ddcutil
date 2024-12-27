@@ -245,14 +245,17 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
             RPT_ATTR_TEXT(depth+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "enabled");
             RPT_ATTR_TEXT(depth+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "status");
             RPT_ATTR_TEXT(depth+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "dpms");
-            RPT_ATTR_EDID(depth+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "edid");
+            // RPT_ATTR_EDID(depth+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "edid");
+            bool edid_found = GET_ATTR_EDID(NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
+            rpt_vstring(depth, "/sys/class/drm/%s/edid:                                  %s",
+                  businfo->drm_connector_name, (edid_found) ? "Found" : "Not found");
          }
       }
       // not useful and clutters the output
       // i2c_report_functionality_flags(businfo->functionality, /* maxline */ 90, depth);
-      if (businfo->edid) {
-         report_parsed_edid(businfo->edid, true /* verbose */, depth);
-      }
+      // if (businfo->edid) {
+      //    report_parsed_edid(businfo->edid, true /* verbose */, depth);
+      // }
       rpt_vstring(depth, "last_checked_asleep:       %s", sbool(businfo->last_checked_dpms_asleep));
    }
 #ifdef OUT    // sole non-sysfs use of i2c_sysfs_i2c_sys_info.c:
