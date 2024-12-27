@@ -482,10 +482,10 @@ check_how_unsupported_reported(Display_Handle * dh) {
  *  verbose output is distracting.
  */
 STATIC bool
-ddc_initial_checks_by_dh(Display_Handle * dh) {
+ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
    bool debug = false;
    TRACED_ASSERT(dh && dh->dref);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newly_added=%s", dh_repr(dh), sbool(newly_added));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s",interpret_dref_flags_t(dh->dref->flags));
    I2C_Bus_Info * businfo = dh->dref->detail;
    Per_Display_Data * pdd = dh->dref->pdd;
@@ -500,7 +500,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       //    i2c_check_businfo_connector(businfo);
       // }
 
-      int depth = (debug) ? 1 : -1;
+      int depth = IS_DBGTRC(debug, DDCA_TRC_NONE) ? 1 : -1;
       if (businfo->drm_connector_name) {
          possibly_write_detect_to_status_by_connector_name(businfo->drm_connector_name);
          rpt_label(0, "Current sysfs attributes:");
@@ -508,7 +508,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "status");
          RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "enabled");
          RPT_ATTR_INT (depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "drm_connector_id");
-         RPT_ATTR_EDID(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
+         bool edid_found = GET_ATTR_EDID(NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
+         rpt_vstring(depth, "/sys/class/drm/%s/edid:                                     %s",
+               businfo->drm_connector_name, (edid_found) ? "Found" : "Not found");
+         // RPT_ATTR_EDID(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
       }
 
       // DBGMSG("monitor_state_tests = %s", SBOOL(monitor_state_tests));
@@ -539,23 +542,33 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
       if (ddc_excp) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
+            "!!!!! busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
             businfo->busno,
             pdd_get_adjusted_sleep_multiplier(pdd),
             feature_code,
             errinfo_summary(ddc_excp));
-            SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
-               "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
-               businfo->busno,
-               pdd_get_adjusted_sleep_multiplier(pdd),
-               feature_code,
-               errinfo_summary(ddc_excp));
+            char * msg = g_strdup_printf( "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
+                  businfo->busno,
+                  pdd_get_adjusted_sleep_multiplier(pdd),
+                  feature_code,
+                  errinfo_summary(ddc_excp));
+            if (ddc_excp)
+               SYSLOG2(DDCA_SYSLOG_ERROR, "!!! %s", msg);
+            else
+               SYSLOG2(DDCA_SYSLOG_INFO, "%s", msg);
+            free(msg);
+
             dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
             bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
-            if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES &&
+            if (newly_added || (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES &&
                                             dynamic_sleep_active &&
-                                            initial_multiplier < 1.0f)
+                                            initial_multiplier < 1.0f))
             {
+               if (dynamic_sleep_active) {
+                  DBGMSG("Additional 1 second sleep for newly added display");
+                  SYSLOG2(DDCA_SYSLOG_ERROR, "Additional 1 second sleep for newly added display");
+                  sleep(1);
+               }
                // turn off optimization in case it's on
                if (pdd_is_dynamic_sleep_active(pdd) ) {
                   ERRINFO_FREE(ddc_excp);
@@ -668,9 +681,9 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
  *  flag in reply packets to indicate an unsupported feature.
  */
 bool
-ddc_initial_checks_by_dref(Display_Ref * dref) {
+ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, newly_added=%s", dref_repr_t(dref), sbool(newly_added));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial dref->flags: %s", interpret_dref_flags_t(dref->flags));
 
    bool result = false;
@@ -708,7 +721,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
 
       err = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
       if (!err)  {
-         result = ddc_initial_checks_by_dh(dh);
+         result = ddc_initial_checks_by_dh(dh, newly_added);
          ddc_close_display_wo_return(dh);
       }
       else {
@@ -747,6 +760,32 @@ bye:
 }
 
 
+#ifdef UNUSED
+bool ddc_recheck_dh(Display_Handle * dh) {
+   bool result = false;
+
+
+   return result;
+}
+#endif
+
+
+bool
+ddc_recheck_dref(Display_Ref * dref) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
+   bool result = false;
+
+   dref_lock(dref);
+   dref->flags = 0;
+   result = ddc_initial_checks_by_dref(dref, false);
+   dref_unlock(dref);
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   return result;
+}
+
+
 /** Performs initial checks in a thread
  *
  *  @param data display reference
@@ -759,7 +798,7 @@ threaded_initial_checks_by_dref(gpointer data) {
    TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref) );
 
-   ddc_initial_checks_by_dref(dref);
+   ddc_initial_checks_by_dref(dref, false);
    // g_thread_exit(NULL);
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. dref = %s,", dref_repr_t(dref) );
    return NULL;
@@ -812,7 +851,7 @@ ddc_non_async_scan(GPtrArray * all_displays) {
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-      ddc_initial_checks_by_dref(dref);
+      ddc_initial_checks_by_dref(dref, false);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -2014,18 +2053,6 @@ ddc_enable_usb_display_detection(bool onoff) {
 }
 
 
-#ifdef UNUSED
-/** Indicates whether USB displays are to be detected
- *
- *  @return true/false
- */
-bool
-ddc_is_usb_display_detection_enabled() {
-   return detect_usb_displays;
-}
-#endif
-
-
 /** If a display is present on a specified bus adds a Display_Ref
  *  for that display.
  *
@@ -2069,7 +2096,9 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       dref->drm_connector = g_strdup(businfo->drm_connector_name);
       dref->drm_connector_id = businfo->drm_connector_id;
 
-      ddc_initial_checks_by_dref(dref);
+      ddc_initial_checks_by_dref(dref, true);
+      if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
+         dref->dispno = DISPNO_INVALID;
       ddc_add_display_ref(dref);
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
@@ -2206,10 +2235,8 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_mark_display_ref_removed);
    RTTI_ADD_FUNC(ddc_non_async_scan);
+   RTTI_ADD_FUNC(ddc_recheck_dref);
    RTTI_ADD_FUNC(ddc_redetect_displays);
-#ifdef OLD
-   RTTI_ADD_FUNC(ddc_validate_display_ref);
-#endif
    RTTI_ADD_FUNC(ddc_validate_display_ref2);
    RTTI_ADD_FUNC(drefs_edid_equal);
    RTTI_ADD_FUNC(filter_phantom_displays);

@@ -29,7 +29,8 @@ extern bool  skip_ddc_checks;
 
 // Initial Checks
 void         ddc_set_async_threshold(int threshold);
-bool         ddc_initial_checks_by_dref(Display_Ref * dref);
+bool         ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added);
+bool         ddc_recheck_dref(Display_Ref * dref);
 
 // Get Display Information
 GPtrArray *  ddc_get_all_display_refs();  // returns GPtrArray of Display_Ref instances, including invalid displays
@@ -56,6 +57,7 @@ typedef enum {
    DREF_VALIDATE_BASIC_ONLY         = 0,
    DREF_VALIDATE_EDID               = 1,
    DREF_VALIDATE_AWAKE              = 2,
+   DREF_VALIDATE_DDC_COMMUNICATION_FAILURE_OK = 3,
 } Dref_Validation_Options;
 #define DREF_VALIDATE_ALL (DREF_VALIDATE_EDID | DREF_VALIDATE_AWAKE)
 DDCA_Status  ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation_options);
@@ -69,7 +71,6 @@ Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connecto
              ddc_get_dref_by_busno_or_connector(_busno,NULL, (_ignore))
 #define      DDC_GET_DREF_BY_CONNECTOR(_connector_name, _ignore_invalid) \
              ddc_get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
-
 
 void         ddc_add_display_ref(Display_Ref * dref);
 void         ddc_mark_display_ref_removed(Display_Ref* dref);
