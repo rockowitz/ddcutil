@@ -283,9 +283,9 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
    if (debug)
       printf("(%s) Writing to %p\n", __func__, (void*)rpt_cur_output_dest());
 
-   char prefix[80] = {0};
+   char prefix[100] = {0};
    if (prefix_report_output)
-      get_msg_decoration(prefix, 80, redirect_reports_to_syslog);
+      get_msg_decoration(prefix, 100, redirect_reports_to_syslog);
 
    if (collector) {
       g_ptr_array_add(collector, g_strdup_printf("%*s%s\n", rpt_get_indent(depth), "", title));
