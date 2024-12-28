@@ -23,6 +23,7 @@
 #include "usb/usb_displays.h"
 #endif
 
+extern int   dispno_max;
 extern bool  monitor_state_tests;
 extern bool  detect_phantom_displays;
 extern bool  skip_ddc_checks;

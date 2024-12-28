@@ -84,7 +84,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 static GPtrArray * all_display_refs = NULL;         // all detected displays, array of Display_Ref *
 static GMutex      all_display_refs_mutex;
 static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
-static int dispno_max = 0;                      // highest assigned display number
+int dispno_max = 0;                      // highest assigned display number
 static int ddc_detect_async_threshold = DEFAULT_DDC_CHECK_ASYNC_THRESHOLD;
 #ifdef ENABLE_USB
 static bool detect_usb_displays = true;
