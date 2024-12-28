@@ -120,6 +120,7 @@ void terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid) {
        DBGMSG("Thread %d not found", cur_tid);
     }
     if (!pid_found || !tid_found) {
+       free_traced_function_stack();
        g_thread_exit(GINT_TO_POINTER(-1));
     }
 }
@@ -203,7 +204,6 @@ void ddc_i2c_filter_sleep_events(GArray * events) {
 
 void ddc_i2c_emit_deferred_events(GArray * deferred_events) {
    bool debug = false;
-
 
 #ifdef TEMPORARY_SIMPLIFICATION
    if (deferred_events->len > 1) {  // FUTURE ENHANCMENT, filter out meaningless events
@@ -348,8 +348,8 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
 bool ddc_i2c_hotplug_change_handler(
       Bit_Set_256    bs_buses_w_edid_removed,
       Bit_Set_256    bs_buses_w_edid_added,
-      GArray * events_queue,
-      GPtrArray* drefs_to_recheck)
+      GArray *       events_queue,
+      GPtrArray*     drefs_to_recheck)
 {
    bool debug = false;
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
