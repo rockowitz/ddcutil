@@ -79,14 +79,20 @@ static GMutex    watch_thread_mutex;
 // Common to all variants
 //
 
-
+/** Determines the actual watch mode to be used
+ *
+ *  @param  initial_mode   mode requested
+ *  @param  xev_data_loc  address at which to set the address of a newly allocated
+ *                        XEvent_Data struct, if the resolved mode is Watch_Mode_Xevent
+ *  @return actual watch mode to be used
+ */
 DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "initial_mode=%s xev_data_loc=%p", ddc_watch_mode_name(initial_mode), xev_data_loc);
 
    DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
+   XEvent_Data * xevdata = NULL;
    *xev_data_loc = NULL;
-
 
 #ifndef ENABLE_UDEV
    if (initial_mode == Watch_Mode_Udev)
@@ -122,13 +128,19 @@ DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** x
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "initially resolved watch mode = %s", ddc_watch_mode_name(resolved_watch_mode));
 
    if (resolved_watch_mode == Watch_Mode_Xevent) {
-      *xev_data_loc  = ddc_init_xevent_screen_change_notification();
-      if (!xev_data_loc) {
-         ddc_watch_mode = Watch_Mode_Poll;
+      xevdata  = ddc_init_xevent_screen_change_notification();
+      // *xev_data_loc  = ddc_init_xevent_screen_change_notification();
+      if (!xevdata) {
+         resolved_watch_mode = Watch_Mode_Poll;
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR api unavailable. Switching to Watch_Mode_Poll");
       }
    }
 
+   DBG( "xevdata=%p, watch_mode = %s", xevdata, ddc_watch_mode_name(resolved_watch_mode));
+
+   *xev_data_loc = xevdata;
+   // ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xevdata);
+   ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, *xev_data_loc);
    if (*xev_data_loc && IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       dbgrpt_xevent_data(*xev_data_loc,  0);
    }
@@ -136,6 +148,11 @@ DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** x
          ddc_watch_mode_name(resolved_watch_mode),  *xev_data_loc);
    return resolved_watch_mode;
 }
+
+
+// hacks
+DDC_Watch_Mode resolved_watch_mode;
+Watch_Displays_Data * global_wdd;
 
 /** Starts thread that watches for changes in display connection status.
  *
@@ -151,6 +168,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
         ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    Error_Info * err = NULL;
    XEvent_Data * xev_data = NULL;
+   // DDC_Watch_Mode resolved_watch_mode;
 
    if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
@@ -162,7 +180,8 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(ddc_watch_mode, &xev_data);
+   resolved_watch_mode = resolve_watch_mode(ddc_watch_mode, &xev_data);
+   ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
 
    int calculated_watch_loop_millisec = calc_watch_loop_millisec(resolved_watch_mode);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
@@ -186,27 +205,31 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    }
    else {
       terminate_watch_thread = false;
-      Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
-      memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-      data->main_process_id = getpid();
-      data->main_thread_id = get_thread_id();  // alt = syscall(SYS_gettid);
+
+      Watch_Displays_Data * wdd = calloc(1, sizeof(Watch_Displays_Data));
+      memcpy(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
+      wdd->main_process_id = getpid();
+      wdd->main_thread_id = get_thread_id();  // alt = syscall(SYS_gettid);
       // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
-      data->event_classes = event_classes;
-      data->watch_mode = resolved_watch_mode;
-      data->watch_loop_millisec = calculated_watch_loop_millisec;
+      wdd->event_classes = event_classes;
+      wdd->watch_mode = resolved_watch_mode;
+      wdd->watch_loop_millisec = calculated_watch_loop_millisec;
       if (xev_data)
-         data->evdata = xev_data;
+         wdd->evdata = xev_data;
+      global_wdd = wdd;
 
       GThreadFunc watch_thread_func = (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
                                         ? ddc_watch_displays_without_udev
                                         : ddc_watch_displays_udev;
 
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
                        watch_thread_func,
-                       data);
+                       wdd);
       active_classes = event_classes;
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil watch thread started");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started watch_thread = %p", watch_thread);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil watch thread %p started", watch_thread);
    }
    g_mutex_unlock(&watch_thread_mutex);
 
@@ -234,10 +257,24 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
 #ifdef ENABLE_UDEV
    if (enabled_classes_loc)
       *enabled_classes_loc = DDCA_EVENT_CLASS_NONE;
+   DBGMSG("resolved_watch_mode = %s", ddc_watch_mode_name(resolved_watch_mode));
+
    g_mutex_lock(&watch_thread_mutex);
 
    if (watch_thread) {
-      terminate_watch_thread = true;  // signal watch thread to terminate
+      if (resolved_watch_mode == Watch_Mode_Xevent) {
+         if (terminate_using_x11_event) {
+            ddc_send_x11_termination_message(global_wdd->evdata);
+            sleep(2);
+         }
+         else {
+            terminate_watch_thread = true;
+         }
+      }
+      else {
+         terminate_watch_thread = true;  // signal watch thread to terminate
+      }
+
       // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
       // usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
       if (wait)
