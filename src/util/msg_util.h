@@ -28,5 +28,6 @@ char*      peek_traced_function();
 bool       pop_traced_function(const char * funcname);
 void       debug_traced_function_stack();
 GPtrArray* get_traced_callstack(bool most_recent_last);
+void       free_traced_function_stack();
 
 #endif /* MSG_UTIL_H_ */

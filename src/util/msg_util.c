@@ -31,6 +31,7 @@ static __thread GQueue * traced_function_stack;
 __thread pid_t process_id = 0;
 __thread pid_t thread_id  = 0;
 
+
 static inline pid_t tid() {
    if (!thread_id)
       thread_id = syscall(SYS_gettid);
@@ -83,6 +84,7 @@ char * get_msg_decoration(char * buf, uint bufsize, bool dest_syslog) {
 
    return buf;
 }
+
 
 /** Returns the wall time as a formatted string.
  *
@@ -139,7 +141,6 @@ GPtrArray * get_traced_callstack(bool most_recent_last) {
 }
 
 
-
 void push_traced_function(const char * funcname) {
    // printf("(push_traced_function, funcname = %s, traced_function_stack_enabled=%d\n",
    //       funcname, traced_function_stack_enabled);
@@ -188,4 +189,9 @@ bool pop_traced_function(const char * funcname) {
 }
 
 
+void free_traced_function_stack() {
+   // printf("(free_traced_function_stack) Executing\n");
+   if (traced_function_stack)
+      g_queue_free_full(traced_function_stack, g_free);
+}
 
