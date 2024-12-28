@@ -801,6 +801,7 @@ threaded_initial_checks_by_dref(gpointer data) {
    ddc_initial_checks_by_dref(dref, false);
    // g_thread_exit(NULL);
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. dref = %s,", dref_repr_t(dref) );
+   free_traced_function_stack();
    return NULL;
 }
 
