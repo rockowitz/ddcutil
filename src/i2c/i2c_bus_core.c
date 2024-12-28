@@ -1919,6 +1919,7 @@ i2c_threaded_initial_checks_by_businfo(gpointer data) {
    // g_thread_exit(NULL);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. bus=/dev/i2c-%d", businfo->busno );
+   free_traced_function_stack();
    return NULL;
 }
 
