@@ -2095,7 +2095,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
    if (businfo->edid) {
       dref = create_bus_display_ref(businfo->busno);
       // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
-      dref->dispno = ++dispno_max;   // dispno not used in libddcutil except to indicate invalid
+      // dref->dispno = ++dispno_max;   // dispno not used in libddcutil except to indicate invalid
       dref->pedid = copy_parsed_edid(businfo->edid);
       dref->mmid  = mmk_new(
                        dref->pedid->mfg_id,
@@ -2112,6 +2112,8 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       ddc_initial_checks_by_dref(dref, true);
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
          dref->dispno = DISPNO_INVALID;
+      else
+         dref->dispno = ++dispno_max;
       ddc_add_display_ref(dref);
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
