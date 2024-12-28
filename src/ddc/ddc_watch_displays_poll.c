@@ -256,13 +256,15 @@ void ddc_poll_recheck_bus(
 void process_screen_change_event(
       BS256* p_bs_old_attached_buses,
       BS256* p_bs_old_buses_w_edid,
-      GArray * deferred_events
+      GArray * deferred_events,
+      GPtrArray * displays_to_recheck
       )
 {
-   bool debug = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "p_bs_old_attached_buses -> %s, *p_bs_old_buses_w_edid -> %s",
-         bs256_to_string_decimal_t(*p_bs_old_attached_buses, "", ","),
-         bs256_to_string_decimal_t(*p_bs_old_buses_w_edid,   "", ",")) ;
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "*p_bs_old_attached_buses -> %s",
+                         bs256_to_string_decimal_t(*p_bs_old_attached_buses, "", ","));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "*p_bs_old_buses_w_edid   -> %s",
+                         bs256_to_string_decimal_t(*p_bs_old_buses_w_edid,   "", ",")) ;
 
    BS256 bs_old_attached_buses = *p_bs_old_attached_buses;
    BS256 bs_old_buses_w_edid   = *p_bs_old_buses_w_edid;
@@ -339,7 +341,8 @@ void process_screen_change_event(
          hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
                                               bs_removed_buses_w_edid,
                                               bs_added_buses_w_edid,
-                                              deferred_events);
+                                              deferred_events,
+                                              displays_to_recheck);
       }
 
       if (hotplug_change_handler_emitted)
@@ -458,14 +461,75 @@ void process_screen_change_event(
       *p_bs_old_attached_buses  = bs_old_attached_buses;
       *p_bs_old_buses_w_edid    = bs_old_buses_w_edid;;
 
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "p_bs_old_attached_buses -> %s, *p_bs_old_buses_w_edid -> %s",
-            bs256_to_string_decimal_t(*p_bs_old_attached_buses, "", ","),
+      DBGTRC_DONE(debug, DDCA_TRC_NONE, "*p_bs_old_attached_buses -> %s",
+            bs256_to_string_decimal_t(*p_bs_old_attached_buses, "", ","));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "*p_bs_old_buses_w_edid -> %s",
             bs256_to_string_decimal_t(*p_bs_old_buses_w_edid,   "", ","));
 }
 
 
-gpointer ddc_watch_displays_without_udev(gpointer data) {
+int simple_ipow(int base, int exponent) {
+   assert(exponent >= 0);
+   int result = 1;
+   for (int i = 0; i < exponent; i++) {
+      result = result * base;
+   }
+   return result;
+}
+
+typedef struct {
+   GPtrArray * displays_to_recheck;
+   GArray *    deferred_event_queue;
+   GMutex *    deferred_event_queue_mutex;
+} Recheck_Displays_Data;
+
+gpointer ddc_recheck_displays_func(gpointer data) {
    bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "data=%p", data);
+   Recheck_Displays_Data*  rdd = (Recheck_Displays_Data *) data;
+   GPtrArray* displays_to_recheck = rdd->displays_to_recheck;
+
+   for (int sleepctr = 0; sleepctr < 4 && displays_to_recheck->len > 0; sleepctr++) {
+      int sleep_sec = simple_ipow(2, sleepctr);
+      sleep(sleep_sec);
+
+      for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
+          Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
+          DBGMSG("   rechecking %s", dref_repr_t(dref));
+          bool ddc_enabled = ddc_recheck_dref(dref);
+          if (!ddc_enabled) {
+             DBGMSG("ddc still not enabled");
+          }
+          else {
+             DBGMSG("ddc became enabled for %s after %d seconds", dref_reprx_t(dref), sleep_sec);
+
+             ddc_emit_or_queue_display_status_event(
+                   DDCA_EVENT_DDC_ENABLED,
+                   dref->drm_connector,
+                   dref,
+                   dref->io_path,
+                   rdd->deferred_event_queue);
+          }
+          g_ptr_array_remove_index(displays_to_recheck, ndx);
+       }
+
+      for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
+          Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
+          DBGMSG("ddc communication did not become enabled for display %s", dref_reprx_t(dref));
+          g_ptr_array_remove_index(displays_to_recheck, ndx);
+      }
+      g_ptr_array_free(displays_to_recheck, true);
+      // free(rdd); // ?? needed?
+   }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "terminating recheck thread");
+   free_traced_function_stack();
+   g_thread_exit(NULL);
+}
+
+
+gpointer ddc_watch_displays_without_udev(gpointer data) {
+   bool debug = false;
    // bool debug_sysfs_state = false;
    bool use_deferred_event_queue = false;
    // bool report_events = true;
@@ -474,14 +538,18 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
    assert(wdd->watch_mode == Watch_Mode_Xevent  || wdd->watch_mode == Watch_Mode_Poll);
    if (wdd->watch_mode == Watch_Mode_Xevent)
       assert(wdd->evdata);
+   GPtrArray * displays_to_recheck = g_ptr_array_new();
+   // g_mutex_init(displays_to_recheck_mutex);
 
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
          "Caller process id: %d, caller thread id: %d, event_classes=0x%02x, terminate_using_x11_event=%s",
          wdd->main_process_id, wdd->main_thread_id, wdd->event_classes, sbool(terminate_using_x11_event));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for display connection events: %s",
          sbool(wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION));
+#ifdef WATCH_DPMS
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for dpms events: %s",
           sbool(wdd->event_classes & DDCA_EVENT_CLASS_DPMS));
+#endif
 
    // may need to wait on startup
    while (!all_i2c_buses) {
@@ -490,15 +558,12 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
       sleep_millis(1000*1000);
    }
 
-#ifdef WATCH_ASLEEP
-   bool watch_dpms = wdd->event_classes & DDCA_EVENT_CLASS_DPMS;
-#endif
-
    pid_t cur_pid = getpid();
    pid_t cur_tid = get_thread_id();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Our process id: %d, our thread id: %d", cur_pid, cur_tid);
 
-#ifdef WATCH_ASLEEP
+#ifdef WATCH_DPMS
+   bool watch_dpms = wdd->event_classes & DDCA_EVENT_CLASS_DPMS;
    BS256 bs_sleepy_buses   = EMPTY_BIT_SET_256;
 #endif
    BS256 bs_old_attached_buses = buses_bitset_from_businfo_array(all_i2c_buses, false);
@@ -520,10 +585,11 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
     }
 
    GArray * deferred_events = NULL;
-   if (use_deferred_event_queue)
+   if (use_deferred_event_queue) {
       deferred_events = g_array_new( false,      // zero_terminated
                                      false,       // clear
                                      sizeof(DDCA_Display_Status_Event));
+   }
    bool skip_next_sleep = false;
    int slept = 0;   // will contain length of final sleep
 
@@ -562,7 +628,24 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
       }
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Processing screen change event");
-      process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid, deferred_events);
+      process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
+            deferred_events,
+            displays_to_recheck);
+      if (displays_to_recheck->len > 0) {
+         DBGMSG("HANDLING displays_to_recheck");
+
+         Recheck_Displays_Data * rdd = calloc(1, sizeof(Recheck_Displays_Data));
+         rdd->displays_to_recheck = displays_to_recheck;
+         rdd->deferred_event_queue = deferred_events;
+
+         /* GThread* recheck_thread = */
+         g_thread_new("recheck_displays",             // optional thread name
+                      ddc_recheck_displays_func,
+                      displays_to_recheck);
+         // thread ddc_recheck_displays_func will free displays_to_recheck passed to it.
+         displays_to_recheck = g_ptr_array_new();
+      }
+
    } // while()
 
    // n. slept == 0 if no sleep was performed
@@ -575,6 +658,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
    if (watch_dpms)
       g_ptr_array_free(sleepy_connectors, true);
 #endif
+   free_traced_function_stack();
    g_thread_exit(0);
    assert(false);    // avoid clang warning re wdd use after free
    return NULL;    // satisfy compiler check that value returned
