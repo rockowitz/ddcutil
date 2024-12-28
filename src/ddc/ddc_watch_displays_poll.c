@@ -489,19 +489,24 @@ gpointer ddc_recheck_displays_func(gpointer data) {
    Recheck_Displays_Data*  rdd = (Recheck_Displays_Data *) data;
    GPtrArray* displays_to_recheck = rdd->displays_to_recheck;
 
+   int sleep_sec = 0;
    for (int sleepctr = 0; sleepctr < 4 && displays_to_recheck->len > 0; sleepctr++) {
-      int sleep_sec = simple_ipow(2, sleepctr);
+      sleep_sec = simple_ipow(2, sleepctr);
       sleep(sleep_sec);
 
       for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
           Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
-          DBGMSG("   rechecking %s", dref_repr_t(dref));
+          // DBGMSG("   rechecking %s", dref_repr_t(dref));
           bool ddc_enabled = ddc_recheck_dref(dref);
           if (!ddc_enabled) {
-             DBGMSG("ddc still not enabled");
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                   "ddc still not enabled for %s after %d seconds", dref_reprx_t(dref), sleep_sec);
           }
           else {
-             DBGMSG("ddc became enabled for %s after %d seconds", dref_reprx_t(dref), sleep_sec);
+             char * s = g_strdup_printf("ddc became enabled for %s after %d seconds", dref_reprx_t(dref), sleep_sec);
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
+             SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+             free(s);
              dref->dispno = ++dispno_max;
 
              ddc_emit_or_queue_display_status_event(
@@ -516,7 +521,12 @@ gpointer ddc_recheck_displays_func(gpointer data) {
 
       for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
           Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
-          DBGMSG("ddc communication did not become enabled for display %s", dref_reprx_t(dref));
+          char * s = g_strdup_printf(
+                "ddc communication did not become enabled for display %s within %d seconds",
+                dref_reprx_t(dref), sleep_sec);
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
+          SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+          free(s);
           g_ptr_array_remove_index(displays_to_recheck, ndx);
       }
       g_ptr_array_free(displays_to_recheck, true);
@@ -633,7 +643,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
             deferred_events,
             displays_to_recheck);
       if (displays_to_recheck->len > 0) {
-         DBGMSG("HANDLING displays_to_recheck");
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "handling displays_to_recheck");
 
          Recheck_Displays_Data * rdd = calloc(1, sizeof(Recheck_Displays_Data));
          rdd->displays_to_recheck = displays_to_recheck;
