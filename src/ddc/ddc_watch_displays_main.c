@@ -151,8 +151,7 @@ DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** x
 
 
 // hacks
-DDC_Watch_Mode resolved_watch_mode;
-Watch_Displays_Data * global_wdd;
+Watch_Displays_Data * global_wdd;     // needed for ddc_stop_watch_displays()
 
 /** Starts thread that watches for changes in display connection status.
  *
@@ -180,7 +179,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   resolved_watch_mode = resolve_watch_mode(ddc_watch_mode, &xev_data);
+   DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(ddc_watch_mode, &xev_data);
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
 
    int calculated_watch_loop_millisec = calc_watch_loop_millisec(resolved_watch_mode);
@@ -254,15 +253,16 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
    DBGTRC_STARTING(debug, TRACE_GROUP, "wait=%s, watch_thread=%p", SBOOL(wait), watch_thread );
 
    DDCA_Status ddcrc = DDCRC_OK;
+
 #ifdef ENABLE_UDEV
    if (enabled_classes_loc)
       *enabled_classes_loc = DDCA_EVENT_CLASS_NONE;
-   DBGMSG("resolved_watch_mode = %s", ddc_watch_mode_name(resolved_watch_mode));
+   DBGMSG("resolved_watch_mode = %s", ddc_watch_mode_name(global_wdd->watch_mode));
 
    g_mutex_lock(&watch_thread_mutex);
 
    if (watch_thread) {
-      if (resolved_watch_mode == Watch_Mode_Xevent) {
+      if (global_wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {
             ddc_send_x11_termination_message(global_wdd->evdata);
             sleep(2);
