@@ -187,6 +187,8 @@ void ddc_emit_display_status_record(
 }
 
 
+GMutex emit_or_queue_mutex;
+
 /** Assembles a #DDCA_Display_Status_Event record and either calls
  *  #ddc_emit_display_status_record to emit it immediately or adds it
  *  to a queue of event records
@@ -229,13 +231,16 @@ void ddc_emit_or_queue_display_status_event(
          connector_name,
          dref,
          io_path);
-   DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "event: %s", display_status_event_repr(evt));
+   DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "event: %s", display_status_event_repr_t(evt));
    // SYSLOG2(DDCA_SYSLOG_NOTICE, "event: %s", display_status_event_repr(evt));
 
+
+   g_mutex_lock(&emit_or_queue_mutex);  // or &emit_queue_mutex ???
    if (queue)
-      g_array_append_val(queue,evt);
+      g_array_append_val(queue,evt);   // TODO also need to lock where queue flushed
    else
       ddc_emit_display_status_record(evt);
+   g_mutex_unlock(&emit_or_queue_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
