@@ -265,7 +265,8 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
       hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
                                            bs_buses_w_edid_removed,
                                            bs_buses_w_edid_added,
-                                           events_queue);
+                                           events_queue,
+                                           NULL);
    }
 
    if (hotplug_change_handler_emitted)
@@ -381,7 +382,8 @@ Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
       hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
                                            bs_buses_w_edid_removed,
                                            bs_buses_w_edid_added,
-                                           events_queue);
+                                           events_queue,
+                                           NULL);
    }
 
    if (hotplug_change_handler_emitted)
@@ -589,14 +591,16 @@ gpointer ddc_watch_displays_udev(gpointer data) {
             // n. slept == 0 if no sleep was performed
             DBGTRC_DONE(debug, TRACE_GROUP,
                   "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
-              free_watch_displays_data(wdd);
-              //  int rc = udev_monitor_filter_remove(mon);
-              udev_monitor_unref(mon);
-              udev_unref(udev);
+           free_watch_displays_data(wdd);
+           //  int rc = udev_monitor_filter_remove(mon);
+           udev_monitor_unref(mon);
+           udev_unref(udev);
 #ifdef WATCH_DPMS
-              if (watch_dpms)
-                 g_ptr_array_free(sleepy_connectors, true);
+           if (watch_dpms)
+              g_ptr_array_free(sleepy_connectors, true);
 #endif
+
+            free_traced_function_stack();
             g_thread_exit(0);
             assert(false);    // avoid clang warning re wdd use after free
          }
@@ -729,7 +733,8 @@ gpointer ddc_watch_displays_udev(gpointer data) {
                if (cname) {
                   DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "1) Using connector id %d, name =%s", connector_number, cname);
                   bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
-                                        connector_number, cname, bs_cur_buses_w_edid, deferred_events);
+                                        connector_number, cname, bs_cur_buses_w_edid,
+                                        deferred_events);
                   // xxx("drm change case1");
                   processed = true;
                }
