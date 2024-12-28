@@ -468,7 +468,7 @@ void process_screen_change_event(
 }
 
 
-int simple_ipow(int base, int exponent) {
+static int simple_ipow(int base, int exponent) {
    assert(exponent >= 0);
    int result = 1;
    for (int i = 0; i < exponent; i++) {
@@ -638,7 +638,6 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
          rdd->displays_to_recheck = displays_to_recheck;
          rdd->deferred_event_queue = deferred_events;
 
-         /* GThread* recheck_thread = */
          g_thread_new("recheck_displays",             // optional thread name
                       ddc_recheck_displays_func,
                       displays_to_recheck);
@@ -668,4 +667,5 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
 void init_ddc_watch_displays_poll() {
       RTTI_ADD_FUNC(ddc_watch_displays_without_udev);
       RTTI_ADD_FUNC(process_screen_change_event);
+      RTTI_ADD_FUNC(ddc_recheck_displays_func);
 }
