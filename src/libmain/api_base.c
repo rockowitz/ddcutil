@@ -627,11 +627,12 @@ _ddca_terminate(void) {
       DDCA_Display_Event_Class active_classes;
       if (is_watch_displays_executing())
          ddc_stop_watch_displays(/*wait=*/ false, &active_classes);   // in case it was started
-      DBGMSG("After ddc_stop_watch_displays");
-      sleep(5);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "After ddc_stop_watch_displays");
+      // sleep(5); // still needed?
       terminate_ddc_services();
       terminate_base_services();
       free_regex_hash_table();
+
       library_initialized = false;
       if (flog)
          fclose(flog);
@@ -640,6 +641,10 @@ _ddca_terminate(void) {
    else {
       DBGTRC_DONE(debug, DDCA_TRC_API, "library was already terminated");   // should be impossible
    }
+   // Frees the traced function stack for the main thread.
+   // For created threads, is called at time of thread termination
+   free_traced_function_stack();  // must come after last DBG... call
+
    // special handling for termination msg
    if (syslog_level > DDCA_SYSLOG_NEVER)
       syslog(LOG_NOTICE, "libddcutil terminating.");
