@@ -502,6 +502,7 @@ gpointer ddc_recheck_displays_func(gpointer data) {
           }
           else {
              DBGMSG("ddc became enabled for %s after %d seconds", dref_reprx_t(dref), sleep_sec);
+             dref->dispno = ++dispno_max;
 
              ddc_emit_or_queue_display_status_event(
                    DDCA_EVENT_DDC_ENABLED,
