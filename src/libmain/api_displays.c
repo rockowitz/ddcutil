@@ -98,6 +98,13 @@ DDCA_Status ddci_validate_ddca_display_ref2(
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_REMOVED set!");
       result = DDCRC_DISCONNECTED;
    }
+   else if ( !(dref->flags & DREF_DDC_COMMUNICATION_WORKING) &&
+             !(validation_options & DREF_VALIDATE_DDC_COMMUNICATION_FAILURE_OK)
+           )
+   {
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_DDC_COMMUNICATION_WORKING not set!");
+      result = DDCRC_INVALID_DISPLAY;
+   }
    else {
       result =  (dref) ? ddc_validate_display_ref2(dref, validation_options) : DDCRC_ARG;
    }
@@ -958,7 +965,7 @@ ddca_get_display_info(
 
    // if ddc_validate_display_ref() fails, returns its status code
    WITH_VALIDATED_DR4(
-         ddca_dref, ddcrc, DREF_VALIDATE_EDID,
+         ddca_dref, ddcrc, DREF_VALIDATE_EDID | DREF_VALIDATE_DDC_COMMUNICATION_FAILURE_OK,
          {
             DDCA_Display_Info * info = calloc(1, sizeof(DDCA_Display_Info));
             ddci_init_display_info(dref, info);
