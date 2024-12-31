@@ -503,7 +503,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
       int depth = IS_DBGTRC(debug, DDCA_TRC_NONE) ? 1 : -1;
       if (businfo->drm_connector_name) {
          possibly_write_detect_to_status_by_connector_name(businfo->drm_connector_name);
-         rpt_label(0, "Current sysfs attributes:");
+         if (depth > 0)
+            rpt_label(0, "Current sysfs attributes:");
          RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "dpms");
          RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "status");
          RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "enabled");
@@ -615,7 +616,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
             {
                dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             }
-      }
+         }
 
          else {   // DDCA_IO_I2C
             if (psc == 0 ||
@@ -630,6 +631,9 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
                   // communication failed, do not set DDCRC_COMMUNICATION_WORKING
                   dh->dref->flags |= DREF_DDC_BUSY;
                }
+               else {
+                  // do not set DDCRC_COMMUNICATION_WORKING
+               }
             }
 
             if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {  // used only when testing
@@ -641,7 +645,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          }    // end, io_mode == DDC_IO_I2C
 
          if (ddc_excp)
-            errinfo_free(ddc_excp);
+            ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
 
          if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
             // Would prefer to defer checking version until actually needed to avoid
@@ -772,14 +776,16 @@ bool ddc_recheck_dh(Display_Handle * dh) {
 
 bool
 ddc_recheck_dref(Display_Ref * dref) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
    bool result = false;
 
    dref_lock(dref);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Obtained lock on %s:", dref_reprx_t(dref));
    dref->flags = 0;
    result = ddc_initial_checks_by_dref(dref, false);
    dref_unlock(dref);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Released lock on %s:", dref_reprx_t(dref));
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
@@ -2091,7 +2097,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
    assert(businfo->flags & I2C_BUS_PROBED);
    // businfo->flags &= ~I2C_BUS_PROBED;
-   i2c_check_bus2(businfo);  // if display on bus was previously removed, into in businfo, particuarly EDID, will be stale
+   i2c_check_bus2(businfo);  // if display on bus was previously removed, info in businfo, particuarly EDID, will be stale
    if (businfo->edid) {
       dref = create_bus_display_ref(businfo->busno);
       // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
