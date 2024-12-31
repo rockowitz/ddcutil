@@ -111,7 +111,7 @@ char * formatted_wall_time() {
 
 void debug_traced_function_stack(bool reverse) {
    if (traced_function_stack) {
-      printf("[%d] Traced function stack %p:\n");
+      printf("[%d] Traced function stack %p:\n", tid(), traced_function_stack);
       int queue_len = g_queue_get_length(traced_function_stack);
       if (queue_len > 0) {
          printf("traced function stack (addr=%p, len=%d, tid=%d):\n", traced_function_stack, queue_len, tid() );
@@ -209,7 +209,7 @@ void free_traced_function_stack() {
    if (traced_function_stack) {
       printf("[%d](free_traced_function_stack) traced_function_stack=%p. Executing.\n",
             tid(), traced_function_stack);
-      printf("[%d](free_traced_function_stack) Final contents of traced_function_stack:\n");
+      printf("[%d](free_traced_function_stack) Final contents of traced_function_stack:\n", tid());
       debug_traced_function_stack(true);
       g_queue_free_full(traced_function_stack, g_free);
    }
