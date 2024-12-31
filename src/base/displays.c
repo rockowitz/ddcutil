@@ -765,6 +765,7 @@ void dref_lock(Display_Ref * dref) {
    if (was_locked ) {
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "dref %s is locked,  waiting ... ", dref_reprx_t(dref));
       g_mutex_lock(&(dref->access_mutex));
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "obtained lock on %s",  dref_reprx_t(dref));
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "dref %s", dref_reprx_t(dref));
 }
