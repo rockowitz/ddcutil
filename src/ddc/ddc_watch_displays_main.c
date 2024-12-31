@@ -41,6 +41,7 @@
 #include "base/drm_connector_state.h"
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
+#include "base/parms.h"
 #include "base/rtti.h"
 /** \endcond */
 
@@ -63,9 +64,9 @@
 
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
-DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Dynamic;
+DDC_Watch_Mode   ddc_watch_mode = DEFAULT_WATCH_MODE;
 bool             enable_watch_displays = true;
 
 // some of these go elsewhere
@@ -88,7 +89,7 @@ static GMutex    watch_thread_mutex;
  */
 DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "initial_mode=%s xev_data_loc=%p", ddc_watch_mode_name(initial_mode), xev_data_loc);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s xev_data_loc=%p", ddc_watch_mode_name(initial_mode), xev_data_loc);
 
    DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
    XEvent_Data * xevdata = NULL;
@@ -124,8 +125,17 @@ DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** x
       // if (!sysfs_fully_reliable)
       //    ddc_watch_mode = Watch_Mode_Poll;
    }
-
+   else {
+      resolved_watch_mode = initial_mode;
+   }
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "initially resolved watch mode = %s", ddc_watch_mode_name(resolved_watch_mode));
+
+#ifdef NO
+    if (resolved_watch_mode  == Watch_Mode_Udev) {
+      if (!sysfs_fully_reliable)  // ???
+         resolved_watch_mode = Watch_Mode_Poll;
+   }
+#endif
 
    if (resolved_watch_mode == Watch_Mode_Xevent) {
       xevdata  = ddc_init_xevent_screen_change_notification();
@@ -144,7 +154,7 @@ DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** x
    if (*xev_data_loc && IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       dbgrpt_xevent_data(*xev_data_loc,  0);
    }
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "resolved_watch_mode: %s. *xev_data_loc: %p",
+   DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s. *xev_data_loc: %p",
          ddc_watch_mode_name(resolved_watch_mode),  *xev_data_loc);
    return resolved_watch_mode;
 }
@@ -257,11 +267,12 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
 #ifdef ENABLE_UDEV
    if (enabled_classes_loc)
       *enabled_classes_loc = DDCA_EVENT_CLASS_NONE;
-   DBGMSG("resolved_watch_mode = %s", ddc_watch_mode_name(global_wdd->watch_mode));
 
    g_mutex_lock(&watch_thread_mutex);
 
    if (watch_thread) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "resolved_watch_mode = %s",
+                                            ddc_watch_mode_name(global_wdd->watch_mode));
       if (global_wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {
             ddc_send_x11_termination_message(global_wdd->evdata);
