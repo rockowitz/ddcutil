@@ -62,7 +62,7 @@
 
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 // globals
 bool    use_sysfs_connector_id = true;
@@ -127,7 +127,7 @@ bool
 ddc_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool prior_has_edid) {
    bool debug = false;
    // int debug_depth = (debug) ? 1 : -1;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "drm_connector_name=%s, prior_has_edid =%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector_name=%s, prior_has_edid =%s",
          drm_connector_name, SBOOL(prior_has_edid));
    assert(drm_connector_name);
 
@@ -172,7 +172,7 @@ ddc_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool 
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to rpt_attr_edid()", __func__, stablect-1);
    }
 
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, prior_has_edid, "Required %d extra calls to rpt_attr_edid()", stablect-1);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, prior_has_edid, "Required %d extra calls to rpt_attr_edid()", stablect-1);
    return prior_has_edid;
 }
 
@@ -189,7 +189,7 @@ bool
 ddc_i2c_stabilized_bus_by_connector_id(int connector_id, bool prior_has_edid) {
    bool debug = false;
    // int debug_depth = (debug) ? 1 : -1;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_id=%d, prior_has_edid =%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "connector_id=%d, prior_has_edid =%s",
          connector_id, SBOOL(prior_has_edid));
 
    char * drm_connector_name =  get_sys_drm_connector_name_by_connector_id(connector_id);
@@ -201,7 +201,7 @@ ddc_i2c_stabilized_bus_by_connector_id(int connector_id, bool prior_has_edid) {
 
    free(drm_connector_name);
 
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, prior_has_edid, "");
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, prior_has_edid, "");
    return prior_has_edid;
 }
 
@@ -221,7 +221,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
       GArray *    events_queue)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bs_prev_buses_w_edid: %s", BS256_REPR(bs_prev_buses_w_edid));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bs_prev_buses_w_edid: %s", BS256_REPR(bs_prev_buses_w_edid));
 
 #ifdef OLD
    GPtrArray * new_buses = i2c_detect_buses0();
@@ -257,10 +257,10 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
 
    if (connected_buses_changed) {
       BS256 bs_buses_w_edid_removed = bs256_and_not(bs_prev_buses_w_edid, bs_new_buses_w_edid);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_removed: %s", BS256_REPR(bs_buses_w_edid_removed));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_buses_w_edid_removed: %s", BS256_REPR(bs_buses_w_edid_removed));
 
       BS256 bs_buses_w_edid_added = bs256_and_not(bs_new_buses_w_edid, bs_prev_buses_w_edid);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_added: %s", BS256_REPR(bs_buses_w_edid_added));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_buses_w_edid_added: %s", BS256_REPR(bs_buses_w_edid_added));
 
       hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
                                            bs_buses_w_edid_removed,
@@ -270,7 +270,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
    }
 
    if (hotplug_change_handler_emitted)
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "hotplug_change_handler_emitted = %s",
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "hotplug_change_handler_emitted = %s",
             sbool (hotplug_change_handler_emitted));
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning Bit_Set_256: %s", BS256_REPR(bs_new_buses_w_edid));
@@ -286,7 +286,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
  */
 int search_all_businfo_record_by_connector_name(char *connector_name) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_name = |%s|", connector_name);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name = |%s|", connector_name);
 
    // reads connector dir directly, i.e. does not retrieve persistent data structure
    //  Sys_Drm_Connector * conn = get_drm_connector(connector_name, debug_depth);
@@ -311,7 +311,7 @@ int search_all_businfo_record_by_connector_name(char *connector_name) {
          }
       }
    }
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "returning busno %d", busno);
+   DBGTRC_DONE(debug, TRACE_GROUP, "returning busno %d", busno);
    return busno;
 }
 
@@ -343,7 +343,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
 {
    bool debug = false;
    // int debug_depth = (debug) ? 1 : -1;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_number=%d, connector_name=%s, bs_prev_buses_w_edid: %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "connector_number=%d, connector_name=%s, bs_prev_buses_w_edid: %s",
          connector_number, connector_name, BS256_REPR(bs_prev_buses_w_edid));
 
    Bit_Set_256 bs_new_buses_w_edid = bs_prev_buses_w_edid;
@@ -496,12 +496,12 @@ gpointer ddc_watch_displays_udev(gpointer data) {
 
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+   DBGTRC_STARTING(debug, TRACE_GROUP,
          "Caller process id: %d, caller thread id: %d, event_classes=0x%02x",
          wdd->main_process_id, wdd->main_thread_id, wdd->event_classes);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for display connection events: %s",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Watching for display connection events: %s",
          sbool(wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for dpms events: %s",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Watching for dpms events: %s",
           sbool(wdd->event_classes & DDCA_EVENT_CLASS_DPMS));
 
    bool watch_dpms = wdd->event_classes & DDCA_EVENT_CLASS_DPMS;
