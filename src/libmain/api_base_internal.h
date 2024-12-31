@@ -179,7 +179,7 @@ void unquiesce_api();
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
-      dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+      dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_STARTING, \
             __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
       if (ptd_api_profiling_enabled) ptd_profile_function_start(__func__); \
   } while(0)
@@ -230,7 +230,7 @@ void unquiesce_api();
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
-      dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+      dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_STARTING, \
             __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
       if (ptd_api_profiling_enabled) ptd_profile_function_start(__func__); \
   } while(0)
@@ -245,7 +245,7 @@ void unquiesce_api();
 #define API_EPILOG(_debug_flag, _respect_quiesced, _rc, _format, ...) \
    do { \
         dbgtrc_ret_ddcrc( \
-          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
@@ -260,7 +260,7 @@ void unquiesce_api();
 #define API_EPILOG_RET_BOOL(_debug_flag, _respect_quiesced,  _result, _format, ...) \
    do { \
       dbgtrc_returning_expression( \
-          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, sbool(_result), _format, ##__VA_ARGS__); \
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
@@ -276,7 +276,7 @@ void unquiesce_api();
 #define API_EPILOG_WO_RETURN(_debug_flag, _respect_quiesced, _rc, _format, ...) \
    do { \
         dbgtrc_ret_ddcrc( \
-          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
