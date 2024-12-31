@@ -58,7 +58,7 @@
 #include "ddc_watch_displays_common.h"
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 
 int       extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
@@ -226,7 +226,7 @@ void ddc_i2c_emit_deferred_events(GArray * deferred_events) {
 
 
 Display_Ref * ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo) {
-   bool debug  = false;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
 
    i2c_reset_bus_info(businfo);
@@ -437,6 +437,7 @@ bool ddc_i2c_hotplug_change_handler(
       //                                 1);       // depth
       ddc_dbgrpt_display_refs_terse(true, 1);
    }
+
    DBGTRC_RET_BOOL(debug, TRACE_GROUP,event_emitted, "");
    return event_emitted;
 }
@@ -499,7 +500,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
 Bit_Set_256
 ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "prior =%s, some_displays_disconnected=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "prior =%s, some_displays_disconnected=%s",
          BS256_REPR(bs_prior), SBOOL(some_displays_disconnected));
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_prior:", BS256_REPR(bs_prior));
 
@@ -536,7 +537,7 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_buses_w_edid_as_bitset()", __func__, stablect-1);
    }
 
-   DBGTRC_RET_STRING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, BS256_REPR(bs_prior),"");
    return bs_prior;
 }
 
