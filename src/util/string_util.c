@@ -1555,6 +1555,7 @@ void hex_dump_indented_collect(GPtrArray * collector, const Byte* data, int size
    char buffer[128];
    char *ascii;
    char indentation[100];
+   g_snprintf(indentation, 100, "%.*s", indents, "");
 
    memset(buffer, 0, 128);
 
