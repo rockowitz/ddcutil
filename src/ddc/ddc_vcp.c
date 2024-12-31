@@ -205,6 +205,7 @@ ddc_get_nontable_vcp_value(
 
    Error_Info * excp = NULL;
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
+   I2C_Bus_Info * businfo = dh->dref->detail;
    *parsed_response_loc = NULL;
 
    if (enable_mock_data) {
@@ -243,6 +244,14 @@ ddc_get_nontable_vcp_value(
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "ddc_write_read_with_retry() returned %s, response_packet_ptr=%p",
                 psc_desc(ERRINFO_STATUS(excp)), response_packet_ptr);
+   }
+   if (excp) {
+      if (!(businfo->flags & I2C_BUS_HAS_EDID)) {
+         dh->dref->flags &= ~(DREF_DDC_IS_MONITOR|DREF_DDC_COMMUNICATION_CHECKED);
+      }
+      if (!(businfo->flags & I2C_BUS_ADDR_X37)) {
+         dh->dref->flags &= ~(DREF_DDC_COMMUNICATION_WORKING);
+      }
    }
 
    if (!excp) {
