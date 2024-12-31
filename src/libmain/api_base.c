@@ -626,7 +626,7 @@ _ddca_terminate(void) {
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
       DDCA_Display_Event_Class active_classes;
       if (is_watch_displays_executing())
-         ddc_stop_watch_displays(/*wait=*/ false, &active_classes);   // in case it was started
+         ddc_stop_watch_displays(/*wait=*/ true, &active_classes);   // in case it was started
       DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "After ddc_stop_watch_displays");
       // sleep(5); // still needed?
       terminate_ddc_services();
@@ -1073,6 +1073,7 @@ ddca_set_ferr_to_default(void) {
 void
 ddca_start_capture(DDCA_Capture_Option_Flags flags) {
    bool debug = false;
+   traced_function_stack_suspended = true;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "flags=0x%02x", flags);
    msg_decoration_suspended = true;
    start_capture(flags);
@@ -1086,6 +1087,7 @@ ddca_end_capture(void) {
    char * result = end_capture();
    msg_decoration_suspended = false;
    DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %p", result);
+   traced_function_stack_suspended = false;
    return result;
 }
 
