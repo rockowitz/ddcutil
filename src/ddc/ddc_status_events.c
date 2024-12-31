@@ -234,7 +234,6 @@ void ddc_emit_or_queue_display_status_event(
    DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "event: %s", display_status_event_repr_t(evt));
    // SYSLOG2(DDCA_SYSLOG_NOTICE, "event: %s", display_status_event_repr(evt));
 
-
    g_mutex_lock(&emit_or_queue_mutex);  // or &emit_queue_mutex ???
    if (queue)
       g_array_append_val(queue,evt);   // TODO also need to lock where queue flushed
