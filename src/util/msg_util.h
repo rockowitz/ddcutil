@@ -20,13 +20,14 @@ extern bool stdout_stderr_redirected;
 extern bool dbgtrc_dest_syslog;
 extern bool traced_function_stack_enabled;
 extern __thread bool msg_decoration_suspended;
+extern __thread bool traced_function_stack_suspended;
 
 char*      get_msg_decoration(char * buf, uint bufsize, bool dest_syslog);
 char*      formatted_wall_time();
 void       push_traced_function(const char * funcname);
 char*      peek_traced_function();
-bool       pop_traced_function(const char * funcname);
-void       debug_traced_function_stack();
+void       pop_traced_function(const char * funcname);
+void       debug_traced_function_stack(bool reverse);
 GPtrArray* get_traced_callstack(bool most_recent_last);
 void       free_traced_function_stack();
 
