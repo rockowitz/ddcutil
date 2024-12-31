@@ -63,7 +63,7 @@
 
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 int  nonudev_poll_loop_millisec = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;   // 2000;   // default sleep time on each loop
 
@@ -261,9 +261,9 @@ void process_screen_change_event(
       )
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "*p_bs_old_attached_buses -> %s",
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "*p_bs_old_attached_buses -> %s",
                          bs256_to_string_decimal_t(*p_bs_old_attached_buses, "", ","));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "*p_bs_old_buses_w_edid   -> %s",
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_CONN, "*p_bs_old_buses_w_edid   -> %s",
                          bs256_to_string_decimal_t(*p_bs_old_buses_w_edid,   "", ",")) ;
 
    BS256 bs_old_attached_buses = *p_bs_old_attached_buses;
@@ -461,9 +461,9 @@ void process_screen_change_event(
       *p_bs_old_attached_buses  = bs_old_attached_buses;
       *p_bs_old_buses_w_edid    = bs_old_buses_w_edid;;
 
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "*p_bs_old_attached_buses -> %s",
+      DBGTRC_DONE(debug, DDCA_TRC_CONN, "*p_bs_old_attached_buses -> %s",
             bs256_to_string_decimal_t(*p_bs_old_attached_buses, "", ","));
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "*p_bs_old_buses_w_edid -> %s",
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_CONN, "*p_bs_old_buses_w_edid -> %s",
             bs256_to_string_decimal_t(*p_bs_old_buses_w_edid,   "", ","));
 }
 
@@ -484,10 +484,18 @@ typedef struct {
 } Recheck_Displays_Data;
 
 gpointer ddc_recheck_displays_func(gpointer data) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "data=%p", data);
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "!!! data=%p", data);
    Recheck_Displays_Data*  rdd = (Recheck_Displays_Data *) data;
    GPtrArray* displays_to_recheck = rdd->displays_to_recheck;
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "displays_to_recheck=%p", displays_to_recheck);
+
+#ifdef DEBUG
+   for (int ndx = 0; ndx < displays_to_recheck->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
+      DBGMSG("dref=%s", dref_reprx_t(dref));
+   }
+#endif
 
    int sleep_sec = 0;
    for (int sleepctr = 0; sleepctr < 4 && displays_to_recheck->len > 0; sleepctr++) {
@@ -515,8 +523,8 @@ gpointer ddc_recheck_displays_func(gpointer data) {
                    dref,
                    dref->io_path,
                    rdd->deferred_event_queue);
+             g_ptr_array_remove_index(displays_to_recheck, ndx);
           }
-          g_ptr_array_remove_index(displays_to_recheck, ndx);
        }
 
       for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
@@ -529,13 +537,14 @@ gpointer ddc_recheck_displays_func(gpointer data) {
           free(s);
           g_ptr_array_remove_index(displays_to_recheck, ndx);
       }
-      g_ptr_array_free(displays_to_recheck, true);
-      // free(rdd); // ?? needed?
-   }
+   }  // sleepctr loop
 
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "terminating recheck thread");
+   g_ptr_array_free(displays_to_recheck, true);  // n. ptr array destroyed, but drefs remain
+   free(rdd);
+   DBGTRC_DONE(debug, TRACE_GROUP, "terminating recheck thread");
    free_traced_function_stack();
    g_thread_exit(NULL);
+   return NULL;     // no effect, but avoids compiler error
 }
 
 
@@ -552,10 +561,10 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
    GPtrArray * displays_to_recheck = g_ptr_array_new();
    // g_mutex_init(displays_to_recheck_mutex);
 
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+   DBGTRC_STARTING(debug, TRACE_GROUP,
          "Caller process id: %d, caller thread id: %d, event_classes=0x%02x, terminate_using_x11_event=%s",
          wdd->main_process_id, wdd->main_thread_id, wdd->event_classes, sbool(terminate_using_x11_event));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for display connection events: %s",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Watching for display connection events: %s",
          sbool(wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION));
 #ifdef WATCH_DPMS
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for dpms events: %s",
@@ -564,8 +573,8 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
 
    // may need to wait on startup
    while (!all_i2c_buses) {
-      DBGMSF(debug, "Waiting 1 sec for all_i2c_buses");
-      // usleep(1000*1000);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Waiting 1 sec for all_i2c_buses");
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Waiting 1 sec for all_i2c_buses");
       sleep_millis(1000*1000);
    }
 
@@ -648,12 +657,6 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
          Recheck_Displays_Data * rdd = calloc(1, sizeof(Recheck_Displays_Data));
          rdd->displays_to_recheck = displays_to_recheck;
          rdd->deferred_event_queue = deferred_events;
-
-         g_thread_new("recheck_displays",             // optional thread name
-                      ddc_recheck_displays_func,
-                      displays_to_recheck);
-         // thread ddc_recheck_displays_func will free displays_to_recheck passed to it.
-         displays_to_recheck = g_ptr_array_new();
       }
 
    } // while()
