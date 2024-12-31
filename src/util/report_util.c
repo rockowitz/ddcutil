@@ -291,10 +291,12 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
       g_ptr_array_add(collector, g_strdup_printf("%*s%s\n", rpt_get_indent(depth), "", title));
    }
    else {
-      if (redirect_reports_to_syslog)
-         syslog(LOG_NOTICE, "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
-      else
-         f0printf(rpt_cur_output_dest(), "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
+      if (depth >= 0) {
+         if (redirect_reports_to_syslog)
+            syslog(LOG_NOTICE, "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
+         else
+            f0printf(rpt_cur_output_dest(), "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
+      }
    }
 }
 
