@@ -658,21 +658,27 @@ i2c_detect_x37(int fd, char * driver) {
  *  @param  dh     display handle
  *  @retval NULL   ok
  *  @retval Error_Info with status DDCRC_DISCONNECTED or DDCRC_DPMS_ASLEEP
+ *                                 DDCRC_OTHER  slave addr x37 unresponsive
  */
 
 Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    bool debug = false;
    assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
    I2C_Bus_Info * businfo = dh->dref->detail;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p", businfo->busno, businfo );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, busno=%d, businfo=%p", dh_repr(dh), businfo->busno, businfo );
    assert(businfo && ( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
    assert( (businfo->flags & I2C_BUS_EXISTS) &&
            (businfo->flags & I2C_BUS_PROBED)
          );
 
-   Error_Info * result = NULL;
+   Error_Info * err = NULL;
    bool edid_exists = false;
    for (int tryctr = 1; !edid_exists && tryctr <= 3; tryctr++) {
+      if (tryctr > 1) {
+         DBGMSG("!!! Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
+         SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists, tryctr = %d", tryctr);
+         sleep(1);   // hack
+      }
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
       if (businfo->drm_connector_name) {
          i2c_edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
@@ -685,29 +691,31 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 #else
       edid_exists = i2c_check_edid_exists_by_dh(dh);
 #endif
-      DBGMSG("!!! Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
-      SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists, tryctr = %d", tryctr);
-      sleep(1);   // hack
+
    }
 
    if (!edid_exists) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "!!! Checking EDID failed");
       DBGMSG("!!! Checking EDID failed");
-      result = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d", businfo->busno);
+      err = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d", businfo->busno);
+      businfo->flags &= ~(I2C_BUS_HAS_EDID|I2C_BUS_ADDR_X37);
    }
    else {
       char * driver = businfo->driver;
       int ddcrc = i2c_detect_x37(dh->fd, driver);
-      if (ddcrc)
-         result = ERRINFO_NEW(DDCRC_OTHER, "Slave address x37 unresponsive. io status = %s", psc_desc(ddcrc));
+      if (ddcrc){
+         err = ERRINFO_NEW(DDCRC_OTHER, "Slave address x37 unresponsive. io status = %s", psc_desc(ddcrc));
+         businfo->flags &= ~I2C_BUS_ADDR_X37;
+      }
    }
-   if (!result) {
+   if (!err) {
       if (dpms_check_drm_asleep_by_dref(dh->dref))
-         result = ERRINFO_NEW(DDCRC_DPMS_ASLEEP,
+         err = ERRINFO_NEW(DDCRC_DPMS_ASLEEP,
                "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
    }
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "");
-   return result;
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "");
+   return err;
 }
 
 
@@ -1130,7 +1138,7 @@ Byte * get_connector_edid(const char * connector_name) {
  bye:
     free(drm_connector_name);
     ERRINFO_FREE_WITH_REPORT(master_err, true);
-    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, edid_exists, "");
+    DBGTRC_RET_BOOL(debug, TRACE_GROUP, edid_exists, "");
     return edid_exists;
  }
 
@@ -2164,8 +2172,8 @@ GPtrArray * i2c_detect_buses0() {
 
 
 I2C_Bus_Info * i2c_get_and_check_bus_info(int busno) {
-   bool debug  = false;
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d", busno);
+   bool debug  = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
 
    bool new_info = false;
    I2C_Bus_Info* businfo =  i2c_get_bus_info(busno, &new_info);
