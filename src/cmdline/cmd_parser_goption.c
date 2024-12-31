@@ -996,6 +996,17 @@ parse_command(
       disable_tgefs_expl = "do not try to get EDID from /sys (default)";
    }
 
+   DDC_Watch_Mode default_watch_mode = DEFAULT_WATCH_MODE;
+   char * default_watch_mode_keyword;
+   switch(default_watch_mode) {
+   case Watch_Mode_Dynamic:  default_watch_mode_keyword = "DYNAMIC"; break;
+   case Watch_Mode_Xevent:   default_watch_mode_keyword = "XEVENT";  break;
+   case Watch_Mode_Poll:     default_watch_mode_keyword = "POLL";    break;
+   case Watch_Mode_Udev:     default_watch_mode_keyword = "UDEV";    break;
+   }
+   char watch_mode_expl[80];
+   g_snprintf(watch_mode_expl, 80, "DYNAMIC|XEVENT|POLL|UDEV, default: %s", default_watch_mode_keyword);
+
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
    gboolean f3_flag         = false;
@@ -1235,7 +1246,7 @@ parse_command(
       {"disable-api", '\0', G_OPTION_FLAG_HIDDEN,
                       G_OPTION_ARG_NONE, &disable_api_flag, "Completely disable API", NULL },
       {"watch-mode", '\0', G_OPTION_FLAG_HIDDEN,
-                           G_OPTION_ARG_STRING, &watch_mode_work, "How to watch for display changes",  "UDEV|POLL|XEVENT|DYNAMIC"},
+                           G_OPTION_ARG_STRING, &watch_mode_work, "How to watch for display changes",  watch_mode_expl},
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
@@ -1470,7 +1481,6 @@ parse_command(
    // const char * pieces3[] = {commands_list_help, command_argument_help};
    // char * help_summary = strjoin(pieces3, 2, NULL);
 
-
    char * help_summary = NULL;
    if (preparse_verbose) {
       char * cmd_args_help = assemble_command_argument_help();
@@ -1519,7 +1529,6 @@ parse_command(
    free(help_description);
 
    g_option_context_set_help_enabled(context, true);
-
    /* From g_option_parse_documentation():
       If the parsing is successful, any parsed arguments are removed from the
       array and argc and argv are updated accordingly.
@@ -1921,6 +1930,8 @@ parse_command(
       parsing_ok &= parse_watch_mode(watch_mode_work, parsed_cmd, errmsgs);
       FREE(watch_mode_work);
    }
+   else
+      parsed_cmd->watch_mode = DEFAULT_WATCH_MODE;
 
    DBGMSF(debug, "edid_read_size_work = %d", edid_read_size_work);
    if (edid_read_size_work !=  -1 &&
@@ -2087,6 +2098,7 @@ parse_command(
          DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
       }
    }
+
    if (parse_only_flag && parsing_ok) {
       free_parsed_cmd(parsed_cmd);
       parsed_cmd = NULL;
