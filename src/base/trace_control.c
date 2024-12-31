@@ -40,6 +40,7 @@ Value_Name_Title_Table trace_group_table = {
       VNT(DDCA_TRC_DDCIO, "DDCIO"),
       VNT(DDCA_TRC_SLEEP, "SLEEP"),
       VNT(DDCA_TRC_RETRY, "RETRY"),
+      VNT(DDCA_TRC_CONN,  "CONN"),
       VNT_END
 };
 const int trace_group_ct = (ARRAY_SIZE(trace_group_table)-1);
