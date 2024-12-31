@@ -142,7 +142,7 @@ Parsed_Cmd *  new_parsed_cmd() {
    if (DEFAULT_ENABLE_CACHED_CAPABILITIES)
       parsed_cmd->flags |= CMD_FLAG_ENABLE_CACHED_CAPABILITIES;
 
-   parsed_cmd->watch_mode = Watch_Mode_Dynamic;
+   // parsed_cmd->watch_mode = Watch_Mode_Dynamic;
    return parsed_cmd;
 }
 
