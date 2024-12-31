@@ -78,9 +78,14 @@ ddca_get_capabilities_string(
       }
    );
 
+#ifdef TMI
    API_EPILOG(debug, RESPECT_QUIESCE, psc, "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
                      dh_repr((Display_Handle *) ddca_dh),
                      *pcaps_loc, *pcaps_loc );
+#endif
+   API_EPILOG(debug, RESPECT_QUIESCE, psc, "ddca_dh=%s, *pcaps_loc=%p",
+                     dh_repr((Display_Handle *) ddca_dh),
+                     *pcaps_loc );
 }
 
 
@@ -214,8 +219,10 @@ ddca_parse_capabilities_string(
          "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
    ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
    // if ( IS_DBGTRC(debug, DDCA_TRC_API) && *parsed_capabilities_loc)
+#ifdef TMI
    if (is_traced_api_call(__func__) && *parsed_capabilities_loc)
       dbgrpt_ddca_capabilities(*parsed_capabilities_loc, 2);
+#endif
    return ddcrc;
 }
 
