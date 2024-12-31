@@ -19,6 +19,11 @@
 
 #include "ddc_watch_displays_xevent.h"
 
+static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
+
+static Display* dpy;
+static int  screen_change_eventno = 0;
+
 
 void  dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
    rpt_structure_loc("XEvent_Data", evdata, depth);
@@ -36,8 +41,6 @@ void ddc_free_xevent_data(XEvent_Data * evdata) {
    free(evdata);
 }
 
-Display* dpy;
-int  screen_change_eventno = 0;
 
 /** Initializes for using X11 to detect screen changes.
  *
@@ -46,15 +49,15 @@ int  screen_change_eventno = 0;
  */
 XEvent_Data * ddc_init_xevent_screen_change_notification() {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    bool ok = false;
    // check for extension
    XEvent_Data * evdata = calloc(1, sizeof(XEvent_Data));
    Display * display = XOpenDisplay(NULL);
    evdata->dpy = display;
-   DBGMSG("display=%p", display);
-   DBGMSG("evdata->dpy=%p", evdata->dpy);
+   // DBGMSG("display=%p", display);
+   // DBGMSG("evdata->dpy=%p", evdata->dpy);
    if (!evdata->dpy)
       goto bye;
    evdata->screen = DefaultScreen(evdata->dpy);
@@ -76,8 +79,10 @@ XEvent_Data * ddc_init_xevent_screen_change_notification() {
 
    screen_change_eventno = evdata->rr_event_base + RRScreenChangeNotify;
    evdata->screen_change_eventno = evdata->rr_event_base + RRScreenChangeNotify;
-   XRRSelectInput(evdata->dpy, evdata->w, RRScreenChangeNotifyMask);
-   // XSelectInput(evdata->dpy, evdata->w, RRScreenChangeNotifyMask);
+   if (!terminate_using_x11_event) {
+      XRRSelectInput(evdata->dpy, evdata->w, RRScreenChangeNotifyMask);
+      // XSelectInput(evdata->dpy, evdata->w, RRScreenChangeNotifyMask);
+   }
    ok = true;
 
 bye:
@@ -86,7 +91,7 @@ bye:
       evdata = NULL;
    }
 
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning %p", evdata);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", evdata);
    return evdata;
 }
 
@@ -102,7 +107,7 @@ bye:
  */
 _Bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "evdata=%p, poll_interval=%d", evdata, poll_interval);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "evdata=%p, poll_interval=%d", evdata, poll_interval);
 
    bool found = false;
    int flushct = 0;
@@ -137,7 +142,7 @@ _Bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
       }
    }
 
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, found, "Flushed %d events", flushct);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "Flushed %d events", flushct);
    return found;
 }
 
@@ -148,16 +153,15 @@ _Bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
 
 void ddc_send_x11_termination_message(XEvent_Data * evdata) {
    bool debug = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "evdata->dpy=%p", evdata->dpy);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "evdata->dpy=%p", evdata->dpy);
 
    Display * dpy = evdata->dpy;
    // Display * dpy = XOpenDisplay(NULL);
-   DBGMSG("XOpenDisplay() returned %p", dpy);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dpy = %p", dpy);
    int screen = DefaultScreen(dpy);
    Window win = RootWindow(dpy, screen);
    XEvent evt;
 
-   DBGMSG("WOLF 3");
    evt.xclient.type = ClientMessage;
    evt.xclient.serial = 0;
    evt.xclient.send_event = True;
@@ -172,20 +176,21 @@ void ddc_send_x11_termination_message(XEvent_Data * evdata) {
    evt.xclient.data.l[4] = 0;
 
    // Send the client message
-   DBGMSG("Calling XSendEvent() ...");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling XSendEvent() ...");
    bool ok = XSendEvent(dpy, win /*DefaultRootWindow(dpy)*/, False,
               NoEventMask,
            /*   SubstructureRedirectMask | SubstructureNotifyMask,*/
               (XEvent *)&evt);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XSendEvent() returned %s", SBOOL(ok));
    XFlush(dpy);
-   sleep(2);
+   sleep(2);    // needed?
 
    if (ok)
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "XSendEvent() succeeded");
+      DBGTRC_DONE(debug, TRACE_GROUP, "XSendEvent() succeeded");
    else
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "XSendEvent() failed!");
+      DBGTRC_DONE(debug, TRACE_GROUP, "XSendEvent() failed!");
 }
+
 
 /** Predicate function used by XIfEvent()
  *
@@ -230,7 +235,7 @@ Bool is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
  */
 bool next_X11_event_of_interest(XEvent_Data * evdata) {
    bool debug = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE,"evdata=%p", evdata);
+   DBGTRC_STARTING(debug, TRACE_GROUP,"evdata=%p", evdata);
 
    bool result = false;
 
@@ -246,6 +251,7 @@ bool next_X11_event_of_interest(XEvent_Data * evdata) {
       result = false;
    }
    else if (event_return.xclient.type == evdata->screen_change_eventno) {
+      DBGMSG("received screen changed event");
       result = true;
 
       XEvent event;
@@ -258,7 +264,7 @@ bool next_X11_event_of_interest(XEvent_Data * evdata) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Flushed %d events", flushct);
    }
 
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
 
