@@ -687,6 +687,7 @@ ddc_write_read_with_retry(
    int  ddcrc_null_response_ct = 0;
    int  max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
    int  ddcrc_null_response_max = 3;
+   Error_Info * master_error = NULL;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"ddcrc_null_response_max=%d, read_bytewise=%s",
                                         ddcrc_null_response_max, sbool(read_bytewise));
    Error_Info * try_errors[MAX_MAX_TRIES] = {NULL};
@@ -702,7 +703,6 @@ ddc_write_read_with_retry(
          tryctr, max_tries, psc_name_code(psc), sbool(retryable),
          sbool(read_bytewise), pdd_get_adjusted_sleep_multiplier(pdd) );
 
-
       Error_Info * cur_excp = ddc_write_read(
                 dh,
                 request_packet_ptr,
@@ -712,6 +712,7 @@ ddc_write_read_with_retry(
                 expected_subtype,
                 response_packet_ptr_loc);
 
+      ASSERT_IFF(!cur_excp, *response_packet_ptr_loc);
       // TESTCASES:
       // if (tryctr < 2)
       //    cur_excp = ERRINFO_NEW(DDCRC_NULL_RESPONSE, "dummy");
@@ -812,9 +813,11 @@ ddc_write_read_with_retry(
          if (psc == -EIO || psc == -ENXIO) {
             Error_Info * err = i2c_check_open_bus_alive(dh) ;
             if (err) {
-               psc = err->status_code;
-               retryable = false;
-               errinfo_free(err);
+               // psc = err->status_code;
+               // retryable = false;
+               // errinfo_free(err);
+               master_error = err;
+               goto bye;
             }
          }
 
@@ -877,8 +880,6 @@ ddc_write_read_with_retry(
                    errct, s);
    free(s);
 
-   Error_Info * ddc_excp = NULL;
-
    if (psc < 0) {
       // int last_try_index = tryctr-1;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
@@ -897,7 +898,7 @@ ddc_write_read_with_retry(
          psc = DDCRC_ALL_RESPONSES_NULL;
       }
 
-      ddc_excp = errinfo_new_with_causes(psc, errors_found, errct, __func__, NULL);
+      master_error = errinfo_new_with_causes(psc, errors_found, errct, __func__, NULL);
 
       if (psc != try_errors[tryctr-1]->status_code)
          COUNT_STATUS_CODE(psc);     // new status code, count it
@@ -910,10 +911,11 @@ ddc_write_read_with_retry(
 
    try_data_record_tries2(dh, WRITE_READ_TRIES_OP, psc, tryctr);
 
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Total Tries (tryctr): %d. Returning: %s",
-                                   tryctr, errinfo_summary(ddc_excp));
-   return ddc_excp;
+bye:
+   DBGTRC_DONE(debug, TRACE_GROUP, "Total Tries (tryctr): %d. *response_packet_pointer_loc=%p,  Returning: %s",
+                                   tryctr, *response_packet_ptr_loc, errinfo_summary(master_error));
+   ASSERT_IFF(!master_error, *response_packet_ptr_loc);
+   return master_error;
 }
 
 
