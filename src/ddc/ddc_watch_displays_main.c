@@ -146,7 +146,7 @@ DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** x
       }
    }
 
-   DBG( "xevdata=%p, watch_mode = %s", xevdata, ddc_watch_mode_name(resolved_watch_mode));
+   // DBG( "xevdata=%p, watch_mode = %s", xevdata, ddc_watch_mode_name(resolved_watch_mode));
 
    *xev_data_loc = xevdata;
    // ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xevdata);
@@ -261,6 +261,9 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "wait=%s, watch_thread=%p", SBOOL(wait), watch_thread );
+
+   // show_backtrace(2);
+   // debug_current_traced_function_stack(true);
 
    DDCA_Status ddcrc = DDCRC_OK;
 
