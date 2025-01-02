@@ -34,6 +34,7 @@
 void init_base_services() {
    bool debug = false;
    DBGF(debug, "Starting.");
+
    errinfo_init(psc_name, psc_desc);
    init_core();
    init_monitor_model_key();
@@ -52,16 +53,22 @@ void init_base_services() {
    init_feature_metadata();
    init_drm_connector_state();
    init_flock();
+
    DBGF(debug, "Done");
 }
 
 
 /** Cleanup at termination helps to reveal where the real leaks are */
 void terminate_base_services() {
+   bool debug = false;
+   DBGF(debug, "Starting");
+
    terminate_per_thread_data();
    terminate_per_display_data();
    terminate_execution_stats();
    terminate_dsa2();
    terminate_displays();
    terminate_rtti();
+
+   DBGF(debug, "Done");
 }
