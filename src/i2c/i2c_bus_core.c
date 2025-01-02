@@ -670,6 +670,9 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    assert( (businfo->flags & I2C_BUS_EXISTS) &&
            (businfo->flags & I2C_BUS_PROBED)
          );
+   if (debug) {
+      show_backtrace(1);
+   }
 
    Error_Info * err = NULL;
    bool edid_exists = false;
@@ -1336,11 +1339,15 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
  *  @return status code
  */
 Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
-   bool debug  = false;
+   bool debug  = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p, primitive_sysfs=%s",
          businfo->busno, businfo, SBOOL(primitive_sysfs) );
    assert(businfo && ( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
-   // show_backtrace(1);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "businfo->flags = 0x%04x = %s", businfo->flags,
+         i2c_interpret_bus_flags_t(businfo->flags));
+   if (debug) {
+      show_backtrace(1);
+   }
    // int d = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 1 : -1;
    assert(businfo->busno >= 0);
    assert(businfo->busno != 255);
@@ -1372,21 +1379,23 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
    }
 
    if (!primitive_sysfs) {
-      Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, -1);
-      businfo->driver = g_strdup(driver_info->driver);  // ** LEAKY
-      // perhaps save businfo->driver_version
-      // assert(driver_info->adapter_class);
-      bool is_video_driver = false;
-      if (driver_info->adapter_class) {
-         is_video_driver = is_adapter_class_display_controller(driver_info->adapter_class);
-      }
-      if (!is_video_driver) {
-         master_err = ERRINFO_NEW(DDCRC_OTHER, "Display controller for bus %d has class %s",
-               businfo->busno, driver_info->adapter_class);
+      if (!businfo->driver) {
+         Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, -1);
+         businfo->driver = g_strdup(driver_info->driver);  // ** LEAKY
+         // perhaps save businfo->driver_version
+         // assert(driver_info->adapter_class);
+         bool is_video_driver = false;
+         if (driver_info->adapter_class) {
+            is_video_driver = is_adapter_class_display_controller(driver_info->adapter_class);
+         }
+         if (!is_video_driver) {
+            master_err = ERRINFO_NEW(DDCRC_OTHER, "Display controller for bus %d has class %s",
+                  businfo->busno, driver_info->adapter_class);
+            free_sysfs_i2c_info(driver_info);
+            goto bye;
+         }
          free_sysfs_i2c_info(driver_info);
-         goto bye;
       }
-      free_sysfs_i2c_info(driver_info);
    }
 
    businfo->flags |= I2C_BUS_EXISTS;
@@ -1400,24 +1409,25 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
 
    // *** Try to find the drm connector by bus number
 
-   //assert(businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_CHECKED ||
-   //       businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_FOUND);
-   businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_CHECKED;
-   // n. will fail for MST
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Finding DRM connector name for bus %s using busno", dev_name);
-   Find_Sys_Drm_Connector_Result res = find_sys_drm_connector_by_busno_or_edid(businfo->busno, NULL);
-   if (res.connector_name) {
-      businfo->drm_connector_name = strdup(res.connector_name);  // *** LEAKS ***
-      businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
-      businfo->drm_connector_id = res.connector_id;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Found DRM connector name %s by busno, found_by=%s",
-            businfo->drm_connector_name, drm_connector_found_by_name(businfo->drm_connector_found_by));
-      free_find_sys_drm_connector_result_contents(res);
+   if (!businfo->drm_connector_name) {  // i.e. this is a recheck
+      //assert(businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_CHECKED ||
+      //       businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_FOUND);
+      businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_CHECKED;
+      // n. will fail for MST
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Finding DRM connector name for bus %s using busno", dev_name);
+      Find_Sys_Drm_Connector_Result res = find_sys_drm_connector_by_busno_or_edid(businfo->busno, NULL);
+      if (res.connector_name) {
+         businfo->drm_connector_name = strdup(res.connector_name);  // *** LEAKS ***
+         businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
+         businfo->drm_connector_id = res.connector_id;
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Found DRM connector name %s by busno, found_by=%s",
+               businfo->drm_connector_name, drm_connector_found_by_name(businfo->drm_connector_found_by));
+         free_find_sys_drm_connector_result_contents(res);
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DRM connector not found by busno %d", businfo->busno);
+      }
    }
-   else {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DRM connector not found by busno %d", businfo->busno);
-   }
-
    // *** Possibly try to get the EDID from sysfs
    bool checked_connector_for_edid = false;
    if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
@@ -1459,6 +1469,7 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
 #endif
    if (!checked_connector_for_edid) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, calling i2c_get_parsed_edid", businfo->busno);
+      assert(!businfo->edid);
       DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
                     businfo->busno, psc_desc(ddcrc));
@@ -1478,7 +1489,7 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
       set_connector_for_businfo_using_edid(businfo);
    }
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "WOLF 4: Bus %s: connector_name=%s, found by: %s",
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bus %s: connector_name=%s, found by: %s",
          dev_name, businfo->drm_connector_name,
          drm_connector_found_by_name(businfo->drm_connector_found_by));
 
@@ -1531,7 +1542,7 @@ Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
 
 bye:
    if ( IS_DBGTRC(debug, TRACE_GROUP)) {
-      DBGTRC_DONE(true, TRACE_GROUP, "busno=%d, flags = %s",
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "busno=%d, flags = %s",
             businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
 
       // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "businfo:");
@@ -1927,7 +1938,7 @@ i2c_threaded_initial_checks_by_businfo(gpointer data) {
    // g_thread_exit(NULL);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. bus=/dev/i2c-%d", businfo->busno );
-   free_traced_function_stack();
+   free_current_traced_function_stack();
    return NULL;
 }
 
