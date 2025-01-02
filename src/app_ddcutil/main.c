@@ -1248,10 +1248,10 @@ bye:
       closelog();
    }
 
-   ddc_stop_watch_displays(true,NULL);
+   // ddc_stop_watch_displays(true,NULL);
    terminate_ddc_services();
    terminate_base_services();
-   free_traced_function_stack();
+   free_all_traced_function_stacks();
 
    return main_rc;
 }
