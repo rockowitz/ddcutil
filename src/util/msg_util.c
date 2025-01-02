@@ -28,6 +28,8 @@ bool traced_function_stack_enabled = true;
 bool __thread traced_function_stack_suspended = false;
 
 static __thread GQueue * traced_function_stack;
+static GPtrArray * all_traced_function_stacks = NULL;
+static GMutex all_traced_function_stacks_mutex;
 
 __thread pid_t process_id = 0;
 __thread pid_t thread_id  = 0;
@@ -109,12 +111,12 @@ char * formatted_wall_time() {
 }
 
 
-void debug_traced_function_stack(bool reverse) {
-   if (traced_function_stack) {
+void debug_traced_function_stack(GQueue * stack, bool reverse) {
+   if (stack) {
       printf("[%d] Traced function stack %p:\n", tid(), traced_function_stack);
       int queue_len = g_queue_get_length(traced_function_stack);
       if (queue_len > 0) {
-         printf("traced function stack (addr=%p, len=%d, tid=%d):\n", traced_function_stack, queue_len, tid() );
+         printf("[%7d]traced function stack (addr=%p, len=%d:\n", tid(), traced_function_stack, queue_len );
          if (reverse) {
             for (int ndx =  g_queue_get_length(traced_function_stack)-1; ndx >=0 ; ndx--) {
                printf("   %s\n", (char*) g_queue_peek_nth(traced_function_stack, ndx));
@@ -130,13 +132,21 @@ void debug_traced_function_stack(bool reverse) {
          printf("    EMPTY\n");
       }
    }
+
+}
+
+
+void debug_current_traced_function_stack(bool reverse) {
+   if (traced_function_stack) {
+      debug_traced_function_stack(traced_function_stack, reverse);
+   }
    else {
       printf("[%d] no traced function stack\n", tid());
    }
 }
 
 
-GPtrArray * get_traced_callstack(bool most_recent_last) {
+GPtrArray * get_traced_function_stack(bool most_recent_last) {
    GPtrArray* callstack = g_ptr_array_new_with_free_func(g_free);
    int qsize = g_queue_get_length(traced_function_stack);
    if (most_recent_last) {
@@ -153,6 +163,43 @@ GPtrArray * get_traced_callstack(bool most_recent_last) {
 }
 
 
+typedef struct {
+   GQueue * traced_function_stack;
+   pid_t    thread_id;
+} All_Traced_Function_Stacks_Entry;
+
+
+/** Creates a traced function stack on the current thread
+ *  and adds it to the list of traced function stacks
+ *  on all threads.
+ */
+GQueue * new_traced_function_stack() {
+   bool debug = false;
+   if (debug)
+      printf("[%7d](%s) Starting.\n", tid(), __func__);
+
+   GQueue* result = g_queue_new();
+   g_mutex_lock(&all_traced_function_stacks_mutex);
+   if (!all_traced_function_stacks)
+      all_traced_function_stacks = g_ptr_array_new();
+   All_Traced_Function_Stacks_Entry * entry = calloc(1, sizeof(All_Traced_Function_Stacks_Entry));
+   entry->traced_function_stack = result;
+   entry->thread_id = tid();
+   // printf("entry=%p\n", entry);
+   g_ptr_array_add(all_traced_function_stacks, entry);
+   g_mutex_unlock(&all_traced_function_stacks_mutex);
+
+   if (debug)
+      printf("[%7d](%s) Done.    Returning %p\n", tid(), __func__, result);
+
+   return result;
+}
+
+
+/** Pushes a function name onto the traced function stack for the current thread.
+ *
+ *  @param funcname  function name
+ */
 void push_traced_function(const char * funcname) {
    bool debug = false;
    if (debug)
@@ -160,14 +207,14 @@ void push_traced_function(const char * funcname) {
             tid(), funcname, traced_function_stack_enabled);
    if (traced_function_stack_enabled && !traced_function_stack_suspended) {
       if (!traced_function_stack) {
-         traced_function_stack = g_queue_new();
+         traced_function_stack = new_traced_function_stack();
          if (debug)
             printf("(push_traced_function) tid=%d, allocated new traced_function_stack %p\n", tid(), traced_function_stack);
       }
       g_queue_push_head(traced_function_stack, g_strdup(funcname));
    }
    else {
-      // fprintf(stderr, "traced_function_stack is disabled\n");
+      fprintf(stderr, "traced_function_stack is disabled\n");
    }
    // debug_traced_function_stack(true);
 }
@@ -184,34 +231,106 @@ char * peek_traced_function() {
 
 
 void pop_traced_function(const char * funcname) {
+   bool debug = false;
+
    if (!traced_function_stack) {
-      fprintf(stderr, "(%s) tid=%d. No traced function stack\n", __func__, tid());
+      fprintf(stderr, "[%7d](%s) funcname=%s. No traced function stack\n", tid(), __func__, funcname);
    }
    else {
       if (traced_function_stack_enabled && !traced_function_stack_suspended) {
          char * popped_func = g_queue_pop_head(traced_function_stack);
          if (!popped_func) {
-            fprintf(stderr, "(%s) tid=%d, traced_function_stack=%p, traced_function_stack is empty\n",
-                  __func__, tid(), traced_function_stack);
+            fprintf(stderr, "(%s) tid=%d, traced_function_stack=%p, expected %s, traced_function_stack is empty\n",
+                  __func__, tid(), traced_function_stack, funcname);
          }
-         else if (strcmp(popped_func, funcname) != 0) {
-            fprintf(stderr, "[%d](%s)traced_function_stack=%p, !!! popped traced function %s, expected %s\n",
-                  tid(), __func__, traced_function_stack,  popped_func, funcname);
-            fprintf(stderr, "Current traced function stack:\n");
-            debug_traced_function_stack(true);
+         else {
+            if (strcmp(popped_func, funcname) != 0) {
+               fprintf(stderr, "[%d](%s)traced_function_stack=%p, !!! popped traced function %s, expected %s\n",
+                     tid(), __func__, traced_function_stack,  popped_func, funcname);
+               fprintf(stderr, "Current traced function stack:\n");
+               debug_current_traced_function_stack(true);
+            }
+            else {
+               if (debug)
+                  fprintf(stdout, "[%7d](%s) Popped %s\n", tid(), __func__, popped_func);
+            }
+            free(popped_func);
          }
       }
    }
 }
 
+#ifdef no
+void remove_traced_function_stack(GQueue * stack) {
+   g_mutex_lock(&all_traced_function_stacks_mutex);
+   g_ptr_array_remove(all_traced_function_stacks, stack);
+   g_mutex_unlock(&all_traced_function_stacks_mutex);
+}
+#endif
 
-void free_traced_function_stack() {
+
+/** Frees the traced function stack on the current thread.
+ *
+ * Must be called WITHOUT all_traced_function_stacks_mutex locked
+ */
+void free_current_traced_function_stack() {
    if (traced_function_stack) {
-      printf("[%d](free_traced_function_stack) traced_function_stack=%p. Executing.\n",
+      printf("[%d](free_current_traced_function_stack) traced_function_stack=%p. Executing.\n",
             tid(), traced_function_stack);
-      printf("[%d](free_traced_function_stack) Final contents of traced_function_stack:\n", tid());
-      debug_traced_function_stack(true);
+      printf("[%d](free_current_traced_function_stack) Final contents of traced_function_stack:\n", tid());
+      debug_current_traced_function_stack(true);
       g_queue_free_full(traced_function_stack, g_free);
+      g_mutex_lock(&all_traced_function_stacks_mutex);
+      g_ptr_array_remove(all_traced_function_stacks, traced_function_stack);
+      g_mutex_unlock(&all_traced_function_stacks_mutex);
    }
 }
+
+
+// must be called with all_traced_function_stacks_mutex locked
+void free_traced_function_stack(GQueue * stack) {
+   printf("[%d](%s) Starting. stack=%p\n", tid(), __func__, traced_function_stack);
+
+   if (stack) {
+      printf("[%d](free__traced_function_stack) Final contents of traced_function_stack:\n", tid());
+      debug_traced_function_stack(stack, true);
+
+      g_queue_free_full(stack, g_free);
+
+      g_ptr_array_remove(all_traced_function_stacks, stack);
+   }
+
+   printf("[%d](%s) Done.\n", tid(), __func__);
+}
+
+
+void free_all_traced_function_stacks() {
+   bool debug = true;
+   if (debug)
+      printf("[%7d](%s) Starting.\n", tid(), __func__);
+
+   g_mutex_lock(&all_traced_function_stacks_mutex);
+   // g_queue_set_free_func(all_traced_function_stacks, g_free);
+   if (all_traced_function_stacks) {
+      printf("Found %d traced function stack(s)\n", all_traced_function_stacks->len);
+      for (int ndx = all_traced_function_stacks->len-1; ndx >= 0; ndx--) {
+         All_Traced_Function_Stacks_Entry * entry = g_ptr_array_index(all_traced_function_stacks, ndx);
+         // printf("entry=%p\n", entry);
+         if (debug)
+            printf("Freeing traced function stack for thread %d\n", entry->thread_id);
+         free_traced_function_stack(entry->traced_function_stack);
+         g_ptr_array_remove_index(all_traced_function_stacks, ndx);
+         free(entry);
+      }
+      g_ptr_array_free(all_traced_function_stacks, true);
+      all_traced_function_stacks = NULL;
+   }
+   else {
+      printf("[%7d](%s) traced_function_stacks not set\n", tid(), __func__);
+   }
+   g_mutex_unlock(&all_traced_function_stacks_mutex);
+
+   if (debug)
+      printf("[%7d](%s) Done.\n", tid(), __func__);
+};
 

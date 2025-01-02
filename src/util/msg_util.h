@@ -27,8 +27,9 @@ char*      formatted_wall_time();
 void       push_traced_function(const char * funcname);
 char*      peek_traced_function();
 void       pop_traced_function(const char * funcname);
-void       debug_traced_function_stack(bool reverse);
-GPtrArray* get_traced_callstack(bool most_recent_last);
-void       free_traced_function_stack();
+void       debug_current_traced_function_stack(bool reverse);
+GPtrArray* get_traced_function_stack(bool most_recent_last);
+void       free_current_traced_function_stack();
+void       free_all_traced_function_stacks();
 
 #endif /* MSG_UTIL_H_ */
