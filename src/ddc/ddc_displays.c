@@ -91,6 +91,7 @@ static bool detect_usb_displays = true;
 #else
 static bool detect_usb_displays = false;
 #endif
+static bool allow_asleep = true;
 bool monitor_state_tests = false;
 bool skip_ddc_checks = false;
 bool debug_locks = false;
@@ -541,8 +542,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          }
    #endif
 
-      if (ddc_excp) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+         if (ddc_excp) {
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "!!!!! busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
             businfo->busno,
             pdd_get_adjusted_sleep_multiplier(pdd),
@@ -644,6 +645,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
             }
          }    // end, io_mode == DDC_IO_I2C
 
+         // DBGMSG("Before ERRINFO_FREE_WITH_REPORT(): ddc_excp=%p", ddc_excp);
          if (ddc_excp)
             ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
 
@@ -659,7 +661,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          }
 
          pdd_set_dynamic_sleep_active(dref->pdd, true);   // in case it was set false
-      free(parsed_response_loc);
+         free(parsed_response_loc);
       }
    }  // end, !DREF_DDC_COMMUNICATION_CHECKED
 
@@ -807,7 +809,7 @@ threaded_initial_checks_by_dref(gpointer data) {
    ddc_initial_checks_by_dref(dref, false);
    // g_thread_exit(NULL);
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. dref = %s,", dref_repr_t(dref) );
-   free_traced_function_stack();
+   free_current_traced_function_stack();
    return NULL;
 }
 
@@ -1946,7 +1948,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
                }
             }
          }
-         if (ddcrc == 0 && (validation_options&DREF_VALIDATE_AWAKE)) {
+         if (ddcrc == 0 && (validation_options&DREF_VALIDATE_AWAKE && !allow_asleep)) {
             if (dpms_check_drm_asleep_by_dref(dref))
                ddcrc = DDCRC_DPMS_ASLEEP;
          }
@@ -2097,7 +2099,8 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
    assert(businfo->flags & I2C_BUS_PROBED);
    // businfo->flags &= ~I2C_BUS_PROBED;
-   i2c_check_bus2(businfo);  // if display on bus was previously removed, info in businfo, particuarly EDID, will be stale
+   // unnecessary, already done by i2c_get_and_check_bus_info() call in our only caller, ddc_i2c_hotplug_change_handler()
+   // i2c_check_bus2(businfo);  // if display on bus was previously removed, info in businfo, particuarly EDID, will be stale
    if (businfo->edid) {
       dref = create_bus_display_ref(businfo->busno);
       // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
