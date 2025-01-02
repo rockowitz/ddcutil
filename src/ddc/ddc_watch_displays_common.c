@@ -120,7 +120,7 @@ void terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid) {
        DBGMSG("Thread %d not found", cur_tid);
     }
     if (!pid_found || !tid_found) {
-       free_traced_function_stack();
+       free_current_traced_function_stack();
        g_thread_exit(GINT_TO_POINTER(-1));
     }
 }
@@ -389,9 +389,10 @@ bool ddc_i2c_hotplug_change_handler(
          event_emitted = true;
       }
       if (i2c_device_exists(busno)) {
-         i2c_reset_bus_info(businfo);
+         // i2c_reset_bus_info(businfo);  // alredy done in ddc_remove_display_by_businfo2()
       }
       else {
+         // is this possible?
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Device /dev/i2c-%d no longer exists.", busno);
          i2c_remove_bus_by_busno(busno);
       }
