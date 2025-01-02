@@ -542,7 +542,7 @@ gpointer ddc_recheck_displays_func(gpointer data) {
    g_ptr_array_free(displays_to_recheck, true);  // n. ptr array destroyed, but drefs remain
    free(rdd);
    DBGTRC_DONE(debug, TRACE_GROUP, "terminating recheck thread");
-   free_traced_function_stack();
+   free_current_traced_function_stack();
    g_thread_exit(NULL);
    return NULL;     // no effect, but avoids compiler error
 }
@@ -649,14 +649,17 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Processing screen change event");
       process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
-            deferred_events,
-            displays_to_recheck);
+                                  deferred_events, displays_to_recheck);
       if (displays_to_recheck->len > 0) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "handling displays_to_recheck");
 
          Recheck_Displays_Data * rdd = calloc(1, sizeof(Recheck_Displays_Data));
          rdd->displays_to_recheck = displays_to_recheck;
          rdd->deferred_event_queue = deferred_events;
+         g_thread_new("display_recheck_thread",             // optional thread name
+                      ddc_recheck_displays_func,
+                      rdd);
+         displays_to_recheck = g_ptr_array_new();
       }
 
    } // while()
@@ -664,6 +667,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
    // n. slept == 0 if no sleep was performed
    DBGTRC_DONE(debug, TRACE_GROUP,
          "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
+   g_ptr_array_free(displays_to_recheck, true);
    free_watch_displays_data(wdd);
    if (deferred_events)
       g_array_free(deferred_events, true);
@@ -671,7 +675,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
    if (watch_dpms)
       g_ptr_array_free(sleepy_connectors, true);
 #endif
-   free_traced_function_stack();
+   free_current_traced_function_stack();
    g_thread_exit(0);
    assert(false);    // avoid clang warning re wdd use after free
    return NULL;    // satisfy compiler check that value returned
