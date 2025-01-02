@@ -643,7 +643,7 @@ _ddca_terminate(void) {
    }
    // Frees the traced function stack for the main thread.
    // For created threads, is called at time of thread termination
-   free_traced_function_stack();  // must come after last DBG... call
+   free_current_traced_function_stack();  // must come after last DBG... call
 
    // special handling for termination msg
    if (syslog_level > DDCA_SYSLOG_NEVER)
