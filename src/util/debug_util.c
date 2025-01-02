@@ -204,7 +204,7 @@ void show_backtrace(int stack_adjust) {
       perror("backtrace unavailable");
    }
    else {
-      rpt_label(depth, "Current call stack:\n");
+      rpt_label(depth, "Current call stack:");
       for (int ndx = 0; ndx < callstack->len; ndx++) {
          rpt_vstring(depth, "   %s", (char *) g_ptr_array_index(callstack, ndx));
       }
