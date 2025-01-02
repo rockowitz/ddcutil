@@ -600,7 +600,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
               g_ptr_array_free(sleepy_connectors, true);
 #endif
 
-            free_traced_function_stack();
+            free_current_traced_function_stack();
             g_thread_exit(0);
             assert(false);    // avoid clang warning re wdd use after free
          }
