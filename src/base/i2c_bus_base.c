@@ -155,6 +155,9 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
    assert(businfo);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d, flags=%s",
          businfo, businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
+   if (debug) {
+      show_backtrace(1);
+   }
    if (i2c_device_exists(businfo->busno)) {
       //businfo->flags &= ~(I2C_BUS_ACCESSIBLE | I2C_BUS_ADDR_X30 | I2C_BUS_ADDR_X37 |
       //       I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID );
@@ -168,6 +171,7 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
       free_parsed_edid(businfo->edid);
       businfo->edid = NULL;
    }
+   // free(businfo->drm_connector_name); // double free
    if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Final businfo:");
       i2c_dbgrpt_bus_info(businfo, true, 2);
@@ -282,7 +286,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
  */
 I2C_Bus_Info * i2c_new_bus_info(int busno) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "busno=%d", busno);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
    assert(busno != 255 && busno != -1);
    I2C_Bus_Info * businfo = calloc(1, sizeof(I2C_Bus_Info));
    memcpy(businfo->marker, I2C_BUS_INFO_MARKER, 4);
@@ -401,7 +405,7 @@ void i2c_discard_buses() {
  */
 void i2c_free_bus_info(I2C_Bus_Info * businfo) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo = %p", businfo);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo = %p, busno=%d", businfo, businfo->busno);
    // if (IS_DBGTRC(debug, TRACE_GROUP))
    //    show_backtrace(1);
    if (businfo)
