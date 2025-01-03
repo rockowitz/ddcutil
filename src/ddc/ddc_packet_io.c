@@ -217,9 +217,19 @@ ddc_open_display(
    {
       possibly_write_detect_to_status_by_dref(dref);
       char * status;
+      int tryct = 0;
+   retry_status:
       RPT_ATTR_TEXT(-1, &status, "/sys/class/drm", dref->drm_connector, "status");
-      if (streq(status, "disconnected"))
+      if (streq(status, "disconnected")) {
+         if (tryct == 0) {
+            free(status);
+            DBGTRC_NOPREFIX(true, TRACE_GROUP, "status == disconnected, sleeping 1 sec and retrying");
+            sleep(1);
+            tryct++;
+            goto retry_status;
+         }
          err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
+      }
       free(status);
       if (err)
          goto bye;
