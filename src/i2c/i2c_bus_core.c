@@ -1339,7 +1339,7 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
  *  @return status code
  */
 Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
-   bool debug  = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p, primitive_sysfs=%s",
          businfo->busno, businfo, SBOOL(primitive_sysfs) );
    assert(businfo && ( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
