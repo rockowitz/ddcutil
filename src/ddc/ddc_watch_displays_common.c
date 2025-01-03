@@ -389,7 +389,7 @@ bool ddc_i2c_hotplug_change_handler(
          event_emitted = true;
       }
       if (i2c_device_exists(busno)) {
-         // i2c_reset_bus_info(businfo);  // alredy done in ddc_remove_display_by_businfo2()
+         // i2c_reset_bus_info(businfo);  // already done in ddc_remove_display_by_businfo2()
       }
       else {
          // is this possible?
@@ -416,14 +416,20 @@ bool ddc_i2c_hotplug_change_handler(
        path.io_mode = DDCA_IO_I2C;
        path.path.i2c_busno = busno;
        Display_Ref* dref = ddc_add_display_by_businfo(businfo);
-       add_published_dref_id_by_dref(dref);
-       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) && drefs_to_recheck) {
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
-          g_ptr_array_add(drefs_to_recheck, dref);
-       }
-       ddc_emit_or_queue_display_status_event(
+       if (dref) {
+          add_published_dref_id_by_dref(dref);
+          if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) && drefs_to_recheck) {
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
+             g_ptr_array_add(drefs_to_recheck, dref);
+          }
+          ddc_emit_or_queue_display_status_event(
              DDCA_EVENT_DISPLAY_CONNECTED, businfo->drm_connector_name, dref, path, events_queue);
-       event_emitted = true;
+          event_emitted = true;
+       }
+       else {
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Newly detected display has disappeared!!!");
+          event_emitted = false;
+      }
    }
    bs256_iter_free(iter);
 
