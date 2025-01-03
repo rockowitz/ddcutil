@@ -552,7 +552,13 @@ Display_Ref * dref_id_to_ptr(guint dref_id) {
 #endif
 
 
-
+/** Given a DDCA_Display_Ref, looks up the corresponding Display_Ref*
+ *  in the hash table of external display refs that have been given
+ *  to the client.
+ *
+ *   @param ddca_dref public opaque display ref
+ *   @result pointer to internal Display_Ref, NULL if not found
+ */
 Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref = %p", ddca_dref);
@@ -583,13 +589,18 @@ Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
 
 DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref) {
    bool debug = false;
+   DDCA_Display_Ref ddca_dref = (DDCA_Display_Ref*) GUINT_TO_POINTER(0);
+   if (dref) {
 #ifdef NUMERIC_DDCA_DISPLAY_REF
-   DDCA_Display_Ref * ddca_dref = GUINT_TO_POINTER(dref->dref_id);
+      DDCA_Display_Ref * ddca_dref = (DDCA_Display_Ref*) GUINT_TO_POINTER(dref->dref_id);
 #else
-   DDCA_Display_Ref  ddca_dref = (void*) dref;
+      DDCA_Display_Ref  ddca_dref = (void*) dref;
 #endif
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "dref=%p, dref->dref_id=%d, retuning %p",
-                                         dref, dref->dref_id, ddca_dref);
+      DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "dref=%p, dref->dref_id=%d, returning %p",
+                                            dref, dref->dref_id, ddca_dref);
+   }
+   else
+      DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "dref=%p, returning %p", dref, ddca_dref);
    return ddca_dref;
 }
 
