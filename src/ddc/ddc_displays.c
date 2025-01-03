@@ -816,6 +816,8 @@ ddc_recheck_dref(Display_Ref * dref) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Released lock on %s:", dref_reprx_t(dref));
 
    result = (!err);
+   if (err)
+      errinfo_free(err);
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
@@ -887,7 +889,8 @@ ddc_non_async_scan(GPtrArray * all_displays) {
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-      ddc_initial_checks_by_dref(dref, false);
+      Error_Info * err = ddc_initial_checks_by_dref(dref, false);
+      free(err);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -2294,6 +2297,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_mark_display_ref_removed);
+
    RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(ddc_recheck_dref);
    RTTI_ADD_FUNC(ddc_redetect_displays);
