@@ -117,7 +117,7 @@ void sleep_millis_with_trace(
    if (!message)
       message = "";
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_SLEEP,
+   DBGTRC_EXECUTED(debug, DDCA_TRC_SLEEP,
                    "Sleeping for %d milliseconds. %s", milliseconds, message);
 
    if (milliseconds > 0)
