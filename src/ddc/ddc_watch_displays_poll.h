@@ -9,6 +9,7 @@
 #include <glib-2.0/glib.h>
 
 extern int  nonudev_poll_loop_millisec;
+extern bool stabilize_added_buses_w_edid;
 
 gpointer ddc_watch_displays_without_udev(gpointer data);
 

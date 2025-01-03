@@ -426,6 +426,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       verify_sysfs_edid = true;
 #endif
 
+   if (parsed_cmd->flags2 & CMD_FLAG2_F19)
+      stabilize_added_buses_w_edid = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F23)
       primitive_sysfs = true;
 

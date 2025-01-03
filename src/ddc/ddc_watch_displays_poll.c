@@ -66,6 +66,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 int  nonudev_poll_loop_millisec = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;   // 2000;   // default sleep time on each loop
+bool stabilize_added_buses_w_edid;
 
 #ifdef OLD
 //
@@ -254,9 +255,9 @@ void ddc_poll_recheck_bus(
 
 
 void process_screen_change_event(
-      BS256* p_bs_old_attached_buses,
-      BS256* p_bs_old_buses_w_edid,
-      GArray * deferred_events,
+      BS256*      p_bs_old_attached_buses,
+      BS256*      p_bs_old_buses_w_edid,
+      GArray *    deferred_events,
       GPtrArray * displays_to_recheck
       )
 {
@@ -289,7 +290,9 @@ void process_screen_change_event(
                                 bs256_to_string_decimal_t(bs_cur_buses_w_edid, "", ","));
 #endif
 
-      if ( bs256_count(bs_removed_buses_w_edid) > 0 ) {   // || bs256_count(bs_removed_attached_buses) > 0) {
+   // if ( bs256_count(bs_removed_buses_w_edid) > 0 ) {   // || bs256_count(bs_removed_attached_buses) > 0) {
+      if ( bs256_count(bs_removed_buses_w_edid) > 0 ||
+           (stabilize_added_buses_w_edid &&  bs256_count(bs_added_buses_w_edid) > 0)) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_attached_buses: %s", BS256_REPR(bs_old_attached_buses));
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_cur_attached_buses: %s", BS256_REPR(bs_cur_attached_buses));
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_buses_w_edid: %s",   BS256_REPR(bs_old_buses_w_edid));
