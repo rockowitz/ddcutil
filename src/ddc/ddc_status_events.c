@@ -144,10 +144,10 @@ ddc_create_display_status_event(
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "event_type=%d, connector_name=%s, dref=%s, io_path=%s",
          event_type, connector_name, dref_reprx_t(dref), dpath_short_name_t(&io_path) );
    DDCA_Display_Status_Event evt;
-   DBGMSF(debug, "sizeof(DDCA_Display_Status_Event) = %d, sizeof(evt) = %d",
-         sizeof(DDCA_Display_Status_Event), sizeof(evt));
+   // DBGMSF(debug, "sizeof(DDCA_Display_Status_Event) = %d, sizeof(evt) = %d",
+   //       sizeof(DDCA_Display_Status_Event), sizeof(evt));
    evt.timestamp_nanos = elapsed_time_nanosec();
-   evt.dref = dref_to_ddca_dref(dref);
+   evt.dref = dref_to_ddca_dref(dref);  // 0 if dref == NULL
    evt.event_type = event_type;
    if (connector_name)
       g_snprintf(evt.connector_name, sizeof(evt.connector_name), "%s", connector_name);
