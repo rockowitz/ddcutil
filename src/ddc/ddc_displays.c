@@ -707,6 +707,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
  */
 Error_Info *
 ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
+   assert(dref);
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, newly_added=%s", dref_repr_t(dref), sbool(newly_added));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial dref->flags: %s", interpret_dref_flags_t(dref->flags));
@@ -835,8 +836,9 @@ threaded_initial_checks_by_dref(gpointer data) {
    TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref) );
 
-   ddc_initial_checks_by_dref(dref, false);
+   Error_Info * erec = ddc_initial_checks_by_dref(dref, false);
    // g_thread_exit(NULL);
+   ERRINFO_FREE_WITH_REPORT(erec, debug);
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. dref = %s,", dref_repr_t(dref) );
    free_current_traced_function_stack();
    return NULL;
@@ -1956,8 +1958,9 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
                   int maxtries = 4;
                   int sleep_millis = 500;
                   for (int tryctr = 0; tryctr < maxtries; tryctr++) {
-                     if (tryctr > 0)
+                     if (tryctr > 0) {
                         usleep(MILLIS2NANOS(sleep_millis));
+                     }
                      possibly_write_detect_to_status_by_dref(dref);
                      if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") ) {
                         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "RPT_ATTR_EDID failed. tryctr=%d", tryctr);
@@ -2170,6 +2173,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
             dref->dispno = ++dispno_max;
          ddc_add_display_ref(dref);
       }
+      errinfo_free(err);
    }   // edid exists
 
 
