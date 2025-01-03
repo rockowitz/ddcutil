@@ -30,7 +30,7 @@ void  dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
    int d1 = depth+1;
    rpt_vstring(d1, "dpy:                   %p", evdata->dpy);
    rpt_vstring(d1, "screen:                %d", evdata->screen);
-   rpt_vstring(d1, "w:                     %p", evdata->w);
+   rpt_vstring(d1, "w:                     %ul", evdata->w);
    rpt_vstring(d1, "screen_change_eventno: %d", evdata->screen_change_eventno);
 }
 
