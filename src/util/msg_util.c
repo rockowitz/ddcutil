@@ -113,18 +113,18 @@ char * formatted_wall_time() {
 
 void debug_traced_function_stack(GQueue * stack, bool reverse) {
    if (stack) {
-      printf("[%d] Traced function stack %p:\n", tid(), traced_function_stack);
-      int queue_len = g_queue_get_length(traced_function_stack);
+      printf("[%d] Traced function stack %p:\n", tid(), stack);
+      int queue_len = g_queue_get_length(stack);
       if (queue_len > 0) {
-         printf("[%7d]traced function stack (addr=%p, len=%d:\n", tid(), traced_function_stack, queue_len );
+         printf("[%7d]traced function stack (addr=%p, len=%d:\n", tid(), stack, queue_len );
          if (reverse) {
-            for (int ndx =  g_queue_get_length(traced_function_stack)-1; ndx >=0 ; ndx--) {
-               printf("   %s\n", (char*) g_queue_peek_nth(traced_function_stack, ndx));
+            for (int ndx =  g_queue_get_length(stack)-1; ndx >=0 ; ndx--) {
+               printf("   %s\n", (char*) g_queue_peek_nth(stack, ndx));
             }
          }
          else {
-            for (int ndx = 0; ndx < g_queue_get_length(traced_function_stack); ndx++) {
-               printf("   %s\n", (char*) g_queue_peek_nth(traced_function_stack, ndx));
+            for (int ndx = 0; ndx < g_queue_get_length(stack); ndx++) {
+               printf("   %s\n", (char*) g_queue_peek_nth(stack, ndx));
             }
          }
       }
