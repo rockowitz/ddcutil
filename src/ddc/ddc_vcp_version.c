@@ -105,11 +105,13 @@ set_vcp_version_xdf_by_dh(Display_Handle * dh)
            set_output_level(olev);
 
         const char * e1 = "Error detecting VCP version using VCP feature xDF:";
-        if (ddc_excp)
+        if (ddc_excp) {
            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s %s", e1, errinfo_summary(ddc_excp));
+           ERRINFO_FREE(ddc_excp);
+        }
         else {
            if (!parsed_response_loc->valid_response)
-              MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s Invalid respose", e1);
+              MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s Invalid response", e1);
            else if (!parsed_response_loc->supported_opcode) {
               // happens for pre MCCS v2 monitors
               MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "%s Unsupported feature code", e1);
