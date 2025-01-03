@@ -405,7 +405,7 @@ void i2c_discard_buses() {
  */
 void i2c_free_bus_info(I2C_Bus_Info * businfo) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo = %p, busno=%d", businfo, businfo->busno);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo = %p", businfo);
    // if (IS_DBGTRC(debug, TRACE_GROUP))
    //    show_backtrace(1);
    if (businfo)
