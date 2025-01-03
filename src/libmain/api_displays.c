@@ -120,8 +120,7 @@ DDCA_Status ddci_validate_ddca_display_ref2(
             ddca_dref, ddca_dref, *dref_loc, dref_reprx_t(*dref_loc));
    }
    else
-      DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "ddca_dref=%p=%d, *dref_loc=%p",
-            ddca_dref, ddca_dref, *dref_loc);
+      DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "ddca_dref=%p=%d", ddca_dref, ddca_dref);
    return result;
 }
 
