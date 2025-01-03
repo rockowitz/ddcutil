@@ -86,36 +86,42 @@ DDCA_Status ddci_validate_ddca_display_ref2(
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref=%p=%d, validation_options=0x%02x, dref_loc=%p",
                                          ddca_dref, ddca_dref, validation_options, dref_loc);
+   DDCA_Status result = DDCRC_OK;
    if (dref_loc)
       *dref_loc = NULL;
    if (debug)
       dbgrpt_published_dref_hash("published_dref_hash", 1);
    Display_Ref * dref = dref_from_published_ddca_dref(ddca_dref);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref_from_ddca_dref() returned %s", dref_reprx_t(dref));
-   // should be redundant with ddc_validate_display_ref2(), but something not being caught
-   DDCA_Status result = DDCRC_OK;
-   if (dref->flags & DREF_REMOVED) {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_REMOVED set!");
-      result = DDCRC_DISCONNECTED;
-   }
-   else if ( !(dref->flags & DREF_DDC_COMMUNICATION_WORKING) &&
-             !(validation_options & DREF_VALIDATE_DDC_COMMUNICATION_FAILURE_OK)
-           )
-   {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_DDC_COMMUNICATION_WORKING not set!");
-      result = DDCRC_INVALID_DISPLAY;
+   if (!dref) {
+      result = DDCRC_ARG;
    }
    else {
-      result =  (dref) ? ddc_validate_display_ref2(dref, validation_options) : DDCRC_ARG;
+      // should be redundant with ddc_validate_display_ref2(), but something not being caught
+      if (dref->flags & DREF_REMOVED) {
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_REMOVED set!");
+         result = DDCRC_DISCONNECTED;
+      }
+      else if ( !(dref->flags & DREF_DDC_COMMUNICATION_WORKING) &&
+                !(validation_options & DREF_VALIDATE_DDC_COMMUNICATION_FAILURE_OK)
+              )
+      {
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_DDC_COMMUNICATION_WORKING not set!");
+         result = DDCRC_INVALID_DISPLAY;
+      }
+      else {
+         result =  ddc_validate_display_ref2(dref, validation_options);
+      }
    }
 
-   if (result == DDCRC_OK && dref_loc)
+   if (result == DDCRC_OK && dref_loc) {
       *dref_loc = dref;
-
-   if (*dref_loc)
-      DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "ddca_dref=%p=%d. *dref_loc=%p -> %s", ddca_dref, ddca_dref, *dref_loc, dref_reprx_t(*dref_loc));
+      DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "ddca_dref=%p=%d. *dref_loc=%p -> %s",
+            ddca_dref, ddca_dref, *dref_loc, dref_reprx_t(*dref_loc));
+   }
    else
-      DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "ddca_dref=%p=%d, *dref_loc=%p",ddca_dref, ddca_dref, *dref_loc);
+      DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "ddca_dref=%p=%d, *dref_loc=%p",
+            ddca_dref, ddca_dref, *dref_loc);
    return result;
 }
 
