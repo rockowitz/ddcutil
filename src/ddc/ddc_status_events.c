@@ -219,11 +219,10 @@ void ddc_emit_or_queue_display_status_event(
 #endif
    }
    else {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, io_path=%s, event_type=%d=%s, dispno=%d",
+      DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, io_path=%s, event_type=%d=%s",
             connector_name,
             dpath_repr_t(&io_path),
-            event_type, ddc_display_event_type_name(event_type),
-            dref->dispno);
+            event_type, ddc_display_event_type_name(event_type));
    }
 
    DDCA_Display_Status_Event evt = ddc_create_display_status_event(
