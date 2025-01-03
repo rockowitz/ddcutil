@@ -522,11 +522,13 @@ find_dref(
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;
-            if (ddc_initial_checks_by_dref(dref, false)) {
+            Error_Info * err = ddc_initial_checks_by_dref(dref, false);
+            if (err) {
                f0printf(outf, "DDC communication failed for monitor on bus /dev/i2c-%d\n", busno);
                free_display_ref(dref);
                // i2c_free_bus_info(businfo);  // double free
                dref = NULL;
+               ERRINFO_FREE_WITH_REPORT(err, debug);
                final_result = DDCRC_INVALID_DISPLAY;
             }
             else {
@@ -1251,7 +1253,8 @@ bye:
    // ddc_stop_watch_displays(true,NULL);
    terminate_ddc_services();
    terminate_base_services();
-   free_all_traced_function_stacks();
+   // free_all_traced_function_stacks();
+   free_current_traced_function_stack();
 
    return main_rc;
 }
