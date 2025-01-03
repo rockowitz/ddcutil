@@ -1338,7 +1338,7 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
  *  @param  businfo  pointer to #I2C_Bus_Info struct in which information will be set
  *  @return status code
  */
-Status_Errno  i2c_check_bus2(I2C_Bus_Info * businfo) {
+Status_Errno  i2c_check_bus(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p, primitive_sysfs=%s",
          businfo->busno, businfo, SBOOL(primitive_sysfs) );
@@ -1934,7 +1934,7 @@ i2c_threaded_initial_checks_by_businfo(gpointer data) {
    TRACED_ASSERT(memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0 );
    DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d", businfo->busno );
 
-   i2c_check_bus2(businfo);
+   i2c_check_bus(businfo);
    // g_thread_exit(NULL);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. bus=/dev/i2c-%d", businfo->busno );
@@ -1992,7 +1992,7 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
       I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "Calling i2c_check_bus() synchronously for bus %d", businfo->busno);
-      i2c_check_bus2(businfo);
+      i2c_check_bus(businfo);
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -2190,10 +2190,10 @@ I2C_Bus_Info * i2c_get_and_check_bus_info(int busno) {
    I2C_Bus_Info* businfo =  i2c_get_bus_info(busno, &new_info);
    if (!new_info)
       i2c_reset_bus_info(businfo);
-   i2c_check_bus2(businfo);
+   i2c_check_bus(businfo);
 #ifdef OLD
    if (new_info | !(businfo->flags&I2C_BUS_INITIAL_CHECK_DONE)) {
-      i2c_check_bus2(businfo);
+      i2c_check_bus(businfo);
    }
    else {
       i2c_recheck_bus(businfo);
@@ -2242,7 +2242,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
       }
       businfo = i2c_new_bus_info(busno);
       businfo->flags = I2C_BUS_EXISTS;
-      i2c_check_bus2(businfo);
+      i2c_check_bus(businfo);
       if (debug)
          i2c_dbgrpt_bus_info(businfo, true, 0);
       g_ptr_array_add(all_i2c_buses, businfo);
@@ -2484,7 +2484,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(get_i2c_device_numbers_using_udev);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
    RTTI_ADD_FUNC(i2c_async_scan);
-   RTTI_ADD_FUNC(i2c_check_bus2);
+   RTTI_ADD_FUNC(i2c_check_bus);
    RTTI_ADD_FUNC(i2c_check_edid_exists_by_dh);
    RTTI_ADD_FUNC(i2c_check_open_bus_alive);
    RTTI_ADD_FUNC(i2c_close_bus);
