@@ -100,18 +100,18 @@ bool debug_locks = false;
 void ddc_add_display_ref(Display_Ref * dref) {
    bool debug = false ;
    debug = debug || debug_locks;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
    g_mutex_lock(&all_display_refs_mutex);
    g_ptr_array_add(all_display_refs, dref);
    g_mutex_unlock(&all_display_refs_mutex);
-   DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
 }
 
 
 void ddc_mark_display_ref_removed(Display_Ref* dref) {
    bool debug = false;
    debug = debug || debug_locks;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
    g_mutex_lock(&all_display_refs_mutex);
    if (IS_DBGTRC(debug, debug)) {
       show_backtrace(2);
@@ -119,7 +119,7 @@ void ddc_mark_display_ref_removed(Display_Ref* dref) {
    }
    dref->flags |= DREF_REMOVED;
    g_mutex_unlock(&all_display_refs_mutex);
-   DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
 }
 
 
@@ -568,7 +568,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
 
             dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
             if (ddc_excp->status_code != DDCRC_DISCONNECTED) {
-
                bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
                if (newly_added || (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES &&
                                                dynamic_sleep_active &&
@@ -577,7 +576,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
                   if (dynamic_sleep_active) {
                      DBGMSG("Additional 1 second sleep for newly added display");
                      SYSLOG2(DDCA_SYSLOG_ERROR, "Additional 1 second sleep for newly added display");
-                     sleep(1);
+                     DW_SLEEP(1000, "Additional 1 second sleep for newly added display");
                   }
                   // turn off optimization in case it's on
                   if (pdd_is_dynamic_sleep_active(pdd) ) {
@@ -585,6 +584,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
                      FREE(dref->communication_error_summary);
                      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
                      pdd_set_dynamic_sleep_active(dref->pdd, false);
+                     ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
                      ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
                      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                            "busno=%d, sleep-multiplier=%5.2f. "
@@ -1959,7 +1959,8 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
                   int sleep_millis = 500;
                   for (int tryctr = 0; tryctr < maxtries; tryctr++) {
                      if (tryctr > 0) {
-                        usleep(MILLIS2NANOS(sleep_millis));
+                        // usleep(MILLIS2NANOS(sleep_millis));
+                        DW_SLEEP(sleep_millis, "Reading edid from sysfs");
                      }
                      possibly_write_detect_to_status_by_dref(dref);
                      if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") ) {
@@ -2119,7 +2120,7 @@ ddc_is_usb_display_detection_enabled() {
 Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    assert(businfo);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "businfo=%p, busno=%d", businfo, businfo->busno);
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       i2c_dbgrpt_bus_info(businfo, /* include sysinfo*/ true, 4);
    //    ddc_dbgrpt_display_refs_summary(/* include_invalid_displays*/ true, /* report_businfo */ false, 2 );
@@ -2178,7 +2179,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
 
    // ddc_dbgrpt_display_refs_summary(/* include_invalid_displays*/ true, /* report_businfo */ true, 2 );
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref %s", dref_reprx_t(dref), dref);
+   DBGTRC_DONE(debug, DDCA_TRC_CONN, "Returning dref %s", dref_reprx_t(dref), dref);
    if (IS_DBGTRC(debug, DDCA_TRC_NONE) && dref)
       dbgrpt_display_ref_summary(dref, /* include_businfo*/ false, 2);
    return dref;
