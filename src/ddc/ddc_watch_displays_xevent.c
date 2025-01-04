@@ -15,6 +15,7 @@
 #include "base/rtti.h"
 #include "base/sleep.h"
 
+#include "base/i2c_bus_base.h"   // for DDC_DW_SLEEP
 #include "ddc_watch_displays_common.h"
 
 #include "ddc_watch_displays_xevent.h"
@@ -183,7 +184,8 @@ void ddc_send_x11_termination_message(XEvent_Data * evdata) {
               (XEvent *)&evt);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XSendEvent() returned %s", SBOOL(ok));
    XFlush(dpy);
-   sleep(2);    // needed?
+   // sleep(2);    // needed?
+   DW_SLEEP(2*1000*1000, "After XSendEvent");
 
    if (ok)
       DBGTRC_DONE(debug, TRACE_GROUP, "XSendEvent() succeeded");
