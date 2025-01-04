@@ -34,6 +34,7 @@
 #define VALID_ERROR_INFO_PTR(ptr) \
    assert(ptr); \
    if (memcmp(ptr->marker, ERROR_INFO_MARKER, 4) != 0) { \
+      DBG("Invalid ptr->marker, ptr=%p", ptr); \
       show_backtrace(1); \
       debug_current_traced_function_stack(false); \
    } \
