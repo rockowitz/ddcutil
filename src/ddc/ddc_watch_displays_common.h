@@ -80,7 +80,6 @@ bool ddc_i2c_hotplug_change_handler(
       GArray * events_queue,
       GPtrArray * drefs_to_recheck);
 
-
 void init_ddc_watch_displays_common();
 
 #endif /* DDC_WATCH_DISPLAYS_COMMON_H_ */
