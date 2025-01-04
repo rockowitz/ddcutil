@@ -503,7 +503,8 @@ gpointer ddc_recheck_displays_func(gpointer data) {
    int sleep_sec = 0;
    for (int sleepctr = 0; sleepctr < 4 && displays_to_recheck->len > 0; sleepctr++) {
       sleep_sec = simple_ipow(2, sleepctr);
-      sleep(sleep_sec);
+      // sleep(sleep_sec);
+      DW_SLEEP(sleep_sec*1000*1000, "Recheck interval");
 
       for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
           Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
