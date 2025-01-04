@@ -1569,46 +1569,12 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  indicating why a display ref is invalid.
  *
  *  @param   dref   display reference to validate
- *  #param   basic_only
- *  @param   require_not_asleep
+ *  #param   validation_options
  *  @retval  DDCRC_OK
  *  @retval  DDCRC_ARG             dref is null or does not point to a Display_Ref
  *  @retval  DDCRC_DISCONNECTED    display has been disconnected
  *  @retval  DDCRC_DPMS_ASLEEP     possible if require_not_asleep == true
  */
-#ifdef OLD
-DDCA_Status
-ddc_validate_display_ref(Display_Ref * dref, bool basic_only, bool require_not_asleep) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s, require_not_asleep=%s",
-         dref, dref_repr_t(dref), sbool(require_not_asleep));
-   assert(all_display_refs);
-
-   DDCA_Status ddcrc = DDCRC_OK;
-   if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0)
-         ddcrc = DDCRC_ARG;
-   // else if (dref->dispno < 0)   // cause of ddcui issue  #55
-   //    ddcrc = DDCRC_ARG;
-   else if (dref->flags & DREF_REMOVED)
-      ddcrc = DDCRC_DISCONNECTED;
-   else if (all_video_adapters_implement_drm && dref->drm_connector && !basic_only) {
-      // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
-      // if (!dref->drm_connector)
-      //   ddcrc = DDCRC_INTERNAL_ERROR;
-      // wrong, bug in driver, edid persists after disconnection
-      // else if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") )
-      //    ddcrc = DDCRC_DISCONNECTED;
-      // else
-      if (require_not_asleep && dpms_check_drm_asleep_by_connector(dref->drm_connector))
-         ddcrc = DDCRC_DPMS_ASLEEP;
-   }
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-#endif
-
-
 DDCA_Status
 ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation_options) {
    bool debug = false;
@@ -1690,63 +1656,6 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p=%s", dref, dref_reprx_t(dref));
    return ddcrc;
 }
-
-
-
-#ifdef OLD
-DDCA_Status
-ddc_validate_display_ref(Display_Ref * dref, bool require_not_asleep) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
-   assert(all_display_refs);
-   DDCA_Status ddcrc = DDCRC_ARG;
-   if (!dref)
-      goto bye;
-   if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
-      goto bye;
-   }
-   if (ddc_watch_mode == Watch_Mode_Simple_Udev) {
-      if (dref->drm_connector) {
-         int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
-         bool found_edid = RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid");
-         if (!found_edid)
-            ddcrc = DDCRC_DISCONNECTED;
-         else if (require_not_asleep && dpms_check_drm_asleep_by_dref(dref))
-            ddcrc = DDCRC_DPMS_ASLEEP;
-         else
-            ddcrc = DDCRC_OK;
-      }
-      else {
-         DBGMSG("dref->drm_connector not set.  returning DDCRC_OK");
-         ddcrc = DDCRC_OK;
-      }
-   }
-   else {
-      for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
-         Display_Ref* cur = g_ptr_array_index(all_display_refs, ndx);
-         if (cur == dref) {
-            // need to check for dref->dispno < 0 ?
-            if (dref->flags & DREF_REMOVED)
-               ddcrc = DDCRC_DISCONNECTED;
-         // else if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
-            else if (dpms_check_drm_asleep_by_connector(dref->drm_connector)) {
-               ddcrc = DDCRC_DPMS_ASLEEP;
-            }
-            else
-               ddcrc = DDCRC_OK;
-            break;
-         }
-      }
-   }
-
-bye:
-   if (dref)
-      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p, dispno=%d", dref, dref->dispno);
-   else
-      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p", dref);
-   return ddcrc;
-}
-#endif
 
 
 /** Indicates whether displays have already been detected
@@ -2014,16 +1923,6 @@ void ddc_mark_display_ref_removed(Display_Ref* dref) {
    g_mutex_unlock(&all_display_refs_mutex);
    DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
 }
-
-
-#ifdef UNUSED
-bool ddc_recheck_dh(Display_Handle * dh) {
-   bool result = false;
-
-
-   return result;
-}
-#endif
 
 
 bool
