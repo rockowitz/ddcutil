@@ -55,6 +55,7 @@
 
 #include "ddc_displays.h"
 #include "ddc_multi_part_io.h"
+#include "ddc/ddc_phantom_displays.h"
 #include "ddc_serialize.h"
 #include "ddc_services.h"
 #include "ddc_try_data.h"

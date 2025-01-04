@@ -25,6 +25,7 @@ ddc_dumpload.c              \
 ddc_multi_part_io.c         \
 ddc_output.c                \
 ddc_packet_io.c             \
+ddc_phantom_displays.c      \
 ddc_read_capabilities.c     \
 ddc_save_current_settings.c \
 ddc_serialize.c             \

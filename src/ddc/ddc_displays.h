@@ -25,7 +25,6 @@
 
 extern int   dispno_max;
 extern bool  monitor_state_tests;
-extern bool  detect_phantom_displays;
 extern bool  skip_ddc_checks;
 
 // Initial Checks
@@ -79,6 +78,7 @@ DDCA_Status  ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback
 DDCA_Status  ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
 void         ddc_emit_display_hotplug_event();
 #endif
+
 
 // Initialization and termination
 void         init_ddc_displays();

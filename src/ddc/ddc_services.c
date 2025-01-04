@@ -49,6 +49,7 @@
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_phantom_displays.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_save_current_settings.h"
@@ -222,6 +223,7 @@ void init_ddc_services() {
    init_ddc_try_data();
    init_ddc_display_selection();
    init_ddc_display_ref_reports();
+   init_ddc_phantom_displays();
    init_ddc_displays();
    init_ddc_dumpload();
    init_ddc_output();
