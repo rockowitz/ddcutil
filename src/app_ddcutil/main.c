@@ -777,13 +777,21 @@ DDCA_Syslog_Level preparse_syslog_level(int argc, char** argv) {
    return result;
 }
 
+
+/** Terminates watch displays thread in case of CTRL-C etc. then
+ *  terminates execution.
+ */
 void interrupt_handler(int sig) {
-   printf("\nHandling interrupt\n");
+   bool debug = false;
+   if (debug)
+      printf("\nHandling interrupt\n");
    // signal(sig, SIG_IGN);
    DDCA_Display_Event_Class event_classes  = DDCA_EVENT_CLASS_ALL;
-   ddc_stop_watch_displays(true, &event_classes);
-   printf("ddc_stop_watch_displays() returned\n");
-   printf("Calling exit()\n");
+   ddc_stop_watch_displays(false, &event_classes);
+   if (debug) {
+      printf("ddc_stop_watch_displays() returned\n");
+      printf("Calling exit()\n");
+   }
    exit(0);
 }
 
@@ -1051,6 +1059,7 @@ main(int argc, char *argv[]) {
          main_rc = EXIT_FAILURE;
       }
       else {
+         // Catch CTRL-C to terminate watch thread, then exit:
          signal(SIGINT, interrupt_handler);
          ddc_ensure_displays_detected();
          Error_Info * erec = ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
