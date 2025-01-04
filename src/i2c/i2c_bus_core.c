@@ -682,8 +682,8 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    for (int tryctr = 1; !edid_exists && tryctr <= 3; tryctr++) {
       if (tryctr > 1) {
          DBGMSG("!!! Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
-         SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists, tryctr = %d", tryctr);
-         DW_SLEEP(1000*1000, "Retrying i2c_check_edid_exists"); // violates layering
+         SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists_by_dh, tryctr = %d", tryctr);
+         DW_SLEEP(1000*1000, "Retrying i2c_check_edid_exists_by_dh");
          // sleep(1);   // hack
       }
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
