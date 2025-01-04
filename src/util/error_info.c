@@ -152,7 +152,7 @@ errinfo_free(Error_Info * erec){
       VALID_ERROR_INFO_PTR(erec);
 
       if (debug) {
-         printf("(%s) Freeing exception: \n", __func__);
+         DBG("Freeing exception:");
          errinfo_report(erec, 2);
       }
 
