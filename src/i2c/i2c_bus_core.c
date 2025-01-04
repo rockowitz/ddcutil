@@ -27,8 +27,8 @@
 
 #include "util/coredefs_base.h"
 #include "util/debug_util.h"
+#include "util/data_structures.h"
 #include "util/drm_common.h"
-#include <base/drm_connector_state.h>
 #include "util/edid.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
@@ -52,6 +52,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/display_lock.h"
+#include "base/drm_connector_state.h"
 #include "base/flock.h"
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
@@ -305,6 +306,16 @@ Error_Info * i2c_open_bus(
          if (flockrc != 0) {
              DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Cross instance locking failed for %s", filename);
              cur_error = ERRINFO_NEW(flockrc, "flock_lock_by_fd(%s) returned %s", filename, psc_desc(flockrc));
+#ifdef EXPERIMENTAL_FLOCK_RECOVREY
+             Buffer * edidbuf = buffer_new(256, "");
+             Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(*fd_loc, edidbuf);
+             bool found_edid = (rc == 0);
+             buffer_free(edidbuf, "");
+             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "able to read edid directly for /dev/i2c-%d: %s",
+                   busno, sbool(found_edid));
+             // TODO: read attributes
+             // RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", dh->dref->
+#endif
          }
          else {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Cross instance locking succeeded for %s", filename);

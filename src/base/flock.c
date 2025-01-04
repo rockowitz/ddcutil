@@ -11,7 +11,9 @@
 
 #include "public/ddcutil_types.h"
 
+#include "util/data_structures.h"
 #include "util/debug_util.h"
+#include "util/edid.h"
 #include "util/file_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
@@ -24,6 +26,12 @@
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
+#ifdef EXPERIMENTAL_FLOCK_RECOVERY
+#include "i2c/i2c_edid.h"     // violates layering
+#include "i2c/i2c_execute.h"
+#endif
+
+#include "base/flock.h"
 
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_BASE;
 
@@ -107,11 +115,62 @@ void explore_flock(int fd, const char * filename) {
    }
 }
 
+#ifdef EXPERIMENTAL_FLOCK_RECOVERY
+static bool simple_ioctl_read_edid_by_fd(
+      int  fd,
+      int  read_size,
+      bool write_before_read,
+      int  depth)
+{
+   bool debug = true;
+   DBGMSF(debug, "Starting. fd=%d, filename=%s, read_size=%d, write_before_read=%s",
+                 fd, filename_for_fd_t(fd), read_size, sbool(write_before_read));
+   assert(read_size == 128 || read_size == 256);
+   rpt_nl();
+   rpt_vstring(depth, "Attempting simple %d byte EDID read, fd=%d, %s initial write",
+                  read_size, fd,
+                  (write_before_read) ? "WITH" : "WITHOUT"
+                  );
+
+   Byte * edid_buf = calloc(1, 256);
+
+   int rc = 0;
+   bool ok = false;
+
+   if (write_before_read) {
+      edid_buf[0] = 0x00;
+      rc = i2c_ioctl_writer(fd, 0x50, 1, edid_buf);
+      if (rc < 0) {
+         rpt_vstring(depth, "write of 1 byte failed, errno = %s", linux_errno_desc(errno));
+         rpt_label(depth, "Continuing");
+      }
+   }
+
+   DBGMSF(debug, "Calling i2c_ioctl_reader(), read_bytewise=false, read_size=%d, edid_buf=%p",
+                 read_size, edid_buf);
+   rc = i2c_ioctl_reader(fd, 0x50, false, read_size, edid_buf);
+   if (rc < 0) {
+      rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
+   }
+   else {
+      rpt_hex_dump(edid_buf, read_size, depth+1);
+      ok = true;
+   }
+
+   free(edid_buf);
+   DBGMSF(debug, "Returning: %s", sbool(ok));
+   return ok;
+}
+#endif
+
 
 Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
    assert(filename);
    bool debug = false;
-   debug = debug ||  debug_flock;
+   debug = debug || debug_flock;
+#ifdef EXPERIMENTAL_FLOCK_RECOVERY
+   debug = debug || streq(filename,"/devi2c-25");
+#endif
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "fd=%d, filename=%s, wait=%s", fd, filename, SBOOL(wait));
 
    // int inode = get_inode_by_fn(filename);
@@ -144,6 +203,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       } // flockrc == 0
 
       // handle failure
+      // n.b. lock will fail w EAGAIN if at least NEC display turned off
       assert(flockrc == -1);
       int errsv = errno;
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "filename=%s, flock_call_ctr=%d, flock() returned: %s",
@@ -162,6 +222,22 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
          break;
       }
 
+#ifdef EXPERIMENTAL_FLOCK_RECOVERY
+      if (errsv == EWOULDBLOCK) {
+         Buffer * edidbuf = buffer_new(256, "");
+         Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf);
+         bool found_edid = (rc == 0);
+         buffer_free(edidbuf, "");
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "able to read edid directly: %s", sbool(found_edid));
+         // TODO: read attributes
+         // RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", dh->dref->
+
+         simple_ioctl_read_edid_by_fd(fd,
+                                      256,   // read size
+                                      true,  //write before read
+                                      2);    // depth
+      }
+#endif
       DBGTRC_NOPREFIX(debug || debug_flock, DDCA_TRC_NONE,
                  "Resource locked. filename=%s, flock_call_ctr=%d, Sleeping", filename, flock_call_ctr);
 
