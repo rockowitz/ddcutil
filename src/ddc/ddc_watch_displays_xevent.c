@@ -15,7 +15,7 @@
 #include "base/rtti.h"
 #include "base/sleep.h"
 
-#include "base/i2c_bus_base.h"   // for DDC_DW_SLEEP
+#include "base/i2c_bus_base.h"   // for DW_SLEEP()
 #include "ddc_watch_displays_common.h"
 
 #include "ddc_watch_displays_xevent.h"
