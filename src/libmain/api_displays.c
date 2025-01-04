@@ -1025,8 +1025,8 @@ ddca_get_display_refs(
    bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "include_invalid_displays=%s", SBOOL(include_invalid_displays));
-
    API_PRECOND_W_EPILOG(drefs_loc);
+
    int dref_ct = 0;
    DDCA_Status ddcrc = 0;
    ddc_ensure_displays_detected();
@@ -1038,13 +1038,15 @@ ddca_get_display_refs(
    for (int ndx = 0; ndx < filtered_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(filtered_displays, ndx);
          *cur_ddca_dref = dref_to_ddca_dref(dref);
+         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%p -> %p", cur_ddca_dref, *cur_ddca_dref);
          add_published_dref_id_by_dref(dref);
          cur_ddca_dref++;
    }
    *cur_ddca_dref = NULL; // terminating NULL ptr, redundant since calloc()
+   dref_ct = filtered_displays->len;
    g_ptr_array_free(filtered_displays, true);
 
-   dref_ct = 0;
+
    if (IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
       DBGMSG("          *drefs_loc=%p", drefs_loc);
       DDCA_Display_Ref * cur_ddca_dref = result_list;
@@ -1052,7 +1054,6 @@ ddca_get_display_refs(
          Display_Ref * dref = dref_from_published_ddca_dref(*cur_ddca_dref);
          DBGMSG("          DDCA_Display_Ref %p -> display %d", *cur_ddca_dref, dref->dispno);
          cur_ddca_dref++;
-         dref_ct++;
       }
       dbgrpt_published_dref_hash(__func__, 1);
    }
@@ -1063,7 +1064,8 @@ ddca_get_display_refs(
    set_ddca_error_detail_from_open_errors();
    ddcrc = 0;
 
-   API_EPILOG(debug, RESPECT_QUIESCE, ddcrc, "Returned list has %d displays", dref_ct);
+   API_EPILOG(debug, RESPECT_QUIESCE, ddcrc, "*drefs_loc=%p, returned list has %d displays",
+         *drefs_loc, dref_ct);
 }
 
 
