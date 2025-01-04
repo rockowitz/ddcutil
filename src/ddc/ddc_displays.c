@@ -1646,7 +1646,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
                }
             }
          }
-         if (ddcrc == 0 && (validation_options&DREF_VALIDATE_AWAKE && !allow_asleep)) {
+         if (ddcrc == 0 && ((validation_options&DREF_VALIDATE_AWAKE) && !allow_asleep)) {
             if (dpms_check_drm_asleep_by_dref(dref))
                ddcrc = DDCRC_DPMS_ASLEEP;
          }
