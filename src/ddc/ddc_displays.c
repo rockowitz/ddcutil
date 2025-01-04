@@ -580,7 +580,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
                   }
                   // turn off optimization in case it's on
                   if (pdd_is_dynamic_sleep_active(pdd) ) {
-                     ERRINFO_FREE(ddc_excp);
                      FREE(dref->communication_error_summary);
                      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
                      pdd_set_dynamic_sleep_active(dref->pdd, false);
