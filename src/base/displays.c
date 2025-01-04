@@ -592,9 +592,9 @@ DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref) {
    DDCA_Display_Ref ddca_dref = (DDCA_Display_Ref*) GUINT_TO_POINTER(0);
    if (dref) {
 #ifdef NUMERIC_DDCA_DISPLAY_REF
-      DDCA_Display_Ref * ddca_dref = (DDCA_Display_Ref*) GUINT_TO_POINTER(dref->dref_id);
+      ddca_dref = (DDCA_Display_Ref*) GUINT_TO_POINTER(dref->dref_id);
 #else
-      DDCA_Display_Ref  ddca_dref = (void*) dref;
+      ddca_dref = (void*) dref;
 #endif
       DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "dref=%p, dref->dref_id=%d, returning %p",
                                             dref, dref->dref_id, ddca_dref);
