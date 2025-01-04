@@ -23,6 +23,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
+#include "util/timestamp.h"
 
 #include "core.h"
 #include "rtti.h"
@@ -795,19 +796,23 @@ X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes) {
 }
 
 
+void dw_sleep(const char * func, int line, const char * file, uint millis, const char * msg) {
+   DBGMSG("func=%s, millis=%d, nanos=%ld", func, millis, MILLIS2NANOS(millis));
+   // usleep(MILLIS2NANOS(millis));  // why doesnt this work?
+   usleep(1000l*millis);
+   syslog(LOG_NOTICE, "[%d](%s) Slept for %d millisec: %s", tid(), func, millis, msg);
+}
+
 
 /** Module initialization. */
 void init_i2c_bus_base() {
-   // RTTI_ADD_FUNC(i2c_add_bus);
    RTTI_ADD_FUNC(i2c_get_bus_info);
    RTTI_ADD_FUNC(i2c_discard_buses0);
    RTTI_ADD_FUNC(i2c_discard_buses);
    RTTI_ADD_FUNC(i2c_dbgrpt_buses);
    RTTI_ADD_FUNC(i2c_free_bus_info);
-//   RTTI_ADD_FUNC(i2c_get_drm_connector_name);
    RTTI_ADD_FUNC(i2c_new_bus_info);
    RTTI_ADD_FUNC(i2c_reset_bus_info);
-//   RTTI_ADD_FUNC(i2c_update_bus_info);
    RTTI_ADD_FUNC(i2c_remove_bus_by_busno);
    RTTI_ADD_FUNC(i2c_dbgrpt_bus_info);
    RTTI_ADD_FUNC(i2c_query_x37_detected);
