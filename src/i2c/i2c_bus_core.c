@@ -353,8 +353,10 @@ Error_Info * i2c_open_bus(
 
       if (total_wait_millisec > max_wait_millisec)
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Total wait %d exceeds max wait %d, tries=%d", total_wait_millisec, max_wait_millisec, tryctr);
-      else
-         usleep(wait_interval_millisec * 1000);
+      else {
+         DW_SLEEP(wait_interval_millisec, "");
+         // usleep(wait_interval_millisec * 1000);
+      }
    }
 
    if (*fd_loc >= 0) {
@@ -646,7 +648,8 @@ i2c_detect_x37(int fd, char * driver) {
          wait = 2000;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "driver=%s, sleeping for %d millisec", driver, wait);
             // usleep(poll_wait_millisec*1000);
-      sleep_millis(wait);
+      DW_SLEEP(wait, "Extra x37 sleep");
+      // sleep_millis(wait);
    }
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"loopctr=%d", loopctr);
    return rc;
@@ -680,7 +683,8 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
       if (tryctr > 1) {
          DBGMSG("!!! Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
          SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists, tryctr = %d", tryctr);
-         sleep(1);   // hack
+         DW_SLEEP(1000*1000, "Retrying i2c_check_edid_exists"); // violates layering
+         // sleep(1);   // hack
       }
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
       if (businfo->drm_connector_name) {
