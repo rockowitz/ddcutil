@@ -35,17 +35,6 @@ __thread pid_t process_id = 0;
 __thread pid_t thread_id  = 0;
 
 
-static inline pid_t tid() {
-   if (!thread_id)
-      thread_id = syscall(SYS_gettid);
-   return thread_id;
-}
-
-static inline pid_t pid() {
-   if (!process_id)
-      process_id = syscall(SYS_gettid);
-   return thread_id;
-}
 
 
 char * get_msg_decoration(char * buf, uint bufsize, bool dest_syslog) {
