@@ -29,6 +29,7 @@
 #include "util/glib_util.h"
 #include "util/i2c_util.h"
 #include "util/linux_util.h"
+#include "util/msg_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
@@ -245,7 +246,7 @@ Display_Ref * ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo) {
    else {
       char s[80];
       g_snprintf(s, 80, "No Display_Ref found for i2c bus: %d", busno);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", s);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"%s", s);
       SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
    }
 
@@ -507,8 +508,8 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
 Bit_Set_256
 ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "prior =%s, some_displays_disconnected=%s",
-         BS256_REPR(bs_prior), SBOOL(some_displays_disconnected));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "prior =%s, some_displays_disconnected=%s, extra_stabilization_millisec=%d",
+         BS256_REPR(bs_prior), SBOOL(some_displays_disconnected), extra_stabilization_millisec);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_prior:", BS256_REPR(bs_prior));
 
    // Special handling for case of apparently disconnected displays.
@@ -523,16 +524,17 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         usleep(extra_stabilization_millisec * 1000);
+         DW_SLEEP(extra_stabilization_millisec,  "Initial delay");
       }
    }
 
    int stablect = 0;
    bool stable = false;
    while (!stable) {
-      // DBGMSG("SLEEPING");
+      DBGMSG("SLEEPING");
       // usleep(1000*stabilization_poll_millisec);
-      sleep_millis(stabilization_poll_millisec);
+      // sleep_millis(stabilization_poll_millisec);
+      DW_SLEEP(stabilization_poll_millisec, "Loop until stable");
       BS256 bs_latest = i2c_buses_w_edid_as_bitset();
       if (bs256_eq(bs_latest, bs_prior))
             stable = true;
@@ -547,6 +549,7 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
    DBGTRC_RET_STRING(debug, TRACE_GROUP, BS256_REPR(bs_prior),"");
    return bs_prior;
 }
+
 
 void init_ddc_watch_displays_common() {
 #ifdef WATCH_ASLEEP
