@@ -800,6 +800,8 @@ void dw_sleep(const char * func, int line, const char * file, uint millis, const
    DBGMSG("func=%s, millis=%d, nanos=%ld", func, millis, MILLIS2NANOS(millis));
    // usleep(MILLIS2NANOS(millis));  // why doesnt this work?
    usleep(1000l*millis);
+   // Use syslog() instead of SYSLOG2() to ensure that msg is written to system log
+   // no matter what ddcutil log level cutoff is in effoec
    syslog(LOG_NOTICE, "[%d](%s) Slept for %d millisec: %s", tid(), func, millis, msg);
 }
 
