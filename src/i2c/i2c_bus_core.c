@@ -241,8 +241,8 @@ Error_Info * i2c_open_bus(
    assert(businfo); // !!! fails, all_bus_info not yet set
 #endif
 
-   int open_max_wait_millisec = DEFAULT_OPEN_MAX_WAIT_MILLIS;
-   int open_wait_interval_millisec = DEFAULT_OPEN_WAIT_INTERVAL_MILLIS;
+   int open_max_wait_millisec = DEFAULT_OPEN_MAX_WAIT_MILLISEC;
+   int open_wait_interval_millisec = DEFAULT_OPEN_WAIT_INTERVAL_MILLISEC;
    int total_wait_millisec = 0;
 
    char filename[20];
@@ -625,9 +625,9 @@ i2c_detect_x37(int fd, char * driver) {
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = 0;
-   int max_tries = DETECT_X37_TRIES_MAX;  //2;   // ***TEMP*** 3;
+   int max_tries = DETECT_X37_MAX_TRIES;  //2;   // ***TEMP*** 3;
    bool use_file_io = false;
-   int poll_wait_millisec = DETECT_X37_RETRY_MILLIS;  // 400;
+   int poll_wait_millisec = DETECT_X37_RETRY_MILLISEC;  // 400;
    char * s = (use_file_io) ? "i2c" : "ioctl";
    int loopctr;
    for (loopctr = 0; loopctr < max_tries; loopctr++) {  // retries seem to give no benefit
@@ -693,7 +693,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
       if (tryctr > 1) {
          DBGMSG("!!! Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
          SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists_by_dh, tryctr = %d", tryctr);
-         DW_SLEEP(CHECK_OPEN_BUS_ALIVE_RETRY_INTERVAL_MILLIS*(uint64_t) 1000, "Retrying i2c_check_edid_exists_by_dh");
+         DW_SLEEP(CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC*(uint64_t) 1000, "Retrying i2c_check_edid_exists_by_dh");
          // sleep(1);   // hack
       }
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
