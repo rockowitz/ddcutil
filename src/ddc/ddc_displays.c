@@ -434,8 +434,9 @@ check_how_unsupported_reported(Display_Handle * dh) {
  *  - Checks if the monitor uses DDC Null Response to indicate invalid VCP code
  *  - Checks if the monitor uses mh=ml=sh=sl=0 to indicate invalid VCP code
  *
- *  @param dh  pointer to #Display_Handle for open monitor device
- *  @return **true** if DDC communication with the display succeeded, **false** otherwise.
+ *  @param dh           pointer to #Display_Handle for open monitor device
+ *  @param newly_added  called by display watch when adding a display
+ *  @return #Error_Info struct if error, caller responsible for freeing
  *
  *  @remark
  *  Sets bits in dh->dref->flags
