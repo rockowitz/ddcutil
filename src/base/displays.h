@@ -24,6 +24,10 @@
 
 extern bool      terminate_watch_thread;
 
+extern GPtrArray * all_display_refs;         // all detected displays, array of Display_Ref *
+extern GMutex      all_display_refs_mutex;
+extern bool        debug_locks;
+
 
 /** \file
 Display Specification

@@ -38,6 +38,9 @@
 
 #include "displays.h"
 
+GPtrArray * all_display_refs = NULL;         // all detected displays, array of Display_Ref *
+GMutex      all_display_refs_mutex;
+bool        debug_locks = false;
 
 bool      terminate_watch_thread = false;
 

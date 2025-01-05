@@ -58,6 +58,7 @@
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
 #ifdef BUILD_SHARED_LIB
+#include "ddc/ddc_watch_displays_dref.h"
 #include "ddc/ddc_watch_displays_xevent.h"
 #include "ddc/ddc_watch_displays_udev.h"
 #include "ddc/ddc_watch_displays_poll.h"
@@ -235,6 +236,7 @@ void init_ddc_services() {
    init_ddc_vcp();
    init_ddc_vcp_version();
 // #ifdef BUILD_SHARED_LIB
+   init_ddc_watch_displays_dref();
    init_ddc_watch_displays_xevent();
    init_ddc_watch_displays_udev();
    init_ddc_watch_displays_poll();

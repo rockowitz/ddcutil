@@ -54,6 +54,7 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_watch_displays_dref.h"
 #include "ddc/ddc_watch_displays_xevent.h"
 
 #include "ddc_watch_displays_common.h"
