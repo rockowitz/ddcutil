@@ -1,42 +1,22 @@
-// ddc_watch_displays_dref.c
+/** @file ddc_watch_displays_dref.c */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
  
 /** \cond */
 #include <assert.h>
-// #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
-// #include <string.h>
-// #include <sys/stat.h>
-// #include <time.h>
-#ifdef USE_X11
-// #include <X11/extensions/dpmsconst.h>
-#endif
+#include <string.h>
 
-// #include "config.h"
+#include "config.h"
 
-// #include "util/data_structures.h"
+#include "util/data_structures.h"
 #include "util/debug_util.h"
-// #include "util/drm_common.h"
-// #include <base/drm_connector_state.h>
-// #include "util/edid.h"
+#include "util/edid.h"
 #include "util/error_info.h"
-// #include "util/failsim.h"
-// #include "util/report_util.h"
-// #include "util/string_util.h"
-// #include "util/subprocess_util.h"
-// #include "util/sysfs_i2c_util.h"
-// #include "util/sysfs_util.h"
-#ifdef ENABLE_UDEV
-// #include "util/udev_usb_util.h"
-// #include "util/udev_util.h"
-#endif
-#ifdef USE_X11
-// #include "util/x11_util.h"
-#endif
+#include "util/report_util.h"
+#include "util/string_util.h"
 
 /** \endcond */
 
@@ -45,19 +25,14 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
-// #include "base/monitor_model_key.h"
+#include "base/monitor_model_key.h"
 #include "base/parms.h"
 #include "base/rtti.h"
 
-// #include "i2c/i2c_bus_core.h"
-
-// #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_displays.h"
-// #include "ddc/ddc_vcp_version.h"
-// #include "ddc/ddc_vcp.h"
-// #include "ddc/ddc_watch_displays_main.h"
 
-// #include "ddc/ddc_displays.h"
+#include "ddc/ddc_watch_displays_dref.h"
+
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
