@@ -122,13 +122,20 @@
 #define DEFAULT_DDC_CHECK_ASYNC_THRESHOLD 3
 
 
+//
+// Display detection
+//
+
+// Retry interval for retrying open display
 #define DEFAULT_OPEN_MAX_WAIT_MILLISEC 1000
 #define DEFAULT_OPEN_WAIT_INTERVAL_MILLISEC 100
 
+// Retry interval and max tries when checking that a display handle
+// is still valid
 #define CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC 1000
 #define CHECK_OPEN_BUS_ALIVE_MAX_TRIES 3
 
-
+// During bus detection, retry interval and max tries for X37 detection
 #define DETECT_X37_MAX_TRIES 3
 #define DETECT_X37_RETRY_MILLISEC 400
 
@@ -141,7 +148,8 @@
 #define DEFAULT_UDEV_WATCH_LOOP_MILLISEC 500
 #define DEFAULT_POLL_WATCH_LOOP_MILLISEC 2000
 #define DEFAULT_XEVENT_WATCH_LOOP_MILLISEC 300
-// Once a UDEV DRM event is received that possibly indicates a display change,
+
+// Once an event is received that possibly indicates a display change,
 // libddcutil repeatedly checks /sys/class/drm until the reported displays
 // stabilize
 /** Extra time to wait before first stabilization check */
