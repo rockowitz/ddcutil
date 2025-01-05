@@ -143,11 +143,11 @@ const char *         x37_detection_state_name(X37_Detection_State state);
 void                 i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State deteted);
 X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes);
 
-#define DW_SLEEP(_millis, _msg) \
+#define DW_SLEEP_MILLIS(_millis, _msg) \
    do { \
-      dw_sleep(__func__, __LINE__, __FILE__, _millis, _msg); \
+      dw_sleep_millis(__func__, __LINE__, __FILE__, _millis, _msg); \
    } while(0)
-void dw_sleep(const char * func, int line, const char * file, uint millis, const char * msg);
+void dw_sleep_millis(const char * func, int line, const char * file, uint millis, const char * msg);
 
 // Initialization and termination
 void init_i2c_bus_base();

@@ -525,7 +525,7 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         DW_SLEEP(initial_stabilization_millisec,  "Initial delay");
+         DW_SLEEP_MILLIS(initial_stabilization_millisec,  "Initial delay");
       }
    }
 
@@ -535,7 +535,7 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
       DBGMSG("SLEEPING");
       // usleep(1000*stabilization_poll_millisec);
       // sleep_millis(stabilization_poll_millisec);
-      DW_SLEEP(stabilization_poll_millisec, "Loop until stable");
+      DW_SLEEP_MILLIS(stabilization_poll_millisec, "Loop until stable");
       BS256 bs_latest = i2c_buses_w_edid_as_bitset();
       if (bs256_eq(bs_latest, bs_prior))
             stable = true;

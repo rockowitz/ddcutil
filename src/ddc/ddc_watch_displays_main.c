@@ -279,7 +279,7 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
       if (global_wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {
             ddc_send_x11_termination_message(global_wdd->evdata);
-            DW_SLEEP(2*1000*1000, "After ddc_send_x11_termination_message()");
+            DW_SLEEP_MILLIS(2*1000*1000, "After ddc_send_x11_termination_message()");
             // sleep(2);
          }
          else {

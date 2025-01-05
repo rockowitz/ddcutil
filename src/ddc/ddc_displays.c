@@ -551,7 +551,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
                   if (dynamic_sleep_active) {
                      DBGMSG("Additional 1 second sleep for newly added display");
                      SYSLOG2(DDCA_SYSLOG_ERROR, "Additional 1 second sleep for newly added display");
-                     DW_SLEEP(1000, "Additional 1 second sleep for newly added display");
+                     DW_SLEEP_MILLIS(1000, "Additional 1 second sleep for newly added display");
                   }
                   // turn off optimization in case it's on
                   if (pdd_is_dynamic_sleep_active(pdd) ) {
@@ -1467,7 +1467,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
                   for (int tryctr = 0; tryctr < maxtries; tryctr++) {
                      if (tryctr > 0) {
                         // usleep(MILLIS2NANOS(sleep_millis));
-                        DW_SLEEP(sleep_millis, "Reading edid from sysfs");
+                        DW_SLEEP_MILLIS(sleep_millis, "Reading edid from sysfs");
                      }
                      possibly_write_detect_to_status_by_dref(dref);
                      if (!RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid") ) {
