@@ -241,8 +241,8 @@ Error_Info * i2c_open_bus(
    assert(businfo); // !!! fails, all_bus_info not yet set
 #endif
 
-   int max_wait_millisec = 1000;    // hack
-   int wait_interval_millisec = 100;
+   int open_max_wait_millisec = DEFAULT_OPEN_MAX_WAIT_MILLIS;
+   int open_wait_interval_millisec = DEFAULT_OPEN_WAIT_INTERVAL_MILLIS;
    int total_wait_millisec = 0;
 
    char filename[20];
@@ -259,7 +259,7 @@ Error_Info * i2c_open_bus(
    snprintf(filename, 20, "/dev/"I2C"-%d", busno);
    int tryctr = 0;
 
-   while( *fd_loc < 0 && total_wait_millisec <= max_wait_millisec) {
+   while( *fd_loc < 0 && total_wait_millisec <= open_max_wait_millisec) {
       bool device_locked = false;
       bool device_flocked = false;
       bool device_opened = false;
@@ -294,7 +294,7 @@ Error_Info * i2c_open_bus(
                 cur_error->status_code == -ENOENT) 
             {
                // no point in retrying, force loop exit:
-               total_wait_millisec = max_wait_millisec + 1;
+               total_wait_millisec = open_max_wait_millisec + 1;
             }
          }
       }
@@ -360,12 +360,12 @@ Error_Info * i2c_open_bus(
       else
          errinfo_add_cause(master_error, cur_error);
 
-      total_wait_millisec += wait_interval_millisec;
+      total_wait_millisec += open_wait_interval_millisec;
 
-      if (total_wait_millisec > max_wait_millisec)
-       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Total wait %d exceeds max wait %d, tries=%d", total_wait_millisec, max_wait_millisec, tryctr);
+      if (total_wait_millisec > open_max_wait_millisec)
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Total wait %d exceeds max wait %d, tries=%d", total_wait_millisec, open_max_wait_millisec, tryctr);
       else {
-         DW_SLEEP(wait_interval_millisec, "");
+         DW_SLEEP(open_wait_interval_millisec, "");
          // usleep(wait_interval_millisec * 1000);
       }
    }
@@ -625,9 +625,9 @@ i2c_detect_x37(int fd, char * driver) {
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = 0;
-   int max_tries = 2;   // ***TEMP*** 3;
+   int max_tries = DETECT_X37_TRIES_MAX;  //2;   // ***TEMP*** 3;
    bool use_file_io = false;
-   int poll_wait_millisec = 400;
+   int poll_wait_millisec = DETECT_X37_RETRY_MILLIS;  // 400;
    char * s = (use_file_io) ? "i2c" : "ioctl";
    int loopctr;
    for (loopctr = 0; loopctr < max_tries; loopctr++) {  // retries seem to give no benefit
@@ -674,7 +674,6 @@ i2c_detect_x37(int fd, char * driver) {
  *  @retval Error_Info with status DDCRC_DISCONNECTED or DDCRC_DPMS_ASLEEP
  *                                 DDCRC_OTHER  slave addr x37 unresponsive
  */
-
 Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    bool debug = false;
    assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
@@ -690,11 +689,11 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 
    Error_Info * err = NULL;
    bool edid_exists = false;
-   for (int tryctr = 1; !edid_exists && tryctr <= 3; tryctr++) {
+   for (int tryctr = 1; !edid_exists && tryctr <= CHECK_OPEN_BUS_ALIVE_MAX_TRIES; tryctr++) {
       if (tryctr > 1) {
          DBGMSG("!!! Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
          SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists_by_dh, tryctr = %d", tryctr);
-         DW_SLEEP(1000*1000, "Retrying i2c_check_edid_exists_by_dh");
+         DW_SLEEP(CHECK_OPEN_BUS_ALIVE_RETRY_INTERVAL_MILLIS*(uint64_t) 1000, "Retrying i2c_check_edid_exists_by_dh");
          // sleep(1);   // hack
       }
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi

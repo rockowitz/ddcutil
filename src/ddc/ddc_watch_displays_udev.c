@@ -136,13 +136,13 @@ ddc_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool 
    // few seconds later by a connect. Wait a few seconds to avoid triggering events
    // in this case.
    if (prior_has_edid) {
-      if (extra_stabilization_millisec > 0) {
+      if (initial_stabilization_millisec > 0) {
          char * s = g_strdup_printf(
-               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", extra_stabilization_millisec);
+               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", initial_stabilization_millisec);
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         DW_SLEEP(extra_stabilization_millisec * 1000, "Initial sleep");
+         DW_SLEEP(initial_stabilization_millisec * 1000, "Initial sleep");
       }
    }
 

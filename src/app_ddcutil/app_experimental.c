@@ -73,7 +73,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(23, "Set global primitive_sysfs");
    REPORT_FLAG_OPTION(24, "Write detect to status if nvidia driver");
 
-   rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZATION_MILLISEC);
+   rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_INITIAL_STABILIZATION_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
    rpt_vstring(depth+1, "Utility option --i3:          flock_poll_millisec (default = %d)", DEFAULT_FLOCK_POLL_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);

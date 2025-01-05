@@ -122,6 +122,17 @@
 #define DEFAULT_DDC_CHECK_ASYNC_THRESHOLD 3
 
 
+#define DEFAULT_OPEN_MAX_WAIT_MILLIS 1000
+#define DEFAULT_OPEN_WAIT_INTERVAL_MILLIS 100
+
+#define CHECK_OPEN_BUS_ALIVE_RETRY_INTERVAL_MILLIS 1000
+#define CHECK_OPEN_BUS_ALIVE_MAX_TRIES 3
+
+
+#define DETECT_X37_TRIES_MAX 3
+#define DETECT_X37_RETRY_MILLIS 400
+
+
 //
 // *** Watching for display changes
 //
@@ -134,9 +145,9 @@
 // libddcutil repeatedly checks /sys/class/drm until the reported displays
 // stabilize
 /** Extra time to wait before first stabilization check */
-#define DEFAULT_EXTRA_STABILIZATION_MILLISEC 0   // 4000
+#define DEFAULT_INITIAL_STABILIZATION_MILLISEC 500   // 4000
 /** Polling interval between stabilization checks */
-#define DEFAULT_STABILIZATION_POLL_MILLISEC 1000
+#define DEFAULT_STABILIZATION_POLL_MILLISEC 100
 
 
 //

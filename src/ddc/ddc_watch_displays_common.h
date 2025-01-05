@@ -16,7 +16,7 @@
 
 #include "ddc/ddc_watch_displays_xevent.h"
 
-extern int       extra_stabilization_millisec;
+extern int       initial_stabilization_millisec;
 extern int       stabilization_poll_millisec;
 extern int       udev_watch_loop_millisec;
 extern int       poll_watch_loop_millisec;

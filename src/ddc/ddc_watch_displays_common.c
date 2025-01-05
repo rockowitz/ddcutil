@@ -63,12 +63,12 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 
-int       extra_stabilization_millisec = DEFAULT_EXTRA_STABILIZATION_MILLISEC;
-int       stabilization_poll_millisec  = DEFAULT_STABILIZATION_POLL_MILLISEC;
-int       udev_watch_loop_millisec     = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
-int       poll_watch_loop_millisec     = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
-int       xevent_watch_loop_millisec   = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
-bool      terminate_using_x11_event    = false;
+int       initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
+int       stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
+int       udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
+int       poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
+int       xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+bool      terminate_using_x11_event      = false;
 
 
 int calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
@@ -472,13 +472,13 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
    // few seconds later by a connect. Wait a few seconds to avoid triggering events
    // in this case.
    if (some_displays_disconnected) {
-      if (extra_stabilization_millisec > 0) {
+      if (initial_stabilization_millisec > 0) {
          char * s = g_strdup_printf(
-               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", extra_stabilization_millisec);
+               "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", initial_stabilization_millisec);
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         usleep(extra_stabilization_millisec * 1000);
+         usleep(initial_stabilization_millisec * 1000);
       }
    }
 
@@ -510,7 +510,7 @@ Bit_Set_256
 ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "prior =%s, some_displays_disconnected=%s, extra_stabilization_millisec=%d",
-         BS256_REPR(bs_prior), SBOOL(some_displays_disconnected), extra_stabilization_millisec);
+         BS256_REPR(bs_prior), SBOOL(some_displays_disconnected), initial_stabilization_millisec);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_prior:", BS256_REPR(bs_prior));
 
    // Special handling for case of apparently disconnected displays.
@@ -518,14 +518,14 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
    // few seconds later by a connect. Wait a few seconds to avoid triggering events
    // in this case.
    if (some_displays_disconnected) {
-      if (extra_stabilization_millisec > 0) {
+      if (initial_stabilization_millisec > 0) {
          char * s = g_strdup_printf(
                "Delaying %d milliseconds to avoid a false disconnect/connect sequence...",
-               extra_stabilization_millisec);
+               initial_stabilization_millisec);
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         DW_SLEEP(extra_stabilization_millisec,  "Initial delay");
+         DW_SLEEP(initial_stabilization_millisec,  "Initial delay");
       }
    }
 

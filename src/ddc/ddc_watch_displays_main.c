@@ -201,7 +201,7 @@ ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
 // MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
 // MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"try_get_edid_from_sysfs_first:          %s", SBOOL(try_get_edid_from_sysfs_first));  // i2c_edid_exists()
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"extra_stabilization_millisec:           %d", extra_stabilization_millisec);
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"extra_stabilization_millisec:           %d", initial_stabilization_millisec);
                                                // ddc_i2c_stabilized_single_bus_by_connector_id, i2c_stabilized_buses_bitset()  (both)
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"stabilization_poll_millisec:            %d", stabilization_poll_millisec);  // same
 

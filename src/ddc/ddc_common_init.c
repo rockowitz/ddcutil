@@ -381,7 +381,7 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
     use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
 
     if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
-       extra_stabilization_millisec = parsed_cmd->i1;
+       initial_stabilization_millisec = parsed_cmd->i1;
     if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))
        stabilization_poll_millisec = parsed_cmd->i7;
     if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET))
