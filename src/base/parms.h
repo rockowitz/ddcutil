@@ -157,6 +157,9 @@
 /** Polling interval between stabilization checks */
 #define DEFAULT_STABILIZATION_POLL_MILLISEC 100
 
+/// When checking that DDC communication has become enabled,
+// checks occur at increasing multipliers of this value.
+#define WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC 1000
 
 //
 // *** Miscellaneous

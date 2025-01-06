@@ -66,7 +66,8 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 int  nonudev_poll_loop_millisec = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;   // 2000;   // default sleep time on each loop
-bool stabilize_added_buses_w_edid;
+bool stabilize_added_buses_w_edid;  // not set, only stabilize when displays removed
+int retry_thread_sleep_factor_millis = WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC;
 
 #ifdef OLD
 //
@@ -500,11 +501,9 @@ gpointer ddc_recheck_displays_func(gpointer data) {
    }
 #endif
 
-   int sleep_sec = 0;
    for (int sleepctr = 0; sleepctr < 4 && displays_to_recheck->len > 0; sleepctr++) {
-      sleep_sec = simple_ipow(2, sleepctr);
-      // sleep(sleep_sec);
-      DW_SLEEP_MILLIS(sleep_sec*1000, "Recheck interval");
+      int sleep_multiplier = simple_ipow(2, sleepctr);
+      DW_SLEEP_MILLIS(sleep_multiplier*retry_thread_sleep_factor_millis, "Recheck interval");
 
       for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
           Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
@@ -512,10 +511,10 @@ gpointer ddc_recheck_displays_func(gpointer data) {
           bool ddc_enabled = ddc_recheck_dref(dref);
           if (!ddc_enabled) {
              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                   "ddc still not enabled for %s after %d seconds", dref_reprx_t(dref), sleep_sec);
+                   "ddc still not enabled for %s after %d seconds", dref_reprx_t(dref), sleep_multiplier);
           }
           else {
-             char * s = g_strdup_printf("ddc became enabled for %s after %d seconds", dref_reprx_t(dref), sleep_sec);
+             char * s = g_strdup_printf("ddc became enabled for %s after %d seconds", dref_reprx_t(dref), sleep_multiplier);
              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
              SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
              free(s);
@@ -535,7 +534,7 @@ gpointer ddc_recheck_displays_func(gpointer data) {
           Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
           char * s = g_strdup_printf(
                 "ddc communication did not become enabled for display %s within %d seconds",
-                dref_reprx_t(dref), sleep_sec);
+                dref_reprx_t(dref), sleep_multiplier);
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
           SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
           free(s);
