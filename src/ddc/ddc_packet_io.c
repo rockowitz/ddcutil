@@ -137,7 +137,13 @@ ddc_validate_display_handle2(Display_Handle * dh) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%p", dh);
    assert(open_displays);
 
-   DDCA_Status result = ddc_validate_display_ref2(dh->dref,  DREF_VALIDATE_EDID|DREF_VALIDATE_AWAKE);
+   DDCA_Status result = DDCRC_OK;
+   // DDCA_Status result = ddc_validate_display_ref2(dh->dref,  DREF_VALIDATE_EDID|DREF_VALIDATE_AWAKE);
+   // DDCA_Status result = ddc_validate_display_ref2(dh->dref,  DREF_VALIDATE_BASIC_ONLY);
+   if (dh->dref->flags & DREF_REMOVED) {
+      result = DDCRC_DISCONNECTED;
+   }
+
    if (result == DDCRC_OK) {
       g_mutex_lock (&open_displays_mutex);
       if (!g_hash_table_contains(open_displays, dh) )
