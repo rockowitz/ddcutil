@@ -715,7 +715,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    }
 
    if (!edid_exists) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "!!! Checking EDID failed");
+      SYSLOG2(DDCA_SYSLOG_ERROR, "!!! Checking EDID failed after %d tries", CHECK_OPEN_BUS_ALIVE_MAX_TRIES);
       DBGMSG("!!! Checking EDID failed");
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d", businfo->busno);
       businfo->flags &= ~(I2C_BUS_HAS_EDID|I2C_BUS_ADDR_X37);
