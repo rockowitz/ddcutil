@@ -227,35 +227,6 @@ void ddc_i2c_emit_deferred_events(GArray * deferred_events) {
 }
 
 
-Display_Ref * ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
-
-   i2c_reset_bus_info(businfo);
-   int busno = businfo->busno;
-
-   Display_Ref * dref = DDC_GET_DREF_BY_BUSNO(businfo->busno, /*ignore_invalid*/ true);
-   char buf[100];
-   g_snprintf(buf, 100, "Removing connected display, dref %s", dref_repr_t(dref));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
-   if (dref) {
-      assert(!(dref->flags & DREF_REMOVED));
-      ddc_mark_display_ref_removed(dref);
-      dref->detail = NULL;
-   }
-   else {
-      char s[80];
-      g_snprintf(s, 80, "No Display_Ref found for i2c bus: %d", busno);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"%s", s);
-      SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
-   }
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref=%p", dref);
-   return dref;
-}
-
-
 #ifdef WATCH_ASLEEP
 /** Compares the set of buses currently asleep with the previous list.
  *  If differences exist, either emit events directly or place them on
@@ -525,16 +496,13 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         DW_SLEEP_MILLIS(initial_stabilization_millisec,  "Initial delay");
+         DW_SLEEP_MILLIS(initial_stabilization_millisec,  "Initial stabilization delay");
       }
    }
 
    int stablect = 0;
    bool stable = false;
    while (!stable) {
-      DBGMSG("SLEEPING");
-      // usleep(1000*stabilization_poll_millisec);
-      // sleep_millis(stabilization_poll_millisec);
       DW_SLEEP_MILLIS(stabilization_poll_millisec, "Loop until stable");
       BS256 bs_latest = i2c_buses_w_edid_as_bitset();
       if (bs256_eq(bs_latest, bs_prior))
@@ -543,8 +511,10 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
       stablect++;
    }
    if (stablect > 1) {
-      DBGTRC(debug || true, TRACE_GROUP,   "Required %d extra calls to i2c_buses_w_edid_as_bitset()", stablect+1);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_buses_w_edid_as_bitset()", __func__, stablect-1);
+      char buf[100];
+      g_snprintf(buf, 100,"Required %d extra calls to i2c_buses_w_edid_as_bitset()", stablect+1);
+      DBGTRC(debug || true, TRACE_GROUP, "%s", buf);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    }
 
    DBGTRC_RET_STRING(debug, TRACE_GROUP, BS256_REPR(bs_prior),"");
@@ -556,7 +526,6 @@ void init_ddc_watch_displays_common() {
 #ifdef WATCH_ASLEEP
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
 #endif
-   // RTTI_ADD_FUNC(ddc_i2c_stabilized_buses);
    RTTI_ADD_FUNC(ddc_i2c_stabilized_buses_bs);
    RTTI_ADD_FUNC(ddc_i2c_emit_deferred_events);
    RTTI_ADD_FUNC(ddc_i2c_hotplug_change_handler);
