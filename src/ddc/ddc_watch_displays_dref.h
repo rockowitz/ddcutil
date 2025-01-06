@@ -1,4 +1,7 @@
-// ddc_watch_displays_dref.h
+/** @file ddc_watch_displays_dref.h
+ *  Functions that modify persistent DDC_Display_Ref tables,
+ *  used only by display change detection
+ */
 
 // Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -10,7 +13,6 @@
 #ifndef DDC_WATCH_DISPLAYS_DREF_H_
 #define DDC_WATCH_DISPLAYS_DREF_H_
 
-// Display Status Change
 void         ddc_add_display_ref(Display_Ref * dref);
 void         ddc_mark_display_ref_removed(Display_Ref* dref);
 
