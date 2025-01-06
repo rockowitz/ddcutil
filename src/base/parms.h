@@ -126,7 +126,7 @@
 // Display detection
 //
 
-// Retry interval for retrying open display
+// Retry interval for retrying to open display
 #define DEFAULT_OPEN_MAX_WAIT_MILLISEC 1000
 #define DEFAULT_OPEN_WAIT_INTERVAL_MILLISEC 100
 
@@ -147,13 +147,13 @@
 /** How frequently libddcutil watches for changes to connected displays */
 #define DEFAULT_UDEV_WATCH_LOOP_MILLISEC 500
 #define DEFAULT_POLL_WATCH_LOOP_MILLISEC 2000
-#define DEFAULT_XEVENT_WATCH_LOOP_MILLISEC 300
+#define DEFAULT_XEVENT_WATCH_LOOP_MILLISEC 100
 
 // Once an event is received that possibly indicates a display change,
 // libddcutil repeatedly checks /sys/class/drm until the reported displays
 // stabilize
 /** Extra time to wait before first stabilization check */
-#define DEFAULT_INITIAL_STABILIZATION_MILLISEC 500   // 4000
+#define DEFAULT_INITIAL_STABILIZATION_MILLISEC 0  // 500   // 4000
 /** Polling interval between stabilization checks */
 #define DEFAULT_STABILIZATION_POLL_MILLISEC 100
 
