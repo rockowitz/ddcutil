@@ -797,7 +797,7 @@ X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes) {
 
 
 void dw_sleep_millis(const char * func, int line, const char * file, uint millis, const char * msg) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "func=%s, millis=%d, micros=%ld", func, millis, MILLIS2MICROS(millis));
    usleep((uint64_t)1000*millis);
    // Use syslog() instead of SYSLOG2() to ensure that msg is written to system log
