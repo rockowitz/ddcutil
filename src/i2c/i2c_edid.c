@@ -396,7 +396,6 @@ retry:
    while (tryctr < max_tries && rc != 0) {
       int edid_read_size = EDID_Read_Size;
       if (EDID_Read_Size == 0)
-
          edid_read_size = (tryctr < 2) ? 128 : 256;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                     "Trying EDID read. tryctr=%d, max_tries=%d,"
