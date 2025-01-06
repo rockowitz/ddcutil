@@ -89,7 +89,10 @@ static bool detect_usb_displays = true;
 #else
 static bool detect_usb_displays = false;
 #endif
+
+#ifdef DONT_CHECK_EDID
 static bool allow_asleep = true;
+#endif
 
 // Externally visible globals:
 int  dispno_max = 0;                      // highest assigned display number
@@ -1424,7 +1427,6 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s, validation_options=x%02x",
          dref, dref_reprx_t(dref), validation_options);
    assert(all_display_refs);
-   int d = (debug) ? 1 : -1;
 
    DDCA_Status ddcrc = DDCRC_OK;
    if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
@@ -1439,7 +1441,9 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Already marked removed");
          ddcrc = DDCRC_DISCONNECTED;
       }
+#ifdef DONT_CHECK_EDID
       else if (all_video_adapters_implement_drm) {
+         int d = (debug) ? 1 : -1;
          if (!dref->drm_connector) {
             // start_capture(DDCA_CAPTURE_STDERR);
             rpt_vstring(0, "Internal error in %s at line %d in file %s. dref->drm_connector == NULL",
@@ -1494,6 +1498,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
                ddcrc = DDCRC_DPMS_ASLEEP;
          }
       }
+#endif
    }
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p=%s", dref, dref_reprx_t(dref));
