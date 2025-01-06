@@ -42,6 +42,33 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 // Functions used only by display change handling
 //
 
+
+void ddc_add_display_ref(Display_Ref * dref) {
+   bool debug = false ;
+   debug = debug || debug_locks;
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+   g_mutex_lock(&all_display_refs_mutex);
+   g_ptr_array_add(all_display_refs, dref);
+   g_mutex_unlock(&all_display_refs_mutex);
+   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+}
+
+
+void ddc_mark_display_ref_removed(Display_Ref* dref) {
+   bool debug = false;
+   debug = debug || debug_locks;
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+   g_mutex_lock(&all_display_refs_mutex);
+   if (IS_DBGTRC(debug, debug)) {
+      show_backtrace(2);
+      backtrace_to_syslog(LOG_NOTICE, 2);
+   }
+   dref->flags |= DREF_REMOVED;
+   g_mutex_unlock(&all_display_refs_mutex);
+   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+}
+
+
 /** If a display is present on a specified bus adds a Display_Ref
  *  for that display.
  *
@@ -120,7 +147,6 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
-#ifdef BAD
 /** Given a #I2C_Bus_Info instance, checks if there is a currently active #Display_Ref
  *  for that bus (i.e. one with the DREF_REMOVED flag not set).
  *  If found, sets the DREF_REMOVED flag.
@@ -128,57 +154,32 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
  *  @param  businfo
  *  @return Display_Ref
  */
-Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
-   bool debug  = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
-   assert(all_display_refs);
-
-   // DBGTRC_NOPREFIX(true, TRACE_GROUP, "All existing Bus_Info recs:");
-   // i2c_dbgrpt_buses(/* report_all */ true, 2);
-
-   i2c_reset_bus_info(businfo);  // ???
-
-   Display_Ref * dref = ddc_get_dref_by_busno_or_connector(businfo->busno, NULL, /*ignore_invalid*/ true);
-   if (dref) {
-      if (IS_DBGTRC(debug, DDCA_TRC_NONE))
-         dbgrpt_display_ref_summary(dref, false /*include_businfo*/ ,  1);
-      assert(!(dref->flags & DREF_REMOVED));  // it was checked in the ddc_get_dref_by_busno_or_connector() call
-      dref->flags |= DREF_REMOVED;
-      dref->detail = NULL;
-      // ddc_emit_display_detection_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
-      //                                 businfo->drm_connector_name,
-      //                                 dref, dref->io_path);
-   }
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref %s", dref_repr_t(dref));
-   return dref;
-}
-#endif
-
-
-void ddc_add_display_ref(Display_Ref * dref) {
-   bool debug = false ;
-   debug = debug || debug_locks;
-   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
-   g_mutex_lock(&all_display_refs_mutex);
-   g_ptr_array_add(all_display_refs, dref);
-   g_mutex_unlock(&all_display_refs_mutex);
-   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
-}
-
-
-void ddc_mark_display_ref_removed(Display_Ref* dref) {
+Display_Ref * ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo) {
    bool debug = false;
-   debug = debug || debug_locks;
-   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
-   g_mutex_lock(&all_display_refs_mutex);
-   if (IS_DBGTRC(debug, debug)) {
-      show_backtrace(2);
-      backtrace_to_syslog(LOG_NOTICE, 2);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
+
+   i2c_reset_bus_info(businfo);
+   int busno = businfo->busno;
+
+   Display_Ref * dref = DDC_GET_DREF_BY_BUSNO(businfo->busno, /*ignore_invalid*/ true);
+   char buf[100];
+   g_snprintf(buf, 100, "Removing connected display, dref %s", dref_repr_t(dref));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
+   if (dref) {
+      assert(!(dref->flags & DREF_REMOVED));
+      ddc_mark_display_ref_removed(dref);
+      dref->detail = NULL;
    }
-   dref->flags |= DREF_REMOVED;
-   g_mutex_unlock(&all_display_refs_mutex);
-   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+   else {
+      char s[80];
+      g_snprintf(s, 80, "No Display_Ref found for i2c bus: %d", busno);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"%s", s);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref=%p", dref);
+   return dref;
 }
 
 
@@ -358,7 +359,6 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
 }
 
 
-
 void init_ddc_watch_displays_dref()  {
    // Functions used only for display change detection
    RTTI_ADD_FUNC(ddc_add_display_by_businfo);
@@ -366,4 +366,5 @@ void init_ddc_watch_displays_dref()  {
    RTTI_ADD_FUNC(ddc_get_dref_by_busno_or_connector);
    RTTI_ADD_FUNC(ddc_mark_display_ref_removed);
    RTTI_ADD_FUNC(ddc_recheck_dref);
+   RTTI_ADD_FUNC(ddc_remove_display_by_businfo2);
 }
