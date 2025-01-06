@@ -15,7 +15,7 @@ void         ddc_add_display_ref(Display_Ref * dref);
 void         ddc_mark_display_ref_removed(Display_Ref* dref);
 
 Display_Ref* ddc_add_display_by_businfo(I2C_Bus_Info * businfo);
-Display_Ref* ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo);
+Display_Ref* ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
 
 Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connector, bool ignore_invalid);
 #define      DDC_GET_DREF_BY_BUSNO(_busno, _ignore) \

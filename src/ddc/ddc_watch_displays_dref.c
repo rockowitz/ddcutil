@@ -154,7 +154,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
  *  @param  businfo
  *  @return Display_Ref
  */
-Display_Ref * ddc_remove_display_by_businfo2(I2C_Bus_Info * businfo) {
+Display_Ref * ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
 
@@ -366,5 +366,5 @@ void init_ddc_watch_displays_dref()  {
    RTTI_ADD_FUNC(ddc_get_dref_by_busno_or_connector);
    RTTI_ADD_FUNC(ddc_mark_display_ref_removed);
    RTTI_ADD_FUNC(ddc_recheck_dref);
-   RTTI_ADD_FUNC(ddc_remove_display_by_businfo2);
+   RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
 }

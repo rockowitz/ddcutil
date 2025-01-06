@@ -355,7 +355,7 @@ bool ddc_i2c_hotplug_change_handler(
          break;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing bus %d", busno);
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
-      Display_Ref* dref = ddc_remove_display_by_businfo2(businfo);
+      Display_Ref* dref = ddc_remove_display_by_businfo(businfo);
       if (dref) {
          ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
                dref->drm_connector, dref, dref->io_path, events_queue);
