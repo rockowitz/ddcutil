@@ -112,12 +112,13 @@ const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
 
 char * display_status_event_repr(DDCA_Display_Status_Event evt) {
    char * s = g_strdup_printf(
-      "DDCA_Display_Status_Event[%s:  %s, %s, dref: %s, io_path:/dev/i2c-%d]",
+      "DDCA_Display_Status_Event[%s:  %s, %s, dref: %s, io_path:/dev/i2c-%d, ddc working: %s]",
       formatted_time_t(evt.timestamp_nanos),   // will this clobber a wrapping DBGTRC?
       ddc_display_event_type_name(evt.event_type),
-      evt.connector_name,
-      ddca_dref_repr_t(evt.dref),
-      evt.io_path.path.i2c_busno);
+                                  evt.connector_name,
+                                  ddca_dref_repr_t(evt.dref),
+                                  evt.io_path.path.i2c_busno,
+                                  sbool(evt.flags&DDCA_DISPLAY_EVENT_DDC_WORKING));
    return s;
 }
 
@@ -144,8 +145,9 @@ ddc_create_display_status_event(
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "event_type=%d, connector_name=%s, dref=%s, io_path=%s",
          event_type, connector_name, dref_reprx_t(dref), dpath_short_name_t(&io_path) );
    DDCA_Display_Status_Event evt;
-   // DBGMSF(debug, "sizeof(DDCA_Display_Status_Event) = %d, sizeof(evt) = %d",
-   //       sizeof(DDCA_Display_Status_Event), sizeof(evt));
+   memset(&evt, 0, sizeof(evt));
+   DBGMSF(debug, "sizeof(DDCA_Display_Status_Event) = %d, sizeof(evt) = %d",
+         sizeof(DDCA_Display_Status_Event), sizeof(evt));
    evt.timestamp_nanos = elapsed_time_nanosec();
    evt.dref = dref_to_ddca_dref(dref);  // 0 if dref == NULL
    evt.event_type = event_type;
@@ -154,8 +156,11 @@ ddc_create_display_status_event(
    else
       memset(evt.connector_name,0,sizeof(evt.connector_name));
    evt.io_path = (dref) ? dref->io_path : io_path;
-   evt.unused[0] = 0;
-   evt.unused[1] = 0;
+   if (dref && event_type == DDCA_EVENT_DISPLAY_CONNECTED
+            && (dref->flags&DREF_DDC_COMMUNICATION_WORKING))
+      evt.flags |= DDCA_DISPLAY_EVENT_DDC_WORKING;
+   // evt.unused[0] = 0;
+   // evt.unused[1] = 0;
 
    DBGTRC_RET_STRING(debug, DDCA_TRC_NONE, display_status_event_repr_t(evt), "");
    return evt;
