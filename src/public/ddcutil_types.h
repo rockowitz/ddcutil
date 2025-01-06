@@ -567,18 +567,25 @@ typedef enum {
  *  maximum of 31 printable characters and a termination byte.
  *
  *  @remark
- *  The DDCA_Display_Status_Event is defined with two unused fields to allow
+ *  The DDCA_Display_Status_Event is defined with unused fields at the end to allow
  *  for future extension without breaking the ABI.
  *
  *  @since 2.1.0
+ *
+ *  @remark
+ *  Field flags with bit DDCA_DISPLAY_EVENT_DDC_WORKING added in 2.2.0
  */
+
+#define DDCA_DISPLAY_EVENT_DDC_WORKING 0x08
+
 typedef struct {
    uint64_t                timestamp_nanos;
    DDCA_Display_Event_Type event_type;
    DDCA_IO_Path            io_path;
    char                    connector_name[32];
    DDCA_Display_Ref        dref;
-   void *                  unused[2];
+   uint8_t                 flags;
+   void *                  unused[1];
 } DDCA_Display_Status_Event;
 
 
