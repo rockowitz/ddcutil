@@ -673,6 +673,9 @@ i2c_detect_x37(int fd, char * driver) {
  *  @retval NULL   ok
  *  @retval Error_Info with status DDCRC_DISCONNECTED or DDCRC_DPMS_ASLEEP
  *                                 DDCRC_OTHER  slave addr x37 unresponsive
+ *
+ *  @remark
+ *  Called from ddc_write_read_with_retry()
  */
 Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    bool debug = false;
