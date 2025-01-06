@@ -9,6 +9,7 @@
 #include <stdbool.h>
 
 #include "base/displays.h"
+#include "base/i2c_bus_base.h"
 
 #ifndef DDC_WATCH_DISPLAYS_DREF_H_
 #define DDC_WATCH_DISPLAYS_DREF_H_
