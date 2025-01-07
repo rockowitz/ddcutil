@@ -8,6 +8,8 @@
 
 #include <stdbool.h>
 
+#include "util/error_info.h"
+
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
 
@@ -26,7 +28,7 @@ Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connecto
 #define      DDC_GET_DREF_BY_CONNECTOR(_connector_name, _ignore_invalid) \
              ddc_get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
 
-bool         ddc_recheck_dref(Display_Ref * dref);
+Error_Info*  ddc_recheck_dref(Display_Ref * dref);
 
 void         init_ddc_watch_displays_dref();
 #endif /* DDC_WATCH_DISPLAYS_DREF_H_ */

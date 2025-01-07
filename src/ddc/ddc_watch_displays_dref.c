@@ -183,24 +183,21 @@ Display_Ref * ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
-bool
+Error_Info *
 ddc_recheck_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
-   bool result = false;
+   Error_Info * err = NULL;
 
    dref_lock(dref);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Obtained lock on %s:", dref_reprx_t(dref));
    dref->flags = 0;
-   Error_Info * err = ddc_initial_checks_by_dref(dref, false);
+   err = ddc_initial_checks_by_dref(dref, false);
    dref_unlock(dref);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Released lock on %s:", dref_reprx_t(dref));
 
-   result = (!err);
-   if (err)
-      errinfo_free(err);
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
-   return result;
+   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_NONE, err, "");
+   return err;
 }
 
 
