@@ -580,7 +580,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
                            errinfo_summary(ddc_excp));
                   }
                }
-
             }
          }
 
@@ -721,8 +720,10 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
       }
       else {
          err = ddc_initial_checks_by_dh(dh, newly_added);
-         if (err)
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ddc_initial_checks_by_dh() returned %s",psc_desc(err->status_code));
+         if (err) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ddc_initial_checks_by_dh() returned %s",
+                                                  psc_desc(err->status_code));
+         }
          ddc_close_display_wo_return(dh);
       }
       if (!(dref->flags & DREF_REMOVED))
