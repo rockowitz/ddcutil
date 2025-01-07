@@ -64,5 +64,4 @@ doxydoc/apidoc
 # Miscellaneous tools
 /heaptrack*
 *.tar.gz
-.github/*
 
