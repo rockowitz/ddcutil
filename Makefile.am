@@ -52,6 +52,7 @@ dist-hook:
 	find ${distdir}  -name "*old"  -type d -prune -exec rm -fv {} \;
 	find ${distdir}  -name "*new"  -type d -prune -exec rm -fv {} \;
 	find ${distdir}  -name ".gitignore"    -exec rm -v {} \;
+	rm -rfv ${distdir}/.github  
 
 # Too many false positives: 
 #  alpha.clone.CloneChecker
