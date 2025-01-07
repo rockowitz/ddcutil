@@ -1,4 +1,4 @@
-## [2.2.0] 2024-12-15
+## [2.2.0] 2024-01-07
 
 ### General
 
@@ -22,7 +22,8 @@
   Typically, this will be added to the [libddcutil] section of configuration 
   file ddcutilrc. It can also be included in the options string passed in the
   opts argument to ddca_init2(). Addresses issue #446.
-   
+- Maintain a stack of traced functions for debugging.
+  
 
 #### Changed
 
@@ -77,6 +78,7 @@
   is irrelevant for this command. Partially addresses issue #454.
 - rpt...() functions can redirect output to syslog, making lines coming from 
   multiple threads more coherent
+- Enable additional compiler warnings to tighten the code.
 
 #### Fixed
 
@@ -126,6 +128,16 @@ The shared library **libddcutil** is backwardly compatible with the one in
 ddcutil 2.1.0. The SONAME is unchanged as libddcutil.so.5. The released library
 file is libddcutil.so.5.1.3. 
 
+#### Added
+
+- Option ***--disable-api*** completely disables the API. Most API calls, including
+  those performing DDC communications, will fail. This can be useful for testing 
+  whether **libddcutil** is the source of a system error in the case of client
+  applications, e.g. KDE PowerDevil, that will not build without the shared library.
+- Add libddcutil only option ***--disable-watch-displays***, which unconditionally
+  blocks **ddca_start_watch_displays()** from starting the thread that watches
+  for display changes. Workaround for issue #470.
+
 #### Changed
 
 - **ddca_start_watch_displays()**: 
@@ -138,26 +150,41 @@ file is libddcutil.so.5.1.3.
 - Write build date and time to system log when starting libddcutil.
 - Rework libdccutil output to avoid duplicate msgs in system log when all terminal 
   output is directed to the log, as with KDE Plasma
-- Most functions that specify a display ref now return status code 
+- Most API functions that specify a display reference now return status code 
   DDCRC_DISCONNECTED if the display reference is no longer valid.
 - Quiesce the API during **ddca_redetect_displays()**.  Operations that access
   display state are not permitted, and return DDCRC_QUIESCED.
 - Add DDCA_STATS_API to enum DDCA_Stats_Type, for reporting API specific stats.
 - Compile using option -Wformat-security. Issue #458.
-- Include thread id in messages written to syslog.
-- Add libddcutil only option ***--disable-watch-displays***, which unconditionally
-  blocks **ddca_start_watch_displays()** from starting the thread that watches
-  for display changes. Workaround for issue #470.
 - Opaque pointer DDCA_Display_Ref now contains a display reference id instead
   of an actual pointer. It's type continues to be void* so client program use
   of this type is unchanged.
-- Add libddutil option ***--disable-api***, which completely disables the API.
-  Useful for testing whether libddcutil contributes to a system problem.
-- Whan a display is connected, the display number assigned is one greater than
-  the highest already assigned, instead of 99.  
+- **libddcutil** maintains a table of DDCA_Display_Refs that have been
+  "published" by the API, for validating DDCA_Display_Ref args on API 
+  function calls.
+- The opaque value in DDCA_Display_Ref is now an integer id number instead of 
+  pointer into the libddcutil data structures, making it slightly more opaque.
+  The type of DDCA_Display_Ref remains "void*", so no client changes are needed
+- syslog output is generally prefixed with date and thread id
+- It's possible that there's a delay between the time a monitor is turned on 
+  (and X11/Wayland generate a display change event) and the time that DDC 
+  becomes enabled. There's a newly added flags field in DDCA_Display_Status_Event,
+  with one bit defined, DDCA_DISPLAY_EVENT_DDC_WORKING.  Normally, this bit is 
+  set in the emitted DDCA_Display_Status_Event. However, if DDC is not immediately
+  enabled the bit is not set, and the display reference goes onto a recheck queue 
+  to be processed by a separate thread. An event of type DDCA_EVENT_DDC_ENABLED
+  will be emitted if and when the recheck thread determines that DDC is working.
+- There's a tension in display change detection between minimizing the time between
+  when X11/Wayland detects a monitor having been turned on and libddcutil issuing
+  an event of type DDCA_DISPLAY_EVENT_CONNECTED versus checking and rechecking 
+  failed states (e.g. DDC not working).  In many caes, the frequency and wait 
+  intervals are controlled by settings in file src/base/parms.h.
+
 
 #### Fixed
 
+- Whan a display is connected, the display number assigned to its display 
+  reference is one greater than the highest already assigned, instead of 99.  
 - **ddca_start_watch_displays()**: 
   Fixed segfault that occured with driver nvidia when checking if all video
   adapters implement drm. Issue #390. 
@@ -169,6 +196,10 @@ file is libddcutil.so.5.1.3.
     are still reported using **ddca_get_error_detail()**. In addition, error
     messages are written to the terminal and, depending on the current
     syslog level, to the system log.
+- **ddca_get_display_refs()** and **ddac_get_display_info_list2()** do not 
+  include display references for displays that are no longer connected.
+- **ddca_get_display_info()** succeeds even if DDC communication is not working.  
+    Addresses issue #???.
 - Display reference validation: Do not use dref->drm_connector, which may be 
   invalid after hotplug. Addresses issue #418.
 - **ddca_dref_repr()**: Do not check that the display reference is still valid.
