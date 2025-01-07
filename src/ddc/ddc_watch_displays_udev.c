@@ -142,7 +142,7 @@ ddc_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool 
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         DW_SLEEP_MILLIS(initial_stabilization_millisec * 1000, "Initial sleep");
+         DW_SLEEP_MILLIS(initial_stabilization_millisec, "Initial sleep");
       }
    }
 

@@ -696,7 +696,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
       if (tryctr > 1) {
          DBGMSG("!!! Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
          SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists_by_dh, tryctr = %d", tryctr);
-         DW_SLEEP_MILLIS(CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC*(uint64_t) 1000, "Retrying i2c_check_edid_exists_by_dh");
+         DW_SLEEP_MILLIS(CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC, "Retrying i2c_check_edid_exists_by_dh");
          // sleep(1);   // hack
       }
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
