@@ -159,7 +159,7 @@
 
 /// When checking that DDC communication has become enabled,
 // checks occur at increasing multipliers of this value.
-#define WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC 1000
+#define WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC 500
 
 //
 // *** Miscellaneous
