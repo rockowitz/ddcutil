@@ -35,8 +35,6 @@ __thread pid_t process_id = 0;
 __thread pid_t thread_id  = 0;
 
 
-
-
 char * get_msg_decoration(char * buf, uint bufsize, bool dest_syslog) {
    bool debug = false;
    assert(bufsize >= 100);
@@ -263,11 +261,14 @@ void remove_traced_function_stack(GQueue * stack) {
  * Must be called WITHOUT all_traced_function_stacks_mutex locked
  */
 void free_current_traced_function_stack() {
+   bool debug = false;
    if (traced_function_stack) {
-      printf("[%d](free_current_traced_function_stack) traced_function_stack=%p. Executing.\n",
-            tid(), traced_function_stack);
-      printf("[%d](free_current_traced_function_stack) Final contents of traced_function_stack:\n", tid());
-      debug_current_traced_function_stack(true);
+      if (debug) {
+         printf("[%d](free_current_traced_function_stack) traced_function_stack=%p. Executing.\n",
+               tid(), traced_function_stack);
+         printf("[%d](free_current_traced_function_stack) Final contents of traced_function_stack:\n", tid());
+         debug_current_traced_function_stack(true);
+      }
       g_queue_free_full(traced_function_stack, g_free);
       g_mutex_lock(&all_traced_function_stacks_mutex);
       g_ptr_array_remove(all_traced_function_stacks, traced_function_stack);
@@ -278,18 +279,21 @@ void free_current_traced_function_stack() {
 
 // must be called with all_traced_function_stacks_mutex locked
 void free_traced_function_stack(GQueue * stack) {
-   printf("[%d](%s) Starting. stack=%p\n", tid(), __func__, traced_function_stack);
+   bool debug = true;
+   if (debug)
+      printf("[%d](%s) Starting. stack=%p\n", tid(), __func__, traced_function_stack);
 
    if (stack) {
-      printf("[%d](free__traced_function_stack) Final contents of traced_function_stack:\n", tid());
-      debug_traced_function_stack(stack, true);
-
+      if (debug) {
+         printf("[%d](free__traced_function_stack) Final contents of traced_function_stack:\n", tid());
+         debug_traced_function_stack(stack, true);
+      }
       g_queue_free_full(stack, g_free);
-
       g_ptr_array_remove(all_traced_function_stacks, stack);
    }
 
-   printf("[%d](%s) Done.\n", tid(), __func__);
+   if (debug)
+      printf("[%d](%s) Done.\n", tid(), __func__);
 }
 
 
