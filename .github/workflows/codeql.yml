@@ -85,6 +85,7 @@ jobs:
         echo '  make bootstrap'
         echo '  make release'
         aclocal
+        autoheader
         autoconf
         automake
         ./configure
