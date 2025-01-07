@@ -123,8 +123,8 @@ _Bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
          XAnyEvent *e = (XAnyEvent*) &event;
          if (debug)
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "windows change event  serial %ld, synthetic %s, window 0x%lx,", e->serial,
-                  sbool(e->send_event), e->window);
+                  "windows change event  serial %ld, synthetic %s, window %ju,",
+                  e->serial, sbool(e->send_event), (intmax_t)e->window);
          bool more = true;
          while (more) {
             more = XCheckTypedEvent(evdata->dpy, evdata->screen_change_eventno, &event);
@@ -134,11 +134,8 @@ _Bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Flushed %d events", flushct);
          break;
       } else {
-         // DBGF(debug, "Not found");
-         // DBGF(debug, "sleeping");
-         // sleep(2);
-         // split_sleep();
-         printf(".");
+         if (debug)
+            printf(".");
          sleep_millis(poll_interval);
       }
    }
