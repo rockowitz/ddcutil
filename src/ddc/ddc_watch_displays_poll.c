@@ -487,6 +487,29 @@ typedef struct {
    GMutex *    deferred_event_queue_mutex;
 } Recheck_Displays_Data;
 
+/** Function that processes display refs on the array of displays to recheck
+ *  for DDC communication.
+ *
+ *  @param   data  pointer to a #Recheck_Displays_Data struct
+ *
+ *  At increasing time intervals, each display ref is checked to see if DDC
+ *  communication is working.  If so, a #DDC_Display_Status event of type
+ *  #DDCA_EVENT_DDC_ENABLED is emitted, and the display ref is removed from
+ *  from the array.
+ *
+ *  The time intervals are calculated as follows. The intervals are numbered
+ *  from 0. The base interval is global variable #retry_thread_sleep_factor_millis.
+ *  An adjustment factor is calculated as 2**i, where i is the interval number,
+ *  i.e. 1, 2, 4, 8 etc.
+ *
+ *  The thread terminates when either all display refs have been removed from
+ *  the array because communication has succeeded, or because the maximum of
+ *  sleep intervals have occurred, i.e. until a total of
+ *  (1+2+4+8)*retry_thread_sleep_factor_millis milliseconds have been slept.
+ *
+ *  On termination the **displays to recheck** array is freed.  Note that the
+ *  display references themselves are not; display references are persistent.
+ */
 gpointer ddc_recheck_displays_func(gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "!!! data=%p", data);
@@ -501,9 +524,11 @@ gpointer ddc_recheck_displays_func(gpointer data) {
    }
 #endif
 
+   int total_slept_millisec = 0;
    for (int sleepctr = 0; sleepctr < 4 && displays_to_recheck->len > 0; sleepctr++) {
-      int sleep_multiplier = simple_ipow(2, sleepctr);
-      DW_SLEEP_MILLIS(sleep_multiplier*retry_thread_sleep_factor_millis, "Recheck interval");
+      int sleep_interval = simple_ipow(2, sleepctr) * retry_thread_sleep_factor_millis;
+      DW_SLEEP_MILLIS(sleep_interval, "Recheck interval");
+      total_slept_millisec += sleep_interval;
 
       for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
           Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
@@ -511,10 +536,11 @@ gpointer ddc_recheck_displays_func(gpointer data) {
           bool ddc_enabled = ddc_recheck_dref(dref);
           if (!ddc_enabled) {
              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                   "ddc still not enabled for %s after %d seconds", dref_reprx_t(dref), sleep_multiplier);
+                   "ddc still not enabled for %s after %d milliseconds", dref_reprx_t(dref), sleep_interval);
           }
           else {
-             char * s = g_strdup_printf("ddc became enabled for %s after %d seconds", dref_reprx_t(dref), sleep_multiplier);
+             char * s = g_strdup_printf("ddc became enabled for %s after %d milliseconds",
+                                        dref_reprx_t(dref), sleep_interval);
              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
              SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
              free(s);
@@ -529,18 +555,18 @@ gpointer ddc_recheck_displays_func(gpointer data) {
              g_ptr_array_remove_index(displays_to_recheck, ndx);
           }
        }
-
-      for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
-          Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
-          char * s = g_strdup_printf(
-                "ddc communication did not become enabled for display %s within %d seconds",
-                dref_reprx_t(dref), sleep_multiplier);
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
-          SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
-          free(s);
-          g_ptr_array_remove_index(displays_to_recheck, ndx);
-      }
    }  // sleepctr loop
+
+   for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
+       Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
+       char * s = g_strdup_printf(
+             "ddc communication did not become enabled for display %s within %d milliseconds",
+                dref_reprx_t(dref), total_slept_millisec);
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
+       SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+       free(s);
+       g_ptr_array_remove_index(displays_to_recheck, ndx);
+   }
 
    g_ptr_array_free(displays_to_recheck, true);  // n. ptr array destroyed, but drefs remain
    free(rdd);
@@ -551,6 +577,10 @@ gpointer ddc_recheck_displays_func(gpointer data) {
 }
 
 
+/** Function that executes in the display watch thread.
+ *
+ *  @param   data  pointer to a #Watch_Display_Data struct
+ */
 gpointer ddc_watch_displays_without_udev(gpointer data) {
    bool debug = false;
    // bool debug_sysfs_state = false;
@@ -562,7 +592,6 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
    if (wdd->watch_mode == Watch_Mode_Xevent)
       assert(wdd->evdata);
    GPtrArray * displays_to_recheck = g_ptr_array_new();
-   // g_mutex_init(displays_to_recheck_mutex);
 
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "Caller process id: %d, caller thread id: %d, event_classes=0x%02x, terminate_using_x11_event=%s",
@@ -578,7 +607,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
    while (!all_i2c_buses) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Waiting 1 sec for all_i2c_buses");
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Waiting 1 sec for all_i2c_buses");
-      sleep_millis(1000*1000);
+      sleep_millis(500);
    }
 
    pid_t cur_pid = getpid();
@@ -609,9 +638,9 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
 
    GArray * deferred_events = NULL;
    if (use_deferred_event_queue) {
-      deferred_events = g_array_new( false,      // zero_terminated
-                                     false,       // clear
-                                     sizeof(DDCA_Display_Status_Event));
+      deferred_events = g_array_new(false,      // zero_terminated
+                                    false,      // clear
+                                    sizeof(DDCA_Display_Status_Event));
    }
    bool skip_next_sleep = false;
    int slept = 0;   // will contain length of final sleep
