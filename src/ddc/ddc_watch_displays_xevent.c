@@ -98,15 +98,22 @@ bye:
 
 
 //
-// used for non XIfEvent() mode, i.e. terminate_using_x11_event == false
+// Used for non XIfEvent() mode, i.e. terminate_using_x11_event == false
 //
 
-/**
- *  @param evedata
- *  @param poll_interval
- *  @return true if screen changed event was received, false if not
+/** Waits for an X11 screen change event. Repeatedly calls XCheckTypedEvent()
+ *  in a polling loop until a screen change XEvent is received or the polling
+ *  loop is terminated by #global terminate_watch_thread being set.
+ *
+ *  This function is used when waiting is NOT terminated by a user created
+ *  X11 event.
+ *
+ *  @param evdata pointer to XEvent_Data struct
+ *  @param poll_interval  XCheckTypedEvent() polling interval
+ *  @retval true  screen changed event was received
+ *  @retval false
  */
-_Bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
+bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "evdata=%p, poll_interval=%d", evdata, poll_interval);
 
@@ -146,9 +153,14 @@ _Bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
 
 
 //
-// Terminate using XIfEvent()
+// Used when checking the event queue using XIfEvent()
 //
 
+/** Calls XSendEvent to place a termination message into the
+ *  event queue.
+ *
+ *  @param evdata pointer to XEvent_Data struct
+ */
 void ddc_send_x11_termination_message(XEvent_Data * evdata) {
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "evdata->dpy=%p", evdata->dpy);
