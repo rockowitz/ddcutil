@@ -533,26 +533,42 @@ gpointer ddc_recheck_displays_func(gpointer data) {
       for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
           Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
           // DBGMSG("   rechecking %s", dref_repr_t(dref));
-          bool ddc_enabled = ddc_recheck_dref(dref);
-          if (!ddc_enabled) {
-             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                   "ddc still not enabled for %s after %d milliseconds", dref_reprx_t(dref), sleep_interval);
-          }
-          else {
+          Error_Info * err = ddc_recheck_dref(dref);
+          if (!err) {
              char * s = g_strdup_printf("ddc became enabled for %s after %d milliseconds",
-                                        dref_reprx_t(dref), sleep_interval);
+                                          dref_reprx_t(dref), total_slept_millisec);
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
+               SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+               free(s);
+               dref->dispno = ++dispno_max;
+
+               ddc_emit_or_queue_display_status_event(
+                     DDCA_EVENT_DDC_ENABLED,
+                     dref->drm_connector,
+                     dref,
+                     dref->io_path,
+                     rdd->deferred_event_queue);
+               g_ptr_array_remove_index(displays_to_recheck, ndx);
+          }
+          else if (err->status_code == DDCRC_DISCONNECTED) {
+             char * s = g_strdup_printf("Display %s no longer detected after %d milliseconds",
+                                        dref_reprx_t(dref), total_slept_millisec);
              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
              SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
              free(s);
-             dref->dispno = ++dispno_max;
 
+             dref->dispno = DISPNO_REMOVED;
              ddc_emit_or_queue_display_status_event(
-                   DDCA_EVENT_DDC_ENABLED,
+                   DDCA_EVENT_DISPLAY_DISCONNECTED,
                    dref->drm_connector,
                    dref,
                    dref->io_path,
                    rdd->deferred_event_queue);
              g_ptr_array_remove_index(displays_to_recheck, ndx);
+          }
+          else {
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                   "ddc still not enabled for %s after %d milliseconds", dref_reprx_t(dref), sleep_interval);
           }
        }
    }  // sleepctr loop
