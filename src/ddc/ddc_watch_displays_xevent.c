@@ -29,10 +29,10 @@ static int  screen_change_eventno = 0;
 void  dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
    rpt_structure_loc("XEvent_Data", evdata, depth);
    int d1 = depth+1;
-   rpt_vstring(d1, "dpy:                   %p", evdata->dpy);
-   rpt_vstring(d1, "screen:                %d", evdata->screen);
-   rpt_vstring(d1, "w:                     %ud", evdata->w);
-   rpt_vstring(d1, "screen_change_eventno: %d", evdata->screen_change_eventno);
+   rpt_vstring(d1, "dpy:                   %p",  evdata->dpy);
+   rpt_vstring(d1, "screen:                %d",  evdata->screen);
+   rpt_vstring(d1, "w:                     %jd", (uintmax_t) evdata->w);
+   rpt_vstring(d1, "screen_change_eventno: %d",  evdata->screen_change_eventno);
 }
 
 
