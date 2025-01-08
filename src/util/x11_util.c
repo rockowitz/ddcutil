@@ -104,6 +104,24 @@ void edid_recs_free_func(gpointer voidptr) {
 }
 
 
+/* XRRGetScreenResourcesCurrent vs XRRGetScreenResources.
+
+from: https://stackoverflow.com/questions/29625442/how-to-find-the-dpi-of-a-monitor-on-which-a-specific-window-is-placed-in-linux
+
+There are actually 2 functions to query resources about the screens:
+XRRGetScreenResourcesCurrent and XRRGetScreenResources.
+The first one returns some cached value, while the latter one asks the server
+which may introduce polling. The description (search for RRGetScreenResources):
+https://www.x.org/releases/X11R7.6/doc/randrproto/randrproto.txt
+
+Someone went through the trouble timing it: https://github.com/glfw/glfw/issues/347
+
+XRRGetScreenResourcesCurrent: Typically from 20 to 100 us.
+XRRGetScreenResources: Typically from 13600 to 13700 us.
+
+*/
+
+
 /** Obtains all the EDIDs known to X11.
  *
  * @return GPtrArray of X11_Edid_Rec

@@ -392,10 +392,13 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
    if (IS_DBGTRC(debug, (DDCA_TRC_TOP | DDCA_TRC_VCP)) )
       dbgrpt_dyn_feature_set(fset, /*verbose=*/false, 2);
 
+
    if (!fset) {
       vcpinfo_ok = false;
    }
    else {
+      bool saved_prefix_report_output = prefix_report_output;
+      prefix_report_output = false;
       if ( get_output_level() <= DDCA_OL_TERSE)
          report_dyn_feature_set(fset, 0);
       else {
@@ -416,6 +419,7 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
             report_vcp_feature_table_entry(pentry, 0);
          }
       }
+      prefix_report_output = saved_prefix_report_output;
       // free_vcp_feature_set(fset);
       free_dyn_feature_set(fset);
    }

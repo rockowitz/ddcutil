@@ -551,7 +551,7 @@ dyn_report_cap_features(
  * @param dref  display reference, may be null
  * @param depth logical indentation depth
  *
- * Output is written to the current stdout device.
+ * Output is written to the current report destination.
  *
  * @remark
  * dh/dref alternatives are needed to avoid double open of already opened device
@@ -576,6 +576,9 @@ void dyn_report_parsed_capabilities(
 
    if (dh)
       dref = dh->dref;
+
+   bool saved_prefix_report_output = prefix_report_output;
+   prefix_report_output = false;
 
    bool has_error_messages = pcaps->messages && pcaps->messages->len > 0;
    DDCA_Output_Level output_level = get_output_level();
@@ -674,6 +677,9 @@ void dyn_report_parsed_capabilities(
          }
       }
    }
+
+   prefix_report_output = saved_prefix_report_output;
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 

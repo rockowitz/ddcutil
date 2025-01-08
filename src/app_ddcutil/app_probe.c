@@ -45,6 +45,9 @@ void app_probe_display_by_dh(Display_Handle * dh)
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
 
+   bool saved_prefix_report_output = prefix_report_output;
+   prefix_report_output = false;
+
    Error_Info * ddc_excp = NULL;
    Parsed_Edid * pedid = dh->dref->pedid;
    f0printf(fout, "\nEDID version: %d.%d", pedid->edid_version_major, pedid->edid_version_minor);
@@ -213,6 +216,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
 
    app_show_single_vcp_value_by_feature_id(dh, 0x14, true);
 
+   prefix_report_output = saved_prefix_report_output;
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 

@@ -3,7 +3,7 @@
  * Runtime trace information
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <glib-2.0/glib.h>
@@ -91,11 +91,16 @@ void dbgrpt_rtti_func_name_table(int depth, bool show_internal) {
 
 
 void report_rtti_func_name_table(int depth, char * msg) {
+   bool saved_prefix_report_output = prefix_report_output;
+   prefix_report_output = false;
+
    if (msg) {
       rpt_label(depth, msg);
       depth++;
    }
    dbgrpt_rtti_func_name_table(depth, false);
+
+   prefix_report_output = saved_prefix_report_output;
 }
 
 

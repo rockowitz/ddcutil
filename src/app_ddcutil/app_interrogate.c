@@ -2,7 +2,7 @@
  *  Implement the INTERROGATE command
  */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -15,6 +15,7 @@
 
 #include "public/ddcutil_types.h"
 
+#include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
@@ -61,6 +62,10 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    dup2(1,2);   // redirect stderr to stdout
    // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
+
+   bool saved_prefix_report_output = prefix_report_output;
+   prefix_report_output = false;
+
    force_envcmd_settings(parsed_cmd);
    f0printf(fout(), "This command will take a while to run...\n\n");
 
@@ -103,6 +108,9 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
       reset_stats();
    }
    f0printf(fout(), "\nDisplay scanning complete.\n");
+
+   prefix_report_output = saved_prefix_report_output;
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 #endif

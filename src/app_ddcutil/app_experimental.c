@@ -34,6 +34,9 @@ rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
 void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
+   bool saved_prefix_report_output = prefix_report_output;
+   prefix_report_output = false;
+
 #ifdef UNUSED
    char buf0[80];
    g_snprintf(buf0, 80, "Use non-default watch mode (default = %s)", ddc_watch_mode_name(ddc_watch_mode));
@@ -99,6 +102,9 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --fl2:         Unused");
 
    rpt_nl();
+
+   prefix_report_output = saved_prefix_report_output;
+
 }
 
 #undef REPORT_FLAG_OPTION

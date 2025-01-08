@@ -105,6 +105,9 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
    DBGTRC_STARTING(debug, DDCA_TRC_DDC, "stats: 0x%02x, show_per_thread_stats: %s, include_dsa_internal: %s",
          stats, sbool(show_per_display_stats), sbool(include_dsa_internal));
 
+   bool saved_prefix_report_output = prefix_report_output;
+   prefix_report_output = false;
+
    if (stats_to_syslog_only) {
       start_capture(DDCA_CAPTURE_STDERR);
    }
@@ -184,6 +187,8 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
       }
       ntsa_free(lines, true);
    }
+
+   prefix_report_output = saved_prefix_report_output;
 
    DBGTRC_DONE(debug, DDCA_TRC_DDC, "");
 }

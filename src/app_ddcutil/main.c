@@ -176,6 +176,9 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     bool debug = false;
     DBGMSF(debug, "Executing...");
 
+    bool saved_prefix_report_output = prefix_report_output;
+    prefix_report_output = false;
+
     show_ddcutil_version();
     if (streq(BUILD_DATE, "Not set"))
        fprintf(stdout, "Build timestamp:            Not set\n");
@@ -187,6 +190,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
        rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file options:", default_options);
 
     // report_build_options(depth);
+
     show_reporting();  // uses fout()
     report_optional_features(parsed_cmd, depth);
     report_tracing(depth);
@@ -194,6 +198,8 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     report_performance_options(depth);
     report_experimental_options(parsed_cmd, depth);
     report_build_options(depth);
+
+    prefix_report_output = saved_prefix_report_output;
 
     DBGMSF(debug, "Done");
 }
@@ -1053,7 +1059,10 @@ main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_C1) {
-      DBGMSG("Executing temporarily defined command C1: watch for display connection/disconnection");
+      bool saved_prefix_report_output = prefix_report_output;
+      prefix_report_output = false;
+
+      rpt_label(0, "Executing temporarily defined command C1: watch for display connection/disconnection");
       if (!all_video_adapters_implement_drm) {
          DBGMSG("Requires DRM capable video drivers.");
          main_rc = EXIT_FAILURE;
@@ -1068,22 +1077,29 @@ main(int argc, char *argv[]) {
             main_rc = EXIT_FAILURE;
          }
          else {
-            DBGMSG("Watching for 10 hours");
+            rpt_label(0,"Watching for 10 hours");
             sleep(10*60*60);
-            DBGMSG("Terminating execution after 10 hours");
+            rpt_label(0,"Terminating execution after 10 hours");
             ddc_stop_watch_displays(true, NULL);
             main_rc = EXIT_SUCCESS;
          }
       }
+
+      prefix_report_output = saved_prefix_report_output;
    }
 
    else if (parsed_cmd->cmd_id == CMDID_C2 ||
             parsed_cmd->cmd_id == CMDID_C3 ||
             parsed_cmd->cmd_id == CMDID_C4)
    {
+      bool saved_prefix_report_output = prefix_report_output;
+      prefix_report_output = false;
+
       Cmd_Desc * desc = get_command(parsed_cmd->cmd_id);
-      DBGMSG("Unrecognized command: %s", desc->cmd_name);
+      rpt_vstring(0,"Unrecognized command: %s", desc->cmd_name);
       main_rc = EXIT_FAILURE;
+
+      prefix_report_output = saved_prefix_report_output;
    }
 
 #ifdef INCLUDE_TESTCASES
@@ -1097,6 +1113,10 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
+
+      bool saved_prefix_report_output = prefix_report_output;
+      prefix_report_output = false;
+
       verify_i2c_access();
 
       if ( parsed_cmd->flags2 & CMD_FLAG2_F4) {
@@ -1106,6 +1126,9 @@ main(int argc, char *argv[]) {
          ddc_ensure_displays_detected();
          ddc_report_displays(/*include_invalid_displays=*/ true, 0);
       }
+
+      prefix_report_output = saved_prefix_report_output;
+
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Display detection complete");
       main_rc = EXIT_SUCCESS;
    }
@@ -1122,9 +1145,14 @@ main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
+      bool saved_prefix_report_output = prefix_report_output;
+      prefix_report_output = false;
+
       if (parsed_cmd->output_level >= DDCA_OL_VERBOSE)
          force_envcmd_settings(parsed_cmd);
       query_sysenv(parsed_cmd->flags & CMD_FLAG_QUICK);
+
+      prefix_report_output = saved_prefix_report_output;
       main_rc = EXIT_SUCCESS;
    }
 
@@ -1132,7 +1160,12 @@ main(int argc, char *argv[]) {
 #ifdef ENABLE_USB
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command USBENV...");
       dup2(1,2);   // redirect stderr to stdout
+      bool saved_prefix_report_output = prefix_report_output;
+      prefix_report_output = false;
+
       query_usbenv();
+
+      prefix_report_output = saved_prefix_report_output;
       main_rc = EXIT_SUCCESS;
 #else
       f0printf(fout(), "ddcutil was not built with support for USB connected monitors\n");
