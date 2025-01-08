@@ -11,7 +11,7 @@
  * - destination stack
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -34,7 +34,17 @@
 #include "report_util.h"
 
 bool redirect_reports_to_syslog = false;
-bool prefix_report_output = false;
+bool default_prefix_report_output = false;
+
+/** Sets the initial report ornamentation status.
+ *
+ *  Note this does not change the ornamentation status for existing threads.
+ *
+ *  @param output_dest  default output destination
+ */
+void rpt_set_default_ornamentation_enabled(bool onoff) {
+   default_prefix_report_output = onoff;
+}
 
 
 #define DEFAULT_INDENT_SPACES_PER_DEPTH 3
@@ -77,6 +87,7 @@ typedef struct {
    // work around for fact that can't initialize the initial stack entry to stdout
    FILE* alt_initial_output_dest;     // initial NULL;
    bool  initial_output_dest_changed; // initial false;
+   bool  prefix_report_output;
 } Per_Thread_Settings;
 
 
@@ -95,6 +106,7 @@ static Per_Thread_Settings *  get_thread_settings() {
       settings = g_new0(Per_Thread_Settings, 1);
       settings->indent_spaces_stack_pos = -1;
       settings->output_dest_stack_pos   = -1;
+      settings->prefix_report_output = default_prefix_report_output;
 
       if (default_output_dest)
          settings->output_dest_stack[++settings->output_dest_stack_pos] = default_output_dest;
@@ -105,6 +117,26 @@ static Per_Thread_Settings *  get_thread_settings() {
    // printf("(%s) Returning: %p\n", __func__, settings);
    return settings;
 }
+
+
+//
+// Ornamentation control
+//
+
+
+bool rpt_get_ornamentation_enabled()  {
+   Per_Thread_Settings * settings = get_thread_settings();
+   return settings->prefix_report_output;
+}
+
+
+bool rpt_set_ornamentation_enabled(bool enabled) {
+   Per_Thread_Settings * settings = get_thread_settings();
+   bool old = settings->prefix_report_output;
+   settings->prefix_report_output = enabled;
+   return old;
+}
+
 
 
 //
@@ -284,7 +316,7 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
       printf("(%s) Writing to %p\n", __func__, (void*)rpt_cur_output_dest());
 
    char prefix[100] = {0};
-   if (prefix_report_output)
+   if (rpt_get_ornamentation_enabled())
       get_msg_decoration(prefix, 100, redirect_reports_to_syslog);
 
    if (collector) {

@@ -3,7 +3,7 @@
  *  ddcutil standalone application mainline
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -176,8 +176,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     bool debug = false;
     DBGMSF(debug, "Executing...");
 
-    bool saved_prefix_report_output = prefix_report_output;
-    prefix_report_output = false;
+    bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
     show_ddcutil_version();
     if (streq(BUILD_DATE, "Not set"))
@@ -199,7 +198,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     report_experimental_options(parsed_cmd, depth);
     report_build_options(depth);
 
-    prefix_report_output = saved_prefix_report_output;
+    rpt_set_ornamentation_enabled(saved_prefix_report_output);
 
     DBGMSF(debug, "Done");
 }
@@ -1059,8 +1058,7 @@ main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_C1) {
-      bool saved_prefix_report_output = prefix_report_output;
-      prefix_report_output = false;
+      bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
       rpt_label(0, "Executing temporarily defined command C1: watch for display connection/disconnection");
       if (!all_video_adapters_implement_drm) {
@@ -1085,21 +1083,20 @@ main(int argc, char *argv[]) {
          }
       }
 
-      prefix_report_output = saved_prefix_report_output;
+      rpt_set_ornamentation_enabled(saved_prefix_report_output);
    }
 
    else if (parsed_cmd->cmd_id == CMDID_C2 ||
             parsed_cmd->cmd_id == CMDID_C3 ||
             parsed_cmd->cmd_id == CMDID_C4)
    {
-      bool saved_prefix_report_output = prefix_report_output;
-      prefix_report_output = false;
+      bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
       Cmd_Desc * desc = get_command(parsed_cmd->cmd_id);
       rpt_vstring(0,"Unrecognized command: %s", desc->cmd_name);
       main_rc = EXIT_FAILURE;
 
-      prefix_report_output = saved_prefix_report_output;
+      rpt_set_ornamentation_enabled(saved_prefix_report_output);
    }
 
 #ifdef INCLUDE_TESTCASES
@@ -1114,8 +1111,7 @@ main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
 
-      bool saved_prefix_report_output = prefix_report_output;
-      prefix_report_output = false;
+      bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
       verify_i2c_access();
 
@@ -1127,7 +1123,7 @@ main(int argc, char *argv[]) {
          ddc_report_displays(/*include_invalid_displays=*/ true, 0);
       }
 
-      prefix_report_output = saved_prefix_report_output;
+      rpt_set_ornamentation_enabled(saved_prefix_report_output);
 
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Display detection complete");
       main_rc = EXIT_SUCCESS;
@@ -1145,14 +1141,14 @@ main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
-      bool saved_prefix_report_output = prefix_report_output;
-      prefix_report_output = false;
+
+      bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
       if (parsed_cmd->output_level >= DDCA_OL_VERBOSE)
          force_envcmd_settings(parsed_cmd);
       query_sysenv(parsed_cmd->flags & CMD_FLAG_QUICK);
 
-      prefix_report_output = saved_prefix_report_output;
+      rpt_set_ornamentation_enabled(saved_prefix_report_output);
       main_rc = EXIT_SUCCESS;
    }
 
@@ -1160,12 +1156,11 @@ main(int argc, char *argv[]) {
 #ifdef ENABLE_USB
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command USBENV...");
       dup2(1,2);   // redirect stderr to stdout
-      bool saved_prefix_report_output = prefix_report_output;
-      prefix_report_output = false;
+      bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
       query_usbenv();
 
-      prefix_report_output = saved_prefix_report_output;
+      rpt_set_ornamentation_enabled(saved_prefix_report_output);
       main_rc = EXIT_SUCCESS;
 #else
       f0printf(fout(), "ddcutil was not built with support for USB connected monitors\n");

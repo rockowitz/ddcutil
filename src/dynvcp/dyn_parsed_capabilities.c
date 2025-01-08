@@ -3,7 +3,7 @@
  * Report parsed capabilities, taking into account dynamic feature definitions.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -577,8 +577,7 @@ void dyn_report_parsed_capabilities(
    if (dh)
       dref = dh->dref;
 
-   bool saved_prefix_report_output = prefix_report_output;
-   prefix_report_output = false;
+   bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
    bool has_error_messages = pcaps->messages && pcaps->messages->len > 0;
    DDCA_Output_Level output_level = get_output_level();
@@ -678,7 +677,7 @@ void dyn_report_parsed_capabilities(
       }
    }
 
-   prefix_report_output = saved_prefix_report_output;
+   rpt_set_ornamentation_enabled(saved_prefix_report_output);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }

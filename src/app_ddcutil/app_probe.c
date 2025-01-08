@@ -2,7 +2,7 @@
   * Implement PROBE command
   */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "public/ddcutil_types.h"
@@ -45,8 +45,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
 
-   bool saved_prefix_report_output = prefix_report_output;
-   prefix_report_output = false;
+   bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
    Error_Info * ddc_excp = NULL;
    Parsed_Edid * pedid = dh->dref->pedid;
@@ -216,7 +215,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
 
    app_show_single_vcp_value_by_feature_id(dh, 0x14, true);
 
-   prefix_report_output = saved_prefix_report_output;
+   rpt_set_ornamentation_enabled(saved_prefix_report_output);
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 

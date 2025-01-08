@@ -552,9 +552,9 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
                                                initial_multiplier < 1.0f))
                {
                   if (dynamic_sleep_active) {
-                     DBGMSG("Additional 1 second sleep for newly added display");
-                     SYSLOG2(DDCA_SYSLOG_ERROR, "Additional 1 second sleep for newly added display");
-                     DW_SLEEP_MILLIS(1000, "Additional 1 second sleep for newly added display");
+                     DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Additional 1 second sleep for newly added display A");
+                     // SYSLOG2(DDCA_SYSLOG_ERROR, "Additional 1 second sleep for newly added display B");
+                     DW_SLEEP_MILLIS(1000, "Additional 1 second sleep for newly added display C");
                   }
                   // turn off optimization in case it's on
                   if (pdd_is_dynamic_sleep_active(pdd) ) {

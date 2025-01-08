@@ -3,7 +3,7 @@
  * ddc layer initialization and configuration, statistics management
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -105,8 +105,7 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
    DBGTRC_STARTING(debug, DDCA_TRC_DDC, "stats: 0x%02x, show_per_thread_stats: %s, include_dsa_internal: %s",
          stats, sbool(show_per_display_stats), sbool(include_dsa_internal));
 
-   bool saved_prefix_report_output = prefix_report_output;
-   prefix_report_output = false;
+   bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
    if (stats_to_syslog_only) {
       start_capture(DDCA_CAPTURE_STDERR);
@@ -188,7 +187,7 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
       ntsa_free(lines, true);
    }
 
-   prefix_report_output = saved_prefix_report_output;
+   rpt_set_ornamentation_enabled(saved_prefix_report_output);
 
    DBGTRC_DONE(debug, DDCA_TRC_DDC, "");
 }

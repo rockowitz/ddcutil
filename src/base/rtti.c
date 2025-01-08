@@ -91,8 +91,7 @@ void dbgrpt_rtti_func_name_table(int depth, bool show_internal) {
 
 
 void report_rtti_func_name_table(int depth, char * msg) {
-   bool saved_prefix_report_output = prefix_report_output;
-   prefix_report_output = false;
+   bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
    if (msg) {
       rpt_label(depth, msg);
@@ -100,7 +99,7 @@ void report_rtti_func_name_table(int depth, char * msg) {
    }
    dbgrpt_rtti_func_name_table(depth, false);
 
-   prefix_report_output = saved_prefix_report_output;
+   rpt_set_ornamentation_enabled(saved_prefix_report_output);
 }
 
 

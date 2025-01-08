@@ -1,6 +1,6 @@
 /** @file app_experimental.c */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -34,8 +34,7 @@ rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
 void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
-   bool saved_prefix_report_output = prefix_report_output;
-   prefix_report_output = false;
+   bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
 #ifdef UNUSED
    char buf0[80];
@@ -103,8 +102,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 
    rpt_nl();
 
-   prefix_report_output = saved_prefix_report_output;
-
+   rpt_set_ornamentation_enabled(saved_prefix_report_output);
 }
 
 #undef REPORT_FLAG_OPTION

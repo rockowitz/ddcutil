@@ -39,6 +39,7 @@
 #include "base/displays.h"
 #include "base/dsa2.h"
 #include "base/execution_stats.h"
+#include "base/i2c_bus_base.h"
 #include "base/parms.h"
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
@@ -229,11 +230,15 @@ ddc_open_display(
       if (streq(status, "disconnected")) {
          if (tryct == 0) {
             free(status);
-            DBGTRC_NOPREFIX(true, TRACE_GROUP, "status == disconnected, sleeping 1 sec and retrying");
-            sleep(1);
+            // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "status == disconnected, sleeping 1 sec and retrying");
+            DW_SLEEP_MILLIS(1000, "Delay before rechecking attribute status");
             tryct++;
             goto retry_status;
          }
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "%s still disconnected after 1 second delay and retry", dref_reprx_t(dref));
+         SYSLOG2(DDCA_SYSLOG_WARNING,
+               "%s still disconnected after 1 second delay and retry", dref_reprx_t(dref));
          err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
       }
       free(status);

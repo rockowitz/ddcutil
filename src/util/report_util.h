@@ -3,7 +3,7 @@
  *  Report utility package
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef REPORT_UTIL_H_
@@ -33,7 +33,11 @@ extern __thread Byte rpt_prefix_options;
 #endif
 
 extern bool redirect_reports_to_syslog;
-extern bool prefix_report_output;
+extern bool default_prefix_report_output;
+
+void rpt_set_default_ornamentation_enabled(bool onoff);
+bool rpt_get_ornamentation_enabled();
+bool rpt_set_ornamentation_enabled(bool enabled);
 
 void rpt_set_default_output_dest(FILE* output_dest);
 void rpt_push_output_dest(FILE* new_dest);
