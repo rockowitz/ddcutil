@@ -18,13 +18,11 @@ extern bool dbgtrc_show_process_id; // prefix debug/trace messages with process 
 extern bool dbgtrc_trace_to_syslog_only;
 extern bool stdout_stderr_redirected;
 
-// extern bool dbgtrc_dest_syslog;
 extern bool traced_function_stack_enabled;
 extern __thread bool msg_decoration_suspended;
 extern __thread bool traced_function_stack_suspended;
 extern __thread pid_t process_id;
 extern __thread pid_t thread_id;
-
 
 static inline pid_t tid() {
    if (!thread_id)
@@ -37,7 +35,6 @@ static inline pid_t pid() {
       process_id = syscall(SYS_gettid);
    return thread_id;
 }
-
 
 char*      get_msg_decoration(char * buf, uint bufsize, bool dest_syslog);
 char*      formatted_wall_time();

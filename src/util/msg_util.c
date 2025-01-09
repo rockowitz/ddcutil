@@ -22,7 +22,6 @@ bool dbgtrc_show_thread_id =  false;  ///< include thread id in debug/trace outp
 bool dbgtrc_show_process_id = false;  ///< include process id in debug/trace output
 bool dbgtrc_trace_to_syslog_only = false; ///< send trace output only to system log
 bool stdout_stderr_redirected = false;
-// bool dbgtrc_dest_syslog     = false;
 bool __thread msg_decoration_suspended = false;
 bool traced_function_stack_enabled = true;
 bool __thread traced_function_stack_suspended = false;
