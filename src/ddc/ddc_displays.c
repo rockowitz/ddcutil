@@ -438,7 +438,7 @@ check_supported_feature(Display_Handle * dh, bool newly_added) {
    Per_Display_Data * pdd = dh->dref->pdd;
    Display_Ref * dref = dh->dref;
    I2C_Bus_Info * businfo = dh->dref->detail;
-:
+
    DDCA_Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
    // feature that always exists
