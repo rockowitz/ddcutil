@@ -1,6 +1,6 @@
-/** @file ddc_watch_displays_main.c */
+/** @file ddc_dw_main.c */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -55,12 +55,12 @@
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp.h"
 
-#include "ddc_watch_displays_common.h"
-#include "ddc_watch_displays_udev.h"
-#include "ddc_watch_displays_poll.h"
-#include "ddc_watch_displays_xevent.h"
+#include "ddc/ddc_dw_common.h"
+#include "ddc/ddc_dw_udev.h"
+#include "ddc/ddc_dw_poll.h"
+#include "ddc/ddc_dw_xevent.h"
 
-#include "ddc_watch_displays_main.h"
+#include "ddc/ddc_dw_main.h"
 
 
 // Trace class for this file

@@ -101,7 +101,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 // #include "ddc/ddc_watch_displays.h"
-#include "ddc/ddc_watch_displays_main.h"
+#include <ddc/ddc_dw_main.h>
 
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/cmd_parser.h"

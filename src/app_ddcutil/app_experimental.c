@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
-
 #include <stdio.h>
 #include <strings.h>
 
@@ -20,9 +19,8 @@
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
-// #include "ddc/ddc_watch_displays_udev.h"
-#include "ddc/ddc_watch_displays_common.h"
-#include "ddc/ddc_watch_displays_main.h"
+#include "ddc/ddc_dw_common.h"
+#include "ddc/ddc_dw_main.h"
 
 #include "app_experimental.h"
 

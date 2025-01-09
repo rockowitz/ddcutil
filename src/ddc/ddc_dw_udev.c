@@ -1,9 +1,9 @@
-/** @file ddc_watch_displays_udev.c
+/** @file ddc_dw_udev.c
  *
  *  Watch for monitor addition and removal using UDEV
  */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -56,9 +56,9 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_dw_common.h"
 
-#include "ddc/ddc_watch_displays_common.h"
-#include "ddc/ddc_watch_displays_udev.h"
+#include "ddc/ddc_dw_udev.h"
 
 
 // Trace class for this file

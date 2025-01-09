@@ -3,7 +3,7 @@
  *  Primary file for the ENVIRONMENT command
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // #define SYSENV_QUICK_TEST_RUN 1
@@ -62,7 +62,7 @@
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_try_data.h"
-#include "ddc/ddc_watch_displays_udev.h"
+#include "ddc/ddc_dw_udev.h"
 
 #include "vcp/persistent_capabilities.h"
 

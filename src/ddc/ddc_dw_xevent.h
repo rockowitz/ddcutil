@@ -1,10 +1,10 @@
-/** @file ddc_watch_displays_xevent.h */
+/** @file ddc_dw_xevent.h */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DDC_WATCH_DISPLAYS_XEVENT_H_
-#define DDC_WATCH_DISPLAYS_XEVENT_H_
+#ifndef DDC_DW_XEVENT_H_
+#define DDC_DW_XEVENT_H_
 
 #include <stdbool.h>
 #include <X11/Xlib.h>
@@ -27,4 +27,4 @@ void          ddc_send_x11_termination_message(XEvent_Data * evdata);
 
 void          init_ddc_watch_displays_xevent();
 
-#endif /* DDC_WATCH_DISPLAYS_XEVENT_H_ */
+#endif /* DDC_DW_XEVENT_H_ */

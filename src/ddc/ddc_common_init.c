@@ -2,14 +2,14 @@
  *  Initialization that must be performed very early by both ddcutil and libddcutil
  */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Contains initialization functions extracted from main.c so they can
 // be shared with libmain/api.base.c
 
 #include <assert.h>
-#include <base/drm_connector_state.h>
+
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
@@ -33,6 +33,7 @@
 #include "base/core.h"
 #include "base/display_retry_data.h"
 #include "base/dsa2.h"
+#include "base/drm_connector_state.h"
 #include "base/flock.h"
 #include "base/i2c_bus_base.h"
 #include "base/parms.h"
@@ -60,10 +61,10 @@
 #include "ddc_services.h"
 #include "ddc_try_data.h"
 #include "ddc_vcp.h"
-#include "ddc/ddc_watch_displays_udev.h"
-#include "ddc/ddc_watch_displays_poll.h"
-#include "ddc_watch_displays_main.h"
-#include "ddc_watch_displays_common.h"
+#include "ddc/ddc_dw_udev.h"
+#include "ddc/ddc_dw_poll.h"
+#include "ddc/ddc_dw_main.h"
+#include "ddc/ddc_dw_common.h"
 
 #include "ddc_common_init.h"
 

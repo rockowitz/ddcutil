@@ -1,6 +1,6 @@
 /** @file api_displays.c */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -33,10 +33,10 @@
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_display_selection.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_dw_udev.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp_version.h"
-#include "ddc/ddc_watch_displays_udev.h"
 
 #include "libmain/api_base_internal.h"
 #include "libmain/api_error_info_internal.h"

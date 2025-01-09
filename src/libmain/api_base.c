@@ -1,4 +1,5 @@
 /** @file api_base.c
+#include <ddc/ddc_dw_main.h>
  *
  *  C API base functions.
  */
@@ -50,13 +51,13 @@
 
 #include "ddc/ddc_common_init.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_dw_main.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_watch_displays_main.h"
 
 #include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"

@@ -1,10 +1,10 @@
-// ddc_watch_displays_common.h
+/** @file ddc_dw_common.h */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DDC_WATCH_DISPLAYS_COMMON_H_
-#define DDC_WATCH_DISPLAYS_COMMON_H_
+#ifndef DDC_DW_COMMON_H_
+#define DDC_DW_COMMON_H_
 
 #include <glib-2.0/glib.h>
 #include <sys/types.h>
@@ -14,7 +14,7 @@
 
 #include "base/displays.h"
 
-#include "ddc/ddc_watch_displays_xevent.h"
+#include "ddc/ddc_dw_xevent.h"
 
 extern int       initial_stabilization_millisec;
 extern int       stabilization_poll_millisec;
@@ -27,7 +27,6 @@ extern bool      terminate_using_x11_event;
 int  calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);
 int  split_sleep(int watch_loop_millisec);
 void terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid);
-
 
 typedef void (*Display_Change_Handler)(
                  GPtrArray *          buses_removed,
@@ -82,4 +81,4 @@ bool ddc_i2c_hotplug_change_handler(
 
 void init_ddc_watch_displays_common();
 
-#endif /* DDC_WATCH_DISPLAYS_COMMON_H_ */
+#endif /* DDC_DW_COMMON_H_ */

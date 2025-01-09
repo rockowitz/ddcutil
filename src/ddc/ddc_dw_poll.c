@@ -1,9 +1,9 @@
-/** @file_watch_displays_poll.c
+/** @file_dw_poll.c
  *
  *  Watch for display changes without using UDEV
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -52,14 +52,14 @@
 #include "i2c/i2c_sys_drm_connector.h"
 
 #include "ddc/ddc_displays.h"
-#include "ddc/ddc_watch_displays_common.h"
-#include "ddc/ddc_watch_displays_dref.h"
-#include "ddc/ddc_watch_displays_xevent.h"
+#include "ddc/ddc_dw_common.h"
+#include "ddc/ddc_dw_dref.h"
+#include "ddc/ddc_dw_xevent.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp.h"
 
-#include "ddc/ddc_watch_displays_poll.h"
+#include "ddc/ddc_dw_poll.h"
 
 
 // Trace class for this file

@@ -1,6 +1,6 @@
-/** @file ddc_watch_displays_dref.c */
+/** @file ddc_dw_dref.c */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 /** \cond */
@@ -17,10 +17,9 @@
 #include "util/error_info.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-
 /** \endcond */
 
-// #include "public/ddcutil_types.h"
+#include "public/ddcutil_types.h"
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -31,7 +30,8 @@
 
 #include "ddc/ddc_displays.h"
 
-#include "ddc/ddc_watch_displays_dref.h"
+#include "ddc/ddc_dw_dref.h"
+
 
 
 // Default trace class for this file

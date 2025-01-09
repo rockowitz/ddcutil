@@ -24,7 +24,6 @@
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/drm_common.h"
-#include <base/drm_connector_state.h>
 #include "util/edid.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
@@ -47,6 +46,7 @@
 
 #include "base/core.h"
 #include "base/ddc_packets.h"
+#include "base/drm_connector_state.h"
 #include "base/dsa2.h"
 #include "base/feature_metadata.h"
 #include "base/linux_errno.h"
@@ -75,7 +75,7 @@
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_watch_displays_main.h"
+#include "ddc/ddc_dw_main.h"
 
 #include "ddc/ddc_displays.h"
 

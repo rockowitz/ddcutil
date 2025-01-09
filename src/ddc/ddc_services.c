@@ -58,12 +58,12 @@
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
 #ifdef BUILD_SHARED_LIB
-#include "ddc/ddc_watch_displays_dref.h"
-#include "ddc/ddc_watch_displays_xevent.h"
-#include "ddc/ddc_watch_displays_udev.h"
-#include "ddc/ddc_watch_displays_poll.h"
-#include "ddc/ddc_watch_displays_main.h"
-#include "ddc/ddc_watch_displays_common.h"
+#include "ddc/ddc_dw_dref.h"
+#include "ddc/ddc_dw_xevent.h"
+#include "ddc/ddc_dw_udev.h"
+#include "ddc/ddc_dw_poll.h"
+#include "ddc/ddc_dw_main.h"
+#include "ddc/ddc_dw_common.h"
 #endif
 
 #include "ddc/ddc_services.h"

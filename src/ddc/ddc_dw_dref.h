@@ -1,9 +1,9 @@
-/** @file ddc_watch_displays_dref.h
+/** @file ddc_dw_dref.h
  *  Functions that modify persistent DDC_Display_Ref tables,
  *  used only by display change detection
  */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <stdbool.h>
@@ -13,8 +13,8 @@
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
 
-#ifndef DDC_WATCH_DISPLAYS_DREF_H_
-#define DDC_WATCH_DISPLAYS_DREF_H_
+#ifndef DDC_DW_DREF_H_
+#define DDC_DW_DREF_H_
 
 void         ddc_add_display_ref(Display_Ref * dref);
 void         ddc_mark_display_ref_removed(Display_Ref* dref);
