@@ -428,8 +428,8 @@ check_how_unsupported_reported(Display_Handle * dh) {
 }
 
 
-
-Error_Info * check_supported_feature(Display_Handle * dh, bool newly_added) {
+STATIC Error_Info *
+check_supported_feature(Display_Handle * dh, bool newly_added) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newly_added=%s", dh_repr(dh), SBOOL(newly_added));
 
@@ -438,7 +438,7 @@ Error_Info * check_supported_feature(Display_Handle * dh, bool newly_added) {
    Per_Display_Data * pdd = dh->dref->pdd;
    Display_Ref * dref = dh->dref;
    I2C_Bus_Info * businfo = dh->dref->detail;
-
+:
    DDCA_Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
    // feature that always exists
