@@ -513,7 +513,7 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
    if (stablect > 1) {
       char buf[100];
       g_snprintf(buf, 100,"Required %d extra calls to i2c_buses_w_edid_as_bitset()", stablect+1);
-      DBGTRC(debug || true, TRACE_GROUP, "%s", buf);
+      DBGTRC_NOPREFIX(debug || true, TRACE_GROUP, "%s", buf);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    }
 
