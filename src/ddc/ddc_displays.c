@@ -5,7 +5,7 @@
  *  This file and ddc_display_ref_reports.c cross-reference each other.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -428,6 +428,99 @@ check_how_unsupported_reported(Display_Handle * dh) {
 }
 
 
+
+Error_Info * check_supported_feature(Display_Handle * dh, bool newly_added) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newly_added=%s", dh_repr(dh), SBOOL(newly_added));
+
+   Error_Info * ddc_excp = NULL;
+
+   Per_Display_Data * pdd = dh->dref->pdd;
+   Display_Ref * dref = dh->dref;
+   I2C_Bus_Info * businfo = dh->dref->detail;
+
+   DDCA_Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
+   Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
+   // feature that always exists
+   Byte feature_code = 0x10;
+   ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+   // may return DDCRC_DISCONNECTED from i2c_check_open_bus_alive()
+
+
+#ifdef TESTING
+   if (businfo->busno == 6) {
+      ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
+      DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
+   }
+#endif
+
+   if (ddc_excp) {
+      char * msg = g_strdup_printf(
+            "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
+            businfo->busno,
+            pdd_get_adjusted_sleep_multiplier(pdd),
+            feature_code,
+            errinfo_summary(ddc_excp));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "!!!! %s", msg);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "!!! %s", msg);
+      free(msg);
+
+      dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
+      if (ddc_excp->status_code != DDCRC_DISCONNECTED) {
+         bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
+         if (newly_added || (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES &&
+                                         dynamic_sleep_active &&
+                                         initial_multiplier < 1.0f))
+         {
+            if (newly_added) {
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Additional 1 second sleep for newly added display A");
+               DW_SLEEP_MILLIS(1000, "Additional 1 second sleep for newly added display C");
+            }
+            // turn off optimization in case it's on
+            if (dynamic_sleep_active ) {
+               FREE(dref->communication_error_summary);
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
+               pdd_set_dynamic_sleep_active(dref->pdd, false);
+               ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
+               ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                     "busno=%d, sleep-multiplier=%5.2f. "
+                     "Retesting for supported feature 0x%02x returned %s",
+                     businfo->busno,
+                     pdd_get_adjusted_sleep_multiplier(pdd),
+                     feature_code,
+                     errinfo_summary(ddc_excp));
+               dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
+               SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
+                     "busno=%d, sleep-multiplier=%5.2f."
+                     "Retesting for supported feature 0x%02x returned %s",
+                     businfo->busno,
+                     pdd_get_adjusted_sleep_multiplier(pdd),
+                     feature_code,
+                     errinfo_summary(ddc_excp));
+            }
+         }
+      }
+   }
+
+   // if (businfo->busno == 6) {
+   //    ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
+   //    DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
+   // }
+
+   free(parsed_response_loc);
+
+   Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s, status: %s",
+         errinfo_summary(ddc_excp), psc_desc(psc));
+
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
+   return ddc_excp;
+}
+
+
 /** Collects initial monitor checks to perform them on a single open of the
  *  monitor device, and to avoid repeating them.
  *
@@ -460,6 +553,7 @@ check_how_unsupported_reported(Display_Handle * dh) {
  *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
  *  verbose output is distracting.
  */
+
 STATIC Error_Info *
 ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
    bool debug = false;
@@ -511,88 +605,9 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       }
       else {
-         DDCA_Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
-         Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
-         // feature that always exists
-         Byte feature_code = 0x10;
-         ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
-         // may return DDCRC_DISCONNECTED from i2c_check_open_bus_alive()
-
-
-   #ifdef TESTING
-         if (businfo->busno == 6) {
-            ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
-            DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
-         }
-   #endif
-
-         if (ddc_excp) {
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "!!!!! busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
-            businfo->busno,
-            pdd_get_adjusted_sleep_multiplier(pdd),
-            feature_code,
-            errinfo_summary(ddc_excp));
-            char * msg = g_strdup_printf( "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
-                  businfo->busno,
-                  pdd_get_adjusted_sleep_multiplier(pdd),
-                  feature_code,
-                  errinfo_summary(ddc_excp));
-            if (ddc_excp)
-               SYSLOG2(DDCA_SYSLOG_ERROR, "!!! %s", msg);
-            else
-               SYSLOG2(DDCA_SYSLOG_INFO, "%s", msg);
-            free(msg);
-
-            dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-            if (ddc_excp->status_code != DDCRC_DISCONNECTED) {
-               bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
-               if (newly_added || (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES &&
-                                               dynamic_sleep_active &&
-                                               initial_multiplier < 1.0f))
-               {
-                  if (dynamic_sleep_active) {
-                     DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Additional 1 second sleep for newly added display A");
-                     // SYSLOG2(DDCA_SYSLOG_ERROR, "Additional 1 second sleep for newly added display B");
-                     DW_SLEEP_MILLIS(1000, "Additional 1 second sleep for newly added display C");
-                  }
-                  // turn off optimization in case it's on
-                  if (pdd_is_dynamic_sleep_active(pdd) ) {
-                     FREE(dref->communication_error_summary);
-                     DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
-                     pdd_set_dynamic_sleep_active(dref->pdd, false);
-                     ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
-                     ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
-                     DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                           "busno=%d, sleep-multiplier=%5.2f. "
-                           "Retesting for supported feature 0x%02x returned %s",
-                           businfo->busno,
-                           pdd_get_adjusted_sleep_multiplier(pdd),
-                           feature_code,
-                           errinfo_summary(ddc_excp));
-                     dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-                     SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
-                           "busno=%d, sleep-multiplier=%5.2f."
-                           "Retesting for supported feature 0x%02x returned %s",
-                           businfo->busno,
-                           pdd_get_adjusted_sleep_multiplier(pdd),
-                           feature_code,
-                           errinfo_summary(ddc_excp));
-                  }
-               }
-            }
-         }
-
-         // if (businfo->busno == 6) {
-         //    ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
-         //    DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
-         // }
+         ddc_excp = check_supported_feature(dh, newly_added);
 
          Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s, status: %s",
-               errinfo_summary(ddc_excp), psc_desc(psc));
-
          if (psc == DDCRC_DISCONNECTED) {
             dh->dref->flags = DREF_REMOVED;
          }
@@ -651,9 +666,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          }
 
          pdd_set_dynamic_sleep_active(dref->pdd, true);   // in case it was set false
-         free(parsed_response_loc);
+         // free(parsed_response_loc);
       }
    }  // end, !DREF_DDC_COMMUNICATION_CHECKED
+
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "Final flags: %s", interpret_dref_flags_t(dh->dref->flags));
    return ddc_excp;
@@ -1646,6 +1662,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(ddc_validate_display_ref2);
    RTTI_ADD_FUNC(read_unsupported_feature);
+   RTTI_ADD_FUNC(check_supported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
 }
 
