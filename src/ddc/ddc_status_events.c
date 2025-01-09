@@ -3,6 +3,7 @@
 // Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <assert.h>
 #include <glib-2.0/glib.h>
 
 #include "public/ddcutil_types.h"
@@ -23,6 +24,24 @@
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+
+
+/** Use a static_assert() to ensure that the allocated size of
+ *  DDCA_Display_Status_Event is unchanged from that in a prior
+ *  release.
+ */
+void assert_ddca_display_status_event_size_unchanged() {
+   typedef struct {
+      uint64_t                timestamp_nanos;
+      DDCA_Display_Event_Type event_type;
+      DDCA_IO_Path            io_path;
+      char                    connector_name[32];
+      DDCA_Display_Ref        dref;
+      void *                  unused[2];
+   } DDCA_Display_Status_Event_2_1_4;
+
+   static_assert(sizeof(DDCA_Display_Status_Event) == sizeof(DDCA_Display_Status_Event_2_1_4));
+}
 
 //
 // Display Status Events
