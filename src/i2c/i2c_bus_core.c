@@ -2,7 +2,7 @@
  *
  * I2C bus detection and inspection
  */
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -694,10 +694,12 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    bool edid_exists = false;
    for (int tryctr = 1; !edid_exists && tryctr <= CHECK_OPEN_BUS_ALIVE_MAX_TRIES; tryctr++) {
       if (tryctr > 1) {
-         DBGMSG("!!! Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
-         SYSLOG2(DDCA_SYSLOG_WARNING, "!!! Retrying i2c_check_edid_exists_by_dh, tryctr = %d", tryctr);
-         DW_SLEEP_MILLIS(CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC, "Retrying i2c_check_edid_exists_by_dh");
-         // sleep(1);   // hack
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "!!! (A) Retrying i2c_check_edid_exists, busno=%d, tryctr = %d", businfo->busno, tryctr);
+         SYSLOG2(DDCA_SYSLOG_WARNING,
+               "!!! (B) Retrying i2c_check_edid_exists_by_dh, tryctr = %d", tryctr);
+         DW_SLEEP_MILLIS2(DDCA_SYSLOG_WARNING, CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC,
+                          "Retrying i2c_check_edid_exists_by_dh (c)");
       }
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
       if (businfo->drm_connector_name) {
@@ -711,12 +713,11 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 #else
       edid_exists = i2c_check_edid_exists_by_dh(dh);
 #endif
-
    }
 
    if (!edid_exists) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "!!! Checking EDID failed after %d tries", CHECK_OPEN_BUS_ALIVE_MAX_TRIES);
-      DBGMSG("!!! Checking EDID failed");
+      SYSLOG2(DDCA_SYSLOG_ERROR, "!!! (B) Checking EDID failed after %d tries", CHECK_OPEN_BUS_ALIVE_MAX_TRIES);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "!!! (A) Checking EDID failed");
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d", businfo->busno);
       businfo->flags &= ~(I2C_BUS_HAS_EDID|I2C_BUS_ADDR_X37);
    }
