@@ -36,6 +36,7 @@
 #include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/msg_util.h"
+#include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/parms.h"      // ensure available to any file that includes core.h
@@ -561,15 +562,35 @@ extern const char * valid_syslog_levels_string;
  *  @param  fmt                message format
  *  @param  ...                message arguments
  */
+#define DECORATED_SYSLOG(_ddcutil_severity, format, ...) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+         char prefix[100] = {0}; \
+         if (rpt_get_ornamentation_enabled() ) { \
+            get_msg_decoration(prefix, 100, true); \
+         } \
+         syslog(syslog_priority, "%s%s (N)", prefix, body); \
+         free(body); \
+      } \
+   } \
+} while(0)
+
+
 #define SYSLOG2(_ddcutil_severity, format, ...) \
 do { \
    if (test_emit_syslog(_ddcutil_severity)) { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
-         syslog(syslog_priority, format, ##__VA_ARGS__); \
+         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+         syslog(syslog_priority, "%s (P)", body); \
+         free(body); \
       } \
    } \
 } while(0)
+
 
 
 /** Writes a message to the current ferr() or fout() device and, depending on
