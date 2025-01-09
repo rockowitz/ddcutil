@@ -796,13 +796,13 @@ X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes) {
 }
 
 
-void dw_sleep_millis(const char * func, int line, const char * file, uint millis, const char * msg) {
+void dw_sleep_millis(DDCA_Syslog_Level level, const char * func, int line, const char * file, uint millis, const char * msg) {
    bool debug = false;
    DBGMSF(debug, "func=%s, millis=%d, micros=%ld", func, millis, MILLIS2MICROS(millis));
    usleep((uint64_t)1000*millis);
    // Use syslog() instead of SYSLOG2() to ensure that msg is written to system log
    // no matter what ddcutil log level cutoff is in effoec
-   syslog(LOG_NOTICE, "[%d](%s) Slept for %d millisec: %s", tid(), func, millis, msg);
+   SYSLOG2(level, "[%d](%s) Slept for %d millisec: %s", tid(), func, millis, msg);
 }
 
 
