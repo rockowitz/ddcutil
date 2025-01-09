@@ -1,6 +1,6 @@
 /** @file msg_util.h */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef MSG_UTIL_H_
@@ -18,7 +18,7 @@ extern bool dbgtrc_show_process_id; // prefix debug/trace messages with process 
 extern bool dbgtrc_trace_to_syslog_only;
 extern bool stdout_stderr_redirected;
 
-extern bool dbgtrc_dest_syslog;
+// extern bool dbgtrc_dest_syslog;
 extern bool traced_function_stack_enabled;
 extern __thread bool msg_decoration_suspended;
 extern __thread bool traced_function_stack_suspended;

@@ -1,6 +1,6 @@
 /** @file msg_util.c */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -22,7 +22,7 @@ bool dbgtrc_show_thread_id =  false;  ///< include thread id in debug/trace outp
 bool dbgtrc_show_process_id = false;  ///< include process id in debug/trace output
 bool dbgtrc_trace_to_syslog_only = false; ///< send trace output only to system log
 bool stdout_stderr_redirected = false;
-bool dbgtrc_dest_syslog     = false;
+// bool dbgtrc_dest_syslog     = false;
 bool __thread msg_decoration_suspended = false;
 bool traced_function_stack_enabled = true;
 bool __thread traced_function_stack_suspended = false;
@@ -51,16 +51,16 @@ char * get_msg_decoration(char * buf, uint bufsize, bool dest_syslog) {
 
       if (dbgtrc_show_time)
          g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(4));
-      if (dbgtrc_show_wall_time && !dbgtrc_dest_syslog)
+      if (dbgtrc_show_wall_time && !dest_syslog)
          g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
       if (dbgtrc_show_thread_id)
-         g_snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid());
+         g_snprintf(thread_prefix, 15, "[%6jd]", (intmax_t) tid());
       if (dbgtrc_show_process_id)
-         g_snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) pid());
+         g_snprintf(thread_prefix, 15, "[%6jd]", (intmax_t) pid());
       if (traced_function_stack_enabled) {
          char * s = peek_traced_function();
          if (s)
-            g_snprintf(funcname_prefix, 80, "(%-40s)", s);
+            g_snprintf(funcname_prefix, 80, "(%-31s)", s);
       }
 
       g_snprintf(buf, bufsize, "%s%s%s%s%s",
