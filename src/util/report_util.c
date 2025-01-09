@@ -320,14 +320,14 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
       get_msg_decoration(prefix, 100, redirect_reports_to_syslog);
 
    if (collector) {
-      g_ptr_array_add(collector, g_strdup_printf("%*s%s\n", rpt_get_indent(depth), "", title));
+      g_ptr_array_add(collector, g_strdup_printf("%*s%s (H)\n", rpt_get_indent(depth), "", title));
    }
    else {
       if (depth >= 0) {
          if (redirect_reports_to_syslog)
-            syslog(LOG_NOTICE, "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
+            syslog(LOG_NOTICE, "%s%*s%s (I)\n", prefix, rpt_get_indent(depth), "", title);
          else
-            f0printf(rpt_cur_output_dest(), "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
+            f0printf(rpt_cur_output_dest(), "%s%*s%s (J)\n", prefix, rpt_get_indent(depth), "", title);
       }
    }
 }
