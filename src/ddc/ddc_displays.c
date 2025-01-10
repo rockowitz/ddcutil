@@ -429,11 +429,13 @@ check_how_unsupported_reported(Display_Handle * dh) {
 
 
 STATIC Error_Info *
-check_supported_feature(Display_Handle * dh, bool newly_added) {
+check_supported_feature(Display_Handle * dh, bool newly_added, DDCA_Vcp_Feature_Code feature_code, uint16_t * p_shsl) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newly_added=%s", dh_repr(dh), SBOOL(newly_added));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newly_added=%s feature=0x%02x, p_shsl=%p",
+         dh_repr(dh), SBOOL(newly_added), feature_code,p_shsl);
 
    Error_Info * ddc_excp = NULL;
+   *p_shsl = 0;
 
    Per_Display_Data * pdd = dh->dref->pdd;
    Display_Ref * dref = dh->dref;
@@ -442,10 +444,12 @@ check_supported_feature(Display_Handle * dh, bool newly_added) {
    DDCA_Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
    // feature that always exists
-   Byte feature_code = 0x10;
+   // Byte feature_code = 0x10;
    ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
    // may return DDCRC_DISCONNECTED from i2c_check_open_bus_alive()
-
+   if (!ddc_excp) {
+      *p_shsl = HI_LO_BYTES_TO_SHORT(parsed_response_loc->sh, parsed_response_loc->sl);
+   }
 
 #ifdef TESTING
    if (businfo->busno == 6) {
@@ -483,6 +487,10 @@ check_supported_feature(Display_Handle * dh, bool newly_added) {
                pdd_set_dynamic_sleep_active(dref->pdd, false);
                ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
                ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
+               if (!ddc_excp) {
+                  *p_shsl = HI_LO_BYTES_TO_SHORT(parsed_response_loc->sh, parsed_response_loc->sl);
+               }
+
                DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                      "busno=%d, sleep-multiplier=%5.2f. "
                      "Retesting for supported feature 0x%02x returned %s",
@@ -512,11 +520,10 @@ check_supported_feature(Display_Handle * dh, bool newly_added) {
 
    Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-         "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s, status: %s",
-         errinfo_summary(ddc_excp), psc_desc(psc));
+         "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s, status: %s",
+         feature_code, errinfo_summary(ddc_excp), psc_desc(psc));
 
-
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "*p_shsl=0x%04x", *p_shsl);
    return ddc_excp;
 }
 
@@ -563,6 +570,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
    Display_Ref * dref = dh->dref;
    I2C_Bus_Info * businfo = dref->detail;
    Per_Display_Data * pdd = dref->pdd;
+   bool iomode_is_i2c = dh->dref->io_path.io_mode == DDCA_IO_I2C;
+
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusted sleep-multiplier = %5.2f",
                                        pdd_get_adjusted_sleep_multiplier(pdd));
    Error_Info * ddc_excp = NULL;
@@ -607,7 +616,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       }
       else {
-         ddc_excp = check_supported_feature(dh, newly_added);
+         uint16_t shsl;
+         // DDCA_Vcp_Feature_Code fc = (iomode_is_i2c) ? 0xdf : 0x10;
+         DDCA_Vcp_Feature_Code fc = 0x10;
+         ddc_excp = check_supported_feature(dh, newly_added, fc, &shsl);
 
          Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
 
@@ -642,10 +654,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
                dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
             }
          }    // end, io_mode == DDC_IO_I2C
-
-         // DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Before ERRINFO_FREE_WITH_REPORT(): ddc_excp=%p", ddc_excp);
-         // if (ddc_excp)
-         //    ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
       }
    }  // end, !DREF_DDC_COMMUNICATION_CHECKED
 
