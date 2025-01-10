@@ -553,7 +553,6 @@ check_supported_feature(Display_Handle * dh, bool newly_added) {
  *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
  *  verbose output is distracting.
  */
-
 STATIC Error_Info *
 ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
    bool debug = false;
