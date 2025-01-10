@@ -567,6 +567,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
                                        pdd_get_adjusted_sleep_multiplier(pdd));
    Error_Info * ddc_excp = NULL;
 
+   bool saved_dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
+
    if (debug)
       show_backtrace(1);
 
@@ -644,23 +646,21 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          // DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Before ERRINFO_FREE_WITH_REPORT(): ddc_excp=%p", ddc_excp);
          // if (ddc_excp)
          //    ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
-
-         if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
-            // Would prefer to defer checking version until actually needed to avoid
-            // additional DDC io during monitor detection.  Unfortunately, this would
-            // introduce ddc_open_display(), with its possible error states,
-            // into other functions, e.g. ddca_get_feature_list_by_dref()
-            if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
-               // may have been forced by option --mccs
-               set_vcp_version_xdf_by_dh(dh);
-            }
-         }
-
-         pdd_set_dynamic_sleep_active(dref->pdd, true);   // in case it was set false
-         // free(parsed_response_loc);
       }
    }  // end, !DREF_DDC_COMMUNICATION_CHECKED
 
+   if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
+      // Would prefer to defer checking version until actually needed to avoid
+      // additional DDC io during monitor detection.  Unfortunately, this would
+      // introduce ddc_open_display(), with its possible error states,
+      // into other functions, e.g. ddca_get_feature_list_by_dref()
+      if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
+         // may have been forced by option --mccs
+         set_vcp_version_xdf_by_dh(dh);
+      }
+   }
+
+   pdd_set_dynamic_sleep_active(dref->pdd, saved_dynamic_sleep_active);   // in case it was set false
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "Final flags: %s", interpret_dref_flags_t(dh->dref->flags));
    return ddc_excp;
@@ -709,6 +709,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
       dref->flags |= (DREF_DDC_COMMUNICATION_CHECKED |
                       DREF_DDC_COMMUNICATION_WORKING |
                       DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED);
+      dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "dref=%s, skipping initial ddc checks", dref_repr_t(dref));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Skipping initial ddc checks");
       result = true;
@@ -756,14 +757,9 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
    }
 
 bye:
-   if (dref) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref=%s, Final flags: %s", dref_repr_t(dref), interpret_dref_flags_t(dref->flags));
-   }
-   // DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dref = %s", dref_repr_t(dref) );
-   // if (err)
-   //    errinfo_free(err);
-   // return result;
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "");
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref=%s, Final flags: %s", dref_repr_t(dref), interpret_dref_flags_t(dref->flags));
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dref=%s", dref_repr_t(dref));
    return err;
 }
 
