@@ -570,7 +570,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
    Display_Ref * dref = dh->dref;
    I2C_Bus_Info * businfo = dref->detail;
    Per_Display_Data * pdd = dref->pdd;
-   bool iomode_is_i2c = dh->dref->io_path.io_mode == DDCA_IO_I2C;
+   // bool iomode_is_i2c = dh->dref->io_path.io_mode == DDCA_IO_I2C;
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusted sleep-multiplier = %5.2f",
                                        pdd_get_adjusted_sleep_multiplier(pdd));
@@ -650,19 +650,19 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
             if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {  // used only when testing
                DBGTRC_NOPREFIX(debug || true , TRACE_GROUP,
                      "dh=%s, Forcing DDC communication success.", dh_repr(dh) );
-               dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-               dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
+               dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+               dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
             }
          }    // end, io_mode == DDC_IO_I2C
       }
    }  // end, !DREF_DDC_COMMUNICATION_CHECKED
 
-   if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
+   if ( dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
       // Would prefer to defer checking version until actually needed to avoid
       // additional DDC io during monitor detection.  Unfortunately, this would
       // introduce ddc_open_display(), with its possible error states,
       // into other functions, e.g. ddca_get_feature_list_by_dref()
-      if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
+      if ( vcp_version_eq(dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
          // may have been forced by option --mccs
          set_vcp_version_xdf_by_dh(dh);
       }
@@ -670,7 +670,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
 
    pdd_set_dynamic_sleep_active(dref->pdd, saved_dynamic_sleep_active);   // in case it was set false
 
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "Final flags: %s", interpret_dref_flags_t(dh->dref->flags));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "Final flags: %s", interpret_dref_flags_t(dref->flags));
    return ddc_excp;
 }
 
