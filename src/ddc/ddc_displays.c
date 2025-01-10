@@ -560,8 +560,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
    TRACED_ASSERT(dh && dh->dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newly_added=%s", dh_repr(dh), sbool(newly_added));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s",interpret_dref_flags_t(dh->dref->flags));
-   I2C_Bus_Info * businfo = dh->dref->detail;
-   Per_Display_Data * pdd = dh->dref->pdd;
+
+   Display_Ref * dref = dh->dref;
+   I2C_Bus_Info * businfo = dref->detail;
+   Per_Display_Data * pdd = dref->pdd;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusted sleep-multiplier = %5.2f",
                                        pdd_get_adjusted_sleep_multiplier(pdd));
    Error_Info * ddc_excp = NULL;
@@ -569,7 +571,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
    if (debug)
       show_backtrace(1);
 
-   Display_Ref * dref = dh->dref;
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
       // assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
       assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
@@ -608,39 +609,30 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          ddc_excp = check_supported_feature(dh, newly_added);
 
          Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
-         if (psc == DDCRC_DISCONNECTED) {
-            dh->dref->flags = DREF_REMOVED;
+
+         if (psc == 0 ||
+             psc == DDCRC_REPORTED_UNSUPPORTED ||
+             psc == DDCRC_DETERMINED_UNSUPPORTED)
+         {
+            dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+         }
+         else if (psc == DDCRC_DISCONNECTED)
+         {
+            dref->flags = DREF_REMOVED;
+         }
+         else if (psc == -EBUSY) {
+             // communication failed, do not set DDCRC_COMMUNICATION_WORKING
+             dref->flags |= DREF_DDC_BUSY;
+          }
+
+         if (psc != -EBUSY) {
+            dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
          }
 
-         else if (psc != -EBUSY)
-            dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-
-         if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-            if (psc == 0 ||
-                psc == DDCRC_REPORTED_UNSUPPORTED ||
-                psc == DDCRC_DETERMINED_UNSUPPORTED)
-            {
-               dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-            }
-         }
-
-         else {   // DDCA_IO_I2C
-            if (psc == 0 ||
-                psc == DDCRC_REPORTED_UNSUPPORTED ||
-                psc == DDCRC_DETERMINED_UNSUPPORTED)
-            {
-               dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-               check_how_unsupported_reported(dh);
-            }  // end, communication working
-            else {
-               if (psc == -EBUSY) {
-                  // communication failed, do not set DDCRC_COMMUNICATION_WORKING
-                  dh->dref->flags |= DREF_DDC_BUSY;
-               }
-               else {
-                  // do not set DDCRC_COMMUNICATION_WORKING
-               }
-            }
+         if ( (dref->flags&DREF_DDC_COMMUNICATION_WORKING) &&
+               dref->io_path.io_mode == DDCA_IO_I2C)
+         {
+            check_how_unsupported_reported(dh);
 
             if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {  // used only when testing
                DBGTRC_NOPREFIX(debug || true , TRACE_GROUP,
