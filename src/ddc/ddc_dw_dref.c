@@ -1,4 +1,7 @@
-/** @file ddc_dw_dref.c */
+/** @file ddc_dw_dref.c
+ *  Functions that modify persistent Display_Ref related data structures
+ *  when display connection and disconnection are detected.
+ */
 
 // Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -33,16 +36,15 @@
 #include "ddc/ddc_dw_dref.h"
 
 
-
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 
-//
-// Functions used only by display change handling
-//
-
-
+/** Adds a Display_Ref to the array of all Display_Refs
+ *  in a thread safe manner.
+ *
+ *  @param dref pointer to Display_Ref to add.
+ */
 void ddc_add_display_ref(Display_Ref * dref) {
    bool debug = false ;
    debug = debug || debug_locks;
@@ -54,6 +56,10 @@ void ddc_add_display_ref(Display_Ref * dref) {
 }
 
 
+/** Marks a Display_Ref as removed, in a thread safe manner.
+ *
+ * @param dref pointer to Display_Ref to mark removed.
+ */
 void ddc_mark_display_ref_removed(Display_Ref* dref) {
    bool debug = false;
    debug = debug || debug_locks;
@@ -69,7 +75,7 @@ void ddc_mark_display_ref_removed(Display_Ref* dref) {
 }
 
 
-/** If a display is present on a specified bus adds a Display_Ref
+/** If a display is present on a specified bus, adds a Display_Ref
  *  for that display.
  *
  *  @param businfo  I2C_Bus_Info record for the bus
@@ -201,47 +207,6 @@ ddc_recheck_dref(Display_Ref * dref) {
 }
 
 
-#ifdef UNUSED
-Display_Ref *
-ddc_get_display_ref_by_drm_connector(
-      const char * connector_name,
-      bool         ignore_invalid)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP,
-         "connector_name=%s, ignore_invalid=%s", connector_name, sbool(ignore_invalid));
-   Display_Ref * result = NULL;
-   TRACED_ASSERT(all_display_refs);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_displays->len=%d", all_display_refs->len);
-   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
-      Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
-      // ddc_dbgrpt_display_ref(cur, 4);
-      bool pass_filter = true;
-      if (ignore_invalid) {
-         pass_filter = (cur->dispno > 0 || !(cur->flags&DREF_REMOVED));
-      }
-      if (pass_filter) {
-         if (cur->io_path.io_mode == DDCA_IO_I2C) {
-            I2C_Bus_Info * businfo = cur->detail;
-            if (!businfo) {
-               SEVEREMSG("active display ref has no bus info");
-               continue;
-            }
-            // TODO: handle drm_connector_name not yet checked
-            if (businfo->drm_connector_name && streq(businfo->drm_connector_name,connector_name)) {
-               result = cur;
-               break;
-            }
-         }
-      }
-   }
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s = %p", dref_repr_t(result), result);
-   return result;
-}
-#endif
-
-
 /** Locates the currently live Display_Ref for the specified bus.
  *  Discarded display references, i.e. ones marked removed (flag DREF_REMOVED)
  *  are ignored. There should be at most one non-removed Display_Ref.
@@ -356,8 +321,48 @@ Display_Ref * ddc_get_dref_by_busno_or_connector(
 }
 
 
+#ifdef UNUSED
+Display_Ref *
+ddc_get_display_ref_by_drm_connector(
+      const char * connector_name,
+      bool         ignore_invalid)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "connector_name=%s, ignore_invalid=%s", connector_name, sbool(ignore_invalid));
+   Display_Ref * result = NULL;
+   TRACED_ASSERT(all_display_refs);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_displays->len=%d", all_display_refs->len);
+   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+      Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
+      // ddc_dbgrpt_display_ref(cur, 4);
+      bool pass_filter = true;
+      if (ignore_invalid) {
+         pass_filter = (cur->dispno > 0 || !(cur->flags&DREF_REMOVED));
+      }
+      if (pass_filter) {
+         if (cur->io_path.io_mode == DDCA_IO_I2C) {
+            I2C_Bus_Info * businfo = cur->detail;
+            if (!businfo) {
+               SEVEREMSG("active display ref has no bus info");
+               continue;
+            }
+            // TODO: handle drm_connector_name not yet checked
+            if (businfo->drm_connector_name && streq(businfo->drm_connector_name,connector_name)) {
+               result = cur;
+               break;
+            }
+         }
+      }
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s = %p", dref_repr_t(result), result);
+   return result;
+}
+#endif
+
+
 void init_ddc_watch_displays_dref()  {
-   // Functions used only for display change detection
    RTTI_ADD_FUNC(ddc_add_display_by_businfo);
    RTTI_ADD_FUNC(ddc_add_display_ref);
    RTTI_ADD_FUNC(ddc_get_dref_by_busno_or_connector);

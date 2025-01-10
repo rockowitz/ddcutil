@@ -1,6 +1,6 @@
 /** @file ddc_dw_dref.h
- *  Functions that modify persistent DDC_Display_Ref tables,
- *  used only by display change detection
+ *  Functions that modify persistent Display_Ref related data structures when
+ *  display connection and disconnection are detected.
  */
 
 // Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
