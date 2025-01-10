@@ -5,7 +5,7 @@
  * the acyclic graph of #includes within the ddc source directory.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -135,40 +135,46 @@ set_vcp_version_xdf_by_dh(Display_Handle * dh)
 }
 
 
+DDCA_MCCS_Version_Spec get_overriding_vcp_version(
+      Display_Ref * dref)
+{
+   bool debug = true;
+   // TMI
+   if (debug) {
+      DBGMSG("          dh->dref->vcp_version_cmdline = %s", format_vspec_verbose(dref->vcp_version_cmdline));
+      if (dref->dfr)
+         DBGMSG("          dh->dref->dfr->vspec = %s",          format_vspec_verbose(dref->dfr->vspec));
+      else
+         DBGMSG("          dh->dref->dfr == NULL");
+   }
+
+   DDCA_MCCS_Version_Spec result = DDCA_VSPEC_UNQUERIED;
+
+   if (vcp_version_is_valid(dref->vcp_version_cmdline, false)) {
+      result = dref->vcp_version_cmdline;
+      DBGMSF(debug, "Using dref->vcp_version_cmdline = %s", format_vspec(result));
+   }
+
+   else if (dref->dfr && vcp_version_is_valid(dref->dfr->vspec, /* allow_unknown */ false)) {
+      result = dref->dfr->vspec;
+      DBGMSF(debug, "Using dref->dfr->vspec = %s", format_vspec_verbose(result));
+   }
+
+   return result;
+}
+
+
 DDCA_MCCS_Version_Spec get_saved_vcp_version(
       Display_Ref * dref)
 {
    bool debug = false;
+
    DDCA_MCCS_Version_Spec result = DDCA_VSPEC_UNKNOWN;
-   // TMI
-   if (debug) {
-      DBGMSG("Starting. dref=%s", dref_repr_t(dref) );
-
-      DBGMSG("          dref->vcp_version_cmdline = %s", format_vspec_verbose(dref->vcp_version_cmdline));
-      if (dref->dfr) {
-      DBGMSG("          dref->dfr->vspec = %s ",         format_vspec_verbose(dref->dfr->vspec));
-      }
-      else {
-      DBGMSG("          dref->dfr == NULL");
-      }
-      DBGMSG("          dref->vcp_version_xdf = %s",     format_vspec_verbose(dref->vcp_version_xdf));
-
-   }
-
-   if (vcp_version_is_valid(dref->vcp_version_cmdline, false)) {
-       result = dref->vcp_version_cmdline;
-       DBGMSF(debug, "Using dref->vcp_version_cmdline = %s", format_vspec(result));
-    }
-
-    else if (dref->dfr && vcp_version_is_valid(dref->dfr->vspec, /* allow_unknown */ false)) {
-        result = dref->dfr->vspec;
-        DBGMSF(debug, "Using dref->dfr->vspec = %s", format_vspec_verbose(result));
-    }
-
-    else {
+   result = get_overriding_vcp_version(dref);
+   if (vcp_version_eq(result, DDCA_VSPEC_UNQUERIED)) {
        result = dref->vcp_version_xdf;
        DBGMSF(debug, "Using dref->vcp_version_xdf = %s", format_vspec_verbose(result));
-    }
+   }
 
     DBGMSF(debug, "dref=%s, Returning: %s", dref_repr_t(dref), format_vspec_verbose(result));
     return result;
@@ -190,21 +196,6 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dh(Display_Handle * dh) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dh=%s, dref=%s", dh_repr(dh), dref_repr_t(dh->dref));
 
    DDCA_MCCS_Version_Spec result = DDCA_VSPEC_UNKNOWN;
-   // TMI
-   if (debug) {
-      DBGMSG("          dh->dref->vcp_version_cmdline = %s", format_vspec_verbose(dh->dref->vcp_version_cmdline));
-
-      if (dh->dref->dfr) {
-      DBGMSG("          dh->dref->dfr->vspec = %s",          format_vspec_verbose(dh->dref->dfr->vspec));
-      }
-      else {
-      DBGMSG("          dh->dref->dfr == NULL");
-      }
-
-      DBGMSG("          dh->dref->vcp_version_xdf = %s ",
-                 format_vspec_verbose(dh->dref->vcp_version_xdf));
-   }
-
    result = get_saved_vcp_version(dh->dref);
    if (vcp_version_eq(result, DDCA_VSPEC_UNQUERIED)) {
       result = set_vcp_version_xdf_by_dh(dh);
