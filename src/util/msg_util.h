@@ -17,8 +17,9 @@ extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread i
 extern bool dbgtrc_show_process_id; // prefix debug/trace messages with process id
 extern bool dbgtrc_trace_to_syslog_only;
 extern bool stdout_stderr_redirected;
-
 extern bool traced_function_stack_enabled;
+extern bool tag_output;
+
 extern __thread bool msg_decoration_suspended;
 extern __thread bool traced_function_stack_suspended;
 extern __thread pid_t process_id;
