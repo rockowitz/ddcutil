@@ -1,7 +1,7 @@
 /** @file parsed_cmd.c
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -392,7 +392,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       free(interpreted_flags);
 #endif
 
-
+      rpt_nl();
+      rpt_label(depth, "Temporary Utility Variables");
 
 
 #define RPT_IVAL(_n, _depth) \
