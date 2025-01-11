@@ -325,7 +325,8 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
    else {
       if (depth >= 0) {
          if (redirect_reports_to_syslog)
-            syslog(LOG_NOTICE, "%s%*s%s (I)", prefix, rpt_get_indent(depth), "", title);
+            syslog(LOG_NOTICE, "%s%*s%s%s",
+                  prefix, rpt_get_indent(depth), "", title, (tag_output) ? " (I)" : "");
          else
             f0printf(rpt_cur_output_dest(), "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
       }

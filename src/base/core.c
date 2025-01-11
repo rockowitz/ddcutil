@@ -608,27 +608,30 @@ static bool vdbgtrc(
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
          if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog_only) {
-            char * syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s (J)",
-                        thread_prefix, elapsed_prefix, funcname, retval_info, base_msg);
+            char * syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
+                        thread_prefix, elapsed_prefix, funcname, retval_info, base_msg,
+                        (tag_output) ? " (J)" : "");
             syslog(LOG_DEBUG, "%s", syslog_msg);
             free(syslog_msg);
          }
          else if ( (options & DBGTRC_OPTIONS_SEVERE) && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
-            char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s (K)",
-                                     elapsed_prefix, funcname, retval_info, base_msg);
+            char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
+                                     elapsed_prefix, funcname, retval_info, base_msg,
+                                     (tag_output) ? " (K)" : ""  );
             syslog(LOG_ERR, "%s", syslog_msg);
             free(syslog_msg);
          }
          else if (redirect_reports_to_syslog) {
-            syslog(LOG_NOTICE, "%s(%-30s) %s%s (L)",
-                  elapsed_prefix, funcname, retval_info, base_msg);
+            syslog(LOG_NOTICE, "%s(%-30s) %s%s%s",
+                  elapsed_prefix, funcname, retval_info, base_msg,
+                  (tag_output) ? " (L)" : ""  );
          }
 
          if (!dbgtrc_trace_to_syslog_only && !stdout_stderr_redirected && !redirect_reports_to_syslog) {
             FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
                               ? thread_settings->ferr
                               : thread_settings->fout;
-            f0printf(where, "%s (M)\n", decorated_msg);
+            f0printf(where, "%s%s\n", decorated_msg, (tag_output) ? " (M)" : ""  );
             // f0puts(decorated_msg, where);
             // f0putc('\n', where);
             fflush(where);

@@ -572,7 +572,7 @@ do { \
          if (rpt_get_ornamentation_enabled() ) { \
             get_msg_decoration(prefix, 100, true); \
          } \
-         syslog(syslog_priority, "%s%s (N)", prefix, body); \
+         syslog(syslog_priority, "%s%s%s", prefix, body, (tag_output) ? " (N)" : ""  ); \
          free(body); \
       } \
    } \
@@ -585,7 +585,7 @@ do { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-         syslog(syslog_priority, "%s (P)", body); \
+         syslog(syslog_priority, "%s%s", body, (tag_output) ? " (P)" : "" ); \
          free(body); \
       } \
    } \
