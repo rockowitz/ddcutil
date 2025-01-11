@@ -138,7 +138,7 @@ set_vcp_version_xdf_by_dh(Display_Handle * dh)
 DDCA_MCCS_Version_Spec get_overriding_vcp_version(
       Display_Ref * dref)
 {
-   bool debug = true;
+   bool debug = false;
    // TMI
    if (debug) {
       DBGMSG("          dh->dref->vcp_version_cmdline = %s", format_vspec_verbose(dref->vcp_version_cmdline));
