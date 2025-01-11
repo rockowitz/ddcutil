@@ -1,4 +1,4 @@
-## [2.2.0] 2024-01-07
+## [2.2.0] 2024-01-11
 
 ### General
 
@@ -112,6 +112,8 @@
   of issue #465.
 - Dump information to syslog instead of asserting failure if unable to get flock
   on /dev/i2c device.
+- Option ***--skip-ddc-checks*** set vcp version in Display_Ref to DDCA_VSPEC_UNKNOWN
+  to avoid possible assert failure.
 - Memory leaks.
 
 ### Building 
