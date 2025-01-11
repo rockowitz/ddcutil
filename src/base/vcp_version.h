@@ -3,7 +3,7 @@
  *  VCP (aka MCCS) version specification
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_VERSION_H_
@@ -28,8 +28,8 @@ extern const char * valid_vcp_versions;                    ///< for error msgs
 // used internally in app_vcpinfo.c.
 
 /** @name version_id
- *  Ids for MCCS/VCP versions, reflecting the fact that
- *  there is a small set of valid version values.
+ *  Ids for MCCS/VCP versions, reflecting the fact that the set of values
+ *  is small.
  */
 ///@{
 
