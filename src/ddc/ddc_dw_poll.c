@@ -677,7 +677,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
 
       if (wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {
-            bool event_found = next_X11_event_of_interest(wdd->evdata);
+            bool event_found = dw_next_X11_event_of_interest(wdd->evdata);
             // either display changed or terminate signaled
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "event_found=%s", sbool(event_found));
             if (!event_found) {
