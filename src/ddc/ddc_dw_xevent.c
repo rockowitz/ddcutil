@@ -11,13 +11,13 @@
 #include "util/report_util.h"
 
 #include "base/core.h"
-#include "base/displays.h"     // for terminate_watch_thread
+#include "base/displays.h"       // for terminate_watch_thread
+#include "base/i2c_bus_base.h"   // for DW_SLEEP()
 #include "base/rtti.h"
 #include "base/sleep.h"
 
-#include "base/i2c_bus_base.h"   // for DW_SLEEP()
-
 #include "ddc/ddc_dw_common.h"
+
 #include "ddc/ddc_dw_xevent.h"
 
 static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
@@ -32,6 +32,8 @@ void  dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
    rpt_vstring(d1, "dpy:                   %p",  evdata->dpy);
    rpt_vstring(d1, "screen:                %d",  evdata->screen);
    rpt_vstring(d1, "w:                     %jd", (uintmax_t) evdata->w);
+   rpt_vstring(d1, "rr_error_base:         %d",  evdata->rr_error_base);
+   rpt_vstring(d1, "rr_event_base:         %d",  evdata->rr_event_base);
    rpt_vstring(d1, "screen_change_eventno: %d",  evdata->screen_change_eventno);
 }
 
@@ -43,7 +45,7 @@ void ddc_free_xevent_data(XEvent_Data * evdata) {
 }
 
 
-/** Initializes for using X11 to detect screen changes.
+/** Initialization for using X11 to detect screen changes.
  *
  *  @return pointer to newly allocated XEvent_Data struct,
  *          NULL if initialization fails
@@ -57,8 +59,6 @@ XEvent_Data * ddc_init_xevent_screen_change_notification() {
    XEvent_Data * evdata = calloc(1, sizeof(XEvent_Data));
    Display * display = XOpenDisplay(NULL);
    evdata->dpy = display;
-   // DBGMSG("display=%p", display);
-   // DBGMSG("evdata->dpy=%p", evdata->dpy);
    if (!evdata->dpy)
       goto bye;
    evdata->screen = DefaultScreen(evdata->dpy);
@@ -83,6 +83,9 @@ XEvent_Data * ddc_init_xevent_screen_change_notification() {
    if (!terminate_using_x11_event) {
       XRRSelectInput(evdata->dpy, evdata->w, RRScreenChangeNotifyMask);
       // XSelectInput(evdata->dpy, evdata->w, RRScreenChangeNotifyMask);
+   }
+   else {
+      XRRSelectInput(evdata->dpy, evdata->w, 0xffffffff);
    }
    ok = true;
 
@@ -193,8 +196,7 @@ void ddc_send_x11_termination_message(XEvent_Data * evdata) {
               (XEvent *)&evt);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XSendEvent() returned %s", SBOOL(ok));
    XFlush(dpy);
-   // sleep(2);    // needed?
-   DW_SLEEP_MILLIS(2000, "After XSendEvent");
+   DW_SLEEP_MILLIS(2000, "After XSendEvent");  // needed?
 
    if (ok)
       DBGTRC_DONE(debug, TRACE_GROUP, "XSendEvent() succeeded");
@@ -205,12 +207,12 @@ void ddc_send_x11_termination_message(XEvent_Data * evdata) {
 
 /** Predicate function used by XIfEvent()
  *
- *  @param  dsp
+ *  @param  dsp   X11 display
  *  @param  evt   XEvent to test
  *  @param  arg   pointer to Watch_Displays_Data
  */
-Bool is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
-   bool debug = true;
+Bool dw_is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsp=%p, evt=%p, arg=%p", dsp, evt, arg);
 
    bool result = false;
@@ -244,15 +246,17 @@ Bool is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
  * @return  true  received ScreenChangeNotify event
  *          false received termination event
  */
-bool next_X11_event_of_interest(XEvent_Data * evdata) {
-   bool debug = true;
+bool dw_next_X11_event_of_interest(XEvent_Data * evdata) {
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,"evdata=%p", evdata);
 
    bool result = false;
 
    XEvent event_return;
 
-   XIfEvent(evdata->dpy, &event_return, is_ddc_event, (XPointer) evdata);
+   // XNextEvent(evdata->dpy, &event_return);  // temp
+
+   XIfEvent(evdata->dpy, &event_return, dw_is_ddc_event, (XPointer) evdata);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XIfEvent returned");
 
    if (event_return.xclient.type == ClientMessage &&
@@ -283,6 +287,7 @@ bool next_X11_event_of_interest(XEvent_Data * evdata) {
 void init_ddc_watch_displays_xevent() {
    RTTI_ADD_FUNC(ddc_detect_xevent_screen_change);
    RTTI_ADD_FUNC(ddc_init_xevent_screen_change_notification);
-   RTTI_ADD_FUNC(next_X11_event_of_interest);
+   RTTI_ADD_FUNC(dw_next_X11_event_of_interest);
    RTTI_ADD_FUNC(ddc_send_x11_termination_message);
+   RTTI_ADD_FUNC(dw_is_ddc_event);
 }

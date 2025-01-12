@@ -22,7 +22,7 @@ void          dbgrpt_xevent_data(XEvent_Data* evdata, int depth);
 void          ddc_free_xevent_data(XEvent_Data * evdata);
 XEvent_Data * ddc_init_xevent_screen_change_notification();
 bool          ddc_detect_xevent_screen_change(XEvent_Data * evdata,  int poll_interval);
-bool          next_X11_event_of_interest(XEvent_Data * evdata);
+bool          dw_next_X11_event_of_interest(XEvent_Data * evdata);
 void          ddc_send_x11_termination_message(XEvent_Data * evdata);
 
 void          init_ddc_watch_displays_xevent();
