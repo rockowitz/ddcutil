@@ -75,7 +75,6 @@ static DDCA_Display_Event_Class active_classes = DDCA_EVENT_CLASS_NONE;
 static GMutex    watch_thread_mutex;
 
 
-
 //
 // Common to all variants
 //
@@ -280,7 +279,6 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
          if (terminate_using_x11_event) {
             ddc_send_x11_termination_message(global_wdd->evdata);
             DW_SLEEP_MILLIS(2*1000, "After ddc_send_x11_termination_message()");
-            // sleep(2);
          }
          else {
             terminate_watch_thread = true;
