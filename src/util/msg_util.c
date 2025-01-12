@@ -1,4 +1,8 @@
-/** @file msg_util.c */
+/** @file msg_util.c
+ *
+ *  Creates standardized prefix (time, thread, etc.) for messages,
+ *  and maintains a stack of the names of traced functions.
+ */
 
 // Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -7,11 +11,10 @@
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
-#include <sys/syscall.h>
+#include <stdio.h>
 #include <syslog.h>
 #include <time.h>
 
-#include "debug_util.h"
 #include "glib_util.h"
 #include "timestamp.h"
 
@@ -295,14 +298,6 @@ void pop_traced_function(const char * funcname) {
    }
 }
 
-#ifdef no
-void remove_traced_function_stack(GQueue * stack) {
-   g_mutex_lock(&all_traced_function_stacks_mutex);
-   g_ptr_array_remove(all_traced_function_stacks, stack);
-   g_mutex_unlock(&all_traced_function_stacks_mutex);
-}
-#endif
-
 
 /** Frees the specified traced function stack.
  *
@@ -312,7 +307,7 @@ void remove_traced_function_stack(GQueue * stack) {
  *  Must be called with #all_traced_function_stacks_mutex locked.
  */
 static void free_traced_function_stack(GQueue * stack) {
-   bool debug = true;
+   bool debug = false;
    if (debug) {
       printf("[%d](%s) Starting. stack=%p\n", tid(), __func__, traced_function_stack);
       if (stack) {
