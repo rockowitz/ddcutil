@@ -97,12 +97,6 @@ static bool allow_asleep = true;
 
 // Externally visible globals:
 int  dispno_max = 0;                      // highest assigned display number
-// bool monitor_state_tests = false;
-// bool skip_ddc_checks = false;
-
-
-
-
 
 
 /** Performs initial checks in a thread
@@ -974,9 +968,7 @@ void check_drefs_alive() {
 #endif
 
 
-
 void init_ddc_displays() {
-   // RTTI_ADD_FUNC(check_how_unsupported_reported);
    RTTI_ADD_FUNC(ddc_async_scan);
    RTTI_ADD_FUNC(ddc_close_all_displays);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
@@ -984,13 +976,9 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_displays_already_detected);
    RTTI_ADD_FUNC(ddc_ensure_displays_detected);
    RTTI_ADD_FUNC(ddc_get_all_display_refs);
-   // RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
-   // RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(ddc_validate_display_ref2);
-   // RTTI_ADD_FUNC(read_unsupported_feature);
-   // RTTI_ADD_FUNC(check_supported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
 }
 

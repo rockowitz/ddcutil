@@ -24,8 +24,6 @@
 #endif
 
 extern int   dispno_max;
-// extern bool  monitor_state_tests;
-// extern bool  skip_ddc_checks;
 
 // Initial Checks
 void         ddc_set_async_threshold(int threshold);
