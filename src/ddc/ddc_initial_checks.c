@@ -1,16 +1,14 @@
-// ddc_initial_checks.c
+/** @file ddc_initial_checks.c */
 
 // Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
  
 /** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
+#include <stdbool.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <time.h>
 #ifdef USE_X11
 #include <X11/extensions/dpmsconst.h>
 #endif
@@ -19,64 +17,42 @@
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
-#include "util/drm_common.h"
 #include "util/edid.h"
 #include "util/error_info.h"
-#include "util/failsim.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/subprocess_util.h"
-#include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
-#ifdef ENABLE_UDEV
-#include "util/udev_usb_util.h"
-#include "util/udev_util.h"
-#endif
 #ifdef USE_X11
 #include "util/x11_util.h"
 #endif
-
 /** \endcond */
 
 #include "public/ddcutil_types.h"
 
 #include "base/core.h"
+#include "base/displays.h"
 #include "base/ddc_packets.h"
-#include "base/drm_connector_state.h"
 #include "base/dsa2.h"
-#include "base/feature_metadata.h"
-#include "base/linux_errno.h"
+#include "base/i2c_bus_base.h"
 #include "base/monitor_model_key.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
 #include "base/rtti.h"
-
-#include "vcp/vcp_feature_codes.h"
+#include "base/status_code_mgt.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_dpms.h"
-#include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_sys_drm_connector.h"
-#include "i2c/i2c_sysfs_base.h"  // for is_sysfs_unreliable()
+#include "i2c/i2c_sysfs_base.h"
 
-#ifdef ENABLE_USB
-#include "usb/usb_displays.h"
-#endif
-
-#include "dynvcp/dyn_feature_files.h"
-
-#include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_phantom_displays.h"
-#include "ddc/ddc_serialize.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_dw_main.h"
+
+#include "ddc/ddc_initial_checks.h"
+
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
-
-#include "ddc/ddc_initial_checks.h"
 
 //
 // Globals
@@ -758,7 +734,6 @@ void explore_monitor_state(Display_Handle* dh) {
 }
 
 
-
 void init_ddc_initial_checks() {
    RTTI_ADD_FUNC(check_how_unsupported_reported);
 
@@ -768,7 +743,4 @@ void init_ddc_initial_checks() {
    RTTI_ADD_FUNC(read_unsupported_feature);
    RTTI_ADD_FUNC(check_supported_feature);
 }
-
-
-
 
