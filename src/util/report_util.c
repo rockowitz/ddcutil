@@ -35,6 +35,7 @@
 
 bool redirect_reports_to_syslog = false;
 bool default_prefix_report_output = false;
+bool tag_output = false;
 
 /** Sets the initial report ornamentation status.
  *

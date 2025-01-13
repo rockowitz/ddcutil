@@ -34,6 +34,7 @@ extern __thread Byte rpt_prefix_options;
 
 extern bool redirect_reports_to_syslog;
 extern bool default_prefix_report_output;
+extern bool tag_output;
 
 void rpt_set_default_ornamentation_enabled(bool onoff);
 bool rpt_get_ornamentation_enabled();
