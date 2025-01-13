@@ -1,5 +1,4 @@
 /** @file api_base.c
-#include <ddc/ddc_dw_main.h>
  *
  *  C API base functions.
  */

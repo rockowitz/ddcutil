@@ -15,6 +15,7 @@
 /** \endcond */
 
 #include "base/base_services.h"
+#include "base/display_lock.h"
 #include "base/display_retry_data.h"
 #include "base/dsa2.h"
 #include "base/feature_metadata.h"
@@ -42,10 +43,10 @@
 
 #include "ddc/ddc_common_init.h"
 #include "ddc/ddc_display_selection.h"
-#include <base/display_lock.h>
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
+#include "ddc/ddc_initial_checks.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
@@ -229,6 +230,7 @@ void init_ddc_services() {
    init_ddc_display_selection();
    init_ddc_display_ref_reports();
    init_ddc_phantom_displays();
+   init_ddc_initial_checks();
    init_ddc_displays();
    init_ddc_dumpload();
    init_ddc_output();

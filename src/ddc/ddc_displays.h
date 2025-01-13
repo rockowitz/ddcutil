@@ -24,12 +24,12 @@
 #endif
 
 extern int   dispno_max;
-extern bool  monitor_state_tests;
-extern bool  skip_ddc_checks;
+// extern bool  monitor_state_tests;
+// extern bool  skip_ddc_checks;
 
 // Initial Checks
 void         ddc_set_async_threshold(int threshold);
-Error_Info * ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added);
+// Error_Info * ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added);
 
 // Get Display Information
 GPtrArray *  ddc_get_all_display_refs();  // returns GPtrArray of Display_Ref instances, including invalid displays

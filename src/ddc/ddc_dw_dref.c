@@ -32,6 +32,7 @@
 #include "base/rtti.h"
 
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_initial_checks.h"
 
 #include "ddc/ddc_dw_dref.h"
 

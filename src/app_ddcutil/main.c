@@ -90,6 +90,7 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_display_selection.h"
+#include "ddc/ddc_initial_checks.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
@@ -100,8 +101,7 @@
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-// #include "ddc/ddc_watch_displays.h"
-#include <ddc/ddc_dw_main.h>
+#include "ddc/ddc_dw_main.h"
 
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/cmd_parser.h"
