@@ -46,6 +46,7 @@
 #include "util/sysfs_filter_functions.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
+#include "util/traced_function_stack.h"
 #include "util/xdg_util.h"
 /** \endcond */
 

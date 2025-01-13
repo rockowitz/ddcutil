@@ -36,6 +36,7 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
+#include "util/traced_function_stack.h"
 #include "util/udev_util.h"
 
 #include "base/core.h"

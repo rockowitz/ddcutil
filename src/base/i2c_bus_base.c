@@ -1,7 +1,7 @@
 /** @file i2c_bus_base.c
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -24,6 +24,7 @@
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
 #include "util/timestamp.h"
+#include "util/traced_function_stack.h"
 
 #include "core.h"
 #include "rtti.h"

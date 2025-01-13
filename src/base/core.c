@@ -50,6 +50,7 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/timestamp.h"
+#include "util/traced_function_stack.h"
 
 #include "base/build_info.h"
 #include "base/core_per_thread_settings.h"

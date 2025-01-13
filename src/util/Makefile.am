@@ -43,6 +43,7 @@ string_util.c              \
 sysfs_util.c               \
 subprocess_util.c          \
 timestamp.c                \
+traced_function_stack.c    \
 utilrpt.c                  \
 xdg_util.c
 

@@ -41,6 +41,7 @@
 #include "util/subprocess_util.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
+#include "util/traced_function_stack.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
 #endif
