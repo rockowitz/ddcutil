@@ -70,191 +70,6 @@ int  nonudev_poll_loop_millisec = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;   // 2000;  
 bool stabilize_added_buses_w_edid;  // not set, only stabilize when displays removed
 int retry_thread_sleep_factor_millis = WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC;
 
-#ifdef OLD
-//
-//  Variant Watch_Mode_Full_Poll
-//
-
-// #ifdef WATCH_MODE_FULL_POLL
-
-/** Primary function to check for changes in display status (disconnect, DPMS),
- *  modify internal data structures, and emit client notifications.
- */
-DDCA_Display_Event_Class event_classes;
-void ddc_poll_recheck_bus(
-      DDCA_Display_Event_Class event_classes,
-      BS256                    old_attached_buses_bitset,
-      BS256                    old_buses_with_edid_bitset,
-      GArray *                 deferred_events )
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
-
-   bool report_events = true;
-
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_connected_buses_bitset has %d bits set", bs256_count(old_buses_with_edid_bitset));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_attached_buses_bitset: %s", bs256_to_string_decimal_t(old_attached_buses_bitset, "", ",") );
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_buses_with_edid_bitset: %s",bs256_to_string_decimal_t(old_buses_with_edid_bitset, "", ","));
-
-   Bit_Set_256  cur_attached_buses_bitset = i2c_detect_attached_buses_as_bitset();
-   Bit_Set_256  newly_attached_buses_bitset = bs256_and_not(cur_attached_buses_bitset, old_attached_buses_bitset);
-   Bit_Set_256  newly_detached_buses_bitset = bs256_and_not(old_attached_buses_bitset, cur_attached_buses_bitset);
-
-   bool changed = false;
-   if (bs256_count(newly_detached_buses_bitset) > 0) {
-      Bit_Set_256_Iterator iter = bs256_iter_new(newly_detached_buses_bitset);
-      int busno;
-      while(true) {
-         busno = bs256_iter_next(iter);
-         if (busno < 0)
-            break;
-#ifdef FUTURE
-         DDCA_IO_Path iopath;
-         iopath.io_mode = DDCA_IO_I2C;
-         iopath.path.i2c_busno = busno;
-         // connector events not currently being reported
-         // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_REMOVED, NULL, NULL, iopath);
-#endif
-      }
-      bs256_iter_free(iter);
-      changed = true;
-   }
-
-   if (bs256_count(newly_attached_buses_bitset) > 0) {
-      Bit_Set_256_Iterator iter = bs256_iter_new(newly_attached_buses_bitset);
-      int busno;
-      while(true) {
-         busno = bs256_iter_next(iter);
-         if (busno < 0)
-            break;
-         DDCA_IO_Path iopath;
-         iopath.io_mode = DDCA_IO_I2C;
-         iopath.path.i2c_busno = busno;
-
-         I2C_Bus_Info * new_businfo = i2c_new_bus_info(iopath.path.i2c_busno);
-         new_businfo->flags = I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME | I2C_BUS_EXISTS;
-         i2c_check_bus2(new_businfo);
-         g_ptr_array_add(all_i2c_buses, new_businfo);
-         DBGTRC_NOPREFIX(debug || report_events, DDCA_TRC_NONE, "Added businfo for bus /dev/i2c-%d", new_businfo->busno);
-         if (IS_DBGTRC(debug, DDCA_TRC_NONE))
-            i2c_dbgrpt_bus_info(new_businfo, /*include_sysinfo*/ true, 1);
-         DBGTRC_NOPREFIX(debug|| report_events, DDCA_TRC_NONE, "Emitting DDCA_EVENT_BUS_ATTACHED for bus /dev/i2c-%d", iopath.path.i2c_busno);
-         // connector events not currently being reported
-         // ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ADDED, new_businfo->drm_connector_name, NULL, iopath);
-      }
-      bs256_iter_free(iter);
-      changed = true;
-   }
-
-   if (changed) {
-      DBGMSG("changed == true");
-      // get_sys_drm_connectors(/*rescan=*/true);
-   }
-
-   GPtrArray * new_buses = i2c_detect_buses0();
-   Bit_Set_256 new_buses_with_edid_bitset = buses_bitset_from_businfo_array(new_buses, true);
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_bitset has %d bits set", bs256_count(new_bitset));
-
-   Bit_Set_256 newly_disconnected_buses_bitset = bs256_and_not(old_buses_with_edid_bitset, new_buses_with_edid_bitset);
-   Bit_Set_256 newly_connected_buses_bitset    = bs256_and_not(new_buses_with_edid_bitset, old_buses_with_edid_bitset);
-   int ct =  bs256_count(newly_disconnected_buses_bitset);
-   if (ct > 0)
-      DBGTRC_NOPREFIX(debug|| report_events, DDCA_TRC_NONE, "newly_disconnected_buses_bitset has %d bits set", ct);
-   ct = bs256_count(newly_connected_buses_bitset);
-   if (ct > 0)
-      DBGTRC_NOPREFIX(debug|| report_events, DDCA_TRC_NONE, "newly_connected_buses_bitset has %d bits set", ct);
-
-   Bit_Set_256_Iterator iter = bs256_iter_new(newly_disconnected_buses_bitset);
-   int busno;
-   while(true) {
-      busno = bs256_iter_next(iter);
-      if (busno < 0)
-         break;
-      I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
-      Display_Ref * dref = ddc_remove_display_by_businfo(businfo);
-      ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
-                                      businfo->drm_connector_name,
-                                      dref, dref->io_path,
-                                      NULL);
-      if (i2c_device_exists(businfo->busno)) {
-         i2c_reset_bus_info(businfo);
-      }
-      else {
-         g_ptr_array_remove(all_i2c_buses, businfo);
-      }
-
-      // get_sys_drm_connectors(/*rescan=*/true);
-   }
-   bs256_iter_free(iter);
-
-   iter = bs256_iter_new(newly_connected_buses_bitset);
-   while(true) {
-      busno = bs256_iter_next(iter);
-      if (busno < 0)
-         break;
-
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Newly detected busno %d", busno);
-      int new_index = i2c_find_bus_info_index_in_gptrarray_by_busno(new_buses, busno);
-      I2C_Bus_Info * new_businfo = g_ptr_array_index(new_buses, new_index);
-      if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_businfo: /dev/i2c-%d @%p",
-               new_businfo->busno, new_businfo);
-         // i2c_dbgrpt_bus_info(new_businfo, 4);
-      }
-      I2C_Bus_Info * old_businfo = i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
-      if (old_businfo) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updating businfo for /dev/i2c-%d", old_businfo->busno);
-         i2c_update_bus_info(old_businfo, new_businfo);
-         Display_Ref * dref = ddc_add_display_by_businfo(old_businfo);
-         ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED,
-                             old_businfo->drm_connector_name, dref, dref->io_path, NULL);
-      }
-      else {
-         DBGTRC_NOPREFIX(debug|| report_events, DDCA_TRC_NONE,
-               "Adding businfo for newly detected /dev/i2c-%d", new_businfo->busno);
-         // g_ptr_array_steal_index() requires glib 2.58
-         // g_ptr_array_steal_index(new_buses, new_index);
-         // should not be set, but just in case:
-         g_ptr_array_set_free_func(new_buses, NULL);
-         g_ptr_array_remove_index(new_buses, new_index);
-         g_ptr_array_add(all_i2c_buses, new_businfo);
-         Display_Ref * dref = ddc_add_display_by_businfo(new_businfo);
-         ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED,
-                             new_businfo->drm_connector_name, dref, dref->io_path, NULL);
-
-      }
-   }
-   bs256_iter_free(iter);
-   g_ptr_array_set_free_func(new_buses, (GDestroyNotify) i2c_free_bus_info);
-   g_ptr_array_free(new_buses, true);
-
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Checking sleep state");
-   assert(all_i2c_buses);
-   for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
-      I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ndx=%d, businfo=%p", ndx, businfo);
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bus=%d", businfo->busno);
-      if (businfo->flags & I2C_BUS_ADDR_0X50) {
-         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bus=%d, I2C_BUS_ADDR_0X50 set", businfo->busno);
-         bool is_dpms_asleep = dpms_check_drm_asleep_by_businfo(businfo);
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, is_dpms_asleep=%s, last_checked_dpms_asleep=%s",
-               businfo->busno, sbool(is_dpms_asleep), sbool(businfo->last_checked_dpms_asleep));
-         if (is_dpms_asleep != businfo->last_checked_dpms_asleep) {
-            Display_Ref * dref = ddc_get_dref_by_busno_or_connector(businfo->busno, NULL, /*ignore_invalid*/ true);
-            assert(dref);
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sleep change event for dref=%p->%s", dref, dref_repr_t(dref));
-            DDCA_Display_Event_Type event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
-            ddc_emit_or_queue_display_status_event(event_type, dref->drm_connector, dref, dref->io_path, NULL);
-            businfo->last_checked_dpms_asleep = is_dpms_asleep;
-         }
-      }
-   }
-
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
-}
-
-#endif
-
 
 void process_screen_change_event(
       BS256*      p_bs_old_attached_buses,
@@ -271,12 +86,6 @@ void process_screen_change_event(
 
    BS256 bs_old_attached_buses = *p_bs_old_attached_buses;
    BS256 bs_old_buses_w_edid   = *p_bs_old_buses_w_edid;
-
-#ifdef OLD
-      GPtrArray * cur_buses = i2c_detect_buses0();
-      Bit_Set_256 bs_cur_buses_w_edid   = buses_bitset_from_businfo_array(cur_buses, true);
-      Bit_Set_256 bs_cur_attached_buses = buses_bitset_from_businfo_array(cur_buses, false);
-#endif
 
       Bit_Set_256 bs_cur_attached_buses = i2c_detect_attached_buses_as_bitset();
       Bit_Set_256 bs_cur_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_cur_attached_buses);
@@ -300,12 +109,6 @@ void process_screen_change_event(
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_buses_w_edid: %s",   BS256_REPR(bs_old_buses_w_edid));
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_cur_buses_w_edid: %s",   BS256_REPR(bs_cur_buses_w_edid));
 
-#ifdef OLD
-         cur_buses = ddc_i2c_stabilized_buses(cur_buses, true);
-         bs_cur_buses_w_edid   = buses_bitset_from_businfo_array(cur_buses, true);
-         bs_cur_attached_buses = buses_bitset_from_businfo_array(cur_buses, false);
-#endif
-
          bs_cur_buses_w_edid = ddc_i2c_stabilized_buses_bs(bs_cur_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
 
          BS256 bs_added_buses_w_edid     = bs256_and_not(bs_cur_buses_w_edid, bs_old_buses_w_edid);
@@ -323,9 +126,6 @@ void process_screen_change_event(
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_removed_buses_w_edid: %s", BS256_REPR(bs_removed_buses_w_edid));
 
       }
-#ifdef OLD
-      g_ptr_array_free(cur_buses, true);
-#endif
       bs_old_buses_w_edid   = bs_cur_buses_w_edid;
       bs_old_attached_buses = bs_cur_attached_buses;
 
@@ -356,76 +156,6 @@ void process_screen_change_event(
 
 
 
-#ifdef OUT
-      if ( bs256_count(bs_removed_buses_w_edid) > 0) {
-         Bit_Set_256_Iterator iter = bs256_iter_new(bs_removed_buses_w_edid);
-         int busno;
-         while(true) {
-            busno = bs256_iter_next(iter);
-            if (busno < 0)
-               break;
-
-            DBGTRC_NOPREFIX(debug || true, DDCA_TRC_NONE, "Disconnected display on bus %d", busno);
-            I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
-            Display_Ref * dref = ddc_remove_display_by_businfo(businfo);
-            ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
-                                            businfo->drm_connector_name,
-                                            dref, dref->io_path,
-                                            NULL);
-         }
-         bs256_iter_free(iter);
-      }
-
-      if ( bs256_count(bs_removed_attached_buses) > 0) {
-      Bit_Set_256_Iterator iter = bs256_iter_new(bs_removed_attached_buses);
-         int busno;
-         while(true) {
-            busno = bs256_iter_next(iter);
-            if (busno < 0)
-               break;
-
-            DBGTRC_NOPREFIX(debug || true, DDCA_TRC_NONE, "Detached bus %d", busno);
-            I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
-            i2c_remove_bus_info(busno);
-            i2c_free_bus_info(businfo);
-         }
-         bs256_iter_free(iter);
-      }
-
-       if ( bs256_count(bs_added_attached_buses) > 0) {
-          Bit_Set_256_Iterator iter = bs256_iter_new(bs_added_attached_buses);
-          int busno;
-          while(true) {
-             busno = bs256_iter_next(iter);
-             if (busno < 0)
-                break;
-
-             DBGTRC_NOPREFIX(debug || true, DDCA_TRC_NONE, "Attach new bus %d", busno);
-             I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
-             businfo->flags &= ~I2C_BUS_PROBED;
-             i2c_check_bus2(businfo);
-             i2c_add_bus_info(businfo);
-          }
-          bs256_iter_free(iter);
-      }
-
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_added_buses_w_edid(2): %s", BS256_REPR(bs_added_buses_w_edid));
-      if ( bs256_count(bs_added_buses_w_edid) > 0) {
-         Bit_Set_256_Iterator iter = bs256_iter_new(bs_added_buses_w_edid);
-         while (true) {
-            int busno = bs256_iter_next(iter);
-            if (busno < 0)
-               break;
-
-            DBGTRC_NOPREFIX(debug || true, DDCA_TRC_NONE, "Connected display on bus %d", busno);
-            I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
-            assert(businfo);
-            Display_Ref * dref = ddc_add_display_by_businfo(businfo);
-            ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_CONNECTED,
-                             businfo->drm_connector_name, dref, dref->io_path, NULL);
-         }
-      }
-#endif
 
 #ifdef WATCH_ASLEEP
       if (watch_dpms) {
