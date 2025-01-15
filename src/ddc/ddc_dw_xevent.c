@@ -23,7 +23,6 @@
 static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 static Display* dpy;
-static int  screen_change_eventno = 0;
 
 
 void  dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
@@ -78,7 +77,6 @@ XEvent_Data * ddc_init_xevent_screen_change_notification() {
       goto bye;
    }
 
-   screen_change_eventno = evdata->rr_event_base + RRScreenChangeNotify;
    evdata->screen_change_eventno = evdata->rr_event_base + RRScreenChangeNotify;
    if (!terminate_using_x11_event) {
       XRRSelectInput(evdata->dpy, evdata->w, RRScreenChangeNotifyMask);
@@ -216,7 +214,6 @@ Bool dw_is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsp=%p, evt=%p, arg=%p", dsp, evt, arg);
 
    bool result = false;
-   // Watch_Displays_Data * wdd = arg;
    XEvent_Data * evdata = (XEvent_Data*) arg;
 
    if (evt->xclient.type == ClientMessage &&
