@@ -457,6 +457,7 @@ load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
     MLM_Node * cur_node[MAX_LEVELS] = {NULL};
 
     int linect = all_lines->len;
+    assert(linect > 0);
     int linendx;
     char * a_line;
     bool device_ids_done = false;    // end of PCI id section seen?
@@ -599,6 +600,7 @@ static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.  id_type=%d\n", __func__, id_type);
+   assert(all_lines->len > 0);
 
    guint linendx;
    // char * a_line;
@@ -700,6 +702,7 @@ static void load_id_file(Device_Id_Type id_type){
       printf("(%s) id_type=%d\n", __func__, id_type);
 
    char * device_id_fqfn = devid_find_file(id_type);
+   int linect = 0;
    if (device_id_fqfn) {
       // char device_id_fqfn[MAX_PATH];
       // snprintf(device_id_fqfn, MAX_PATH, id_fqfn, id_fn);  // ???
@@ -707,19 +710,17 @@ static void load_id_file(Device_Id_Type id_type){
          printf("(%s) device_id_fqfn = %s\n", __func__, device_id_fqfn);
 
       GPtrArray * all_lines = g_ptr_array_sized_new(30000);
-      int linect = file_getlines(device_id_fqfn, all_lines, true);
+      linect = file_getlines(device_id_fqfn, all_lines, true);
       if (linect > 0) {
          load_file_lines(id_type, all_lines);
-      }       // if (all_lines)
-      // to do: call
-
+      }
       g_ptr_array_set_free_func(all_lines, g_free);
       g_ptr_array_free(all_lines, true);
       free(device_id_fqfn);
    }          // if pci.ids or usb.ids was found
-   else {
+   if (linect == 0) {  //  pci.ids/usb.ids not found or empty
       if (debug)
-         printf("(%s) File not found, creating dummy mlm", __func__);
+         printf("(%s) File not found or empty, creating dummy mlm", __func__);
       if (id_type == ID_TYPE_PCI) {
          MLM_Level pci_id_levels[] = {
                {"vendor",   10000, 0},
