@@ -86,7 +86,8 @@ static GMutex    watch_thread_mutex;
  *                        XEvent_Data struct, if the resolved mode is Watch_Mode_Xevent
  *  @return actual watch mode to be used
  */
-DDC_Watch_Mode resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
+STATIC DDC_Watch_Mode
+resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s xev_data_loc=%p", ddc_watch_mode_name(initial_mode), xev_data_loc);
 
