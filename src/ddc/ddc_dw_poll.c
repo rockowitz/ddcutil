@@ -71,62 +71,61 @@ int  retry_thread_sleep_factor_millisec = WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLIS
 bool stabilize_added_buses_w_edid;  // if set, stabilize when displays added as well as removed
 
 
-
-void process_screen_change_event(
-      BS256*      p_bs_old_attached_buses,
-      BS256*      p_bs_old_buses_w_edid,
+STATIC void process_screen_change_event(
+      BS256*      p_bs_attached_buses,
+      BS256*      p_bs_buses_w_edid,
       GArray *    deferred_events,
       GPtrArray * displays_to_recheck
       )
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "*p_bs_old_attached_buses -> %s",
-                         bs256_to_string_decimal_t(*p_bs_old_attached_buses, "", ","));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_CONN, "*p_bs_old_buses_w_edid   -> %s",
-                         bs256_to_string_decimal_t(*p_bs_old_buses_w_edid,   "", ",")) ;
+                         bs256_to_string_decimal_t(*p_bs_attached_buses, "", ","));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_CONN, "*p_bs_buses_w_edid   -> %s",
+                         bs256_to_string_decimal_t(*p_bs_buses_w_edid,   "", ",")) ;
 
-   BS256 bs_old_attached_buses = *p_bs_old_attached_buses;
-   BS256 bs_old_buses_w_edid   = *p_bs_old_buses_w_edid;
+   BS256 bs_old_attached_buses = *p_bs_attached_buses;
+   BS256 bs_old_buses_w_edid   = *p_bs_buses_w_edid;
 
-   Bit_Set_256 bs_cur_attached_buses = i2c_detect_attached_buses_as_bitset();
-   Bit_Set_256 bs_cur_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_cur_attached_buses);
+   Bit_Set_256 bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
+   Bit_Set_256 bs_new_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_new_attached_buses);
 
-   Bit_Set_256 bs_added_buses_w_edid     = bs256_and_not(bs_cur_buses_w_edid, bs_old_buses_w_edid);
-   Bit_Set_256 bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_cur_buses_w_edid);
-   Bit_Set_256 bs_added_attached_buses   = bs256_and_not(bs_cur_attached_buses, bs_old_attached_buses);
-   Bit_Set_256 bs_removed_attached_buses = bs256_and_not(bs_old_attached_buses, bs_cur_attached_buses);
+   Bit_Set_256 bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
+   Bit_Set_256 bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_new_buses_w_edid);
+   Bit_Set_256 bs_added_attached_buses   = bs256_and_not(bs_new_attached_buses, bs_old_attached_buses);
+   Bit_Set_256 bs_removed_attached_buses = bs256_and_not(bs_old_attached_buses, bs_new_attached_buses);
 #ifdef TMI
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_buses_w_edid(0): %s",
                              bs256_to_string_decimal_t(bs_old_buses_w_edid, "", ","));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_cur_buses_w_edid(0): %s",
-                             bs256_to_string_decimal_t(bs_cur_buses_w_edid, "", ","));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_new_buses_edid(0): %s",
+                             bs256_to_string_decimal_t(bs_new_buses_w_edid, "", ","));
 #endif
 
    if ( bs256_count(bs_removed_buses_w_edid) > 0 ||
         (stabilize_added_buses_w_edid &&  bs256_count(bs_added_buses_w_edid) > 0)) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_attached_buses: %s", BS256_REPR(bs_old_attached_buses));
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_cur_attached_buses: %s", BS256_REPR(bs_cur_attached_buses));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_new_attached_buses: %s", BS256_REPR(bs_new_attached_buses));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_buses_w_edid: %s",   BS256_REPR(bs_old_buses_w_edid));
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_cur_buses_w_edid: %s",   BS256_REPR(bs_cur_buses_w_edid));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_new_buses_edid: %s",   BS256_REPR(bs_new_buses_w_edid));
 
-      bs_cur_buses_w_edid = ddc_i2c_stabilized_buses_bs(bs_cur_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
+      bs_new_buses_w_edid = ddc_i2c_stabilized_buses_bs(bs_new_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
 
-      BS256 bs_added_buses_w_edid     = bs256_and_not(bs_cur_buses_w_edid, bs_old_buses_w_edid);
-      bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_cur_buses_w_edid);
-      bs_added_attached_buses   = bs256_and_not(bs_cur_attached_buses, bs_old_attached_buses);
-      bs_removed_attached_buses = bs256_and_not(bs_old_attached_buses, bs_cur_attached_buses);
+      BS256 bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
+      bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_new_buses_w_edid);
+      bs_added_attached_buses   = bs256_and_not(bs_new_attached_buses, bs_old_attached_buses);
+      bs_removed_attached_buses = bs256_and_not(bs_old_attached_buses, bs_new_attached_buses);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After stabilization:");
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_attached_buses: %s", BS256_REPR(bs_old_attached_buses));
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_cur_attached_buses: %s", BS256_REPR(bs_cur_attached_buses));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_new_attached_buses: %s", BS256_REPR(bs_new_attached_buses));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_buses_w_edid:   %s", BS256_REPR(bs_old_buses_w_edid));
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_cur_buses_w_edid:   %s", BS256_REPR(bs_cur_buses_w_edid));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_new_buses_edid:     %s", BS256_REPR(bs_new_buses_w_edid));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_added_attached_buses:   %s", BS256_REPR(bs_added_attached_buses));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_removed_attached_buses:   %s", BS256_REPR(bs_removed_attached_buses));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_added_buses_w_edid: %s", BS256_REPR(bs_added_buses_w_edid));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_removed_buses_w_edid: %s", BS256_REPR(bs_removed_buses_w_edid));
    }
-   bs_old_buses_w_edid   = bs_cur_buses_w_edid;
-   bs_old_attached_buses = bs_cur_attached_buses;
+   bs_old_buses_w_edid   = bs_new_buses_w_edid;
+   bs_old_attached_buses = bs_new_attached_buses;
 
    bool hotplug_change_handler_emitted = false;
    bool connected_buses_w_edid_changed = bs256_count(bs_removed_buses_w_edid) > 0 ||
@@ -181,13 +180,13 @@ void process_screen_change_event(
    }
 #endif
 
-   *p_bs_old_attached_buses  = bs_old_attached_buses;
-   *p_bs_old_buses_w_edid    = bs_old_buses_w_edid;;
+   *p_bs_attached_buses  = bs_old_attached_buses;
+   *p_bs_buses_w_edid    = bs_old_buses_w_edid;;
 
    DBGTRC_DONE(debug, DDCA_TRC_CONN, "*p_bs_old_attached_buses -> %s",
-         bs256_to_string_decimal_t(*p_bs_old_attached_buses, "", ","));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_CONN, "*p_bs_old_buses_w_edid -> %s",
-         bs256_to_string_decimal_t(*p_bs_old_buses_w_edid,   "", ","));
+         bs256_to_string_decimal_t(*p_bs_attached_buses, "", ","));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_CONN, "*p_bs_buses_w_edid -> %s",
+         bs256_to_string_decimal_t(*p_bs_buses_w_edid,   "", ","));
 }
 
 
