@@ -716,10 +716,11 @@ Error_Info * i2c_check_device_access(char * dev_name) {
       int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
       char * s = NULL;
       if (errsv == ENOENT) {
+         // should never occur because of prior i2c_device_exists() check
         s = g_strdup_printf("access(%s) returned ENOENT", dev_name);
         DBGMSG("%s", s);
         err = ERRINFO_NEW(-ENOENT, "%s", s);
-        // should never occur because of i2c_device_exists() check
+        SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
       }
       else if (errsv == EACCES) {
         s = g_strdup_printf("Device %s lacks R/W permissions", dev_name);
