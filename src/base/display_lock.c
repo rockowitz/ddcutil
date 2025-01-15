@@ -218,6 +218,7 @@ bye:
 }
 
 
+#ifdef UNUSED    // For future use? n. coverity complains
 int      lockrec_poll_millisec = DEFAULT_FLOCK_POLL_MILLISEC;   // *** TEMP ***
 int      lockrec_max_wait_millisec = DEFAULT_FLOCK_MAX_WAIT_MILLISEC;
 
@@ -294,6 +295,7 @@ bye:
     DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "");
     return err;
 }
+#endif
 
 
 #ifdef UNUSED
@@ -345,7 +347,7 @@ lock_display_by_dpath(
 }
 
 
-
+#ifdef UNUSED
 Error_Info *
 unlock_display2(Display_Lock_Record * dlr) {
    bool debug = false;
@@ -378,6 +380,7 @@ unlock_display2(Display_Lock_Record * dlr) {
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr->io_path=%s", dpath_short_name_t(&dlr->io_path));
    return err;
 }
+#endif
 
 
 /** Unlocks a distinct display.
@@ -505,8 +508,10 @@ init_i2c_display_lock(void) {
 
    RTTI_ADD_FUNC(get_display_lock_record_by_dpath);
    RTTI_ADD_FUNC(lock_display);
+#ifdef UNUSED
    RTTI_ADD_FUNC(lock_display2);
    RTTI_ADD_FUNC(unlock_display2);
+#endif
    RTTI_ADD_FUNC(lock_display_by_dpath);
    RTTI_ADD_FUNC(unlock_display);
    RTTI_ADD_FUNC(unlock_display_by_dpath);

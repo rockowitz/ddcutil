@@ -35,10 +35,12 @@ typedef struct {
 Display_Lock_Record * create_display_lock_record(DDCA_IO_Path io_path);
 void                  terminate_i2c_display_lock();
 Error_Info *          lock_display(Display_Lock_Record * id, Display_Lock_Flags flags);
-Error_Info *          lock_display2(Display_Lock_Record * dlr, Display_Lock_Flags flags);
 Error_Info *          lock_display_by_dpath(DDCA_IO_Path dpath, Display_Lock_Flags flags);
 Error_Info *          unlock_display(Display_Lock_Record * id);
+#ifdef UNUSED
+Error_Info *          lock_display2(Display_Lock_Record * dlr, Display_Lock_Flags flags);
 Error_Info *          unlock_display2(Display_Lock_Record * dlr);
+#endif
 Error_Info *          unlock_display_by_dpath(DDCA_IO_Path dpath);
 void                  dbgrpt_display_locks(int depth);
 char *                interpret_display_lock_flags_t(Display_Lock_Flags lock_flags);
