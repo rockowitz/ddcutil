@@ -986,30 +986,6 @@ Find_Sys_Drm_Connector_Result find_sys_drm_connector_by_busno_or_edid(
 }
 
 
-#ifdef FUTURE
-
-// too many cases of READ_ATTR_EDID() in which this may not work
-
-bool write_detect_to_status = false;
-
-void maybe_write_detect_to_status(char * driver, char * drm_connector_name) {
-   if (driver && streq(driver, "nvidia") && write_detect_to_status) {
-      char fq_status_attr[100];
-      g_snprintf(fq_status_attr, 100, "/sys/class/drm/%s/status", drm_connector_name);
-      // redundant, fopen() is sufficient
-      // int access_rc = access(fq_status_attr, R_OK|W_OK);
-      // if (access_rc == 0) {
-         FILE* f = fopen(fq_status_attr, "w");
-         if (f) {
-            puts("detect", f);
-            close(f);
-         }
-      // }
-   }
-}
-#endif
-
-
 /** Returns the value of the edid attribute for a DRM connector.
  *
  *  @param  connector_name
@@ -1092,10 +1068,6 @@ Byte * get_connector_edid(const char * connector_name) {
     }
 
     if ( sysfs_is_ignorable_i2c_device(busno) ) {
-       goto bye;
-    }
-
-    if ( access(dev_name, R_OK|W_OK) < 0 ) {
        goto bye;
     }
 
