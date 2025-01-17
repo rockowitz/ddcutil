@@ -6,6 +6,10 @@
 #ifndef TRACED_FUNCTION_STACK_H_
 #define TRACED_FUNCTION_STACK_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <sys/syscall.h>
@@ -38,5 +42,8 @@ GPtrArray* get_current_traced_function_stack_contents(bool most_recent_last);
 void       free_current_traced_function_stack();
 void       free_all_traced_function_stacks();
 
+#ifdef __cplusplus
+}    // extern "C"
+#endif
 
 #endif /* TRACED_FUNCTION_STACK_H_ */
