@@ -242,7 +242,7 @@ void unquiesce_api();
 /** For functions that return a DDCA_Status.  Perform the function return in
  *  the macro.
  */
-#define API_EPILOG(_debug_flag, _respect_quiesced, _rc, _format, ...) \
+#define API_EPILOG_RET_DDCRC(_debug_flag, _respect_quiesced, _rc, _format, ...) \
    do { \
         dbgtrc_ret_ddcrc( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \

@@ -1,6 +1,6 @@
 // api_metadata.c
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -290,7 +290,7 @@ ddca_get_feature_list_by_dref(
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
           "Feature list: %s", feature_list_string(feature_list_loc, "", ","));
       // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
-   API_EPILOG(debug, RESPECT_QUIESCE, psc, "feature_set_id=%d=0x%08x=%s, subset=%d=%s",
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, psc, "feature_set_id=%d=0x%08x=%s, subset=%d=%s",
          feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
          subset, feature_subset_name(subset));
 }
@@ -465,7 +465,7 @@ ddca_get_feature_flags_by_vspec(
          psc = DDCRC_UNKNOWN_FEATURE;
       }
    }
-   API_EPILOG(debug, false, psc, "");
+   API_EPILOG_RET_DDCRC(debug, false, psc, "");
 }
 
 
@@ -549,7 +549,7 @@ ddca_get_feature_metadata_by_vspec(
    *info_loc = meta;
 
    ASSERT_IFF(psc==0, *info_loc);
-   API_EPILOG(debug, NORESPECT_QUIESCE, psc, "");
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, psc, "");
 }
 
 
@@ -584,7 +584,7 @@ ddca_get_feature_metadata_by_dref(
          }
    );
    ASSERT_IFF(psc==0, *metadata_loc);
-   API_EPILOG(debug, RESPECT_QUIESCE, psc, "");
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, psc, "");
    return psc;
 }
 
@@ -628,7 +628,7 @@ ddca_get_feature_metadata_by_dh(
                 }
          }
       );
-   API_EPILOG(debug, RESPECT_QUIESCE, psc, "");
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, psc, "");
 }
 
 
@@ -739,7 +739,7 @@ ddca_get_feature_name_by_dref(
                   psc = DDCRC_ARG;
          }
    )
-   API_EPILOG(debug, psc, "");
+   API_EPILOG_RET_DDCRC(debug, psc, "");
 }
 #endif
 
@@ -871,7 +871,7 @@ ddca_get_simple_nc_feature_value_name_by_table(
    if (!*value_name_loc)
       rc = DDCRC_NOT_FOUND;               // correct handling for value not found?
    assert ( (rc==0 && *value_name_loc) || (rc!=0 && !*value_name_loc) );
-   API_EPILOG(debug, NORESPECT_QUIESCE, rc, "");
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "");
 }
 
 
@@ -974,7 +974,7 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
       }
    );
 
-   API_EPILOG(debug, RESPECT_QUIESCE, psc, "");
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, psc, "");
 }
 
 
@@ -1000,7 +1000,7 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
       }
    );
 
-   API_EPILOG(debug, RESPECT_QUIESCE, psc, "ddca_dh=%p->%s.",
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, psc, "ddca_dh=%p->%s.",
           ddca_dh, dh_repr(ddca_dh) );
 }
 

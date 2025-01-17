@@ -3,7 +3,7 @@
  *  Capabilities related functions of the API
  */
 
-// Copyright (C) 2015-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -79,11 +79,11 @@ ddca_get_capabilities_string(
    );
 
 #ifdef TMI
-   API_EPILOG(debug, RESPECT_QUIESCE, psc, "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, psc, "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
                      dh_repr((Display_Handle *) ddca_dh),
                      *pcaps_loc, *pcaps_loc );
 #endif
-   API_EPILOG(debug, RESPECT_QUIESCE, psc, "ddca_dh=%s, *pcaps_loc=%p",
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, psc, "ddca_dh=%s, *pcaps_loc=%p",
                      dh_repr((Display_Handle *) ddca_dh),
                      *pcaps_loc );
 }
@@ -354,7 +354,7 @@ ddca_report_parsed_capabilities_by_dref(
    }
 
 bye:
-   API_EPILOG(debug, RESPECT_QUIESCE, ddcrc, "");
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, ddcrc, "");
 }
 
 
@@ -393,7 +393,7 @@ ddca_report_parsed_capabilities_by_dh(
    ddca_report_parsed_capabilities_by_dref(p_caps, dh->dref, depth);
 
 bye:
-   API_EPILOG(debug, RESPECT_QUIESCE, ddcrc, "");
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, ddcrc, "");
 }
 
 

@@ -436,7 +436,7 @@ ddca_redetect_displays() {
    quiesce_api();
    ddc_redetect_displays();
    unquiesce_api();
-   API_EPILOG(debug, NORESPECT_QUIESCE, 0, "");
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, 0, "");
 }
 
 
@@ -1065,7 +1065,7 @@ ddca_get_display_refs(
    set_ddca_error_detail_from_open_errors();
    ddcrc = 0;
 
-   API_EPILOG(debug, RESPECT_QUIESCE, ddcrc, "*drefs_loc=%p, returned list has %d displays",
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, ddcrc, "*drefs_loc=%p, returned list has %d displays",
          *drefs_loc, dref_ct);
 }
 
@@ -1122,7 +1122,7 @@ ddca_get_display_info_list2(
    *dlist_loc = result_list;
    assert(*dlist_loc);
 
-   API_EPILOG(debug, RESPECT_QUIESCE, ddcrc, "Returned list has %d displays", filtered_ct);
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, ddcrc, "Returned list has %d displays", filtered_ct);
 }
 
 
@@ -1265,7 +1265,7 @@ ddca_report_display_info(
          rpt_vstring(d1, "Consider using option --force-slave-address.");
       }
    }
-   API_EPILOG(debug, NORESPECT_QUIESCE, rc, "");
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "");
 }
 
 
@@ -1456,7 +1456,7 @@ ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
        result = ddc_register_display_status_callback(func);
  #endif
 
-   API_EPILOG(debug, RESPECT_QUIESCE, result, "func=%p", func);
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, result, "func=%p", func);
    return result;
 }
 
@@ -1469,7 +1469,7 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) 
 
    DDCA_Status result = ddc_unregister_display_status_callback(func);
 
-   API_EPILOG(debug, RESPECT_QUIESCE, result, "func=%p", func);
+   API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, result, "func=%p", func);
    return result;
 }
 

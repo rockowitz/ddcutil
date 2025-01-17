@@ -1,7 +1,7 @@
 /** @file api_capabilities_internal.h
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_CAPABILITIES_INTERNAL_H_
