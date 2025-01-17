@@ -3,7 +3,7 @@
  *  Get, set, and format feature values
  */
 
-// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -110,19 +110,25 @@ ddca_get_non_table_vcp_value(
           // DBGMSG("valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
           //        valrec->mh, valrec->ml, valrec->sh, valrec->sl);
           free(code_info);
-          DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
-                "valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
-                valrec->mh, valrec->ml, valrec->sh, valrec->sl);
+          // DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
+          //       "valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
+          //       valrec->mh, valrec->ml, valrec->sh, valrec->sl);
        }
        else {
           psc = ddc_excp->status_code;
           save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
           ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, DDCA_TRC_API));
-          DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
+          // DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
        }
     } );
+
 bye:
-   API_EPILOG_WO_RETURN(debug, true, psc, "");
+   if (psc == 0)
+      API_EPILOG_WO_RETURN(debug, true, psc,
+            "valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
+             valrec->mh, valrec->ml, valrec->sh, valrec->sl);
+   else
+      API_EPILOG_WO_RETURN(debug, true, psc, "");
    return psc;
 }
 
@@ -165,13 +171,15 @@ ddca_get_table_vcp_value(
             buffer_free(p_table_bytes, __func__);
          }
          TRACED_ASSERT_IFF(psc==0, *table_value_loc);
-         DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
-                "ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
-                ddca_dh, dh_repr(ddca_dh), feature_code, *table_value_loc);
+         // DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
+         //        "ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
+         //        ddca_dh, dh_repr(ddca_dh), feature_code, *table_value_loc);
       }
    );
 bye:
-   API_EPILOG_WO_RETURN(debug, true, psc, "");
+   API_EPILOG_WO_RETURN(debug, true, psc,
+         "ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
+         ddca_dh, dh_repr(ddca_dh), feature_code, *table_value_loc);
    return psc;
 }
 
@@ -352,10 +360,6 @@ ddca_free_any_vcp_value(
 void
 dbgrpt_any_vcp_value(
       DDCA_Any_Vcp_Value * valrec,
-      int                  depth);
-void
-dbgrpt_any_vcp_value(
-      DDCA_Any_Vcp_Value * valrec,
       int                  depth)
 {
    int d1 = depth+1;
@@ -463,7 +467,7 @@ ddca_get_formatted_vcp_value(
                       }
                   }
                }
-               DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
+               // DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
          }
    )
 
@@ -564,6 +568,7 @@ bye:
    return ddcrc;
 }
 
+
 DDCA_Status
 ddca_format_any_vcp_value_by_dref(
       DDCA_Vcp_Feature_Code   feature_code,
@@ -627,7 +632,7 @@ ddci_format_non_table_vcp_value(
              formatted_value_loc);
    DDCA_Status ddcrc = API_PRECOND_RVALUE(formatted_value_loc);
    if (ddcrc != 0) {
-      DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc, "");
+      // DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc, "");
       goto bye;
    }
 
@@ -646,12 +651,18 @@ ddci_format_non_table_vcp_value(
                           feature_code, vspec, mmid, &anyval, formatted_value_loc);
    // assert( (ddcrc==0 &&*formatted_value_loc) || (ddcrc!=0 && !*formatted_value_loc) );
 
-   API_EPILOG_NO_RETURN(debug, false, "");
    if (ddcrc == 0)
-      DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc,
-             "*formatted_value_loc=%p->%s", *formatted_value_loc, *formatted_value_loc);
+      API_EPILOG_WO_RETURN(debug, false, ddcrc,
+            "*formatted_value_loc=%p->%s", *formatted_value_loc, *formatted_value_loc);
    else
-      DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc,  "*formatted_value_loc=%p", *formatted_value_loc);
+      API_EPILOG_WO_RETURN(debug, false, ddcrc,
+            "*formatted_value_loc=%p", *formatted_value_loc);
+
+   // if (ddcrc == 0)
+   //    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc,
+   //           "*formatted_value_loc=%p->%s", *formatted_value_loc, *formatted_value_loc);
+   // else
+   //    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc,  "*formatted_value_loc=%p", *formatted_value_loc);
 
 bye:
    DISABLE_API_CALL_TRACING();
