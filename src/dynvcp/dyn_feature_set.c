@@ -1,13 +1,14 @@
 /** @file dyn_feature_set.c
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <string.h>
 
 #include "util/debug_util.h"
 #include "util/report_util.h"
+#include "util/traced_function_stack.h"
 
 #include "base/displays.h"
 #include "base/feature_lists.h"
@@ -37,7 +38,19 @@ void free_dyn_feature_set(Dyn_Feature_Set * fset) {
 
 
 void report_dyn_feature_set(Dyn_Feature_Set * fset, int depth) {
-   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fset=%p", fset);
+
+#ifdef TMI
+   if (IS_DBGTRC(debug, TRACE_GROUP)) {
+      if (fset)
+         DBGMSG("marker = |%.4s| = %s", fset->marker, hexstring_t((unsigned char *)fset->marker, 4));
+      show_backtrace(1);
+      debug_current_traced_function_stack(true);
+   }
+#endif
+
+   assert( fset && memcmp(fset->marker, DYN_FEATURE_SET_MARKER, 4) == 0);
    for (int ndx=0; ndx < fset->members_dfm->len; ndx++) {
       Display_Feature_Metadata * dfm_entry  = g_ptr_array_index(fset->members_dfm,ndx);
       rpt_vstring(depth,
@@ -45,6 +58,8 @@ void report_dyn_feature_set(Dyn_Feature_Set * fset, int depth) {
                   dfm_entry->feature_code,
                   dfm_entry->feature_name);
    }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -888,5 +903,6 @@ void init_dyn_feature_set() {
    RTTI_ADD_FUNC(dyn_create_feature_set);
   //  RTTI_ADD_FUNC(create_vcp_feature_set);
    RTTI_ADD_FUNC(create_vcp_feature_set_from_feature_set_ref);
+   RTTI_ADD_FUNC(report_dyn_feature_set);
 }
 
