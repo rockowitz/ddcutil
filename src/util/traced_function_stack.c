@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <syslog.h>
 
+#include "backtrace.h"
 #include "glib_util.h"
 
 #include "traced_function_stack.h"
@@ -131,9 +132,12 @@ GQueue * new_traced_function_stack() {
  */
 void push_traced_function(const char * funcname) {
    bool debug = false;
-   if (debug)
+   if (debug) {
       printf("[%d](push_traced_function) funcname = %s, traced_function_stack_enabled=%d\n",
             tid(), funcname, traced_function_stack_enabled);
+      syslog(LOG_DEBUG, "[%d](push_traced_function) funcname = %s, traced_function_stack_enabled=%d\n",
+            tid(), funcname, traced_function_stack_enabled);
+   }
 
    if (traced_function_stack_enabled && !traced_function_stack_suspended) {
       if (!traced_function_stack) {
@@ -144,7 +148,8 @@ void push_traced_function(const char * funcname) {
       g_queue_push_head(traced_function_stack, g_strdup(funcname));
    }
    else {
-      fprintf(stderr, "traced_function_stack is disabled\n");
+      if (debug)
+         fprintf(stderr, "traced_function_stack is disabled\n");
    }
 
    // debug_current_traced_function_stack(true);
@@ -187,6 +192,7 @@ void pop_traced_function(const char * funcname) {
                   __func__, tid(), traced_function_stack, funcname);
             syslog(LOG_ERR, "(%s) tid=%d, traced_function_stack=%p, expected %s, traced_function_stack is empty\n",
                   __func__, tid(), traced_function_stack, funcname);
+            backtrace_to_syslog(LOG_ERR, /* stack_adjust */ 1);
          }
          else {
             if (strcmp(popped_func, funcname) != 0) {
@@ -198,8 +204,10 @@ void pop_traced_function(const char * funcname) {
                debug_current_traced_function_stack(true);
             }
             else {
-               if (debug)
+               if (debug) {
                   fprintf(stdout, "[%7d](%s) Popped %s\n", tid(), __func__, popped_func);
+                  syslog(LOG_DEBUG, "[%d](%s) Popped %s", tid(), __func__, popped_func);
+               }
             }
             free(popped_func);
          }
