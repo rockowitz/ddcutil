@@ -163,6 +163,7 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
       free(parsed_cmd->raw_command);
       free(parsed_cmd->failsim_control_fn);
       free(parsed_cmd->fref);
+      free(parsed_cmd->trace_destination);
       ntsa_free(parsed_cmd->traced_files, true);
       ntsa_free(parsed_cmd->traced_functions, true);
       ntsa_free(parsed_cmd->traced_calls, true);
