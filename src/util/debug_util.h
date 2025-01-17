@@ -14,8 +14,9 @@ extern "C" {
 #endif
 
 #include <assert.h>
-#include <glib-2.0/glib.h>
 #include <stdbool.h>
+
+#include "backtrace.h"     // so existing code doesn't need to include
 
 #define ASSERT_WITH_BACKTRACE(_condition) \
 do { \
@@ -25,9 +26,7 @@ do { \
    }                       \
 } while(0)
 
-GPtrArray * get_backtrace(int stack_adjust);
 void show_backtrace(int stack_adjust);
-void backtrace_to_syslog(int priority, int stack_adjust);
 
 void set_simple_dbgmsg_min_funcname_size(int new_size);
 
