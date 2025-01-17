@@ -6,6 +6,10 @@
 #ifndef MSG_UTIL_H_
 #define MSG_UTIL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 
@@ -20,5 +24,9 @@ extern __thread bool msg_decoration_suspended;
 
 char*      get_msg_decoration(char * buf, uint bufsize, bool dest_syslog);
 char*      formatted_wall_time();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* MSG_UTIL_H_ */
