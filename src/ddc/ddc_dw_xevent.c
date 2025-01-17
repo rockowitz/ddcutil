@@ -22,7 +22,8 @@
 
 static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
-static Display* dpy;
+// static Display* dpy;
+static Atom     termination_atom;
 
 
 void  dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
@@ -58,6 +59,7 @@ XEvent_Data * ddc_init_xevent_screen_change_notification() {
    XEvent_Data * evdata = calloc(1, sizeof(XEvent_Data));
    Display * display = XOpenDisplay(NULL);
    evdata->dpy = display;
+   // dpy = display;
    if (!evdata->dpy)
       goto bye;
    evdata->screen = DefaultScreen(evdata->dpy);
@@ -83,6 +85,7 @@ XEvent_Data * ddc_init_xevent_screen_change_notification() {
       // XSelectInput(evdata->dpy, evdata->w, RRScreenChangeNotifyMask);
    }
    else {
+      termination_atom =  XInternAtom(evdata->dpy, "TERMINATION_MSG", false);
       XRRSelectInput(evdata->dpy, evdata->w, 0xffffffff);
    }
    ok = true;
@@ -178,7 +181,7 @@ void ddc_send_x11_termination_message(XEvent_Data * evdata) {
    evt.xclient.send_event = True;
    evt.xclient.display = evdata->dpy;
    evt.xclient.window = win;
-   evt.xclient.message_type = XInternAtom(evdata->dpy, "TERMINATION_MSG", false);
+   evt.xclient.message_type = termination_atom;
    evt.xclient.format = 32;
    evt.xclient.data.l[0] = 0;
    evt.xclient.data.l[1] = 0;
@@ -217,7 +220,7 @@ Bool dw_is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
    XEvent_Data * evdata = (XEvent_Data*) arg;
 
    if (evt->xclient.type == ClientMessage &&
-         evt->xclient.message_type == XInternAtom(dpy, "TERMINATION_MSG", false)
+         evt->xclient.message_type == termination_atom
       )
    {
       result = true;
@@ -257,7 +260,7 @@ bool dw_next_X11_event_of_interest(XEvent_Data * evdata) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XIfEvent returned");
 
    if (event_return.xclient.type == ClientMessage &&
-       event_return.xclient.message_type ==  XInternAtom(dpy, "TERMINATION_MSG", false) )
+       event_return.xclient.message_type ==  termination_atom )
    {
       DBGMSG("received termination msg");
       result = false;
