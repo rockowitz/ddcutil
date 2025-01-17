@@ -9,6 +9,10 @@
 #ifndef TIMESTAMP_H_
 #define TIMESTAMP_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** \cond */
 #include <glib-2.0/glib.h>
 /** \endcond */
@@ -27,5 +31,9 @@ char *   formatted_epoch_time_t(time_t epoch_seconds);
 #define NANOS2MILLIS( _namosec ) (((_nanosec)+500000)/1000000)
 #define MILLIS2NANOS( _millisec) (_millisec*(uint64_t)1000000)
 #define MILLIS2MICROS(_millisec) (_millisec*(uint64_t)1000)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* TIMESTAMP_H_ */
