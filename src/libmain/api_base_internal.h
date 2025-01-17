@@ -3,7 +3,7 @@
  *  For use only by other api_... files
  */
 
-// Copyright (C) 2015-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_BASE_INTERNAL_H_
@@ -273,7 +273,7 @@ void unquiesce_api();
 /** For functions that return a DDCA_Status.  This variant reports the status code
  *  being returned, but leaves it to the caller to actually execute the return;
  */
-#define API_EPILOG_WO_RETURN(_debug_flag, _respect_quiesced, _rc, _format, ...) \
+#define API_EPILOG_BEFORE_RETURN(_debug_flag, _respect_quiesced, _rc, _format, ...) \
    do { \
         dbgtrc_ret_ddcrc( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \

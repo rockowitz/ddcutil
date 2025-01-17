@@ -124,11 +124,11 @@ ddca_get_non_table_vcp_value(
 
 bye:
    if (psc == 0)
-      API_EPILOG_WO_RETURN(debug, true, psc,
+      API_EPILOG_BEFORE_RETURN(debug, true, psc,
             "valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
              valrec->mh, valrec->ml, valrec->sh, valrec->sl);
    else
-      API_EPILOG_WO_RETURN(debug, true, psc, "");
+      API_EPILOG_BEFORE_RETURN(debug, true, psc, "");
    return psc;
 }
 
@@ -177,7 +177,7 @@ ddca_get_table_vcp_value(
       }
    );
 bye:
-   API_EPILOG_WO_RETURN(debug, true, psc,
+   API_EPILOG_BEFORE_RETURN(debug, true, psc,
          "ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
          ddca_dh, dh_repr(ddca_dh), feature_code, *table_value_loc);
    return psc;
@@ -235,7 +235,7 @@ get_value_type(
       ddcrc = 0;
    }
 
-   API_EPILOG_WO_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "");
+   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "");
    return ddcrc;
 }
 
@@ -261,7 +261,7 @@ ddca_get_any_vcp_value_using_explicit_type(
       *valrec_loc = valrec2;
    }
 
-   API_EPILOG_WO_RETURN(debug, true, rc, "*valrec_loc=%p", *valrec_loc);
+   API_EPILOG_BEFORE_RETURN(debug, true, rc, "*valrec_loc=%p", *valrec_loc);
    ASSERT_IFF(rc == 0, *valrec_loc);
    return rc;
 }
@@ -321,7 +321,7 @@ ddca_get_any_vcp_value_using_implicit_type(
                  valrec_loc);
    }
    ASSERT_IFF(ddcrc==0, *valrec_loc);
-   API_EPILOG_WO_RETURN(debug, true, ddcrc, "");
+   API_EPILOG_BEFORE_RETURN(debug, true, ddcrc, "");
    return ddcrc;
 }
 
@@ -472,7 +472,7 @@ ddca_get_formatted_vcp_value(
    )
 
 bye:
-   API_EPILOG_WO_RETURN(debug, psc, "");
+   API_EPILOG_BEFORE_RETURN(debug, psc, "");
    return psc;
 }
 #endif
@@ -562,7 +562,7 @@ ddci_format_any_vcp_value(
 bye:
    if (dfm)
       dfm_free(dfm);
-   API_EPILOG_WO_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "formatted_value_loc -> %s", *formatted_value_loc);
+   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "formatted_value_loc -> %s", *formatted_value_loc);
    // 7/2019: wrong, *formatted_value_loc always set, why did this ever work?
    // assert( (ddcrc==0 && *formatted_value_loc) || (ddcrc!=0 &&!*formatted_value_loc) );
    return ddcrc;
@@ -601,7 +601,7 @@ ddca_format_any_vcp_value_by_dref(
                // assert( (psc==0 && *formatted_value_loc) || (psc!=0 &&!*formatted_value_loc) );
          }
    )
-   API_EPILOG_WO_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "*formatted_value_loc = %p -> |%s|",
+   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "*formatted_value_loc = %p -> |%s|",
                                          *formatted_value_loc, *formatted_value_loc);
    return ddcrc;
 }
@@ -652,10 +652,10 @@ ddci_format_non_table_vcp_value(
    // assert( (ddcrc==0 &&*formatted_value_loc) || (ddcrc!=0 && !*formatted_value_loc) );
 
    if (ddcrc == 0)
-      API_EPILOG_WO_RETURN(debug, false, ddcrc,
+      API_EPILOG_BEFORE_RETURN(debug, false, ddcrc,
             "*formatted_value_loc=%p->%s", *formatted_value_loc, *formatted_value_loc);
    else
-      API_EPILOG_WO_RETURN(debug, false, ddcrc,
+      API_EPILOG_BEFORE_RETURN(debug, false, ddcrc,
             "*formatted_value_loc=%p", *formatted_value_loc);
 
    // if (ddcrc == 0)
@@ -698,7 +698,7 @@ ddca_format_non_table_vcp_value_by_dref(
                // assert( (psc==0 &&*formatted_value_loc) || (psc!=0 && !*formatted_value_loc) );
          }
    )
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, ddcrc, "*formatted_value_loc = %p -> |%s|",
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "*formatted_value_loc = %p -> |%s|",
                                                *formatted_value_loc, *formatted_value_loc);
    return ddcrc;
 }
@@ -733,7 +733,7 @@ ddci_format_table_vcp_value(
 
    DDCA_Status ddcrc = ddci_format_any_vcp_value(
              feature_code, vspec, mmid, &anyval, formatted_value_loc);
-   API_EPILOG_WO_RETURN(debug, false, ddcrc, "");
+   API_EPILOG_BEFORE_RETURN(debug, false, ddcrc, "");
    return ddcrc;
 }
 
@@ -766,7 +766,7 @@ ddca_format_table_vcp_value_by_dref(
                          formatted_value_loc);
          }
    )
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, ddcrc,
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc,
                                "*formatted_value_loc = %p -> |%s|",
                                *formatted_value_loc, *formatted_value_loc);
    return ddcrc;
@@ -866,7 +866,7 @@ ddca_set_continuous_vcp_value(
    bool debug = false;
    API_PROLOG(debug, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddci_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
-   API_EPILOG_WO_RETURN(debug, ddcrc, "");
+   API_EPILOG_BEFORE_RETURN(debug, ddcrc, "");
    return ddcrc;
 }
 #endif
@@ -882,7 +882,7 @@ ddca_set_simple_nc_vcp_value(
    bool debug = false;
    API_PROLOG(debug, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddci_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
-   API_EPILOG_WO_RETURN(debug, ddcrc, "");
+   API_EPILOG_BEFORE_RETURN(debug, ddcrc, "");
    return ddcrc;
 }
 #endif
@@ -966,7 +966,7 @@ ddca_set_non_table_vcp_value(
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddci_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
    return ddcrc;
 }
 
@@ -1035,7 +1035,7 @@ ddca_set_table_vcp_value(
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddci_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
    return ddcrc;
 }
 
@@ -1092,7 +1092,7 @@ ddca_set_any_vcp_value(
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddci_set_any_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
    return ddcrc;
 }
 
@@ -1122,7 +1122,7 @@ ddca_get_profile_related_values(
       }
    );
 bye:
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, psc, "");
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, psc, "");
    return psc;
 }
 
@@ -1148,7 +1148,7 @@ ddca_set_profile_related_values(
          DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
       }
    );
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, psc, "");
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, psc, "");
    return psc;
 }
 

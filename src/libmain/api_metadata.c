@@ -660,7 +660,7 @@ ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
          free_ddca_feature_metadata(metadata);
       }
    }
-   API_EPILOG_WO_RETURN(debug, false, 0, "");
+   API_EPILOG_BEFORE_RETURN(debug, false, 0, "");
 }
 
 

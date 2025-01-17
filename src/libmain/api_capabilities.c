@@ -215,7 +215,7 @@ ddca_parse_capabilities_string(
       free_parsed_capabilities(pcaps);
    }
    *parsed_capabilities_loc = result;
-   API_EPILOG_WO_RETURN(debug, NORESPECT_QUIESCE, ddcrc,
+   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, ddcrc,
          "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
    ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
    // if ( IS_DBGTRC(debug, DDCA_TRC_API) && *parsed_capabilities_loc)

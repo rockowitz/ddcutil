@@ -366,7 +366,7 @@ ddca_get_display_ref(
          rc = DDCRC_INVALID_DISPLAY;
    }
 
-   API_EPILOG_WO_RETURN(debug, NORESPECT_QUIESCE, rc,
+   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, rc,
                         "*dref_loc=%p", psc_name_code(rc), *dref_loc);
    TRACED_ASSERT( (rc==0 && *dref_loc) || (rc!=0 && !*dref_loc) );
    return rc;
@@ -423,7 +423,7 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
          }
       );
    }
-   API_EPILOG_WO_RETURN(debug, psc, "");
+   API_EPILOG_BEFORE_RETURN(debug, psc, "");
    return psc;
 }
 #endif
@@ -487,7 +487,7 @@ ddca_report_display_by_dref(
    if (rc == 0)
       ddc_report_display_by_dref(dref, depth);
 
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, rc, "");
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc, "");
    return rc;
 }
 
@@ -536,7 +536,7 @@ ddca_validate_display_ref(DDCA_Display_Ref ddca_dref, bool require_not_asleep)
    save_thread_error_detail(public_error_detail);
 #endif
 
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, rc, "");
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc, "");
    return rc;
 }
 
@@ -648,7 +648,7 @@ ddca_open_display3(
    }
 
 
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, rc,
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc,
                         "*dh_loc=%p -> %s", *dh_loc, dh_repr(*dh_loc));
    TRACED_ASSERT_IFF(rc==0, *dh_loc);
    return rc;
@@ -692,7 +692,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
       save_thread_error_detail(public_error_detail);
    }
 
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, rc, "");
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc, "");
    return rc;
 }
 
@@ -979,7 +979,7 @@ ddca_get_display_info(
          }
    )
 
-   API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, ddcrc, "ddca_dref=%p, dref=%s", ddca_dref, dref_reprx_t(dref0));
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "ddca_dref=%p, dref=%s", ddca_dref, dref_reprx_t(dref0));
    return ddcrc;
 }
 
@@ -1504,7 +1504,7 @@ ddca_set_display_sleep_multiplier(
        else
           rc = DDCRC_ARG;
     }
-    API_EPILOG_WO_RETURN(debug, RESPECT_QUIESCE, rc, "");
+    API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc, "");
     return rc;
 }
 
@@ -1526,7 +1526,7 @@ ddca_get_current_display_sleep_multiplier(
        Per_Display_Data * pdd = dref->pdd;
        *multiplier_loc        = pdd->final_successful_adjusted_sleep_multiplier;
     }
-    API_EPILOG_WO_RETURN(debug, NORESPECT_QUIESCE, rc, "");
+    API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, rc, "");
     return rc;
 }
 

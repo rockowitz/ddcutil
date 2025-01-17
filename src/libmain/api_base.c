@@ -3,7 +3,7 @@
  *  C API base functions.
  */
 
-// Copyright (C) 2015-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -1075,7 +1075,8 @@ void
 ddca_start_capture(DDCA_Capture_Option_Flags flags) {
    bool debug = false;
    traced_function_stack_suspended = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_API, "flags=0x%02x", flags);
+   // DBGTRC_STARTING(debug, DDCA_TRC_API, "flags=0x%02x", flags);
+   DBGF(debug, "flags=0x%02x", flags);
    msg_decoration_suspended = true;
    start_capture(flags);
 }
@@ -1087,7 +1088,8 @@ ddca_end_capture(void) {
    // DBGTRC_STARTING(debug, DDCA_TRC_API, "");
    char * result = end_capture();
    msg_decoration_suspended = false;
-   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %p", result);
+   // DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %p", result);
+   DBGF(debug, "Returning %p", result);
    traced_function_stack_suspended = false;
    return result;
 }
