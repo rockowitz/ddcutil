@@ -1,4 +1,4 @@
-/** @file i2c_dpms.c
+/** @file sysfs_dpms.c
  *  DPMS related functions
  */
 
@@ -27,13 +27,12 @@
 #include "base/displays.h"
 #include "base/rtti.h"
 
-// #include "i2c_sys_drm_connector.h"
-#include "i2c_sysfs_base.h"  // for is_sysfs_reliable()
+#include "sysfs/sysfs_base.h"  // for is_sysfs_reliable()
 
-#include "i2c_dpms.h"
+#include "sysfs/sysfs_dpms.h"
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SYSFS;
 
 //
 // DPMS Detection

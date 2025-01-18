@@ -11,7 +11,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
-
 #include <limits.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -30,7 +29,7 @@
 #include "base/status_code_mgt.h"
 /** \endcond */
 
-#include "sysfs/i2c_sysfs_base.h"
+#include "sysfs/sysfs_base.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_edid.h"

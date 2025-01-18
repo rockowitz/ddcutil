@@ -58,9 +58,9 @@
 
 #include "vcp/vcp_feature_codes.h"
 
-#include "sysfs/i2c_dpms.h"
-#include "sysfs/i2c_sys_drm_connector.h"
-#include "sysfs/i2c_sysfs_base.h"// for is_sysfs_unreliable()
+#include "sysfs/sysfs_dpms.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
+#include "sysfs/sysfs_base.h"  // for is_sysfs_unreliable()
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"

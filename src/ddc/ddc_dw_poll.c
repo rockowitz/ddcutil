@@ -48,8 +48,8 @@
 #include "base/sleep.h"
 /** \endcond */
 
-#include "sysfs/i2c_dpms.h"
-#include "sysfs/i2c_sys_drm_connector.h"
+#include "sysfs/sysfs_dpms.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "i2c/i2c_bus_core.h"
 

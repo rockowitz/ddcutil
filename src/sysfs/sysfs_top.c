@@ -1,4 +1,4 @@
-/** i2c_sysfs_top.c */
+/** @file sysfs_top.c */
 
 // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -8,11 +8,11 @@
 #include "util/data_structures.h"
 #include "util/report_util.h"
 
-#include "i2c_sys_drm_connector.h"
-#include "i2c_sysfs_conflicting_drivers.h"
-#include "i2c_sysfs_i2c_info.h"
+#include "sysfs_conflicting_drivers.h"
+#include "sysfs_i2c_info.h"
+#include "sysfs_sys_drm_connector.h"
 
-#include "i2c_sysfs_top.h"
+#include "sysfs_top.h"
 
 
 void consolidated_i2c_sysfs_report(int depth) {

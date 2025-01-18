@@ -1,12 +1,12 @@
-/** @file i2c_dpms.h
+/** @file sysfs_dpms.h
  *  DPMS related functions
  */
 
 // Copyright (C) 2023-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_DPMS_H_
-#define I2C_DPMS_H_
+#ifndef SYSFS_DPMS_H_
+#define SYSFS_DPMS_H_
 
 #include <stdbool.h>
 
@@ -33,4 +33,4 @@ bool             dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo);
 bool             dpms_check_drm_asleep_by_dref(Display_Ref * dref);
 void             init_i2c_dpms();
 
-#endif /* I2C_DPMS_H_ */
+#endif /* SYSFS_DPMS_H_ */

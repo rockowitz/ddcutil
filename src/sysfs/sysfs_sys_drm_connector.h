@@ -1,4 +1,4 @@
-/** \file i2c_sysfs.h
+/** @file sysfs_sys_drm_connector.h
  *
  *  Query /sys file system for information on I2C devices
  */
@@ -6,8 +6,8 @@
 // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_SYS_DRM_CONNECTOR_H_
-#define I2C_SYS_DRM_CONNECTOR_H_
+#ifndef SYSFS_SYS_DRM_CONNECTOR_H_
+#define SYSFS_SYS_DRM_CONNECTOR_H_
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
@@ -64,4 +64,4 @@ Sys_Drm_Connector * get_drm_connector(const char * fn, int depth);
 // Initialization
 void init_i2c_sysfs();
 
-#endif /* I2C_SYS_DRM_CONNECTOR_H_ */
+#endif /* SYSFS_SYS_DRM_CONNECTOR_H_ */

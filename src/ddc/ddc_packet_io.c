@@ -46,8 +46,8 @@
 #include "base/tuned_sleep.h"
 #include "base/per_display_data.h"
 
-#include "sysfs/i2c_dpms.h"
-#include "sysfs/i2c_sysfs_base.h"
+#include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_dpms.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"

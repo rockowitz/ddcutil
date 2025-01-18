@@ -32,7 +32,7 @@
 #include "base/rtti.h"
 /** \endcond */
 
-#include "sysfs/i2c_sys_drm_connector.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs_common.h"

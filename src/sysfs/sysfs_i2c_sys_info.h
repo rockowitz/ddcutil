@@ -1,10 +1,10 @@
-/** @file i2c_sysfs_sys_info.h */
+/** @file sysfs_sys_info.h */
 
 // Copyright (C) 2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_SYSFS_SYS_INFO_H_
-#define I2C_SYSFS_SYS_INFO_H_
+#ifndef SYSFS_SYS_INFO_H_
+#define SYSFS_SYS_INFO_H_
 
 #include "util/data_structures.h"
 

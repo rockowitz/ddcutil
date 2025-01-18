@@ -3,12 +3,12 @@
 // Copyright (C) 2022-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "i2c_dpms.h"
-#include "i2c_sys_drm_connector.h"
-#include "i2c_sysfs_base.h"
-#include "i2c_sysfs_conflicting_drivers.h"
-#include "i2c_sysfs_i2c_info.h"
-#include "i2c_sysfs_i2c_sys_info.h"
+#include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_conflicting_drivers.h"
+#include "sysfs/sysfs_dpms.h"
+#include "sysfs/sysfs_i2c_info.h"
+#include "sysfs/sysfs_i2c_sys_info.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "sysfs_services.h"
 

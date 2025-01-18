@@ -1,4 +1,4 @@
-// i2c_sysfs_conflicting_drivers.c
+/** @file sysfs_conflicting_drivers.c */
 
 // Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -17,7 +17,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 /** \endcond */
-
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
@@ -42,11 +41,11 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#include "i2c_sys_drm_connector.h"
+#include "sysfs_sys_drm_connector.h"
 
-#include "i2c_sysfs_conflicting_drivers.h"
+#include "sysfs_conflicting_drivers.h"
 
-static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
+static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_SYSFS;
 
 //
 //  Scan for conflicting modules/drivers: Struct Sys_Conflicting_Driver

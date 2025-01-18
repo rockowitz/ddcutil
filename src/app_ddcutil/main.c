@@ -75,14 +75,14 @@
 #include "dynvcp/dyn_feature_files.h"
 #include "dynvcp/dyn_parsed_capabilities.h"
 
-#include "i2c/i2c_bus_core.h"
-#include <sysfs/i2c_dpms.h>
-#include "i2c/i2c_strategy_dispatcher.h"
-#include <sysfs/i2c_sys_drm_connector.h>
-// #include "i2c/i2c_sysfs_i2c_info.h"
-#include <sysfs/i2c_sysfs_top.h>
-#include <sysfs/i2c_sysfs_base.h>
+#include "sysfs/sysfs_dpms.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
+// #include "sysfs/i2c_sysfs_i2c_info.h"
+#include "sysfs/sysfs_top.h"
+#include "sysfs/sysfs_base.h"
 
+#include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_strategy_dispatcher.h"
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #endif
@@ -117,7 +117,7 @@
 #include "app_ddcutil/app_interrogate.h"
 #include "app_ddcutil/app_probe.h"
 #include "app_ddcutil/app_getvcp.h"
-#include <app_ddcutil/app_ddcutil_services.h>
+#include "app_ddcutil/app_ddcutil_services.h"
 #include "app_ddcutil/app_setvcp.h"
 #include "app_ddcutil/app_vcpinfo.h"
 #include "app_ddcutil/app_watch.h"

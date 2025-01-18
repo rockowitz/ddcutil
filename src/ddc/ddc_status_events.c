@@ -17,7 +17,7 @@
 #include "base/core.h"
 #include "base/rtti.h"
 
-#include "sysfs/i2c_sys_drm_connector.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "ddc_status_events.h"
 

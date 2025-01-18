@@ -1,10 +1,10 @@
-/** @file i2c_sysfs_conflicting_drivers.h */
+/** @file sysfs_conflicting_drivers.h */
 
 // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_SYSFS_CONFLICTING_DRIVERS_H_
-#define I2C_SYSFS_CONFLICTING_DRIVERS_H_
+#ifndef SYSFS_CONFLICTING_DRIVERS_H_
+#define SYSFS_CONFLICTING_DRIVERS_H_
 
 #include <glib-2.0/glib.h>
 
@@ -28,4 +28,4 @@ GPtrArray * conflicting_driver_names(GPtrArray * conflicts);
 char *      conflicting_driver_names_string_t(GPtrArray * conflicts);
 void        init_i2c_sysfs_conflicting_drivers();
 
-#endif /* I2C_SYSFS_CONFLICTING_DRIVERS_H_ */
+#endif /* SYSFS_CONFLICTING_DRIVERS_H_ */

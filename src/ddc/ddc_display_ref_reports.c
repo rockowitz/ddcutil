@@ -29,10 +29,10 @@
 #include "base/per_display_data.h"
 #include "base/rtti.h"
 
-#include "sysfs/i2c_sys_drm_connector.h"
-#include "sysfs/i2c_sysfs_base.h"
-#include "sysfs/i2c_sysfs_conflicting_drivers.h"
-#include "sysfs/i2c_sysfs_top.h"
+#include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_conflicting_drivers.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
+#include "sysfs/sysfs_top.h"
 
 #include "i2c/i2c_bus_core.h"
 

@@ -43,8 +43,8 @@
 #include "base/stats.h"
 #include "base/tuned_sleep.h"
 
-#include "sysfs/i2c_sysfs_base.h"
-#include "sysfs/i2c_sys_drm_connector.h"
+#include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "vcp/persistent_capabilities.h"
 

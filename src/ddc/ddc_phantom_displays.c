@@ -15,7 +15,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#include "sysfs/i2c_sysfs_base.h"
+#include "sysfs/sysfs_base.h"
 
 #include "ddc_phantom_displays.h"
 

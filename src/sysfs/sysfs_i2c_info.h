@@ -1,10 +1,10 @@
-/** @file i2c_sysfs_i2c_info.h */
+/** @file sysfs_i2c_info.h */
 
 // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_SYSFS_I2C_INFO_H_
-#define I2C_SYSFS_I2C_INFO_H_
+#ifndef SYSFS_I2C_INFO_H_
+#define SYSFS_I2C_INFO_H_
 
 #include <glib-2.0/glib.h>
 
@@ -33,4 +33,4 @@ Bit_Set_256      get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info();
 void             init_i2c_sysfs_i2c_info();
 void             terminate_i2c_sysfs_i2c_info();
 
-#endif /* I2C_SYSFS_I2C_INFO_H_ */
+#endif /* SYSFS_I2C_INFO_H_ */

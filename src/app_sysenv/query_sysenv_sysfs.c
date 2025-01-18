@@ -33,9 +33,9 @@
 #include "base/rtti.h"
 /** \endcond */
 
-#include "sysfs/i2c_sys_drm_connector.h"
-#include "sysfs/i2c_sysfs_i2c_sys_info.h"
-#include "sysfs/i2c_sysfs_top.h"
+#include "sysfs/sysfs_i2c_sys_info.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
+#include "sysfs/sysfs_top.h"
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs_common.h"

@@ -1,11 +1,10 @@
-/** @file i2c_sys_drm_connector.c
+/** @file sysfs_sys_drm_connector.c
  *
  *  Query /sys file system for information on I2C devices
  */
 
 // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
 
 #include "config.h"
 
@@ -21,7 +20,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 /** \endcond */
-
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
@@ -46,12 +44,12 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#include "i2c_sysfs_base.h"
+#include "sysfs_base.h"
 
-#include "i2c_sys_drm_connector.h"
+#include "sysfs_sys_drm_connector.h"
 
 
-static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
+static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_SYSFS;
 
 //
 //  *** Scan /sys by drm connector - uses struct Sys_Drm_Connector ***

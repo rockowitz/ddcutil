@@ -1,10 +1,10 @@
-/** @file i2c_sysfs_base.h */
+/** @file sysfs_base.h */
 
 // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_SYSFS_BASE_H_
-#define I2C_SYSFS_BASE_H_
+#ifndef SYSFS_BASE_H_
+#define SYSFS_BASE_H_
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
@@ -128,4 +128,4 @@ void                   set_cbd_connector(Connector_Busno_Dref * cbd, Display_Ref
 void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
 #endif
 
-#endif /* I2C_SYSFS_BASE_H_ */
+#endif /* SYSFS_BASE_H_ */

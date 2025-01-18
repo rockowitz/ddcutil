@@ -40,8 +40,8 @@
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
-#include "sysfs/i2c_dpms.h"
-#include "sysfs/i2c_sysfs_base.h"
+#include "sysfs/sysfs_dpms.h"
+#include "sysfs/sysfs_base.h"
 
 #include "i2c/i2c_bus_core.h"
 
