@@ -44,8 +44,6 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#include "sysfs_i2c_info.h"   // ugh - circular
-
 #include "sysfs_base.h"
 
 
