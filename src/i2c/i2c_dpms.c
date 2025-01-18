@@ -2,7 +2,7 @@
  *  DPMS related functions
  */
 
-// Copyright (C) 2023-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -31,8 +31,6 @@
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_sysfs_base.h"  // for is_sysfs_unreliable
 
-
-
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
@@ -57,6 +55,13 @@ char * interpret_dpms_state_t(Dpms_State state) {
 }
 
 
+/** Does X Display Power Management Signaling (DPMS) report the X11 power level
+ *  as a sleep mode, i.e. other then DPMSModeOn?
+ *
+ *  @retval true   XDG session type is X11 and X11 power level != DPMSModeOn
+ *  @retval false  XDG session type is X11 and X11 power Level = DPMS_ModeOn
+ *  @retval false  XDG session type != X11
+ */
 bool dpms_is_x11_asleep() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
@@ -98,7 +103,6 @@ bool dpms_is_x11_asleep() {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
-
 
 
 #ifdef UNUSED
@@ -147,8 +151,6 @@ void dpms_check_x11_asleep() {
 #endif
 
 
-
-
 /** Checks if a display, specified by its DRM connector name, is in a DPMS
  *  sleep mode. The check is performed using the connector's dpms attribute.
  *
@@ -156,7 +158,6 @@ void dpms_check_x11_asleep() {
  *  @retval true  if the dpms attribute value is other than "On"
  *  @retval false if the dpms attribute value is "On"
  */
-
 bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "drm_connector_name=%s", drm_connector_name);
@@ -182,6 +183,12 @@ bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
 }
 
 
+/** Checks if a display, specified by its I2C bus number, is in a DPMS
+ *  sleep mode.
+ *
+ *  @param  drm_connector_name
+ *  @return true  if the display is in a sleep mode, false if not
+ */
 bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    assert(businfo);
@@ -192,7 +199,15 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
    // ASSERT_IFF( !(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED), !businfo->drm_connector_found_by);
    char * xdg_session_type = getenv("XDG_SESSION_TYPE");
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE = |%s|", xdg_session_type);
-   if (streq(xdg_session_type, "x11")) {
+   bool sysfs_reliable = is_sysfs_reliable_for_busno(businfo->busno);
+   if (streq(xdg_session_type, "x11") && !sysfs_reliable) {
+      char * s = g_strdup_printf(
+                 "is_sysfs_reliable_for_busno(%d) returned false and session_type = X11. "
+                 "Using X11 to determine if display is asleep",
+                  businfo->busno);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
+      SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+      free(s);
       asleep = dpms_is_x11_asleep();
    }
    else {
@@ -212,10 +227,13 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
       }
 #endif
 
-      bool sysfs_reliable = is_sysfs_reliable_for_busno(businfo->busno);
       if (!sysfs_reliable) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "is_sysfs_reliable(%d) returned false. Assuming not asleep", businfo->busno);
-         SYSLOG2(DDCA_SYSLOG_ERROR, "is_sysfs_reliable(%d) false. Assuming not asleep", businfo->busno);
+         char * s = g_strdup_printf(
+               "is_sysfs_reliable_for_busno(%d) returned false and session type != X11. Assuming not asleep",
+               businfo->busno);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
+         SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+         free(s);
       }
       else {
          if (businfo->drm_connector_name) {
@@ -229,6 +247,12 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
+/** Checks if a display, specified by its Display Reference, is in a DPMS
+ *  sleep mode.
+ *
+ *  @param  drm_connector_name
+ *  @return true  if the display is in a sleep mode, false if not
+ */
 bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
