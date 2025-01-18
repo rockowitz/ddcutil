@@ -732,7 +732,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
       }
    }
    if (!err) {
-      if (dpms_check_drm_asleep_by_busno(businfo->busno))
+      if (dpms_check_drm_asleep_by_businfo(businfo))
          err = ERRINFO_NEW(DDCRC_DPMS_ASLEEP,
                "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
    }
