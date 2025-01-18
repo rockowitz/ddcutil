@@ -10,8 +10,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "base/i2c_bus_base.h"
 #include "base/displays.h"
+#include "base/i2c_bus_base.h"
 
 extern bool force_sysfs_unreliable;
 extern bool force_sysfs_reliable;
