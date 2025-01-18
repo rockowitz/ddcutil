@@ -2,7 +2,7 @@
  *
  *  I2C bus detection and inspection
  */
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_BUS_CORE_H_
@@ -25,7 +25,7 @@
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 
-#include <i2c/i2c_sys_drm_connector.h>
+#include "sysfs/i2c_sys_drm_connector.h"
 
 /** \def I2C_SLAVE_ADDR_MAX Addresses on an I2C bus are 7 bits in size */
 #define I2C_SLAVE_ADDR_MAX 128

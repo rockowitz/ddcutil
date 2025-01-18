@@ -18,12 +18,14 @@ CLEANFILES = \
 *expand
 
 # Intermediate Library
-noinst_LTLIBRARIES = libi2c.la
+noinst_LTLIBRARIES = libsysfs.la
 
-libi2c_la_SOURCES =       \
-i2c_bus_core.c            \
-i2c_bus_selector.c        \
-i2c_edid.c                \
-i2c_execute.c             \
-i2c_services.c            \
-i2c_strategy_dispatcher.c
+libsysfs_la_SOURCES =       \
+i2c_dpms.c                \
+i2c_sys_drm_connector.c   \
+i2c_sysfs_base.c          \
+i2c_sysfs_conflicting_drivers.c \
+i2c_sysfs_i2c_info.c      \
+i2c_sysfs_i2c_sys_info.c  \
+i2c_sysfs_top.c           \
+sysfs_services.c

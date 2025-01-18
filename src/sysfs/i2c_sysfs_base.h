@@ -1,12 +1,17 @@
 /** @file i2c_sysfs_base.h */
 
-// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_SYSFS_BASE_H_
 #define I2C_SYSFS_BASE_H_
 
 #include <glib-2.0/glib.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "base/i2c_bus_base.h"
+#include "base/displays.h"
 
 extern bool force_sysfs_unreliable;
 extern bool force_sysfs_reliable;

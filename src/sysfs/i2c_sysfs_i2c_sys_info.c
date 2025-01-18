@@ -1,6 +1,6 @@
 /** @file i2c_sysfs_sys_info.c */
 
-// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  
@@ -43,9 +43,9 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#include "i2c/i2c_sysfs_base.h"
+#include "i2c_sysfs_base.h"
 
-#include "i2c/i2c_sysfs_i2c_sys_info.h"
+#include "i2c_sysfs_i2c_sys_info.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;

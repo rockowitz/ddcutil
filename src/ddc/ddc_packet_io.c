@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
@@ -46,10 +46,11 @@
 #include "base/tuned_sleep.h"
 #include "base/per_display_data.h"
 
+#include "sysfs/i2c_dpms.h"
+#include "sysfs/i2c_sysfs_base.h"
+
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_sysfs_base.h"
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"

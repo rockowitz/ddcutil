@@ -1,6 +1,6 @@
 /** @file ddc_initial_checks.c */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 /** \cond */
@@ -40,9 +40,10 @@
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
+#include "sysfs/i2c_dpms.h"
+#include "sysfs/i2c_sysfs_base.h"
+
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_dpms.h"
-#include "i2c/i2c_sysfs_base.h"
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"

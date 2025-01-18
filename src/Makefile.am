@@ -1,10 +1,10 @@
 # src/Makefile.am
 
-DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dynvcp i2c libmain  sample_clients test usb usb_util util vcp
+DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dynvcp i2c libmain sysfs  sample_clients test usb usb_util util vcp
 # contain only header files:
 EXTRA_DIST = bsd private public
 
-SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc
+SUBDIRS = util usb_util base vcp sysfs i2c usb dynvcp ddc
 if INCLUDE_TESTCASES_COND
 SUBDIRS += test
 endif 
@@ -209,6 +209,7 @@ libcommon_la_LIBADD = \
 ddc/libddc.la    \
 dynvcp/libdynvcp.la \
 i2c/libi2c.la    \
+sysfs/libsysfs.la \
 vcp/libvcp.la    \
 cmdline/libcmdline.la \
 base/libbase.la  \

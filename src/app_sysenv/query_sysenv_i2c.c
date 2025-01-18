@@ -3,7 +3,7 @@
  * Check I2C devices using directly coded I2C calls
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -30,10 +30,11 @@
 #include "base/status_code_mgt.h"
 /** \endcond */
 
+#include "sysfs/i2c_sysfs_base.h"
+
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_execute.h"
-#include "i2c/i2c_sysfs_base.h"
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs.h"

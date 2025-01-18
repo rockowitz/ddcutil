@@ -26,9 +26,9 @@
 #include "base/per_display_data.h"
 #include "base/rtti.h"
 
-#include "i2c/i2c_sysfs_conflicting_drivers.h"
-#include "i2c/i2c_sys_drm_connector.h"
-#include "i2c/i2c_dpms.h"
+#include "sysfs/i2c_dpms.h"
+#include "sysfs/i2c_sys_drm_connector.h"
+#include "sysfs/i2c_sysfs_conflicting_drivers.h"
 
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_display_selection.h"

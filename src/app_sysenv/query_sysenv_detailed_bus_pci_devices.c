@@ -4,7 +4,7 @@
  *  that performs minimal filtering of attributes.
  */
 
-// Copyright (C) 2022-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  /** \cond */
@@ -32,7 +32,7 @@
 #include "base/rtti.h"
 /** \endcond */
 
-#include "i2c/i2c_sys_drm_connector.h"
+#include "sysfs/i2c_sys_drm_connector.h"
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs_common.h"

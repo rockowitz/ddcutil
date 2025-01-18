@@ -2,7 +2,7 @@
  *  DPMS related functions
  */
 
-// Copyright (C) 2023-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_DPMS_H_

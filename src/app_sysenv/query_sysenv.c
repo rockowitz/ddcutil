@@ -55,8 +55,9 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_execute.h"   // for i2c_forceable_slave_addr_flag
-#include "i2c/i2c_sysfs_base.h"
-#include "i2c/i2c_sys_drm_connector.h"
+
+#include "sysfs/i2c_sysfs_base.h"
+#include "sysfs/i2c_sys_drm_connector.h"
 
 #include "ddc/ddc_displays.h"     // for ddc_ensure_displays_detected()
 #include "ddc/ddc_display_ref_reports.h"

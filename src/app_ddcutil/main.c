@@ -76,12 +76,12 @@
 #include "dynvcp/dyn_parsed_capabilities.h"
 
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_dpms.h"
+#include <sysfs/i2c_dpms.h>
 #include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_sys_drm_connector.h"
+#include <sysfs/i2c_sys_drm_connector.h>
 // #include "i2c/i2c_sysfs_i2c_info.h"
-#include "i2c/i2c_sysfs_top.h"
-#include "i2c/i2c_sysfs_base.h"
+#include <sysfs/i2c_sysfs_top.h>
+#include <sysfs/i2c_sysfs_base.h>
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"

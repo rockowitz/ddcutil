@@ -1,6 +1,6 @@
 /** @file ddc_status_events.c */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -17,7 +17,7 @@
 #include "base/core.h"
 #include "base/rtti.h"
 
-#include "i2c/i2c_sys_drm_connector.h"
+#include "sysfs/i2c_sys_drm_connector.h"
 
 #include "ddc_status_events.h"
 

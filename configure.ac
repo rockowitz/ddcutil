@@ -2,7 +2,7 @@
 # ddcutil autotools configure script 
 #
 
-# Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+# Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 dnl General notes:  
@@ -73,6 +73,7 @@ AC_CONFIG_FILES([
 	src/base/Makefile
 	src/vcp/Makefile
 	src/dynvcp/Makefile
+	src/sysfs/Makefile
 	src/i2c/Makefile
 	src/usb/Makefile
 	src/ddc/Makefile

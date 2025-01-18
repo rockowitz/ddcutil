@@ -65,18 +65,20 @@
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
 
+#include "sysfs/i2c_sysfs_i2c_info.h"
+#include "sysfs/i2c_dpms.h"
+#include "sysfs/i2c_sysfs_base.h"
+#include "sysfs/i2c_sys_drm_connector.h"
+#include "sysfs/i2c_sysfs_conflicting_drivers.h"
+// #include "sysfs/i2c_sysfs_top.h"
+
 #ifdef TARGET_BSD
 #include "bsd/i2c-dev.h"
 #else
 #include "i2c/wrap_i2c-dev.h"
 #endif
-#include "i2c/i2c_sysfs_i2c_info.h"
-#include "i2c/i2c_dpms.h"
+
 #include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_sysfs_base.h"
-#include "i2c/i2c_sys_drm_connector.h"
-#include "i2c/i2c_sysfs_conflicting_drivers.h"
-// #include "i2c/i2c_sysfs_top.h"
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_edid.h"
 

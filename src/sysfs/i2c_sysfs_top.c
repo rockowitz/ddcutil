@@ -1,6 +1,6 @@
 /** i2c_sysfs_top.c */
 
-// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 #include <glib-2.0/glib.h>
@@ -8,9 +8,9 @@
 #include "util/data_structures.h"
 #include "util/report_util.h"
 
+#include "i2c_sys_drm_connector.h"
 #include "i2c_sysfs_conflicting_drivers.h"
 #include "i2c_sysfs_i2c_info.h"
-#include "i2c/i2c_sys_drm_connector.h"
 
 #include "i2c_sysfs_top.h"
 

@@ -1,6 +1,6 @@
 /** @file i2c_sysfs_conflicting_drivers.h */
 
-// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_SYSFS_CONFLICTING_DRIVERS_H_
@@ -9,7 +9,6 @@
 #include <glib-2.0/glib.h>
 
 #include "util/coredefs.h"
-
 
 typedef struct {
    int     i2c_busno;

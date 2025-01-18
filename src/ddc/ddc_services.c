@@ -28,12 +28,14 @@
 #include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
-#include "dynvcp/vcp_feature_set.h"
 
+#include "dynvcp/vcp_feature_set.h"
 #include "dynvcp/dyn_feature_codes.h"
 #include "dynvcp/dyn_feature_set.h"
 #include "dynvcp/dyn_feature_files.h"
 #include "dynvcp/dyn_parsed_capabilities.h"
+
+#include "sysfs/sysfs_services.h"
 
 #include "i2c/i2c_services.h"
 
@@ -199,6 +201,9 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
 void init_ddc_services() {
    bool debug = false;
    DBGMSF(debug, "Starting");
+
+   // sysfs
+   init_sysfs_services();
 
    // i2c:
    init_i2c_services();

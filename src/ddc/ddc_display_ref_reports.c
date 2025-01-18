@@ -4,7 +4,7 @@
  *  ddc_display_ref_reports.c and ddc_displays.c cross-reference each other.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -29,11 +29,12 @@
 #include "base/per_display_data.h"
 #include "base/rtti.h"
 
+#include "sysfs/i2c_sys_drm_connector.h"
+#include "sysfs/i2c_sysfs_base.h"
+#include "sysfs/i2c_sysfs_conflicting_drivers.h"
+#include "sysfs/i2c_sysfs_top.h"
+
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_sysfs_base.h"
-#include "i2c/i2c_sysfs_top.h"
-#include "i2c/i2c_sysfs_conflicting_drivers.h"
-#include "i2c/i2c_sys_drm_connector.h"
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"

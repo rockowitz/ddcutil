@@ -42,12 +42,13 @@
 #include "base/trace_control.h"
 #include "base/tuned_sleep.h"
 
+#include "sysfs/i2c_sysfs_base.h"
+
 #include "cmdline/cmd_parser.h"
 #include "cmdline/parsed_cmd.h"
 
 #include "i2c/i2c_bus_core.h"   // for testing watch_devices
 #include "i2c/i2c_execute.h"    // for i2c_set_addr()
-#include "i2c/i2c_sysfs_base.h"
 
 #include "ddc/ddc_common_init.h"
 #include "ddc/ddc_displays.h"

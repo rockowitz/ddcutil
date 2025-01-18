@@ -1,6 +1,6 @@
 /** @file ddc_phantom_displays.c  Phantom display detection*/
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 #include "config.h"
@@ -15,7 +15,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#include "i2c/i2c_sysfs_base.h"
+#include "sysfs/i2c_sysfs_base.h"
 
 #include "ddc_phantom_displays.h"
 

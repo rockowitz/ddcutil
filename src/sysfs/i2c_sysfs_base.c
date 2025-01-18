@@ -1,6 +1,6 @@
 // i2c_sysfs_base.c
 
- // Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+ // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -13,13 +13,14 @@
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 /** \endcond */
 
-
+#include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #ifdef USE_LIBDRM
@@ -43,9 +44,9 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#include "i2c/i2c_sysfs_i2c_info.h"   // ugh
+#include "i2c_sysfs_i2c_info.h"   // ugh - circular
 
-#include "i2c/i2c_sysfs_base.h"
+#include "i2c_sysfs_base.h"
 
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;

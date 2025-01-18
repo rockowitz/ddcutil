@@ -43,6 +43,9 @@
 #include "base/stats.h"
 #include "base/tuned_sleep.h"
 
+#include "sysfs/i2c_sysfs_base.h"
+#include "sysfs/i2c_sys_drm_connector.h"
+
 #include "vcp/persistent_capabilities.h"
 
 #include "dynvcp/dyn_feature_files.h"
@@ -51,8 +54,6 @@
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_sysfs_base.h"
-#include "i2c/i2c_sys_drm_connector.h"
 
 #include "ddc_displays.h"
 #include "ddc/ddc_initial_checks.h"
