@@ -49,38 +49,9 @@
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_SYSFS;
 
-
 //
-// Predicate functions
+// Predicate Functions
 //
-
-// typedef Dir_Filter_Func
-bool is_drm_connector(const char * dirname, const char * simple_fn) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
-   bool result = false;
-   if (str_starts_with(simple_fn, "card")) {
-      char * s0 = g_strdup( simple_fn + 4);   // work around const char *
-      char * s = s0;
-      while (isdigit(*s)) s++;
-      if (*s == '-')
-         result = true;
-      free(s0);
-   }
-   DBGMSF(debug, "Done.     Returning %s", SBOOL(result));
-   return result;
-}
-
-
-bool fn_equal(const char * filename, const char * val) {
-   return streq(filename, val);
-}
-
-
-bool fn_starts_with(const char * filename, const char * val) {
-   return str_starts_with(filename, val);
-}
-
 
 bool is_n_nnnn(const char * dirname, const char * simple_fn) {
    bool result = predicate_any_D_00hh(simple_fn);
@@ -95,7 +66,6 @@ bool fn_any(const char * filename, const char * ignore) {
    return true;
 }
 #endif
-
 
 //
 // *** Common Functions

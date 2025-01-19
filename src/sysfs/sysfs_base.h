@@ -19,9 +19,6 @@ extern bool enable_write_detect_to_status;
 
 // predicate functions
 // typedef Dir_Filter_Func
-bool        is_drm_connector(const char * dirname, const char * simple_fn);
-bool        fn_equal(const char * filename, const char * val);
-bool        fn_starts_with(const char * filename, const char * val);
 bool        is_n_nnnn(const char * dirname, const char * simple_fn);
 
 GPtrArray * get_sys_video_devices();

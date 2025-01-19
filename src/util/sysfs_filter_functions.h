@@ -1,7 +1,7 @@
 /** \f sysfs_filter_functions.h
   */
 
-//// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+//// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SYSFS_FILTER_FUNCTIONS_H_
@@ -11,18 +11,22 @@
 
 #include "data_structures.h"
 
-
-
 // Filename_Filter_Func
 
 bool predicate_cardN(          const char * value);
 bool predicate_cardN_connector(const char * value);
 bool predicate_i2c_N(          const char * value);
 bool predicate_any_D_00hh(     const char * value);
-bool predicate_exact_D_00hh(   const char * value, const char * sbusno);
+
+// Filename_Filter_Func_With_Arg
+
+bool fn_equal(              const char * filename, const char * val);
+bool fn_starts_with(        const char * filename, const char * val);
+bool predicate_exact_D_00hh(const char * value,    const char * sbusno);
 
 // Dir_Filter_Func
 
+bool is_drm_connector(     const char * dirname, const char * simple_fn);
 bool is_i2cN_dir(          const char * dirname, const char * fn_ignored); // for e.g. dirname i2c-3
 bool is_drm_dp_aux_subdir( const char * dirname, const char * val);
 bool is_card_connector_dir(const char * dirname, const char * simple_fn); // for e.g. card0-DP-1
