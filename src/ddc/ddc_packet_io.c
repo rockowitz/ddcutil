@@ -42,6 +42,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/parms.h"
 #include "base/rtti.h"
+#include "base/sleep.h"
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
 #include "base/per_display_data.h"

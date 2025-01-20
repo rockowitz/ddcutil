@@ -38,6 +38,7 @@
 #include "base/parms.h"
 #include "base/per_display_data.h"
 #include "base/rtti.h"
+#include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
 #include "sysfs/sysfs_dpms.h"

@@ -43,6 +43,7 @@
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/rtti.h"
+#include "base/sleep.h"
 /** \endcond */
 
 #include "sysfs/sysfs_base.h"

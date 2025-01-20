@@ -5,7 +5,7 @@
  * tracing and and maintain sleep statistics.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -15,6 +15,7 @@
 #include <unistd.h>
 /** \endcond */
 
+#include "util/common_inlines.h"
 #include "util/report_util.h"
 #include "util/timestamp.h"
 
@@ -123,3 +124,23 @@ void sleep_millis_with_trace(
    if (milliseconds > 0)
       sleep_millis(milliseconds);
 }
+
+
+// Special sleep function for watching display connection changes
+// TODO: Integrate with sleep_millis_with_trace()
+
+void dw_sleep_millis(DDCA_Syslog_Level level,
+                     const char *      func,
+                     int               line,
+                     const char *      file,
+                     uint              millis,
+                     const char *      msg)
+{
+   bool debug = false;
+   DBGMSF(debug, "func=%s, millis=%d, micros=%ld", func, millis, MILLIS2MICROS(millis));
+   usleep((uint64_t)1000*millis);
+   // Alternatively, use syslog() instead of SYSLOG2() to ensure that msg is
+   // written to system log no matter what ddcutil log level cutoff is in effect
+   SYSLOG2(level, "[%d](%s) Slept for %d millisec: %s", tid(), func, millis, msg);
+}
+
