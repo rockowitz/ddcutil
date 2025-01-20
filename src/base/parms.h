@@ -158,7 +158,7 @@
 #define DEFAULT_STABILIZATION_POLL_MILLISEC 100
 
 // When checking that DDC communication has become enabled,
-// checks occur at increasing multipliers of this value.
+// checks occur at increasing multiples of this value.
 #define WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC 500
 
 //
