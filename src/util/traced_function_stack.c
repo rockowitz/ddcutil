@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <syslog.h>
 
+#include "common_inlines.h"
 #include "backtrace.h"
 #include "glib_util.h"
 

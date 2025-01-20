@@ -15,6 +15,7 @@
 #include <syslog.h>
 #include <time.h>
 
+#include "common_inlines.h"
 #include "glib_util.h"
 #include "timestamp.h"
 #include "traced_function_stack.h"
