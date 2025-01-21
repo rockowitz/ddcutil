@@ -59,7 +59,7 @@ GPtrArray* display_detection_callbacks = NULL;
  *  The function must be of type DDDCA_Display_Detection_Callback_Func.
  *  It is not an error if the function is already registered.
  */
-DDCA_Status ddc_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
+DDCA_Status dw_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
@@ -87,7 +87,7 @@ DDCA_Status ddc_register_display_status_callback(DDCA_Display_Status_Callback_Fu
  *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *                                  or not all video devices support DRM
  */
-DDCA_Status ddc_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) {
+DDCA_Status dw_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
@@ -103,7 +103,7 @@ DDCA_Status ddc_unregister_display_status_callback(DDCA_Display_Status_Callback_
 }
 
 
-const char * ddc_display_event_class_name(DDCA_Display_Event_Class class) {
+const char * dw_display_event_class_name(DDCA_Display_Event_Class class) {
    char * result = NULL;
    switch(class) {
    case DDCA_EVENT_CLASS_NONE:               result = "DDCA_EVENT_CLASS_NONE";               break;
@@ -115,7 +115,7 @@ const char * ddc_display_event_class_name(DDCA_Display_Event_Class class) {
 }
 
 
-const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
+const char * dw_display_event_type_name(DDCA_Display_Event_Type event_type) {
    char * result = NULL;
    switch(event_type) {
    case DDCA_EVENT_DISPLAY_CONNECTED:    result = "DDCA_EVENT_DISPLAY_CONNECTED";    break;
@@ -133,7 +133,7 @@ char * display_status_event_repr(DDCA_Display_Status_Event evt) {
    char * s = g_strdup_printf(
       "DDCA_Display_Status_Event[%s:  %s, %s, dref: %s, io_path:/dev/i2c-%d, ddc working: %s]",
       formatted_time_t(evt.timestamp_nanos),   // will this clobber a wrapping DBGTRC?
-      ddc_display_event_type_name(evt.event_type),
+      dw_display_event_type_name(evt.event_type),
                                   evt.connector_name,
                                   ddca_dref_repr_t(evt.dref),
                                   evt.io_path.path.i2c_busno,
@@ -154,7 +154,7 @@ char * display_status_event_repr_t(DDCA_Display_Status_Event evt) {
 
 
 DDCA_Display_Status_Event
-ddc_create_display_status_event(
+dw_create_display_status_event(
       DDCA_Display_Event_Type event_type,
       const char *            connector_name,
       Display_Ref*            dref,
@@ -190,7 +190,7 @@ ddc_create_display_status_event(
  *
  *  @param  evt
  */
-void ddc_emit_display_status_record(
+void dw_emit_display_status_record(
       DDCA_Display_Status_Event  evt)
 {
    bool debug = false;
@@ -224,7 +224,7 @@ GMutex emit_or_queue_mutex;
  *  @param  io_path     for DDCA_EVENT_BUS_ATTACHED or DDCA_EVENT_BUS_DETACHED
  *  @param  queue       if non-null, append status event record
  */
-void ddc_emit_or_queue_display_status_event(
+void dw_emit_or_queue_display_status_event(
       DDCA_Display_Event_Type event_type,
       const char *            connector_name,
       Display_Ref*            dref,
@@ -235,21 +235,21 @@ void ddc_emit_or_queue_display_status_event(
    if (dref) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, dispno=%d, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
             dref, dref_reprx_t(dref), dref->dispno, SBOOL(dref->flags&DREF_REMOVED),
-            event_type, ddc_display_event_type_name(event_type), connector_name);
+            event_type, dw_display_event_type_name(event_type), connector_name);
 #ifdef NEW
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
             dref, dref_reprx_t(dref),
-            event_type, ddc_display_event_type_name(event_type));
+            event_type, dw_display_event_type_name(event_type));
 #endif
    }
    else {
       DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, io_path=%s, event_type=%d=%s",
             connector_name,
             dpath_repr_t(&io_path),
-            event_type, ddc_display_event_type_name(event_type));
+            event_type, dw_display_event_type_name(event_type));
    }
 
-   DDCA_Display_Status_Event evt = ddc_create_display_status_event(
+   DDCA_Display_Status_Event evt = dw_create_display_status_event(
          event_type,
          connector_name,
          dref,
@@ -261,7 +261,7 @@ void ddc_emit_or_queue_display_status_event(
    if (queue)
       g_array_append_val(queue,evt);   // TODO also need to lock where queue flushed
    else
-      ddc_emit_display_status_record(evt);
+      dw_emit_display_status_record(evt);
    g_mutex_unlock(&emit_or_queue_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -269,9 +269,9 @@ void ddc_emit_or_queue_display_status_event(
 
 
 void init_dw_status_events() {
-   RTTI_ADD_FUNC(ddc_create_display_status_event);
-   RTTI_ADD_FUNC(ddc_emit_or_queue_display_status_event);
-   RTTI_ADD_FUNC(ddc_emit_display_status_record);
-   RTTI_ADD_FUNC(ddc_register_display_status_callback);
-   RTTI_ADD_FUNC(ddc_unregister_display_status_callback);
+   RTTI_ADD_FUNC(dw_create_display_status_event);
+   RTTI_ADD_FUNC(dw_emit_or_queue_display_status_event);
+   RTTI_ADD_FUNC(dw_emit_display_status_record);
+   RTTI_ADD_FUNC(dw_register_display_status_callback);
+   RTTI_ADD_FUNC(dw_unregister_display_status_callback);
 }

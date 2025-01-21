@@ -174,7 +174,7 @@ STATIC void process_screen_change_event(
                  assert(dref);
                  DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sleep change event for dref=%p->%s", dref, dref_repr_t(dref));
                  DDCA_Display_Event_Type event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
-                 ddc_emit_or_queue_display_status_event(event_type, dref->drm_connector, dref, dref->io_path, NULL);
+                 dw_emit_or_queue_display_status_event(event_type, dref->drm_connector, dref, dref->io_path, NULL);
                  businfo->last_checked_dpms_asleep = is_dpms_asleep;
               }
            }
@@ -264,7 +264,7 @@ gpointer ddc_recheck_displays_func(gpointer data) {
             free(s);
             dref->dispno = ++dispno_max;
 
-            ddc_emit_or_queue_display_status_event(
+            dw_emit_or_queue_display_status_event(
                   DDCA_EVENT_DDC_ENABLED,
                   dref->drm_connector,
                   dref,
@@ -280,7 +280,7 @@ gpointer ddc_recheck_displays_func(gpointer data) {
              free(s);
 
              dref->dispno = DISPNO_REMOVED;
-             ddc_emit_or_queue_display_status_event(
+             dw_emit_or_queue_display_status_event(
                    DDCA_EVENT_DISPLAY_DISCONNECTED,
                    dref->drm_connector,
                    dref,

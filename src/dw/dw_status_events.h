@@ -13,19 +13,19 @@
 #include "base/displays.h"
 
 // Display Status Events
-DDCA_Status  ddc_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
-DDCA_Status  ddc_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
-const char * ddc_display_event_class_name(DDCA_Display_Event_Class class);
-const char*  ddc_display_event_type_name(DDCA_Display_Event_Type event_type);
+DDCA_Status  dw_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
+DDCA_Status  dw_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
+const char * dw_display_event_class_name(DDCA_Display_Event_Class class);
+const char*  dw_display_event_type_name(DDCA_Display_Event_Type event_type);
 char *       display_status_event_repr(DDCA_Display_Status_Event evt);
 char *       display_status_event_repr_t(DDCA_Display_Status_Event evt);
 DDCA_Display_Status_Event
-             ddc_create_display_status_event(DDCA_Display_Event_Type event_type,
+             dw_create_display_status_event(DDCA_Display_Event_Type event_type,
                                              const char *            connector_name,
                                              Display_Ref*            dref,
                                              DDCA_IO_Path            io_path);
-void         ddc_emit_display_status_record(DDCA_Display_Status_Event  evt);
-void         ddc_emit_or_queue_display_status_event(DDCA_Display_Event_Type event_type,
+void         dw_emit_display_status_record(DDCA_Display_Status_Event  evt);
+void         dw_emit_or_queue_display_status_event(DDCA_Display_Event_Type event_type,
                                               const char *            connector_name,
                                               Display_Ref*            dref,
                                               DDCA_IO_Path            io_path,

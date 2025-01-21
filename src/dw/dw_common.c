@@ -224,7 +224,7 @@ void dw_i2c_emit_deferred_events(GArray * deferred_events) {
    for (int ndx = 0; ndx < deferred_events->len; ndx++) {
       DDCA_Display_Status_Event evt = g_array_index(deferred_events, DDCA_Display_Status_Event, ndx);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Emitting deferred event %s", display_status_event_repr_t(evt));
-      ddc_emit_display_status_record(evt);
+      dw_emit_display_status_record(evt);
    }
    g_array_remove_range(deferred_events,0, deferred_events->len);
 }
@@ -360,7 +360,7 @@ bool dw_i2c_hotplug_change_handler(
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
       Display_Ref* dref = ddc_remove_display_by_businfo(businfo);
       if (dref) {
-         ddc_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
+         dw_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
                dref->drm_connector, dref, dref->io_path, events_queue);
          event_emitted = true;
       }
@@ -398,7 +398,7 @@ bool dw_i2c_hotplug_change_handler(
              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
              g_ptr_array_add(drefs_to_recheck, dref);
           }
-          ddc_emit_or_queue_display_status_event(
+          dw_emit_or_queue_display_status_event(
              DDCA_EVENT_DISPLAY_CONNECTED, businfo->drm_connector_name, dref, path, events_queue);
           event_emitted = true;
        }
