@@ -371,7 +371,7 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
 
 STATIC void
 init_display_watch_options(Parsed_Cmd* parsed_cmd) {
-   ddc_watch_mode = parsed_cmd->watch_mode;
+   watch_displays_mode = parsed_cmd->watch_mode;
    enable_watch_displays = parsed_cmd->flags & CMD_FLAG_WATCH_DISPLAY_EVENTS;
    try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
 
