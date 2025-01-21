@@ -397,6 +397,33 @@ dw_redetect_displays() {
 }
 
 
+// Temporary hidden location, will move to api.base.c when/if published
+
+void ddca_get_display_watch_settings(DDCA_DW_Settings * settings) {
+   // settings->watch_mode = ddc_watch_mode;
+
+   settings->udev_watch_loop_interval_millisec   = udev_watch_loop_millisec;
+   settings->poll_watch_loop_interval_millisec   = poll_watch_loop_millisec;
+   settings->xevent_watch_loop_interval_millisec = xevent_watch_loop_millisec;
+
+   settings->initial_stabilization_millisec      = initial_stabilization_millisec;
+   settings->stabilization_poll_millisec         = stabilization_poll_millisec;
+
+   // settings->watch_retry_thread_sleep_factor_millisec;
+}
+
+void ddca_set_display_watch_settings(DDCA_DW_Settings * settings) {
+   udev_watch_loop_millisec   =     settings->udev_watch_loop_interval_millisec;
+   poll_watch_loop_millisec   =     settings->poll_watch_loop_interval_millisec;
+   xevent_watch_loop_millisec =     settings->xevent_watch_loop_interval_millisec;
+
+   initial_stabilization_millisec = settings->initial_stabilization_millisec;
+   stabilization_poll_millisec =    settings->stabilization_poll_millisec;
+
+   // settings->watch_retry_thread_sleep_factor_millisec;
+}
+
+
 void init_dw_main() {
    RTTI_ADD_FUNC(dw_start_watch_displays);
    RTTI_ADD_FUNC(dw_stop_watch_displays);
