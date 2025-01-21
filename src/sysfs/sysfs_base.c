@@ -1429,7 +1429,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
 }
 
 
-int search_all_businfo_record_by_connector_name(char *connector_name) {
+int search_all_businfo_records_by_connector_name(char *connector_name) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name = |%s|", connector_name);
 
@@ -1474,7 +1474,7 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
    RTTI_ADD_FUNC(is_sysfs_reliable);
-   RTTI_ADD_FUNC(search_all_businfo_record_by_connector_name);
+   RTTI_ADD_FUNC(search_all_businfo_records_by_connector_name);
 #ifdef UNUSED
    RTTI_ADD_FUNC(get_sys_video_devices);
 #endif

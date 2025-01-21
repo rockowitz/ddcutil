@@ -104,7 +104,7 @@ sysfs_is_ignorable_i2c_device(
 
 // moved from dw_udev.h:
 
-int              search_all_businfo_record_by_connector_name(char *connector_name);
+int              search_all_businfo_records_by_connector_name(char *connector_name);
 
 
 

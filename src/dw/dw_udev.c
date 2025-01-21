@@ -310,7 +310,7 @@ Bit_Set_256 dw_i2c_check_bus_changes_for_connector(
          connector_number, connector_name, BS256_REPR(bs_prev_buses_w_edid));
 
    Bit_Set_256 bs_new_buses_w_edid = bs_prev_buses_w_edid;
-   int busno = search_all_businfo_record_by_connector_name(connector_name);
+   int busno = search_all_businfo_records_by_connector_name(connector_name);
    // busno -1 possible for added hub devices, only the one w attached monitor will have busno
    if (busno < 0)
       goto bye;
