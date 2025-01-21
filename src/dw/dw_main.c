@@ -70,7 +70,7 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
-DDC_Watch_Mode   ddc_watch_mode = DEFAULT_WATCH_MODE;
+DDCA_Watch_Mode   ddc_watch_mode = DEFAULT_WATCH_MODE;
 bool             enable_watch_displays = true;
 
 // some of these go elsewhere
@@ -90,12 +90,12 @@ static GMutex    watch_thread_mutex;
  *                        XEvent_Data struct, if the resolved mode is Watch_Mode_Xevent
  *  @return actual watch mode to be used
  */
-STATIC DDC_Watch_Mode
-resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
+STATIC DDCA_Watch_Mode
+resolve_watch_mode(DDCA_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s xev_data_loc=%p", ddc_watch_mode_name(initial_mode), xev_data_loc);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s xev_data_loc=%p", watch_mode_name(initial_mode), xev_data_loc);
 
-   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
+   DDCA_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
    XEvent_Data * xevdata = NULL;
    *xev_data_loc = NULL;
 
@@ -132,7 +132,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
    else {
       resolved_watch_mode = initial_mode;
    }
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "initially resolved watch mode = %s", ddc_watch_mode_name(resolved_watch_mode));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "initially resolved watch mode = %s", watch_mode_name(resolved_watch_mode));
 
 #ifdef NO
     if (resolved_watch_mode  == Watch_Mode_Udev) {
@@ -159,7 +159,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
       dw_dbgrpt_xevent_data(*xev_data_loc,  0);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s. *xev_data_loc: %p",
-         ddc_watch_mode_name(resolved_watch_mode),  *xev_data_loc);
+         watch_mode_name(resolved_watch_mode),  *xev_data_loc);
    return resolved_watch_mode;
 }
 
@@ -178,7 +178,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
         "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
-        ddc_watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
+        watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    Error_Info * err = NULL;
    XEvent_Data * xev_data = NULL;
    // DDC_Watch_Mode resolved_watch_mode;
@@ -193,14 +193,14 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(ddc_watch_mode, &xev_data);
+   DDCA_Watch_Mode resolved_watch_mode = resolve_watch_mode(ddc_watch_mode, &xev_data);
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
 
    int calculated_watch_loop_millisec = dw_calc_watch_loop_millisec(resolved_watch_mode);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
-         ddc_watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
+         watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
 
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
 // MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
@@ -280,7 +280,7 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
 
    if (watch_thread) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "resolved_watch_mode = %s",
-                                            ddc_watch_mode_name(global_wdd->watch_mode));
+                                            watch_mode_name(global_wdd->watch_mode));
       if (global_wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {
             dw_send_x11_termination_message(global_wdd->evdata);

@@ -996,7 +996,7 @@ parse_command(
       disable_tgefs_expl = "do not try to get EDID from /sys (default)";
    }
 
-   DDC_Watch_Mode default_watch_mode = DEFAULT_WATCH_MODE;
+   DDCA_Watch_Mode default_watch_mode = DEFAULT_WATCH_MODE;
    char * default_watch_mode_keyword;
    switch(default_watch_mode) {
    case Watch_Mode_Dynamic:  default_watch_mode_keyword = "DYNAMIC"; break;

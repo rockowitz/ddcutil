@@ -256,7 +256,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
       RPT_CMDFLAG("watch hotplug events", CMD_FLAG_WATCH_DISPLAY_EVENTS,                d1);
       rpt_vstring(d1, "watch_mode                                               : %s",
-            ddc_watch_mode_name(parsed_cmd->watch_mode));
+            watch_mode_name(parsed_cmd->watch_mode));
       RPT_CMDFLAG("disable API",          CMD_FLAG_DISABLE_API,                                 d1);
 
       rpt_nl();

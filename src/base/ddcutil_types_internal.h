@@ -64,9 +64,17 @@ typedef struct {
 // uses -1,-1 for unset
 
 
+typedef enum {
+   Watch_Mode_Poll,
+   Watch_Mode_Xevent,
+   Watch_Mode_Udev,
+   Watch_Mode_Dynamic,
+} DDCA_Watch_Mode;
+
+
 //! For tuning display watch logic
 typedef struct {
-   // DDC_Watch_Mode watch_mode;    // can this be changed dynamically?  needs to be a DDCA type if exposed
+   DDCA_Watch_Mode watch_mode;    // can this be changed dynamically?
 
    uint16_t  udev_watch_loop_interval_millisec;
    uint16_t  poll_watch_loop_interval_millisec;

@@ -74,7 +74,7 @@ int       xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 bool      terminate_using_x11_event      = false;
 
 
-int dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
+int dw_calc_watch_loop_millisec(DDCA_Watch_Mode watch_mode) {
    assert(watch_mode != Watch_Mode_Dynamic);
    int final_answer = 0;
 

@@ -24,7 +24,7 @@ extern int       xevent_watch_loop_millisec;
 extern int       calculated_watch_loop_millisec;
 extern bool      terminate_using_x11_event;
 
-int  dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);
+int  dw_calc_watch_loop_millisec(DDCA_Watch_Mode watch_mode);
 int  dw_split_sleep(int watch_loop_millisec);
 void dw_terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid);
 
@@ -40,7 +40,7 @@ typedef struct {
    pid_t                    main_process_id;
    pid_t                    main_thread_id;
    DDCA_Display_Event_Class event_classes;
-   DDC_Watch_Mode           watch_mode;
+   DDCA_Watch_Mode           watch_mode;
    int                      watch_loop_millisec;
    XEvent_Data *            evdata;
   } Watch_Displays_Data;
