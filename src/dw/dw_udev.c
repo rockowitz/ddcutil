@@ -127,7 +127,7 @@ void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
  *  @return true if edid attribute has value, false if not
  */
 bool
-ddc_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool prior_has_edid) {
+dw_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool prior_has_edid) {
    bool debug = false;
    // int debug_depth = (debug) ? 1 : -1;
    DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector_name=%s, prior_has_edid =%s",
@@ -189,7 +189,7 @@ ddc_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool 
  *  @return true if sysfs connnector dir attribute edid has value, false if not
  */
 bool
-ddc_i2c_stabilized_bus_by_connector_id(int connector_id, bool prior_has_edid) {
+dw_i2c_stabilized_bus_by_connector_id(int connector_id, bool prior_has_edid) {
    bool debug = false;
    // int debug_depth = (debug) ? 1 : -1;
    DBGTRC_STARTING(debug, TRACE_GROUP, "connector_id=%d, prior_has_edid =%s",
@@ -199,7 +199,7 @@ ddc_i2c_stabilized_bus_by_connector_id(int connector_id, bool prior_has_edid) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "drm_connector_name = |%s|", drm_connector_name);
    assert(drm_connector_name);
 
-   prior_has_edid = ddc_i2c_stabilized_single_bus_by_connector_name(
+   prior_has_edid = dw_i2c_stabilized_single_bus_by_connector_name(
                           drm_connector_name, prior_has_edid);
 
    free(drm_connector_name);
@@ -219,7 +219,7 @@ ddc_i2c_stabilized_bus_by_connector_id(int connector_id, bool prior_has_edid) {
  *                               if non-null, put events on the queue
  *  @return updated set of buses having edid
  */
-Bit_Set_256 ddc_i2c_check_bus_changes(
+Bit_Set_256 dw_i2c_check_bus_changes(
       Bit_Set_256 bs_prev_buses_w_edid,
       GArray *    events_queue)
 {
@@ -338,7 +338,7 @@ int search_all_businfo_record_by_connector_name(char *connector_name) {
  *                               if non-null, put events on the queue
  *  @return updated set of buses having edid
  */
-Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
+Bit_Set_256 dw_i2c_check_bus_changes_for_connector(
       int         connector_number,
       char *      connector_name,
       Bit_Set_256 bs_prev_buses_w_edid,
@@ -358,7 +358,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
    bool prior_has_edid = bs256_contains(bs_prev_buses_w_edid, busno);
    bool stabilized_bus_has_edid =
         // ddc_i2c_stabilized_bus_by_connector_id(connector_number, prior_has_edid);
-        ddc_i2c_stabilized_single_bus_by_connector_name(connector_name, prior_has_edid);
+        dw_i2c_stabilized_single_bus_by_connector_name(connector_name, prior_has_edid);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "ddc_i2c_stabilized_bus_by_connector_id() returned %s",
          SBOOL(stabilized_bus_has_edid));
@@ -400,7 +400,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
 
 
 #ifdef BAD
-Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
+Bit_Set_256 dw_i2c_check_bus_changes_for_connector(
       int         connector_number,
       char *      connector_name,
       Bit_Set_256 bs_prev_buses_w_edid,
@@ -492,7 +492,7 @@ void debug_watch_state(int connector_number, char * cname) {
  *
  *  @param data   #Watch_Displays_Data passed from creator thread
  */
-gpointer ddc_watch_displays_udev(gpointer data) {
+gpointer dw_watch_displays_udev(gpointer data) {
    bool debug = false;
    bool debug_sysfs_state = false;
    bool use_deferred_event_queue = false;
@@ -734,7 +734,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
 
                if (cname) {
                   DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "1) Using connector id %d, name =%s", connector_number, cname);
-                  bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
+                  bs_cur_buses_w_edid = dw_i2c_check_bus_changes_for_connector(
                                         connector_number, cname, bs_cur_buses_w_edid,
                                         deferred_events);
                   // xxx("drm change case1");
@@ -753,7 +753,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
                      DBGTRC(true, DDCA_TRC_NONE,
                            "2) connector name reported by get_sys_drm_connector_name_by_busno(): %s",
                            cname);
-                     bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
+                     bs_cur_buses_w_edid = dw_i2c_check_bus_changes_for_connector(
                                         connector_number, cname, bs_cur_buses_w_edid, deferred_events);
                      processed = true;
                   }
@@ -768,7 +768,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
                   if (cname) {
                      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
                            "3) connector name reported by get_sys_drm_connector_name_by_busno(): %s", cname);
-                     bs_cur_buses_w_edid = ddc_i2c_check_bus_changes_for_connector(
+                     bs_cur_buses_w_edid = dw_i2c_check_bus_changes_for_connector(
                                         connector_number, cname, bs_cur_buses_w_edid, deferred_events);
                      processed = true;
                   }
@@ -781,7 +781,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
          if (!processed) {
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "4) Calling ddc_i2c_check_bus_changes");
             // emits display change events or queues them
-            bs_cur_buses_w_edid = ddc_i2c_check_bus_changes(bs_cur_buses_w_edid, deferred_events);
+            bs_cur_buses_w_edid = dw_i2c_check_bus_changes(bs_cur_buses_w_edid, deferred_events);
          }
 
         if (watch_dpms) {
@@ -817,13 +817,13 @@ void init_dw_udev() {
    RTTI_ADD_FUNC(ddc_i2c_filter_sleep_events);
 #endif
    RTTI_ADD_FUNC(search_all_businfo_record_by_connector_name);
-   RTTI_ADD_FUNC(ddc_i2c_check_bus_changes);
-   RTTI_ADD_FUNC(ddc_i2c_check_bus_changes_for_connector);
-   RTTI_ADD_FUNC(ddc_i2c_stabilized_bus_by_connector_id);
-   RTTI_ADD_FUNC(ddc_i2c_stabilized_single_bus_by_connector_name);
+   RTTI_ADD_FUNC(dw_i2c_check_bus_changes);
+   RTTI_ADD_FUNC(dw_i2c_check_bus_changes_for_connector);
+   RTTI_ADD_FUNC(dw_i2c_stabilized_bus_by_connector_id);
+   RTTI_ADD_FUNC(dw_i2c_stabilized_single_bus_by_connector_name);
 #ifdef WATCH_DPMS
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
 #endif
-   RTTI_ADD_FUNC(ddc_watch_displays_udev);
+   RTTI_ADD_FUNC(dw_watch_displays_udev);
 #endif
 }

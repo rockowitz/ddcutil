@@ -18,7 +18,7 @@
 extern bool use_sysfs_connector_id;
 extern bool report_udev_events;
 
-gpointer    ddc_watch_displays_udev(gpointer data);
+gpointer    dw_watch_displays_udev(gpointer data);
 void        init_dw_udev();
 
 #endif /* DW_UDEV_H_ */

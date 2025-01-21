@@ -231,9 +231,10 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          wdd->evdata = xev_data;
       global_wdd = wdd;
 
-      GThreadFunc watch_thread_func = (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
-                                        ? dw_watch_displays_without_udev
-                                        : ddc_watch_displays_udev;
+      GThreadFunc watch_thread_func =
+            (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
+                 ? dw_watch_displays_without_udev
+                 : dw_watch_displays_udev;
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
       watch_thread = g_thread_new(
