@@ -16,13 +16,13 @@
 
 #include "dw_xevent.h"
 
-extern int       initial_stabilization_millisec;
-extern int       stabilization_poll_millisec;
-extern int       udev_watch_loop_millisec;
-extern int       poll_watch_loop_millisec;
-extern int       xevent_watch_loop_millisec;
-extern int       calculated_watch_loop_millisec;
-extern bool      terminate_using_x11_event;
+extern uint16_t   initial_stabilization_millisec;
+extern uint16_t   stabilization_poll_millisec;
+extern uint16_t   udev_watch_loop_millisec;
+extern uint16_t   poll_watch_loop_millisec;
+extern uint16_t   xevent_watch_loop_millisec;
+extern int        calculated_watch_loop_millisec;
+extern bool       terminate_using_x11_event;
 
 int  dw_calc_watch_loop_millisec(DDCA_Watch_Mode watch_mode);
 int  dw_split_sleep(int watch_loop_millisec);

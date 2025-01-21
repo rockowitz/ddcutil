@@ -66,11 +66,11 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 
-int       initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
-int       stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
-int       udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
-int       poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
-int       xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+uint16_t   initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
+uint16_t   stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
+uint16_t   udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
+uint16_t   poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
+uint16_t   xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 bool      terminate_using_x11_event      = false;
 
 
