@@ -19,11 +19,11 @@
 extern DDC_Watch_Mode ddc_watch_mode;
 extern bool           enable_watch_displays;
 
-Error_Info * ddc_start_watch_displays(DDCA_Display_Event_Class event_classes);
-DDCA_Status  ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes);
-DDCA_Status  ddc_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc);
-void         ddc_redetect_displays();
-bool         is_watch_displays_executing();
+Error_Info * dw_start_watch_displays(DDCA_Display_Event_Class event_classes);
+DDCA_Status  dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes);
+DDCA_Status  dw_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc);
+void         dw_redetect_displays();
+bool         dw_is_watch_displays_executing();
 void         init_dw_main();
 
 #endif /* DW_MAIN_H_ */

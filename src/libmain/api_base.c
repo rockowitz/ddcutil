@@ -631,8 +631,8 @@ _ddca_terminate(void) {
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
       DDCA_Display_Event_Class active_classes;
-      if (is_watch_displays_executing())
-         ddc_stop_watch_displays(/*wait=*/ true, &active_classes);   // in case it was started
+      if (dw_is_watch_displays_executing())
+         dw_stop_watch_displays(/*wait=*/ true, &active_classes);   // in case it was started
       DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "After ddc_stop_watch_displays");
       // sleep(5); // still needed?
       terminate_dw_services();
@@ -876,7 +876,7 @@ ddci_init(const char *      libopts,
       ddc_ensure_displays_detected();
 #ifdef OUT
       if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS) {
-         ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS);
+         dw_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS);
          SYSLOG2(DDCA_SYSLOG_NOTICE,
                "Started watch displays for DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS");
    }
@@ -945,7 +945,7 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
       edet = new_ddca_error_detail (DDCRC_ARG, "Invalid event class specified");
    }
    else {
-      Error_Info * erec = ddc_start_watch_displays(enabled_classes);
+      Error_Info * erec = dw_start_watch_displays(enabled_classes);
       edet = error_info_to_ddca_detail(erec);
       ERRINFO_FREE(erec);
    }
@@ -967,7 +967,7 @@ ddca_stop_watch_displays(bool wait) {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting");
    DDCA_Display_Event_Class active_classes;
-   DDCA_Status ddcrc = ddc_stop_watch_displays(wait, &active_classes);
+   DDCA_Status ddcrc = dw_stop_watch_displays(wait, &active_classes);
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
 }
 
@@ -976,7 +976,7 @@ DDCA_Status
 ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting classes_loc=%p", classes_loc);
-   DDCA_Status ddcrc = ddc_get_active_watch_classes(classes_loc);
+   DDCA_Status ddcrc = dw_get_active_watch_classes(classes_loc);
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "*classes_loc=0x%02x", *classes_loc);
 }
 

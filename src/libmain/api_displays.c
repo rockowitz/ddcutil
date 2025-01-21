@@ -436,7 +436,7 @@ ddca_redetect_displays() {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "");
    quiesce_api();
-   ddc_redetect_displays();
+   dw_redetect_displays();
    unquiesce_api();
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, 0, "");
 }

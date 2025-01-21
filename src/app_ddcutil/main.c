@@ -795,7 +795,7 @@ void interrupt_handler(int sig) {
       printf("\nHandling interrupt\n");
    // signal(sig, SIG_IGN);
    DDCA_Display_Event_Class event_classes  = DDCA_EVENT_CLASS_ALL;
-   ddc_stop_watch_displays(false, &event_classes);
+   dw_stop_watch_displays(false, &event_classes);
    if (debug) {
       printf("ddc_stop_watch_displays() returned\n");
       printf("Calling exit()\n");
@@ -1073,7 +1073,7 @@ main(int argc, char *argv[]) {
          // Catch CTRL-C to terminate watch thread, then exit:
          signal(SIGINT, interrupt_handler);
          ddc_ensure_displays_detected();
-         Error_Info * erec = ddc_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
+         Error_Info * erec = dw_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
          if (erec) {
             ERRINFO_FREE_WITH_REPORT(erec, true);
             main_rc = EXIT_FAILURE;
@@ -1082,7 +1082,7 @@ main(int argc, char *argv[]) {
             rpt_label(0,"Watching for 10 hours");
             sleep(10*60*60);
             rpt_label(0,"Terminating execution after 10 hours");
-            ddc_stop_watch_displays(true, NULL);
+            dw_stop_watch_displays(true, NULL);
             main_rc = EXIT_SUCCESS;
          }
       }

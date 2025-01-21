@@ -174,7 +174,7 @@ Watch_Displays_Data * global_wdd;     // needed for ddc_stop_watch_displays()
  *           -  DDCRC_ARG                event_classes == DDCA_EVENT_CLASS_NONE
  */
 Error_Info *
-ddc_start_watch_displays(DDCA_Display_Event_Class event_classes) {
+dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
         "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
@@ -261,7 +261,7 @@ bye:
  *  @retval  DDCRC_INVALID_OPERATION  watch thread not executing
  */
 DDCA_Status
-ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
+dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "wait=%s, watch_thread=%p", SBOOL(wait), watch_thread );
@@ -316,7 +316,7 @@ ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc
 }
 
 
-bool is_watch_displays_executing() {
+bool dw_is_watch_displays_executing() {
    return watch_thread;
 }
 
@@ -329,7 +329,7 @@ bool is_watch_displays_executing() {
  *  @retval DDCRC_INVALID_OPERATION watch thread not executing
  */
 DDCA_Status
-ddc_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
+dw_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
     bool debug = false;
     DBGTRC_STARTING(debug, TRACE_GROUP, "classes_loc = %p", classes_loc);
    DDCA_Status ddcrc = DDCRC_INVALID_OPERATION;
@@ -346,15 +346,15 @@ ddc_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
 
 
 void
-ddc_redetect_displays() {
+dw_redetect_displays() {
    bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
    DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
-   DDCA_Status active_rc = ddc_get_active_watch_classes(&enabled_classes);
+   DDCA_Status active_rc = dw_get_active_watch_classes(&enabled_classes);
    if (active_rc == DDCRC_OK) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling ddc_stop_watch_displays()");
-      DDCA_Status rc = ddc_stop_watch_displays(/*wait*/ true, &enabled_classes);
+      DDCA_Status rc = dw_stop_watch_displays(/*wait*/ true, &enabled_classes);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Called ddc_stop_watch_displays()");
       assert(rc == DDCRC_OK);
    }
@@ -385,7 +385,7 @@ ddc_redetect_displays() {
       // dbgrpt_valid_display_refs(1);
    }
    if (active_rc == DDCRC_OK) {
-      Error_Info * err = ddc_start_watch_displays(enabled_classes);
+      Error_Info * err = dw_start_watch_displays(enabled_classes);
       assert(!err);    // should never fail since restarting with same enabled classes
    }
 
@@ -396,11 +396,11 @@ ddc_redetect_displays() {
 
 
 void init_dw_main() {
-   RTTI_ADD_FUNC(ddc_start_watch_displays);
-   RTTI_ADD_FUNC(ddc_stop_watch_displays);
-   RTTI_ADD_FUNC(ddc_get_active_watch_classes);
+   RTTI_ADD_FUNC(dw_start_watch_displays);
+   RTTI_ADD_FUNC(dw_stop_watch_displays);
+   RTTI_ADD_FUNC(dw_get_active_watch_classes);
    RTTI_ADD_FUNC(resolve_watch_mode);
-   RTTI_ADD_FUNC(ddc_redetect_displays);
+   RTTI_ADD_FUNC(dw_redetect_displays);
 }
 
 
