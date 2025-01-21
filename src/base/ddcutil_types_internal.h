@@ -64,5 +64,29 @@ typedef struct {
 // uses -1,-1 for unset
 
 
+//! For tuning display watch logic
+typedef struct {
+   // DDC_Watch_Mode watch_mode;    // can this be changed dynamically?  needs to be a DDCA type if exposed
+
+   uint16_t  udev_watch_loop_interval_millisec;
+   uint16_t  poll_watch_loop_interval_millisec;
+   uint16_t  xevent_watch_loop_interval_millisec;
+
+   // Once an event is received that possibly indicates a display change,
+   // libddcutil repeatedly checks /sys/class/drm until the reported displays
+   // stabilize
+   /** Extra time to wait before first stabilization check */
+   uint16_t  initial_stabilization_millisec; /** Delay before initialization check */
+   uint16_t  stabilization_poll_millisec;    /** Polling interval between stabilization checks */
+
+   // When checking that DDC communication has become enabled,
+   // checks occur at increasing multiples of this value.
+   uint16_t   watch_retry_thread_sleep_factor_millisec;
+
+
+
+} ddca_dw_settings;
+
+
 
 #endif /* DDCUTIL_TYPES_INTERNAL_H_ */
