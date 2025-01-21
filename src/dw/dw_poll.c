@@ -110,7 +110,7 @@ STATIC void process_screen_change_event(
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_buses_w_edid: %s",   BS256_REPR(bs_old_buses_w_edid));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_new_buses_edid: %s",   BS256_REPR(bs_new_buses_w_edid));
 
-      bs_new_buses_w_edid = ddc_i2c_stabilized_buses_bs(bs_new_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
+      bs_new_buses_w_edid = dw_i2c_stabilized_buses_bs(bs_new_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
 
       BS256 bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
       bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_new_buses_w_edid);
@@ -134,7 +134,7 @@ STATIC void process_screen_change_event(
                                        bs256_count(bs_added_buses_w_edid) > 0;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "connected_buses_changed = %s", SBOOL(connected_buses_w_edid_changed));
    if (connected_buses_w_edid_changed) {
-      hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
+      hotplug_change_handler_emitted = dw_i2c_hotplug_change_handler(
                                            bs_removed_buses_w_edid,
                                            bs_added_buses_w_edid,
                                            deferred_events,
@@ -383,17 +383,17 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
 
    while (!terminate_watch_thread) {
       if (deferred_events && deferred_events->len > 0) {
-         ddc_i2c_emit_deferred_events(deferred_events);
+         dw_i2c_emit_deferred_events(deferred_events);
       }
       else {     // skip polling loop sleep if deferred events were output
          if (!skip_next_sleep && wdd->watch_mode == Watch_Mode_Poll) {
-            slept = split_sleep(wdd->watch_loop_millisec);
+            slept = dw_split_sleep(wdd->watch_loop_millisec);
          }
       }
       skip_next_sleep = false;
       if (terminate_watch_thread)
          continue;
-      terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
+      dw_terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
 
       if (wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {
@@ -435,7 +435,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
    DBGTRC_DONE(debug, TRACE_GROUP,
          "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
    g_ptr_array_free(displays_to_recheck, true);
-   free_watch_displays_data(wdd);
+   dw_free_watch_displays_data(wdd);
    if (deferred_events)
       g_array_free(deferred_events, true);
 #ifdef WATCH_DPMS

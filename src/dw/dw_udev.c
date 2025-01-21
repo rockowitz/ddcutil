@@ -250,7 +250,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
          bs_new_buses_w_edid = bs_stabilized_buses_w_edid;
 #endif
 
-         BS256 bs_new_buses_w_edid = ddc_i2c_stabilized_buses_bs(bs_new_buses_w_edid, detected_displays_removed_flag);
+         BS256 bs_new_buses_w_edid = dw_i2c_stabilized_buses_bs(bs_new_buses_w_edid, detected_displays_removed_flag);
       }
    }
 
@@ -265,7 +265,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes(
       BS256 bs_buses_w_edid_added = bs256_and_not(bs_new_buses_w_edid, bs_prev_buses_w_edid);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_buses_w_edid_added: %s", BS256_REPR(bs_buses_w_edid_added));
 
-      hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
+      hotplug_change_handler_emitted = dw_i2c_hotplug_change_handler(
                                            bs_buses_w_edid_removed,
                                            bs_buses_w_edid_added,
                                            events_queue,
@@ -382,7 +382,7 @@ Bit_Set_256 ddc_i2c_check_bus_changes_for_connector(
       BS256 bs_buses_w_edid_added = bs256_and_not(bs_new_buses_w_edid, bs_prev_buses_w_edid);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_added: %s", BS256_REPR(bs_buses_w_edid_added));
 
-      hotplug_change_handler_emitted = ddc_i2c_hotplug_change_handler(
+      hotplug_change_handler_emitted = dw_i2c_hotplug_change_handler(
                                            bs_buses_w_edid_removed,
                                            bs_buses_w_edid_added,
                                            events_queue,
@@ -580,11 +580,11 @@ gpointer ddc_watch_displays_udev(gpointer data) {
       while (!dev) {
          int slept = 0;   // will contain length of final sleep
          if (deferred_events && deferred_events->len > 0) {
-            ddc_i2c_emit_deferred_events(deferred_events);
+            dw_i2c_emit_deferred_events(deferred_events);
          }
          else {     // skip polling loop sleep if deferred events were output
             if (!skip_next_sleep) {
-               slept = split_sleep(wdd->watch_loop_millisec);
+               slept = dw_split_sleep(wdd->watch_loop_millisec);
             }
          }
          skip_next_sleep = false;
@@ -593,7 +593,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
             // n. slept == 0 if no sleep was performed
             DBGTRC_DONE(debug, TRACE_GROUP,
                   "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
-           free_watch_displays_data(wdd);
+           dw_free_watch_displays_data(wdd);
            //  int rc = udev_monitor_filter_remove(mon);
            udev_monitor_unref(mon);
            udev_unref(udev);
@@ -619,7 +619,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
          }
 #endif
 
-         terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
+         dw_terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
 
          if (wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
             dev = udev_monitor_receive_device(mon);

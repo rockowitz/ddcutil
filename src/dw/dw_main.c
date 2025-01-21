@@ -196,7 +196,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(ddc_watch_mode, &xev_data);
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
 
-   int calculated_watch_loop_millisec = calc_watch_loop_millisec(resolved_watch_mode);
+   int calculated_watch_loop_millisec = dw_calc_watch_loop_millisec(resolved_watch_mode);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
@@ -345,6 +345,7 @@ dw_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
 }
 
 
+/** Called to completely redetect displays */
 void
 dw_redetect_displays() {
    bool debug = false || debug_locks;

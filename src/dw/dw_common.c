@@ -74,7 +74,7 @@ int       xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 bool      terminate_using_x11_event      = false;
 
 
-int calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
+int dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
    assert(watch_mode != Watch_Mode_Dynamic);
    int final_answer = 0;
 
@@ -101,7 +101,7 @@ int calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
 }
 
 
-int split_sleep(int watch_loop_millisec) {
+int dw_split_sleep(int watch_loop_millisec) {
    assert(watch_loop_millisec > 0);
    uint64_t max_sleep_microsec = watch_loop_millisec * (uint64_t)1000;
    uint64_t sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
@@ -112,7 +112,7 @@ int split_sleep(int watch_loop_millisec) {
 }
 
 
-void terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid) {
+void dw_terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid) {
     // Doesn't work to detect client crash, main thread and process remains for some time.
     // 11/2020: is this even needed since terminate_watch_thread check added?
     // #ifdef DOESNT_WORK
@@ -131,7 +131,7 @@ void terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid) {
 }
 
 
-void free_watch_displays_data(Watch_Displays_Data * wdd) {
+void dw_free_watch_displays_data(Watch_Displays_Data * wdd) {
    if (wdd) {
       assert( memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
       wdd->marker[3] = 'x';
@@ -207,7 +207,7 @@ void ddc_i2c_filter_sleep_events(GArray * events) {
 #endif
 
 
-void ddc_i2c_emit_deferred_events(GArray * deferred_events) {
+void dw_i2c_emit_deferred_events(GArray * deferred_events) {
    bool debug = false;
 
 #ifdef TEMPORARY_SIMPLIFICATION
@@ -321,7 +321,7 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
  *  @return true if an event was emitted or placed on the queue,
  *          false if not
  */
-bool ddc_i2c_hotplug_change_handler(
+bool dw_i2c_hotplug_change_handler(
       Bit_Set_256    bs_buses_w_edid_removed,
       Bit_Set_256    bs_buses_w_edid_added,
       GArray *       events_queue,
@@ -481,7 +481,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
 
 
 Bit_Set_256
-ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
+dw_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "prior =%s, some_displays_disconnected=%s, extra_stabilization_millisec=%d",
          BS256_REPR(bs_prior), SBOOL(some_displays_disconnected), initial_stabilization_millisec);
@@ -529,7 +529,7 @@ void init_dw_common() {
 #ifdef WATCH_ASLEEP
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
 #endif
-   RTTI_ADD_FUNC(ddc_i2c_stabilized_buses_bs);
-   RTTI_ADD_FUNC(ddc_i2c_emit_deferred_events);
-   RTTI_ADD_FUNC(ddc_i2c_hotplug_change_handler);
+   RTTI_ADD_FUNC(dw_i2c_stabilized_buses_bs);
+   RTTI_ADD_FUNC(dw_i2c_emit_deferred_events);
+   RTTI_ADD_FUNC(dw_i2c_hotplug_change_handler);
 }
