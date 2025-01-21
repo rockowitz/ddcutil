@@ -91,10 +91,6 @@ typedef struct {
    // checks occur at increasing multiples of this value.
    uint16_t   watch_retry_thread_sleep_factor_millisec;
 
-
-
-} ddca_dw_settings;
-
-
+} DDCA_DW_Settings;
 
 #endif /* DDCUTIL_TYPES_INTERNAL_H_ */
