@@ -12,12 +12,10 @@
 #include "public/ddcutil_types.h"
 
 #include "util/error_info.h"
-
-#include "base/displays.h"
 /** \endcond */
 
-extern DDCA_Watch_Mode ddc_watch_mode;
-extern bool           enable_watch_displays;
+extern DDCA_Watch_Mode watch_displays_mode;
+extern bool            enable_watch_displays;
 
 Error_Info * dw_start_watch_displays(DDCA_Display_Event_Class event_classes);
 DDCA_Status  dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes);
