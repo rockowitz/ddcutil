@@ -407,7 +407,7 @@ gpointer dw_watch_displays_without_udev(gpointer data) {
          }
 
          else {
-            bool event_found = ddc_detect_xevent_screen_change(wdd->evdata,  wdd->watch_loop_millisec);
+            bool event_found = dw_detect_xevent_screen_change(wdd->evdata,  wdd->watch_loop_millisec);
             if (event_found)
                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Screen change event occurred");
             else

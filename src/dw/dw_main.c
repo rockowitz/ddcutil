@@ -142,7 +142,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
 #endif
 
    if (resolved_watch_mode == Watch_Mode_Xevent) {
-      xevdata  = ddc_init_xevent_screen_change_notification();
+      xevdata  = dw_init_xevent_screen_change_notification();
       // *xev_data_loc  = ddc_init_xevent_screen_change_notification();
       if (!xevdata) {
          resolved_watch_mode = Watch_Mode_Poll;
@@ -156,7 +156,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
    // ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xevdata);
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, *xev_data_loc);
    if (*xev_data_loc && IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      dbgrpt_xevent_data(*xev_data_loc,  0);
+      dw_dbgrpt_xevent_data(*xev_data_loc,  0);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s. *xev_data_loc: %p",
          ddc_watch_mode_name(resolved_watch_mode),  *xev_data_loc);
@@ -282,7 +282,7 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
                                             ddc_watch_mode_name(global_wdd->watch_mode));
       if (global_wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {
-            ddc_send_x11_termination_message(global_wdd->evdata);
+            dw_send_x11_termination_message(global_wdd->evdata);
             DW_SLEEP_MILLIS(2*1000, "After ddc_send_x11_termination_message()");
          }
          else {

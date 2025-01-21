@@ -23,7 +23,7 @@ static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 static Atom     termination_atom;
 
 
-void  dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
+void  dw_dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
    rpt_structure_loc("XEvent_Data", evdata, depth);
    int d1 = depth+1;
    rpt_vstring(d1, "dpy:                   %p",  evdata->dpy);
@@ -35,7 +35,7 @@ void  dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
 }
 
 
-void ddc_free_xevent_data(XEvent_Data * evdata) {
+void dw_free_xevent_data(XEvent_Data * evdata) {
    if (evdata->dpy)
       XCloseDisplay(evdata->dpy);
    free(evdata);
@@ -47,7 +47,7 @@ void ddc_free_xevent_data(XEvent_Data * evdata) {
  *  @return pointer to newly allocated XEvent_Data struct,
  *          NULL if initialization fails
  */
-XEvent_Data * ddc_init_xevent_screen_change_notification() {
+XEvent_Data * dw_init_xevent_screen_change_notification() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
@@ -89,7 +89,7 @@ XEvent_Data * ddc_init_xevent_screen_change_notification() {
 
 bye:
    if (!ok) {
-      ddc_free_xevent_data(evdata);
+      dw_free_xevent_data(evdata);
       evdata = NULL;
    }
 
@@ -114,7 +114,7 @@ bye:
  *  @retval true  screen changed event was received
  *  @retval false
  */
-bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
+bool dw_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "evdata=%p, poll_interval=%d", evdata, poll_interval);
 
@@ -162,7 +162,7 @@ bool ddc_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
  *
  *  @param evdata pointer to XEvent_Data struct
  */
-void ddc_send_x11_termination_message(XEvent_Data * evdata) {
+void dw_send_x11_termination_message(XEvent_Data * evdata) {
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "evdata->dpy=%p", evdata->dpy);
 
@@ -282,9 +282,9 @@ bool dw_next_X11_event_of_interest(XEvent_Data * evdata) {
 
 
 void init_dw_xevent() {
-   RTTI_ADD_FUNC(ddc_detect_xevent_screen_change);
-   RTTI_ADD_FUNC(ddc_init_xevent_screen_change_notification);
+   RTTI_ADD_FUNC(dw_detect_xevent_screen_change);
+   RTTI_ADD_FUNC(dw_init_xevent_screen_change_notification);
    RTTI_ADD_FUNC(dw_next_X11_event_of_interest);
-   RTTI_ADD_FUNC(ddc_send_x11_termination_message);
+   RTTI_ADD_FUNC(dw_send_x11_termination_message);
    RTTI_ADD_FUNC(dw_is_ddc_event);
 }
