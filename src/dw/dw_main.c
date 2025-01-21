@@ -4,59 +4,42 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
-#include "public/ddcutil_types.h"
 
 /** \cond */
 #include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <glib-2.0/glib.h>
-#ifdef ENABLE_UDEV
-#include <libudev.h>
-#endif
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
+#include "public/ddcutil_types.h"
+#include "public/ddcutil_status_codes.h"
+
+#include "util/common_inlines.h"
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
-#include "util/drm_common.h"
-#include "util/file_util.h"
-#include "util/glib_string_util.h"
-#include "util/glib_util.h"
-#include "util/i2c_util.h"
-#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
-#include "util/udev_util.h"
-#include "util/x11_util.h"
 
 #include "base/core.h"
 #include "base/displays.h"
-#include "base/ddc_errno.h"
+#include "base/ddcutil_types_internal.h"
 #include "base/dsa2.h"
 #include "base/drm_connector_state.h"
 #include "base/i2c_bus_base.h"
-#include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
 /** \endcond */
 
 #include "sysfs/sysfs_base.h"
-#include "sysfs/sysfs_dpms.h"
-#include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
-#include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_vcp.h"
 
 #include "dw_status_events.h"
 #include "dw_common.h"
@@ -70,13 +53,13 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
-DDCA_Watch_Mode   ddc_watch_mode = DEFAULT_WATCH_MODE;
+DDCA_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
 bool             enable_watch_displays = true;
 
 // some of these go elsewhere
 static GThread * watch_thread = NULL;
-static DDCA_Display_Event_Class active_classes = DDCA_EVENT_CLASS_NONE;
 static GMutex    watch_thread_mutex;
+static DDCA_Display_Event_Class active_watch_displays_classes = DDCA_EVENT_CLASS_NONE;
 
 
 //
@@ -124,10 +107,10 @@ resolve_watch_mode(DDCA_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
          }
       }
 
-      //     ddc_watch_mode = Watch_Mode_Udev;
+      //     dw_watch_mode = Watch_Mode_Udev;
       // sysfs_fully_reliable = is_sysfs_reliable();
       // if (!sysfs_fully_reliable)
-      //    ddc_watch_mode = Watch_Mode_Poll;
+      //    dw_watch_mode = Watch_Mode_Poll;
    }
    else {
       resolved_watch_mode = initial_mode;
@@ -150,7 +133,7 @@ resolve_watch_mode(DDCA_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
       }
    }
 
-   // DBG( "xevdata=%p, watch_mode = %s", xevdata, ddc_watch_mode_name(resolved_watch_mode));
+   // DBG( "xevdata=%p, watch_mode = %s", xevdata, dw_watch_mode_name(resolved_watch_mode));
 
    *xev_data_loc = xevdata;
    // ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xevdata);
@@ -165,7 +148,7 @@ resolve_watch_mode(DDCA_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
 
 
 // hacks
-Watch_Displays_Data * global_wdd;     // needed for ddc_stop_watch_displays()
+Watch_Displays_Data * global_wdd;     // needed for dw_stop_watch_displays()
 
 /** Starts thread that watches for changes in display connection status.
  *
@@ -177,8 +160,8 @@ Error_Info *
 dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-        "ddc_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
-        watch_mode_name(ddc_watch_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
+        "dw_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
+        watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    Error_Info * err = NULL;
    XEvent_Data * xev_data = NULL;
    // DDC_Watch_Mode resolved_watch_mode;
@@ -193,7 +176,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   DDCA_Watch_Mode resolved_watch_mode = resolve_watch_mode(ddc_watch_mode, &xev_data);
+   DDCA_Watch_Mode resolved_watch_mode = resolve_watch_mode(watch_displays_mode, &xev_data);
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
 
    int calculated_watch_loop_millisec = dw_calc_watch_loop_millisec(resolved_watch_mode);
@@ -221,8 +204,8 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
       Watch_Displays_Data * wdd = calloc(1, sizeof(Watch_Displays_Data));
       memcpy(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-      wdd->main_process_id = getpid();
-      wdd->main_thread_id = get_thread_id();  // alt = syscall(SYS_gettid);
+      wdd->main_process_id = pid();   // getpid();
+      wdd->main_thread_id = tid();   get_thread_id();  // alt = syscall(SYS_gettid);
       // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
       wdd->event_classes = event_classes;
       wdd->watch_mode = resolved_watch_mode;
@@ -241,7 +224,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
                        "watch_displays",             // optional thread name
                        watch_thread_func,
                        wdd);
-      active_classes = event_classes;
+      active_watch_displays_classes = event_classes;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started watch_thread = %p", watch_thread);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil watch thread %p started", watch_thread);
    }
@@ -302,7 +285,7 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
          g_thread_unref(watch_thread);
       watch_thread = NULL;
       if (enabled_classes_loc)
-         *enabled_classes_loc = active_classes;
+         *enabled_classes_loc = active_watch_displays_classes;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
    }
    else {
@@ -337,7 +320,7 @@ dw_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
    *classes_loc = DDCA_EVENT_CLASS_NONE;
    g_mutex_lock(&watch_thread_mutex);
    if (watch_thread) {
-      *classes_loc = active_classes;
+      *classes_loc = active_watch_displays_classes;
       ddcrc = DDCRC_OK;
    }
    g_mutex_unlock(&watch_thread_mutex);
@@ -400,7 +383,7 @@ dw_redetect_displays() {
 // Temporary hidden location, will move to api.base.c when/if published
 
 void ddca_get_display_watch_settings(DDCA_DW_Settings * settings) {
-   // settings->watch_mode = ddc_watch_mode;
+   // settings->watch_mode = dw_watch_mode;
 
    settings->udev_watch_loop_interval_millisec   = udev_watch_loop_millisec;
    settings->poll_watch_loop_interval_millisec   = poll_watch_loop_millisec;
