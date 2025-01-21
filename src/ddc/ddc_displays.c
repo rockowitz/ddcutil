@@ -78,14 +78,14 @@
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_dw_main.h"
+// #include "ddc/ddc_dw_main.h"
 
 #include "ddc/ddc_displays.h"
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
-static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
+GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
 static int ddc_detect_async_threshold = DEFAULT_DDC_CHECK_ASYNC_THRESHOLD;
 #ifdef ENABLE_USB
 static bool detect_usb_displays = true;
@@ -375,7 +375,7 @@ Display_Ref * detect_display_by_businfo(I2C_Bus_Info * businfo) {
  *  @param  open_errors_loc where to return address of #GPtrArray of #Bus_Open_Error
  *  @return array of #Display_Ref
  */
-STATIC GPtrArray *
+GPtrArray *
 ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "display_caching_enabled=%s, detect_usb_displays=%s",
@@ -672,55 +672,6 @@ ddc_discard_detected_displays() {
 }
 
 
-void
-ddc_redetect_displays() {
-   bool debug = false || debug_locks;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
-   DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
-   DDCA_Status active_rc = ddc_get_active_watch_classes(&enabled_classes);
-   if (active_rc == DDCRC_OK) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling ddc_stop_watch_displays()");
-      DDCA_Status rc = ddc_stop_watch_displays(/*wait*/ true, &enabled_classes);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Called ddc_stop_watch_displays()");
-      assert(rc == DDCRC_OK);
-   }
-   ddc_discard_detected_displays();
-   if (dsa2_is_enabled())
-      dsa2_save_persistent_stats();
-   // free_sysfs_drm_connector_names();
-
-   if (use_drm_connector_states)
-      redetect_drm_connector_states();
-
-   // init_sysfs_drm_connector_names();
-   // get_sys_drm_connectors(/*rescan=*/true);
-   if (dsa2_is_enabled()) {
-      Error_Info * erec = dsa2_restore_persistent_stats();
-      if (erec) {
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected error from dsa2_restore_persistent_stats(): %s",
-               errinfo_summary(erec));
-         free(erec);
-      }
-   }
-   i2c_detect_buses();
-   g_mutex_lock(&all_display_refs_mutex);
-   all_display_refs = ddc_detect_all_displays(&display_open_errors);
-   g_mutex_unlock(&all_display_refs_mutex);
-   if (debug) {
-      ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
-      // dbgrpt_valid_display_refs(1);
-   }
-   if (active_rc == DDCRC_OK) {
-      Error_Info * err = ddc_start_watch_displays(enabled_classes);
-      assert(!err);    // should never fail since restarting with same enabled classes
-   }
-
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
-   DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
-                                   all_display_refs, all_display_refs->len);
-}
-
 
 #ifdef UNUSED
 /** Checks that a #Display_Ref is in array **all_displays**
@@ -979,7 +930,6 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_ensure_displays_detected);
    RTTI_ADD_FUNC(ddc_get_all_display_refs);
    RTTI_ADD_FUNC(ddc_non_async_scan);
-   RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(ddc_validate_display_ref2);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
 }

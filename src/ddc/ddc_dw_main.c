@@ -38,6 +38,7 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/ddc_errno.h"
+#include "base/dsa2.h"
 #include "base/drm_connector_state.h"
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
@@ -53,6 +54,7 @@
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp.h"
@@ -343,11 +345,62 @@ ddc_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
 }
 
 
+void
+ddc_redetect_displays() {
+   bool debug = false || debug_locks;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
+   DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
+   DDCA_Status active_rc = ddc_get_active_watch_classes(&enabled_classes);
+   if (active_rc == DDCRC_OK) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling ddc_stop_watch_displays()");
+      DDCA_Status rc = ddc_stop_watch_displays(/*wait*/ true, &enabled_classes);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Called ddc_stop_watch_displays()");
+      assert(rc == DDCRC_OK);
+   }
+   ddc_discard_detected_displays();
+   if (dsa2_is_enabled())
+      dsa2_save_persistent_stats();
+   // free_sysfs_drm_connector_names();
+
+   if (use_drm_connector_states)
+      redetect_drm_connector_states();
+
+   // init_sysfs_drm_connector_names();
+   // get_sys_drm_connectors(/*rescan=*/true);
+   if (dsa2_is_enabled()) {
+      Error_Info * erec = dsa2_restore_persistent_stats();
+      if (erec) {
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected error from dsa2_restore_persistent_stats(): %s",
+               errinfo_summary(erec));
+         free(erec);
+      }
+   }
+   i2c_detect_buses();
+   g_mutex_lock(&all_display_refs_mutex);
+   all_display_refs = ddc_detect_all_displays(&display_open_errors);
+   g_mutex_unlock(&all_display_refs_mutex);
+   if (debug) {
+      ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
+      // dbgrpt_valid_display_refs(1);
+   }
+   if (active_rc == DDCRC_OK) {
+      Error_Info * err = ddc_start_watch_displays(enabled_classes);
+      assert(!err);    // should never fail since restarting with same enabled classes
+   }
+
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
+   DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
+                                   all_display_refs, all_display_refs->len);
+}
+
+
 void init_ddc_watch_displays_main() {
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
    RTTI_ADD_FUNC(ddc_get_active_watch_classes);
    RTTI_ADD_FUNC(resolve_watch_mode);
+   RTTI_ADD_FUNC(ddc_redetect_displays);
 }
 
 

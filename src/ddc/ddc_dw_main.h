@@ -22,6 +22,7 @@ extern bool           enable_watch_displays;
 Error_Info * ddc_start_watch_displays(DDCA_Display_Event_Class event_classes);
 DDCA_Status  ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes);
 DDCA_Status  ddc_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc);
+void         ddc_redetect_displays();
 bool         is_watch_displays_executing();
 void         init_ddc_watch_displays_main();
 

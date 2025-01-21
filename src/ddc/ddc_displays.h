@@ -24,6 +24,7 @@
 #endif
 
 extern int   dispno_max;
+extern GPtrArray * display_open_errors;      // hack for moving redetect_displays to ddc_dw_main.c
 
 // Initial Checks
 void         ddc_set_async_threshold(int threshold);
@@ -39,9 +40,9 @@ GPtrArray *  ddc_get_bus_open_errors();
 int          ddc_get_display_count(bool include_invalid_displays);
 
 // Display Detection
+GPtrArray *  ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc);
 void         ddc_ensure_displays_detected();
 void         ddc_discard_detected_displays();
-void         ddc_redetect_displays();
 bool         ddc_displays_already_detected();
 #ifdef UNUSED
 Display_Ref* detect_display_by_businfo(I2C_Bus_Info * businfo);
