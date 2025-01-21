@@ -56,17 +56,17 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_save_current_settings.h"
-#include "ddc/ddc_status_events.h"
+#include <dw/ddc_status_events.h>
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
 #ifdef BUILD_SHARED_LIB
-#include "ddc/ddc_dw_dref.h"
-#include "ddc/ddc_dw_xevent.h"
-#include "ddc/ddc_dw_udev.h"
-#include "ddc/ddc_dw_poll.h"
-#include "ddc/ddc_dw_main.h"
-#include "ddc/ddc_dw_common.h"
+#include <dw/ddc_dw_dref.h>
+#include <dw/ddc_dw_xevent.h>
+#include <dw/ddc_dw_udev.h>
+#include <dw/ddc_dw_poll.h>
+#include <dw/ddc_dw_main.h>
+#include <dw/ddc_dw_common.h>
 #endif
 
 #include "ddc/ddc_services.h"

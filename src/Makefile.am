@@ -4,7 +4,7 @@ DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dynvcp i2c libmain sysfs 
 # contain only header files:
 EXTRA_DIST = bsd private public
 
-SUBDIRS = util usb_util base vcp sysfs i2c usb dynvcp ddc
+SUBDIRS = util usb_util base vcp sysfs i2c usb dynvcp ddc dw
 if INCLUDE_TESTCASES_COND
 SUBDIRS += test
 endif 
@@ -206,7 +206,8 @@ export AM_CFLAGS_STD
 #
 
 libcommon_la_LIBADD = \
-ddc/libddc.la    \
+dw/libdw.la         \
+ddc/libddc.la       \
 dynvcp/libdynvcp.la \
 i2c/libi2c.la    \
 sysfs/libsysfs.la \

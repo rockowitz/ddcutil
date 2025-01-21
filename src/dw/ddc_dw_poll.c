@@ -54,14 +54,14 @@
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_displays.h"
-#include "ddc/ddc_dw_common.h"
-#include "ddc/ddc_dw_dref.h"
-#include "ddc/ddc_dw_xevent.h"
+#include <dw/ddc_dw_common.h>
+#include <dw/ddc_dw_dref.h>
+#include <dw/ddc_dw_xevent.h>
 #include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_status_events.h"
+#include <dw/ddc_status_events.h>
 #include "ddc/ddc_vcp.h"
 
-#include "ddc/ddc_dw_poll.h"
+#include <dw/ddc_dw_poll.h>
 
 
 // Trace class for this file

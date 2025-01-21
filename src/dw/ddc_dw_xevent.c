@@ -1,8 +1,6 @@
 /** @file ddc_dw_xevent.c */
-
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
-// SPDX-License-Identifier: GPL-2.0-or-later
-
+#include <dw/ddc_dw_common.h>
+#include <dw/ddc_dw_xevent.h>
 #include <stdbool.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -16,9 +14,6 @@
 #include "base/rtti.h"
 #include "base/sleep.h"
 
-#include "ddc/ddc_dw_common.h"
-
-#include "ddc/ddc_dw_xevent.h"
 
 static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 

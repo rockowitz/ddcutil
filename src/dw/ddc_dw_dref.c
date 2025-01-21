@@ -8,6 +8,7 @@
  
 /** \cond */
 #include <assert.h>
+#include <dw/ddc_dw_dref.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -34,7 +35,6 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_initial_checks.h"
 
-#include "ddc/ddc_dw_dref.h"
 
 
 // Default trace class for this file

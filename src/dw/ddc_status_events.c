@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <dw/ddc_status_events.h>
 #include <glib-2.0/glib.h>
 
 #include "public/ddcutil_types.h"
@@ -19,7 +20,6 @@
 
 #include "sysfs/sysfs_sys_drm_connector.h"
 
-#include "ddc_status_events.h"
 
 
 // Trace class for this file

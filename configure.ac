@@ -77,6 +77,7 @@ AC_CONFIG_FILES([
 	src/i2c/Makefile
 	src/usb/Makefile
 	src/ddc/Makefile
+	src/dw/Makefile
 	src/test/Makefile
 	src/cmdline/Makefile
 	src/app_sysenv/Makefile

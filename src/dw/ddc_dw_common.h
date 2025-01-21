@@ -14,7 +14,7 @@
 
 #include "base/displays.h"
 
-#include "ddc/ddc_dw_xevent.h"
+#include <dw/ddc_dw_xevent.h>
 
 extern int       initial_stabilization_millisec;
 extern int       stabilization_poll_millisec;

@@ -6,6 +6,9 @@
 #include "config.h"
 
 #include <assert.h>
+#include <dw/ddc_dw_main.h>
+#include <dw/ddc_dw_udev.h>
+#include <dw/ddc_status_events.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -33,12 +36,8 @@
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_display_selection.h"
 #include "ddc/ddc_displays.h"
-#include "ddc/ddc_dw_udev.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_status_events.h"
 #include "ddc/ddc_vcp_version.h"
-
-#include "ddc/ddc_dw_main.h"
 
 #include "libmain/api_base_internal.h"
 #include "libmain/api_error_info_internal.h"

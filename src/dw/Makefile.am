@@ -1,4 +1,4 @@
-# src/ddc/Makefile.am
+# src/dw/Makefile.am
 
 AM_CPPFLAGS =         \
   $(LIBDRM_CFLAGS)    \
@@ -14,27 +14,20 @@ CLEANFILES = \
 *expand
 
 # Intermediate Library
-noinst_LTLIBRARIES = libddc.la
+noinst_LTLIBRARIES = libdw.la
 
-libddc_la_SOURCES =         \
-ddc_common_init.c           \
-ddc_displays.c              \
-ddc_display_ref_reports.c   \
-ddc_display_selection.c     \
-ddc_dumpload.c              \
-ddc_initial_checks.c        \
-ddc_multi_part_io.c         \
-ddc_output.c                \
-ddc_packet_io.c             \
-ddc_phantom_displays.c      \
-ddc_read_capabilities.c     \
-ddc_save_current_settings.c \
-ddc_serialize.c             \
-ddc_services.c              \
-ddc_strategy.c              \
-ddc_vcp.c                   \
-ddc_vcp_version.c           \
-ddc_try_data.c 
+libdw_la_SOURCES =         \
+ddc_status_events.c         
+
+if ENABLE_UDEV_COND
+libdw_la_SOURCES += \
+  ddc_dw_common.c \
+  ddc_dw_main.c \
+  ddc_dw_poll.c \
+  ddc_dw_dref.c \
+  ddc_dw_udev.c \
+  ddc_dw_xevent.c
+endif
 
 # Rename to "all=local" for development 
 all-local-disabled:

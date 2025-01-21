@@ -63,10 +63,10 @@
 #include "ddc_services.h"
 #include "ddc_try_data.h"
 #include "ddc_vcp.h"
-#include "ddc/ddc_dw_udev.h"
-#include "ddc/ddc_dw_poll.h"
-#include "ddc/ddc_dw_main.h"
-#include "ddc/ddc_dw_common.h"
+#include <dw/ddc_dw_udev.h>
+#include <dw/ddc_dw_poll.h>
+#include <dw/ddc_dw_main.h>
+#include <dw/ddc_dw_common.h>
 
 #include "ddc_common_init.h"
 

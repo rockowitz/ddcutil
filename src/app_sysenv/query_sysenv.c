@@ -63,7 +63,7 @@
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_try_data.h"
-#include "ddc/ddc_dw_udev.h"
+#include <dw/ddc_dw_udev.h>
 
 #include "vcp/persistent_capabilities.h"
 
