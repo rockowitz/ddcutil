@@ -247,14 +247,6 @@ void init_ddc_services() {
    init_ddc_multi_part_io();
    init_ddc_vcp();
    init_ddc_vcp_version();
-// #ifdef BUILD_SHARED_LIB
-   init_dw_dref();
-   init_dw_xevent();
-   init_dw_udev();
-   init_dw_poll();
-   init_dw_common();
-   init_dw_main();
-// #endif
 
    RTTI_ADD_FUNC(ddc_report_stats_main);
 

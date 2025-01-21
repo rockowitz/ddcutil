@@ -61,6 +61,7 @@
 #include "ddc/ddc_vcp.h"
 
 #include "dw/dw_main.h"
+#include "dw/dw_services.h"
 
 #include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"
@@ -516,6 +517,7 @@ _libddcutil_constructor(void) {
    init_api_base();         // registers functions in RTTI table
    init_base_services();    // initializes tracing related modules
    init_ddc_services();     // initializes i2c, usb, ddc, vcp, dynvcp
+   init_dw_services();      // initializes dw
    init_api_services();     // other files in directory libmain
 
 #ifdef TESTING_CLEANUP
@@ -633,6 +635,7 @@ _ddca_terminate(void) {
          ddc_stop_watch_displays(/*wait=*/ true, &active_classes);   // in case it was started
       DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "After ddc_stop_watch_displays");
       // sleep(5); // still needed?
+      terminate_dw_services();
       terminate_ddc_services();
       terminate_base_services();
       free_regex_hash_table();

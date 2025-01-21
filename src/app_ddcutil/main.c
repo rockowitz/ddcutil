@@ -104,6 +104,7 @@
 #include "ddc/ddc_vcp.h"
 
 #include "dw/dw_main.h"
+#include "dw/dw_services.h"
 
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/cmd_parser.h"
@@ -840,6 +841,7 @@ main(int argc, char *argv[]) {
    add_local_rtti_functions();      // add entries for this file
    init_base_services();            // so tracing related modules are initialized
    init_ddc_services();             // initializes i2c, usb, ddc, vcp, dynvcp
+   init_dw_services();              // initializes subdir dw
    init_app_ddcutil_services();
 #ifdef ENABLE_ENVCMDS
    init_app_sysenv_services();
