@@ -255,7 +255,7 @@ gpointer ddc_recheck_displays_func(gpointer data) {
       for (int ndx = displays_to_recheck->len-1; ndx >= 0; ndx--) {
          Display_Ref * dref = g_ptr_array_index(displays_to_recheck, ndx);
          // DBGMSG("   rechecking %s", dref_repr_t(dref));
-         Error_Info * err = ddc_recheck_dref(dref);
+         Error_Info * err = dw_recheck_dref(dref);
          if (!err) {
             char * s = g_strdup_printf("ddc became enabled for %s after %d milliseconds",
                                           dref_reprx_t(dref), total_slept_millisec);

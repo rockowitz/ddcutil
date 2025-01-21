@@ -46,7 +46,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
  *
  *  @param dref pointer to Display_Ref to add.
  */
-void ddc_add_display_ref(Display_Ref * dref) {
+void dw_add_display_ref(Display_Ref * dref) {
    bool debug = false ;
    debug = debug || debug_locks;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
@@ -61,7 +61,7 @@ void ddc_add_display_ref(Display_Ref * dref) {
  *
  * @param dref pointer to Display_Ref to mark removed.
  */
-void ddc_mark_display_ref_removed(Display_Ref* dref) {
+void dw_mark_display_ref_removed(Display_Ref* dref) {
    bool debug = false;
    debug = debug || debug_locks;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
@@ -85,7 +85,7 @@ void ddc_mark_display_ref_removed(Display_Ref* dref) {
  *  @remark
  *  Called only when ddc_watch_displays_common.c handling display change
  */
-Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
+Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    assert(businfo);
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "businfo=%p, busno=%d", businfo, businfo->busno);
@@ -140,7 +140,7 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
             dref->dispno = DISPNO_INVALID;
          else
             dref->dispno = ++dispno_max;
-         ddc_add_display_ref(dref);
+         dw_add_display_ref(dref);
       }
       errinfo_free(err);
    }   // edid exists
@@ -161,21 +161,21 @@ Display_Ref * ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
  *  @param  businfo
  *  @return Display_Ref
  */
-Display_Ref * ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
+Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
 
    i2c_reset_bus_info(businfo);
    int busno = businfo->busno;
 
-   Display_Ref * dref = DDC_GET_DREF_BY_BUSNO(businfo->busno, /*ignore_invalid*/ true);
+   Display_Ref * dref = DW_GET_DREF_BY_BUSNO(businfo->busno, /*ignore_invalid*/ true);
    char buf[100];
    g_snprintf(buf, 100, "Removing connected display, dref %s", dref_repr_t(dref));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
    if (dref) {
       assert(!(dref->flags & DREF_REMOVED));
-      ddc_mark_display_ref_removed(dref);
+      dw_mark_display_ref_removed(dref);
       dref->detail = NULL;
    }
    else {
@@ -191,7 +191,7 @@ Display_Ref * ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
 
 
 Error_Info *
-ddc_recheck_dref(Display_Ref * dref) {
+dw_recheck_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
    Error_Info * err = NULL;
@@ -217,7 +217,7 @@ ddc_recheck_dref(Display_Ref * dref) {
  *  @param  ignore_invalid
  *  @return  display reference, NULL if no live reference exists
  */
-Display_Ref * ddc_get_dref_by_busno_or_connector(
+Display_Ref * dw_get_dref_by_busno_or_connector(
       int          busno,
       const char * connector,
       bool         ignore_invalid)
@@ -364,10 +364,10 @@ ddc_get_display_ref_by_drm_connector(
 
 
 void init_dw_dref()  {
-   RTTI_ADD_FUNC(ddc_add_display_by_businfo);
-   RTTI_ADD_FUNC(ddc_add_display_ref);
-   RTTI_ADD_FUNC(ddc_get_dref_by_busno_or_connector);
-   RTTI_ADD_FUNC(ddc_mark_display_ref_removed);
-   RTTI_ADD_FUNC(ddc_recheck_dref);
-   RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
+   RTTI_ADD_FUNC(dw_add_display_by_businfo);
+   RTTI_ADD_FUNC(dw_add_display_ref);
+   RTTI_ADD_FUNC(dw_get_dref_by_busno_or_connector);
+   RTTI_ADD_FUNC(dw_mark_display_ref_removed);
+   RTTI_ADD_FUNC(dw_recheck_dref);
+   RTTI_ADD_FUNC(dw_remove_display_by_businfo);
 }

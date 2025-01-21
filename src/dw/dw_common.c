@@ -358,7 +358,7 @@ bool dw_i2c_hotplug_change_handler(
          break;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing bus %d", busno);
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
-      Display_Ref* dref = ddc_remove_display_by_businfo(businfo);
+      Display_Ref* dref = dw_remove_display_by_businfo(businfo);
       if (dref) {
          dw_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
                dref->drm_connector, dref, dref->io_path, events_queue);
@@ -391,7 +391,7 @@ bool dw_i2c_hotplug_change_handler(
        DDCA_IO_Path path;
        path.io_mode = DDCA_IO_I2C;
        path.path.i2c_busno = busno;
-       Display_Ref* dref = ddc_add_display_by_businfo(businfo);
+       Display_Ref* dref = dw_add_display_by_businfo(businfo);
        if (dref) {
           add_published_dref_id_by_dref(dref);
           if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) && drefs_to_recheck) {
