@@ -11,7 +11,7 @@
 extern int  nonudev_poll_loop_millisec;
 extern bool stabilize_added_buses_w_edid;
 
-gpointer ddc_watch_displays_without_udev(gpointer data);
+gpointer dw_watch_displays_without_udev(gpointer data);
 void init_dw_poll();
 
 #endif /* DW_POLL_H_ */

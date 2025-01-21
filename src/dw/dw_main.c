@@ -232,7 +232,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       global_wdd = wdd;
 
       GThreadFunc watch_thread_func = (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
-                                        ? ddc_watch_displays_without_udev
+                                        ? dw_watch_displays_without_udev
                                         : ddc_watch_displays_udev;
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
