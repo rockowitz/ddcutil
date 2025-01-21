@@ -40,7 +40,7 @@ typedef struct {
    pid_t                    main_process_id;
    pid_t                    main_thread_id;
    DDCA_Display_Event_Class event_classes;
-   DDCA_Watch_Mode           watch_mode;
+   DDCA_Watch_Mode          watch_mode;
    int                      watch_loop_millisec;
    XEvent_Data *            evdata;
   } Watch_Displays_Data;
