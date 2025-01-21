@@ -248,6 +248,12 @@ bool dref_set_alive(Display_Ref * dref, bool alive);
 bool dref_get_alive(Display_Ref * dref);
 #endif
 
+Display_Ref* get_dref_by_busno_or_connector(int busno, const char * connector, bool ignore_invalid);
+#define      GET_DREF_BY_BUSNO(_busno, _ignore) \
+             get_dref_by_busno_or_connector(_busno,NULL, (_ignore))
+#define      GET_DREF_BY_CONNECTOR(_connector_name, _ignore_invalid) \
+             get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
+
 // *** Display_Handle ***
 
 #define DISPLAY_HANDLE_MARKER "DSPH"

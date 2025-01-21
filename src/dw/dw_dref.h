@@ -18,17 +18,9 @@
 
 void         dw_add_display_ref(Display_Ref * dref);
 void         dw_mark_display_ref_removed(Display_Ref* dref);
-
 Display_Ref* dw_add_display_by_businfo(I2C_Bus_Info * businfo);
 Display_Ref* dw_remove_display_by_businfo(I2C_Bus_Info * businfo);
-
-Display_Ref* dw_get_dref_by_busno_or_connector(int busno, const char * connector, bool ignore_invalid);
-#define      DW_GET_DREF_BY_BUSNO(_busno, _ignore) \
-             ddc_get_dref_by_busno_or_connector(_busno,NULL, (_ignore))
-#define      DW_GET_DREF_BY_CONNECTOR(_connector_name, _ignore_invalid) \
-             ddc_get_dref_by_busno_or_connector(-1, _connector_name, _ignore_invalid)
-
-Error_Info*  ddc_recheck_dref(Display_Ref * dref);
+Error_Info*  dw_recheck_dref(Display_Ref * dref);
 
 void         init_dw_dref();
 
