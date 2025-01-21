@@ -56,17 +56,18 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_save_current_settings.h"
-#include <dw/ddc_status_events.h>
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
+
+#include "dw/dw_status_events.h"
 #ifdef BUILD_SHARED_LIB
-#include <dw/ddc_dw_dref.h>
-#include <dw/ddc_dw_xevent.h>
-#include <dw/ddc_dw_udev.h>
-#include <dw/ddc_dw_poll.h>
-#include <dw/ddc_dw_main.h>
-#include <dw/ddc_dw_common.h>
+#include "dw/dw_dref.h"
+#include "dw/dw_xevent.h"
+#include "dw/dw_udev.h"
+#include "dw/dw_poll.h"
+#include "dw/dw_main.h"
+#include "dw/dw_common.h"
 #endif
 
 #include "ddc/ddc_services.h"
@@ -242,17 +243,17 @@ void init_ddc_services() {
    init_ddc_packet_io();
    init_ddc_read_capabilities();
    init_ddc_serialize();
-   init_ddc_status_events();
+   init_dw_status_events();
    init_ddc_multi_part_io();
    init_ddc_vcp();
    init_ddc_vcp_version();
 // #ifdef BUILD_SHARED_LIB
-   init_ddc_watch_displays_dref();
-   init_ddc_watch_displays_xevent();
-   init_ddc_watch_displays_udev();
-   init_ddc_watch_displays_poll();
-   init_ddc_watch_displays_common();
-   init_ddc_watch_displays_main();
+   init_dw_dref();
+   init_dw_xevent();
+   init_dw_udev();
+   init_dw_poll();
+   init_dw_common();
+   init_dw_main();
 // #endif
 
    RTTI_ADD_FUNC(ddc_report_stats_main);

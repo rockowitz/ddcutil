@@ -1,4 +1,4 @@
-/** @file ddc_dw_common.c */
+/** @file dw_common.c */
 
 // Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -54,12 +54,13 @@
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
-#include <dw/ddc_status_events.h>
 #include "ddc/ddc_vcp.h"
-#include <dw/ddc_dw_dref.h>
-#include <dw/ddc_dw_xevent.h>
 
-#include <dw/ddc_dw_common.h>
+#include "dw_status_events.h"
+#include "dw_dref.h"
+#include "dw_xevent.h"
+
+#include "dw_common.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
@@ -524,7 +525,7 @@ ddc_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnecte
 }
 
 
-void init_ddc_watch_displays_common() {
+void init_dw_common() {
 #ifdef WATCH_ASLEEP
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
 #endif

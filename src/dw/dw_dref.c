@@ -1,4 +1,4 @@
-/** @file ddc_dw_dref.c
+/** @file dw_dref.c
  *  Functions that modify persistent Display_Ref related data structures
  *  when display connection and disconnection are detected.
  */
@@ -8,7 +8,6 @@
  
 /** \cond */
 #include <assert.h>
-#include <dw/ddc_dw_dref.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -35,6 +34,7 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_initial_checks.h"
 
+#include "dw_dref.h"
 
 
 // Default trace class for this file
@@ -363,7 +363,7 @@ ddc_get_display_ref_by_drm_connector(
 #endif
 
 
-void init_ddc_watch_displays_dref()  {
+void init_dw_dref()  {
    RTTI_ADD_FUNC(ddc_add_display_by_businfo);
    RTTI_ADD_FUNC(ddc_add_display_ref);
    RTTI_ADD_FUNC(ddc_get_dref_by_busno_or_connector);

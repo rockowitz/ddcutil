@@ -1,4 +1,4 @@
-/** @file ddc_dw_udev.c
+/** @file dw_udev.c
  *
  *  Watch for monitor addition and removal using UDEV
  */
@@ -56,11 +56,12 @@
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
-#include <dw/ddc_status_events.h>
 #include "ddc/ddc_vcp.h"
-#include <dw/ddc_dw_common.h>
 
-#include <dw/ddc_dw_udev.h>
+#include "dw_common.h"
+#include "dw_status_events.h"
+
+#include "dw/dw_udev.h"
 
 
 // Trace class for this file
@@ -808,7 +809,7 @@ gpointer ddc_watch_displays_udev(gpointer data) {
 #endif // ENABLE_UDEV
 
 
-void init_ddc_watch_displays_udev() {
+void init_dw_udev() {
 
 
 #ifdef ENABLE_UDEV

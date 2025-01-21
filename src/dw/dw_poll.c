@@ -1,4 +1,4 @@
-/** @file_dw_poll.c
+/** @file dw_poll.c
  *
  *  Watch for display changes without using UDEV
  */
@@ -54,14 +54,15 @@
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_displays.h"
-#include <dw/ddc_dw_common.h>
-#include <dw/ddc_dw_dref.h>
-#include <dw/ddc_dw_xevent.h>
 #include "ddc/ddc_packet_io.h"
-#include <dw/ddc_status_events.h>
 #include "ddc/ddc_vcp.h"
 
-#include <dw/ddc_dw_poll.h>
+#include "dw_common.h"
+#include "dw_dref.h"
+#include "dw_status_events.h"
+#include "dw_xevent.h"
+
+#include "dw_poll.h"
 
 
 // Trace class for this file
@@ -448,7 +449,7 @@ gpointer ddc_watch_displays_without_udev(gpointer data) {
 }
 
 
-void init_ddc_watch_displays_poll() {
+void init_dw_poll() {
       RTTI_ADD_FUNC(ddc_watch_displays_without_udev);
       RTTI_ADD_FUNC(process_screen_change_event);
       RTTI_ADD_FUNC(ddc_recheck_displays_func);

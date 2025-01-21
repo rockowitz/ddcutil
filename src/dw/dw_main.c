@@ -1,4 +1,4 @@
-/** @file ddc_dw_main.c */
+/** @file dw_main.c */
 
 // Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -56,15 +56,15 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_packet_io.h"
-#include <dw/ddc_status_events.h>
 #include "ddc/ddc_vcp.h"
 
-#include <dw/ddc_dw_common.h>
-#include <dw/ddc_dw_udev.h>
-#include <dw/ddc_dw_poll.h>
-#include <dw/ddc_dw_xevent.h>
+#include "dw_status_events.h"
+#include "dw_common.h"
+#include "dw_udev.h"
+#include "dw_poll.h"
+#include "dw_xevent.h"
 
-#include <dw/ddc_dw_main.h>
+#include "dw_main.h"
 
 
 // Trace class for this file
@@ -395,7 +395,7 @@ ddc_redetect_displays() {
 }
 
 
-void init_ddc_watch_displays_main() {
+void init_dw_main() {
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
    RTTI_ADD_FUNC(ddc_get_active_watch_classes);

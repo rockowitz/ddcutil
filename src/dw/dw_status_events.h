@@ -1,10 +1,10 @@
-/** @file ddc_status_events.h */
+/** @file dw_status_events.h */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DDC_STATUS_EVENTS_H_
-#define DDC_STATUS_EVENTS_H_
+#ifndef DW_STATUS_EVENTS_H_
+#define DW_STATUS_EVENTS_H_
 
 #include "glib-2.0/glib.h"
 
@@ -30,6 +30,6 @@ void         ddc_emit_or_queue_display_status_event(DDCA_Display_Event_Type even
                                               Display_Ref*            dref,
                                               DDCA_IO_Path            io_path,
                                               GArray*                 queue);
-void init_ddc_status_events();
+void init_dw_status_events();
 
-#endif /* DDC_STATUS_EVENTS_H_ */
+#endif /* DW_STATUS_EVENTS_H_ */

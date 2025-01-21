@@ -1,6 +1,5 @@
-/** @file ddc_dw_xevent.c */
-#include <dw/ddc_dw_common.h>
-#include <dw/ddc_dw_xevent.h>
+/** @file dw_xevent.c */
+
 #include <stdbool.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -14,6 +13,9 @@
 #include "base/rtti.h"
 #include "base/sleep.h"
 
+#include "dw_common.h"
+
+#include "dw_xevent.h"
 
 static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
@@ -279,7 +281,7 @@ bool dw_next_X11_event_of_interest(XEvent_Data * evdata) {
 }
 
 
-void init_ddc_watch_displays_xevent() {
+void init_dw_xevent() {
    RTTI_ADD_FUNC(ddc_detect_xevent_screen_change);
    RTTI_ADD_FUNC(ddc_init_xevent_screen_change_notification);
    RTTI_ADD_FUNC(dw_next_X11_event_of_interest);

@@ -1,10 +1,10 @@
-/** @file ddc_dw_xevent.h */
+/** @file dw_xevent.h */
 
 // Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DDC_DW_XEVENT_H_
-#define DDC_DW_XEVENT_H_
+#ifndef DW_XEVENT_H_
+#define DW_XEVENT_H_
 
 #include <stdbool.h>
 #include <X11/Xlib.h>
@@ -25,6 +25,6 @@ bool          ddc_detect_xevent_screen_change(XEvent_Data * evdata,  int poll_in
 bool          dw_next_X11_event_of_interest(XEvent_Data * evdata);
 void          ddc_send_x11_termination_message(XEvent_Data * evdata);
 
-void          init_ddc_watch_displays_xevent();
+void          init_dw_xevent();
 
-#endif /* DDC_DW_XEVENT_H_ */
+#endif /* DW_XEVENT_H_ */

@@ -1,12 +1,11 @@
-/** @file ddc_status_events.c */
+/** @file dw_status_events.c */
 
 // Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
-#include <dw/ddc_status_events.h>
-#include <glib-2.0/glib.h>
 
+#include <glib-2.0/glib.h>
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_c_api.h"
 #include "public/ddcutil_status_codes.h"
@@ -20,6 +19,7 @@
 
 #include "sysfs/sysfs_sys_drm_connector.h"
 
+#include "dw_status_events.h"
 
 
 // Trace class for this file
@@ -268,7 +268,7 @@ void ddc_emit_or_queue_display_status_event(
 }
 
 
-void init_ddc_status_events() {
+void init_dw_status_events() {
    RTTI_ADD_FUNC(ddc_create_display_status_event);
    RTTI_ADD_FUNC(ddc_emit_or_queue_display_status_event);
    RTTI_ADD_FUNC(ddc_emit_display_status_record);

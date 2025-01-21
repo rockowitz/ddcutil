@@ -1,10 +1,10 @@
-/** @file ddc_dw_main.h */
+/** @file dw_main.h */
 
 // Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DDC_DW_MAIN_H_
-#define DDC_DW_MAIN_H_
+#ifndef DW_MAIN_H_
+#define DW_MAIN_H_
 
 /** \cond */
 #include <glib-2.0/glib.h>
@@ -24,6 +24,6 @@ DDCA_Status  ddc_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enable
 DDCA_Status  ddc_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc);
 void         ddc_redetect_displays();
 bool         is_watch_displays_executing();
-void         init_ddc_watch_displays_main();
+void         init_dw_main();
 
-#endif /* DDC_DW_MAIN_H_ */
+#endif /* DW_MAIN_H_ */

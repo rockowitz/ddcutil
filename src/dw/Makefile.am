@@ -17,16 +17,16 @@ CLEANFILES = \
 noinst_LTLIBRARIES = libdw.la
 
 libdw_la_SOURCES =         \
-ddc_status_events.c         
+dw_status_events.c         
 
 if ENABLE_UDEV_COND
 libdw_la_SOURCES += \
-  ddc_dw_common.c \
-  ddc_dw_main.c \
-  ddc_dw_poll.c \
-  ddc_dw_dref.c \
-  ddc_dw_udev.c \
-  ddc_dw_xevent.c
+  dw_common.c \
+  dw_main.c \
+  dw_poll.c \
+  dw_dref.c \
+  dw_udev.c \
+  dw_xevent.c
 endif
 
 # Rename to "all=local" for development 

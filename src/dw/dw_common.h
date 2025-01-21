@@ -1,10 +1,10 @@
-/** @file ddc_dw_common.h */
+/** @file dw_common.h */
 
 // Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DDC_DW_COMMON_H_
-#define DDC_DW_COMMON_H_
+#ifndef DW_COMMON_H_
+#define DW_COMMON_H_
 
 #include <glib-2.0/glib.h>
 #include <sys/types.h>
@@ -14,7 +14,7 @@
 
 #include "base/displays.h"
 
-#include <dw/ddc_dw_xevent.h>
+#include "dw_xevent.h"
 
 extern int       initial_stabilization_millisec;
 extern int       stabilization_poll_millisec;
@@ -79,6 +79,6 @@ bool ddc_i2c_hotplug_change_handler(
       GArray * events_queue,
       GPtrArray * drefs_to_recheck);
 
-void init_ddc_watch_displays_common();
+void init_dw_common();
 
-#endif /* DDC_DW_COMMON_H_ */
+#endif /* DW_COMMON_H_ */

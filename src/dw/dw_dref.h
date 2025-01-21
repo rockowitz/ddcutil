@@ -1,4 +1,4 @@
-/** @file ddc_dw_dref.h
+/** @file dw_dref.h
  *  Functions that modify persistent Display_Ref related data structures when
  *  display connection and disconnection are detected.
  */
@@ -13,8 +13,8 @@
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
 
-#ifndef DDC_DW_DREF_H_
-#define DDC_DW_DREF_H_
+#ifndef DW_DREF_H_
+#define DW_DREF_H_
 
 void         ddc_add_display_ref(Display_Ref * dref);
 void         ddc_mark_display_ref_removed(Display_Ref* dref);
@@ -30,5 +30,6 @@ Display_Ref* ddc_get_dref_by_busno_or_connector(int busno, const char * connecto
 
 Error_Info*  ddc_recheck_dref(Display_Ref * dref);
 
-void         init_ddc_watch_displays_dref();
-#endif /* DDC_WATCH_DISPLAYS_DREF_H_ */
+void         init_dw_dref();
+
+#endif /* DW_DREF_H_ */
