@@ -771,12 +771,10 @@ gpointer dw_watch_displays_udev(gpointer data) {
 
 void init_dw_udev() {
 
-
 #ifdef ENABLE_UDEV
 #ifdef UNUSED
    RTTI_ADD_FUNC(ddc_i2c_filter_sleep_events);
 #endif
-   RTTI_ADD_FUNC(search_all_businfo_record_by_connector_name);
    RTTI_ADD_FUNC(dw_i2c_check_bus_changes);
    RTTI_ADD_FUNC(dw_i2c_check_bus_changes_for_connector);
    RTTI_ADD_FUNC(dw_i2c_stabilized_bus_by_connector_id);
