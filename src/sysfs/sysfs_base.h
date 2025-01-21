@@ -102,6 +102,11 @@ bool
 sysfs_is_ignorable_i2c_device(
       int busno);
 
+// moved from dw_udev.h:
+
+int              search_all_businfo_record_by_connector_name(char *connector_name);
+
+
 
 void init_i2c_sysfs_base();
 

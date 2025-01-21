@@ -281,46 +281,6 @@ Bit_Set_256 dw_i2c_check_bus_changes(
 }
 
 
-/** Searches through all_i2c_buses array of Bus_Info record
- *  to find one with given connector name.
- *
- *  @param  connector_name    DRM connector name
- *  #return bus number from Bus_Info record found, -1 if not found
- */
-int search_all_businfo_record_by_connector_name(char *connector_name) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name = |%s|", connector_name);
-
-   // reads connector dir directly, i.e. does not retrieve persistent data structure
-   //  Sys_Drm_Connector * conn = get_drm_connector(connector_name, debug_depth);
-   // int busno = conn->i2c_busno;
-   // free(conn);
-   Connector_Bus_Numbers *cbn = calloc(1, sizeof(Connector_Bus_Numbers));
-   get_connector_bus_numbers("/sys/class/drm", connector_name, cbn);
-   int busno = cbn->i2c_busno;
-   free_connector_bus_numbers(cbn);
-   if (busno < 0) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Examining businfo records...");
-      // look through all businfo records for one with the connector name
-      for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
-         I2C_Bus_Info *businfo = g_ptr_array_index(all_i2c_buses, ndx);
-         DBGMSG("Examining businfo record for bus %d, I2C_BUS_PROBED=%s, connector_found_by=%s",
-               businfo->busno, sbool(businfo->flags & I2C_BUS_PROBED),
-               drm_connector_found_by_name(businfo->drm_connector_found_by));
-         // need to check if businfo record is valid?
-         if (streq(businfo->drm_connector_name, connector_name)) {
-            busno = businfo->busno;
-            break;
-         }
-      }
-   }
-   DBGTRC_DONE(debug, TRACE_GROUP, "returning busno %d", busno);
-   return busno;
-}
-
-
-
-
 /** Simpler alternative to #ddc_i2c_check_bus_changes() for the common case where
  *  all displays have a sysfs connector record with an accurate edid attribute.
  *
