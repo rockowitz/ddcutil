@@ -65,50 +65,46 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
+uint16_t  initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
+uint16_t  stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
+uint16_t  udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
+uint16_t  poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
+uint16_t  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 
-uint16_t   initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
-uint16_t   stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
-uint16_t   udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
-uint16_t   poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
-uint16_t   xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 bool      terminate_using_x11_event      = false;
 
 
-int dw_calc_watch_loop_millisec(DDCA_Watch_Mode watch_mode) {
+uint32_t dw_calc_watch_loop_millisec(DDCA_Watch_Mode watch_mode) {
    assert(watch_mode != Watch_Mode_Dynamic);
    int final_answer = 0;
 
-   if (watch_mode == Watch_Mode_Udev) {
-      if (udev_watch_loop_millisec)
-         final_answer = udev_watch_loop_millisec;
-      else
-         final_answer = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
+   switch (watch_mode) {
+   case Watch_Mode_Udev:   final_answer = udev_watch_loop_millisec;   break;
+   case Watch_Mode_Xevent: final_answer = xevent_watch_loop_millisec; break;
+   case Watch_Mode_Poll:   final_answer = poll_watch_loop_millisec;   break;
+   case Watch_Mode_Dynamic:
+        PROGRAM_LOGIC_ERROR("watch_mode == Watch_Mode_Dynamic");
    }
-   else if (watch_mode == Watch_Mode_Xevent) {
-      if (xevent_watch_loop_millisec)
-         final_answer = xevent_watch_loop_millisec;
-      else
-         final_answer = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
-   }
-   else {
-      if (poll_watch_loop_millisec)
-         final_answer = poll_watch_loop_millisec;
-      else
-         final_answer = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
-   }
-   // calculated_watch_loop_millisec = final_answer;
+
    return final_answer;
 }
 
 
-int dw_split_sleep(int watch_loop_millisec) {
+/** Performs a sleep in short segments so that it can be responsively terminated
+ *  when dw_stop_watch_displays() is called. Each segment is no longer than
+ *  200 milliseconds.
+ *
+ *  @param  watch_loop_millisec  intended total milliseconds to sleep
+ *  @return actual total milliseconds
+ */
+uint32_t dw_split_sleep(int watch_loop_millisec) {
    assert(watch_loop_millisec > 0);
    uint64_t max_sleep_microsec = watch_loop_millisec * (uint64_t)1000;
    uint64_t sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
-   int slept = 0;
+   uint64_t slept = 0;
    for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
       usleep(sleep_step_microsec);
-   return slept;
+   return slept/1000;
 }
 
 
