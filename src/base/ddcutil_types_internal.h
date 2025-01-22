@@ -74,6 +74,7 @@ typedef enum {
 
 //! For tuning display watch logic
 typedef struct {
+   // see init_display_watch_options() for consideration of what to add
    DDCA_Watch_Mode watch_mode;    // can this be changed dynamically?
 
    uint16_t  udev_watch_loop_interval_millisec;
