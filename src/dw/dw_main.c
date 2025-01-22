@@ -56,19 +56,15 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 DDCA_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
 bool             enable_watch_displays = true;
 
-// some of these go elsewhere
 static GThread * watch_thread = NULL;
 static GMutex    watch_thread_mutex;
 static DDCA_Display_Event_Class active_watch_displays_classes = DDCA_EVENT_CLASS_NONE;
+static Watch_Displays_Data * global_wdd;     // needed to pass to dw_stop_watch_displays()
 
-
-//
-// Common to all variants
-//
 
 /** Determines the actual watch mode to be used
  *
- *  @param  initial_mode   mode requested
+ *  @param  initial_mode  mode requested
  *  @param  xev_data_loc  address at which to set the address of a newly allocated
  *                        XEvent_Data struct, if the resolved mode is Watch_Mode_Xevent
  *  @return actual watch mode to be used
@@ -147,13 +143,11 @@ resolve_watch_mode(DDCA_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
 }
 
 
-// hacks
-Watch_Displays_Data * global_wdd;     // needed for dw_stop_watch_displays()
-
 /** Starts thread that watches for changes in display connection status.
  *
- *  \return  Error_Info struct if error:
- *           -  DDCRC_INVALID_OPERATION  watch thread already started
+ *  @param  event_classes  types of events to watch for
+ *  @return  Error_Info struct if error, possible status codes:
+ *           -  DDCRC_INVALID_OPERATION  e.g. watch thread already started, watching disabled
  *           -  DDCRC_ARG                event_classes == DDCA_EVENT_CLASS_NONE
  */
 Error_Info *
@@ -164,7 +158,6 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
         watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    Error_Info * err = NULL;
    XEvent_Data * xev_data = NULL;
-   // DDC_Watch_Mode resolved_watch_mode;
 
    if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
@@ -185,12 +178,9 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
 
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:                 %s", SBOOL(use_sysfs_connector_id));    // watch udev only
-// MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_x37_detection_table:                %s", SBOOL(use_x37_detection_table));   // check_x37_for_businfo()
-// MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"try_get_edid_from_sysfs_first:          %s", SBOOL(try_get_edid_from_sysfs_first));  // i2c_edid_exists()
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"extra_stabilization_millisec:           %d", initial_stabilization_millisec);
-                                               // ddc_i2c_stabilized_single_bus_by_connector_id, i2c_stabilized_buses_bitset()  (both)
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"stabilization_poll_millisec:            %d", stabilization_poll_millisec);  // same
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:       %s", SBOOL(use_sysfs_connector_id));    // watch udev only
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"extra_stabilization_millisec: %d", initial_stabilization_millisec);
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"stabilization_poll_millisec:  %d", stabilization_poll_millisec);
 
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
@@ -250,9 +240,6 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "wait=%s, watch_thread=%p", SBOOL(wait), watch_thread );
 
-   // show_backtrace(2);
-   // debug_current_traced_function_stack(true);
-
    DDCA_Status ddcrc = DDCRC_OK;
 
 #ifdef ENABLE_UDEV
@@ -265,7 +252,7 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "resolved_watch_mode = %s",
                                             watch_mode_name(global_wdd->watch_mode));
       if (global_wdd->watch_mode == Watch_Mode_Xevent) {
-         if (terminate_using_x11_event) {
+         if (terminate_using_x11_event) {   // for testing, does not currently work
             dw_send_x11_termination_message(global_wdd->evdata);
             DW_SLEEP_MILLIS(2*1000, "After ddc_send_x11_termination_message()");
          }
@@ -367,7 +354,6 @@ dw_redetect_displays() {
    g_mutex_unlock(&all_display_refs_mutex);
    if (debug) {
       ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
-      // dbgrpt_valid_display_refs(1);
    }
    if (active_rc == DDCRC_OK) {
       Error_Info * err = dw_start_watch_displays(enabled_classes);
