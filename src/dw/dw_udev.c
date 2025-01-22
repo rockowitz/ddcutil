@@ -538,7 +538,7 @@ gpointer dw_watch_displays_udev(gpointer data) {
       }
 
       while (!dev) {
-         int slept = 0;   // will contain length of final sleep
+         uint32_t slept = 0;   // will contain length of final sleep
          if (deferred_events && deferred_events->len > 0) {
             dw_i2c_emit_deferred_events(deferred_events);
          }
@@ -552,7 +552,7 @@ gpointer dw_watch_displays_udev(gpointer data) {
          if (terminate_watch_thread) {
             // n. slept == 0 if no sleep was performed
             DBGTRC_DONE(debug, TRACE_GROUP,
-                  "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
+                  "Terminating thread.  Final polling sleep was %d millisec.", slept);
            dw_free_watch_displays_data(wdd);
            //  int rc = udev_monitor_filter_remove(mon);
            udev_monitor_unref(mon);
