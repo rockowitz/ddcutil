@@ -1,6 +1,6 @@
 /** @file flock.c */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -47,6 +47,10 @@ void i2c_enable_cross_instance_locks(bool yesno) {
    DBGTRC_EXECUTED(debug, TRACE_GROUP, "yesno = %s", SBOOL(yesno));
 }
 
+
+//
+// Debugging Functions
+//
 
 void show_flock(const char * filename) {
    int inode = get_inode_by_fn(filename);
