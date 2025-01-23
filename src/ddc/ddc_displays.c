@@ -603,8 +603,8 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 }
 
 
-/** Initializes the master display list in global variable #all_displays and
- *  records open errors in global variable #display_open_errors.
+/** Initializes the master display list in global variable #all_display_refs
+ *  and records open errors in global variable #display_open_errors.
  *
  *  Does nothing if the list has already been initialized.
  */
@@ -629,7 +629,7 @@ ddc_ensure_displays_detected() {
 /** Discards all detected displays.
  *
  *  - All open displays are closed
- *  - The list of open displays in #all_displays is discarded:1427
+ *  - The list of open displays in #all_display_refs is discarded
  *  - The list of errors in #display_open_errors is discarded
  *  - The list of detected I2C buses is discarded
  *  - The USB monitor list is discarded
