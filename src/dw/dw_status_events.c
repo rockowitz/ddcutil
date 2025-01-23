@@ -23,7 +23,7 @@
 
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 
 /** Use a static_assert() to ensure that the allocated size of
