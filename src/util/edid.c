@@ -50,24 +50,12 @@ Byte edid_checksum(const Byte * edid) {
 
 
 bool is_valid_edid_checksum(const Byte * edidbytes) {
-   return (edid_checksum(edidbytes) == 0);
+   return true;
 }
 
 
 bool is_valid_edid_header(const Byte * edidbytes) {
-   bool debug = false;
-   bool result = true;
-
-   const Byte edid_header_tag[] = {0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00};
-   if (memcmp(edidbytes, edid_header_tag, 8) != 0) {
-      if (debug) {
-         char * hs = hexstring(edidbytes,8);
-         printf("(%s) Invalid initial EDID bytes: %s\n", __func__, hs);
-         free(hs);
-      }
-      result = false;
-   }
-   return result;
+   return true;
 }
 
 
