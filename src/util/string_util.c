@@ -1545,8 +1545,8 @@ void hex_dump_indented_collect(GPtrArray * collector, const Byte* data, int size
    DBGF(debug, "Starting. indents=%d", indents);
    assert(collector);
    if (debug) {
-      show_backtrace(2);
-      backtrace_to_syslog(LOG_NOTICE, 2);
+      show_backtrace(0);
+      backtrace_to_syslog(LOG_NOTICE, 0);
    }
 
    int i; // index in data...
