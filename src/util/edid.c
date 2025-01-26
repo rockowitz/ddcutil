@@ -433,11 +433,10 @@ void report_parsed_edid_base(
              __func__, (void*)edid, SBOOL(verbose_synopsis), sbool(show_raw));
 
    if (debug) {
-      show_backtrace(2);
+      show_backtrace(0);
       if (redirect_reports_to_syslog)
-         backtrace_to_syslog(LOG_NOTICE, 2);
+         backtrace_to_syslog(LOG_NOTICE, 0);
    }
-
 
    int d1 = depth+1;
    int d2 = depth+2;
