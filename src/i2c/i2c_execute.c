@@ -3,7 +3,7 @@
  * Basic functions for writing to and reading from the I2C bus using
  * alternative mechanisms.
  */
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -556,9 +556,12 @@ i2c_ioctl_reader1(
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "Error in ioctl() read, rc=%d, errno=%s, device=%s",
                         rc, psc_desc(-errsv), filename_for_fd_t(fd));
-      SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) Error in ioctl() read, rc=%d, errno=%s, device=%s",
+      SYSLOG2(DDCA_SYSLOG_DEBUG, "(%s) Error in ioctl() read, rc=%d, errno=%s, device=%s",
             __func__, rc, psc_desc(-errsv), filename_for_fd_t(fd));
-      // show_backtrace(1);
+      if (IS_DBGTRC(debug, TRACE_GROUP)) {
+         show_backtrace(0);
+         dbgrpt_traced_callstack_call_table(0);
+      }
       rc = -errsv;
    }
    else {
