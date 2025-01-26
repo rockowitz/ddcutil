@@ -265,7 +265,7 @@ Bit_Set_256 dw_i2c_check_bus_changes(
       BS256 bs_buses_w_edid_added = bs256_and_not(bs_new_buses_w_edid, bs_prev_buses_w_edid);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_buses_w_edid_added: %s", BS256_REPR(bs_buses_w_edid_added));
 
-      hotplug_change_handler_emitted = dw_i2c_hotplug_change_handler(
+      hotplug_change_handler_emitted = dw_hotplug_change_handler(
                                            bs_buses_w_edid_removed,
                                            bs_buses_w_edid_added,
                                            events_queue,
@@ -342,7 +342,7 @@ Bit_Set_256 dw_i2c_check_bus_changes_for_connector(
       BS256 bs_buses_w_edid_added = bs256_and_not(bs_new_buses_w_edid, bs_prev_buses_w_edid);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_added: %s", BS256_REPR(bs_buses_w_edid_added));
 
-      hotplug_change_handler_emitted = dw_i2c_hotplug_change_handler(
+      hotplug_change_handler_emitted = dw_hotplug_change_handler(
                                            bs_buses_w_edid_removed,
                                            bs_buses_w_edid_added,
                                            events_queue,

@@ -134,7 +134,7 @@ STATIC void process_screen_change_event(
                                        bs256_count(bs_added_buses_w_edid) > 0;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "connected_buses_changed = %s", SBOOL(connected_buses_w_edid_changed));
    if (connected_buses_w_edid_changed) {
-      hotplug_change_handler_emitted = dw_i2c_hotplug_change_handler(
+      hotplug_change_handler_emitted = dw_hotplug_change_handler(
                                            bs_removed_buses_w_edid,
                                            bs_added_buses_w_edid,
                                            deferred_events,
