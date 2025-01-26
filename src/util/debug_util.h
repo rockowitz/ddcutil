@@ -3,7 +3,7 @@
  * Functions for debugging
  */
 
-// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DEBUG_UTIL_H_
@@ -21,7 +21,7 @@ extern "C" {
 #define ASSERT_WITH_BACKTRACE(_condition) \
 do { \
    if ( !(_condition) ) {  \
-      show_backtrace(2);   \
+      show_backtrace(0);   \
       assert(_condition);  \
    }                       \
 } while(0)
