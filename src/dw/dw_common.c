@@ -477,7 +477,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
 
 
 Bit_Set_256
-dw_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
+dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "prior =%s, some_displays_disconnected=%s, extra_stabilization_millisec=%d",
          BS256_REPR(bs_prior), SBOOL(some_displays_disconnected), initial_stabilization_millisec);
@@ -528,7 +528,7 @@ void init_dw_common() {
 #ifdef WATCH_ASLEEP
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
 #endif
-   RTTI_ADD_FUNC(dw_i2c_stabilized_buses_bs);
+   RTTI_ADD_FUNC(dw_stabilized_buses_bs);
    RTTI_ADD_FUNC(dw_i2c_emit_deferred_events);
    RTTI_ADD_FUNC(dw_i2c_hotplug_change_handler);
 }

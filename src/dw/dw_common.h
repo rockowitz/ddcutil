@@ -56,7 +56,7 @@ bool bs256_pair_eq(Bit_Set_256_Pair pair1, Bit_Set_256_Pair pair2);
 #endif
 
 Bit_Set_256
-dw_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected);
+dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected);
 
 #ifdef WATCH_ASLEEP
 Bit_Set_256 ddc_i2c_check_bus_asleep(
