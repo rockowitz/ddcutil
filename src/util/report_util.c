@@ -88,7 +88,9 @@ typedef struct {
    // work around for fact that can't initialize the initial stack entry to stdout
    FILE* alt_initial_output_dest;     // initial NULL;
    bool  initial_output_dest_changed; // initial false;
-   bool  prefix_report_output;
+
+   bool  prefix_report_output;        // initial false
+   // bool  temporary_reports_to_syslog; // initial false
 } Per_Thread_Settings;
 
 
@@ -278,6 +280,17 @@ void rpt_change_output_dest(FILE* new_dest) {
       settings->alt_initial_output_dest = new_dest;
    }
 }
+
+
+#ifdef MAYBE_FUTURE
+bool rpt_set_reports_to_syslog_override(bool onoff) {
+   Per_Thread_Settings * settings = get_thread_settings();
+   bool old = settings->temporary_reports_to_syslog;
+   settings->temporary_reports_to_syslog = onoff;
+   return old;
+}
+#endif
+
 
 
 // should not be needed, for diagnosing a problem
