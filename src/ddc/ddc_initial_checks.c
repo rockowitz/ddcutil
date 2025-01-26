@@ -314,7 +314,7 @@ check_supported_feature(Display_Handle * dh, bool newly_added, DDCA_Vcp_Feature_
             feature_code,
             errinfo_summary(ddc_excp));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "!!!! %s", msg);
-      SYSLOG2(DDCA_SYSLOG_ERROR, "!!! %s", msg);
+      SYSLOG2(DDCA_SYSLOG_WARNING, "(%s) %s", __func__, msg);
       free(msg);
 
       dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
@@ -427,7 +427,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
    bool saved_dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
 
    if (debug)
-      show_backtrace(1);
+      show_backtrace(0);
 
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
       // assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
