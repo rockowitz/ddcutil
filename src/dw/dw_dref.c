@@ -69,7 +69,7 @@ void dw_mark_display_ref_removed(Display_Ref* dref) {
    g_mutex_lock(&all_display_refs_mutex);
    if (IS_DBGTRC(debug, debug)) {
       show_backtrace(2);
-      backtrace_to_syslog(LOG_NOTICE, 2);
+      backtrace_to_syslog(LOG_NOTICE, 0);
    }
    dref->flags |= DREF_REMOVED;
    g_mutex_unlock(&all_display_refs_mutex);
@@ -171,7 +171,7 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
 
    Display_Ref * dref = GET_DREF_BY_BUSNO(businfo->busno, /*ignore_invalid*/ true);
    char buf[100];
-   g_snprintf(buf, 100, "Removing connected display, dref %s", dref_repr_t(dref));
+   g_snprintf(buf, 100, "Removing connected display on bus %d", businfo->busno);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
    if (dref) {
