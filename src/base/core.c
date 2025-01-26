@@ -1086,7 +1086,12 @@ get_thread_capture_buf_desc() {
 
 void
 start_capture(DDCA_Capture_Option_Flags flags) {
+   bool debug = false;
+   DBGF(debug,"Starting. flags=0x%02x", flags);
+
    In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+   // traced_function_stack_suspended = true;
+   msg_decoration_suspended = true;
 
    if (!fdesc->in_memory_file) {
       fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
@@ -1098,39 +1103,50 @@ start_capture(DDCA_Capture_Option_Flags flags) {
    if (flags & DDCA_CAPTURE_STDERR)
       set_ferr(fdesc->in_memory_file);
    fdesc->in_memory_capture_active = true;
-   // printf("(%s) Done.\n", __func__);
+
+   // DBGF(debug, "Done.");
 }
 
 
 char *
 end_capture(void) {
+   bool debug = false;
+   // DBGF(debug, "Starting");
+
    In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
    assert(fdesc->in_memory_capture_active);
 
-   char * result = "\0";
+   char * result = NULL;
    // printf("(%s) Starting.\n", __func__);
    assert(fdesc->in_memory_file);
    if (fflush(fdesc->in_memory_file) < 0) {
       set_ferr_to_default();
       SEVEREMSG("flush() failed. errno=%d", errno);
-      return g_strdup(result);
+      // return g_strdup(result);
+      result = g_strdup("\0");
    }
-   // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
-   result = g_strdup(fdesc->in_memory_bufstart);
-   if (fclose(fdesc->in_memory_file) < 0) {
-      set_ferr_to_default();
-      SEVEREMSG("fclose() failed. errno=%d", errno);
-      return result;
+   else {
+      // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
+      result = g_strdup(fdesc->in_memory_bufstart);
+      if (fclose(fdesc->in_memory_file) < 0) {
+         set_ferr_to_default();
+         SEVEREMSG("fclose() failed. errno=%d", errno);
+         result = g_strdup("\0");
+      }
+      else {
+         free(fdesc->in_memory_bufstart);
+         fdesc->in_memory_file = NULL;
+      }
    }
-   free(fdesc->in_memory_bufstart);
-   fdesc->in_memory_file = NULL;
    set_fout_to_default();
    if (fdesc->flags & DDCA_CAPTURE_STDERR)
-      set_ferr_to_default();
+   set_ferr_to_default();
    redirect_reports_to_syslog = fdesc->saved_rpt_to_syslog;
    fdesc->in_memory_capture_active = false;
+   // traced_function_stack_suspended = false;
+   msg_decoration_suspended = false;
 
-   // printf("(%s) Done. result=%p\n", __func__, result);
+   DBGF(debug, "Done.     result=%p", result);
    return result;
 }
 
