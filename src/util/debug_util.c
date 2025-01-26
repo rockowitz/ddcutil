@@ -42,10 +42,10 @@ void show_backtrace(int stack_adjust) {
    int depth = 0;
    GPtrArray * callstack = get_backtrace(stack_adjust+2); // +2 for get_backtrace(), backtrace()
    if (!callstack) {
-      perror("backtrace unavailable");
+      perror("backtrace() unavailable");
    }
    else {
-      rpt_label(depth, "Current call stack:");
+      rpt_label(depth, "Current call stack (using backtrace()):");
       for (int ndx = 0; ndx < callstack->len; ndx++) {
          rpt_vstring(depth, "   %s", (char *) g_ptr_array_index(callstack, ndx));
       }
@@ -61,6 +61,7 @@ void set_simple_dbgmsg_min_funcname_size(int new_size) {
    min_funcname_size = new_size;
 }
 
+// n. uses no report_util functions
 bool simple_dbgmsg(
         bool              debug_flag,
         const char *      funcname,
