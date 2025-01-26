@@ -203,7 +203,7 @@ void ddc_i2c_filter_sleep_events(GArray * events) {
 #endif
 
 
-void dw_i2c_emit_deferred_events(GArray * deferred_events) {
+void dw_emit_deferred_events(GArray * deferred_events) {
    bool debug = false;
 
 #ifdef TEMPORARY_SIMPLIFICATION
@@ -529,6 +529,6 @@ void init_dw_common() {
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
 #endif
    RTTI_ADD_FUNC(dw_stabilized_buses_bs);
-   RTTI_ADD_FUNC(dw_i2c_emit_deferred_events);
+   RTTI_ADD_FUNC(dw_emit_deferred_events);
    RTTI_ADD_FUNC(dw_i2c_hotplug_change_handler);
 }

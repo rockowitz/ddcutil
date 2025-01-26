@@ -65,7 +65,7 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
       GArray*      events_queue);
 #endif
 
-void dw_i2c_emit_deferred_events(GArray * deferred_events);
+void dw_emit_deferred_events(GArray * deferred_events);
 
 bool dw_i2c_hotplug_change_handler(
       Bit_Set_256    bs_buses_w_edid_removed,

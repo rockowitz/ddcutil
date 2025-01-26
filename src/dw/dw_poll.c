@@ -383,7 +383,7 @@ gpointer dw_watch_displays_without_udev(gpointer data) {
 
    while (!terminate_watch_thread) {
       if (deferred_events && deferred_events->len > 0) {
-         dw_i2c_emit_deferred_events(deferred_events);
+         dw_emit_deferred_events(deferred_events);
       }
       else {     // skip polling loop sleep if deferred events were output
          if (!skip_next_sleep && wdd->watch_mode == Watch_Mode_Poll) {

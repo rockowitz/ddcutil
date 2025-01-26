@@ -540,7 +540,7 @@ gpointer dw_watch_displays_udev(gpointer data) {
       while (!dev) {
          uint32_t slept = 0;   // will contain length of final sleep
          if (deferred_events && deferred_events->len > 0) {
-            dw_i2c_emit_deferred_events(deferred_events);
+            dw_emit_deferred_events(deferred_events);
          }
          else {     // skip polling loop sleep if deferred events were output
             if (!skip_next_sleep) {
