@@ -502,7 +502,8 @@ dw_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected
    int stablect = 0;
    bool stable = false;
    while (!stable) {
-      DW_SLEEP_MILLIS(stabilization_poll_millisec, "Loop until stable");
+      // DW_SLEEP_MILLIS(stabilization_poll_millisec, "Loop until stable"); // TMI
+      sleep_millis(stabilization_poll_millisec);
       BS256 bs_latest = i2c_buses_w_edid_as_bitset();
       if (bs256_eq(bs_latest, bs_prior))
             stable = true;
@@ -511,7 +512,9 @@ dw_i2c_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected
    }
    if (stablect > 1) {
       char buf[100];
-      g_snprintf(buf, 100,"Required %d extra calls to i2c_buses_w_edid_as_bitset()", stablect+1);
+      g_snprintf(buf, 100,
+            "Required %d extra %d millisecond calls to i2c_buses_w_edid_as_bitset()",
+            stablect+1, stabilization_poll_millisec);
       DBGTRC_NOPREFIX(debug || true, TRACE_GROUP, "%s", buf);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    }
