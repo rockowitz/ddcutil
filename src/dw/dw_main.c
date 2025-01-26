@@ -178,9 +178,10 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
 
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"use_sysfs_connector_id:       %s", SBOOL(use_sysfs_connector_id));    // watch udev only
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"extra_stabilization_millisec: %d", initial_stabilization_millisec);
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"stabilization_poll_millisec:  %d", stabilization_poll_millisec);
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"          use_sysfs_connector_id:       %s", SBOOL(use_sysfs_connector_id));    // watch udev only
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"          extra_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
+         initial_stabilization_millisec, stabilization_poll_millisec);
+   // MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"          stabilization_poll_millisec:  %d", stabilization_poll_millisec);
 
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
@@ -322,6 +323,7 @@ dw_redetect_displays() {
    bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
+
    DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
    DDCA_Status active_rc = dw_get_active_watch_classes(&enabled_classes);
    if (active_rc == DDCRC_OK) {
@@ -380,6 +382,7 @@ void ddca_get_display_watch_settings(DDCA_DW_Settings * settings) {
 
    // settings->watch_retry_thread_sleep_factor_millisec;
 }
+
 
 void ddca_set_display_watch_settings(DDCA_DW_Settings * settings) {
    udev_watch_loop_millisec   =     settings->udev_watch_loop_interval_millisec;
