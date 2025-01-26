@@ -519,9 +519,9 @@ rpt_attr_edid(
     bool debug = false;
     DBGF(debug, "Starting.  depth=%d, value_loc=%p, fn_segment=|%s|", depth, value_loc, fn_segment);
     if (debug) {
-       show_backtrace(2);
+       show_backtrace(0);
        if (redirect_reports_to_syslog)
-          backtrace_to_syslog(LOG_NOTICE, 2);
+          backtrace_to_syslog(LOG_NOTICE, 0);
     }
     if (debug && depth < 0)
           depth=1;
