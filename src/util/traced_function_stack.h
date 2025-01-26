@@ -12,10 +12,6 @@ extern "C" {
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
-// #include <sys/syscall.h>
-// #include <unistd.h>
-
-#include "common_inlines.h"
 
 extern bool traced_function_stack_enabled;
 extern __thread bool traced_function_stack_suspended;
