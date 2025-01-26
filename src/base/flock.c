@@ -20,6 +20,7 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/timestamp.h"
+#include "util/traced_function_stack.h"
 
 #include "base/core.h"
 #include "base/parms.h"
@@ -52,27 +53,39 @@ void i2c_enable_cross_instance_locks(bool yesno) {
 // Debugging Functions
 //
 
-void show_flock(const char * filename) {
+void show_flock(const char * filename, bool dest_syslog) {
+   if (dest_syslog)
+      start_capture(DDCA_CAPTURE_NOOPTS);
+
    int inode = get_inode_by_fn(filename);
-   MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Processes locking %s (inode %d): ", filename, inode);
+   rpt_vstring(1, "Processes locking %s (inode %d): ", filename, inode);
    char cmd[80];
    g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d | cut -d' ' -f'1'", inode);
    execute_shell_cmd_rpt(cmd, 1);  // *** TEMP ***
    GPtrArray * pids = execute_shell_cmd_collect(cmd);
-   // rpt_vstring(1, "Processes locking inode %jd", inode);
    for (int ndx = 0; ndx < pids->len; ndx++) {
       char * spid = g_ptr_array_index(pids, ndx);
-      rpt_vstring(2, "%s", spid);  // *** TEMP ***
+      rpt_vstring(2, "%s", spid);
       g_snprintf(cmd, 80, "cat /proc/%s/status | grep -E -e Name -e State -e '^Pid:'", spid);
       execute_shell_cmd_rpt(cmd, 1); // *** TEMP ***
       GPtrArray * status_lines = execute_shell_cmd_collect(cmd);
       for (int k = 0; k < status_lines->len; k ++) {
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "   %s", (char*) g_ptr_array_index(status_lines, k));
+         rpt_vstring(2, "%s", (char*) g_ptr_array_index(status_lines, k));
       }
       rpt_nl();
       g_ptr_array_free(status_lines, true);
    }
    g_ptr_array_free(pids,true);
+
+   if (dest_syslog) {
+      Null_Terminated_String_Array ntsa = end_capture_as_ntsa();
+      for (int ndx = 0; ntsa[ndx]; ndx++) {
+         char * s = ntsa[ndx];
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+         s++;
+      }
+      ntsa_free(ntsa, true);
+   }
 }
 
 
@@ -210,11 +223,14 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       // n.b. lock will fail w EAGAIN if at least NEC display turned off
       assert(flockrc == -1);
       int errsv = errno;
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "filename=%s, flock_call_ctr=%d, flock() returned: %s",
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "filename=%s, flock_call_ctr=%d, flock() returned: %s",
             filename, flock_call_ctr, psc_desc(-errsv));
 
       if (total_wait_millisec > max_wait_millisec) {
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Max wait time exceeded after %d flock() calls", flock_call_ctr);
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Max wait time %"PRIu64" milliseconds exceeded after %d flock() calls",
+               max_wait_millisec, flock_call_ctr);
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Max wait time %"PRIu64" milliseconds exceeded after %d flock() calls",
+               max_wait_millisec, flock_call_ctr);
          flockrc = DDCRC_FLOCKED;
          break;
       }
@@ -245,32 +261,40 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       DBGTRC_NOPREFIX(debug || debug_flock, DDCA_TRC_NONE,
                  "Resource locked. filename=%s, flock_call_ctr=%d, Sleeping", filename, flock_call_ctr);
 
-      if (flock_call_ctr == 1)
-              MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE, "%s locked.  Retrying...", filename);
+      // if (flock_call_ctr == 1)
+      //         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s locked.  Retrying...", filename);
       usleep(flock_poll_millisec*1000);
       total_wait_millisec += flock_poll_millisec;
    }
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "end of polling loop. flockrc = %d", flockrc);
 
-   if (flockrc != 0) {
-      if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
-         DBGMSG("Flock diagnostics:");
-         show_flock(filename);
-         show_backtrace(2);
-         backtrace_to_syslog(LOG_ERR, 0);
-         //  ASSERT_WITH_BACKTRACE(false);
-      }
-   }
+   // DBGMSG("Testing Flock diagnostics:");
+   // show_flock(filename, true);
 
-   if (flock_call_ctr > 1) {
-      if (flockrc == 0) {
+   if (flockrc == 0) {
+      if (flock_call_ctr == 1) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
+         SYSLOG2(DDCA_SYSLOG_DEBUG, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
+      }
+      else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
       }
-      else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock for %s failed on %d calls", filename, flock_call_ctr);
-         SYSLOG2(DDCA_SYSLOG_ERROR, "flock for %s failed on %d calls", filename, flock_call_ctr);
+
+   }
+   else {
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "flock for %s failed on %d calls", filename, flock_call_ctr);
+      if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
+         DBGMSG("Flock diagnostics:");
+         show_flock(filename, false);
+         show_backtrace(0);
+         debug_current_traced_function_stack(/*reverse*/ true);
       }
+
+      SYSLOG2(DDCA_SYSLOG_ERROR, "flock for %s failed on %d calls", filename, flock_call_ctr);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Flock diagnostics:");
+      show_flock(filename, true);
+      backtrace_to_syslog(LOG_ERR, 0);
    }
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE,flockrc, "filename=%s", filename);
    return flockrc;
