@@ -26,6 +26,16 @@ static GMutex all_traced_function_stacks_mutex;
 __thread pid_t process_id = 0;
 __thread pid_t thread_id  = 0;
 
+
+#ifdef UNUSED
+bool suspend_traced_function_stack(bool onoff) {
+   bool old = traced_function_stack_suspended;
+   traced_function_stack_suspended = onoff;
+   return old;
+}
+#endif
+
+
 /** Reports the contents of the specified traced function stack.
  *
  *  @param stack    traced function stack to report
@@ -121,7 +131,6 @@ GQueue * new_traced_function_stack() {
 
    if (debug)
       printf("[%7d](%s) Done.    Returning %p\n", tid(), __func__, result);
-
    return result;
 }
 
@@ -193,7 +202,7 @@ void pop_traced_function(const char * funcname) {
                   __func__, tid(), traced_function_stack, funcname);
             syslog(LOG_ERR, "(%s) tid=%d, traced_function_stack=%p, expected %s, traced_function_stack is empty\n",
                   __func__, tid(), traced_function_stack, funcname);
-            backtrace_to_syslog(LOG_ERR, /* stack_adjust */ 1);
+            backtrace_to_syslog(LOG_ERR, /* stack_adjust */ 0);
          }
          else {
             if (strcmp(popped_func, funcname) != 0) {
