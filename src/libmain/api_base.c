@@ -1080,10 +1080,7 @@ ddca_set_ferr_to_default(void) {
 void
 ddca_start_capture(DDCA_Capture_Option_Flags flags) {
    bool debug = false;
-   traced_function_stack_suspended = true;
-   // DBGTRC_STARTING(debug, DDCA_TRC_API, "flags=0x%02x", flags);
    DBGF(debug, "flags=0x%02x", flags);
-   msg_decoration_suspended = true;
    start_capture(flags);
 }
 
@@ -1091,12 +1088,10 @@ ddca_start_capture(DDCA_Capture_Option_Flags flags) {
 char *
 ddca_end_capture(void) {
    bool debug = false;
-   // DBGTRC_STARTING(debug, DDCA_TRC_API, "");
+
    char * result = end_capture();
-   msg_decoration_suspended = false;
-   // DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %p", result);
+
    DBGF(debug, "Returning %p", result);
-   traced_function_stack_suspended = false;
    return result;
 }
 
