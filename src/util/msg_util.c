@@ -62,7 +62,7 @@ char * get_msg_decoration(char * buf, uint bufsz, bool dest_syslog) {
          g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(4));
       if (dbgtrc_show_wall_time && !dest_syslog)
          g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
-      if (dbgtrc_show_thread_id)
+      if (dbgtrc_show_thread_id || dest_syslog)
          g_snprintf(thread_prefix, 15, "[%6jd]", (intmax_t) tid());
       if (dbgtrc_show_process_id)
          g_snprintf(thread_prefix, 15, "[%6jd]", (intmax_t) pid());
