@@ -320,7 +320,7 @@ gpointer ddc_recheck_displays_func(gpointer data) {
  *
  *  @param   data  pointer to a #Watch_Display_Data struct
  */
-gpointer dw_watch_displays_without_udev(gpointer data) {
+gpointer dw_watch_display_connections(gpointer data) {
    bool debug = false;
    bool use_deferred_event_queue = false;
    Watch_Displays_Data * wdd = data;
@@ -451,7 +451,7 @@ gpointer dw_watch_displays_without_udev(gpointer data) {
 
 
 void init_dw_poll() {
-      RTTI_ADD_FUNC(dw_watch_displays_without_udev);
+      RTTI_ADD_FUNC(dw_watch_display_connections);
       RTTI_ADD_FUNC(process_screen_change_event);
       RTTI_ADD_FUNC(ddc_recheck_displays_func);
 }
