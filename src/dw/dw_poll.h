@@ -9,6 +9,7 @@
 #include <glib-2.0/glib.h>
 
 extern int  nonudev_poll_loop_millisec;
+extern int  retry_thread_sleep_factor_millisec;
 extern bool stabilize_added_buses_w_edid;
 
 gpointer dw_watch_display_connections(gpointer data);
