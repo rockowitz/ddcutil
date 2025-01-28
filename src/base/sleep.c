@@ -141,6 +141,9 @@ void dw_sleep_millis(DDCA_Syslog_Level level,
    usleep((uint64_t)1000*millis);
    // Alternatively, use syslog() instead of SYSLOG2() to ensure that msg is
    // written to system log no matter what ddcutil log level cutoff is in effect
+#ifdef W_TID
    SYSLOG2(level, "[%d](%s) Slept for %d millisec: %s", tid(), func, millis, msg);
+#endif
+   SYSLOG2(level, "(%s) %s: Slept for %d millisec", func, msg, millis);
 }
 
