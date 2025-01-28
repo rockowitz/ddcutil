@@ -535,7 +535,6 @@ is_laptop_drm_connector_name(const char * connector_name) {
 // Check display status
 //
 
-
 /** Checks if the EDID of an existing display handle can be read
  *  using the handle's I2C bus.  Failure indicates that the display
  *  has been disconnected and the display handle is no longer valid.
@@ -694,13 +693,14 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 
    Error_Info * err = NULL;
    bool edid_exists = false;
-   for (int tryctr = 1; !edid_exists && tryctr <= CHECK_OPEN_BUS_ALIVE_MAX_TRIES; tryctr++) {
+   int tryctr = 1;
+   for (; !edid_exists && tryctr <= CHECK_OPEN_BUS_ALIVE_MAX_TRIES; tryctr++) {
       if (tryctr > 1) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "!!! (A) Retrying i2c_check_edid_exists, busno=%d, tryctr=%d, dh=%s",
-               businfo->busno, tryctr, dh_repr(dh));
-         SYSLOG2(DDCA_SYSLOG_WARNING,
-               "!!! (B) Retrying i2c_check_edid_exists_by_dh, tryctr=%d, dh=%s", tryctr, dh_repr(dh));
+         // DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+         //       "!!! (A) Retrying i2c_check_edid_exists, busno=%d, tryctr=%d, dh=%s",
+         //       businfo->busno, tryctr, dh_repr(dh));
+         // SYSLOG2(DDCA_SYSLOG_WARNING,
+         //       "!!! (B) Retrying i2c_check_edid_exists_by_dh, tryctr=%d, dh=%s", tryctr, dh_repr(dh));
          DW_SLEEP_MILLIS2(DDCA_SYSLOG_WARNING, CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC,
                           "Retrying i2c_check_edid_exists_by_dh() (c)");
       }
@@ -719,12 +719,16 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    }
 
    if (!edid_exists) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "!!! (B) Checking EDID failed after %d tries", CHECK_OPEN_BUS_ALIVE_MAX_TRIES);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "!!! (A) Checking EDID failed");
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Checking EDID failed after %d tries (B)", CHECK_OPEN_BUS_ALIVE_MAX_TRIES);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "!!! (A) Checking EDID failed (A)");
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d", businfo->busno);
       businfo->flags &= ~(I2C_BUS_HAS_EDID|I2C_BUS_ADDR_X37);
    }
    else {
+      if (tryctr > 1) {
+         SYSLOG2(DDCA_SYSLOG_WARNING, "Checking EDID succeeded after %d tries (G)", tryctr);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Checking EDID succeeded after %d tries (H)", tryctr);
+      }
       char * driver = businfo->driver;
       int ddcrc = i2c_detect_x37(dh->fd, driver);
       if (ddcrc){
