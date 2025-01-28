@@ -606,6 +606,11 @@ do { \
  *
  *  Messages are written to the system log with the syslog priority
  *  corresponding to the ddcutil severity.
+ *
+ *  If global **msg_to_syslog_only** is set, the message is written only
+ *  to the system log, not to the terminal.  This is avoid duplicate messages
+ *  in the system log if terminal output is redirected to the system log,
+ *  as is the case for KDE applications.
  */
 #define MSG_W_SYSLOG(_ddcutil_severity, format, ...) \
 do { \
