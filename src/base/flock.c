@@ -274,7 +274,8 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
    if (flockrc == 0) {
       if (flock_call_ctr == 1) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
-         SYSLOG2(DDCA_SYSLOG_DEBUG, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
+         // floods syslog:
+         // SYSLOG2(DDCA_SYSLOG_DEBUG, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
       }
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
