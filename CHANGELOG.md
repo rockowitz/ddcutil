@@ -1,4 +1,4 @@
-## [2.2.0] 2024-01-11
+## [2.2.0] 2024-01-28
 
 ### General
 
@@ -23,7 +23,6 @@
   file ddcutilrc. It can also be included in the options string passed in the
   opts argument to ddca_init2(). Addresses issue #446.
 - Maintain a stack of traced functions for debugging.
-  
 
 #### Changed
 
@@ -79,6 +78,7 @@
 - rpt...() functions can redirect output to syslog, making lines coming from 
   multiple threads more coherent
 - Enable additional compiler warnings to tighten the code.
+- Additional trace groups SYSFS, CONN
 
 #### Fixed
 
@@ -114,6 +114,8 @@
   on /dev/i2c device.
 - Option ***--skip-ddc-checks*** set vcp version in Display_Ref to DDCA_VSPEC_UNKNOWN
   to avoid possible assert failure.
+- Prepend thread id to most syslog messages.
+- Make syslog messages more consistent in form. 
 - Memory leaks.
 
 ### Building 
@@ -122,12 +124,13 @@
   X11 specific code is used in display change and sleep state detection.
   The default is --enable-x11.   
   Use x11 code to test for sleep mode instead of using /sys, which 
-  is unreliable for nvidia driver. 
+  is unreliable for nvidia driver.
+
 
 ### Shared Library
 
 The shared library **libddcutil** is backwardly compatible with the one in 
-ddcutil 2.1.0. The SONAME is unchanged as libddcutil.so.5. The released library
+ddcutil 2.1.x. The SONAME is unchanged as libddcutil.so.5. The released library
 file is libddcutil.so.5.1.3. 
 
 #### Added
@@ -139,6 +142,7 @@ file is libddcutil.so.5.1.3.
 - Add libddcutil only option ***--disable-watch-displays***, which unconditionally
   blocks **ddca_start_watch_displays()** from starting the thread that watches
   for display changes. Workaround for issue #470.
+- **ddca_get_display_watch_settings()**, **ddca_set_display_watch_settings()**
 
 #### Changed
 
@@ -213,28 +217,26 @@ file is libddcutil.so.5.1.3.
 - Do not call ddca_stop_watch_displays() at library termination if client has
   already called it. 
 - Use mutexes to control access to corruptable data structures.
-- Consistently write output to system log instead of terminal if  ??? --f8 --f9
 - Memory leaks.
 
 #### Display Change Handling
 
-- Alternative algorithms for detecting display changes,
-  specified by option --watch-mode
-  - watch mode UDEV, the original algorithm 
+- Alternative algorithms for detecting display changes, specified by option ***--watch-mode***
+  - watch mode XEVENT
+    - Scans for changes only when a X11 change notification occurs. 
+      (Uses X11 API extension RANDR, which is also implemented on Wayland.)
+  - watch mode POLL
+    - doesn't use X11 
+    - doesn't rely on /sys 
+    - reads EDIDs in polling loop
+    - can consume a significant amount of CPU time on older machines
+  - watch mode UDEV, the original algorithm
+    - Retained temporarily
     - Does not always work for proprietary nvidia driver. which does not use
       /sys in the same way as amdgpu, i915, nouveau and other drm supporting 
       drivers that are part of the Linux kernel. 
       - Depending on driver version the /sys file system does not reflect 
         display changes and does not generate udev events.
-  - watch mode POLL
-    - doesn't use udev
-    - doesn't rely on /sys 
-    - reads EDIDs in polling loop
-    - can consume a significant amount of CPU time on older machines
-  - watch mode XEVENT
-    - similar to POLL, but scans for changes only when a X11 
-      change notification occurs. (Uses X11 API extension RANDR, which is 
-      also implemented on Wayland.)
   - watch mode DYNAMIC (the default)
     - resolves to XEVENT on X11 or Wayland, otherwise to POLL
 - Extensively reworked display change detection
@@ -246,18 +248,11 @@ file is libddcutil.so.5.1.3.
 - Named options affecting display change detection:
   - --watch-mode UDEV, POLL, XEVENT, DYNAMIC
   - --enable/disable-try-get-edid-from-sysfs (default is --enable-try-get-edid-from-sysfs)
-- Utility options affecting display change detection.  Some of these will become 
-  named options, others will be removed once testing is finished. 
-  - --f17  do not use sysfs connector_id  (default is to use it)
-  - --f18  always report UDEV events
-  - --f20  do not try to avoid rechecking DDC responsiveness when a display is
-           reconnected (default is to remember prior checks)
-  - --f21  always treat sysfs as unreliable for reporting display changes
-  - --f22  never treat sysfs as unreliable for reporting display changes
-  - --i7   extra stabilization milliseconds after apparent disconnection
-  - --i8   explicit loop interval in millisec for watch-mode POLL
-  - --i9   explicit loop interval in millisec for watch-mode UDEV
-  - --i10  explicit loop interval in millisec for watch-mode XEVENT
+- Use constants in parms.h to specify retry intevals and counts
+- Handle possible delay between time that EDID can be read and DDC becomes functional
+- Added **flags** field in unused secton of DDCA_Display_Status Event, with bit DDCA_DISPLAY_EVENT_DDC_WORKING.
+  Normally, this bit is set on display connection events.  In case DDC is not immediately available after 
+  EDID detection, this bit is not set.  If DDC subsequently becomes enabled, and event of type DDCA_EVENT_DDC_ENABLED occurs. 
 
 #### Building 
 
