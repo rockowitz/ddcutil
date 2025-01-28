@@ -767,6 +767,8 @@ ddci_init(const char *      libopts,
    }
 
    client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
+   DBGF(debug, "client_opened_syslog=%s, enable_syslog=%s",
+         sbool(client_opened_syslog), sbool(enable_syslog));
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
       syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;
    enable_syslog = (syslog_level_arg == DDCA_SYSLOG_NEVER) ? false : true;  // global in core.c
