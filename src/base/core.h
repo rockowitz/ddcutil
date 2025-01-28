@@ -10,7 +10,7 @@
  *  - abnormal termination
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_CORE_H_
@@ -32,6 +32,7 @@
 
 #include "public/ddcutil_types.h"
 
+#include "util/common_inlines.h"
 #include "util/coredefs.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
@@ -585,7 +586,7 @@ do { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-         syslog(syslog_priority, "%s%s", body, (tag_output) ? " (P)" : "" ); \
+         syslog(syslog_priority, "[%6jd]%s%s", (intmax_t) tid(), body, (tag_output) ? " (P)" : "" ); \
          free(body); \
       } \
    } \
