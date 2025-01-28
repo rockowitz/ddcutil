@@ -32,8 +32,10 @@ extern "C" {
 extern __thread Byte rpt_prefix_options;
 #endif
 
+// If set, report messages are written to the system log, not the terminal
 extern bool redirect_reports_to_syslog;
-extern bool default_prefix_report_output;
+// If set, report messages have a letter tag appended, as a debugging aid
+// for identifying message source location.
 extern bool tag_output;
 
 void rpt_set_default_ornamentation_enabled(bool onoff);
