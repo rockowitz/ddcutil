@@ -608,10 +608,17 @@ void (*DDCA_Display_Status_Callback_Func)(DDCA_Display_Status_Event event);
 
 
 
-//! For tuning display watch logic
-//!
-//! @since 2.2.0
-//!
+/** Parameter record to tune watching display connection changes.
+ *
+ *  @remark
+ *  DDCA_DW_Settings struct is defined with unused fields at the end to allow
+ *  for future extension without breaking the ABI.
+ *
+ *  @remark
+ *  See init_display_watch_options() for consideration of what to add.
+ *
+ *  @since 2.2.0
+ */
 //! @remark see init_display_watch_options() for consideration of what to add
 typedef struct {
    // Polling loop intervals for each of the watch modes
@@ -628,7 +635,7 @@ typedef struct {
    // checks occur at increasing multiples of this value.
    uint16_t   watch_retry_thread_sleep_factor_millisec;
 
-   void *  padding[8];
+   void *  unused[4];
 } DDCA_DW_Settings;
 
 #ifdef __cplusplus
