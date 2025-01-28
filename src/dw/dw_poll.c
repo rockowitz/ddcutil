@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "util/common_inlines.h"
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/drm_common.h"
@@ -330,8 +331,8 @@ gpointer dw_watch_displays_without_udev(gpointer data) {
    GPtrArray * displays_to_recheck = g_ptr_array_new();
 
    DBGTRC_STARTING(debug, TRACE_GROUP,
-         "Caller process id: %d, caller thread id: %d, event_classes=0x%02x, terminate_using_x11_event=%s",
-         wdd->main_process_id, wdd->main_thread_id, wdd->event_classes, sbool(terminate_using_x11_event));
+         "Caller process id: %d, caller thread id: %d, our thread id: %d, event_classes=0x%02x, terminate_using_x11_event=%s",
+         wdd->main_process_id, wdd->main_thread_id, tid(), wdd->event_classes, sbool(terminate_using_x11_event));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Watching for display connection events: %s",
          sbool(wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION));
 #ifdef WATCH_DPMS
