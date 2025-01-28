@@ -7,7 +7,7 @@
  *  Typedefs, other constants, etc. begin with "DDCA_".
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_C_API_H_
@@ -1810,6 +1810,29 @@ ddca_stop_watch_displays(bool wait);
 DDCA_Status
 ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc);
 
+/** Retrieve current display watch settings into a buffer provided
+ *  by the caller.
+ *
+ *  @param settings_buffer pointer to caller buffer
+ *  @retval DDCRC_OK
+ *  @retval DDCRC_UNINITIALIZED
+ *
+ *  @since 2.2.0
+ */
+DDCA_Status
+ddca_get_display_watch_settings(DDCA_DW_Settings * settings_buffer);
+
+/** Modify the current display watch settings.
+ *
+ *  @param settings_buffer pointer to settings buffer
+ *  @retval DDCRC_OK
+ *  @retval DDCRC_ARG
+ *  @retval DDCRC_UNINITIALIZED
+ *
+ *  @since 2.2.0
+ */
+DDCA_Status
+ddca_set_display_watch_settings(DDCA_DW_Settings * settings_buffer);
 
 
 #ifdef __cplusplus
