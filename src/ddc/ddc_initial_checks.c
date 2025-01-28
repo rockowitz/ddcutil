@@ -277,7 +277,11 @@ check_how_unsupported_reported(Display_Handle * dh) {
 
 
 STATIC Error_Info *
-check_supported_feature(Display_Handle * dh, bool newly_added, DDCA_Vcp_Feature_Code feature_code, uint16_t * p_shsl) {
+check_supported_feature(Display_Handle *      dh,
+                        bool                  newly_added,
+                        DDCA_Vcp_Feature_Code feature_code,
+                        uint16_t *            p_shsl)
+{
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, newly_added=%s feature=0x%02x, p_shsl=%p",
          dh_repr(dh), SBOOL(newly_added), feature_code,p_shsl);
@@ -314,7 +318,7 @@ check_supported_feature(Display_Handle * dh, bool newly_added, DDCA_Vcp_Feature_
             feature_code,
             errinfo_summary(ddc_excp));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "!!!! %s", msg);
-      SYSLOG2(DDCA_SYSLOG_WARNING, "(%s) %s", __func__, msg);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "(%s) %s", __func__, msg);
       free(msg);
 
       dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
@@ -325,8 +329,8 @@ check_supported_feature(Display_Handle * dh, bool newly_added, DDCA_Vcp_Feature_
                                          initial_multiplier < 1.0f))
          {
             if (newly_added) {
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Additional 1 second sleep for newly added display A");
-               DW_SLEEP_MILLIS(1000, "Additional 1 second sleep for newly added display C");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Additional 1 second sleep for newly added display (A)");
+               DW_SLEEP_MILLIS(1000, "Additional 1 second sleep for newly added display (C)");
             }
             // turn off optimization in case it's on
             if (dynamic_sleep_active ) {
@@ -347,7 +351,7 @@ check_supported_feature(Display_Handle * dh, bool newly_added, DDCA_Vcp_Feature_
                      feature_code,
                      errinfo_summary(ddc_excp));
                dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-               SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
+               SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_NOTICE,
                      "busno=%d, sleep-multiplier=%5.2f."
                      "Retesting for supported feature 0x%02x returned %s",
                      businfo->busno,
