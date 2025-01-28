@@ -609,8 +609,13 @@ static bool vdbgtrc(
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
          if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog_only) {
+#ifdef PREV_W_TID
             char * syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
                         thread_prefix, elapsed_prefix, funcname, retval_info, base_msg,
+                        (tag_output) ? " (J)" : "");
+#endif
+            char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
+                        elapsed_prefix, funcname, retval_info, base_msg,
                         (tag_output) ? " (J)" : "");
             syslog(LOG_DEBUG, "%s", syslog_msg);
             free(syslog_msg);
