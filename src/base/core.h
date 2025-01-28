@@ -586,7 +586,7 @@ do { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-         syslog(syslog_priority, "[%6jd]%s%s", (intmax_t) tid(), body, (tag_output) ? " (P)" : "" ); \
+         syslog(syslog_priority, "[%6jd] %s%s", (intmax_t) tid(), body, (tag_output) ? " (P)" : "" ); \
          free(body); \
       } \
    } \
@@ -617,7 +617,9 @@ do { \
    if (test_emit_syslog(_ddcutil_severity)) { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
-         syslog(syslog_priority, format, ##__VA_ARGS__); \
+         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+         syslog(syslog_priority, "[%6jd] %s%s", (intmax_t) tid(), body, (tag_output) ? " (Q)" : "" ); \
+         free(body); \
       } \
    } \
 } while(0)
