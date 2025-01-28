@@ -411,11 +411,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       detect_phantom_displays = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F9)
       msg_to_syslog_only = true;
-   if (parsed_cmd->flags2 & CMD_FLAG2_F16) {
-      msg_to_syslog_only =  true;
-      rpt_set_default_ornamentation_enabled(true); // applies to all new threads
-      rpt_set_ornamentation_enabled(true);         // current thread
-   }
 
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F10)
@@ -504,35 +499,32 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
 
-   // -------
    char * expected_architectures[] = {"x86_64", "i386", "i686", "armv7l", "aarch64", "ppc64",  NULL};
    char * architecture   = execute_shell_cmd_one_line_result("uname -m");
    // char * distributor_id = execute_shell_cmd_one_line_result("lsb_release -s -i");  // e.g. Ubuntu, Raspbian
 
-      if ( ntsa_find(expected_architectures, architecture) >= 0) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_DDC, "Found a known architecture: %s", architecture);
-      }
-      else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_DDC, "Unexpected architecture %s.  Please report.", architecture);
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Unexpected architecture %s.", architecture);
-      }
+   if (ntsa_find(expected_architectures, architecture) >= 0) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_DDC, "Found a known architecture: %s", architecture);
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_DDC, "Unexpected architecture %s.  Please report.", architecture);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Unexpected architecture %s.", architecture);
+   }
 
-     // bool is_raspbian = distributor_id && streq(distributor_id, "Raspbian");
-      bool is_arm      = architecture   &&
-                           ( str_starts_with(architecture, "arm") ||
-                             str_starts_with(architecture, "aarch")
-                           );
-      free(architecture);
-      // free(distributor_id);
+  // bool is_raspbian = distributor_id && streq(distributor_id, "Raspbian");
+   bool is_arm      = architecture   &&
+                        ( str_starts_with(architecture, "arm") ||
+                          str_starts_with(architecture, "aarch")
+                        );
+   free(architecture);
+   // free(distributor_id);
 
-      if (is_arm)
-         primitive_sysfs = true;
+   if (is_arm)
+      primitive_sysfs = true;
 
-   // ---------
-
-uint64_t t0;
-uint64_t t1;
-all_video_adapters_implement_drm = false;
+   uint64_t t0;
+   uint64_t t1;
+   all_video_adapters_implement_drm = false;
 #ifdef USE_LIBDRM
    // For each video adapter node in sysfs, check that subdirectories drm/cardN/cardN-xxx exist
    t0 = cur_realtime_nanosec();
@@ -590,7 +582,10 @@ all_video_adapters_implement_drm = false;
 #ifdef BUILD_SHARED_LIB
    library_disabled = parsed_cmd->flags & CMD_FLAG_DISABLE_API;
 #endif
+   rpt_set_default_ornamentation_enabled(true); // applies to all new threads
+   rpt_set_ornamentation_enabled(true);         // current thread
    init_display_watch_options(parsed_cmd);
+
    init_experimental_options(parsed_cmd);
 
 bye:
