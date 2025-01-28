@@ -857,7 +857,7 @@ main(int argc, char *argv[]) {
 
    DDCA_Syslog_Level preparsed_level = preparse_syslog_level(argc, argv);
    if (preparsed_level != DDCA_SYSLOG_NOT_SET) {
-      DBGMSF(main_debug, "Setting syslog_level = %s", syslog_level_name(preparsed_level));
+      DBGF(main_debug, "Setting preparse syslog_level = %s", syslog_level_name(preparsed_level));
       syslog_level = preparsed_level;
       explicit_syslog_level = true;
    }
@@ -924,8 +924,10 @@ main(int argc, char *argv[]) {
    assert(new_argc == ntsa_length(new_argv));
 
    if (main_debug) {
-      DBGMSG("new_argc = %d, new_argv:", new_argc);
-      rpt_ntsa(new_argv, 1);
+      DBG("new_argc = %d, new_argv:", new_argc);
+      for (int ndx=0; new_argv[ndx]; ndx++) {
+         DBG("   %s", new_argv[ndx]);
+      }
    }
 
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, NULL);
