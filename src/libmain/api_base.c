@@ -982,6 +982,33 @@ ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "*classes_loc=0x%02x", *classes_loc);
 }
 
+DDCA_Status
+ddca_get_display_watch_settings(DDCA_DW_Settings * settings_buffer) {
+   bool debug = false;
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting");
+
+   DDCA_Status ddcrc = DDCRC_OK;
+   if (!settings_buffer)
+      ddcrc = DDCRC_ARG;
+   else
+      dw_get_display_watch_settings(settings_buffer);
+
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "Done");
+}
+
+
+DDCA_Status
+ddca_set_display_watch_settings(DDCA_DW_Settings * settings_buffer) {
+   bool debug = false;
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting");
+
+   DDCA_Status ddcrc = DDCRC_ARG;
+   if (settings_buffer)
+      ddcrc = dw_set_display_watch_settings(settings_buffer);
+
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "Done");
+}
+
 
 //
 // Error Detail
