@@ -71,27 +71,4 @@ typedef enum {
    Watch_Mode_Dynamic,
 } DDCA_Watch_Mode;
 
-
-//! For tuning display watch logic
-typedef struct {
-   // see init_display_watch_options() for consideration of what to add
-   DDCA_Watch_Mode watch_mode;    // can this be changed dynamically?
-
-   uint16_t  udev_watch_loop_interval_millisec;
-   uint16_t  poll_watch_loop_interval_millisec;
-   uint16_t  xevent_watch_loop_interval_millisec;
-
-   // Once an event is received that possibly indicates a display change,
-   // libddcutil repeatedly checks /sys/class/drm until the reported displays
-   // stabilize
-   /** Extra time to wait before first stabilization check */
-   uint16_t  initial_stabilization_millisec; /** Delay before initialization check */
-   uint16_t  stabilization_poll_millisec;    /** Polling interval between stabilization checks */
-
-   // When checking that DDC communication has become enabled,
-   // checks occur at increasing multiples of this value.
-   uint16_t   watch_retry_thread_sleep_factor_millisec;
-
-} DDCA_DW_Settings;
-
 #endif /* DDCUTIL_TYPES_INTERNAL_H_ */

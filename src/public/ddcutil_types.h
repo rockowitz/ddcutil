@@ -7,7 +7,7 @@
  *  within the code that implements the API.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_TYPES_H_
@@ -607,6 +607,29 @@ typedef
 void (*DDCA_Display_Status_Callback_Func)(DDCA_Display_Status_Event event);
 
 
+
+//! For tuning display watch logic
+//!
+//! @since 2.2.0
+//!
+//! @remark see init_display_watch_options() for consideration of what to add
+typedef struct {
+   // Polling loop intervals for each of the watch modes
+   uint16_t  xevent_watch_loop_interval_millisec;   /**< For watch mode XEVENT */
+   uint16_t  poll_watch_loop_interval_millisec;     /**< For watch mode POLL */
+   uint16_t  udev_watch_loop_interval_millisec;     /**< For watch mode UDEV */
+
+   // Once an event is received that possibly indicates a display change, libddcutil
+   // repeatedly checks /sys/class/drm until the reported displays stabilize
+   uint16_t  initial_stabilization_millisec; /**< Delay before first_initialization check */
+   uint16_t  stabilization_poll_millisec;    /**< Polling interval between stabilization checks */
+
+   // When checking that DDC communication has become enabled,
+   // checks occur at increasing multiples of this value.
+   uint16_t   watch_retry_thread_sleep_factor_millisec;
+
+   void *  padding[8];
+} DDCA_DW_Settings;
 
 #ifdef __cplusplus
 }
