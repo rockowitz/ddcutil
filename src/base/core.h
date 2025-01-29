@@ -33,6 +33,7 @@
 #include "public/ddcutil_types.h"
 
 #include "util/common_inlines.h"
+#include "util/common_printf_formats.h"
 #include "util/coredefs.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
@@ -586,7 +587,7 @@ do { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-         syslog(syslog_priority, "[%6jd] %s%s", (intmax_t) tid(), body, (tag_output) ? " (P)" : "" ); \
+         syslog(syslog_priority, PRItid" %s%s", (intmax_t) tid(), body, (tag_output) ? " (P)" : "" ); \
          free(body); \
       } \
    } \
@@ -623,7 +624,7 @@ do { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-         syslog(syslog_priority, "[%6jd] %s%s", (intmax_t) tid(), body, (tag_output) ? " (Q)" : "" ); \
+         syslog(syslog_priority, PRItid" %s%s", (intmax_t) tid(), body, (tag_output) ? " (Q)" : "" ); \
          free(body); \
       } \
    } \
