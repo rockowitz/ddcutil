@@ -112,7 +112,7 @@ typedef struct {
 
 
 static void list_traced_function_stacks() {
-   g_mutex_unlock(&all_traced_function_stacks_mutex);
+   g_mutex_lock(&all_traced_function_stacks_mutex);
    if (!all_traced_function_stacks) {
       printf("No traced function stacks found.\n");
    }
