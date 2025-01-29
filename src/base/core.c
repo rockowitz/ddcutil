@@ -39,6 +39,7 @@
 #include <unistd.h>
 /** \endcond */
 
+#include "util/common_printf_formats.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/error_info.h"
@@ -561,7 +562,7 @@ static bool vdbgtrc(
          if (dbgtrc_show_thread_id && !(options & DBGTRC_OPTIONS_SEVERE) ) {
             // intmax_t tid = get_thread_id();
             // assert(tid == thread_settings->tid);
-            snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);
+            snprintf(thread_prefix, 15, PRItid, thread_settings->tid);
          }
          if (dbgtrc_show_process_id && !(options & DBGTRC_OPTIONS_SEVERE) ) {
             intmax_t pid = get_process_id();
@@ -609,27 +610,27 @@ static bool vdbgtrc(
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
          if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog_only) {
-#ifdef PREV_W_TID
+#ifdef PREV
             char * syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
                         thread_prefix, elapsed_prefix, funcname, retval_info, base_msg,
                         (tag_output) ? " (J)" : "");
 #endif
             char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
-                        elapsed_prefix, funcname, retval_info, base_msg,
+                        thread_prefix, funcname, retval_info, base_msg,
                         (tag_output) ? " (J)" : "");
             syslog(LOG_DEBUG, "%s", syslog_msg);
             free(syslog_msg);
          }
          else if ( (options & DBGTRC_OPTIONS_SEVERE) && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
             char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
-                                     elapsed_prefix, funcname, retval_info, base_msg,
+                                     thread_prefix, funcname, retval_info, base_msg,
                                      (tag_output) ? " (K)" : ""  );
             syslog(LOG_ERR, "%s", syslog_msg);
             free(syslog_msg);
          }
          else if (redirect_reports_to_syslog) {
             syslog(LOG_NOTICE, "%s(%-30s) %s%s%s",
-                  elapsed_prefix, funcname, retval_info, base_msg,
+                  thread_prefix, funcname, retval_info, base_msg,
                   (tag_output) ? " (L)" : ""  );
          }
 
