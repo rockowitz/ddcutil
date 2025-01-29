@@ -16,6 +16,7 @@
 #include <time.h>
 
 #include "common_inlines.h"
+#include "common_printf_formats.h"
 #include "glib_util.h"
 #include "timestamp.h"
 #include "traced_function_stack.h"
@@ -63,9 +64,9 @@ char * get_msg_decoration(char * buf, uint bufsz, bool dest_syslog) {
       if (dbgtrc_show_wall_time && !dest_syslog)
          g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
       if (dbgtrc_show_thread_id || dest_syslog)
-         g_snprintf(thread_prefix, 15, "[%6jd]", (intmax_t) tid());
+         g_snprintf(thread_prefix, 15, PRItid, (intmax_t) tid());
       if (dbgtrc_show_process_id)
-         g_snprintf(thread_prefix, 15, "[%6jd]", (intmax_t) pid());
+         g_snprintf(thread_prefix, 15, PRItid, (intmax_t) pid());
       if (traced_function_stack_enabled) {
          char * s = peek_traced_function();
          if (s)
