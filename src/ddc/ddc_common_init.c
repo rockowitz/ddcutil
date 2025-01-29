@@ -420,6 +420,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F14)
       debug_flock = true;
 
+   if (parsed_cmd->flags2 & CMD_FLAG2_F16)
+      tag_output = true;
 #ifdef TEST_EDID_SMBUS
    if (parsed_cmd->flags & CMD_FLAG_F13)
       EDID_Read_Uses_Smbus = true;
