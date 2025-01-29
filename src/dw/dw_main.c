@@ -173,7 +173,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
 
    int calculated_watch_loop_millisec = dw_calc_watch_loop_millisec(resolved_watch_mode);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
