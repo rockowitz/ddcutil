@@ -112,6 +112,7 @@ typedef struct {
 
 
 static void list_traced_function_stacks() {
+   g_mutex_unlock(&all_traced_function_stacks_mutex);
    if (!all_traced_function_stacks) {
       printf("No traced function stacks found.\n");
    }
@@ -122,6 +123,7 @@ static void list_traced_function_stacks() {
          printf("   thread: "PRItid"  stack: %p\n",  (intmax_t)entry->thread_id, entry->traced_function_stack);
       }
    }
+   g_mutex_unlock(&all_traced_function_stacks_mutex);
 }
 
 
