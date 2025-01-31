@@ -25,6 +25,7 @@
 #include "util/subprocess_util.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/timestamp.h"
+#include "util/traced_function_stack.h"
 #ifdef USE_LIBDRM
 #include "util/drm_common.h"
 #include "util/libdrm_util.h"
@@ -190,6 +191,8 @@ init_tracing(Parsed_Cmd * parsed_cmd)
             DDCRC_CONFIG_ERROR, errinfo_accumulator, __func__, "Invalid trace option(s):");
    g_ptr_array_set_free_func(errinfo_accumulator, (GDestroyNotify) errinfo_free);
    g_ptr_array_free(errinfo_accumulator, true);
+
+   traced_function_stack_enabled = parsed_cmd->flags & CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK;
 
    tracing_initialized = true;
    return result;
