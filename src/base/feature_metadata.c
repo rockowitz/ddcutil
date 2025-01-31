@@ -598,7 +598,7 @@ dfm_to_ddca_feature_metadata(
       Display_Feature_Metadata * dfm)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dfm=%p", dfm);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dfm=%p", dfm);
    if (debug)
       dbgrpt_display_feature_metadata(dfm, 2);
 
@@ -616,7 +616,8 @@ dfm_to_ddca_feature_metadata(
    DBGMSF(debug, "** dfm->sl_values = %p", dfm->sl_values);
    ddca_meta->sl_values = copy_sl_value_table(dfm->sl_values);
 
-   DBGMSF_RET_STRUCT(debug, DDCA_Feature_Metadata, dbgrpt_ddca_feature_metadata, ddca_meta);
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, DDCA_Feature_Metadata,
+                     dbgrpt_ddca_feature_metadata, ddca_meta);
    return ddca_meta;
 }
 
@@ -649,5 +650,6 @@ free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
 void init_feature_metadata() {
    RTTI_ADD_FUNC(dfm_free);
    RTTI_ADD_FUNC(dfm_from_dyn_feature_metadata);
+   RTTI_ADD_FUNC(dfm_to_ddca_feature_metadata);
 }
 
