@@ -15,6 +15,7 @@
 #include <stdbool.h>
 
 #include "util/error_info.h"
+#include "util/traced_function_stack.h"
 /** \endcond */
 
 #include "util/debug_util.h"
@@ -247,7 +248,9 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)) {
       DBGMSG( "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
       dbgrpt_display_ref(dref,  true,  2);
-      ASSERT_WITH_BACKTRACE(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ;
+      debug_current_traced_function_stack(/*reverse*/ true);
+      ASSERT_WITH_BACKTRACE(false);
+      // ASSERT_WITH_BACKTRACE(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ;
    }
 
    DDCA_MCCS_Version_Spec result = get_saved_vcp_version(dref);
