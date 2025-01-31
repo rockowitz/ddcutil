@@ -832,6 +832,7 @@ main(int argc, char *argv[]) {
    bool preparse_verbose = false;
    bool skip_config = false;
    Parsed_Cmd * parsed_cmd = NULL;
+   bool traced_function_stack_initialized = false;
 
    time_t program_start_time = time(NULL);
    char * program_start_time_s = asctime(localtime(&program_start_time));
@@ -986,6 +987,10 @@ main(int argc, char *argv[]) {
                program_start_time_s);
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting.  ddcutil version %s", get_full_ddcutil_version());
+   if (parsed_cmd->flags & CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK) {
+      push_traced_function(__func__);
+      traced_function_stack_initialized = true;
+   }
 
    if (preparse_verbose) {
       if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0) {
@@ -1279,7 +1284,10 @@ bye:
    if (parsed_cmd)
       free_parsed_cmd(parsed_cmd);
 
-   DBGTRC_DONE(main_debug, TRACE_GROUP, "main_rc=%d", main_rc);
+   if (traced_function_stack_initialized)
+      DBGTRC_DONE(main_debug, TRACE_GROUP, "main_rc=%d", main_rc);
+   else
+      DBGTRC_DONE_WO_TRACED_FUNCTION_STACK(main_debug, TRACE_GROUP, "main_rc=%d", main_rc);
 
    time_t end_time = time(NULL);
    char * end_time_s = asctime(localtime(&end_time));
