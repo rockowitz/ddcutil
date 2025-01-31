@@ -249,6 +249,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("x52 not fifo:",    NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,              d1);
       rpt_bool("i2c_io_fileio",    NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO,d1);
       rpt_bool("i2c_io_ioctl",     NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL, d1);
+      rpt_bool("enable traced function stack",
+                                   NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK, d1);
       //RPT_CMDFLAG("heuristicly detect unsupported features", CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, d1);
       rpt_vstring(d1, "%s: %s", "heuristically detect unsupported features                ",
                                           SBOOL(parsed_cmd->flags& CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES));

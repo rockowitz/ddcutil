@@ -77,6 +77,7 @@ typedef enum {
    CMD_FLAG_RO_ONLY                = 0x020000,
    CMD_FLAG_WO_ONLY                = 0x040000,
    CMD_FLAG_ASYNC_I2C_CHECK        = 0x080000,
+
    CMD_FLAG_ENABLE_UDF             = 0x100000,
    CMD_FLAG_ENABLE_USB             = 0x200000,
 
@@ -90,6 +91,7 @@ typedef enum {
    CMD_FLAG_SHOW_SETTINGS      = 0x0400000000,
    CMD_FLAG_ENABLE_CACHED_CAPABILITIES
                                = 0x0800000000,
+
 // CMD_FLAG_CLEAR_PERSISTENT_CACHE
 //                             = 0x1000000000,
    CMD_FLAG_WALLTIME_TRACE     = 0x2000000000,
@@ -119,9 +121,12 @@ typedef enum {
    CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR
                         =  0x0400000000000000,
 
+   CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK
+                         = 0x2000000000000000,
+   CMD_FLAG_DISABLE_API =  0x4000000000000000,
    CMD_FLAG_WATCH_DISPLAY_EVENTS
                         =  0x8000000000000000,
-   CMD_FLAG_DISABLE_API =  0x4000000000000000,
+
 
 #ifdef OLD
    CMD_FLAG_TIMEOUT_I2C_IO         = 0x400000,  // UNUSED  --timeout-i2c-io

@@ -927,6 +927,7 @@ parse_command(
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
    gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
+   gboolean traced_function_stack_flag = false;
    // int      i2c_bus_check_async_min = DEFAULT_I2C_BUS_CHECK_ASYNC_MIN;
    // int      ddc_check_async_min = DEFAULT_DDC_CHECK_ASYNC_MIN;
    char     i2c_bus_check_async_expl[80];
@@ -1134,7 +1135,8 @@ parse_command(
                                                 G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed and internal performance statistics",  "stats type"},
       {"profile-api",'\0', 0, G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
       {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", valid_syslog_levels_string},
-
+      {"enable-traced-function-stack",
+                  '\0', 0, G_OPTION_ARG_NONE, &traced_function_stack_flag, "Enable traced function stack", NULL},
 
       // Performance
       {"enable-capabilities-cache",
@@ -1682,6 +1684,8 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, enable_heuristic_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
    SET_CMDFLAG(CMD_FLAG_FLOCK,             enable_flock_flag);
+   SET_CMDFLAG(CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK,
+                                           traced_function_stack_flag);
 
 
    SET_CLR_CMDFLAG(CMD_FLAG_TRY_GET_EDID_FROM_SYSFS,    try_get_edid_from_sysfs);
