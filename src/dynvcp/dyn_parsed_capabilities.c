@@ -327,8 +327,11 @@ dyn_report_one_cap_feature(
    int d1 = depth+1;
    int d2 = depth+2;
 
-   assert(dref->dfr);  // will be dummy if no dfr read
-   Dyn_Feature_Metadata* dfr_metadata = dyn_get_dynamic_feature_metadata(dref->dfr, vfr->feature_id);
+   Dyn_Feature_Metadata* dfr_metadata = NULL;
+   if (dref) {
+      assert(dref->dfr);  // will be dummy if no dfr read
+      dfr_metadata = dyn_get_dynamic_feature_metadata(dref->dfr, vfr->feature_id);
+   }
    if (dfr_metadata) {
       rpt_vstring(d0, "Feature: %02X (UDF:%s)",
                      vfr->feature_id, dfr_metadata->feature_name);
@@ -480,9 +483,8 @@ dyn_report_one_cap_feature(
          }
       }
 #endif
-
-      DBGTRC_DONE(debug, TRACE_GROUP, "");
    }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -506,29 +508,31 @@ report_commands(Byte_Value_Array cmd_ids, int depth)
 }
 
 
-static void
+STATIC void
 dyn_report_cap_features(
       GPtrArray*             features,     // GPtrArray of Capabilities_Feature_Record
       Display_Ref *          dref,
       DDCA_MCCS_Version_Spec vcp_version)  // from parsed capabilities if possible
 {
-   bool debug = false;
+   bool debug = true;
    int d0 = 0;
    int d1 = 1;
 
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, vcp_version=%s",
                    dref_repr_t(dref), format_vspec(vcp_version));
-   assert(dref);
+   // assert(dref);
 
-   if (!(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED)) {
-      Monitor_Model_Key mmk = mmk_value_from_edid(dref->pedid);
-      Error_Info * erec = dfr_load_by_mmk(mmk, &dref->dfr);
-      if (erec) {
-         if (erec->status_code != DDCRC_NOT_FOUND || debug)
-            errinfo_report(erec,1);
-         errinfo_free(erec);
+   if (dref) {
+      if (!(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED)) {
+         Monitor_Model_Key mmk = mmk_value_from_edid(dref->pedid);
+         Error_Info * erec = dfr_load_by_mmk(mmk, &dref->dfr);
+         if (erec) {
+            if (erec->status_code != DDCRC_NOT_FOUND || debug)
+               errinfo_report(erec,1);
+            errinfo_free(erec);
+         }
+         dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
       }
-      dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
    }
 
    rpt_label(d0, "VCP Features:");
@@ -567,7 +571,7 @@ void dyn_report_parsed_capabilities(
    int d0 = depth;
    int d1 = depth+1;
    int d2 = depth+2;
-   bool debug = false;
+   bool debug = true;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dref=%s, pcaps->raw_cmds_segment_seen=%s, "
                  "pcaps->commands=%p, pcaps->vcp_features=%p",
