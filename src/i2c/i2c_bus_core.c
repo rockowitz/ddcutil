@@ -984,9 +984,9 @@ Find_Sys_Drm_Connector_Result find_sys_drm_connector_by_busno_or_edid(
 
 
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      DBGTRC_DONE(true, DDCA_TRC_NONE, "Returning:");
       dbgrpt_find_sys_drm_connector_result(result, 1);
    }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
    return result;
 }
 
@@ -1560,7 +1560,7 @@ bye:
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
-}
+}  // i2c_check_bus
 
 
 #ifdef OUT
@@ -1819,12 +1819,11 @@ get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
       free_udev_device_summaries(summaries);
    }
 
-   if (IS_DBGTRC(debug,TRACE_GROUP)) {
-      char * s = bva_as_string(bva, /*as_hex*/ false, ",");
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning I2C bus numbers: %s", s);
-      free(s);
-      // bva_report(bva, "Returning I2c bus numbers:");
-   }
+   char * s = bva_as_string(bva, /*as_hex*/ false, ",");
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning I2C bus numbers: %s", s);
+   free(s);
+   // bva_report(bva, "Returning I2c bus numbers:");
+
    return bva;
 }
 
@@ -1833,7 +1832,7 @@ Bit_Set_256 attached_buses;
 
 
 /** Returns the bus numbers for /dev/i2c buses that could possibly be
- *  connected to a monitor.
+ *  connected to a monitor.:
  *
  *  @return array of bus numbers
  */
@@ -1849,11 +1848,9 @@ Byte_Value_Array i2c_detect_attached_buses() {
             get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
 
-   if (IS_DBGTRC(debug, TRACE_GROUP)) {
-      char * s = bva_as_string(i2c_bus_bva,  false,  ", ");
-      DBGTRC_DONE(true, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
-      free(s);
-   }
+   char * s = bva_as_string(i2c_bus_bva,  false,  ", ");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
+   free(s);
    return i2c_bus_bva;;
 }
 
@@ -2266,6 +2263,7 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 
 
 static void init_i2c_bus_core_func_name_table() {
+   RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
    RTTI_ADD_FUNC(check_x37_for_businfo);
    RTTI_ADD_FUNC(get_connector_edid);
    RTTI_ADD_FUNC(get_i2c_device_numbers_using_udev);
