@@ -9,6 +9,8 @@
 #ifndef PARMS_H_
 #define PARMS_H_
 
+#include "config.h"
+
 //
 // *** Build options that are not otherwise set
 //
@@ -17,8 +19,7 @@
 #define NUMERIC_DDCA_DISPLAY_REF
 // #undef NUMERIC_DDCA_DISPLAY_REF
 
-#define STATIC_FUNCTIONS_VISIBLE
-// #undef STATIC_FUNCTIONS_VISIBLE
+// STATIC_FUNCTIONS_VISIBLE defined in config.h
 // If defined, remove static function qualifier on many functions to
 // make them visible to asan, valgrind, backtrace
 #ifdef STATIC_FUNCTIONS_VISIBLE
