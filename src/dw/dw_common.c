@@ -324,9 +324,9 @@ bool dw_hotplug_change_handler(
       GPtrArray*     drefs_to_recheck)
 {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bs_buses_w_edid_removed: %s",
+         BS256_REPR(bs_buses_w_edid_removed));
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "bs_buses_w_edid_removed: %s",
-            BS256_REPR(bs_buses_w_edid_removed));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_added: %s",
             BS256_REPR(bs_buses_w_edid_added));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "events_queue=%p",
