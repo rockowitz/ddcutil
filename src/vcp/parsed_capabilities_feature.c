@@ -1,4 +1,4 @@
-/** \file parsed_capabilities_features.c
+/** \file parsed_capabilities_feature.c
  * Describes one VCP feature in a capabilities string.
  *
  * The functions in this file are used only in parse_capabilities.c,
