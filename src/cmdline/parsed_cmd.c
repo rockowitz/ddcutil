@@ -451,6 +451,10 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
 #undef RPT_IVAL
 
+#define RPT_FVAL(_flagno, _depth) \
+   rpt_str("f"#_flagno, NULL, SBOOL(parsed_cmd->flags2 & CMD_FLAG2_F##_flagno), _depth)
+
+
       rpt_bool("fl1 set",           NULL, parsed_cmd->flags2 & CMD_FLAG2_FL1_SET,      d1);
       if (parsed_cmd->flags2 & CMD_FLAG2_FL1_SET)
          rpt_vstring(d1, "fl1                                                      : %.2f", parsed_cmd->fl1);
@@ -474,6 +478,24 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_CMDFLAG2("f14", CMD_FLAG2_F14, d1);
       RPT_CMDFLAG2("f15", CMD_FLAG2_F15, d1);
       RPT_CMDFLAG2("f16", CMD_FLAG2_F16, d1);
+      RPT_FVAL(17, d1);
+      RPT_FVAL(18, d1);
+      RPT_FVAL(19, d1);
+      RPT_FVAL(20, d1);
+      RPT_FVAL(21, d1);
+      RPT_FVAL(22, d1);
+      RPT_FVAL(23, d1);
+      RPT_FVAL(24, d1);
+      RPT_FVAL(25, d1);
+      RPT_FVAL(26, d1);
+      RPT_FVAL(27, d1);
+      RPT_FVAL(28, d1);
+      RPT_FVAL(29, d1);
+      RPT_FVAL(30, d1);
+      RPT_FVAL(31, d1);
+      RPT_FVAL(32, d1);
+
+#undef RPT_FVAL
 
       rpt_str( "s1",                NULL, parsed_cmd->s1,                            d1);
       rpt_str( "s2",                NULL, parsed_cmd->s2,                            d1);
