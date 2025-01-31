@@ -21,9 +21,11 @@
 #include "traced_function_stack.h"
 
 bool traced_function_stack_enabled = false;
+bool traced_function_stack_errors_fatal = false;
 bool __thread traced_function_stack_suspended = false;
 
 static __thread GQueue * traced_function_stack;
+static __thread bool  traced_function_stack_invalid = false;
 static GPtrArray * all_traced_function_stacks = NULL;
 static GMutex all_traced_function_stacks_mutex;
 
@@ -31,6 +33,22 @@ __thread pid_t process_id = 0;
 __thread pid_t thread_id  = 0;
 
 static void list_traced_function_stacks();
+
+
+/** Delete all entries in the traced function stack for the current thread,
+ *  and reset the traced_function_stack flag.
+ */
+void reset_current_traced_function_stack() {
+   if (traced_function_stack) {
+      int ct = g_queue_get_length(traced_function_stack);
+      for (int ctr = 0; ctr<ct; ctr++) {
+         char * funcname = g_queue_pop_tail(traced_function_stack);
+         free(funcname);
+      }
+      assert(g_queue_get_length(traced_function_stack) == 0);
+   }
+   traced_function_stack_invalid = false;
+}
 
 
 #ifdef UNUSED
@@ -116,6 +134,12 @@ typedef struct {
 } All_Traced_Function_Stacks_Entry;
 
 
+void free_traced_function_stacks_entry(All_Traced_Function_Stacks_Entry* entry) {
+   free(entry);
+}
+
+
+/** Lists all the traced function stacks. */
 static void list_traced_function_stacks() {
    g_mutex_lock(&all_traced_function_stacks_mutex);
    if (!all_traced_function_stacks) {
@@ -174,7 +198,7 @@ void push_traced_function(const char * funcname) {
             TID(), funcname, traced_function_stack_enabled);
    }
 
-   if (traced_function_stack_enabled && !traced_function_stack_suspended) {
+   if (traced_function_stack_enabled && !traced_function_stack_suspended && !traced_function_stack_invalid) {
       if (!traced_function_stack) {
          traced_function_stack = new_traced_function_stack();
          if (debug)
@@ -201,27 +225,37 @@ void push_traced_function(const char * funcname) {
  *  @return function name, null if the stack is empty. Caller should not free.
  */
 char * peek_traced_function() {
+   bool debug = false;
+   if (debug)
+      printf(PRItid"(%s) Starting.\n", TID(), __func__);
+
    char * result = NULL;
-   if (traced_function_stack) {
+   if (traced_function_stack && !traced_function_stack_invalid) {
       result = g_queue_peek_head(traced_function_stack);   // or g_strdup() ???
    }
-   // printf(PRItid"(peek_traced_function), returning %s\n", TID(), result);
+
+   if (debug)
+      printf(PRItid"(%s), returning %s\n", TID(), __func__, result);
    return result;
 }
 
 
-/** Removes the function name on the top of the stack and returns it to the
- *  caller.
+/** Removes the function name on the top of the stack.
+ *
+ *  If the popped function name does not match the expected name,
+ *  the traced function stack is corrupt.  In that case, diagnostics
+ *  are written to both the terminal and the system log.  If flag
+ *  #traced_function_stack_errors_fatal is set, program execution
+ *  terminates with an assert() failure.  If not, thread global
+ *  variable #traced_function_stack_invalid is set, marking the
+ *  stack unusable until the stack is emptied.
  *
  *  @param funcname expected function name
- *  @return function name, or null if the stack is empty.
- *
- *  The caller is responsible for freeing the returned function name.
  */
 void pop_traced_function(const char * funcname) {
    bool debug = false;
 
-   if (traced_function_stack_enabled && !traced_function_stack_suspended) {
+   if (traced_function_stack_enabled && !traced_function_stack_suspended && !traced_function_stack_invalid) {
       if (!traced_function_stack) {
          fprintf(stderr, PRItid"(%s) funcname=%s. No traced function stack\n",
                TID(), __func__, funcname);
@@ -235,7 +269,9 @@ void pop_traced_function(const char * funcname) {
             syslog(LOG_ERR, PRItid"(%s) traced_function_stack=%p, expected %s, traced_function_stack is empty\n",
                   TID(), __func__, traced_function_stack, funcname);
             backtrace_to_syslog(LOG_ERR, 2);
-            ASSERT_WITH_BACKTRACE(0);
+            traced_function_stack_invalid = true;
+            if (traced_function_stack_errors_fatal)
+               ASSERT_WITH_BACKTRACE(0);
          }
          else {
             if (strcmp(popped_func, funcname) != 0) {
@@ -243,10 +279,12 @@ void pop_traced_function(const char * funcname) {
                      TID(), __func__, traced_function_stack,  popped_func, funcname);
                syslog(LOG_ERR, PRItid"(%s)traced_function_stack=%p, !!! popped traced function %s, expected %s\n",
                      TID(), __func__, traced_function_stack,  popped_func, funcname);
-               debug_current_traced_function_stack(true);
+               debug_current_traced_function_stack(/*reverse=*/ false);
                show_backtrace(0);
                backtrace_to_syslog(LOG_ERR, /* stack_adjust */ 0);
-               ASSERT_WITH_BACKTRACE(0);
+               traced_function_stack_invalid = true;
+               if (traced_function_stack_errors_fatal)
+                  ASSERT_WITH_BACKTRACE(0);
             }
             else {
                if (debug) {

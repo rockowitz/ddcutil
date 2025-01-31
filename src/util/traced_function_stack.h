@@ -14,6 +14,7 @@ extern "C" {
 #include <stdbool.h>
 
 extern bool traced_function_stack_enabled;
+extern bool traced_function_stack_errors_fatal;
 extern __thread bool traced_function_stack_suspended;
 
 void       push_traced_function(const char * funcname);
@@ -21,6 +22,7 @@ char*      peek_traced_function();
 void       pop_traced_function(const char * funcname);
 void       debug_current_traced_function_stack(bool reverse);
 GPtrArray* get_current_traced_function_stack_contents(bool most_recent_last);
+void       reset_current_traced_function_stack();
 void       free_current_traced_function_stack();
 void       free_all_traced_function_stacks();
 
