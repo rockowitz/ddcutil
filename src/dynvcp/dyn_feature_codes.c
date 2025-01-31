@@ -4,7 +4,7 @@
  * incorporate user-defined per-monitor feature information.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -285,7 +285,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec(
     if (dfr)
        dfr_free(dfr);
 
-    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Display_Feature_Metadata", dbgrpt_display_feature_metadata, result);
+    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, Display_Feature_Metadata, dbgrpt_display_feature_metadata, result);
     return result;
  }
 
@@ -454,8 +454,8 @@ dyn_format_feature_detail(
      )
 {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "valrec: ");
    if (debug || IS_TRACING() ) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "valrec: ");
       dbgrpt_single_vcp_value(valrec, 2);
    }
 

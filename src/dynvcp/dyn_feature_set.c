@@ -351,12 +351,9 @@ bool test_show_feature(
           showit = false;
     }
 
+    DBGTRC_RET_BOOL(debug, TRACE_GROUP, showit, "");
    return showit;
 }
-
-
-
-
 
 
 // #ifdef OLD
