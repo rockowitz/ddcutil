@@ -23,6 +23,8 @@ static inline pid_t tid() {
    return thread_id;
 }
 
+#define TID() (intmax_t) tid()
+
 static inline pid_t pid() {
    if (!process_id)
       process_id = syscall(SYS_gettid);
