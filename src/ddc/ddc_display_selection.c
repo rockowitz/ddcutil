@@ -1,6 +1,6 @@
 /** @file ddc_display_selection.c */
 
-// Copyright (C) 2022-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -202,7 +202,7 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 static Display_Ref *
 ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. did=%s", did_repr(did));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "did=%s", did_repr(did));
    if (debug)
       dbgrpt_display_identifier(did, 1);
 
