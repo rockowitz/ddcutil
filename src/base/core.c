@@ -512,21 +512,13 @@ static bool vdbgtrc(
 {
    bool debug = false;
    if (debug) {
-      printf("Starting. trace_group=0x%04x, options=0x%02x, funcname=%s, filename=%s,"
+      printf("(vdbgtrc) Starting. trace_group=0x%04x, options=0x%02x, funcname=%s, filename=%s,"
           " lineno=%d, thread=%jd, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
           trace_group, options, funcname, filename, lineno, get_thread_id(),
           (fout() == stdout) ? "==" : "!=",
           retval_info, format);
       printf("trace_api_call_depth=%d\n", trace_api_call_depth);
       printf("traced_function_stack_enabled = %s\n", sbool(traced_function_stack_enabled));
-   }
-   if (traced_function_stack_enabled && (options&DBGTRC_OPTIONS_STARTING)) {
-      // printf("(vdbgtrc) pushing %s\n", funcname);
-      push_traced_function(funcname);
-   }
-   if (traced_function_stack_enabled && (options&DBGTRC_OPTIONS_DONE)) {
-      // printf("(vdbgtrc) popping\n");
-      pop_traced_function(funcname);
    }
 
    bool msg_emitted = false;
@@ -651,7 +643,7 @@ static bool vdbgtrc(
    }
 
    if (debug)
-      printf("Done.   Returning %s\n", sbool(msg_emitted));
+      printf("(%s) Done.   Returning %s\n", __func__, sbool(msg_emitted));
    return msg_emitted;
 }
 
@@ -717,9 +709,9 @@ bool dbgtrc(
         ...)
 {
    bool debug = false;
-   DBGF(debug, "Starting. trace_group=0x%04x, options=0x%02x, funcname=%s,"
+   DBGF(debug, PRItid" Starting. trace_group=0x%04x, options=0x%02x, funcname=%s,"
                " filename=%s, lineno=%d, thread=%jd, trace_callstack_call_depth=%d, fout() %s sysout",
-               trace_group, options, funcname, filename, lineno, get_thread_id(),
+               TID(), trace_group, options, funcname, filename, lineno, get_thread_id(),
                trace_callstack_call_depth, (fout() == stdout) ? "==" : "!=");
 
    bool msg_emitted = false;
