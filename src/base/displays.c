@@ -1006,7 +1006,7 @@ char * ddca_dref_repr_t(DDCA_Display_Ref * ddca_dref) {
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
 #ifdef NUMERIC_DDCA_DISPLAY_REF
-   g_snprintf(buf, 100, "DDCA_Display_Ref[%p]", ddca_dref);
+   g_snprintf(buf, 100, "DDCA_Display_Ref[%d]", GPOINTER_TO_INT(ddca_dref));
 #else
    if (ddca_dref) {
       Display_Ref * dref = (Display_Ref*) ddca_dref;
