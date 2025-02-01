@@ -190,6 +190,7 @@ ddca_create_dispno_display_identifier(
       DDCA_Display_Identifier* did_loc)
 {
    free_thread_error_detail();
+   reset_current_traced_function_stack();
    // assert(did_loc);
    API_PRECOND(did_loc);
    Display_Identifier* did = create_dispno_display_identifier(dispno);
@@ -206,6 +207,7 @@ ddca_create_busno_display_identifier(
 {
    free_thread_error_detail();
    // assert(did_loc);
+   reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    Display_Identifier* did = create_busno_display_identifier(busno);
    *did_loc = did;
@@ -222,6 +224,7 @@ ddca_create_mfg_model_sn_display_identifier(
       DDCA_Display_Identifier* did_loc)
 {
    free_thread_error_detail();
+   reset_current_traced_function_stack();
    // assert(did_loc);
    API_PRECOND(did_loc);
    *did_loc = NULL;
@@ -260,6 +263,7 @@ ddca_create_edid_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
+   reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    *did_loc = NULL;
    DDCA_Status rc = 0;
@@ -283,6 +287,7 @@ ddca_create_usb_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
+   reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    Display_Identifier* did = create_usb_display_identifier(bus, device);
    *did_loc = did;
@@ -298,6 +303,7 @@ ddca_create_usb_hiddev_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
+   reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    Display_Identifier* did = create_usb_hiddev_display_identifier(hiddev_devno);
    *did_loc = did;
@@ -445,12 +451,13 @@ ddca_redetect_displays() {
 const char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
+   reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref=%p", ddca_dref);
 
    Display_Ref * dref = dref_from_published_ddca_dref(ddca_dref);
    char * result = (dref) ? dref_reprx_t(dref) : "Invalid DDCA_Display_Ref";
 
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning: %s", ddca_dref, result);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning: %s", ddca_dref, result);
    return result;
 }
 
@@ -461,6 +468,7 @@ ddca_dbgrpt_display_ref(
       int              depth)
 {
    bool debug = false;
+   reset_current_traced_function_stack();
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
    Display_Ref * dref = ddca_dref;
    if (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) {
@@ -730,6 +738,8 @@ ddca_get_mccs_version_by_dh(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Spec* p_spec)
 {
+   bool debug = false;
+   API_PROLOGX(debug, true, "");
    free_thread_error_detail();
    assert(library_initialized);
    DDCA_Status rc = 0;
@@ -746,6 +756,7 @@ ddca_get_mccs_version_by_dh(
       p_spec->minor = vspec.minor;
       rc = 0;
    }
+   API_EPILOG_BEFORE_RETURN(debug, true, rc, "");
    return rc;
 }
 
@@ -1138,7 +1149,8 @@ ddca_free_display_info(DDCA_Display_Info * info_rec) {
       info_rec->marker[3] = 'x';
       free(info_rec);
    }
-   DBGTRC_DONE(debug, DDCA_TRC_API,"");
+   API_EPILOG_NO_RETURN(debug, false, "");
+   // DBGTRC_DONE(debug, DDCA_TRC_API,"");
    DISABLE_API_CALL_TRACING();
 }
 
@@ -1146,7 +1158,7 @@ ddca_free_display_info(DDCA_Display_Info * info_rec) {
 void
 ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
    bool debug = false;
-   API_PROLOG(debug, "dlist=%p", dlist);
+   API_PROLOG_NO_DISPLAY_IO(debug, "dlist=%p", dlist);
    if (dlist) {
       // n. DDCA_Display_Info contains no pointers,
       // DDCA_Display_Info_List can simply be free'd.
@@ -1157,7 +1169,8 @@ ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
       }
       free(dlist);
    }
-   DBGTRC_DONE(debug, DDCA_TRC_API, "");
+   API_EPILOG_NO_RETURN(debug, false, "");
+   // DBGTRC_DONE(debug, DDCA_TRC_API, "");
    DISABLE_API_CALL_TRACING();
 }
 
@@ -1271,7 +1284,7 @@ ddca_report_display_info(
 }
 
 
-void
+STATIC void
 dbgrpt_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
@@ -1295,6 +1308,7 @@ ddca_report_display_info_list(
       int                      depth)
 {
    bool debug = false;
+   API_PROLOG_NO_DISPLAY_IO(debug, "");
    DBGMSF(debug, "Starting.  dlist=%p, depth=%d", dlist, depth);
 
    int d1 = depth+1;
@@ -1302,10 +1316,11 @@ ddca_report_display_info_list(
    for (int ndx=0; ndx<dlist->ct; ndx++) {
       ddca_report_display_info(&dlist->info[ndx], d1);
    }
+   API_EPILOG_NO_RETURN(debug, false, "");
 }
 
 
-void
+STATIC void
 dbgrpt_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth)
@@ -1415,8 +1430,9 @@ ddca_report_displays(bool include_invalid_displays, int depth) {
    if (!library_initialization_failed) {
       display_ct = ddc_report_displays(include_invalid_displays, depth);
    }
-   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %d", display_ct);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "Returning: %d", display_ct);
    DISABLE_API_CALL_TRACING();
+   API_EPILOG_NO_RETURN(debug, false, ""); // hack
    return display_ct;
 }
 
