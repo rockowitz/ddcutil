@@ -186,7 +186,7 @@ bye:
 
 static
 DDCA_Status
-ddca_get_vcp_value(
+ddci_get_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_Vcp_Value_Type    call_type,   // why is this needed?   look it up from dh and feature_code
@@ -222,7 +222,7 @@ get_value_type(
       DDCA_Vcp_Value_Type *       p_value_type)
 {
    bool debug = false;
-   API_PROLOGX(debug, NORESPECT_QUIESCE, "ddca_dh=%p, feature_code=0x%02x", ddca_dh, feature_code);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "ddca_dh=%p, feature_code=0x%02x", ddca_dh, feature_code);
 
    DDCA_Status ddcrc = DDCRC_NOT_FOUND;
    DDCA_MCCS_Version_Spec vspec     = get_vcp_version_by_dh(ddca_dh);
@@ -235,8 +235,34 @@ get_value_type(
       ddcrc = 0;
    }
 
-   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
+}
+
+
+STATIC DDCA_Status
+ddci_get_any_vcp_value_using_explicit_type(
+       DDCA_Display_Handle         ddca_dh,
+       DDCA_Vcp_Feature_Code       feature_code,
+       DDCA_Vcp_Value_Type         call_type,
+       DDCA_Any_Vcp_Value **       valrec_loc)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+          "ddca_dh=%p, feature_code=0x%02x, call_type=%d, valrec_loc=%p",
+          ddca_dh, feature_code, call_type, valrec_loc);
+   assert(valrec_loc);
+   *valrec_loc = NULL;
+
+   DDCA_Any_Vcp_Value * valrec2 = NULL;
+   DDCA_Status rc = ddci_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
+   if (rc == 0) {
+      *valrec_loc = valrec2;
+   }
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP,  rc, "*valrec_loc=%p", *valrec_loc);
+   ASSERT_IFF(rc == 0, *valrec_loc);
+   return rc;
 }
 
 
@@ -249,21 +275,18 @@ ddca_get_any_vcp_value_using_explicit_type(
 {
    bool debug = false;
    free_thread_error_detail();
+
    API_PROLOGX(debug, true,
           "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, valrec_loc=%p",
           ddca_dh, feature_code, call_type, valrec_loc);
    assert(valrec_loc);
    *valrec_loc = NULL;
+   DDCA_Status ddcrc = ddci_get_any_vcp_value_using_explicit_type(
+         ddca_dh, feature_code, call_type, valrec_loc);
 
-   DDCA_Any_Vcp_Value * valrec2 = NULL;
-   DDCA_Status rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
-   if (rc == 0) {
-      *valrec_loc = valrec2;
-   }
-
-   API_EPILOG_BEFORE_RETURN(debug, true, rc, "*valrec_loc=%p", *valrec_loc);
-   ASSERT_IFF(rc == 0, *valrec_loc);
-   return rc;
+   API_EPILOG_BEFORE_RETURN(debug, true, ddcrc, "*valrec_loc=%p", *valrec_loc);
+   ASSERT_IFF(ddcrc == 0, *valrec_loc);
+   return ddcrc;
 }
 
 
@@ -314,7 +337,7 @@ ddca_get_any_vcp_value_using_implicit_type(
    DDCA_Vcp_Value_Type call_type;
    DDCA_Status ddcrc = get_value_type(ddca_dh, feature_code, &call_type);
    if (ddcrc == 0) {
-      ddcrc = ddca_get_any_vcp_value_using_explicit_type(
+      ddcrc = ddci_get_any_vcp_value_using_explicit_type(
                  ddca_dh,
                  feature_code,
                  call_type,
@@ -503,7 +526,7 @@ ddci_format_any_vcp_value(
 {
    bool debug = false;
    free_thread_error_detail();
-   API_PROLOGX(debug, NORESPECT_QUIESCE, "feature_code=0x%02x, vspec=%d.%d, mmid=%p -> %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x, vspec=%d.%d, mmid=%p -> %s",
                  feature_code,
                  vspec.major, vspec.minor,
                  mmid,
@@ -562,7 +585,8 @@ ddci_format_any_vcp_value(
 bye:
    if (dfm)
       dfm_free(dfm);
-   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "formatted_value_loc -> %s", *formatted_value_loc);
+   // API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "formatted_value_loc -> %s", *formatted_value_loc);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "formatted_value_loc -> %s", *formatted_value_loc);
    // 7/2019: wrong, *formatted_value_loc always set, why did this ever work?
    // assert( (ddcrc==0 && *formatted_value_loc) || (ddcrc!=0 &&!*formatted_value_loc) );
    return ddcrc;
@@ -625,7 +649,7 @@ ddci_format_non_table_vcp_value(
       char **                     formatted_value_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x, vspec=%d.%d, mmid=%s, formatted_value_loc=%p",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x, vspec=%d.%d, mmid=%s, formatted_value_loc=%p",
              feature_code,
              vspec.major, vspec.minor,
              (mmid) ? mmk_repr(*mmid) : "NULL",
@@ -651,12 +675,14 @@ ddci_format_non_table_vcp_value(
                           feature_code, vspec, mmid, &anyval, formatted_value_loc);
    // assert( (ddcrc==0 &&*formatted_value_loc) || (ddcrc!=0 && !*formatted_value_loc) );
 
+#ifdef OUT
    if (ddcrc == 0)
       API_EPILOG_BEFORE_RETURN(debug, false, ddcrc,
             "*formatted_value_loc=%p->%s", *formatted_value_loc, *formatted_value_loc);
    else
       API_EPILOG_BEFORE_RETURN(debug, false, ddcrc,
             "*formatted_value_loc=%p", *formatted_value_loc);
+#endif
 
    // if (ddcrc == 0)
    //    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc,
@@ -665,7 +691,8 @@ ddci_format_non_table_vcp_value(
    //    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc,  "*formatted_value_loc=%p", *formatted_value_loc);
 
 bye:
-   DISABLE_API_CALL_TRACING();
+   // DISABLE_API_CALL_TRACING();
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 
@@ -698,6 +725,7 @@ ddca_format_non_table_vcp_value_by_dref(
                // assert( (psc==0 &&*formatted_value_loc) || (psc!=0 && !*formatted_value_loc) );
          }
    )
+
    API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "*formatted_value_loc = %p -> |%s|",
                                                *formatted_value_loc, *formatted_value_loc);
    return ddcrc;
@@ -724,7 +752,8 @@ ddci_format_table_vcp_value(
 {
    // free_thread_error_detail();   // unnecessary, done by ddca_format_any_vcp_value();
    bool debug = false;
-   API_PROLOG(debug, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   // API_PROLOG(debug, "");
    DDCA_Any_Vcp_Value anyval;
    anyval.opcode = feature_code;
    anyval.value_type = DDCA_TABLE_VCP_VALUE;
@@ -733,7 +762,8 @@ ddci_format_table_vcp_value(
 
    DDCA_Status ddcrc = ddci_format_any_vcp_value(
              feature_code, vspec, mmid, &anyval, formatted_value_loc);
-   API_EPILOG_BEFORE_RETURN(debug, false, ddcrc, "");
+   // API_EPILOG_BEFORE_RETURN(debug, false, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 
