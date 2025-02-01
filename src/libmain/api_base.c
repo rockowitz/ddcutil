@@ -619,6 +619,7 @@ init_library_trace_file(char * library_trace_file, bool debug) {
 void __attribute__ ((destructor))
 _ddca_terminate(void) {
    bool debug = false;
+   reset_current_traced_function_stack();  // ?? needed?
    DBGTRC_STARTING(debug, DDCA_TRC_API, "library_initialized = %s", SBOOL(library_initialized));
    if (library_initialized) {
       if (debug)
@@ -923,7 +924,7 @@ ddca_init2(const char *     libopts,
 DDCA_Status
 ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
-   API_PROLOGX(debug, RESPECT_QUIESCE, "Starting");
+   API_PROLOGX(debug, RESPECT_QUIESCE, "enabled_classes=0x%02x", enabled_classes);
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "all_video_adapters_implement_drm=%s",
          sbool(all_video_adapters_implement_drm));
@@ -967,7 +968,7 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
 DDCA_Status
 ddca_stop_watch_displays(bool wait) {
    bool debug = false;
-   API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting");
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "wait=%s", SBOOL(wait));
    DDCA_Display_Event_Class active_classes;
    DDCA_Status ddcrc = dw_stop_watch_displays(wait, &active_classes);
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
@@ -1270,6 +1271,7 @@ double
 ddca_set_sleep_multiplier(double multiplier)
 {
    bool debug = false;
+   reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, DDCA_TRC_API, "Setting multiplier = %6.3f", multiplier);
 
    double old_value = -1.0;
@@ -1290,6 +1292,7 @@ double
 ddca_get_sleep_multiplier()
 {
    bool debug = false;
+   reset_current_traced_function_stack();
    DBGTRC(debug, DDCA_TRC_API, "");
 
    Per_Thread_Data * ptd = ptd_get_per_thread_data();
@@ -1430,6 +1433,9 @@ ddca_show_stats(
       bool            per_display_stats,
       int             depth)
 {
+   bool debug = false;
+   API_PROLOG_NO_DISPLAY_IO(debug, "stats_types=0x%02x, per_display_stats=%s",
+         stats_types, SBOOL(per_display_stats) );
    if (stats_types) {
       ddc_report_stats_main( stats_types, per_display_stats, per_display_stats, false, depth);
       rpt_nl();
@@ -1444,6 +1450,7 @@ ddca_show_stats(
       }
    }
 #endif
+   API_EPILOG_NO_RETURN(debug, NORESPECT_QUIESCE, "");
 }
 
 void
