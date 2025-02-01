@@ -1143,8 +1143,8 @@ parse_command(
                                                 G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed and internal performance statistics",  "stats type"},
       {"profile-api",'\0', 0, G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
       {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", valid_syslog_levels_string},
-      {"enable-traced-function-stack",
-                  '\0', 0, G_OPTION_ARG_NONE, &traced_function_stack_flag, "Enable traced function stack", NULL},
+//    {"enable-traced-function-stack",
+//                '\0', 0, G_OPTION_ARG_NONE, &traced_function_stack_flag, "Enable traced function stack", NULL},
 
       // Performance
       {"enable-capabilities-cache",

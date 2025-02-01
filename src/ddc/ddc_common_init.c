@@ -192,7 +192,9 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    g_ptr_array_set_free_func(errinfo_accumulator, (GDestroyNotify) errinfo_free);
    g_ptr_array_free(errinfo_accumulator, true);
 
-   traced_function_stack_enabled = parsed_cmd->flags & CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK;
+   // traced_function_stack_enabled = parsed_cmd->flags & CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK;
+   traced_function_stack_enabled = parsed_cmd->flags2 & CMD_FLAG2_F25;
+   traced_function_stack_errors_fatal = parsed_cmd->flags2 & CMD_FLAG2_F26;
 
    tracing_initialized = true;
    return result;

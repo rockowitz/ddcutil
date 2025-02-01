@@ -73,6 +73,14 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(22, "Force sysfs reliable");
    REPORT_FLAG_OPTION(23, "Set global primitive_sysfs");
    REPORT_FLAG_OPTION(24, "Write detect to status if nvidia driver");
+   REPORT_FLAG_OPTION(25, "Enable traced function stack");
+   REPORT_FLAG_OPTION(26, "Traced function stack error are fatal");
+   REPORT_FLAG_OPTION(27, "Unused");
+   REPORT_FLAG_OPTION(28, "Unused");
+   REPORT_FLAG_OPTION(29, "Unused");
+   REPORT_FLAG_OPTION(30, "Unused");
+   REPORT_FLAG_OPTION(31, "Unused");
+   REPORT_FLAG_OPTION(32, "Unused");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_INITIAL_STABILIZATION_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
