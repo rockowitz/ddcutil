@@ -598,7 +598,7 @@ ddca_get_feature_metadata_by_dh(
 {
    bool debug = false;
    // if (feature_code == 0xca)
-   //    debug = true;
+   //    debug =  true;
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE,
           "feature_code=0x%02x, ddca_dh=%p->%s, create_default_if_not_found=%s, metadata_loc=%p",
@@ -925,6 +925,7 @@ ddca_dbgrpt_feature_metadata(
       int                     depth)
 {
    bool debug = false;
+   reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    // rpt_push_output_dest(stdout);
    dbgrpt_ddca_feature_metadata(md, depth);
@@ -988,7 +989,7 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
    DDCA_Status psc = 0;
    WITH_VALIDATED_DH3(ddca_dh, psc,
       {
-            DBGMSF(debug, "dh=%s", dh_repr_p(dh));
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dh=%s", dh_repr_p(dh));
             Error_Info * ddc_excp = dfr_check_by_dh(dh);
             if (ddc_excp) {
                if (ddc_excp->status_code != DDCRC_NOT_FOUND) {
