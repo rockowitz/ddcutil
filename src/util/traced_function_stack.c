@@ -7,12 +7,16 @@
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
+// #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <syslog.h>
 
 #include "common_inlines.h"
 #include "backtrace.h"
 #include "glib_util.h"
+#include "string_util.h"
 #include "syslog.h"
 
 #include "common_printf_formats.h"
@@ -85,6 +89,57 @@ void debug_traced_function_stack(GQueue * stack, bool reverse) {
       else {
          printf("    EMPTY\n");
       }
+   }
+}
+
+
+void collect_traced_function_stack(GPtrArray* collector, GQueue * stack, bool reverse, int stack_adjust) {
+   if (stack && collector) {
+      printf(PRItid" Traced function stack %p:\n", TID(), stack);
+      int queue_len = g_queue_get_length(stack) - stack_adjust;
+      if (queue_len > 0) {
+         // printf(PRItid"traced function stack (addr=%p, len=%d:\n", TID(), stack, queue_len );
+         if (reverse) {
+            for (int ndx =  g_queue_get_length(stack)-stack_adjust; ndx >=0 ; ndx--) {
+               g_ptr_array_add(collector, g_queue_peek_nth(stack, ndx));
+            }
+         }
+         else {
+            for (int ndx = 0; ndx < g_queue_get_length(stack); ndx++) {
+               g_ptr_array_add(collector, g_queue_peek_nth(stack, ndx));
+            }
+         }
+      }
+   }
+}
+
+void traced_function_stack_to_syslog(GQueue* callstack, int syslog_priority, bool reverse) {
+   if (!callstack) {
+      syslog(LOG_PERROR|LOG_ERR, "traced_function_stack unavailable");
+   }
+   else {
+      GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
+      collect_traced_function_stack(collector, callstack, reverse, 2);
+      // syslog(syslog_priority, "Traced function stack %p:", callstack);
+
+      if (collector->len == 0)
+         syslog(syslog_priority, "   EMPTY");
+      else {
+         for (int ndx = 0; ndx < collector->len; ndx++) {
+            syslog(syslog_priority, "   %s", (char *) g_ptr_array_index(collector, ndx));
+         }
+      }
+      g_ptr_array_free(collector, true);
+   }
+}
+
+
+void current_traced_function_stack_to_syslog(int syslog_priority, bool reverse) {
+   if (!traced_function_stack)
+      syslog(LOG_PERROR|LOG_ERR, "No traced function stack for current thread");
+   else {
+      syslog(syslog_priority, "Traced function stack %p for current thread "PRItid, traced_function_stack, TID());
+      traced_function_stack_to_syslog(traced_function_stack, syslog_priority, reverse);
    }
 }
 
@@ -240,6 +295,16 @@ char * peek_traced_function() {
 }
 
 
+void error_msg(char * format, ...) {
+   char msgbuf[300];
+   va_list(args);
+   va_start(args, format);
+   g_vsnprintf(msgbuf, 300, format, args);
+   fprintf(stderr, "%s\n", msgbuf);
+   syslog(LOG_ERR, "%s", msgbuf);
+}
+
+
 /** Removes the function name on the top of the stack.
  *
  *  If the popped function name does not match the expected name,
@@ -264,24 +329,36 @@ void pop_traced_function(const char * funcname) {
       else {
          char * popped_func = g_queue_pop_head(traced_function_stack);
          if (!popped_func) {
-            fprintf(stderr, PRItid"(%s) traced_function_stack=%p, expected %s, traced_function_stack is empty\n",
-                  TID(), __func__, traced_function_stack, funcname);
-            syslog(LOG_ERR, PRItid"(%s) traced_function_stack=%p, expected %s, traced_function_stack is empty\n",
-                  TID(), __func__, traced_function_stack, funcname);
-            backtrace_to_syslog(LOG_ERR, 2);
+            error_msg(PRItid" traced_function_stack=%p, expected %s, traced_function_stack is empty",
+                      TID(), traced_function_stack, funcname);
+
+            error_msg(PRItid" Function %s likely did not call push_traced_function() at start",
+                      TID(), funcname);
+
             traced_function_stack_invalid = true;
             if (traced_function_stack_errors_fatal)
                ASSERT_WITH_BACKTRACE(0);
          }
          else {
-            if (strcmp(popped_func, funcname) != 0) {
-               fprintf(stderr, PRItid"(%s)traced_function_stack=%p, !!! popped traced function %s, expected %s\n",
-                     TID(), __func__, traced_function_stack,  popped_func, funcname);
-               syslog(LOG_ERR, PRItid"(%s)traced_function_stack=%p, !!! popped traced function %s, expected %s\n",
-                     TID(), __func__, traced_function_stack,  popped_func, funcname);
+            if (!streq(popped_func, funcname)) {
+               error_msg(PRItid" traced_function_stack=%p, !!! popped traced function %s, expected %s",
+                         TID(), traced_function_stack,  popped_func, funcname);
+
+               char * look_ahead = peek_traced_function();
+               if (streq(look_ahead, funcname)) {
+                  error_msg(PRItid" Function %s does not call pop_traced_function() at end",
+                            TID(), funcname);
+
+               }
+               else {
+                  error_msg(PRItid" Function %s likely did not call push_traced_function() at start",
+                        TID(), funcname);
+               }
+
                debug_current_traced_function_stack(/*reverse=*/ false);
-               show_backtrace(0);
-               backtrace_to_syslog(LOG_ERR, /* stack_adjust */ 0);
+               show_backtrace(1);
+               backtrace_to_syslog(LOG_ERR, /* stack_adjust */ 1);
+               current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
                traced_function_stack_invalid = true;
                if (traced_function_stack_errors_fatal)
                   ASSERT_WITH_BACKTRACE(0);
