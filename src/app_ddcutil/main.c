@@ -587,9 +587,8 @@ find_dref(
 
    *dref_loc = dref;
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, final_result,
-                 "*dref_loc = %p -> %s",
-                 *dref_loc,
-                 dref_repr_t(*dref_loc) );
+                   "*dref_loc = %p -> %s",
+                   *dref_loc, dref_repr_t(*dref_loc) );
    return final_result;
 }
 
