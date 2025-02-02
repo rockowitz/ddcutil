@@ -164,8 +164,8 @@ DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Ha
 
 
 // forward declarations
-void dbgrpt_display_info(DDCA_Display_Info * dinfo, int depth);
-void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);
+STATIC void dbgrpt_display_info(DDCA_Display_Info * dinfo, int depth);
+STATIC void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);
 
 #ifdef REMOVED
 DDCA_Status
