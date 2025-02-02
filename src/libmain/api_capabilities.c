@@ -89,7 +89,8 @@ ddca_get_capabilities_string(
 }
 
 
-STATIC void
+#ifdef UNUSED
+void
 dbgrpt_ddca_cap_vcp(DDCA_Cap_Vcp * cap, int depth) {
    rpt_structure_loc("DDCA_Cap_Vcp", cap, depth);
    int d1 = depth+1;
@@ -103,6 +104,7 @@ dbgrpt_ddca_cap_vcp(DDCA_Cap_Vcp * cap, int depth) {
       }
    }
 }
+#endif
 
 
 #ifdef UNUSED
