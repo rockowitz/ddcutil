@@ -70,7 +70,7 @@ char * get_msg_decoration(char * buf, uint bufsz, bool dest_syslog) {
       if (traced_function_stack_enabled) {
          char * s = peek_traced_function();
          if (s)
-            g_snprintf(funcname_prefix, 80, "(%-31s)", s);
+            g_snprintf(funcname_prefix, 80, "(%-30s)", s);
       }
 
       g_snprintf(buf, bufsz, "%s%s%s%s%s",
