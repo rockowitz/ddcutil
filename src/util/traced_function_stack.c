@@ -135,7 +135,7 @@ void traced_function_stack_to_syslog(GQueue* callstack, int syslog_priority, boo
 
 
 void current_traced_function_stack_to_syslog(int syslog_priority, bool reverse) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       list_traced_function_stacks();
    if (!traced_function_stack)
@@ -153,7 +153,7 @@ void current_traced_function_stack_to_syslog(int syslog_priority, bool reverse) 
  *  @param reverse  order of entries
  */
 void debug_current_traced_function_stack(bool reverse) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       list_traced_function_stacks();
    if (traced_function_stack) {
@@ -224,9 +224,9 @@ static void list_traced_function_stacks() {
  *  on all threads.
  */
 static GQueue * new_traced_function_stack(const char * funcname) {
-   bool debug = true;
+   bool debug = false;
    if (debug) {
-      printf(PRItid"(%s) Starting. initail function: %s\n", TID(), __func__, funcname);
+      printf(PRItid"(%s) Starting. initial function: %s\n", TID(), __func__, funcname);
       list_traced_function_stacks();
    }
 
@@ -396,7 +396,7 @@ void pop_traced_function(const char * funcname) {
  *  Must be called with #all_traced_function_stacks_mutex locked.
  */
 static void free_traced_function_stack(GQueue * stack) {
-   bool debug = true;
+   bool debug = false;
    if (debug) {
       printf(PRItid"(%s) Starting. stack=%p\n", TID(), __func__, traced_function_stack);
       if (stack) {
@@ -420,7 +420,7 @@ static void free_traced_function_stack(GQueue * stack) {
  * Must be called WITHOUT all_traced_function_stacks_mutex locked
  */
 void free_current_traced_function_stack() {
-   bool debug = true;
+   bool debug = false;
    if (traced_function_stack) {
       if (debug) {
          printf(PRItid"(free_current_traced_function_stack) traced_function_stack=%p. Executing.\n",
