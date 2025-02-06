@@ -95,7 +95,7 @@ void debug_traced_function_stack(GQueue * stack, bool reverse) {
 
 void collect_traced_function_stack(GPtrArray* collector, GQueue * stack, bool reverse, int stack_adjust) {
    if (stack && collector) {
-      printf(PRItid" Traced function stack %p:\n", TID(), stack);
+      // printf(PRItid" Traced function stack %p:\n", TID(), stack);
       int queue_len = g_queue_get_length(stack) - stack_adjust;
       if (queue_len > 0) {
          // printf(PRItid"traced function stack (addr=%p, len=%d:\n", TID(), stack, queue_len );
