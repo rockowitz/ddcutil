@@ -501,18 +501,11 @@ void dbgrpt_published_dref_hash(const char * msg, int depth) {
 
 
 static uint next_dref_id(Display_Ref * dref) {
+   bool debug = false;
    g_mutex_lock (&max_dref_id_mutex);
    guint nextid = ++max_dref_id;
-#ifdef NOT_HERE
-   bool debug = false;
-   g_hash_table_insert(published_dref_hash, GUINT_TO_POINTER(nextid), dref);
-   if (debug) {
-      char msgbuf[100];
-      g_snprintf(msgbuf, 100, "After dref %s inserted", dref_reprx_t(dref));
-      dbgrpt_published_dref_hash(msgbuf, 0);
-   }
-#endif
    g_mutex_unlock(&max_dref_id_mutex);
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "nextid = %u", nextid);
    return nextid;
 }
 
@@ -527,6 +520,7 @@ void add_published_dref_id_by_dref(Display_Ref * dref) {
       dbgrpt_published_dref_hash(msgbuf, 0);
    }
    g_mutex_unlock(&dref_hash_mutex);
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "%s -> %d", dref_reprx_t(dref), dref->dref_id);
 }
 
 
@@ -567,13 +561,17 @@ Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref = %p", ddca_dref);
 
 #ifdef NUMERIC_DDCA_DISPLAY_REF
-    if (debug)
-       dbgrpt_published_dref_hash(__func__, 1);
+    // if (debug)
+    //    dbgrpt_published_dref_hash(__func__, 1);
    guint id = GPOINTER_TO_UINT(ddca_dref);
    Display_Ref * dref = g_hash_table_lookup(published_dref_hash, GUINT_TO_POINTER(id));
-   // DBGMSF(debug, "ddca_dref=%p -> %s", ddca_dref, dref_reprx_t(dref));
-   if (dref)
-      assert (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+
+   if (dref) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ddca_dref=%p -> %s", ddca_dref, dref_reprx_t(dref));
+      if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0)
+         dbgrpt_display_ref(dref, true, 2);
+      assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+   }
 #else
    Display_Ref * dref = (Display_Ref*) ddca_dref;
    if (dref) {
@@ -869,6 +867,7 @@ void dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth) {
    int d2 = depth+2;
 
    rpt_structure_loc("Display_Ref", dref, depth);
+   rpt_vstring(d1, "marker            %.4s", dref->marker);
    rpt_vstring(d1, "dref_id           %d", dref->dref_id);
    rpt_vstring(d1, "io_path:          %s", dpath_repr_t(&(dref->io_path)));
    if (dref->io_path.io_mode == DDCA_IO_USB) {
@@ -965,9 +964,9 @@ char * dref_repr_t(Display_Ref * dref) {
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    if (dref)
 #ifdef WITH_ADDR
-      g_snprintf(buf, 100, "Display_Ref[%s @%p]", dpath_short_name_t(&dref->io_path), (void*)dref);
+      g_snprintf(buf, 100, "Display_Ref[%d:%s @%p]", dref->dref_id, dpath_short_name_t(&dref->io_path), (void*)dref);
 #else
-   g_snprintf(buf, 100, "Display_Ref[%s]", dpath_short_name_t(&dref->io_path));
+   g_snprintf(buf, 100, "Display_Ref[%d:%s]", dref->dref_id, dpath_short_name_t(&dref->io_path));
 #endif
    else
       strcpy(buf, "Display_Ref[NULL]");
@@ -991,11 +990,12 @@ char * dref_reprx_t(Display_Ref * dref) {
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    if (dref)
-      g_snprintf(buf, 100, "Display_Ref[%s%s %d@%p]",
-            (dref->flags & DREF_REMOVED) ? "Disconnected:" : "",
-            dpath_short_name_t(&dref->io_path),
+      g_snprintf(buf, 200, "Display_Ref[%s%d:%s @%p]",
+            (dref->flags & DREF_REMOVED) ? "Disconnected: " : "",
             dref->dref_id,
+            dpath_short_name_t(&dref->io_path),
             (void*) dref);
+
    else
       strcpy(buf, "Display_Ref[NULL]");
    return buf;
@@ -1189,7 +1189,10 @@ ddc_get_display_ref_by_drm_connector(
  *  This functions handles the boilerplate of creating a #Display_Handle.
  */
 Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
-   // assert(dref->io_mode == DDCA_IO_USB);
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "fd=%d, dref=%s", fd, dref_reprx_t(dref));
+   if (debug)
+      dbgrpt_display_ref(dref, false,  1);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->fd = fd;
@@ -1213,9 +1216,11 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
    else {
       // DDCA_IO_USB if !ENABLE_USB
       PROGRAM_LOGIC_ERROR("Unimplemented io_mode = %d", dref->io_path.io_mode);
+      dbgrpt_display_ref(dref, false,  1);
       dh->repr = NULL;
    }
 
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning %p", dh);
    return dh;
 }
 
