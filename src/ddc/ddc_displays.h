@@ -24,6 +24,7 @@
 #endif
 
 extern int   dispno_max;
+extern bool  publish_all_display_refs;
 extern GPtrArray * display_open_errors;      // hack for moving redetect_displays to ddc_dw_main.c
 
 // Initial Checks

@@ -99,6 +99,7 @@ static bool allow_asleep = true;
 
 // Externally visible globals:
 int  dispno_max = 0;                      // highest assigned display number
+bool publish_all_display_refs = false;    // hack for command C1
 
 
 /** Performs initial checks in a thread
@@ -617,6 +618,10 @@ ddc_ensure_displays_detected() {
    if (!all_display_refs) {
       // i2c_detect_buses();  // called in ddc_detect_all_displays()
       all_display_refs = ddc_detect_all_displays(&display_open_errors);
+      if (publish_all_display_refs) {
+         for (int ndx = 0; ndx < all_display_refs->len; ndx++)
+            add_published_dref_id_by_dref(g_ptr_array_index(all_display_refs, ndx));
+      }
    }
    g_mutex_unlock(&all_display_refs_mutex);
 
@@ -643,6 +648,7 @@ ddc_discard_detected_displays() {
 #ifdef ENABLE_USB
    discard_usb_monitor_list();
 #endif
+   reset_published_dref_hash();
    if (all_display_refs) {
       for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
