@@ -361,7 +361,7 @@ bool dbgtrc_returning_string(
 #define DBGTRC_RET_STRING(debug_flag, trace_group, _result, format, ...) \
     do { \
        dbgtrc_returning_string( \
-          (debug_flag) || trace_callstack_call_depth > 0 ||traced_function_stack_enabled \
+          (debug_flag) || trace_callstack_call_depth > 0  \
              ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, _result, format, ##__VA_ARGS__); \
