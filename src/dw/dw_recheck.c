@@ -129,7 +129,7 @@ typedef struct {
  */
 gpointer dw_recheck_displays_func(gpointer data) {
    bool debug = false;
-   DBGTRC_STARTING(true, TRACE_GROUP, "data=%p", data);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
    Recheck_Displays_Data*  rdd = (Recheck_Displays_Data *) data;
    init_recheck_queue();
    // recheck_thread_active = true;
@@ -179,7 +179,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
       Display_Ref * dref = rqe->dref;
       // DBGMSG("   rechecking %s", dref_repr_t(dref));
       Error_Info * err = dw_recheck_dref(dref);    // <===
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "after dw_recheck_dref(), dref->flags=%s",
+      DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "after dw_recheck_dref(), dref->flags=%s",
             interpret_dref_flags_t(dref->flags));
       // dbgrpt_display_ref(dref,false,2);
       if (!err) {
@@ -188,7 +188,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
               dref_reprx_t(dref), NANOS2MILLIS(cur_realtime_nanosec() - rqe->initial_ts_nanos));
          dref->dispno = ++dispno_max;
 
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "locking process_event_mutex");
+         DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "locking process_event_mutex");
          g_mutex_lock(&process_event_mutex);
          dw_emit_or_queue_display_status_event(
                DDCA_EVENT_DDC_ENABLED,
@@ -197,7 +197,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
                dref->io_path,
                NULL);    //  deferred_event_queue);
          g_mutex_unlock(&process_event_mutex);
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "unlocked process_event_mutex");
+         DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "unlocked process_event_mutex");
          dw_free_recheck_queue_entry(rqe);
       }
       else if (err->status_code == DDCRC_DISCONNECTED) {
