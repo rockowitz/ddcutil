@@ -75,7 +75,7 @@ GAsyncQueue * init_callback_queue() {
 void dw_put_callback_queue(DDCA_Display_Status_Callback_Func func,
                            DDCA_Display_Status_Event         event)
 {
-   bool debug = true;
+   bool debug =  true;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "event=%s, func=%p", display_status_event_repr_t(event), func);
 
    Callback_Queue_Entry * entry = calloc(1, sizeof(Callback_Queue_Entry));
@@ -88,7 +88,7 @@ void dw_put_callback_queue(DDCA_Display_Status_Callback_Func func,
 
 
 Callback_Queue_Entry * next_callback_queue_entry() {
-   bool debug = true;
+   bool debug =  true;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "");
 
    int sleep_interval_millis = 200;    // temp
@@ -112,7 +112,7 @@ Callback_Queue_Entry * next_callback_queue_entry() {
  *  @return ??
  */
 gpointer dw_callback_displays_func(gpointer data) {
-   bool debug = true;
+   bool debug =  true;
    traced_function_stack_enabled = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
    Callback_Displays_Data*  cdd = (Callback_Displays_Data *) data;
@@ -153,7 +153,7 @@ free_callback_queue_entry(Callback_Queue_Entry* q) {
  *  @return ??
  */
 gpointer dw_execute_callback_func(gpointer data) {
-   bool debug = true;
+   bool debug = false;
 
    traced_function_stack_suspended = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
