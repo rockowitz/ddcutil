@@ -459,4 +459,5 @@ void init_dw_status_events() {
    RTTI_ADD_FUNC(dw_emit_display_status_record);
    RTTI_ADD_FUNC(dw_register_display_status_callback);
    RTTI_ADD_FUNC(dw_unregister_display_status_callback);
+   RTTI_ADD_FUNC(dw_execute_callback_func);
 }
