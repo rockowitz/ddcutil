@@ -1,4 +1,4 @@
-// common_inlines.h
+/** @file common_inlines.h */
 
 // Copyright (C) 2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -30,6 +30,8 @@ static inline pid_t pid() {
       process_id = syscall(SYS_gettid);
    return thread_id;
 }
+
+#define PID() (intmax_t) pid()
 
 #ifdef __cplusplus
 }    // extern "C"
