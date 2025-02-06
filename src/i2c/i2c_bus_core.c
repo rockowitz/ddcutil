@@ -687,9 +687,13 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    assert( (businfo->flags & I2C_BUS_EXISTS) &&
            (businfo->flags & I2C_BUS_PROBED)
          );
-   if (debug) {
-      show_backtrace(1);
+   if (IS_DBGTRC(debug, TRACE_GROUP)) {
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Traced function stack on entry to i2c_check_open_bus_alive","");
+      // show_backtrace(0);   // all blank lines
+      debug_current_traced_function_stack(false);
    }
+   syslog(LOG_DEBUG, "Traced function stack on entry to i2c_check_open_bus_alive()");
+   current_traced_function_stack_to_syslog(LOG_DEBUG, /*reverse*/ false);
 
    Error_Info * err = NULL;
    bool edid_exists = false;
@@ -719,20 +723,24 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    }
 
    if (!edid_exists) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Checking EDID failed after %d tries (B)", CHECK_OPEN_BUS_ALIVE_MAX_TRIES);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "!!! (A) Checking EDID failed (A)");
+      SYSLOG2(DDCA_SYSLOG_ERROR, "/dev/i2c-%d, Checking EDID failed after %d tries (B)",
+            businfo->busno, CHECK_OPEN_BUS_ALIVE_MAX_TRIES);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "/dev/i2c-%d: Checking EDID failed (A)", businfo->busno);
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d", businfo->busno);
       businfo->flags &= ~(I2C_BUS_HAS_EDID|I2C_BUS_ADDR_X37);
    }
    else {
       if (tryctr > 1) {
-         SYSLOG2(DDCA_SYSLOG_WARNING, "Checking EDID succeeded after %d tries (G)", tryctr);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Checking EDID succeeded after %d tries (H)", tryctr);
+         SYSLOG2(DDCA_SYSLOG_WARNING, "/dev/i2c-%d: Checking EDID succeeded after %d tries (G)",
+               businfo->busno, tryctr);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "/dev/i2c-%d: Checking EDID succeeded after %d tries (H)",
+               businfo->busno,tryctr);
       }
       char * driver = businfo->driver;
       int ddcrc = i2c_detect_x37(dh->fd, driver);
       if (ddcrc){
-         err = ERRINFO_NEW(DDCRC_OTHER, "Slave address x37 unresponsive. io status = %s", psc_desc(ddcrc));
+         err = ERRINFO_NEW(DDCRC_OTHER, "/dev/i2c-%d: Slave address x37 unresponsive. io status = %s",
+               businfo->busno, psc_desc(ddcrc));
          businfo->flags &= ~I2C_BUS_ADDR_X37;
       }
    }
