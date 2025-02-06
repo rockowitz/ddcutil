@@ -531,6 +531,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
  *  to perform initial monitor checks.
  *
  *  @param dref pointer to #Display_Ref for monitor
+ *  @param newly_added
  *  @return **true** if DDC communication with the display succeeded, **false** otherwise.
  *
  *  @remark
@@ -542,7 +543,7 @@ Error_Info *
 ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
    assert(dref);
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, newly_added=%s", dref_repr_t(dref), sbool(newly_added));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, newly_added=%s", dref_reprx_t(dref), sbool(newly_added));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial dref->flags: %s", interpret_dref_flags_t(dref->flags));
 
    bool result = false;
@@ -570,7 +571,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
                       DREF_DDC_COMMUNICATION_WORKING |
                       DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED);
       dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "dref=%s, skipping initial ddc checks", dref_repr_t(dref));
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "dref=%s, skipping initial ddc checks", dref_reprx_t(dref));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Skipping initial ddc checks");
       result = true;
    }
@@ -617,9 +618,10 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
    }
 
 bye:
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref=%s, Final flags: %s", dref_repr_t(dref), interpret_dref_flags_t(dref->flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref=%s, Final flags: %s",
+                   dref_reprx_t(dref), interpret_dref_flags_t(dref->flags));
 
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dref=%s", dref_repr_t(dref));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dref=%s", dref_reprx_t(dref));
    return err;
 }
 
