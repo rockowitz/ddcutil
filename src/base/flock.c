@@ -273,26 +273,26 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
 
    if (flockrc == 0) {
       if (flock_call_ctr == 1) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
          // floods syslog:
-         // SYSLOG2(DDCA_SYSLOG_DEBUG, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
+         // SYSLOG2(DDCA_SYSLOG_DEBUG, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
       }
       else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
-         SYSLOG2(DDCA_SYSLOG_NOTICE, "flock for %s succeeded after %d calls", filename, flock_call_ctr);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
       }
-
    }
    else {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "flock for %s failed on %d calls", filename, flock_call_ctr);
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "flock() for %s failed on %d calls", filename, flock_call_ctr);
       if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
          DBGMSG("Flock diagnostics:");
          show_flock(filename, false);
          show_backtrace(0);
-         debug_current_traced_function_stack(/*reverse*/ true);
+         debug_current_traced_function_stack(/*reverse*/ false);
+         current_traced_function_stack_to_syslog(DDCA_SYSLOG_ERROR, /*reverse=*/ false);
       }
 
-      SYSLOG2(DDCA_SYSLOG_ERROR, "flock for %s failed on %d calls", filename, flock_call_ctr);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "flock() for %s failed on %d calls", filename, flock_call_ctr);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Flock diagnostics:");
       show_flock(filename, true);
       backtrace_to_syslog(LOG_ERR, 0);
