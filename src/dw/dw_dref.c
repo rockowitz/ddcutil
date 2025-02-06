@@ -185,7 +185,7 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
       assert(!(dref->flags & DREF_REMOVED));
       dw_mark_display_ref_removed(dref);
       dref->detail = NULL;
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Updated flags: %s", interpret_dref_flags_t(dref->flags));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updated flags: %s", interpret_dref_flags_t(dref->flags));
    }
    else {
       char s[80];
