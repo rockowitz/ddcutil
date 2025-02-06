@@ -8,13 +8,14 @@
 
 #include "config.h"
 
-#include "dw/dw_status_events.h"
-#include "dw/dw_dref.h"
-#include "dw/dw_xevent.h"
-#include "dw/dw_udev.h"
-#include "dw/dw_poll.h"
-#include "dw/dw_main.h"
 #include "dw/dw_common.h"
+#include "dw/dw_dref.h"
+#include "dw/dw_main.h"
+#include "dw/dw_poll.h"
+#include "dw/dw_recheck.h"
+#include "dw/dw_status_events.h"
+#include "dw/dw_udev.h"
+#include "dw/dw_xevent.h"
 
 #include "dw_services.h"
 
@@ -24,12 +25,13 @@ void init_dw_services() {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
-   init_dw_dref();
-   init_dw_xevent();
-   init_dw_udev();
-   init_dw_poll();
    init_dw_common();
+   init_dw_dref();
    init_dw_main();
+   init_dw_poll();
+   init_dw_recheck();
+   init_dw_udev();
+   init_dw_xevent();
 
    DBGMSF(debug, "Done");
 }

@@ -44,6 +44,7 @@
 #include "dw_status_events.h"
 #include "dw_common.h"
 #include "dw_udev.h"
+#include "dw_recheck.h"
 #include "dw_poll.h"
 #include "dw_xevent.h"
 
@@ -57,9 +58,12 @@ DDCA_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
 bool             enable_watch_displays = true;
 
 static GThread * watch_thread = NULL;
+static GThread * recheck_thread = NULL;
+// static GThread * callback_thread;
 static GMutex    watch_thread_mutex;
 static DDCA_Display_Event_Class active_watch_displays_classes = DDCA_EVENT_CLASS_NONE;
 static Watch_Displays_Data * global_wdd;     // needed to pass to dw_stop_watch_displays()
+
 
 
 /** Determines the actual watch mode to be used
@@ -153,9 +157,10 @@ resolve_watch_mode(DDCA_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
 Error_Info *
 dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP,
+   DBGTRC_STARTING(true, TRACE_GROUP,
         "dw_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
         watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
+   DBGTRC_NOPREFIX(true, TRACE_GROUP, "thread_id = %d, traced_function_stack=%p", TID(), traced_function_stack);
    Error_Info * err = NULL;
    XEvent_Data * xev_data = NULL;
 
@@ -193,6 +198,16 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    else {
       terminate_watch_thread = false;
 
+      // Start recheck thread
+      Recheck_Displays_Data * rdd = calloc(1, sizeof(Recheck_Displays_Data));
+      memcpy(rdd->marker, RECHECK_DISPLAYS_DATA_MARKER,4);
+      recheck_thread = g_thread_new("display_recheck_thread",             // optional thread name
+                                    dw_recheck_displays_func,
+                                    rdd);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started recheck_thread = %p", watch_thread);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil recheck thread %p started", watch_thread);
+
+      // Start watch thread
       Watch_Displays_Data * wdd = calloc(1, sizeof(Watch_Displays_Data));
       memcpy(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
       wdd->main_process_id = pid();   // getpid();
@@ -204,6 +219,17 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       if (xev_data)
          wdd->evdata = xev_data;
       global_wdd = wdd;
+
+#ifdef CALLBACK_DISPLAYS_THREAD
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
+      Callback_Displays_Data * cdd = dw_new_callback_displays_data();
+      callback_thread = g_thread_new(
+                       "callback_displays_thread",             // optional thread name
+                       dw_callback_displays_func,
+                       cdd);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started callback_thread = %p", callback_thread);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
+#endif
 
       GThreadFunc watch_thread_func =
             (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
@@ -267,10 +293,14 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
 
       // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
       // usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
-      if (wait)
+      if (wait) {
          g_thread_join(watch_thread);
-      else
+         g_thread_join(recheck_thread);
+      }
+      else {
          g_thread_unref(watch_thread);
+         g_thread_unref(recheck_thread);
+      }
       watch_thread = NULL;
       if (enabled_classes_loc)
          *enabled_classes_loc = active_watch_displays_classes;

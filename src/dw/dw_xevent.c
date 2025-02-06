@@ -142,8 +142,8 @@ bool dw_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Flushed %d events", flushct);
          break;
       } else {
-         if (debug)
-            printf(".");
+         // if (debug)
+         //    printf(".");
          sleep_millis(poll_interval);
       }
    }
@@ -163,7 +163,7 @@ bool dw_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
  *  @param evdata pointer to XEvent_Data struct
  */
 void dw_send_x11_termination_message(XEvent_Data * evdata) {
-   bool debug = true;
+   bool debug =  true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "evdata->dpy=%p", evdata->dpy);
 
    Display * dpy = evdata->dpy;

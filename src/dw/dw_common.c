@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "util/common_inlines.h"
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
@@ -137,6 +138,33 @@ void dw_free_watch_displays_data(Watch_Displays_Data * wdd) {
 }
 
 
+
+void dw_free_recheck_displays_data(Recheck_Displays_Data * rdd) {
+   if (rdd) {
+      assert( memcmp(rdd->marker, RECHECK_DISPLAYS_DATA_MARKER, 4) == 0 );
+      rdd->marker[3] = 'x';
+      free(rdd);
+   }
+}
+
+
+Callback_Displays_Data * dw_new_callback_displays_data() {
+   Callback_Displays_Data * cdd = calloc(1, sizeof(Callback_Displays_Data));
+   cdd->main_process_id = PID();
+   return cdd;
+}
+
+void dw_free_callback_displays_data(Callback_Displays_Data * cdd) {
+   if (cdd) {
+      assert( memcmp(cdd->marker, CALLBACK_DISPLAYS_DATA_MARKER, 4) == 0 );
+      cdd->marker[3] = 'x';
+      free(cdd);
+   }
+}
+
+
+
+
 #ifdef UNUSED
 void ddc_i2c_filter_sleep_events(GArray * events) {
    bool debug = false;
@@ -205,6 +233,7 @@ void ddc_i2c_filter_sleep_events(GArray * events) {
 
 void dw_emit_deferred_events(GArray * deferred_events) {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
 #ifdef TEMPORARY_SIMPLIFICATION
    if (deferred_events->len > 1) {  // FUTURE ENHANCMENT, filter out meaningless events
@@ -223,6 +252,7 @@ void dw_emit_deferred_events(GArray * deferred_events) {
       dw_emit_display_status_record(evt);
    }
    g_array_remove_range(deferred_events,0, deferred_events->len);
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -332,6 +362,7 @@ bool dw_hotplug_change_handler(
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "events_queue=%p",
             events_queue);
    }
+   // debug_current_traced_function_stack(false);   // ** TEMP **/
 
    bool event_emitted = true;
 
@@ -388,7 +419,7 @@ bool dw_hotplug_change_handler(
        path.io_mode = DDCA_IO_I2C;
        path.path.i2c_busno = busno;
        Display_Ref* dref = dw_add_display_by_businfo(businfo);
-       if (dref) {
+       if (dref && !(dref->flags& DREF_TRANSIENT)) {
           add_published_dref_id_by_dref(dref);
           if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) && drefs_to_recheck) {
              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
@@ -418,6 +449,7 @@ bool dw_hotplug_change_handler(
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP,event_emitted, "");
+   // debug_current_traced_function_stack(false);   // ** TEMP **/
    return event_emitted;
 }
 
@@ -515,7 +547,7 @@ dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
       g_snprintf(buf, 100,
             "Required %d extra %d millisecond calls to i2c_buses_w_edid_as_bitset()",
             stablect+1, stabilization_poll_millisec);
-      DBGTRC_NOPREFIX(debug || true, TRACE_GROUP, "%s", buf);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", buf);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    }
 

@@ -26,6 +26,7 @@ libdw_la_SOURCES += \
   dw_poll.c \
   dw_dref.c \
   dw_udev.c \
+  dw_recheck.c \
   dw_services.c \
   dw_xevent.c
 endif

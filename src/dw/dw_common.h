@@ -47,6 +47,28 @@ typedef struct {
 
 void dw_free_watch_displays_data(Watch_Displays_Data * wdd);
 
+
+#define RECHECK_DISPLAYS_DATA_MARKER "RDDM"
+typedef struct {
+   char                     marker[4];
+   pid_t                    main_process_id;  //?
+   pid_t                    main_thread_id;   //?
+  } Recheck_Displays_Data;
+
+void dw_free_recheck_displays_data(Recheck_Displays_Data * rdd);
+
+
+#define CALLBACK_DISPLAYS_DATA_MARKER "CDDM"
+typedef struct {
+   char                     marker[4];
+   pid_t                    main_process_id;  //?
+// pid_t                    main_thread_id;   //?
+  } Callback_Displays_Data;
+
+Callback_Displays_Data * dw_new_callback_displays_data();
+void dw_free_callback_displays_data(Callback_Displays_Data * rdd);
+
+
 #ifdef UNUSED
 typedef struct {
    Bit_Set_256 all_displays;

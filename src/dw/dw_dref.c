@@ -125,14 +125,21 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
       dref->drm_connector = g_strdup(businfo->drm_connector_name);
       dref->drm_connector_id = businfo->drm_connector_id;
 
+      dref_lock(dref);
       err = ddc_initial_checks_by_dref(dref, true);
+      dref_unlock(dref);
+      if (err) {
+         DBGMSG("ddc_initial_checks_by_dref() returned error:");
+         errinfo_report(err, 2);
+      }
 
       if (err && err->status_code == DDCRC_DISCONNECTED) {
          assert(dref->flags & DREF_REMOVED);
+         DBGTRC_NOPREFIX(true, DDCA_TRC_CONN, "pathological case, dref=%s", dref_reprx_t(dref));
          // pathological case, monitor went away
          dref->flags |= DREF_TRANSIENT;   // allow free_display_ref() to free
-         free_display_ref(dref);
-         dref = NULL;
+         // free_display_ref(dref);
+         // dref = NULL;
       }
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
@@ -178,6 +185,7 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
       assert(!(dref->flags & DREF_REMOVED));
       dw_mark_display_ref_removed(dref);
       dref->detail = NULL;
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Updated flags: %s", interpret_dref_flags_t(dref->flags));
    }
    else {
       char s[80];
@@ -186,7 +194,7 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref=%p", dref);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref=%p=%s", dref, dref_reprx_t(dref));
    return dref;
 }
 

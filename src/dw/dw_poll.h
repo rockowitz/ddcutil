@@ -11,6 +11,8 @@
 extern int  nonudev_poll_loop_millisec;
 extern int  retry_thread_sleep_factor_millisec;
 extern bool stabilize_added_buses_w_edid;
+extern bool recheck_thread_active;   // ?? needed?
+extern GMutex process_event_mutex;
 
 gpointer dw_watch_display_connections(gpointer data);
 void init_dw_poll();

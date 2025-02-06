@@ -12,6 +12,15 @@
 
 #include "base/displays.h"
 
+
+typedef struct {
+   DDCA_Display_Status_Callback_Func func;
+   DDCA_Display_Status_Event         event;
+} Callback_Queue_Entry;
+
+gpointer dw_execute_callback_func(gpointer data);
+
+
 // Display Status Events
 DDCA_Status  dw_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
 DDCA_Status  dw_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
