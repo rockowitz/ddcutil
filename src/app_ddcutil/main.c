@@ -1078,6 +1078,7 @@ main(int argc, char *argv[]) {
       else {
          // Catch CTRL-C to terminate watch thread, then exit:
          signal(SIGINT, interrupt_handler);
+         publish_all_display_refs = true;
          ddc_ensure_displays_detected();
          Error_Info * erec = dw_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION);
          if (erec) {
