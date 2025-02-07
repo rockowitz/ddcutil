@@ -14,21 +14,21 @@ extern "C" {
 #include <unistd.h>
 
 // TODO: merge tid(), pid() with linux_errno.c/h
-extern __thread pid_t process_id;
-extern __thread pid_t thread_id;
 
 static inline pid_t tid() {
-   if (!thread_id)
-      thread_id = syscall(SYS_gettid);
-   return thread_id;
+   static __thread pid_t thread_id2;
+   if (!thread_id2)
+      thread_id2 = syscall(SYS_gettid);
+   return thread_id2;
 }
 
 #define TID() (intmax_t) tid()
 
 static inline pid_t pid() {
+   static __thread pid_t process_id;
    if (!process_id)
       process_id = syscall(SYS_gettid);
-   return thread_id;
+   return process_id;
 }
 
 #define PID() (intmax_t) pid()
