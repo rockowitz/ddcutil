@@ -245,33 +245,39 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
       }
    }
 
-   if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)) {
-      DBGMSG( "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
-      dbgrpt_display_ref(dref,  true,  2);
-      debug_current_traced_function_stack(/*reverse*/ true);
-      ASSERT_WITH_BACKTRACE(false);
-      // ASSERT_WITH_BACKTRACE(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ;
-   }
-
    DDCA_MCCS_Version_Spec result = get_saved_vcp_version(dref);
    if (vcp_version_eq(result, DDCA_VSPEC_UNQUERIED)) {
-      Display_Handle * dh = NULL;
-      // ddc_open_display() should not fail
-      // 2/2020: but it can return -EBUSY
-      // DBGMSF(debug, "Calling ddc_open_display() ...");
-      Error_Info * ddc_excp = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
-      if (!ddc_excp) {
-         result = set_vcp_version_xdf_by_dh(dh);
-         assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
-         // DBGMSF(debug, "Calling ddc_close_display() ...");
-         ddc_close_display_wo_return(dh);
+      if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)) {
+         DBGMSG( "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
+         dbgrpt_display_ref(dref,  true,  2);
+         debug_current_traced_function_stack(/*reverse*/ true);
+         SYSLOG2(DDCA_SYSLOG_ERROR, "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
+         current_traced_function_stack_to_syslog(LOG_ERR, /* reverse */ true);
+         backtrace_to_syslog(LOG_ERR, 0);
+
+         // ASSERT_WITH_BACKTRACE(false);
+         // ASSERT_WITH_BACKTRACE(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ;
+         result = DDCA_VSPEC_UNKNOWN;
       }
       else {
-         // DBGMSF(debug, "ddc_open_display() failed");
-         SYSLOG2((ddc_excp->status_code == -EBUSY) ? DDCA_SYSLOG_INFO : DDCA_SYSLOG_ERROR,
-                 "Unable to open display %s: %s", dref_repr_t(dref), psc_desc(ddc_excp->status_code));
-         dh->dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
-         errinfo_free(ddc_excp);
+         Display_Handle * dh = NULL;
+         // ddc_open_display() should not fail
+         // 2/2020: but it can return -EBUSY
+         // DBGMSF(debug, "Calling ddc_open_display() ...");
+         Error_Info * ddc_excp = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+         if (!ddc_excp) {
+            result = set_vcp_version_xdf_by_dh(dh);
+            assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
+            // DBGMSF(debug, "Calling ddc_close_display() ...");
+            ddc_close_display_wo_return(dh);
+         }
+         else {
+            // DBGMSF(debug, "ddc_open_display() failed");
+            SYSLOG2((ddc_excp->status_code == -EBUSY) ? DDCA_SYSLOG_INFO : DDCA_SYSLOG_ERROR,
+                    "Unable to open display %s: %s", dref_repr_t(dref), psc_desc(ddc_excp->status_code));
+            dh->dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
+            errinfo_free(ddc_excp);
+         }
       }
    }
 
