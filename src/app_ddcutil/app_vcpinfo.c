@@ -24,7 +24,7 @@
 #include "dynvcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_codes.h"
 
-#include "app_ddcutil/app_vcpinfo.h"
+#include "app_vcpinfo.h"
 
 
 /** Creates humanly readable interpretation of VCP feature flags.
