@@ -379,7 +379,7 @@ dyn_get_feature_metadata_by_dh(
 bool
 dyn_format_nontable_feature_detail(
         Display_Feature_Metadata * dfm,
-        // DDCA_MCCS_Version_Spec     vcp_version,
+     // DDCA_MCCS_Version_Spec     vcp_version,
         Nontable_Vcp_Value *       code_info,
         char *                     buffer,
         int                        bufsz)
@@ -417,7 +417,7 @@ dyn_format_nontable_feature_detail(
 bool
 dyn_format_table_feature_detail(
        Display_Feature_Metadata *  dfm,
-       // DDCA_MCCS_Version_Spec     vcp_version,
+    // DDCA_MCCS_Version_Spec     vcp_version,
        Buffer *                   accumulated_value,
        char * *                   aformatted_data
      )
