@@ -514,7 +514,7 @@ dyn_report_cap_features(
       Display_Ref *          dref,
       DDCA_MCCS_Version_Spec vcp_version)  // from parsed capabilities if possible
 {
-   bool debug = true;
+   bool debug = false;
    int d0 = 0;
    int d1 = 1;
 
@@ -571,7 +571,7 @@ void dyn_report_parsed_capabilities(
    int d0 = depth;
    int d1 = depth+1;
    int d2 = depth+2;
-   bool debug = true;
+   bool debug = false;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dref=%s, pcaps->raw_cmds_segment_seen=%s, "
                  "pcaps->commands=%p, pcaps->vcp_features=%p",
