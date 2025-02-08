@@ -916,7 +916,7 @@ ddca_get_display_info_list(void)
 }
 #endif
 
-// STATIC
+STATIC
  void ddci_init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "dref=%s, curinfo=%p", dref_reprx_t(dref),curinfo);
@@ -930,7 +930,7 @@ ddca_get_display_info_list(void)
    }
 
    DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_UNKNOWN;
-   if (dref->dispno > 0) {
+   if (dref->dispno > 0 && (dref->flags&DREF_DDC_COMMUNICATION_WORKING)) {
       vspec = get_vcp_version_by_dref(dref);
    }
    memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
@@ -1207,6 +1207,16 @@ ddca_report_display_info(
                             dinfo->usb_bus, dinfo->usb_device);
             rpt_vstring(d1, "USB hiddev device:   /dev/usb/hiddev%d", dinfo->path.path.hiddev_devno);
             break;
+      }
+
+      // workaround, including drm_connector in DDCA_Display_Info would break API
+      Display_Ref * dref = dref_from_published_ddca_dref(dinfo->dref);
+      if (dref) {   // should never fail, but just in case
+         if (dref->drm_connector_id > 0)
+            // rpt_vstring(d1, "DRM connector id:        %d",  dref->drm_connector_id);
+            rpt_vstring(d1, "DRM connector:        %s (id: %d)",  dref->drm_connector, dref->drm_connector_id);
+         else
+            rpt_vstring(d1, "DRM connector:        %s",  dref->drm_connector);
       }
 
       rpt_vstring(d1, "Mfg Id:               %s", dinfo->mfg_id);
