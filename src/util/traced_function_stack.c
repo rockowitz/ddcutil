@@ -323,6 +323,7 @@ void tfs_error_msg(char * format, ...) {
    va_list(args);
    va_start(args, format);
    g_vsnprintf(msgbuf, 300, format, args);
+   va_end(args);
    fprintf(stderr, "%s\n", msgbuf);
    syslog(LOG_ERR, "%s", msgbuf);
 }
