@@ -784,7 +784,7 @@ ddc_write_read_with_retry(
                   if (!dh->testing_unsupported_feature_active) {
                      bool may_mean_unsupported_feature =
                            (expected_response_type == DDC_PACKET_TYPE_QUERY_VCP_RESPONSE &&
-                            dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED) ||
+                            (dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED)) ||
                            expected_response_type == DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
                      if (may_mean_unsupported_feature) {
                         adjust_remaining_tries_for_null = true;
