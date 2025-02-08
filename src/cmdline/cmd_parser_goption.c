@@ -928,6 +928,7 @@ parse_command(
    gboolean x52_no_fifo_flag   = false;
    gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
    gboolean traced_function_stack_flag = false;
+   gboolean traced_function_stack_errors_fatal_flag = false;
    // int      i2c_bus_check_async_min = DEFAULT_I2C_BUS_CHECK_ASYNC_MIN;
    // int      ddc_check_async_min = DEFAULT_DDC_CHECK_ASYNC_MIN;
    char     i2c_bus_check_async_expl[80];
@@ -1143,8 +1144,6 @@ parse_command(
                                                 G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed and internal performance statistics",  "stats type"},
       {"profile-api",'\0', 0, G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
       {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", valid_syslog_levels_string},
-//    {"enable-traced-function-stack",
-//                '\0', 0, G_OPTION_ARG_NONE, &traced_function_stack_flag, "Enable traced function stack", NULL},
 
       // Performance
       {"enable-capabilities-cache",
@@ -1312,6 +1311,10 @@ parse_command(
       {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_functions,  "Trace functions","function name" },
       {"trcfrom",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,      "Trace call stack from function","function name" },
       {"trcfile",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
+      {"enable-traced-function-stack",
+                  '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &traced_function_stack_flag, "Enable traced function stack", NULL},
+//    {"traced-function-stack-errors-fatal",
+//                '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &traced_function_stack_errors_fatal_flag, "Traced function stack errors are fatal", NULL},
 
       {"timestamp",  '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"ts",         '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
@@ -1703,6 +1706,8 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_FLOCK,             enable_flock_flag);
    SET_CMDFLAG(CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK,
                                            traced_function_stack_flag);
+   SET_CMDFLAG(CMD_FLAG_TRACED_FUNCTION_STACK_ERRORS_FATAL,
+                                           traced_function_stack_errors_fatal_flag);
 
 
    SET_CLR_CMDFLAG(CMD_FLAG_TRY_GET_EDID_FROM_SYSFS,    try_get_edid_from_sysfs);

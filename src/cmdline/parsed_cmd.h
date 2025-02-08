@@ -83,8 +83,8 @@ typedef enum {
 
    CMD_FLAG_TRY_GET_EDID_FROM_SYSFS
                                  = 0x10000000,
-   CMD_FLAG_FLOCK                = 0x40000000,
-   CMD_FLAG_DEFER_SLEEPS         = 0x80000000,
+   CMD_FLAG_FLOCK                = 0x20000000,
+   CMD_FLAG_DEFER_SLEEPS         = 0x40000000,
 
    CMD_FLAG_X52_NO_FIFO        = 0x0100000000,
    CMD_FLAG_VERBOSE_STATS      = 0x0200000000,
@@ -103,16 +103,16 @@ typedef enum {
                              = 0x100000000000,
    CMD_FLAG_DSA2             = 0x200000000000,
 
-   CMD_FLAG_QUICK            = 0x800000000000,
+   CMD_FLAG_QUICK            = 0x400000000000,
 
 
-   CMD_FLAG_MOCK           = 0x04000000000000,
-   CMD_FLAG_PROFILE_API    = 0x08000000000000,
+   CMD_FLAG_MOCK           = 0x01000000000000,
+   CMD_FLAG_PROFILE_API    = 0x02000000000000,
 
    CMD_FLAG_ENABLE_CACHED_DISPLAYS
-                           = 0x40000000000000,
+                           = 0x10000000000000,
    CMD_FLAG_TRACE_TO_SYSLOG_ONLY
-                           = 0x80000000000000,
+                           = 0x20000000000000,
    CMD_FLAG_STATS_TO_SYSLOG
 
                          = 0x0100000000000000,
@@ -122,6 +122,8 @@ typedef enum {
                         =  0x0400000000000000,
 
    CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK
+                         = 0x1000000000000000,
+   CMD_FLAG_TRACED_FUNCTION_STACK_ERRORS_FATAL
                          = 0x2000000000000000,
    CMD_FLAG_DISABLE_API =  0x4000000000000000,
    CMD_FLAG_WATCH_DISPLAY_EVENTS

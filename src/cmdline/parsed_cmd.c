@@ -193,7 +193,12 @@ dbgrpt_ntsa(int depth, char * title, gchar** values) {
 
 
 #define RPT_CMDFLAG(_desc, _flag, _depth) \
-   rpt_str(_desc, NULL, SBOOL(parsed_cmd->flags & _flag), _depth)
+     rpt_vstring(_depth, "%-50s       : %s", _desc,  SBOOL(parsed_cmd->flags & _flag));
+
+#ifdef OLD
+#define RPT_CMDFLAG(_desc, _flag, _depth) \
+  rpt_str(_desc, NULL, SBOOL(parsed_cmd->flags & _flag), _depth)
+#endif
 
 #define RPT_CMDFLAG2(_desc, _flag, _depth) \
    rpt_str(_desc, NULL, SBOOL(parsed_cmd->flags2 & _flag), _depth)
@@ -357,24 +362,27 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_str ("library trace file", NULL, parsed_cmd->trace_destination,                       d1);
       rpt_bool("trace to syslog only", NULL, parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY, d1);
 
-      rpt_str("syslog_level",      NULL, syslog_level_name(parsed_cmd->syslog_level),           d1);
-      rpt_bool("timestamp prefix:", NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,         d1);
-      rpt_bool("walltime prefix:",  NULL, parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE,          d1);
-      rpt_bool("thread id prefix:", NULL, parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE,         d1);
-      rpt_bool("process id prefix:",NULL, parsed_cmd->flags & CMD_FLAG_PROCESS_ID_TRACE,        d1);
+      rpt_str("syslog_level",       NULL, syslog_level_name(parsed_cmd->syslog_level),          d1);
+      RPT_CMDFLAG("timestamp prefix",        CMD_FLAG_TIMESTAMP_TRACE,         d1);
+      RPT_CMDFLAG("walltime prefix",         CMD_FLAG_WALLTIME_TRACE,          d1);
+      RPT_CMDFLAG("thread id prefix",        CMD_FLAG_THREAD_ID_TRACE,         d1);
+      RPT_CMDFLAG("process id prefix",       CMD_FLAG_PROCESS_ID_TRACE,        d1);
+      RPT_CMDFLAG("process id prefix",       CMD_FLAG_PROCESS_ID_TRACE,        d1);
+      RPT_CMDFLAG("enable traced function stack", CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK,        d1);
+      RPT_CMDFLAG("traced function stack errors fatal", CMD_FLAG_TRACED_FUNCTION_STACK_ERRORS_FATAL, d1);
 
       rpt_nl();
       rpt_label(depth, "Other Development");
       rpt_bool("enable_failure_simulation", NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_FAILSIM,   d1);
       rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn,                        d1);
       rpt_bool("mock data",         NULL, parsed_cmd->flags & CMD_FLAG_MOCK,                     d1);
-      // RPT_CMDFLAG("simulate Null Msg indicates unsupported", CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, d1);
-      rpt_vstring(d1, "%s: %s", "simulate Null Msg indicates unsupported                  ",
-                                        SBOOL(parsed_cmd->flags& CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE));
-      RPT_CMDFLAG("skip ddc checks",      CMD_FLAG_SKIP_DDC_CHECKS,                             d1);
-      RPT_CMDFLAG("async I2C bus checks", CMD_FLAG_ASYNC_I2C_CHECK,                             d1);
-      RPT_CMDFLAG("enable_flock",         CMD_FLAG_FLOCK, d1);
-      RPT_CMDFLAG("try get edid from sysfs", CMD_FLAG_TRY_GET_EDID_FROM_SYSFS, d1);
+      RPT_CMDFLAG("simulate Null Msg indicates unsupported", CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, d1);
+   // rpt_vstring(d1, "%s: %s", "simulate Null Msg indicates unsupported                  ",
+   //                                   SBOOL(parsed_cmd->flags& CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE));
+      RPT_CMDFLAG("skip ddc checks",         CMD_FLAG_SKIP_DDC_CHECKS,                          d1);
+      RPT_CMDFLAG("async I2C bus checks",    CMD_FLAG_ASYNC_I2C_CHECK,                          d1);
+      RPT_CMDFLAG("enable_flock",            CMD_FLAG_FLOCK,                                    d1);
+      RPT_CMDFLAG("try get edid from sysfs", CMD_FLAG_TRY_GET_EDID_FROM_SYSFS,                  d1);
 
       rpt_nl();
       rpt_label(depth, "Unsorted");
