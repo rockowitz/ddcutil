@@ -109,14 +109,14 @@ bye:
  *  This function is used when waiting is NOT terminated by a user created
  *  X11 event.
  *
- *  @param evdata pointer to XEvent_Data struct
- *  @param poll_interval  XCheckTypedEvent() polling interval
- *  @retval true  screen changed event was received
- *  @retval false
+ *  @param evdata         pointer to XEvent_Data struct
+ *  @param poll_interval  XCheckTypedEvent() polling interval in milliseconds
+ *  @retval true   screen changed event was received
+ *  @retval false  no event received, termination signal received
  */
 bool dw_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "evdata=%p, poll_interval=%d", evdata, poll_interval);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "evdata=%p, poll_interval=%d millisec", evdata, poll_interval);
 
    bool found = false;
    int flushct = 0;
