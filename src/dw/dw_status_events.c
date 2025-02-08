@@ -372,8 +372,8 @@ void dw_emit_display_status_record(
 #endif
 
    int callback_ct = (display_detection_callbacks) ? display_detection_callbacks->len : 0;
-   if (display_detection_callbacks) {
-      for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
+   if (callback_ct > 0) {
+      for (int ndx = 0; ndx < callback_ct; ndx++)  {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
          Callback_Queue_Entry * cqe = calloc(1, sizeof (Callback_Queue_Entry));
          cqe->event = evt;
