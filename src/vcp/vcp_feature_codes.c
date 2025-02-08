@@ -1100,8 +1100,6 @@ vcp_find_feature_by_hexid(DDCA_Vcp_Feature_Code id) {
    }
    // DBGMSG("ndx= %d", ndx);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ndx=%d", ndx);
-
-
    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "VCP_Feature_Table_Entry", dbgrpt_vcp_entry, result);
    return result;
 }
