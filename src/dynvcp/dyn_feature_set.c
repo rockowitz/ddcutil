@@ -659,7 +659,7 @@ create_dyn_feature_set_from_feature_set_ref(
    Feature_Set_Flags         flags)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,"fsref=%s, vcp_version=%d.%d. flags=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP,"fsref=%s, vcp_version=%d.%d. flags=%s",
                              fsref_repr_t(fsref),
                              vcp_version.major, vcp_version.minor,
                              feature_set_flag_names_t(flags));
@@ -727,7 +727,7 @@ create_vcp_feature_set_from_feature_set_ref(
    Feature_Set_Flags         flags)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,"fsref=%s, vcp_version=%d.%d. flags=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP,"fsref=%s, vcp_version=%d.%d. flags=%s",
                              fsref_repr_t(fsref),
                              vcp_version.major, vcp_version.minor,
                              feature_set_flag_names_t(flags));
