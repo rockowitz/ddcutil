@@ -4,39 +4,42 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
-#include <stdbool.h>
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
-// #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
 
-#include "common_inlines.h"
 #include "backtrace.h"
-#include "glib_util.h"
-#include "string_util.h"
-#include "syslog.h"
-
+#include "common_inlines.h"
 #include "common_printf_formats.h"
 #include "debug_util.h"
+#include "glib_util.h"
+#include "string_util.h"
 
 #include "traced_function_stack.h"
 
-bool traced_function_stack_enabled = false;
-bool traced_function_stack_errors_fatal = false;
-bool __thread traced_function_stack_suspended = false;
+bool              traced_function_stack_enabled = false;
+bool              traced_function_stack_errors_fatal = false;
+__thread bool     traced_function_stack_suspended = false;
+__thread bool     debug_tfs = false;
+__thread GQueue * traced_function_stack;
 
-/*static*/ __thread GQueue * traced_function_stack;
-static __thread bool  traced_function_stack_invalid = false;
-static GPtrArray * all_traced_function_stacks = NULL;
-static GMutex all_traced_function_stacks_mutex;
-
-__thread pid_t process_id = 0;
-__thread pid_t thread_id  = 0;
+static GPtrArray *   all_traced_function_stacks = NULL;
+static GMutex        all_traced_function_stacks_mutex;
+static __thread bool traced_function_stack_invalid = false;
 
 static void list_traced_function_stacks();
+
+
+bool set_debug_thread_tfs(bool newval) {
+   bool old = debug_tfs;
+   debug_tfs = newval;
+   // printf("(%s) debug_tfs\n", sbool(debug_tfs));
+   return old;
+}
 
 
 /** Delete all entries in the traced function stack for the current thread,
@@ -93,7 +96,11 @@ void debug_traced_function_stack(GQueue * stack, bool reverse) {
 }
 
 
-void collect_traced_function_stack(GPtrArray* collector, GQueue * stack, bool reverse, int stack_adjust) {
+void collect_traced_function_stack(GPtrArray* collector,
+                                   GQueue*    stack,
+                                   bool       reverse,
+                                   int        stack_adjust)
+{
    if (stack && collector) {
       // printf(PRItid" Traced function stack %p:\n", TID(), stack);
       int queue_len = g_queue_get_length(stack) - stack_adjust;
@@ -112,6 +119,7 @@ void collect_traced_function_stack(GPtrArray* collector, GQueue * stack, bool re
       }
    }
 }
+
 
 void traced_function_stack_to_syslog(GQueue* callstack, int syslog_priority, bool reverse) {
    if (!callstack) {
@@ -225,6 +233,7 @@ static void list_traced_function_stacks() {
  */
 static GQueue * new_traced_function_stack(const char * funcname) {
    bool debug = false;
+   debug = debug | debug_tfs;
    if (debug) {
       printf(PRItid"(%s) Starting. initial function: %s\n", TID(), __func__, funcname);
       list_traced_function_stacks();
@@ -255,7 +264,9 @@ static GQueue * new_traced_function_stack(const char * funcname) {
  *  @param funcname  function name
  */
 void push_traced_function(const char * funcname) {
+   // printf("(%s) debug_tfs = %s\n", __func__, sbool(debug_tfs));
    bool debug = false;
+   debug = debug | debug_tfs;
    if (debug) {
       printf(PRItid"(push_traced_function) funcname = %s, traced_function_stack_enabled=%d\n",
             TID(), funcname, traced_function_stack_enabled);
@@ -280,7 +291,8 @@ void push_traced_function(const char * funcname) {
    //
    if (debug) {
       printf(PRItid" (%s) Done\n", TID(), __func__);
-      debug_current_traced_function_stack(true);
+      show_backtrace(0);
+      debug_current_traced_function_stack(false);
    }
 }
 
@@ -306,7 +318,7 @@ char * peek_traced_function() {
 
 
 static
-void error_msg(char * format, ...) {
+void tfs_error_msg(char * format, ...) {
    char msgbuf[300];
    va_list(args);
    va_start(args, format);
@@ -330,6 +342,7 @@ void error_msg(char * format, ...) {
  */
 void pop_traced_function(const char * funcname) {
    bool debug = false;
+   debug = debug | debug_tfs;
 
    if (traced_function_stack_enabled && !traced_function_stack_suspended && !traced_function_stack_invalid) {
       if (!traced_function_stack) {
@@ -340,12 +353,12 @@ void pop_traced_function(const char * funcname) {
       else {
          char * popped_func = g_queue_pop_head(traced_function_stack);
          if (!popped_func) {
-            error_msg(PRItid" traced_function_stack=%p, expected %s, traced_function_stack is empty",
+            tfs_error_msg(PRItid" traced_function_stack=%p, expected %s, traced_function_stack is empty",
                       TID(), traced_function_stack, funcname);
 
-            error_msg(PRItid" Function %s likely did not call push_traced_function() at start",
+            tfs_error_msg(PRItid" Function %s likely did not call push_traced_function() at start",
                       TID(), funcname);
-            show_backtrace(0);
+            show_backtrace(1);
             backtrace_to_syslog(1,true);
             traced_function_stack_invalid = true;
             if (traced_function_stack_errors_fatal)
@@ -353,17 +366,17 @@ void pop_traced_function(const char * funcname) {
          }
          else {
             if (!streq(popped_func, funcname)) {
-               error_msg(PRItid" traced_function_stack=%p, !!! popped traced function %s, expected %s",
+               tfs_error_msg(PRItid" traced_function_stack=%p, !!! popped traced function %s, expected %s",
                          TID(), traced_function_stack,  popped_func, funcname);
 
                char * look_ahead = peek_traced_function();
                if (streq(look_ahead, funcname)) {
-                  error_msg(PRItid" Function %s does not call pop_traced_function() at end",
+                  tfs_error_msg(PRItid" Function %s does not call pop_traced_function() at end",
                             TID(), funcname);
 
                }
                else {
-                  error_msg(PRItid" Function %s likely did not call push_traced_function() at start",
+                  tfs_error_msg(PRItid" Function %s likely did not call push_traced_function() at start",
                         TID(), funcname);
                }
 
