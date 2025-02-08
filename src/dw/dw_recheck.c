@@ -174,6 +174,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
                "ddc did not become enabled for %s after %d milliseconds",
                 dref_reprx_t(rqe->dref), max_sleep_time_millis);
          dw_free_recheck_queue_entry(rqe);
+         continue;
       }
 
       Display_Ref * dref = rqe->dref;
@@ -202,7 +203,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
       }
       else if (err->status_code == DDCRC_DISCONNECTED) {
          emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
-             "Display %s no longer detected after %d milliseconds",
+             "Display %s no longer detected after %u milliseconds",
              dref_reprx_t(dref),
              NANOS2MILLIS(cur_time_nanos - rqe->initial_ts_nanos));
 
