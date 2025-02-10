@@ -1,6 +1,7 @@
-## [2.2.0] 2024-01-28
+## [2.2.0] 2024-02-10
 
 ### General
+
 
 #### Added
 
@@ -22,7 +23,8 @@
   Typically, this will be added to the [libddcutil] section of configuration 
   file ddcutilrc. It can also be included in the options string passed in the
   opts argument to ddca_init2(). Addresses issue #446.
-- Maintain a stack of traced functions for debugging.
+- Maintain a stack of traced functions for debugging. Turned on by option 
+  ***--enable-traced-function-stack***
 
 #### Changed
 
@@ -125,6 +127,9 @@
   The default is --enable-x11.   
   Use x11 code to test for sleep mode instead of using /sys, which 
   is unreliable for nvidia driver.
+- Add autoconf/configure option --enable-static-functions-visible. If set, 
+  the "static" storage class specifier is removed from many functions so that 
+  their names appear in backtraces.
 
 
 ### Shared Library
@@ -221,7 +226,8 @@ file is libddcutil.so.5.1.3.
 
 #### Display Change Handling
 
-- Alternative algorithms for detecting display changes, specified by option ***--watch-mode***
+- Alternative algorithms for detecting display changes, specified by option 
+  ***--watch-mode***
   - watch mode XEVENT
     - Scans for changes only when a X11 change notification occurs. 
       (Uses X11 API extension RANDR, which is also implemented on Wayland.)
@@ -230,13 +236,6 @@ file is libddcutil.so.5.1.3.
     - doesn't rely on /sys 
     - reads EDIDs in polling loop
     - can consume a significant amount of CPU time on older machines
-  - watch mode UDEV, the original algorithm
-    - Retained temporarily
-    - Does not always work for proprietary nvidia driver. which does not use
-      /sys in the same way as amdgpu, i915, nouveau and other drm supporting 
-      drivers that are part of the Linux kernel. 
-      - Depending on driver version the /sys file system does not reflect 
-        display changes and does not generate udev events.
   - watch mode DYNAMIC (the default)
     - resolves to XEVENT on X11 or Wayland, otherwise to POLL
 - Extensively reworked display change detection
@@ -246,8 +245,10 @@ file is libddcutil.so.5.1.3.
   - only perform stabilization for removed display
   - not checking for asleep
 - Named options affecting display change detection:
-  - --watch-mode UDEV, POLL, XEVENT, DYNAMIC
+  - --watch-mode POLL, XEVENT, DYNAMIC
   - --enable/disable-try-get-edid-from-sysfs (default is --enable-try-get-edid-from-sysfs)
+- options ***--xevent-watch-loop-millisec*** ***--poll-watch-loop-millisec***
+- Added **ddca_get_display_watch_settings()**, **ddca_set_display_watch_settings()**
 - Use constants in parms.h to specify retry intevals and counts
 - Handle possible delay between time that EDID can be read and DDC becomes functional
 - Added **flags** field in unused secton of DDCA_Display_Status Event, with bit DDCA_DISPLAY_EVENT_DDC_WORKING.
@@ -258,7 +259,8 @@ file is libddcutil.so.5.1.3.
 
 - If macro STATIC_FUNCTIONS_VISIBLE is defined in src/base/parms.h, the static
   qualifier is removed from many functions to improve reports from valgrind, 
-  asan, and internally defined backtrace functions. 
+  asan, and internally defined backtrace functions.  
+  - .configure option --enable-static-functions-visible
 
 
 ## [2.1.4] 2024-02-17
