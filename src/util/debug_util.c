@@ -57,7 +57,7 @@ void show_backtrace(int stack_adjust) {
 }
 
 
-static int min_funcname_size = 32;
+static int min_funcname_size = 30;
 
 void set_simple_dbgmsg_min_funcname_size(int new_size) {
    min_funcname_size = new_size;
