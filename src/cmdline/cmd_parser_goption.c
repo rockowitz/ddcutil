@@ -215,6 +215,8 @@ ignored_hiddev_arg_func(const    gchar* option_name,
 
 
 static void emit_parser_error(GPtrArray* errmsgs, const char * func, const char * msg, ...) {
+   bool debug = false;
+   DBGF(debug, "errmsgs=%p, func=%s, msg=%s", errmsgs, func, msg);
    va_list(args);
    va_start(args, msg);
    char * buffer = g_strdup_vprintf(msg, args);
@@ -225,6 +227,7 @@ static void emit_parser_error(GPtrArray* errmsgs, const char * func, const char 
       buffer[strlen(buffer)-1] = '\0';
 
    if (errmsgs) {
+      DBGF(debug,"Adding error msg %s", buffer);
       g_ptr_array_add(errmsgs, g_strdup(buffer));
    }
    else{
@@ -445,6 +448,24 @@ static bool parse_int_work(char * sval, int * result_loc, GPtrArray * errmsgs) {
 }
 
 
+#ifdef UNUSED
+static bool parse_positive_int(int ival, int * result_loc, GPtrArray * errmsgs) {
+   bool debug = false;
+   bool ok = true;
+   DBGMSF(debug, "ival: %d", ival);
+   ok = (ival > 0);
+   if (ok)
+      *result_loc = ival;
+   else
+      EMIT_PARSER_ERROR(errmsgs,  "Must be a positive number: %d", ival);
+
+   DBGMSF(debug, "Done.  Returning: %d. result_loc -> %d",
+         sbool(ok), *result_loc);
+   return ok;
+}
+#endif
+
+
 static bool parse_sleep_multiplier(
       const char*  sval,
       float *      result_loc,
@@ -489,8 +510,8 @@ static bool parse_watch_mode(
          parsed_cmd->watch_mode = Watch_Mode_Poll;
       else if (is_abbrev(v2, "XEVENT", 3))
          parsed_cmd->watch_mode = Watch_Mode_Xevent;
-      else if (is_abbrev(v2, "UDEV", 3))
-         parsed_cmd->watch_mode = Watch_Mode_Udev;
+   // else if (is_abbrev(v2, "UDEV", 3))
+   //    parsed_cmd->watch_mode = Watch_Mode_Udev;
       else if (is_abbrev(v2, "DYNAMIC", 3))
          parsed_cmd->watch_mode = Watch_Mode_Dynamic;
 
@@ -862,13 +883,13 @@ parse_command(
    char * s = getenv("DDCUTIL_DEBUG_PARSE");
    if (s && strlen(s) > 0)
       debug = true;
-   DBGMSF(debug, "Starting. parser_mode = %d", parser_mode );
+   DBGF(debug, "Starting. parser_mode = %d", parser_mode );
 #ifndef NDEBUG
    init_cmd_parser_base();   // assertions
 #endif
 
    if (debug) {
-      DBGMSG("argc=%d", argc);
+      DBG("argc=%d", argc);
       int ndx = 0;
       for (; ndx < argc; ndx++) {
          DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
@@ -881,7 +902,7 @@ parse_command(
    // DBGMSG("After new_parsed_cmd(), parsed_cmd->output_level_name = %s", output_level_name(parsed_cmd->output_level));
 
    gchar * original_command = g_strjoinv(" ",argv);
-   DBGMSF(debug, "original command: %s", original_command);
+   DBGF(debug, "original command: %s", original_command);
    parsed_cmd->raw_command = original_command;
 
 // gboolean stats_flag       = false;
@@ -981,6 +1002,8 @@ parse_command(
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
    gboolean enable_watch_displays = true;
+   gint     xevent_watch_loop_millis_work = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+   gint     poll_watch_loop_millis_work = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
    gboolean disable_api_flag = false;
    gboolean discard_cached_capabilities_flag = false;
    gboolean discard_dsa_cache_flag = false;
@@ -998,7 +1021,7 @@ parse_command(
       disable_tgefs_expl = "do not try to get EDID from /sys (default)";
    }
 
-   DDCA_Watch_Mode default_watch_mode = DEFAULT_WATCH_MODE;
+   DDC_Watch_Mode default_watch_mode = DEFAULT_WATCH_MODE;
    char * default_watch_mode_keyword;
    switch(default_watch_mode) {
    case Watch_Mode_Dynamic:  default_watch_mode_keyword = "DYNAMIC"; break;
@@ -1007,7 +1030,7 @@ parse_command(
    case Watch_Mode_Udev:     default_watch_mode_keyword = "UDEV";    break;
    }
    char watch_mode_expl[80];
-   g_snprintf(watch_mode_expl, 80, "DYNAMIC|XEVENT|POLL|UDEV, default: %s", default_watch_mode_keyword);
+   g_snprintf(watch_mode_expl, 80, "DYNAMIC|XEVENT|POLL, default: %s", default_watch_mode_keyword);
 
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
@@ -1256,6 +1279,10 @@ parse_command(
                       G_OPTION_ARG_NONE, &disable_api_flag, "Completely disable API", NULL },
       {"watch-mode", '\0', G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_STRING, &watch_mode_work, "How to watch for display changes",  watch_mode_expl},
+      {"xevent-watch-loop-millisec", '\0', G_OPTION_FLAG_HIDDEN,
+                           G_OPTION_ARG_INT, &xevent_watch_loop_millis_work, "Loop delay for mode XEVENT", "milliseconds"},
+      {"poll-watch-loop-millisec", '\0', G_OPTION_FLAG_HIDDEN,
+                           G_OPTION_ARG_INT, &poll_watch_loop_millis_work, "Loop delay for mode POLL", "milliseconds"},
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
@@ -1406,10 +1433,11 @@ parse_command(
       { NULL }
    };
 
+   // DBG("Looking for --hh...");
    Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
    int hh_ndx = ntsa_find(temp_argv, "--hh");
    if (hh_ndx >= 0) {
-      DBGMSG("--hh found");
+      DBGF(debug, "--hh found");
       hidden_help_flag = true;
       free(temp_argv[hh_ndx]);
       temp_argv[hh_ndx] = g_strdup("-h");
@@ -1484,6 +1512,7 @@ parse_command(
    // Main Parser
 
    GError* error = NULL;
+   // DBG("Allocating context...");
    GOptionContext* context  = g_option_context_new("- DDC query and manipulation");
    // g_option_context_add_main_entries(context, option_entries, NULL);
    g_option_context_set_main_group(context, all_options);
@@ -1565,7 +1594,9 @@ parse_command(
       Pass a mangleable copy of argv to g_option_context_parse_strv().
    */
    // Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
+   // DBG("Before g_option_context_parse_strv()");
    bool parsing_ok = g_option_context_parse_strv(context, &temp_argv, &error);
+   DBGF(debug, "g_option_contenxt_parser_strv() returned %s, error=%p", sbool(parsing_ok), error);
    if (!parsing_ok) {
       char * mode_name = (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil";
       if (error) {
@@ -2011,6 +2042,23 @@ parse_command(
       }
    }
 
+   if (xevent_watch_loop_millis_work <= 0) {
+      EMIT_PARSER_ERROR(errmsgs,
+            "--xevent-watch-loop-millisec not a positive number: %d", xevent_watch_loop_millis_work);
+      parsing_ok = false;
+   }
+   else
+      parsed_cmd->xevent_watch_loop_millisec = (uint16_t) xevent_watch_loop_millis_work;
+
+   if (poll_watch_loop_millis_work <= 0) {
+      EMIT_PARSER_ERROR(errmsgs,
+            "--poll-watch-loop-millisec not a positive number: %d", poll_watch_loop_millis_work);
+      parsing_ok = false;
+   }
+   else
+      parsed_cmd->poll_watch_loop_millisec = (uint16_t) poll_watch_loop_millis_work;
+
+
    // All options processed.  Check for consistency, set defaults
 
    if (parser_mode == MODE_LIBDDCUTIL && rest_ct > 0) {
@@ -2034,8 +2082,8 @@ parse_command(
          if (debug)
             show_cmd_desc(cmdInfo);
          // process command args
-         parsed_cmd->cmd_id  = cmdInfo->cmd_id;
-         // parsedCmd->argCt  = cmdInfo->argct;
+         parsed_cmd->cmd_id = cmdInfo->cmd_id;
+         // parsedCmd->argCt = cmdInfo->argct;
          int min_arg_ct = cmdInfo->min_arg_ct;
          int max_arg_ct = cmdInfo->max_arg_ct;
          int argctr = 1;
