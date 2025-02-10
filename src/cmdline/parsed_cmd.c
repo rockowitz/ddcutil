@@ -143,6 +143,8 @@ Parsed_Cmd *  new_parsed_cmd() {
       parsed_cmd->flags |= CMD_FLAG_ENABLE_CACHED_CAPABILITIES;
 
    // parsed_cmd->watch_mode = Watch_Mode_Dynamic;
+   parsed_cmd->xevent_watch_loop_millisec = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+   parsed_cmd->poll_watch_loop_millisec   = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
    return parsed_cmd;
 }
 
@@ -256,7 +258,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("i2c_io_ioctl",     NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL, d1);
       rpt_bool("enable traced function stack",
                                    NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK, d1);
-      //RPT_CMDFLAG("heuristicly detect unsupported features", CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, d1);
+      //RPT_CMDFLAG("heuristically detect unsupported features", CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, d1);
       rpt_vstring(d1, "%s: %s", "heuristically detect unsupported features                ",
                                           SBOOL(parsed_cmd->flags& CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES));
       rpt_bool("quick",            NULL, parsed_cmd->flags & CMD_FLAG_QUICK,                    d1);
@@ -264,6 +266,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_CMDFLAG("watch hotplug events", CMD_FLAG_WATCH_DISPLAY_EVENTS,                d1);
       rpt_vstring(d1, "watch_mode                                               : %s",
             watch_mode_name(parsed_cmd->watch_mode));
+      rpt_int( "xevent_watch_loop_millisec",     NULL,  parsed_cmd->xevent_watch_loop_millisec, d1);
+      rpt_int( "poll_watch_loop_millisec",       NULL,  parsed_cmd->poll_watch_loop_millisec,   d1);
       RPT_CMDFLAG("disable API",          CMD_FLAG_DISABLE_API,                                 d1);
 
       rpt_nl();
