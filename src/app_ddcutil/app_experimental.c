@@ -90,8 +90,12 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i6:          Unused");
    rpt_vstring(depth+1, "Utility option --i7           Stabilization poll millisec (default=%d)", DEFAULT_STABILIZATION_POLL_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i8:          Display watch udev loop millisec (default = %d)", DEFAULT_UDEV_WATCH_LOOP_MILLISEC);
-   rpt_vstring(depth+1, "Utility option --i9:          Display watch non-udev polling loop millisec (default=%d)", DEFAULT_POLL_WATCH_LOOP_MILLISEC);
-   rpt_vstring(depth+1, "Utility option --i10:         Display watch xevent polling loop millisec (default=%d)", DEFAULT_XEVENT_WATCH_LOOP_MILLISEC);
+
+// rpt_vstring(depth+1, "Utility option --i9:          Display watch non-udev polling loop millisec (default=%d)", DEFAULT_POLL_WATCH_LOOP_MILLISEC);
+// rpt_vstring(depth+1, "Utility option --i10:         Display watch xevent polling loop millisec (default=%d)", DEFAULT_XEVENT_WATCH_LOOP_MILLISEC);
+
+   rpt_vstring(depth+1, "Utility option --i9:          Unused");
+   rpt_vstring(depth+1, "Utility option --i10:         Unused");
    rpt_vstring(depth+1, "Utility option --i11:         Unused");
    rpt_vstring(depth+1, "Utility option --i12:         Unused");
    rpt_vstring(depth+1, "Utility option --i13:         Unused");

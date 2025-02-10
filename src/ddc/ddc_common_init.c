@@ -377,29 +377,32 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
 
 STATIC void
 init_display_watch_options(Parsed_Cmd* parsed_cmd) {
-   watch_displays_mode = parsed_cmd->watch_mode;
-   enable_watch_displays = parsed_cmd->flags & CMD_FLAG_WATCH_DISPLAY_EVENTS;
+   watch_displays_mode        = parsed_cmd->watch_mode;
+   enable_watch_displays      = parsed_cmd->flags & CMD_FLAG_WATCH_DISPLAY_EVENTS;
+   poll_watch_loop_millisec   = parsed_cmd->poll_watch_loop_millisec;
+   xevent_watch_loop_millisec = parsed_cmd->xevent_watch_loop_millisec;
+
+   if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET))
+      udev_watch_loop_millisec = parsed_cmd->i8;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F18)
+      report_udev_events = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
+      initial_stabilization_millisec = parsed_cmd->i1;
+   if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))
+      stabilization_poll_millisec = parsed_cmd->i7;
+}
+
+
+STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F17)
        use_sysfs_connector_id = false;
-    if (parsed_cmd->flags2 & CMD_FLAG2_F18)
-       report_udev_events = true;
-    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
-    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
 
-    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
+   force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
+   force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
 
-    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
-       initial_stabilization_millisec = parsed_cmd->i1;
-    if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))
-       stabilization_poll_millisec = parsed_cmd->i7;
-    if (parsed_cmd->i8 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I8_SET))
-       udev_watch_loop_millisec = parsed_cmd->i8;
-    if (parsed_cmd->i9 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I9_SET))
-       poll_watch_loop_millisec = parsed_cmd->i9;
-    if (parsed_cmd->i10 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I10_SET))
-       xevent_watch_loop_millisec = parsed_cmd->i10;
+   use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
 }
 
 
@@ -593,7 +596,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    rpt_set_default_ornamentation_enabled(true); // applies to all new threads
    rpt_set_ornamentation_enabled(true);         // current thread
    init_display_watch_options(parsed_cmd);
-
+   init_algorithm_options(parsed_cmd);
    init_experimental_options(parsed_cmd);
 
 bye:
