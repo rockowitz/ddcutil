@@ -608,32 +608,28 @@ void (*DDCA_Display_Status_Callback_Func)(DDCA_Display_Status_Event event);
 
 
 
-/** Parameter record to tune watching display connection changes.
+/** Parameter record for tuning watching display connection changes.
  *
  *  @remark
- *  DDCA_DW_Settings struct is defined with unused fields at the end to allow
- *  for future extension without breaking the ABI.
- *
- *  @remark
- *  See init_display_watch_options() for consideration of what to add.
+ *  This struct is defined with unused fields at the end to allow for future
+ *  extension without breaking the ABI.
  *
  *  @since 2.2.0
  */
 //! @remark see init_display_watch_options() for consideration of what to add
 typedef struct {
    // Polling loop intervals for each of the watch modes
-   uint16_t  xevent_watch_loop_interval_millisec;   /**< For watch mode XEVENT */
-   uint16_t  poll_watch_loop_interval_millisec;     /**< For watch mode POLL */
-   uint16_t  udev_watch_loop_interval_millisec;     /**< For watch mode UDEV */
+   uint16_t   xevent_watch_interval_millisec;   /**< For watch mode XEVENT */
+   uint16_t   poll_watch_interval_millisec;     /**< For watch mode POLL */
 
    // Once an event is received that possibly indicates a display change, libddcutil
    // repeatedly checks /sys/class/drm until the reported displays stabilize
    uint16_t  initial_stabilization_millisec; /**< Delay before first_initialization check */
    uint16_t  stabilization_poll_millisec;    /**< Polling interval between stabilization checks */
 
-   // When checking that DDC communication has become enabled,
-   // checks occur at increasing multiples of this value.
-   uint16_t   watch_retry_thread_sleep_factor_millisec;
+   // Interval at which to check that DDC has become enabled if it is not
+   // immediately enabled when the EDID is detected.
+   uint16_t   watch_retry_interval_millisec;
 
    void *  unused[4];
 } DDCA_DW_Settings;
