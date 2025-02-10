@@ -63,12 +63,4 @@ typedef struct {
 #endif
 // uses -1,-1 for unset
 
-
-typedef enum {
-   Watch_Mode_Poll,
-   Watch_Mode_Xevent,
-   Watch_Mode_Udev,
-   Watch_Mode_Dynamic,
-} DDCA_Watch_Mode;
-
 #endif /* DDCUTIL_TYPES_INTERNAL_H_ */

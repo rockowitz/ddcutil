@@ -302,7 +302,14 @@ typedef struct {
 
 void free_bus_open_error(Bus_Open_Error * boe);
 
-const char * watch_mode_name(DDCA_Watch_Mode mode);
+typedef enum {
+   Watch_Mode_Dynamic,
+   Watch_Mode_Poll,
+   Watch_Mode_Xevent,
+   Watch_Mode_Udev,
+} DDC_Watch_Mode;
+
+const char * watch_mode_name(DDC_Watch_Mode mode);
 
 bool add_disabled_display(Monitor_Model_Key * mmk);
 bool add_disabled_mmk_by_string(const char * mmid);

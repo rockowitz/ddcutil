@@ -1408,7 +1408,7 @@ char * interpret_dref_flags_t(Dref_Flags flags) {
 }
 
 
-const char * watch_mode_name(DDCA_Watch_Mode mode) {
+const char * watch_mode_name(DDC_Watch_Mode mode) {
    char * result = NULL;
    switch (mode) {
    case Watch_Mode_Poll:     result = "Watch_Mode_Poll";     break;
