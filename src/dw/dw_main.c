@@ -54,7 +54,7 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
-DDCA_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
+DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
 bool             enable_watch_displays = true;
 
 static GThread * watch_thread = NULL;
@@ -73,12 +73,12 @@ static Watch_Displays_Data * global_wdd;     // needed to pass to dw_stop_watch_
  *                        XEvent_Data struct, if the resolved mode is Watch_Mode_Xevent
  *  @return actual watch mode to be used
  */
-STATIC DDCA_Watch_Mode
-resolve_watch_mode(DDCA_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
+STATIC DDC_Watch_Mode
+resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s xev_data_loc=%p", watch_mode_name(initial_mode), xev_data_loc);
 
-   DDCA_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
+   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
    XEvent_Data * xevdata = NULL;
    *xev_data_loc = NULL;
 
@@ -157,10 +157,10 @@ resolve_watch_mode(DDCA_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
 Error_Info *
 dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
-   DBGTRC_STARTING(true, TRACE_GROUP,
+   DBGTRC_STARTING(debug, TRACE_GROUP,
         "dw_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
         watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
-   DBGTRC_NOPREFIX(true, TRACE_GROUP, "thread_id = %d, traced_function_stack=%p", TID(), traced_function_stack);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "thread_id = %d, traced_function_stack=%p", TID(), traced_function_stack);
    Error_Info * err = NULL;
    XEvent_Data * xev_data = NULL;
 
@@ -174,7 +174,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   DDCA_Watch_Mode resolved_watch_mode = resolve_watch_mode(watch_displays_mode, &xev_data);
+   DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(watch_displays_mode, &xev_data);
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
 
    int calculated_watch_loop_millisec = dw_calc_watch_loop_millisec(resolved_watch_mode);
@@ -182,11 +182,11 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
-
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"          use_sysfs_connector_id:       %s", SBOOL(use_sysfs_connector_id));    // watch udev only
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"          extra_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
+   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
+         "                                         extra_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
          initial_stabilization_millisec, stabilization_poll_millisec);
-   // MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,"          stabilization_poll_millisec:  %d", stabilization_poll_millisec);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "use_sysfs_connector_id: %s", SBOOL(use_sysfs_connector_id));    // watch udev only
+
 
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
@@ -403,27 +403,27 @@ void dw_get_display_watch_settings(DDCA_DW_Settings * settings) {
    assert(settings);
    // settings->watch_mode = dw_watch_mode;
 
-   settings->udev_watch_loop_interval_millisec   = udev_watch_loop_millisec;
-   settings->poll_watch_loop_interval_millisec   = poll_watch_loop_millisec;
-   settings->xevent_watch_loop_interval_millisec = xevent_watch_loop_millisec;
+   // settings->udev_watch_interval_millisec   = udev_watch_loop_millisec;
+   settings->poll_watch_interval_millisec   = poll_watch_loop_millisec;
+   settings->xevent_watch_interval_millisec = xevent_watch_loop_millisec;
 
    settings->initial_stabilization_millisec      = initial_stabilization_millisec;
    settings->stabilization_poll_millisec         = stabilization_poll_millisec;
 
-   settings->watch_retry_thread_sleep_factor_millisec = retry_thread_sleep_factor_millisec;
+   settings->watch_retry_interval_millisec = retry_thread_sleep_factor_millisec;
 }
 
 
 DDCA_Status dw_set_display_watch_settings(DDCA_DW_Settings * settings) {
    assert(settings);
-   udev_watch_loop_millisec   =     settings->udev_watch_loop_interval_millisec;
-   poll_watch_loop_millisec   =     settings->poll_watch_loop_interval_millisec;
-   xevent_watch_loop_millisec =     settings->xevent_watch_loop_interval_millisec;
+   // udev_watch_loop_millisec   =     settings->udev_watch_udev_interval_millisec;
+   poll_watch_loop_millisec   =     settings->poll_watch_interval_millisec;
+   xevent_watch_loop_millisec =     settings->xevent_watch_interval_millisec;
 
    initial_stabilization_millisec = settings->initial_stabilization_millisec;
    stabilization_poll_millisec =    settings->stabilization_poll_millisec;
 
-   retry_thread_sleep_factor_millisec = settings->watch_retry_thread_sleep_factor_millisec;
+   retry_thread_sleep_factor_millisec = settings->watch_retry_interval_millisec;
 
    return DDCRC_OK;
 }

@@ -14,7 +14,7 @@
 #include "util/error_info.h"
 /** \endcond */
 
-extern DDCA_Watch_Mode watch_displays_mode;
+extern DDC_Watch_Mode watch_displays_mode;
 extern bool            enable_watch_displays;
 
 Error_Info * dw_start_watch_displays(DDCA_Display_Event_Class event_classes);
