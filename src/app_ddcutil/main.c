@@ -857,7 +857,8 @@ main(int argc, char *argv[]) {
 
    DDCA_Syslog_Level preparsed_level = preparse_syslog_level(argc, argv);
    if (preparsed_level != DDCA_SYSLOG_NOT_SET) {
-      DBGF(main_debug, "Setting preparse syslog_level = %s", syslog_level_name(preparsed_level));
+      DBGF(main_debug, "Setting syslog_level = %s from preparse_syslog_level()",
+                        syslog_level_name(preparsed_level));
       syslog_level = preparsed_level;
       explicit_syslog_level = true;
    }
@@ -887,14 +888,17 @@ main(int argc, char *argv[]) {
       DBGF(main_debug, "syslog_level=%s, explicit_syslog_level=%s",
                          syslog_level_name(syslog_level), SBOOL(explicit_syslog_level));
       if (config_file_errs->len > 0) {
+         // Special handling for config file errors.
+         // Open system log early.
          if (syslog_level > DDCA_SYSLOG_NEVER) {
             openlog("ddcutil",    // prepended to every log message
                      LOG_CONS |   // write to system console if error sending to system logger
                      LOG_PID,     // include caller's process id
                      LOG_USER);   // generic user program, syslogger can use to determine how to handle
             syslog_opened = true;
-            DBGF(main_debug, "openlog() executed");
+            DBGF(main_debug, "openlog() executed for config file errors,  explicit syslog level");
          }
+         // Write error msgs to stderr and (if opened) the system log
          f0printf(ferr(), "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
          if (syslog_opened)
             syslog(LOG_ERR, "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
@@ -930,9 +934,50 @@ main(int argc, char *argv[]) {
       }
    }
 
-   parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, NULL);
+   preparsed_level = preparse_syslog_level(new_argc, new_argv);
+   if (preparsed_level != DDCA_SYSLOG_NOT_SET) {
+      DBGF(main_debug, "Setting syslog_level = %s from preparse_syslog_level()",
+                        syslog_level_name(preparsed_level));
+      syslog_level = preparsed_level;
+      explicit_syslog_level = true;
+   }
+   DBGF(main_debug, "Before parse_command(): syslog_level=%s, explicit_syslog_level=%s",
+                      syslog_level_name(syslog_level), SBOOL(explicit_syslog_level));
+
+   GPtrArray * parser_errmsgs = g_ptr_array_new_with_free_func(g_free);
+   parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, parser_errmsgs);
    DBGF(main_debug, "parse_command() returned %p", parsed_cmd);
    ntsa_free(new_argv, true);
+
+   DBGF(main_debug, "After parse_command(): syslog_level=%s, explicit_syslog_level=%s",
+                      syslog_level_name(syslog_level), SBOOL(explicit_syslog_level));
+   if (parser_errmsgs->len > 0) {
+      // Special handling for parser error messages.
+      // Open system log early.
+      if (syslog_level > DDCA_SYSLOG_NEVER) {
+         openlog("ddcutil",    // prepended to every log message
+                  LOG_CONS |   // write to system console if error sending to system logger
+                  LOG_PID,     // include caller's process id
+                  LOG_USER);   // generic user program, syslogger can use to determine how to handle
+         syslog_opened = true;
+         DBGF(main_debug, "openlog() executed for parser errors");
+      }
+      // Write error msgs to stderr and (if opened) the system log
+      // f0printf(ferr(), "Command error(s):\n");
+      // if (syslog_opened)
+      //    syslog(LOG_ERR, "Error(s) in ddcutil command:\n");
+      for (int ndx = 0; ndx < parser_errmsgs->len; ndx++) {
+         char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(parser_errmsgs, ndx));
+         f0printf(ferr(), s);
+         if (syslog_opened)
+            syslog(LOG_ERR, "%s", s);
+         free(s);
+      }
+      DBGF(main_debug, "Done writing msgs");
+   }
+
+   g_ptr_array_free(parser_errmsgs, true);
+
    if (!parsed_cmd)
       goto bye;      // main_rc == EXIT_FAILURE
 
@@ -955,24 +1000,25 @@ main(int argc, char *argv[]) {
    if (preparse_verbose)
       parsed_cmd->output_level = DDCA_OL_VERBOSE;
 
+   DBG("parsed_cmd->syslog_level =%d=%s, syslog_level=%d=%s, explicit_syslog_level=%s",
+         parsed_cmd->syslog_level, syslog_level_name(parsed_cmd->syslog_level),
+         syslog_level, syslog_level_name(syslog_level),
+         sbool(explicit_syslog_level));
    if (explicit_syslog_level)
-      parsed_cmd->syslog_level = explicit_syslog_level;
-
-   if (parsed_cmd->syslog_level > DDCA_SYSLOG_NEVER && !syslog_opened) {
-      if (parsed_cmd->syslog_level > DDCA_SYSLOG_NEVER ) {   // global
-         openlog("ddcutil",          // prepended to every log message
-                 LOG_CONS |          // write to system console if error sending to system logger
-                 LOG_PID,            // include caller's process id
-                 LOG_USER);          // generic user program, syslogger can use to determine how to handle
-         syslog_opened = true;
-         DBGF(main_debug, "openlog() executed");
-      }
-   }
-   else if (parsed_cmd->syslog_level == DDCA_SYSLOG_NEVER && syslog_opened) {
+      parsed_cmd->syslog_level = syslog_level;
+   if (parsed_cmd->syslog_level == DDCA_SYSLOG_NEVER && syslog_opened) {
       // oops
       DBGF(main_debug, "parsed_cmd=>syslog_level == DDCA_SYSLOG_NEVER, calling closelog()");
       closelog();
       syslog_opened = false;
+   }
+   else if (parsed_cmd->syslog_level > DDCA_SYSLOG_NEVER ) {   // global
+      openlog("ddcutil",          // prepended to every log message
+              LOG_CONS |          // write to system console if error sending to system logger
+              LOG_PID,            // include caller's process id
+              LOG_USER);          // generic user program, syslogger can use to determine how to handle
+      syslog_opened = true;
+      DBGF(main_debug, "Normal openlog() executed for parsed_cmd->syslog_level ");
    }
 
    // tracing is sufficiently initialized, can report start time
@@ -1298,6 +1344,7 @@ bye:
    DBGMSF(main_debug, "syslog_opened=%s", sbool(syslog_opened));
    if (syslog_opened) {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Terminating. Returning %d", main_rc);
+      DBGF(main_debug, "Calling closelog()...");
       closelog();
    }
 
