@@ -1000,7 +1000,7 @@ main(int argc, char *argv[]) {
    if (preparse_verbose)
       parsed_cmd->output_level = DDCA_OL_VERBOSE;
 
-   DBG("parsed_cmd->syslog_level =%d=%s, syslog_level=%d=%s, explicit_syslog_level=%s",
+   DBGF(main_debug,"parsed_cmd->syslog_level =%d=%s, syslog_level=%d=%s, explicit_syslog_level=%s",
          parsed_cmd->syslog_level, syslog_level_name(parsed_cmd->syslog_level),
          syslog_level, syslog_level_name(syslog_level),
          sbool(explicit_syslog_level));
