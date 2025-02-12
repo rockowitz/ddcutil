@@ -1110,6 +1110,7 @@ Byte * get_connector_edid(const char * connector_name) {
           if (edidbytes) {
              edid_exists = true;
              free(edidbytes);
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Retrieved edid using DRM connector %s", drm_connector_name);
           }
           else {
              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Failed to get edid using DRM connector %s", drm_connector_name);
