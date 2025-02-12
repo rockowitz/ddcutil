@@ -207,6 +207,7 @@ lock_display(
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    TRACED_ASSERT(memcmp(dlr->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    bool self_thread = false;
+   bool locked = false;
    g_mutex_lock(&master_display_lock_mutex);
    if (dlr->display_mutex_thread == g_thread_self() )
       self_thread = true;
@@ -219,7 +220,6 @@ lock_display(
       goto bye;
    }
 
-   bool locked = false;
    if (flags & DDISP_WAIT) {
       g_mutex_lock(&dlr->display_mutex);
       locked = true;
