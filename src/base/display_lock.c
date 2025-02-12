@@ -48,6 +48,7 @@
 
 #include "base/displays.h"
 #include "base/rtti.h"
+#include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
 #ifdef ALT_LCOK_REC
@@ -161,6 +162,30 @@ get_display_lock_record_by_dref(Display_Ref * dref) {
 #endif
 
 
+
+#define EMIT_BACKTRACE(_ddcutil_severity, _format, ...) \
+do { \
+   if (!msg_to_syslog_only) { \
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, _format, ##__VA_ARGS__); \
+      if (IS_DBGTRC(debug, DDCA_TRC_NONE)) { \
+         show_backtrace(0);          \
+         debug_current_traced_function_stack(false); \
+      } \
+   } \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         char * body = g_strdup_printf(_format, ##__VA_ARGS__); \
+         syslog(syslog_priority, PRItid" %s%s", (intmax_t) tid(), body, (tag_output) ? " (R)" : "" ); \
+         free(body); \
+         backtrace_to_syslog(syslog_priority, 2); \
+         current_traced_function_stack_to_syslog(syslog_priority, false); \
+      } \
+   } \
+} while(0)
+
+
+
 /** Locks a distinct display.
  *
  *  \param  dlr              Display_Lock_Record distinct display identifier
@@ -188,32 +213,55 @@ lock_display(
       self_thread = true;
    g_mutex_unlock(&master_display_lock_mutex);
    if (self_thread) {
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Attempting to lock display already locked by current thread, tid=%jd", get_thread_id());
+      EMIT_BACKTRACE(DDCA_SYSLOG_ERROR,
+            "Attempting to lock display already locked by current thread, tid=%jd", TID());
       err = errinfo_new(DDCRC_ALREADY_OPEN, __func__,   // is there a better status code?
             "Attempting to lock display already locked by current thread"); // poor
       goto bye;
    }
 
-   bool locked = true;
+   bool locked = false;
    if (flags & DDISP_WAIT) {
       g_mutex_lock(&dlr->display_mutex);
+      locked = true;
    }
    else {
-      locked = g_mutex_trylock(&dlr->display_mutex);
-      if (!locked)
-         err = errinfo_new(DDCRC_LOCKED, __func__, "Locking failed");
-   }
+      int lock_max_wait_millisec = DEFAULT_OPEN_MAX_WAIT_MILLISEC;
+      int lock_wait_interval_millisec = DEFAULT_OPEN_WAIT_INTERVAL_MILLISEC;
+      int total_wait_millisec = 0;
+      int tryctr = 0;
 
-   if (locked) {  // note that this thread owns the lock
-       dlr->display_mutex_thread = g_thread_self();
-       dlr->linux_thread_id = get_thread_id();
+      while (!locked && total_wait_millisec < lock_max_wait_millisec) {
+         tryctr++;
+         locked = g_mutex_trylock(&dlr->display_mutex);
+         if (!locked) {
+            sleep_millis(lock_wait_interval_millisec);
+         }
+      }
+
+      if (locked) {  // note that this thread owns the lock
+          if (tryctr > 1) {
+             EMIT_BACKTRACE(DDCA_SYSLOG_NOTICE, PRItid"Locked %s after %d tries",
+                   TID(), dpath_short_name_t(&dlr->io_path), tryctr);
+          }
+      }
+      else {
+         EMIT_BACKTRACE(DDCA_SYSLOG_ERROR, PRItid"Failed to Lock %s after %d tries. Locked by thread"PRItid,
+               TID(), dpath_short_name_t(&dlr->io_path), tryctr, dlr->linux_thread_id);
+         err = errinfo_new(DDCRC_LOCKED, __func__, "Locking failed for %s after %d tries. Locked by thread"PRItid,
+               dpath_short_name_t(&dlr->io_path), tryctr, dlr->linux_thread_id);
+      }
    }
 
 bye:
+   if (locked) {  // note that this thread owns the lock
+        dlr->display_mutex_thread = g_thread_self();
+        dlr->linux_thread_id = get_thread_id();
+   }
+
    // need a new DDC status code
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr->io_path=%s", dpath_short_name_t(&dlr->io_path));
-   if (err)
-      show_backtrace(2);
+   // DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dlr->io_path=%s", dpath_short_name_t(&dlr->io_path));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "");
    return err;
 }
 
