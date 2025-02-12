@@ -2,7 +2,6 @@
 
 ### General
 
-
 #### Added
 
 - Support DisplayLink devices
@@ -125,11 +124,10 @@
 - Re-enable autoconf/configure option --enable-x11/--disable-x11.
   X11 specific code is used in display change and sleep state detection.
   The default is --enable-x11.   
-  Use x11 code to test for sleep mode instead of using /sys, which 
-  is unreliable for nvidia driver.
-- Add autoconf/configure option --enable-static-functions-visible. If set, 
-  the "static" storage class specifier is removed from many functions so that 
-  their names appear in backtraces.
+- Add autoconf/configure option ***--enable-static-functions-visible***. 
+  If set, storage class specifier "static" is removed from many functions so
+  that their names appear in backtrace reports from valgrind, asan, and glibc 
+  function backtrace().
 
 
 ### Shared Library
@@ -177,20 +175,6 @@ file is libddcutil.so.5.1.3.
   pointer into the libddcutil data structures, making it slightly more opaque.
   The type of DDCA_Display_Ref remains "void*", so no client changes are needed
 - syslog output is generally prefixed with date and thread id
-- It's possible that there's a delay between the time a monitor is turned on 
-  (and X11/Wayland generate a display change event) and the time that DDC 
-  becomes enabled. There's a newly added flags field in DDCA_Display_Status_Event,
-  with one bit defined, DDCA_DISPLAY_EVENT_DDC_WORKING.  Normally, this bit is 
-  set in the emitted DDCA_Display_Status_Event. However, if DDC is not immediately
-  enabled the bit is not set, and the display reference goes onto a recheck queue 
-  to be processed by a separate thread. An event of type DDCA_EVENT_DDC_ENABLED
-  will be emitted if and when the recheck thread determines that DDC is working.
-- There's a tension in display change detection between minimizing the time between
-  when X11/Wayland detects a monitor having been turned on and libddcutil issuing
-  an event of type DDCA_DISPLAY_EVENT_CONNECTED versus checking and rechecking 
-  failed states (e.g. DDC not working).  In many caes, the frequency and wait 
-  intervals are controlled by settings in file src/base/parms.h.
-
 
 #### Fixed
 
@@ -224,7 +208,7 @@ file is libddcutil.so.5.1.3.
 - Use mutexes to control access to corruptable data structures.
 - Memory leaks.
 
-#### Display Change Handling
+#### Display Change Detection
 
 - Alternative algorithms for detecting display changes, specified by option 
   ***--watch-mode***
@@ -255,12 +239,20 @@ file is libddcutil.so.5.1.3.
   Normally, this bit is set on display connection events.  In case DDC is not immediately available after 
   EDID detection, this bit is not set.  If DDC subsequently becomes enabled, and event of type DDCA_EVENT_DDC_ENABLED occurs. 
 
-#### Building 
+- It's possible that there's a delay between the time a monitor is turned on 
+  (and X11/Wayland generate a display change event) and the time that DDC 
+  becomes enabled. There's a newly added flags field in DDCA_Display_Status_Event,
+  with one bit defined, DDCA_DISPLAY_EVENT_DDC_WORKING.  Normally, this bit is 
+  set in the emitted DDCA_Display_Status_Event. However, if DDC is not immediately
+  enabled the bit is not set, and the display reference goes onto a recheck queue 
+  to be processed by a separate thread. An event of type DDCA_EVENT_DDC_ENABLED
+  will be emitted if and when the recheck thread determines that DDC is working.
+- There's a tension in display change detection between minimizing the time between
+  when X11/Wayland detects a monitor having been turned on and libddcutil issuing
+  an event of type DDCA_DISPLAY_EVENT_CONNECTED versus checking and rechecking 
+  failed states (e.g. DDC not working).  In many caes, the frequency and wait 
+  intervals are controlled by settings in file src/base/parms.h.
 
-- If macro STATIC_FUNCTIONS_VISIBLE is defined in src/base/parms.h, the static
-  qualifier is removed from many functions to improve reports from valgrind, 
-  asan, and internally defined backtrace functions.  
-  - .configure option --enable-static-functions-visible
 
 
 ## [2.1.4] 2024-02-17
