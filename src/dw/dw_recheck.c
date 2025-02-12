@@ -203,7 +203,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
       }
       else if (err->status_code == DDCRC_DISCONNECTED) {
          emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
-             "Display %s no longer detected after %u milliseconds",
+             "Display %s no longer detected after %"PRIu64" milliseconds",
              dref_reprx_t(dref),
              NANOS2MILLIS(cur_time_nanos - rqe->initial_ts_nanos));
 
