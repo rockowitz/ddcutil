@@ -1001,23 +1001,19 @@ parse_command(
    gboolean trace_to_syslog_only_flag = false;
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
-   gboolean enable_watch_displays = true;
-   gint     xevent_watch_loop_millis_work = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
-   gint     poll_watch_loop_millis_work = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
    gboolean disable_api_flag = false;
    gboolean discard_cached_capabilities_flag = false;
    gboolean discard_dsa_cache_flag = false;
 
    gboolean try_get_edid_from_sysfs = DEFAULT_TRY_GET_EDID_FROM_SYSFS;
-
    char *   enable_tgefs_expl = NULL;
-   char *  disable_tgefs_expl = NULL;
+   char *   disable_tgefs_expl = NULL;
    if (DEFAULT_TRY_GET_EDID_FROM_SYSFS) {
-      enable_tgefs_expl = "get EDID from /sys when possible (default)";
+      enable_tgefs_expl  = "get EDID from /sys when possible (default)";
       disable_tgefs_expl = "do not try to get EDID from /sys";
    }
    else {
-      enable_tgefs_expl = "get EDID from /sys when possible";
+      enable_tgefs_expl  = "get EDID from /sys when possible";
       disable_tgefs_expl = "do not try to get EDID from /sys (default)";
    }
 
@@ -1031,6 +1027,9 @@ parse_command(
    }
    char watch_mode_expl[80];
    g_snprintf(watch_mode_expl, 80, "DYNAMIC|XEVENT|POLL, default: %s", default_watch_mode_keyword);
+   gboolean enable_watch_displays = true;
+   gint     xevent_watch_loop_millis_work = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+   gint     poll_watch_loop_millis_work = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
