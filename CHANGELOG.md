@@ -134,7 +134,7 @@
 
 The shared library **libddcutil** is backwardly compatible with the one in 
 ddcutil 2.1.x. The SONAME is unchanged as libddcutil.so.5. The released library
-file is libddcutil.so.5.1.3. 
+file is libddcutil.so.5.2.0. 
 
 #### Added
 
