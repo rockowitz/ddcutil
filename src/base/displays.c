@@ -1001,7 +1001,7 @@ char * dref_reprx_t(Display_Ref * dref) {
    return buf;
 }
 
-char * ddca_dref_repr_t(DDCA_Display_Ref * ddca_dref) {
+char * ddci_dref_repr_t(DDCA_Display_Ref * ddca_dref) {
    static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);

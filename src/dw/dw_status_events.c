@@ -266,7 +266,7 @@ char * display_status_event_repr(DDCA_Display_Status_Event evt) {
       formatted_time_t(evt.timestamp_nanos),   // will this clobber a wrapping DBGTRC?
       dw_display_event_type_name(evt.event_type),
                                   evt.connector_name,
-                                  ddca_dref_repr_t(evt.dref),
+                                  ddci_dref_repr_t(evt.dref),
                                   evt.io_path.path.i2c_busno,
                                   sbool(evt.flags&DDCA_DISPLAY_EVENT_DDC_WORKING));
    return s;

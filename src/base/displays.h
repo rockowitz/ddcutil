@@ -233,7 +233,7 @@ void          dbgrpt_display_ref_summary(Display_Ref * dref, bool include_businf
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
 char *        dref_reprx_t(Display_Ref * dref);  // value valid until next call
-char *        ddca_dref_repr_t(DDCA_Display_Ref * ddca_dref);  // value valid until next call
+char *        ddci_dref_repr_t(DDCA_Display_Ref * ddca_dref);  // value valid until next call
 DDCA_Status   free_display_ref(Display_Ref * dref);
 Display_Ref * copy_display_ref(Display_Ref * dref);
 void          dref_lock(Display_Ref * dref);
