@@ -278,7 +278,7 @@ AS_IF([test "x$enable_usb" = "xyes"],
 
 dnl *** configure option: --enable-drm
 AC_ARG_ENABLE([drm],
-              [ AS_HELP_STRING( [--enable-drm=@<:@yes/no@:>@], [Use DRM in diagnostics@<:@default=yes@:>@] )],
+              [ AS_HELP_STRING( [--enable-drm=@<:@yes/no@:>@], [Use DRM@<:@default=yes@:>@] )],
               [enable_drm=${enableval}],
               [enable_drm=yes] )
 AS_IF([test "x$enable_drm" = "xyes"],
@@ -289,7 +289,7 @@ AS_IF([test "x$enable_drm" = "xyes"],
 
 dnl *** configure option: --enable-x11
 AC_ARG_ENABLE([x11],
-              [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11@<:default=yes@:>@] )],
+              [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11@<:@default=yes@:>@] )],
               [enable_x11=${enableval}],
               [enable_x11=yes] )
 # enable_x11=no
@@ -307,12 +307,12 @@ AS_IF([test "x$enable_x11" = "xyes"],
 
 dnl *** configure option: --enable-static-functions-visible
 AC_ARG_ENABLE([static-functions-visible],
-              [ AS_HELP_STRING( [--enable-static-functions-visible=@<:@no/yes@:>@], [Remove static qualifier from function names)@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-static-functions-visible=@<:@no/yes@:>@], [Remove static qualifier from functions@<:@default=no@:>@] )],
               [enable_static_functions_visible=${enableval}],
               [enable_static_functions_visible=no] )
 AM_CONDITIONAL([STATIC_FUNCTIONS_VISIBLE_COND], [test "x$enable_static_functions_visible" = "xyes"] )
 AS_IF( [test "x$enable_static_functions_visible" = "xyes"],
-         AC_DEFINE( [STATIC_FUNCTIONS_VISIBLE], [1], [If defined, remove static qualifier from function declarations.])
+         AC_DEFINE( [STATIC_FUNCTIONS_VISIBLE], [1], [If defined, remove static qualifier from function declarations and definitions.])
          AC_MSG_NOTICE( [static_functions_visible... enabled] )
       ,
          AC_MSG_NOTICE( [static_functions_visible... disabled] )
@@ -402,20 +402,6 @@ AS_IF([test "x$enable_install_lib_only" = "xyes" -a "x$enable_envcmds" = "xyes" 
         enable_envcmds=no
        ]
    ) 
-
-# --disable-envcmds => --disable-drm, --disable-x11
-
-# AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_drm" = "xyes" ],
-#       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-drm] )
-#        enable_drm=no
-#       ]
-#   ) 
-
-# AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_x11" = "xyes" ],
-#        [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-x11] )
-#         enable_x11=no
-#       ]
-#   ) 
 
 
 ###
@@ -699,14 +685,7 @@ dnl        ])
  
 ### X11 
 
-dnl PKG_CHECK_MODULES(XRANDR, xrandr)
-dnl PKG_CHECK_MODULES(X11,    x11)
-
 dnl Duplicate of next section?
-
-dnl TODO: disable if enable-envcmds is false?
-
-dnl Force disable of options if environment commands disabled
 
 AS_IF([test "x$enable_x11" = "xyes"],
          [ PKG_CHECK_MODULES(LIBX11, x11)
@@ -722,10 +701,6 @@ AS_IF([test "x$enable_x11" = "xyes"],
         AC_MSG_NOTICE( [x11...        disabled1] )
      )
 
-dnl AS_IF([test "x$enable_x11" = "xyes"],
-dnl          [ PKG_CHECK_MODULES(XRANDR, xrandr)  
-dnl         ])
-
 
 dnl Note cflags and libs, but don't need to use in makefiles 
 AS_IF( [test 0$DBG -ne 0], 
@@ -733,7 +708,6 @@ AS_IF( [test 0$DBG -ne 0],
           AC_MSG_NOTICE( [LIBX11_CFLAGS:    $LIBX11_CFLAGS] )
           AC_MSG_NOTICE( [LIBX11_LIBS:      $LIBX11_LIBS] )
        ]) 
-
 
 
 ### DOXYGEN
