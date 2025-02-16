@@ -1105,6 +1105,32 @@ parse_command(
    };
 #endif
 
+   GOptionEntry initial_options[] = {
+         // Output control
+         {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",             NULL},
+         {"terse",   't',  G_OPTION_FLAG_NO_ARG,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
+         {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
+         {"vv",      '\0', G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
+         {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
+
+         // Program information
+         {"settings",'\0', 0, G_OPTION_ARG_NONE,     &show_settings_flag,"Show current settings",           NULL},
+         {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version",             NULL},
+
+         // Miscellaneous
+         // move to preparser_options if also implemented for libddcutil
+         {"noconfig",'\0', 0, G_OPTION_ARG_NONE,     &disable_config_flag, "Do not process configuration file", NULL},
+
+         {NULL},
+       };
+
+
+
    GOptionEntry ddcutil_only_options[] = {
          //  Monitor selection options
          {"display", 'd',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
@@ -1129,26 +1155,6 @@ parse_command(
          {"ro",      '\0', 0, G_OPTION_ARG_NONE,     &ro_only_flag,     "Include only RO features",         NULL},
          {"wo",      '\0', 0, G_OPTION_ARG_NONE,     &wo_only_flag,     "Include only WO features",         NULL},
 
-         // Output control
-         {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
-                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",             NULL},
-         {"terse",   't',  G_OPTION_FLAG_NO_ARG,
-                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
-         {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
-                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
-         {"vv",      '\0', G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN,
-                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
-         {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN,
-                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
-
-         // Program information
-         {"settings",'\0', 0, G_OPTION_ARG_NONE,     &show_settings_flag,"Show current settings",           NULL},
-         {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version",             NULL},
-
-         // Miscellaneous
-         // move to preparser_options if also implemented for libddcutil
-         {"noconfig",'\0', 0, G_OPTION_ARG_NONE,     &disable_config_flag, "Do not process configuration file", NULL},
-
       {NULL},
    };
 
@@ -1156,15 +1162,18 @@ parse_command(
    //  long_name short flags option-type          gpointer           description                    arg description
 
       // Diagnostic output
-      {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors (Deprecated, use --ddcdata)", NULL},
-      {"ddcdata", '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
+      {"ddc",     '\0', G_OPTION_FLAG_HIDDEN,
+                        G_OPTION_ARG_NONE, &ddc_flag,         "Report DDC protocol and data errors (Deprecated, use --ddcdata)", NULL},
+      {"ddcdata", '\0', 0,
+                        G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
-                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
+                        G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
       {"vstats",  '\0', G_OPTION_FLAG_OPTIONAL_ARG,
-                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed performance statistics",  "stats type"},
+                        G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed performance statistics",  "stats type"},
       {"istats",  '\0', G_OPTION_FLAG_OPTIONAL_ARG,
-                                                G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed and internal performance statistics",  "stats type"},
-      {"profile-api",'\0', 0, G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
+                        G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed and internal performance statistics",  "stats type"},
+      {"profile-api",'\0', G_OPTION_FLAG_HIDDEN,
+                           G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
       {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", valid_syslog_levels_string},
 
       // Performance
@@ -1210,19 +1219,20 @@ parse_command(
 #endif
       {"async",   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection (deprecated)", NULL},
 
-      {"i2c-bus-checks-async-min",'\0', 0,
+      {"i2c-bus-checks-async-min",'\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &parsed_cmd->i2c_bus_check_async_min, i2c_bus_check_async_expl, NULL},
-      {"ddc-checks-async-min",    '\0', G_OPTION_FLAG_NONE,
+      {"ddc-checks-async-min",    '\0', G_OPTION_FLAG_HIDDEN,
                                      G_OPTION_ARG_INT, &parsed_cmd->ddc_check_async_min, ddc_check_async_expl, NULL},
-      {"i2c-init-async-min",'\0', 0,
+      {"i2c-init-async-min",'\0', G_OPTION_FLAG_HIDDEN,
          G_OPTION_ARG_INT, &parsed_cmd->i2c_bus_check_async_min, i2c_bus_check_async_expl, NULL},
-      {"ddc-init-async-min",    '\0', G_OPTION_FLAG_NONE,
+      {"ddc-init-async-min",    '\0', G_OPTION_FLAG_HIDDEN,
          G_OPTION_ARG_INT, &parsed_cmd->ddc_check_async_min, ddc_check_async_expl, NULL},
 
 
       {"skip-ddc-checks",'\0',0,G_OPTION_ARG_NONE,     &skip_ddc_checks_flag,     "Skip initial DDC checks",  NULL},
 
-      {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
+      {"lazy-sleep",  '\0', G_OPTION_FLAG_HIDDEN,
+                            G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
  //   {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 
       {"less-sleep" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
@@ -1309,7 +1319,8 @@ parse_command(
                   '\0', G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_NONE,     &i2c_io_ioctl_flag, "Use i2c-dev ioctl() calls by default",     NULL},
 
-      {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does not have a FIFO queue", NULL},
+      {"x52-no-fifo",'\0',G_OPTION_FLAG_HIDDEN,
+                          G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does not have a FIFO queue", NULL},
 
       {"edid-read-size",
                       '\0', 0, G_OPTION_ARG_INT,  &edid_read_size_work, "Number of EDID bytes to read", "128,256" },
@@ -1331,30 +1342,30 @@ parse_command(
       // Debugging
       {"excp",       '\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &report_freed_excp_flag, "Report freed exceptions", NULL},
-      {"trace",      '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes,        "Trace classes",  "trace class name" },
+      {"trace",      '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &trace_classes,        "Trace classes",  "trace class name" },
 //    {"trace",      '\0', 0, G_OPTION_ARG_STRING,       &tracework,            "Trace classes",  "comma separated list" },
-      {"trcapi",     '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_api_calls,      "Trace API call", "function name"},
-      {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_functions,  "Trace functions","function name" },
-      {"trcfrom",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,      "Trace call stack from function","function name" },
-      {"trcfile",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
+      {"trcapi",     '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_api_calls,      "Trace API call", "function name"},
+      {"trcfunc",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_functions,  "Trace functions","function name" },
+      {"trcfrom",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,      "Trace call stack from function","function name" },
+      {"trcfile",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
       {"enable-traced-function-stack",
                   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &traced_function_stack_flag, "Enable traced function stack", NULL},
 //    {"traced-function-stack-errors-fatal",
 //                '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &traced_function_stack_errors_fatal_flag, "Traced function stack errors are fatal", NULL},
 
-      {"timestamp",  '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
-      {"ts",         '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
+      {"timestamp",  '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
+      {"ts",         '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"wall-timestamp",
-                     '\0', 0, G_OPTION_ARG_NONE,         &wall_timestamp_trace_flag, "Prepend trace msgs with wall time",  NULL},
-      {"wts",        '\0', 0, G_OPTION_ARG_NONE,         &wall_timestamp_trace_flag, "Prepend trace msgs with wall time",  NULL},
-      {"thread-id",  '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
-      {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
-      {"process-id", '\0', 0, G_OPTION_ARG_NONE,         &process_id_trace_flag, "Prepend trace msgs with process id",  NULL},
-      {"pid",        '\0', 0, G_OPTION_ARG_NONE,         &process_id_trace_flag, "Prepend trace msgs with process id",  NULL},
+                     '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &wall_timestamp_trace_flag, "Prepend trace msgs with wall time",  NULL},
+      {"wts",        '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &wall_timestamp_trace_flag, "Prepend trace msgs with wall time",  NULL},
+      {"thread-id",  '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
+      {"tid",        '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
+      {"process-id", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &process_id_trace_flag, "Prepend trace msgs with process id",  NULL},
+      {"pid",        '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &process_id_trace_flag, "Prepend trace msgs with process id",  NULL},
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
       {"trace-to-syslog-only",'\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &trace_to_syslog_only_flag,  "Direct trace output only to syslog", NULL},
-      {"libddcutil-trace-file",'\0', 0, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
+      {"libddcutil-trace-file",'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
       {"stats-to-syslog",'\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &stats_to_syslog_only_flag,  "Direct stats to syslog", NULL},
 
@@ -1443,6 +1454,7 @@ parse_command(
    }
 
    if (hidden_help_flag) {
+      unhide_options(initial_options);
       unhide_options(ddcutil_only_options);
       unhide_options(common_options);
       unhide_options(debug_options);
@@ -1456,6 +1468,7 @@ parse_command(
 
    GOptionGroup * all_options = g_option_group_new(
          "group name", "group description", "help description", NULL, NULL);
+   g_option_group_add_entries(all_options, initial_options);
    if (parser_mode == MODE_DDCUTIL) {
       g_option_group_add_entries(all_options, ddcutil_only_options);
    }
@@ -1566,8 +1579,8 @@ parse_command(
       // const char * help_pieces[] = {monitor_selection_option_help};
       // help_description = strjoin(help_pieces, 1, NULL);
       // help_description = g_strdup(monitor_selection_option_help);
-      help_description = g_strdup("For detailed help, use option \"--verbose\"");
-                              //    "\nTo see all options, use option \"--hh\"");
+      help_description = g_strdup("For detailed help, use option \"--verbose\""
+                                  "\nTo see all options, use option \"--hh\"");
    }
 
    // on --help, comes after usage line, before option detail
