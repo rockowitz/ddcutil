@@ -124,6 +124,9 @@ Discard cached files used for performance improvement.
 .TP
 .B "traceable-functions"
 Lists functions that can be specifically traced using an option like \fI--trcfunc\fP or \fI--trcfrom\fP
+.TP
+.B "noop "
+Do not execute a command.  Just process options.
 .SS Diagnostic commands
 These commands  diagnose issues in the system configuration that affect 
 \fBddcutil\fP operation,  
@@ -141,6 +144,7 @@ Explore the capabilities and features of a single monitor.
 .B "interrogate "
 Collect maximum information for problem diagnosis. Includes the output of \fBddcutil environment --verbose\fP andfor each detected monitor, 
 the output of \fBddcutil capabilities --verbose\fP and \fBddcutil probe --verbose\fP.
+
 .PP
 
 .SH COMMAND ARGUMENTS
@@ -179,6 +183,32 @@ extended range.
 
 
 .SH OPTIONS
+
+.PP
+Options that control the amount and form of output.
+.TQ
+.B "-t, --terse, --brief"
+Show brief detail.  For command \fBgetvcp\fP, the output is in machine readable form.
+.TQ
+.B -v, --verbose
+Show extended detail
+
+.PP
+Options for program information.
+.TQ
+.B "-V, --version"
+Show program version.
+.TQ
+.B "--settings"
+Report option settings in effect.
+.TQ
+.BR -h , --help 
+Show program help.
+.TQ
+.B "--hh"
+Show program help including hidden options. Hidden options include alternative option names,
+experimental and deprecated options, and ones for debugging.
+
 .PP
 Options for monitor selection.  If none are specified, the default is the first detected monitor.
 Options \fB--mfg\fP, \fB--model\fP and \fB--sn\fP can be specified together.
@@ -222,30 +252,7 @@ Normally, \fBgetvcp\fP does not report Table type features when querying a featu
 .B "--rw, --ro, --wo"
 Limit \fBgetvcp\fP or \fBvcpinfo\fP output to read-write, read-only, or (for \fBvcpinfo\fP) write-only features.
 
-.PP
-Options that control the amount and form of output.
-.TQ
-.B "-t, --terse, --brief"
-Show brief detail.  For command \fBgetvcp\fP, the output is in machine readable form.
-.TQ
-.B -v, --verbose
-Show extended detail
 
-.PP
-Options for program information.
-.TQ
-.B "-V, --version"
-Show program version.
-.TQ
-.B "--settings"
-Report option settings in effect.
-.TQ
-.BR -h , --help 
-Show program help.
-.TQ
-.B "--hh"
-Show program help including hidden options. Hidden options include alternative option names,
-experimental and deprecated options, and ones for debugging.
 
 .PP
 Options for diagnostic output
@@ -271,15 +278,15 @@ Like \fB--vstats\fP, but includes additional internal information.
 .BI --syslog " [" debug | verbose | info | notice | warn | error | never " ]"
 Write messages of the specified or more urgent severity level to the system log.
 The \fBddcutil\fP default is \fBWARN\fP. The \fBlibddcutil\P default is \fBNOTICE\fP.
-.TQ
-.BI "--libddcutil-trace-file" file name
-Direct trace output to the specified file instead of the terminal. This is a \fBlibddcutil\fP only option.
-.TQ
-.BI "--trace" trace-class-name
-Trace all functions in a trace class.  For a list of trace classes, use \fI--help --verbose\fP.
-.TQ
-.BI "--trcfunc" function-name
-Trace a specific function.
+./" .TQ
+./" .BI "--libddcutil-trace-file" file name
+./" Direct trace output to the specified file instead of the terminal. This is a \fBlibddcutil\fP only option.
+./" .TQ
+./" .BI "--trace" trace-class-name
+./" Trace all functions in a trace class.  For a list of trace classes, use \fI--help --verbose\fP.
+./" .TQ
+./" .BI "--trcfunc" function-name
+./" Trace a specific function.
 
 
 .PP
@@ -309,21 +316,21 @@ Adjust the length of waits listed in the DDC/CI specification by this number to 
 wait time.  Well behaved monitors work with sleep-multiplier values less than 1.0, while monitors
 with poor DDC implementations may require sleep-multiplier values greater than 1.0.  In general,
 newer option \fB--enable-dynamic-sleep\fP will provide better performance.
-.TQ
-.B "--lazy-sleep"
-Peform mandated sleeps before the next DDC/CI operation instead of immediately after the
-DDC/CI operation that specified a delay, marginally improving performance.
+.\" .TQ
+.\" .B "--lazy-sleep"
+.\" Peform mandated sleeps before the next DDC/CI operation instead of immediately after the
+.\" DDC/CI operation that specified a delay, marginally improving performance.
 .\" .TQ
 .\" .B "--i2c-bus-checks-async-min"
 .\" (experimental option) During display detection, examine I2C buses in parallel to see if a monitor is present.
 .\" These are low level checks that do not test DDC communication. The default is
 .\" .B "--i2c-bus-checks-async-min 99"
 .\" (i.e. never).
-.TQ
-.B "--ddc-checks-async-min"
-If there are several monitors, initial DDC checks are performed in multiple threads, improving performance.
-This option was formerly (and ambiguously) named \fB--async\fP.  The default is 
-.B "--ddc-checks-async-min 3"
+.\" .TQ
+.\" .B "--ddc-checks-async-min"
+.\" If there are several monitors, initial DDC checks are performed in multiple threads, improving performance.
+.\" This option was formerly (and ambiguously) named \fB--async\fP.  The default is 
+.\" .B "--ddc-checks-async-min 3"
 .TQ
 .B "--skip-ddc-checks"
 Assume DDC communication works and monitors properly use the invalid feature flag in a
@@ -389,6 +396,10 @@ This option has been found to enable access some control functions when using so
 Allow \fBsetvcp\fP of unknown features.
 
 .PP Miscellaneous
+.TQ
+.BI "--ignore-mmid " monitor-model-id
+Ignore monitors with this monitor-model-id.  The see the monitor-model-id for a display, 
+use command \fBddcutil --verbose\fP.
 .TQ 
 .BR "--noconfig "  
 Do not process the configuration file
