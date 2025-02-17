@@ -1,6 +1,6 @@
 # src/Makefile.am
 
-DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dynvcp i2c libmain sysfs  sample_clients test usb usb_util util vcp
+DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dw dynvcp i2c libmain sysfs  sample_clients test usb usb_util util vcp
 # contain only header files:
 EXTRA_DIST = bsd private public
 
