@@ -47,7 +47,8 @@ void assert_ddca_display_status_event_size_unchanged() {
       void *                  unused[2];
    } DDCA_Display_Status_Event_2_1_4;
 
-   static_assert(sizeof(DDCA_Display_Status_Event) == sizeof(DDCA_Display_Status_Event_2_1_4));
+   static_assert(sizeof(DDCA_Display_Status_Event) ==
+                 sizeof(DDCA_Display_Status_Event_2_1_4), "ABI compatibility");
 }
 
 
