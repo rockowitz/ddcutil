@@ -12,7 +12,7 @@
  *  from the UEFI web site.
  */
 
-// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -749,7 +749,7 @@ Pnp_Id_Table_Entry pnp_id_table[] =   {
    {"FNI","Funai Electric Co., Ltd."},
    {"FOA","FOR-A Company Limited"},
    {"FOS","Foss Tecator"},
-   {"FOX","HON HAI PRECISON IND.CO.,LTD."},
+   {"FOX","HON HAI PRECISION IND.CO.,LTD."},
    {"FPE","Fujitsu Peripherals Ltd"},
    {"FPS","Deltec Corporation"},
    {"FPX","Cirel Systemes"},
