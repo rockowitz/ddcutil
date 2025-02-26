@@ -1,0 +1,14 @@
+When packaging ddcutil for distributions, take note of the following: 
+
+- Use of group i2c for permissions is in general no longer necessary. 
+The rules in file /usr/lib/60-ddcutil-i2c.rules give the logged on user RW
+permission to /dev/i2c devices associated with monitors. However, use of 
+tag uaccess does not address the case where the user has logged on using ssh.
+- File 60-ddcutil-usb.rules is not installed.  Monitors that use USB for
+communication with their Virtual Control Panels are rare, and error messages
+caused by the rules, while benigh, can be confusing.
+- File /usr/lib/modules-load.d/ddcutil.conf ensures that driver i2c-dev is 
+loaded if it is not built into the kernel.
+- By default, the build date and time are embedded in the ddcutil and 
+libddcutil executables. If reproducable builds are required, use configure 
+option --disable-build-timestamp.
