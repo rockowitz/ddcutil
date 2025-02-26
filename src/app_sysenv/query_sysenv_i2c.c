@@ -275,11 +275,8 @@ void test_edid_read_variants(Env_Accumulator * accum) {
    rpt_title("Testing EDID read alternatives...",depth);
    sysenv_rpt_current_time(NULL, d1);
 
-   int  busct = 0;
-
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       if (i2c_device_exists(busno)) {
-         busct++;
          rpt_nl();
          rpt_vstring(d1, "Examining device /dev/i2c-%d...", busno);
 
