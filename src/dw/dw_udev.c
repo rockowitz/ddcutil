@@ -250,7 +250,7 @@ Bit_Set_256 dw_i2c_check_bus_changes(
          bs_new_buses_w_edid = bs_stabilized_buses_w_edid;
 #endif
 
-         BS256 bs_new_buses_w_edid = dw_stabilized_buses_bs(bs_new_buses_w_edid, detected_displays_removed_flag);
+         bs_new_buses_w_edid = dw_stabilized_buses_bs(bs_new_buses_w_edid, detected_displays_removed_flag);
       }
    }
 
