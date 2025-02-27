@@ -46,7 +46,9 @@
 #include "dw_udev.h"
 #include "dw_recheck.h"
 #include "dw_poll.h"
+#ifdef USE_X11
 #include "dw_xevent.h"
+#endif
 
 #include "dw_main.h"
 
@@ -79,8 +81,10 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s xev_data_loc=%p", watch_mode_name(initial_mode), xev_data_loc);
 
    DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
+#ifdef USE_X11
    XEvent_Data * xevdata = NULL;
    *xev_data_loc = NULL;
+#endif
 
 #ifndef ENABLE_UDEV
    if (initial_mode == Watch_Mode_Udev)
@@ -89,6 +93,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
 
    if (initial_mode == Watch_Mode_Dynamic) {
       resolved_watch_mode = Watch_Mode_Poll;    // always works, may be slow
+#ifdef USE_X11
       char * xdg_session_type = getenv("XDG_SESSION_TYPE");
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE=|%s|", xdg_session_type);
       if (xdg_session_type &&         // can xdg_session_type ever not be set
@@ -111,6 +116,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
       // sysfs_fully_reliable = is_sysfs_reliable();
       // if (!sysfs_fully_reliable)
       //    dw_watch_mode = Watch_Mode_Poll;
+#endif
    }
    else {
       resolved_watch_mode = initial_mode;
@@ -124,6 +130,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
    }
 #endif
 
+#ifdef USE_X11
    if (resolved_watch_mode == Watch_Mode_Xevent) {
       xevdata  = dw_init_xevent_screen_change_notification();
       // *xev_data_loc  = ddc_init_xevent_screen_change_notification();
@@ -132,15 +139,18 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR api unavailable. Switching to Watch_Mode_Poll");
       }
    }
+#endif
 
    // DBG( "xevdata=%p, watch_mode = %s", xevdata, dw_watch_mode_name(resolved_watch_mode));
 
+#ifdef USE_X11
    *xev_data_loc = xevdata;
    // ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xevdata);
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, *xev_data_loc);
    if (*xev_data_loc && IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       dw_dbgrpt_xevent_data(*xev_data_loc,  0);
    }
+#endif
    DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s. *xev_data_loc: %p",
          watch_mode_name(resolved_watch_mode),  *xev_data_loc);
    return resolved_watch_mode;
@@ -278,6 +288,7 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
    if (watch_thread) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "resolved_watch_mode = %s",
                                             watch_mode_name(global_wdd->watch_mode));
+#ifdef USE_X11
       if (global_wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {   // for testing, does not currently work
             dw_send_x11_termination_message(global_wdd->evdata);
@@ -290,6 +301,9 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
       else {
          terminate_watch_thread = true;  // signal watch thread to terminate
       }
+#else
+      terminate_watch_thread = true;
+#endif
 
       // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
       // usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()

@@ -3,7 +3,7 @@
  *  System configuration and tuning
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARMS_H_
@@ -109,7 +109,11 @@
 #define DEFAULT_DDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_WARNING
 #define DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_NOTICE
 
+#ifdef USE_X11
 #define DEFAULT_WATCH_MODE Watch_Mode_Dynamic
+#else
+#define DEFAULT_WATCH_MODE Watch_Mode_Poll
+#endif
 
 //
 // Asynchronous Initialization

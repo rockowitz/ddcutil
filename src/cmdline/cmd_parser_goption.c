@@ -508,8 +508,10 @@ static bool parse_watch_mode(
 
       if (     is_abbrev(v2, "POLL", 3))
          parsed_cmd->watch_mode = Watch_Mode_Poll;
+#ifdef USE_X11
       else if (is_abbrev(v2, "XEVENT", 3))
          parsed_cmd->watch_mode = Watch_Mode_Xevent;
+#endif
    // else if (is_abbrev(v2, "UDEV", 3))
    //    parsed_cmd->watch_mode = Watch_Mode_Udev;
       else if (is_abbrev(v2, "DYNAMIC", 3))
@@ -1026,9 +1028,15 @@ parse_command(
    case Watch_Mode_Udev:     default_watch_mode_keyword = "UDEV";    break;
    }
    char watch_mode_expl[80];
+#ifdef USE_X11
    g_snprintf(watch_mode_expl, 80, "DYNAMIC|XEVENT|POLL, default: %s", default_watch_mode_keyword);
+#else
+   g_snprintf(watch_mode_expl, 80, "DYNAMIC|POLL, default: %s", default_watch_mode_keyword);
+#endif
    gboolean enable_watch_displays = true;
+#ifdef USE_X11
    gint     xevent_watch_loop_millis_work = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+#endif
    gint     poll_watch_loop_millis_work = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 
    gboolean f1_flag         = false;
@@ -1288,8 +1296,10 @@ parse_command(
                       G_OPTION_ARG_NONE, &disable_api_flag, "Completely disable API", NULL },
       {"watch-mode", '\0', G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_STRING, &watch_mode_work, "How to watch for display changes",  watch_mode_expl},
+#ifdef USE_X11
       {"xevent-watch-loop-millisec", '\0', G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_INT, &xevent_watch_loop_millis_work, "Loop delay for mode XEVENT", "milliseconds"},
+#endif
       {"poll-watch-loop-millisec", '\0', G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_INT, &poll_watch_loop_millis_work, "Loop delay for mode POLL", "milliseconds"},
 #ifdef ENABLE_USB
@@ -2054,6 +2064,7 @@ parse_command(
       }
    }
 
+#ifdef USE_X11
    if (xevent_watch_loop_millis_work <= 0) {
       EMIT_PARSER_ERROR(errmsgs,
             "--xevent-watch-loop-millisec not a positive number: %d", xevent_watch_loop_millis_work);
@@ -2061,6 +2072,7 @@ parse_command(
    }
    else
       parsed_cmd->xevent_watch_loop_millisec = (uint16_t) xevent_watch_loop_millis_work;
+#endif
 
    if (poll_watch_loop_millis_work <= 0) {
       EMIT_PARSER_ERROR(errmsgs,

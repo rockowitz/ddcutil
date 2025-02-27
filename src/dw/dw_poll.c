@@ -62,7 +62,9 @@
 #include "dw_dref.h"
 #include "dw_recheck.h"
 #include "dw_status_events.h"
+#ifdef USE_X11
 #include "dw_xevent.h"
+#endif
 
 #include "dw_poll.h"
 
@@ -276,6 +278,7 @@ gpointer dw_watch_display_connections(gpointer data) {
          continue;
       dw_terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
 
+#ifdef USE_X11
       if (wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {
             bool event_found = dw_next_X11_event_of_interest(wdd->evdata);
@@ -295,6 +298,7 @@ gpointer dw_watch_display_connections(gpointer data) {
                continue;
          }
       }
+#endif
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "locking process_event_mutex");
       g_mutex_lock(&process_event_mutex);

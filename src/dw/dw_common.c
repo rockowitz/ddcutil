@@ -59,7 +59,9 @@
 
 #include "dw_status_events.h"
 #include "dw_dref.h"
+#ifdef USE_X11
 #include "dw_xevent.h"
+#endif
 
 #include "dw_common.h"
 

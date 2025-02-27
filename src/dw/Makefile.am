@@ -27,8 +27,14 @@ libdw_la_SOURCES += \
   dw_dref.c \
   dw_udev.c \
   dw_recheck.c \
-  dw_services.c \
-  dw_xevent.c
+  dw_services.c
+endif
+
+if ENABLE_UDEV_COND
+if USE_X11_COND
+libdw_la_SOURCES += \
+  dw_xevent.c 
+endif
 endif
 
 # Rename to "all=local" for development 

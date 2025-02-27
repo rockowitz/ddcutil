@@ -15,7 +15,9 @@
 #include "dw/dw_recheck.h"
 #include "dw/dw_status_events.h"
 #include "dw/dw_udev.h"
+#ifdef USE_X11
 #include "dw/dw_xevent.h"
+#endif
 
 #include "dw_services.h"
 
@@ -31,7 +33,9 @@ void init_dw_services() {
    init_dw_poll();
    init_dw_recheck();
    init_dw_udev();
+#ifdef USE_X11
    init_dw_xevent();
+#endif
 
    DBGMSF(debug, "Done");
 }
