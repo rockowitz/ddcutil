@@ -300,6 +300,7 @@ void get_connector_bus_numbers(
 // Debug Reports
 //
 
+#ifdef USE_LIBDRM
 static
 void simple_report_one_connector0(
       const char * dirname,     // <device>/drm/cardN
@@ -388,6 +389,7 @@ void dbgrpt_sysfs_basic_connector_attributes(int depth) {
                 depth);
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
+#endif
 
 
 //
@@ -1468,13 +1470,15 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
    RTTI_ADD_FUNC(check_connector_reliability);
    RTTI_ADD_FUNC(check_sysfs_reliability);
-   RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
    RTTI_ADD_FUNC(find_adapter_and_get_driver);
+   RTTI_ADD_FUNC(is_sysfs_reliable);
+#ifdef USE_LIBDRM
+   RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
-   RTTI_ADD_FUNC(is_sysfs_reliable);
    RTTI_ADD_FUNC(search_all_businfo_records_by_connector_name);
+#endif
 #ifdef UNUSED
    RTTI_ADD_FUNC(get_sys_video_devices);
 #endif

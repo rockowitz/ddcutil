@@ -23,9 +23,7 @@
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
-#ifdef USE_LIBDRM
 #include "util/drm_common.h"
-#endif
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
@@ -548,7 +546,6 @@ bool all_sysfs_i2c_info_drm(bool rescan) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rescan=%s", SBOOL(rescan));
    bool result = false;
-#ifdef USE_LIBDRM
    GPtrArray* all_info = get_all_sysfs_i2c_info(rescan, -1);
    GPtrArray* adapter_paths = g_ptr_array_sized_new(4);
    g_ptr_array_set_free_func(adapter_paths, g_free);
@@ -564,7 +561,6 @@ bool all_sysfs_i2c_info_drm(bool rescan) {
       result = all_video_adapters_support_drm_using_drm_api(adapter_paths);
    }
    g_ptr_array_free(adapter_paths, false);
-#endif
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
