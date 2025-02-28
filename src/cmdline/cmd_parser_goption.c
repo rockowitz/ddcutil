@@ -1019,6 +1019,7 @@ parse_command(
       disable_tgefs_expl = "do not try to get EDID from /sys (default)";
    }
 
+#ifdef WATCH_DISPLAYS
    DDC_Watch_Mode default_watch_mode = DEFAULT_WATCH_MODE;
    char * default_watch_mode_keyword;
    switch(default_watch_mode) {
@@ -1038,6 +1039,7 @@ parse_command(
    gint     xevent_watch_loop_millis_work = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 #endif
    gint     poll_watch_loop_millis_work = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
+#endif
 
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
@@ -1289,11 +1291,10 @@ parse_command(
                             G_OPTION_ARG_NONE,    &try_get_edid_from_sysfs,   enable_tgefs_expl, NULL},
       {"disable-try-get-edid-from-sysfs", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &try_get_edid_from_sysfs,   disable_tgefs_expl, NULL},
+#ifdef WATCH_DISPLAYS
 //      {"enable-watch-displays",  '\0', 0, G_OPTION_ARG_NONE, &watch_displays_flag, "Watch for display hotplug events", NULL },
       {"disable-watch-displays", '\0', G_OPTION_FLAG_REVERSE,
                                 G_OPTION_ARG_NONE, &enable_watch_displays, "Do not watch for display change events", NULL },
-      {"disable-api", '\0', G_OPTION_FLAG_HIDDEN,
-                      G_OPTION_ARG_NONE, &disable_api_flag, "Completely disable API", NULL },
       {"watch-mode", '\0', G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_STRING, &watch_mode_work, "How to watch for display changes",  watch_mode_expl},
 #ifdef USE_X11
@@ -1302,6 +1303,9 @@ parse_command(
 #endif
       {"poll-watch-loop-millisec", '\0', G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_INT, &poll_watch_loop_millis_work, "Loop delay for mode POLL", "milliseconds"},
+#endif
+      {"disable-api", '\0', G_OPTION_FLAG_HIDDEN,
+                                           G_OPTION_ARG_NONE, &disable_api_flag, "Completely disable API", NULL },
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
@@ -1672,7 +1676,9 @@ parse_command(
       LIBDDCUTIL_ONLY_OPTION("--trcapi",                parsed_cmd->traced_api_calls);
       LIBDDCUTIL_ONLY_OPTION("--profile-api",           profile_api_flag);
       LIBDDCUTIL_ONLY_OPTION("--libddcutil-trace-file", parsed_cmd->trace_destination);
+#ifdef WATCH_DISPLAYS
       LIBDDCUTIL_ONLY_OPTION("--disable-watch-displays", !enable_watch_displays);
+#endif
       LIBDDCUTIL_ONLY_OPTION("--disable-api",           disable_api_flag);
    }
 
@@ -1742,7 +1748,9 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_DSA2,              enable_dsa2_flag);
    SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
 
+#ifdef WATCH_DISPLAYS
    SET_CMDFLAG(CMD_FLAG_WATCH_DISPLAY_EVENTS,    enable_watch_displays);
+#endif
    SET_CMDFLAG(CMD_FLAG_DISABLE_API,       disable_api_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
@@ -2064,6 +2072,7 @@ parse_command(
       }
    }
 
+#ifdef WATCH_DISPLAYS
 #ifdef USE_X11
    if (xevent_watch_loop_millis_work <= 0) {
       EMIT_PARSER_ERROR(errmsgs,
@@ -2081,7 +2090,7 @@ parse_command(
    }
    else
       parsed_cmd->poll_watch_loop_millisec = (uint16_t) poll_watch_loop_millis_work;
-
+#endif
 
    // All options processed.  Check for consistency, set defaults
 
