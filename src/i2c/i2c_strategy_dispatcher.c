@@ -11,10 +11,12 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <syslog.h>
 /** \endcond */
 
+#include "util/drm_card_connector_util.h"
 #include "util/file_util.h"
 #include "util/i2c_util.h"
 #include "util/string_util.h"
