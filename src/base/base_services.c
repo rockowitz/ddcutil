@@ -3,8 +3,10 @@
  *  Initialize and release base services.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
+
+#include "config.h"
 
 #include "util/debug_util.h"
 #include "util/error_info.h"
@@ -12,7 +14,9 @@
 #include "core.h"
 #include "ddc_packets.h"
 #include "displays.h"
+#ifdef USE_LIBDRM
 #include "drm_connector_state.h"
+#endif
 #include "dynamic_features.h"
 #include "dsa2.h"
 #include "execution_stats.h"
@@ -51,7 +55,9 @@ void init_base_services() {
    init_displays();
    init_i2c_bus_base();
    init_feature_metadata();
+#ifdef USE_LIBDRM
    init_drm_connector_state();
+#endif
    init_flock();
 
    DBGF(debug, "Done");
