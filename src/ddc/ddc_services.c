@@ -60,6 +60,7 @@
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
 
+#ifdef WATCH_DISPLAYS
 #include "dw/dw_status_events.h"
 #ifdef BUILD_SHARED_LIB
 #include "dw/dw_dref.h"
@@ -68,6 +69,7 @@
 #include "dw/dw_poll.h"
 #include "dw/dw_main.h"
 #include "dw/dw_common.h"
+#endif
 #endif
 
 #include "ddc/ddc_services.h"
@@ -243,7 +245,9 @@ void init_ddc_services() {
    init_ddc_packet_io();
    init_ddc_read_capabilities();
    init_ddc_serialize();
+#ifdef WATCH_DISPLAYS
    init_dw_status_events();
+#endif
    init_ddc_multi_part_io();
    init_ddc_vcp();
    init_ddc_vcp_version();
