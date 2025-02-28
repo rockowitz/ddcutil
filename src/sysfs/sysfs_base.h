@@ -32,7 +32,6 @@ char *      get_driver_for_adapter(char * adapter_path, int depth);
 char *      find_adapter_and_get_driver(char * path, int depth);
 char *      get_driver_for_busno(int busno);
 
-
 void possibly_write_detect_to_status(const char * driver, const char * connector);
 void possibly_write_detect_to_status_by_connector_name(const char * connector);
 void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo);
@@ -104,8 +103,7 @@ sysfs_is_ignorable_i2c_device(
 
 // moved from dw_udev.h:
 
-int              search_all_businfo_records_by_connector_name(char *connector_name);
-
+int search_all_businfo_records_by_connector_name(char *connector_name);
 
 
 void init_i2c_sysfs_base();
