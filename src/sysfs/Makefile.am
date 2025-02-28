@@ -21,11 +21,12 @@ CLEANFILES = \
 noinst_LTLIBRARIES = libsysfs.la
 
 libsysfs_la_SOURCES =       \
-sysfs_dpms.c                \
-sysfs_sys_drm_connector.c   \
 sysfs_base.c          \
 sysfs_conflicting_drivers.c \
+sysfs_dpms.c                \
 sysfs_i2c_info.c      \
-sysfs_i2c_sys_info.c  \
+sysfs_sys_drm_connector.c  \
 sysfs_top.c           \
 sysfs_services.c
+
+# endif
