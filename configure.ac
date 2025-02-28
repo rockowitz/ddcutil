@@ -287,6 +287,17 @@ AS_IF([test "x$enable_drm" = "xyes"],
         AC_MSG_NOTICE( [drm...              disabled] )
      )
 
+dnl *** configure option: --enable-watch_displays
+AC_ARG_ENABLE([watch_displays],
+              [ AS_HELP_STRING( [--enable-watch-displays=@<:@yes/no@:>@], [Watch for display changes@<:@default=yes@:>@] )],
+              [enable_watch_displays=${enableval}],
+              [enable_watch_displays=yes] )
+AS_IF([test "x$enable_watch_displays" = "xyes"],
+        AC_MSG_NOTICE( [watch-displays...        enabled (provisional) ]  )
+      ,
+        AC_MSG_NOTICE( [watch-displays...        disabled] )
+     )
+
 dnl *** configure option: --enable-x11
 AC_ARG_ENABLE([x11],
               [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11@<:@default=yes@:>@] )],
@@ -652,6 +663,20 @@ AS_IF( [test 0$DBG -ne 0],
           AC_MSG_NOTICE( [LIBDRM_LIBS:      $LIBDRM_LIBS] )
        ]) 
 
+ AS_IF( [test "x$enable_drm" = "xno" -a "x$enable_watch_displays" = "xyes" ],
+         [
+	         AC_MSG_WARN( [DRM disabled, forcing display watch disabled] )
+		      enable_watch_displays=no
+		   ])
+
+
+AM_CONDITIONAL([WATCH_DISPLAYS_COND], [test "x$watch_displays" = "xyes"] )
+AS_IF([test "x$watch_displays" = "xyes"],
+       AC_DEFINE([WATCH_DISPLAYS], [1], [Watch for display changes])
+       AC_MSG_NOTICE( [watch displays..        enabled]  )
+     ,
+       AC_MSG_NOTICE( [watch displays...       disabled] )
+    )
 
  
 dnl ### libyaml 
@@ -881,7 +906,8 @@ AC_MSG_RESULT([
 	enable_envcmds          ${enable_envcmds}
 	enable_udev             ${enable_udev}
 	enable_usb:             ${enable_usb}
-	enable_drm:             ${enable_drm}   
+	enable_drm:             ${enable_drm}
+	enable_watch_displays:  ${enable_watch_displays}
 	enable_x11:             ${enable_x11}   
 dnl	enable_trace:           ${enable_trace}
 	enable_asan:            ${enable_asan}
