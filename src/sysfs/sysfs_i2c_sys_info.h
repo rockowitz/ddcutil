@@ -1,4 +1,4 @@
-/** @file sysfs_sys_info.h */
+/** @file sysfs_i2c_sys_info.h */
 
 // Copyright (C) 2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
