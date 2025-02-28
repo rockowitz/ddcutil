@@ -17,6 +17,7 @@
 #include "config.h"
 
 #include "util/debug_util.h"
+#include "util/drm_card_connector_util.h"
 #ifdef ENABLE_FAILSIM
 #include "util/failsim.h"
 #endif
@@ -26,15 +27,13 @@
 #include "util/sysfs_i2c_util.h"
 #include "util/timestamp.h"
 #include "util/traced_function_stack.h"
-#ifdef USE_LIBDRM
-#include "util/drm_common.h"
-#include "util/libdrm_util.h"
-#endif
 
 #include "base/core.h"
 #include "base/display_retry_data.h"
 #include "base/dsa2.h"
+#ifdef USE_LIBDRM
 #include "base/drm_connector_state.h"
+#endif
 #include "base/flock.h"
 #include "base/i2c_bus_base.h"
 #include "base/parms.h"
@@ -65,10 +64,12 @@
 #include "ddc_try_data.h"
 #include "ddc_vcp.h"
 
+#ifdef WATCH_DISPLAYS
 #include "dw/dw_common.h"
 #include "dw/dw_main.h"
 #include "dw/dw_poll.h"
 #include "dw/dw_udev.h"
+#endif
 
 #include "ddc_common_init.h"
 
@@ -374,7 +375,7 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
-
+#ifdef WATCH_DISPLAYS
 STATIC void
 init_display_watch_options(Parsed_Cmd* parsed_cmd) {
    watch_displays_mode        = parsed_cmd->watch_mode;
@@ -391,13 +392,16 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))
       stabilization_poll_millisec = parsed_cmd->i7;
 }
+#endif
 
 
 STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
 
+#ifdef WATCH_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F17)
        use_sysfs_connector_id = false;
+#endif
 
    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
@@ -414,8 +418,10 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F5)
       EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
+#ifdef USE_LIBDRM
    if (parsed_cmd->flags2 & CMD_FLAG2_F6)
       use_drm_connector_states = true;
+#endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F7)
       detect_phantom_displays = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F9)
@@ -440,13 +446,17 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       verify_sysfs_edid = true;
 #endif
 
+#ifdef WATCH_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F19)
       stabilize_added_buses_w_edid = true;
+#endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F23)
       primitive_sysfs = true;
 
+#ifdef WATCH_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F24)
       enable_write_detect_to_status = true;
+#endif
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
@@ -533,10 +543,10 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (is_arm)
       primitive_sysfs = true;
 
+
+   all_video_adapters_implement_drm = false;
    uint64_t t0;
    uint64_t t1;
-   all_video_adapters_implement_drm = false;
-#ifdef USE_LIBDRM
    // For each video adapter node in sysfs, check that subdirectories drm/cardN/cardN-xxx exist
    t0 = cur_realtime_nanosec();
    all_video_adapters_implement_drm = check_all_video_adapters_implement_drm();  // in i2c_sysfs.c
@@ -555,17 +565,18 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F12)
       all_video_adapters_implement_drm = false;
-#endif
 
    subinit_i2c_bus_core();
 
    // rpt_nl();
    // get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
 
+#ifdef USE_LIBDRM
    if (use_drm_connector_states)
       redetect_drm_connector_states();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s",
          sbool(use_drm_connector_states), sbool(all_video_adapters_implement_drm));
+#endif
 
 #ifdef NOT_HERE
   // adding or removing MST device can change whether all drm connectors have connector_id
@@ -595,7 +606,9 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 #endif
    rpt_set_default_ornamentation_enabled(true); // applies to all new threads
    rpt_set_ornamentation_enabled(true);         // current thread
+#ifdef WATCH_DISPLAYS
    init_display_watch_options(parsed_cmd);
+#endif
    init_algorithm_options(parsed_cmd);
    init_experimental_options(parsed_cmd);
 
