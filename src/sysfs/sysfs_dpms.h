@@ -28,8 +28,10 @@ extern Dpms_State dpms_state;
 
 char *           interpret_dpms_state_t(Dpms_State state);
 bool             dpms_is_x11_asleep();
+#ifdef USE_LIBDRM
 bool             dpms_check_drm_asleep_by_connector(const char * drm_connector_name);
 bool             dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo);
+#endif
 bool             dpms_check_drm_asleep_by_dref(Display_Ref * dref);
 void             init_i2c_dpms();
 
