@@ -14,10 +14,6 @@
 #include "data_structures.h"
 /** \endcond */
 
-#ifdef UNUSED
-Bit_Set_32   get_sysfs_drm_card_numbers();
-#endif
-
 const char * drm_bus_type_name(uint8_t bus);
 bool         check_drm_supported_using_drm_api(char * busid2);
 bool         adapter_supports_drm_using_drm_api(const char * adapter_path);
@@ -26,24 +22,5 @@ bool         check_video_adapters_list_implements_drm(GPtrArray * adapter_device
 bool         check_all_video_adapters_implement_drm();
 GPtrArray *  get_dri_device_names_using_filesys();
 bool         all_video_adapters_support_drm_using_drm_api(GPtrArray * adapter_paths);
-
-extern Value_Name_Title_Table drm_connector_type_table;
-char * drm_connector_type_name(Byte val);
-char * drm_connector_type_title(Byte val);
-
-typedef struct {
-   int cardno;
-   int connector_id;
-   int connector_type;
-   int connector_type_id;
-} Drm_Connector_Identifier;
-
-char * dci_repr(Drm_Connector_Identifier dci);
-char * dci_repr_t(Drm_Connector_Identifier dci);
-bool   dci_eq(Drm_Connector_Identifier dci1, Drm_Connector_Identifier dci2);
-int    dci_cmp(Drm_Connector_Identifier dci1, Drm_Connector_Identifier dci2);
-int    sys_drm_connector_name_cmp0(const char * s1, const char * s2);
-int    sys_drm_connector_name_cmp(gconstpointer connector_name1, gconstpointer connector_name2);
-Drm_Connector_Identifier parse_sys_drm_connector_name(const char * drm_connector);
 
 #endif /* DRM_COMMON_H_ */

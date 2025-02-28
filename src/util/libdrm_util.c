@@ -30,6 +30,100 @@
 #include "libdrm_util.h"
 
 
+
+
+#ifndef DRM_MODE_CONNECTOR_USB
+// not defined in debian 11 (bullseye)
+#define DRM_MODE_CONNECTOR_USB      20
+#endif
+
+ Value_Name_Title drm_connector_type_table[] = {
+    VNT(DRM_MODE_CONNECTOR_Unknown     , "unknown"    ), //  0
+    VNT(DRM_MODE_CONNECTOR_VGA         , "VGA"        ), //  1
+    VNT(DRM_MODE_CONNECTOR_DVII        , "DVI-I"      ), //  2
+    VNT(DRM_MODE_CONNECTOR_DVID        , "DVI-D"      ), //  3
+    VNT(DRM_MODE_CONNECTOR_DVIA        , "DVI-A"      ), //  4
+    VNT(DRM_MODE_CONNECTOR_Composite   , "Composite"  ), //  5
+    VNT(DRM_MODE_CONNECTOR_SVIDEO      , "S-video"    ), //  6
+    VNT(DRM_MODE_CONNECTOR_LVDS        , "LVDS"       ), //  7
+    VNT(DRM_MODE_CONNECTOR_Component   , "Component"  ), //  8
+    VNT(DRM_MODE_CONNECTOR_9PinDIN     , "DIN"        ), //  9
+    VNT(DRM_MODE_CONNECTOR_DisplayPort , "DP"         ), // 10
+    VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMI"       ), // 11
+    VNT(DRM_MODE_CONNECTOR_HDMIB       , "HDMI-B"     ), // 12
+    VNT(DRM_MODE_CONNECTOR_TV          , "TV"         ), // 13
+    VNT(DRM_MODE_CONNECTOR_eDP         , "eDP"        ), // 14
+    VNT(DRM_MODE_CONNECTOR_VIRTUAL     , "Virtual"    ), // 15
+    VNT(DRM_MODE_CONNECTOR_DSI         , "DSI"        ), // 16  Display Signal Interface, used on Raspberry Pi
+    VNT(DRM_MODE_CONNECTOR_DPI         , "DPI"        ), // 17
+    VNT(DRM_MODE_CONNECTOR_WRITEBACK   , "WRITEBACK"  ), // 18
+    VNT(DRM_MODE_CONNECTOR_SPI         , "SPI"        ), // 19
+    VNT(DRM_MODE_CONNECTOR_USB         , "USB"        ), // 20
+    VNT_END
+ };
+
+
+ /** Returns the symbolic name of a connector type.
+  * @param val connector type
+  * @return symbolic name
+  */
+ char * drm_connector_type_name(Byte val) {
+    return vnt_name(drm_connector_type_table, val);
+ }
+
+
+ /** Returns the description string for a connector type.
+  * @param val connector type
+  * @return descriptive string
+  */
+ char * drm_connector_type_title(Byte val) {
+    return vnt_title(drm_connector_type_table, val);
+ }
+
+
+
+ // For getting the DRM connector type from the DRM connector name
+
+    Value_Name_Title connector_type_lookup_table[] = {
+        VNT(DRM_MODE_CONNECTOR_Unknown     , "unknown"    ), //  0
+        VNT(DRM_MODE_CONNECTOR_VGA         , "VGA"        ), //  1
+        VNT(DRM_MODE_CONNECTOR_DVII        , "DVII"      ), //  2
+        VNT(DRM_MODE_CONNECTOR_DVID        , "DVID"      ), //  3
+        VNT(DRM_MODE_CONNECTOR_DVIA        , "DVIA"      ), //  4
+        VNT(DRM_MODE_CONNECTOR_Composite   , "Composite"  ), //  5
+        VNT(DRM_MODE_CONNECTOR_SVIDEO      , "Svideo"    ), //  6
+        VNT(DRM_MODE_CONNECTOR_LVDS        , "LVDS"       ), //  7
+        VNT(DRM_MODE_CONNECTOR_Component   , "Component"  ), //  8
+        VNT(DRM_MODE_CONNECTOR_9PinDIN     , "DIN"        ), //  9
+        VNT(DRM_MODE_CONNECTOR_DisplayPort , "DP"         ), // 10
+        VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMI"       ), // 11  alternate common name for HDMIA
+        VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMIA"       ), // 11
+        VNT(DRM_MODE_CONNECTOR_HDMIB       , "HDMIB"     ), // 12
+        VNT(DRM_MODE_CONNECTOR_TV          , "TV"         ), // 13
+        VNT(DRM_MODE_CONNECTOR_eDP         , "eDP"        ), // 14
+        VNT(DRM_MODE_CONNECTOR_VIRTUAL     , "Virtual"    ), // 15
+        VNT(DRM_MODE_CONNECTOR_DSI         , "DSI"        ), // 16  Display Signal Interface, used on Raspberry Pi
+        VNT(DRM_MODE_CONNECTOR_DPI         , "DPI"        ), // 17
+        VNT(DRM_MODE_CONNECTOR_WRITEBACK   , "WRITEBACK"  ), // 18
+        VNT(DRM_MODE_CONNECTOR_SPI         , "SPI"        ), // 19
+        VNT(DRM_MODE_CONNECTOR_USB         , "USB"        ), // 20
+        VNT_END
+     };
+
+
+ int lookup_drm_connector_type(const char * name) {
+    int val = vnt_find_id(
+          connector_type_lookup_table,
+          name,
+          true,     // search by title
+          true,     // ignore_case,
+          -1);      // default_id
+    return val;
+ }
+
+
+
+
 // /usr/include/libdrm and /usr/include/drm may both contain copies
 // drm.h amd drm_mode.h,
 // DRM_MODE_PROP_ATOMIC is found in the libdrm/drm_mode.h, but not in drm/drm_mode.h

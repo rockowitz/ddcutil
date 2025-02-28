@@ -26,6 +26,7 @@ data_structures.c          \
 ddcutil_config_file.c      \
 debug_util.c               \
 backtrace.c                \
+drm_card_connector_util.c  \
 edid.c                     \
 error_info.c               \
 file_util.c                \

@@ -14,8 +14,13 @@
 #include <xf86drmMode.h>
 /** \endcond */
 
-char * drm_connector_type_name( Byte val);
+extern Value_Name_Title_Table drm_connector_type_table;
+int    lookup_drm_connector_type(const char * name);
+char * drm_connector_type_name(Byte val);
 char * drm_connector_type_title(Byte val);
+
+// char * drm_connector_type_name( Byte val);
+// char * drm_connector_type_title(Byte val);
 char * connector_status_name( drmModeConnection val);
 char * connector_status_title(drmModeConnection val);
 char * encoder_type_title(uint32_t encoder_type);
