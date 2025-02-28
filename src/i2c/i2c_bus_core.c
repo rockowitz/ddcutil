@@ -53,7 +53,6 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/display_lock.h"
-#include "base/drm_connector_state.h"
 #include "base/flock.h"
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
