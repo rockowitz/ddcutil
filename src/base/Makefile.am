@@ -58,7 +58,6 @@ ddc_errno.c               \
 ddc_packets.c             \
 display_lock.c            \
 displays.c                \
-drm_connector_state.c     \
 dsa2.c                    \
 dynamic_features.c        \
 execution_stats.c         \
@@ -80,6 +79,11 @@ status_code_mgt.c         \
 vcp_version.c             \
 per_display_data.c        \
 display_retry_data.c
+
+if USE_LIBDRM_COND
+libbase_la_SOURCES +=    \
+drm_connector_state.c     
+endif
 
 nodist_libbase_la_SOURCES = adl_errors.h
 
