@@ -1,4 +1,4 @@
-/** @file sysfs_sys_info.c */
+/** @file sysfs_i2c_sys_info.c */
 
 // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -21,9 +21,7 @@
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
-#ifdef USE_LIBDRM
 #include "util/drm_common.h"
-#endif
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
@@ -188,7 +186,6 @@ read_drm_dp_card_connector_node(
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
-
 
 
 // Process a <controller>/drm/cardN/cardN-<connector> for case when
