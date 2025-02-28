@@ -20,9 +20,6 @@
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
-#ifdef USE_LIBDRM
-#include "util/drm_common.h"
-#endif
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
@@ -41,9 +38,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
-#ifdef USE_LIBDRM
 #include "sysfs_sys_drm_connector.h"
-#endif
 
 #include "sysfs_conflicting_drivers.h"
 
@@ -181,7 +176,6 @@ GPtrArray * collect_conflicting_drivers(int busno, int depth) {
 }
 
 
-#ifdef USE_LIBDRM
 GPtrArray * collect_conflicting_drivers_for_any_bus(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
@@ -208,7 +202,6 @@ void report_conflicting_drivers(GPtrArray * conflicts, int depth) {
    else
       rpt_label(depth, "No conflicting drivers found");
 }
-#endif
 
 
 GPtrArray * conflicting_driver_names(GPtrArray * conflicts) {
@@ -241,9 +234,7 @@ void init_i2c_sysfs_conflicting_drivers() {
    RTTI_ADD_FUNC(one_n_nnnn);
    RTTI_ADD_FUNC(collect_conflicting_drivers0);
    RTTI_ADD_FUNC(collect_conflicting_drivers);
-#ifdef USE_LIBDRM
    RTTI_ADD_FUNC(collect_conflicting_drivers_for_any_bus);
-#endif
    RTTI_ADD_FUNC(conflicting_driver_names);
 }
 
