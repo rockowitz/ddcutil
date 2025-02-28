@@ -648,7 +648,7 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
 
 
 /** Module initialization */
-void init_i2c_sysfs() {
+void init_sysfs_sys_drm_connector() {
 
    // Sys_Drm_Connector
    RTTI_ADD_FUNC(one_drm_connector);

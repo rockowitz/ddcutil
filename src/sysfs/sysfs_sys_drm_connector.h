@@ -62,6 +62,6 @@ Sys_Drm_Connector * one_drm_connector0(const char * dirname, const char * fn, in
 Sys_Drm_Connector * get_drm_connector(const char * fn, int depth);
 
 // Initialization
-void init_i2c_sysfs();
+void init_sysfs_sys_drm_connector();
 
 #endif /* SYSFS_SYS_DRM_CONNECTOR_H_ */
