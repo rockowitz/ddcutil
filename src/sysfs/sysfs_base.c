@@ -23,9 +23,7 @@
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
-#ifdef USE_LIBDRM
-#include "util/drm_common.h"
-#endif
+#include "util/drm_card_connector_util.h"
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
@@ -161,6 +159,8 @@ void get_connector_bus_numbers(
    bool debug = false;
    int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=|%s|", dirname, fn);
+   assert(dirname);
+   assert(fn);
    int d0 = (debug) ? 1 : -1;
    bool validate_name = debug;
 
@@ -300,7 +300,6 @@ void get_connector_bus_numbers(
 // Debug Reports
 //
 
-#ifdef USE_LIBDRM
 static
 void simple_report_one_connector0(
       const char * dirname,     // <device>/drm/cardN
@@ -389,7 +388,6 @@ void dbgrpt_sysfs_basic_connector_attributes(int depth) {
                 depth);
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
-#endif
 
 
 //
@@ -1472,13 +1470,11 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(check_sysfs_reliability);
    RTTI_ADD_FUNC(find_adapter_and_get_driver);
    RTTI_ADD_FUNC(is_sysfs_reliable);
-#ifdef USE_LIBDRM
    RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
    RTTI_ADD_FUNC(search_all_businfo_records_by_connector_name);
-#endif
 #ifdef UNUSED
    RTTI_ADD_FUNC(get_sys_video_devices);
 #endif
