@@ -151,7 +151,6 @@ void dpms_check_x11_asleep() {
 #endif
 
 
-#ifdef USE_LIBDRM
 /** Checks if a display, specified by its DRM connector name, is in a DPMS
  *  sleep mode. The check is performed using the connector's dpms attribute.
  *
@@ -246,7 +245,7 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, asleep, "");
    return asleep;
 }
-#endif
+
 
 /** Checks if a display, specified by its Display Reference, is in a DPMS
  *  sleep mode.
@@ -261,10 +260,8 @@ bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
 
    bool result = false;
-#ifdef USE_LIBDRM
    if (dref->detail)
       result = dpms_check_drm_asleep_by_businfo((I2C_Bus_Info*) dref->detail);
-#endif
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
@@ -273,11 +270,8 @@ bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
 
 void init_sysfs_dpms() {
    RTTI_ADD_FUNC(dpms_is_x11_asleep);
-#ifdef USE_LIBDRM
    RTTI_ADD_FUNC(dpms_check_drm_asleep_by_businfo);
-
    RTTI_ADD_FUNC(dpms_check_drm_asleep_by_connector);
-#endif
    RTTI_ADD_FUNC(dpms_check_drm_asleep_by_dref);
    // RTTI_ADD_FUNC(dpms_check_x11_asleep);
 }
