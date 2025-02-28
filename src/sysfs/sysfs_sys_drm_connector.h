@@ -14,7 +14,7 @@
 
 #include "util/coredefs_base.h"
 #include "util/data_structures.h"
-#include "util/drm_common.h"
+#include "util/drm_card_connector_util.h"
 
 #include "base/i2c_bus_base.h"
 
