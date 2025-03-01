@@ -4,12 +4,15 @@ DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dw dynvcp i2c libmain sys
 # contain only header files:
 EXTRA_DIST = bsd private public
 
-SUBDIRS = util usb_util base vcp sysfs i2c usb dynvcp ddc dw
+SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc sysfs
 if INCLUDE_TESTCASES_COND
 SUBDIRS += test
 endif 
 if ENABLE_SHARED_LIB_COND
 SUBDIRS += libmain
+endif
+if WATCH_DISPLAYS_COND
+SUBDIRS += dw
 endif
 SUBDIRS += app_sysenv app_ddcutil cmdline .  sample_clients
 
@@ -206,7 +209,6 @@ export AM_CFLAGS_STD
 #
 
 libcommon_la_LIBADD = \
-dw/libdw.la         \
 ddc/libddc.la       \
 dynvcp/libdynvcp.la \
 i2c/libi2c.la    \
@@ -215,6 +217,11 @@ vcp/libvcp.la    \
 cmdline/libcmdline.la \
 base/libbase.la  \
 util/libutil.la 
+
+if WATCH_DISPLAYS_COND
+libcommon_la_LIBADD += dw/libdw.la
+endif
+
 
 if ENABLE_USB_COND
 libcommon_la_LIBADD += \
