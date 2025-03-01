@@ -1,9 +1,9 @@
-/** @file drm_common.c
+/** @file libdrm_aux_util.c
  *
- *  Consolidates DRM function variants the have proliferated in the code base.
+ *  Functions that depend on the DRM API.
  */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -34,7 +34,7 @@
 #include "sysfs_util.h"
 #include "timestamp.h"
 
-#include "drm_common.h"
+#include "libdrm_aux_util.h"
 
 // from i2c_sysfs.c
 

@@ -1,6 +1,6 @@
 /** @file drm_connector_state.c */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  
@@ -22,7 +22,7 @@
 #include "util/coredefs_base.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
-#include "util/drm_common.h"
+#include "util/libdrm_aux_util.h"
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/libdrm_util.h"

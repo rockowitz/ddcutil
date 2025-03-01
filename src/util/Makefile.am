@@ -79,7 +79,7 @@ endif
 if USE_LIBDRM_COND
 libutil_la_SOURCES += \
 libdrm_util.c \
-drm_common.c
+libdrm_aux_util.c
 endif
 
 if USE_X11_COND

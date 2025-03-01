@@ -17,12 +17,12 @@
 
 #include "coredefs_base.h"
 #include "data_structures.h"
-#include "drm_common.h"
 #include "report_util.h"
 #include "string_util.h"
 
 // for all_displays_drm2():
 #include <unistd.h>  // for close()
+// #include <util/libdrm_aux_util.h>
 #include "debug_util.h"
 #include "file_util.h"
 

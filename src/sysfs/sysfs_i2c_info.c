@@ -22,7 +22,7 @@
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #ifdef USE_LIBDRM
-#include "util/drm_common.h"
+#include "util/libdrm_aux_util.h"
 #endif
 #include "util/edid.h"
 #include "util/file_util.h"

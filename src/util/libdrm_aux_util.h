@@ -1,10 +1,10 @@
-/** @file drm_common.h */
+/** @file libdrm_aux_util.h */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DRM_COMMON_H_
-#define DRM_COMMON_H_
+#ifndef LIBDRM_AUX_UTIL_H_
+#define LIBDRM_AUX_UTIL_H_
 
 /** \cond */
 #include <glib-2.0/glib.h>
@@ -21,4 +21,4 @@ bool         all_displays_drm_using_drm_api();
 GPtrArray *  get_dri_device_names_using_filesys();
 bool         all_video_adapters_support_drm_using_drm_api(GPtrArray * adapter_paths);
 
-#endif /* DRM_COMMON_H_ */
+#endif /* LIBDRM_AUX_UTIL_H_ */

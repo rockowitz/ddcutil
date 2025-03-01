@@ -3,7 +3,7 @@
  *  drm reporting for the environment command
  */
 
-// Copyright (C) 2017-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -28,10 +28,12 @@
 #include <drm/drm_mode.h>
 #endif
 
-#include "util/drm_common.h"
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
+#ifdef USE_LIBDRM
+#include "util/libdrm_aux_util.h"
+#endif
 #include "util/libdrm_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"

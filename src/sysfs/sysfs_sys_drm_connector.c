@@ -23,11 +23,13 @@
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
-#include "util/drm_common.h"
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/i2c_util.h"
+#ifdef USE_LIBDRM
+#include "util/libdrm_aux_util.h"
+#endif
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
