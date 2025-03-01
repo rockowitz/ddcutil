@@ -10,8 +10,6 @@
 #include <config.h>
 
 #include <assert.h>
-#include <base/base_services.h>
-#include <base/drm_connector_state.h>
 #include <ctype.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
@@ -34,9 +32,6 @@
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/i2c_util.h"
-#ifdef USE_LIBDRM
-#include "util/libdrm_util.h"
-#endif
 #include "util/linux_util.h"
 #include "util/regex_util.h"
 #include "util/report_util.h"
@@ -59,6 +54,9 @@
 #include "base/ddc_packets.h"
 #include "base/display_retry_data.h"
 #include "base/displays.h"
+#ifdef USE_LIBDRM
+#include "base/drm_connector_state.h"
+#endif
 #include "base/dsa2.h"
 #include "base/linux_errno.h"
 #include "base/monitor_model_key.h"
@@ -67,6 +65,7 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
+#include "base/base_services.h"
 
 #include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
@@ -77,7 +76,6 @@
 
 #include "sysfs/sysfs_dpms.h"
 #include "sysfs/sysfs_sys_drm_connector.h"
-// #include "sysfs/i2c_sysfs_i2c_info.h"
 #include "sysfs/sysfs_top.h"
 #include "sysfs/sysfs_base.h"
 
@@ -103,8 +101,10 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 
+#ifdef WATCH_DISPLAYS
 #include "dw/dw_main.h"
 #include "dw/dw_services.h"
+#endif
 
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/cmd_parser.h"
@@ -785,6 +785,7 @@ DDCA_Syslog_Level preparse_syslog_level(int argc, char** argv) {
 }
 
 
+#ifdef WATCH_DISPLAYS
 /** Terminates watch displays thread in case of CTRL-C etc. then
  *  terminates execution.
  */
@@ -801,6 +802,7 @@ void interrupt_handler(int sig) {
    }
    exit(0);
 }
+#endif
 
 
 //
@@ -841,7 +843,9 @@ main(int argc, char *argv[]) {
    add_local_rtti_functions();      // add entries for this file
    init_base_services();            // so tracing related modules are initialized
    init_ddc_services();             // initializes i2c, usb, ddc, vcp, dynvcp
+#ifdef WATCH_DISPLAYS
    init_dw_services();              // initializes subdir dw
+#endif
    init_app_ddcutil_services();
 #ifdef ENABLE_ENVCMDS
    init_app_sysenv_services();
@@ -1070,8 +1074,10 @@ main(int argc, char *argv[]) {
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F2) {
       consolidated_i2c_sysfs_report(0);
+#ifdef USE_LIBDRM
       if (use_drm_connector_states)
          report_drm_connector_states(0);
+#endif
       // rpt_label(0, "*** Tests Done ***");
       // rpt_nl();
    }
@@ -1113,6 +1119,7 @@ main(int argc, char *argv[]) {
       main_rc = EXIT_SUCCESS;
    }
 
+#ifdef WATCH_DISPLAYS
    else if (parsed_cmd->cmd_id == CMDID_C1) {
       bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
 
@@ -1142,9 +1149,13 @@ main(int argc, char *argv[]) {
 
       rpt_set_ornamentation_enabled(saved_prefix_report_output);
    }
+#endif
 
    else if (parsed_cmd->cmd_id == CMDID_C2 ||
             parsed_cmd->cmd_id == CMDID_C3 ||
+#ifndef WATCH_DISPLAYS
+            parsed_cmd->cmd_id == CMDID_C1 ||
+#endif
             parsed_cmd->cmd_id == CMDID_C4)
    {
       bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
