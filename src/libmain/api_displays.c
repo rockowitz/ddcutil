@@ -1478,11 +1478,15 @@ ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "func=%p", func);
 
+#ifdef WATCH_DISPLAYS
    DDCA_Status result = DDCRC_INVALID_OPERATION;
  #ifdef ENABLE_UDEV
     if (check_all_video_adapters_implement_drm())
        result = dw_register_display_status_callback(func);
  #endif
+#else
+    DDCA_Status result = DDCRC_UNIMPLEMENTED;
+#endif
 
    API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, result, "func=%p", func);
    return result;
@@ -1495,7 +1499,11 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) 
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "func=%p", func);
 
+#ifdef WATCH_DISPLAYS
    DDCA_Status result = dw_unregister_display_status_callback(func);
+#else
+   DDCA_Status result = DDCRC_UNIMPLEMENTED;
+#endif
 
    API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, result, "func=%p", func);
    return result;
