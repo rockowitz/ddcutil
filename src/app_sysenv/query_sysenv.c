@@ -64,14 +64,14 @@
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_try_data.h"
 
-#include "dw/dw_udev.h"
-
 #include "vcp/persistent_capabilities.h"
 
 #include "query_sysenv_access.h"
 #include "query_sysenv_base.h"
 #include "query_sysenv_dmidecode.h"
+#ifdef USE_LIBDRM
 #include "query_sysenv_drm.h"
+#endif
 #include "query_sysenv_i2c.h"
 #include "query_sysenv_logs.h"
 #include "query_sysenv_modules.h"
