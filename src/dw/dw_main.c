@@ -67,7 +67,12 @@ static DDCA_Display_Event_Class active_watch_displays_classes = DDCA_EVENT_CLASS
 static Watch_Displays_Data * global_wdd;     // needed to pass to dw_stop_watch_displays()
 
 
+// ***
+// Iftesting out resolve_watch_mode() if X11 is not defined is a quick and dirty hack.
+// It relies on the fact that currently the only mode other than XEVENT is POLL
+// ***
 
+#ifdef USE_X11
 /** Determines the actual watch mode to be used
  *
  *  @param  initial_mode  mode requested
@@ -155,6 +160,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
          watch_mode_name(resolved_watch_mode),  *xev_data_loc);
    return resolved_watch_mode;
 }
+#endif
 
 
 /** Starts thread that watches for changes in display connection status.
@@ -172,7 +178,9 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
         watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "thread_id = %d, traced_function_stack=%p", TID(), traced_function_stack);
    Error_Info * err = NULL;
+#ifdef USE_X11
    XEvent_Data * xev_data = NULL;
+#endif
 
    if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
@@ -184,8 +192,12 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
+#ifdef USE_X11
    DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(watch_displays_mode, &xev_data);
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
+#else
+   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
+#endif
 
    int calculated_watch_loop_millisec = dw_calc_watch_loop_millisec(resolved_watch_mode);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
@@ -226,8 +238,10 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       wdd->event_classes = event_classes;
       wdd->watch_mode = resolved_watch_mode;
       wdd->watch_loop_millisec = calculated_watch_loop_millisec;
+#ifdef USE_X11
       if (xev_data)
          wdd->evdata = xev_data;
+#endif
       global_wdd = wdd;
 
 #ifdef CALLBACK_DISPLAYS_THREAD
@@ -447,7 +461,9 @@ void init_dw_main() {
    RTTI_ADD_FUNC(dw_start_watch_displays);
    RTTI_ADD_FUNC(dw_stop_watch_displays);
    RTTI_ADD_FUNC(dw_get_active_watch_classes);
+#ifdef USE_X11
    RTTI_ADD_FUNC(resolve_watch_mode);
+#endif
    RTTI_ADD_FUNC(dw_redetect_displays);
 }
 
