@@ -14,7 +14,9 @@
 
 #include "base/displays.h"
 
+#ifdef USE_X11
 #include "dw_xevent.h"
+#endif
 
 extern uint16_t   initial_stabilization_millisec;
 extern uint16_t   stabilization_poll_millisec;
@@ -40,9 +42,11 @@ typedef struct {
    pid_t                    main_process_id;
    pid_t                    main_thread_id;
    DDCA_Display_Event_Class event_classes;
-   DDC_Watch_Mode          watch_mode;
+   DDC_Watch_Mode           watch_mode;
    int                      watch_loop_millisec;
+#ifdef USE_X11
    XEvent_Data *            evdata;
+#endif
   } Watch_Displays_Data;
 
 void dw_free_watch_displays_data(Watch_Displays_Data * wdd);
