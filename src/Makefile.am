@@ -14,7 +14,11 @@ endif
 if WATCH_DISPLAYS_COND
 SUBDIRS += dw
 endif
-SUBDIRS += app_sysenv app_ddcutil cmdline .  sample_clients
+SUBDIRS += app_sysenv app_ddcutil cmdline . 
+
+if ENABLE_SHARED_LIB_COND
+SUBDIRS += sample_clients
+endif
 
 MOSTLYCLEANFILES =   
 CLEANFILES =
