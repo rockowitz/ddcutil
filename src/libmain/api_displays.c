@@ -441,10 +441,15 @@ DDCA_Status
 ddca_redetect_displays() {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "");
+#ifdef WATCH_DISPLAYS
    quiesce_api();
    dw_redetect_displays();
    unquiesce_api();
-   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, 0, "");
+   DDCA_Status ddcrc = 0;
+#else
+   DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
+#endif
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
 }
 
 
@@ -1512,7 +1517,11 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) 
 
 const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type) {
+#ifdef WATCH_DISPLAYS
       return dw_display_event_type_name(event_type);
+#else
+      return NULL;
+#endif
 }
 
 //
