@@ -8,7 +8,6 @@
 
 /** \cond */
 #include <assert.h>
-#include <base/drm_connector_state.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -29,6 +28,9 @@
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
+#ifdef USE_LIBDRM
+#include "base/drm_connector_state.h"
+#endif
 #include "base/linux_errno.h"
 #include "base/rtti.h"
 /** \endcond */
@@ -872,7 +874,9 @@ void dump_sysfs_i2c(Env_Accumulator * accum) {
    execute_shell_cmd("find /sys/devices -name class | xargs grep \".*\"");
    rpt_nl();
 
+#ifdef USE_LIBDRM
    report_drm_connector_states(0);
+#endif
 
    if (accum->is_arm) {
       rpt_label(0,"*** Extended dump of sysfs video devices for ARM architecture ***");
