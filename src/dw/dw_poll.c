@@ -208,8 +208,10 @@ gpointer dw_watch_display_connections(gpointer data) {
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
    assert(wdd->watch_mode == Watch_Mode_Xevent  || wdd->watch_mode == Watch_Mode_Poll);
+#ifdef USE_X11
    if (wdd->watch_mode == Watch_Mode_Xevent)
       assert(wdd->evdata);
+#endif
    GPtrArray * displays_to_recheck = g_ptr_array_new();
 
    DBGTRC_STARTING(debug, TRACE_GROUP,
