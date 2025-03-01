@@ -1,3 +1,14 @@
+## [2.2.1-dev]
+
+- --enable-watch-displays/--disable-watch-displays controls whether 
+  display watch functionaliity is built
+- --disable-drm forces --disable-watch-displays
+- if built with --disable-watch-displays, API functions related 
+  to display change detection return DDCRC_UNIMPLEMENTED
+- fixed --disable-x11
+- fixed --disable-drm
+- if --disable-x11, the only watch-mode is POLL, watch-mode XEVENT does not exist;
+
 ## [2.2.0] 2024-02-10
 
 ### General
