@@ -60,8 +60,10 @@
 #include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp.h"
 
+#ifdef WATCH_DISPLAYS
 #include "dw/dw_main.h"
 #include "dw/dw_services.h"
+#endif
 
 #include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"
@@ -517,7 +519,9 @@ _libddcutil_constructor(void) {
    init_api_base();         // registers functions in RTTI table
    init_base_services();    // initializes tracing related modules
    init_ddc_services();     // initializes i2c, usb, ddc, vcp, dynvcp
+#ifdef WATCH_DISPLAYS
    init_dw_services();      // initializes dw
+#endif
    init_api_services();     // other files in directory libmain
 
 #ifdef TESTING_CLEANUP
@@ -631,12 +635,14 @@ _ddca_terminate(void) {
       ddc_discard_detected_displays();
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
+#ifdef WATCH_DISPLAYS
       DDCA_Display_Event_Class active_classes;
       if (dw_is_watch_displays_executing())
          dw_stop_watch_displays(/*wait=*/ true, &active_classes);   // in case it was started
       DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "After ddc_stop_watch_displays");
       // sleep(5); // still needed?
       terminate_dw_services();
+#endif
       terminate_ddc_services();
       terminate_base_services();
       free_regex_hash_table();
@@ -926,6 +932,7 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
    API_PROLOGX(debug, RESPECT_QUIESCE, "enabled_classes=0x%02x", enabled_classes);
 
+#ifdef WATCH_DISPLAYS
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "all_video_adapters_implement_drm=%s",
          sbool(all_video_adapters_implement_drm));
 
@@ -961,6 +968,10 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
       ddcrc = edet->status_code;
       save_thread_error_detail(edet);
    }
+#else
+   DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
+#endif
+
    API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, ddcrc, "");
 }
 
@@ -969,8 +980,12 @@ DDCA_Status
 ddca_stop_watch_displays(bool wait) {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "wait=%s", SBOOL(wait));
+#ifdef WATCH_DISPLAYS
    DDCA_Display_Event_Class active_classes;
    DDCA_Status ddcrc = dw_stop_watch_displays(wait, &active_classes);
+#else
+   DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
+#endif
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
 }
 
@@ -979,7 +994,11 @@ DDCA_Status
 ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting classes_loc=%p", classes_loc);
+#ifdef WATCH_DISPLAYS
    DDCA_Status ddcrc = dw_get_active_watch_classes(classes_loc);
+#else
+   DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
+#endif
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "*classes_loc=0x%02x", *classes_loc);
 }
 
@@ -988,11 +1007,15 @@ ddca_get_display_watch_settings(DDCA_DW_Settings * settings_buffer) {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting");
 
+#ifdef WATCH_DISPLAYS
    DDCA_Status ddcrc = DDCRC_OK;
    if (!settings_buffer)
       ddcrc = DDCRC_ARG;
    else
       dw_get_display_watch_settings(settings_buffer);
+#else
+   DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
+#endif
 
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "Done");
 }
@@ -1003,10 +1026,13 @@ ddca_set_display_watch_settings(DDCA_DW_Settings * settings_buffer) {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting");
 
+#ifdef WATCH_DISPLAYS
    DDCA_Status ddcrc = DDCRC_ARG;
    if (settings_buffer)
       ddcrc = dw_set_display_watch_settings(settings_buffer);
-
+#else
+   DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
+#endif
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "Done");
 }
 
