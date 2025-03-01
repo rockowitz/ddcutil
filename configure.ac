@@ -293,9 +293,9 @@ AC_ARG_ENABLE([watch_displays],
               [enable_watch_displays=${enableval}],
               [enable_watch_displays=yes] )
 AS_IF([test "x$enable_watch_displays" = "xyes"],
-        AC_MSG_NOTICE( [watch-displays...        enabled (provisional) ]  )
+        AC_MSG_NOTICE( [watch-displays...   enabled (provisional) ]  )
       ,
-        AC_MSG_NOTICE( [watch-displays...        disabled] )
+        AC_MSG_NOTICE( [watch-displays...   disabled] )
      )
 
 dnl *** configure option: --enable-x11
@@ -370,9 +370,9 @@ AC_ARG_ENABLE([doxygen],
               [enable_doxygen=no] )
 AM_CONDITIONAL([ENABLE_DOXYGEN_COND], [test "x$enable_doxygen" = "xyes"] )
 AS_IF([test "x$enable_doxygen" = "xyes"],
-        AC_MSG_NOTICE( [doxygen...    enabled]  )
+        AC_MSG_NOTICE( [doxygen...          enabled]  )
       ,
-        AC_MSG_NOTICE( [doxygen...    disabled] )
+        AC_MSG_NOTICE( [doxygen...          disabled] )
      )
 
 ###
@@ -421,32 +421,32 @@ AS_IF([test "x$enable_install_lib_only" = "xyes" -a "x$enable_envcmds" = "xyes" 
 
 AM_CONDITIONAL([ENABLE_TARGETBSD_COND], [test "x$enable_targetbsd" = "xyes"] )
 AS_IF([test "x$enable_targetbsd" = "xyes"],
-      AC_MSG_NOTICE( [targetbsd...  enabled] )
+      AC_MSG_NOTICE( [targetbsd...        enabled] )
       AC_DEFINE( [TARGET_BSD], [1], [If defined, building for BSD.])
       AC_SUBST(ENABLE_TARGETBSD_FLAG, 1) 
      ,
-      AC_MSG_NOTICE( [targetbsd...  disabled] )
+      AC_MSG_NOTICE( [targetbsd...        disabled] )
       AC_SUBST(ENABLE_TARGETBSD_FLAG, 0)
       AC_DEFINE( [TARGET_LINUX], [1], [If defined, building for Linux.])
      )
 
 AM_CONDITIONAL([ENABLE_ENVCMDS_COND], [test "x$enable_envcmds" = "xyes"] )
 AS_IF([test "x$enable_envcmds" = "xyes"],
-      AC_MSG_NOTICE( [envcmds...    enabled] )
+      AC_MSG_NOTICE( [envcmds...          enabled] )
       AC_DEFINE( [ENABLE_ENVCMDS], [1], [If defined, enable environment commands.])
       AC_SUBST(ENABLE_ENVCMDS_FLAG, 1) 
      ,
-      AC_MSG_NOTICE( [envcmds...    disabled] )
+      AC_MSG_NOTICE( [envcmds...          disabled] )
       AC_SUBST(ENABLE_ENVCMDS_FLAG, 0)
      )
 
 AM_CONDITIONAL([ENABLE_UDEV_COND], [test "x$enable_udev" = "xyes"] )
 AS_IF([test "x$enable_udev" = "xyes"],
-      AC_MSG_NOTICE( [udev...       enabled] )
+      AC_MSG_NOTICE( [udev...             enabled] )
       AC_DEFINE( [ENABLE_UDEV], [1], [If defined, use UDEV.])
       AC_SUBST(ENABLE_UDEV_FLAG, 1) 
      ,
-      AC_MSG_NOTICE( [udev...       disabled] )
+      AC_MSG_NOTICE( [udev...             disabled] )
       AC_SUBST(ENABLE_UDEV_FLAG, 0)
      )
 
@@ -454,16 +454,16 @@ AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" = "xyes"] )
 AS_IF([test "x$enable_usb" = "xyes"],
         AC_DEFINE( [ENABLE_USB], [1], [If defined, enable USB communication.])
         AC_SUBST(  ENABLE_USB_FLAG, [1] )
-        AC_MSG_NOTICE( [usb...        enabled]  )
+        AC_MSG_NOTICE( [usb...              enabled]  )
       ,
         AC_SUBST( ENABLE_USB_FLAG, [0] )
-        AC_MSG_NOTICE( [usb...        disabled] )
+        AC_MSG_NOTICE( [usb...              disabled] )
      )
 
 AS_IF([test "x$enable_x11" = "xyes"],
-        AC_MSG_NOTICE( [x11...        enabled]  )
+        AC_MSG_NOTICE( [x11...              enabled]  )
       ,
-        AC_MSG_NOTICE( [x11...        disabled] )
+        AC_MSG_NOTICE( [x11...              disabled] )
      )
 
 
@@ -491,9 +491,9 @@ AC_ARG_ENABLE([testcases],
 AM_CONDITIONAL([INCLUDE_TESTCASES_COND], [test "x$include_testcases" = "xyes"] )
 AS_IF([test "x$include_testcases" = "xyes"],
       AC_DEFINE( [INCLUDE_TESTCASES], [1], [If defined, build with test cases.]) 
-      AC_MSG_NOTICE( [testcases...  enabled]  )
+      AC_MSG_NOTICE( [testcases...        enabled]  )
       ,
-      AC_MSG_NOTICE( [testcases...  disabled] )
+      AC_MSG_NOTICE( [testcases...        disabled] )
      )
 
 dnl *** configure option: --enable-callgraph
@@ -503,8 +503,8 @@ AC_ARG_ENABLE([callgraph],
               [enable_callgraph=no] )
 AM_CONDITIONAL([ENABLE_CALLGRAPH_COND], [test "x$enable_callgraph" = "xyes"] )
 AS_IF([test "x$enable_callgraph" = "xyes"],
-      AC_MSG_NOTICE( [callgraph...  enabled]  ),
-      AC_MSG_NOTICE( [callgraph...  disabled] )
+      AC_MSG_NOTICE( [callgraph...        enabled]  ),
+      AC_MSG_NOTICE( [callgraph...        disabled] )
      )
 
 dnl *** configure option: --enable-failsim
@@ -515,9 +515,9 @@ AC_ARG_ENABLE([failsim],
 AM_CONDITIONAL([ENABLE_FAILSIM_COND], [test "x$enable_failsim" = "xyes"] )
 AS_IF( [test "x$enable_failsim" = "xyes"],
          AC_DEFINE( [ENABLE_FAILSIM], [1], [If defined, enable failsim.])
-         AC_MSG_NOTICE( [failsim.....  enabled] )
+         AC_MSG_NOTICE( [failsim...          enabled] )
       ,
-         AC_MSG_NOTICE( [failsim.....  disabled] )
+         AC_MSG_NOTICE( [failsim...          disabled] )
      )
 
 dnl *** configure option: --enable-force-suse
@@ -528,9 +528,9 @@ AC_ARG_ENABLE([force-suse],
 AM_CONDITIONAL([ENABLE_FORCE_SUSE_COND], [test "x$enable_force_suse" = "xyes"] )
 AS_IF( [test "x$enable_force_suse" = "xyes"],
          AC_DEFINE( [ENABLE_FORCE_SUSE], [1], [If defined, force SUSE target directories.])
-         AC_MSG_NOTICE( [force-suse....enabled] )
+         AC_MSG_NOTICE( [force-suse...       enabled] )
       ,
-         AC_MSG_NOTICE( [force-suse....disabled] )
+         AC_MSG_NOTICE( [force-suse...       disabled] )
      )
 
 
@@ -652,9 +652,9 @@ AS_IF([test "x$enable_drm" = "xyes"],
 AM_CONDITIONAL([USE_LIBDRM_COND], [test "x$enable_drm" = "xyes"] )
 AS_IF([test "x$enable_drm" = "xyes"],
         AC_DEFINE([USE_LIBDRM], [1], [Use libdrm])
-        AC_MSG_NOTICE( [drm...        enabled]  )
+        AC_MSG_NOTICE( [drm...             enabled]  )
       ,
-        AC_MSG_NOTICE( [drm...        disabled] )
+        AC_MSG_NOTICE( [drm...             disabled] )
      )
 
 AS_IF( [test 0$DBG -ne 0], 
@@ -670,12 +670,12 @@ AS_IF( [test 0$DBG -ne 0],
 		   ])
 
 
-AM_CONDITIONAL([WATCH_DISPLAYS_COND], [test "x$watch_displays" = "xyes"] )
-AS_IF([test "x$watch_displays" = "xyes"],
+AM_CONDITIONAL([WATCH_DISPLAYS_COND], [test "x$enable_watch_displays" = "xyes"] )
+AS_IF([test "x$enable_watch_displays" = "xyes"],
        AC_DEFINE([WATCH_DISPLAYS], [1], [Watch for display changes])
-       AC_MSG_NOTICE( [watch displays..        enabled]  )
+       AC_MSG_NOTICE( [watch displays..   enabled]  )
      ,
-       AC_MSG_NOTICE( [watch displays...       disabled] )
+       AC_MSG_NOTICE( [watch displays...  disabled] )
     )
 
  
@@ -721,9 +721,9 @@ AS_IF([test "x$enable_x11" = "xyes"],
 AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" = "xyes"] )
 AS_IF([test "x$enable_x11" = "xyes"],
         AC_DEFINE([USE_X11], [1], [Use X11])
-        AC_MSG_NOTICE( [x11...        enabled1]  )
+        AC_MSG_NOTICE( [x11...             enabled1]  )
       ,
-        AC_MSG_NOTICE( [x11...        disabled1] )
+        AC_MSG_NOTICE( [x11...             disabled1] )
      )
 
 
