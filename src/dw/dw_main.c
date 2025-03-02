@@ -141,7 +141,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
       // *xev_data_loc  = ddc_init_xevent_screen_change_notification();
       if (!xevdata) {
          resolved_watch_mode = Watch_Mode_Poll;
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR api unavailable. Switching to Watch_Mode_Poll");
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR API unavailable. Switching to Watch_Mode_Poll");
       }
    }
 #endif
