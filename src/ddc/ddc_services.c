@@ -61,14 +61,9 @@
 #include "ddc/ddc_vcp_version.h"
 
 #ifdef WATCH_DISPLAYS
-#include "dw/dw_status_events.h"
+#include "dw/dw_services.h"
+
 #ifdef BUILD_SHARED_LIB
-#include "dw/dw_dref.h"
-#include "dw/dw_xevent.h"
-#include "dw/dw_udev.h"
-#include "dw/dw_poll.h"
-#include "dw/dw_main.h"
-#include "dw/dw_common.h"
 #endif
 #endif
 
@@ -245,14 +240,15 @@ void init_ddc_services() {
    init_ddc_packet_io();
    init_ddc_read_capabilities();
    init_ddc_serialize();
-#ifdef WATCH_DISPLAYS
-   init_dw_status_events();
-#endif
    init_ddc_multi_part_io();
    init_ddc_vcp();
    init_ddc_vcp_version();
 
    RTTI_ADD_FUNC(ddc_report_stats_main);
+
+#ifdef WATCH_DISPLAYS
+   init_dw_services();
+#endif
 
    if (debug)
       dbgrpt_rtti_func_name_table(1, /* show_internal*/ true);
