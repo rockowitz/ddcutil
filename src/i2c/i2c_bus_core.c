@@ -1326,6 +1326,7 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
           "Finding DRM connector name for bus i2c-%d using EDID, sys/class/drm exists=%s",
           businfo->busno, SBOOL(directory_exists("/sys/class/drm")));
    assert(businfo->edid);
+   assert(directory_exists("/sys/class/drm"));
 
    businfo->drm_connector_name = NULL;
    Found_Sys_Drm_Connector conres =    // n.b. struct returned on stack, not pointer
@@ -1352,12 +1353,15 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
           report_sys_drm_connectors(true, 1);
           Null_Terminated_String_Array lines = end_capture_as_ntsa();
           for (int ndx=0; lines[ndx]; ndx++) {
+#ifdef OLD    // made unnecessary by   assert(directory_exists("/sys/class/drm"));
              if (directory_exists("/sys/class/drm"))
                 LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
              else {
                 SYSLOG2(DDCA_SYSLOG_INFO, "%s", lines[ndx]);
                 SYSLOG2(DDCA_SYSLOG_INFO, "Directory /sys/class/drm does not exist");
              }
+#endif
+             LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
           }
           ntsa_free(lines, true);
           previously_written_to_log = true;
