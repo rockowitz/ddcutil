@@ -20,6 +20,19 @@
 
 #include "data_structures.h"
 
+//
+// Special data types
+//
+
+const char * none_some_all_name(None_Some_All value) {
+   char * result = "NONE";
+   if (value == SOME)
+      result = "SOME";
+   else if (value == ALL)
+         result = "ALL";
+   return result;
+}
+
 
 //
 // Buffer with length management

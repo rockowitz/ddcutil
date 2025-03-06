@@ -21,6 +21,18 @@ extern "C" {
 #include "coredefs_base.h"   // for Byte
 #include "string_util.h"
 
+//
+// Represent None/Some/All
+//
+
+typedef enum {
+   NONE = 0,
+   SOME = 1,
+   ALL  = 2,
+} None_Some_All;
+
+const char * none_some_all_name(None_Some_All value);
+
 
 //
 // Buffer with length management
