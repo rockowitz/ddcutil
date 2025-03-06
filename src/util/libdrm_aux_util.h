@@ -20,5 +20,6 @@ bool         adapter_supports_drm_using_drm_api(const char * adapter_path);
 bool         all_displays_drm_using_drm_api();
 GPtrArray *  get_dri_device_names_using_filesys();
 bool         all_video_adapters_support_drm_using_drm_api(GPtrArray * adapter_paths);
+None_Some_All check_drivers_support_drm_using_drm_api();
 
 #endif /* LIBDRM_AUX_UTIL_H_ */

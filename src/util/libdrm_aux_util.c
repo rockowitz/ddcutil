@@ -233,3 +233,33 @@ const char * drm_bus_type_name(uint8_t bus) {
  }
 
 
+ None_Some_All check_drivers_support_drm_using_drm_api() {
+    bool debug = false;
+    DBGF(debug,  "Starting");
+
+    None_Some_All result = NONE;
+    int ct_drivers_implementing_drm = 0;
+    // returns false on banner under Wayland!!!!
+    int drm_available = drmAvailable();
+    DBGF(debug, "drmAvailable() returned:  %d", drm_available);
+    if (drm_available) {
+       GPtrArray * dev_names = get_dri_device_names_using_filesys();
+       for (int ndx = 0; ndx < dev_names->len; ndx++) {
+          char * dev_name = g_ptr_array_index(dev_names, ndx);
+          if ( probe_dri_device_using_drm_api( dev_name))
+             ct_drivers_implementing_drm++;
+       }
+       if (ct_drivers_implementing_drm == dev_names->len)
+          result = ALL;
+       else if (ct_drivers_implementing_drm > 0)
+          result = SOME;
+       else
+          result = NONE;
+
+       g_ptr_array_free(dev_names, true);
+    }
+
+    DBGF(debug,  "Done. Returning: %s", none_some_all_name(result));
+    return result;
+ }
+
