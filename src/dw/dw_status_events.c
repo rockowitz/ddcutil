@@ -160,14 +160,19 @@ gpointer dw_execute_callback_func(gpointer data) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
    Callback_Queue_Entry *  cqe = (Callback_Queue_Entry *) data;
 
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Invoking callback for event %s in this thread",
-         display_status_event_repr_t(cqe->event));
+   char * buf = g_strdup_printf("Invoking callback function %p for event %s in this thread "PRItid,
+         cqe->func, display_status_event_repr_t(cqe->event), TID());
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", buf);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    cqe->func(cqe->event);
+   free(buf);
 
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Callback function for event %s complete",
-         display_status_event_repr_t(cqe->event));
+   buf = g_strdup_printf("Callback function %p for event %s complete",
+         cqe->func, display_status_event_repr_t(cqe->event));
+   DBGTRC_DONE(debug, TRACE_GROUP, "%s", buf);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    free_callback_queue_entry(cqe);
+   free(buf);
    traced_function_stack_suspended = false;
 
    free_current_traced_function_stack();
