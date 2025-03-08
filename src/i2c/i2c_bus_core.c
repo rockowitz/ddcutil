@@ -404,6 +404,8 @@ Status_Errno i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
          f0printf(ferr(), "Close failed for %s, errno=%s\n",
                           filename_for_fd_t(fd), linux_errno_desc(errsv));
       result = -errsv;
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Close failed for %s, errno=%s\n",
+            filename_for_fd_t(fd), linux_errno_desc(errsv));
       // assert(rc == 0);     // don't bother with recovery for now
    }
    return result;
