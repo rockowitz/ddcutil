@@ -437,7 +437,7 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
       int rc = flock_unlock_by_fd(fd);
       if (rc < 0) {
          DBGTRC_NOPREFIX(true, TRACE_GROUP,
-               "%/dev/i2c-%d. Unexpected error from flock(..,LOCK_UN): %s",
+               "/dev/i2c-%d. Unexpected error from flock(..,LOCK_UN): %s",
                busno, psc_desc(rc));
       }
    }
@@ -1681,9 +1681,6 @@ Status_Errno  i2c_check_bus(I2C_Bus_Info * businfo) {
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
    i2c_close_bus(businfo->busno, fd, CALLOPT_ERR_MSG);
-
-    // doesn't really belong here
-    businfo->last_checked_dpms_asleep = dpms_check_drm_asleep_by_businfo(businfo);
 
     businfo->flags |= I2C_BUS_INITIAL_CHECK_DONE;
 

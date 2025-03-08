@@ -262,7 +262,6 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
       // if (businfo->edid) {
       //    report_parsed_edid(businfo->edid, true /* verbose */, depth);
       // }
-      rpt_vstring(depth, "last_checked_asleep:       %s", sbool(businfo->last_checked_dpms_asleep));
    }
 #ifdef OUT    // sole non-sysfs use of i2c_sysfs_i2c_sys_info.c:
 #ifndef TARGET_BSD

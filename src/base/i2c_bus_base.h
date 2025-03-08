@@ -84,7 +84,6 @@ struct {
    Drm_Connector_Found_By
                     drm_connector_found_by;
    int              drm_connector_id;
-   bool             last_checked_dpms_asleep;
 } I2C_Bus_Info;
 
 char *           i2c_interpret_bus_flags(uint16_t flags);
