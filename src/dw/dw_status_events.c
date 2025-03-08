@@ -148,10 +148,10 @@ free_callback_queue_entry(Callback_Queue_Entry* q) {
 }
 
 
-/** Function that runs in a thread to invoke a single user callback functions
+/** Function that runs in a thread to invoke a single user callback function
  *
  *  @param  data  Callback_Displays_Data struct
- *  @return ??
+ *  @return NULL
  */
 gpointer dw_execute_callback_func(gpointer data) {
    bool debug = false;
@@ -193,7 +193,7 @@ GPtrArray* display_detection_callbacks = NULL;
  *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *                                  or not all video devices support DRM
  *
- *  The function must be of type DDDCA_Display_Detection_Callback_Func.
+ *  The function must be of type DDCA_Display_Detection_Callback_Func.
  *  It is not an error if the function is already registered.
  */
 DDCA_Status dw_register_display_status_callback(DDCA_Display_Status_Callback_Func func) {
