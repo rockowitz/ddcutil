@@ -1,7 +1,7 @@
 /* @file display_lock.h
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAY_LOCK_H_
@@ -44,6 +44,7 @@ Error_Info *          unlock_display2(Display_Lock_Record * dlr);
 Error_Info *          unlock_display_by_dpath(DDCA_IO_Path dpath);
 void                  dbgrpt_display_locks(int depth);
 char *                interpret_display_lock_flags_t(Display_Lock_Flags lock_flags);
+int                   unlock_all_displays_for_current_thread();
 void                  init_i2c_display_lock(void);
 
 #endif /* DISPLAY_LOCK_H_ */

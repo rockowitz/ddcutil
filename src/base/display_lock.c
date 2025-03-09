@@ -3,7 +3,7 @@
  *  opened simultaneously from multiple threads.
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /*
@@ -550,6 +550,50 @@ dbgrpt_display_locks(int depth) {
 }
 
 
+int unlock_all_displays_for_current_thread() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "thread = "PRItid, TID());
+
+
+   int depth = 0;
+   int d1 = depth+1;
+
+   if (IS_DBGTRC(debug, TRACE_GROUP)) {
+      dbgrpt_display_locks(depth);
+      rpt_nl();
+      rpt_label(depth,"index  lock-record-ptr  dpath                         display_mutex_thread");
+   }
+
+   g_mutex_lock(&descriptors_mutex);
+   int unlocked_ct = 0;
+   for (int ndx=0; ndx < lock_records->len; ndx++) {
+      Display_Lock_Record * dlr = g_ptr_array_index(lock_records, ndx);
+      if (IS_DBGTRC(debug, TRACE_GROUP)) {
+         rpt_vstring(d1, "%2d - %p  %-28s  thread ptr=%p, thread id="PRItid,
+                          ndx, dlr,
+                          dpath_repr_t(&dlr->io_path),
+                          (void*) &dlr->display_mutex_thread, dlr->linux_thread_id );
+      }
+
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old linux_thread_id = %jd", dlr->linux_thread_id);
+       if (dlr->display_mutex_thread == g_thread_self()) {
+          unlocked_ct++;
+          dlr->display_mutex_thread = NULL;
+          dlr->linux_thread_id = 0;
+          g_mutex_unlock(&dlr->display_mutex);
+          SYSLOG2(DDCA_SYSLOG_NOTICE, "Unlocked display %s on current thread "PRItid,
+                dpath_repr_t(&dlr->io_path), TID() );
+       }
+
+   }
+   g_mutex_unlock(&descriptors_mutex);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d", unlocked_ct);
+   return unlocked_ct;
+}
+
+
+
 /** Initializes this module */
 void
 init_i2c_display_lock(void) {
@@ -569,6 +613,9 @@ init_i2c_display_lock(void) {
    RTTI_ADD_FUNC(lock_display_by_dref);
    RTTI_ADD_FUNC(unlock_display_by_dref);
 #endif
+
+   RTTI_ADD_FUNC(unlock_all_displays_for_current_thread);
+
 }
 
 
