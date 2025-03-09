@@ -188,6 +188,39 @@ static bool is_drm_conformant_driver(const char * driver_name) {
 // Open/Close Display
 //
 
+
+
+__thread GPtrArray * open_displays_for_thread;
+
+bool add_open_display_for_current_thread(Display_Handle * dh) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_p(dh));
+
+   if (!open_displays_for_thread)
+      open_displays_for_thread = g_ptr_array_new();
+   bool found = g_ptr_array_find(open_displays_for_thread, dh, NULL);
+   if (!found)
+      g_ptr_array_add(open_displays_for_thread, dh);
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, !found, "dh=%s", dh_repr_p(dh));
+   return !found;
+}
+
+
+bool remove_open_display_for_current_thread(Display_Handle * dh) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_p(dh));
+
+   bool found = false;
+   if (open_displays_for_thread) {
+      found = g_ptr_array_remove(open_displays_for_thread, dh);
+   }
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "dh=%s", dh_repr_p(dh));
+   return found;
+}
+
+
 /** Opens a DDC display.
  *
  *  \param  dref            display reference
@@ -347,6 +380,9 @@ bye:
    if (err) {
       COUNT_STATUS_CODE(err->status_code);
    }
+   else {
+      add_open_display_for_current_thread(dh);
+   }
    *dh_loc = dh;
    TRACED_ASSERT_IFF( !err, *dh_loc );
    // dbgrpt_distinct_display_descriptors(0);
@@ -432,6 +468,7 @@ ddc_close_display(Display_Handle * dh) {
          dh_repr_p(dh), g_hash_table_size(open_displays) );
    g_hash_table_remove(open_displays, dh);
    g_mutex_unlock (&open_displays_mutex);
+   remove_open_display_for_current_thread(dh);
 
    free_display_handle(dh);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dref=%s", dref_repr_t(dref));
@@ -465,6 +502,16 @@ void ddc_close_all_displays() {
    // open_displays should be empty at this point
    TRACED_ASSERT(g_hash_table_size(open_displays) == 0);
    DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+void ddc_close_all_displays_for_current_thread() {
+   if (open_displays_for_thread) {
+      for (int ndx = 0; ndx < open_displays_for_thread->len; ndx++) {
+         Display_Handle * dh = g_ptr_array_index(open_displays_for_thread, ndx);
+         ddc_close_display_wo_return(dh);
+      }
+   }
 }
 
 
@@ -1110,6 +1157,8 @@ init_ddc_packet_io_func_name_table() {
    RTTI_ADD_FUNC(ddc_write_only);
    RTTI_ADD_FUNC(ddc_write_only_with_retry);
    RTTI_ADD_FUNC(ddc_validate_display_handle2);
+   RTTI_ADD_FUNC(add_open_display_for_current_thread);
+   RTTI_ADD_FUNC(remove_open_display_for_current_thread);
 }
 
 
