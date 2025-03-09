@@ -506,12 +506,20 @@ void ddc_close_all_displays() {
 
 
 void ddc_close_all_displays_for_current_thread() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   int closed_ct = 0;
    if (open_displays_for_thread) {
       for (int ndx = 0; ndx < open_displays_for_thread->len; ndx++) {
          Display_Handle * dh = g_ptr_array_index(open_displays_for_thread, ndx);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing %s...", dh_repr_p(dh));
+         closed_ct++;
          ddc_close_display_wo_return(dh);
       }
    }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Closed %d open display handles", closed_ct);
 }
 
 
@@ -1159,6 +1167,7 @@ init_ddc_packet_io_func_name_table() {
    RTTI_ADD_FUNC(ddc_validate_display_handle2);
    RTTI_ADD_FUNC(add_open_display_for_current_thread);
    RTTI_ADD_FUNC(remove_open_display_for_current_thread);
+   RTTI_ADD_FUNC(ddc_close_all_displays_for_current_thread);
 }
 
 
