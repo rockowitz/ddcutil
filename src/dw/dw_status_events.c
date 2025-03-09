@@ -23,6 +23,7 @@
 #include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "ddc/ddc_display_ref_reports.h"
+#include "ddc/ddc_packet_io.h"
 
 #include "dw_common.h"
 
@@ -173,6 +174,9 @@ gpointer dw_execute_callback_func(gpointer data) {
    SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    free_callback_queue_entry(cqe);
    free(buf);
+   ddc_close_all_displays_for_current_thread();   // in case client left some open
+   unlock_all_displays_for_current_thread();      // should never be needed
+
    traced_function_stack_suspended = false;
 
    free_current_traced_function_stack();
