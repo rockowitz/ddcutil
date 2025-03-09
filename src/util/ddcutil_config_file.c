@@ -289,7 +289,7 @@ int apply_config_file(
       int prefix_token_ct =
             tokenize_options_line(*untokenized_config_options_loc, &cmd_prefix_tokens);
 
-      DBGF(debug, "prefix_token_ct = %d, cmd_prefix_tokens: ", prefix_token_ct);
+      DBGF(debug, "prefix_token_ct = %d, cmd_prefix_tokens %p: ", prefix_token_ct);
       if (debug)
          ntsa_show(cmd_prefix_tokens);
 
