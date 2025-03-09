@@ -40,6 +40,7 @@ void ddc_close_display_wo_return(
       Display_Handle * dh);
 
 void ddc_close_all_displays();
+void ddc_close_all_displays_for_current_thread();
 
 DDCA_Status ddc_validate_display_handle2(Display_Handle * dh);
 
