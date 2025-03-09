@@ -554,13 +554,12 @@ int unlock_all_displays_for_current_thread() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "thread = "PRItid, TID());
 
-
    int depth = 0;
    int d1 = depth+1;
 
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
-      dbgrpt_display_locks(depth);
-      rpt_nl();
+      // dbgrpt_display_locks(depth);
+      // rpt_nl();
       rpt_label(depth,"index  lock-record-ptr  dpath                         display_mutex_thread");
    }
 
