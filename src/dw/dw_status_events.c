@@ -174,7 +174,7 @@ gpointer dw_execute_callback_func(gpointer data) {
    SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    free_callback_queue_entry(cqe);
    free(buf);
-   ddc_close_all_displays_for_current_thread();   // in case client left some open
+   ddc_close_all_displays_for_current_thread(/*error_if_open=*/ true);   // in case client left some open
    unlock_all_displays_for_current_thread();      // should never be needed
 
    traced_function_stack_suspended = false;

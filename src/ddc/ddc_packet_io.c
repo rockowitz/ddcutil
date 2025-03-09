@@ -505,7 +505,7 @@ void ddc_close_all_displays() {
 }
 
 
-void ddc_close_all_displays_for_current_thread() {
+void ddc_close_all_displays_for_current_thread(bool error_if_open) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
@@ -514,6 +514,9 @@ void ddc_close_all_displays_for_current_thread() {
       for (int ndx = 0; ndx < open_displays_for_thread->len; ndx++) {
          Display_Handle * dh = g_ptr_array_index(open_displays_for_thread, ndx);
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing %s...", dh_repr_p(dh));
+         if (error_if_open) {
+        	 SYSLOG2(DDCA_SYSLOG_ERROR,"Closing %s that should not be open", dh_repr_p(dh) );
+         }
          closed_ct++;
          ddc_close_display_wo_return(dh);
       }
