@@ -555,7 +555,7 @@ typedef enum {
    DDCA_EVENT_CLASS_UNUSED1            = 4,
 } DDCA_Display_Event_Class;
 
-#define DDCA_EVENT_CLASS_ALL (DDCA_EVENT_CLASS_DPMS | DDCA_EVENT_CLASS_DISPLAY_CONNECTION)
+#define DDCA_EVENT_CLASS_ALL ((DDCA_Display_Event_Class)(DDCA_EVENT_CLASS_DPMS | DDCA_EVENT_CLASS_DISPLAY_CONNECTION))
 
 
 /** Event record passed by a display status callback function.

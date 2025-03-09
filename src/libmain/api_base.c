@@ -936,8 +936,18 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "all_video_adapters_implement_drm=%s",
          sbool(all_video_adapters_implement_drm));
 
+
+#ifdef OUT
    if (enabled_classes == DDCA_EVENT_CLASS_ALL)
       enabled_classes = DDCA_EVENT_CLASS_DISPLAY_CONNECTION;
+   else
+#endif
+	   if (enabled_classes&DDCA_EVENT_CLASS_DPMS) {
+        // edet = new_ddca_error_detail(DDCRC_UNIMPLEMENTED, "Watching for DPMS state changes unimplemented");
+  	   // DBGMSG("Watching for DPMS state changes unimplemented");
+  	   MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Watching for DPMS state changes unimplemented");
+        enabled_classes &=~DDCA_EVENT_CLASS_DPMS;
+     }
 
    DDCA_Error_Detail * edet = NULL;
 #ifdef ENABLE_UDEV
@@ -950,6 +960,8 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    }
    else if (enabled_classes&DDCA_EVENT_CLASS_DPMS) {
       edet = new_ddca_error_detail(DDCRC_UNIMPLEMENTED, "Watching for DPMS state changes unimplemented");
+	  // MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Watching for DPMS state changes unimplemented");
+      //enabled_classes &=~DDCA_EVENT_CLASS_DPMS;
    }
    else if (enabled_classes != DDCA_EVENT_CLASS_DISPLAY_CONNECTION) {
       edet = new_ddca_error_detail (DDCRC_ARG, "Invalid event class specified");
