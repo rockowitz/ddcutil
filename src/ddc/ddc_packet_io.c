@@ -193,7 +193,7 @@ static bool is_drm_conformant_driver(const char * driver_name) {
 __thread GPtrArray * open_displays_for_thread;
 
 bool add_open_display_for_current_thread(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_p(dh));
 
    if (!open_displays_for_thread)
@@ -208,7 +208,7 @@ bool add_open_display_for_current_thread(Display_Handle * dh) {
 
 
 bool remove_open_display_for_current_thread(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_p(dh));
 
    bool found = false;
