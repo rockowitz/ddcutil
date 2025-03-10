@@ -28,9 +28,6 @@
 #include "util/coredefs_base.h"
 #include "util/debug_util.h"
 #include "util/data_structures.h"
-#ifdef USE_LIBDRM
-#include "util/libdrm_aux_util.h"
-#endif
 #include "util/edid.h"
 #include "util/error_info.h"
 #include "util/failsim.h"

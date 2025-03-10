@@ -26,9 +26,6 @@
 #include "util/edid.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
-#ifdef USE_LIBDRM
-#include "util/libdrm_aux_util.h"
-#endif
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
