@@ -256,6 +256,10 @@ void decrement_active_api_calls(const char * funcname) {
 /** Quiesce the API.
  *
  *  When quiesced, API calls that can affect monitor state terminate immediately with status DDCRC_QUIESCED.
+ *
+ *  This function waits at most 3000 miliseconds for outstanding API calls to complete.
+ *  If calls are still outstanding, an error messages is written to the system log,
+ *  but this does not prevent queiescing,
  */
 void quiesce_api() {
    bool debug = false;
