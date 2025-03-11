@@ -444,26 +444,44 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 }
 #endif
 
+// GMutex ddca_redetect_active_mutex;
+static bool ddca_redetect_active = false;
 
 DDCA_Status
 ddca_redetect_displays() {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "");
+
    DDCA_Status ddcrc = 0;
-#ifdef WATCH_DISPLAYS
-   if (active_callback_thread_ct > 0) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to call when callback threads are active");
-	  ddcrc = DDCRC_INVALID_OPERATION;
+   bool perform_detect = true;
+
+//   g_mutex_lock(ddca_redetect_active_mutex);
+   if (ddca_redetect_active) {
+	   SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when already active");
+	   perform_detect = false;
+	   ddcrc = DDCRC_INVALID_OPERATION;
    }
-   else {
+   // g_mutex_unlock(ddca_redetect_active_mutex);
+
+#ifdef WATCH_DISPLAYS
+   if (perform_detect) {
+      if (active_callback_thread_ct > 0) {
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_display() when callback threads are active");
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Behavior is indeterminate.");
+         // ddcrc = DDCRC_INVALID_OPERATION;
+         // perform_detect = false;
+      }
+   }
+#endif
+
+   if (perform_detect) {
+	  ddca_redetect_active = true;
       quiesce_api();
       dw_redetect_displays();
       unquiesce_api();
+      ddca_redetect_active = false;
    }
 
-#else
-   DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
-#endif
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
 }
 
