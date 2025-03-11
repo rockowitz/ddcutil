@@ -99,6 +99,10 @@ bool dw_hotplug_change_handler(
       GArray * events_queue,
       GPtrArray * drefs_to_recheck);
 
+void record_active_callback_thread(GThread* thread);
+void remove_active_callback_thread(GThread* thread);
+int  active_callback_thread_ct();
+
 void init_dw_common();
 
 #endif /* DW_COMMON_H_ */

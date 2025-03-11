@@ -560,6 +560,44 @@ dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
 }
 
 
+GMutex * active_callback_threads_mutex;
+GHashTable * active_callback_threads;
+
+
+void record_active_callback_thread(GThread* pthread){
+	bool debug = false;
+	DBGTRC_STARTING(debug,TRACE_GROUP, "pthread=p", pthread);
+
+	g_mutex_lock(active_callback_threads_mutex);
+	if (!active_callback_threads)
+		active_callback_threads = g_hash_table_new(g_direct_hash, g_direct_equal);
+    g_hash_table_add(active_callback_threads, pthread);
+    g_mutex_unlock(active_callback_threads_mutex);
+
+    DBGTRC_DONE(debug, TRACE_GROUP, "pthread=%p");
+}
+
+
+void remove_active_callback_thread(GThread* pthread){
+	bool debug = false;
+	DBGTRC_STARTING(debug,TRACE_GROUP, "pthread=p", pthread);
+
+	if (active_callback_threads) {
+		g_hash_table_remove(active_callback_threads, pthread);
+	}
+
+    DBGTRC_DONE(debug, TRACE_GROUP, "pthread=%p");
+}
+
+
+int  active_callback_thread_ct() {
+	int ct = 0;
+	if (active_callback_threads)
+		ct = g_hash_table_size(active_callback_threads);
+	return ct;
+}
+
+
 void init_dw_common() {
 #ifdef WATCH_ASLEEP
    RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
@@ -567,4 +605,7 @@ void init_dw_common() {
    RTTI_ADD_FUNC(dw_stabilized_buses_bs);
    RTTI_ADD_FUNC(dw_emit_deferred_events);
    RTTI_ADD_FUNC(dw_hotplug_change_handler);
+   RTTI_ADD_FUNC(record_active_callback_thread);
+   RTTI_ADD_FUNC(remove_active_callback_thread);
+   RTTI_ADD_FUNC(active_callback_thread_ct);
 }
