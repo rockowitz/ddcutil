@@ -36,6 +36,7 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 
+#include "dw/dw_common.h"
 #include "dw/dw_main.h"
 #include "dw/dw_status_events.h"
 #include "dw/dw_udev.h"
@@ -347,7 +348,7 @@ ddca_did_repr(DDCA_Display_Identifier ddca_did) {
 //
 
 DDCA_Status
-ddca_get_display_ref(
+ddci_get_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       dref_loc)
 {
@@ -381,6 +382,13 @@ ddca_get_display_ref(
 }
 
 
+DDCA_Status
+ddca_get_display_ref(
+      DDCA_Display_Identifier did,
+      DDCA_Display_Ref*       dref_loc)
+{
+  return ddci_get_display_ref(did, dref_loc);
+}
 
 
 // deprecated
@@ -389,7 +397,7 @@ ddca_create_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       dref_loc)
 {
-   return ddca_get_display_ref(did, dref_loc);
+   return ddci_get_display_ref(did, dref_loc);
 }
 
 #ifdef REMOVED
@@ -441,11 +449,18 @@ DDCA_Status
 ddca_redetect_displays() {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "");
-#ifdef WATCH_DISPLAYS
-   quiesce_api();
-   dw_redetect_displays();
-   unquiesce_api();
    DDCA_Status ddcrc = 0;
+#ifdef WATCH_DISPLAYS
+   if (active_callback_thread_ct > 0) {
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to call when callback threads are active");
+	  ddcrc = DDCRC_INVALID_OPERATION;
+   }
+   else {
+      quiesce_api();
+      dw_redetect_displays();
+      unquiesce_api();
+   }
+
 #else
    DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
 #endif
@@ -717,12 +732,18 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
 //
 
 const char *
-ddca_dh_repr(DDCA_Display_Handle ddca_dh) {
+ddci_dh_repr(DDCA_Display_Handle ddca_dh) {
    char * repr = NULL;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (valid_display_handle(dh))
       repr = dh_repr(dh);
    return repr;
+}
+
+
+const char *
+ddca_dh_repr(DDCA_Display_Handle ddca_dh) {
+	return ddci_dh_repr(ddca_dh);
 }
 
 
@@ -1180,8 +1201,8 @@ ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
 }
 
 
-DDCA_Status
-ddca_report_display_info(
+static DDCA_Status
+ddci_report_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
 {
@@ -1299,6 +1320,14 @@ ddca_report_display_info(
 }
 
 
+DDCA_Status
+ddca_report_display_info(
+      DDCA_Display_Info * dinfo,
+      int                 depth)
+{
+	return ddci_report_display_info(dinfo, depth);
+}
+
 STATIC void
 dbgrpt_display_info(
       DDCA_Display_Info * dinfo,
@@ -1306,7 +1335,7 @@ dbgrpt_display_info(
 {
    bool debug = false;
    DBGMSF(debug, "Starting. dinfo=%p");
-   ddca_report_display_info(dinfo, depth);
+   ddci_report_display_info(dinfo, depth);
    int d1 = depth+1;
 
    rpt_vstring(d1, "dref:                %s", dref_repr_t(dinfo->dref));
@@ -1329,7 +1358,7 @@ ddca_report_display_info_list(
    int d1 = depth+1;
    rpt_vstring(depth, "Found %d displays", dlist->ct);
    for (int ndx=0; ndx<dlist->ct; ndx++) {
-      ddca_report_display_info(&dlist->info[ndx], d1);
+      ddci_report_display_info(&dlist->info[ndx], d1);
    }
    API_EPILOG_NO_RETURN(debug, false, "");
 }
