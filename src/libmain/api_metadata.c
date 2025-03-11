@@ -64,7 +64,7 @@ bool ddca_feature_list_contains(DDCA_Feature_List vcplist, uint8_t vcp_code) {
 
 
 const char *
-ddca_feature_list_id_name(
+ddci_feature_list_id_name(
       DDCA_Feature_Subset_Id  feature_subset_id)
 {
    char * result = NULL;
@@ -95,6 +95,14 @@ ddca_feature_list_id_name(
       break;
    }
    return result;
+}
+
+
+const char *
+ddca_feature_list_id_name(
+      DDCA_Feature_Subset_Id  feature_subset_id)
+{
+   return ddci_feature_list_id_name(feature_subset_id);
 }
 
 
@@ -223,7 +231,7 @@ ddca_get_feature_list_by_dref(
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "feature_subset_id=%d=0x%08x=%s, ddca_dref=%p, "
               "include_table_features=%s, feature_list_loc=%p",
-              feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
+              feature_set_id, feature_set_id, ddci_feature_list_id_name(feature_set_id),
           ddca_dref,
           sbool(include_table_features),
           feature_list_loc);
@@ -291,7 +299,7 @@ ddca_get_feature_list_by_dref(
           "Feature list: %s", feature_list_string(feature_list_loc, "", ","));
       // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
    API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, psc, "feature_set_id=%d=0x%08x=%s, subset=%d=%s",
-         feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
+         feature_set_id, feature_set_id, ddci_feature_list_id_name(feature_set_id),
          subset, feature_subset_name(subset));
 }
 

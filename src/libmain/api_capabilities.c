@@ -23,6 +23,7 @@
 
 #include "base/ddc_command_codes.h"
 #include "base/displays.h"
+#include "base/feature_lists.h"
 #include "base/feature_metadata.h"
 #include "base/rtti.h"
 #include "base/vcp_version.h"
@@ -501,7 +502,7 @@ ddca_report_parsed_capabilities_by_dh(
    bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "p_caps=%p, ddca_dh=%s, depth=%d",
-                      p_caps, ddca_dh_repr(ddca_dh), depth);
+                      p_caps, ddci_dh_repr(ddca_dh), depth);
    DDCA_Status ddcrc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 ) {
@@ -571,7 +572,7 @@ ddca_feature_list_from_capabilities(
    DDCA_Feature_List result = {{0}};
    for (int ndx = 0; ndx < parsed_caps->vcp_code_ct; ndx++) {
       DDCA_Cap_Vcp curVcp = parsed_caps->vcp_codes[ndx];
-      ddca_feature_list_add(&result, curVcp.feature_code);
+      feature_list_add(&result, curVcp.feature_code);
    }
    return result;
 }

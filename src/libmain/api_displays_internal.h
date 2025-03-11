@@ -100,6 +100,8 @@ DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Ha
       } \
    } while(0);
 
+const char *
+ddci_dh_repr(DDCA_Display_Handle ddca_dh);
 
 void init_api_displays();
 

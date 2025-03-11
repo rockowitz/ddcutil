@@ -190,7 +190,7 @@ ddca_build_options(void) {
 
 
 const char *
-ddca_libddcutil_filename(void) {
+ddci_libddcutil_filename(void) {
    Dl_info info = {NULL,NULL,NULL,NULL};
    static char fullname[PATH_MAX];
    static char * p = NULL;
@@ -201,6 +201,13 @@ ddca_libddcutil_filename(void) {
    }
    return p;
 }
+
+
+const char *
+ddca_libddcutil_filename(void) {
+	return ddci_libddcutil_filename();
+}
+
 
 
 bool increment_active_api_calls(const char * funcname) {
@@ -791,7 +798,7 @@ ddci_init(const char *      libopts,
       // special handling for start and termination msgs
       // always output if syslog is opened
       syslog(LOG_NOTICE, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
-                   get_full_ddcutil_version(), ddca_libddcutil_filename());
+                   get_full_ddcutil_version(), ddci_libddcutil_filename());
 
       syslog_level = syslog_level_arg;  // global in trace_control.h
 
