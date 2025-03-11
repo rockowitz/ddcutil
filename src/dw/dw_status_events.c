@@ -165,7 +165,9 @@ gpointer dw_execute_callback_func(gpointer data) {
          cqe->func, display_status_event_repr_t(cqe->event), TID());
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", buf);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
+   record_active_callback_thread(g_thread_self());
    cqe->func(cqe->event);
+   remove_active_callback_thread(g_thread_self());
    free(buf);
 
    buf = g_strdup_printf("Callback function %p for event %s complete",
@@ -194,7 +196,7 @@ GPtrArray* display_detection_callbacks = NULL;
  *
  *  @param  func      function to register
  *  @retval DDCRC_OK
- *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *  @retval DDCRC_INVALID_OPERATION g_hash_table_addddcutil not built with UDEV support,
  *                                  or not all video devices support DRM
  *
  *  The function must be of type DDCA_Display_Detection_Callback_Func.
@@ -223,7 +225,7 @@ DDCA_Status dw_register_display_status_callback(DDCA_Display_Status_Callback_Fun
 /** Unregisters a detection event callback function
  *
  *  @param  function of type DDCA_Display_Detection_Callback_func
- *  @retval DDCRC_OK normal return
+ *  @retval DDCRC_OK normal returng_hash_table_add
  *  @retval DDCRC_NOT_FOUND function not in list of registered functions
  *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *                                  or not all video devices support DRM
