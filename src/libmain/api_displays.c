@@ -722,7 +722,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
    DDCA_Status rc = 0;
    Error_Info * err = NULL;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
-   API_PROLOGX(debug, RESPECT_QUIESCE, "dh = %s", dh_repr(dh));
+   API_PROLOGX(debug, IGNORE_QUIESCE, "dh = %s", dh_repr(dh));
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
          err = ERRINFO_NEW(DDCRC_ARG, "Invalid display handle");
