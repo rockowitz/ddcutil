@@ -465,7 +465,7 @@ ddca_redetect_displays() {
 
 #ifdef WATCH_DISPLAYS
    if (perform_detect) {
-      if (active_callback_thread_ct > 0) {
+      if (active_callback_thread_ct() > 0) {
          SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_display() when callback threads are active");
          SYSLOG2(DDCA_SYSLOG_ERROR, "Behavior is indeterminate.");
          // ddcrc = DDCRC_INVALID_OPERATION;
