@@ -560,7 +560,7 @@ dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
 }
 
 
-GMutex * active_callback_threads_mutex;
+GMutex       active_callback_threads_mutex;
 GHashTable * active_callback_threads;
 
 
@@ -568,11 +568,11 @@ void record_active_callback_thread(GThread* pthread){
 	bool debug = false;
 	DBGTRC_STARTING(debug,TRACE_GROUP, "pthread=p", pthread);
 
-	g_mutex_lock(active_callback_threads_mutex);
+	g_mutex_lock(&active_callback_threads_mutex);
 	if (!active_callback_threads)
 		active_callback_threads = g_hash_table_new(g_direct_hash, g_direct_equal);
     g_hash_table_add(active_callback_threads, pthread);
-    g_mutex_unlock(active_callback_threads_mutex);
+    g_mutex_unlock(&active_callback_threads_mutex);
 
     DBGTRC_DONE(debug, TRACE_GROUP, "pthread=%p");
 }
