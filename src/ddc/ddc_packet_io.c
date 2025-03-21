@@ -214,7 +214,10 @@ bool remove_open_display_for_current_thread(Display_Handle * dh) {
    bool found = false;
    if (open_displays_for_thread) {
       found = g_ptr_array_remove(open_displays_for_thread, dh);
+      if (open_displays_for_thread->len == 0)
+         g_ptr_array_free(open_displays_for_thread, true);
    }
+
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "dh=%s", dh_repr_p(dh));
    return found;
