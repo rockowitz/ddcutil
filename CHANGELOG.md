@@ -1,5 +1,12 @@
 ## [2.2.1-dev]
 
+
+
+
+
+
+
+
 - --enable-watch-displays/--disable-watch-displays controls whether 
   display watch functionaliity is built
 - --disable-drm forces --disable-watch-displays
@@ -8,6 +15,45 @@
 - fixed --disable-x11
 - fixed --disable-drm
 - if --disable-x11, the only watch-mode is POLL, watch-mode XEVENT does not exist;
+
+
+
+### General
+
+#### Added
+#### Changed
+
+- Better handling for case where no sysfs card-connector directories exist
+  - Avoid counfusing messages to terminal
+  - Addresses issue #507
+
+#### Fixed
+
+- Maximum wait time on function lock_display() not respected, possible infinte
+  loop.  Addresses issue #511
+
+- Fix --verify/--noverify parsing.  Addresses eissue #118.
+
+### Building
+
+#### Shared Library
+
+### Added
+
+### Changed
+
+- callback function handling made more bulletproof
+  - close any displays left open by user callback function
+  - write syslog messages with log level NOTICE  before and after executing callback function
+
+- ddca_redetect_displays(): warn/block? if calling with callback threads active
+  also block if ddca_redetect_displays() already executing.
+
+### Fixed
+
+- ddca_close_display(): allow execution even if libddcutil quiesced, 
+  Releases display lock, avoiding possible deadlock.
+
 
 ## [2.2.0] 2024-02-10
 
