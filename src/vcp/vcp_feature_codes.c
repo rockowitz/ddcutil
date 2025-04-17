@@ -1091,15 +1091,14 @@ vcp_find_feature_by_hexid(DDCA_Vcp_Feature_Code id) {
 
    int ndx = 0;
    VCP_Feature_Table_Entry * result = NULL;
-
    for (;ndx < vcp_feature_code_count; ndx++) {
       if (id == vcp_code_table[ndx].code) {
          result = &vcp_code_table[ndx];
          break;
       }
    }
-   // DBGMSG("ndx= %d", ndx);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ndx=%d", ndx);
+
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ndx=%d, result=%p", ndx, result);
    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "VCP_Feature_Table_Entry", dbgrpt_vcp_entry, result);
    return result;
 }
