@@ -68,6 +68,7 @@ void dbgrpt_dyn_feature_set(
       bool              verbose,
       int               depth)
 {
+   bool debug = false;
    int d0 = depth;
    int d1 = depth+1;
 
@@ -75,10 +76,15 @@ void dbgrpt_dyn_feature_set(
    rpt_label  (d0, "Members (dfm):");
    for (int ndx=0; ndx < fset->members_dfm->len; ndx++) {
       Display_Feature_Metadata * dfm = g_ptr_array_index(fset->members_dfm,ndx);
-      if (verbose)
-         dbgrpt_display_feature_metadata(dfm, d1);
+      DBGMSF(debug, "dfm=%p", dfm);
+      if (dfm) {
+         if (verbose)
+            dbgrpt_display_feature_metadata(dfm, d1);
+         else
+            rpt_vstring(d1, "0x%02x - %s", dfm->feature_code, dfm->feature_name);
+         }
       else
-         rpt_vstring(d1, "0x%02x - %s", dfm->feature_code, dfm->feature_name);
+         rpt_vstring(d1, "dfm=NULL");
    }
 }
 
@@ -638,17 +644,9 @@ dyn_create_feature_set(
  *
  *  \param  fsref         external feature set reference
  *  \param  vcp_version
- *  \param  flags         checks only FSF_FORCE
- *
+ *  \param  flags         for named feature set
  *  \return feature set, NULL if not found
  *
- *  @remark
- *  If creating a #VCP_Feature_Set containing a single specified feature,
- *  flag #FSF_FORCE controls whether a feature set is created for an
- *  unrecognized feature.
- *  @remark
- *  If creating a named feature set, see called function #create_feature_set_ref()
- *  for the effect of #FSF_FORCE and other flags.
  *  @remark
  *  Used only for VCPINFO
  */
@@ -685,7 +683,7 @@ create_dyn_feature_set_from_feature_set_ref(
                                               hexid,
                                               NULL,
                                               flags & FSF_CHECK_UDF,
-                                              false);    // with_default
+                                              true);    // with_default
           g_ptr_array_add(fset->members_dfm, dfm_entry);
        }
        bs256_iter_free(iter);
@@ -895,11 +893,11 @@ void dyn_free_feature_set(
    DBGMSF(debug, "Done");
 }
 
+
 void init_dyn_feature_set() {
    RTTI_ADD_FUNC(dyn_create_feature_set0);
    RTTI_ADD_FUNC(dyn_create_feature_set);
-  //  RTTI_ADD_FUNC(create_vcp_feature_set);
-   RTTI_ADD_FUNC(create_vcp_feature_set_from_feature_set_ref);
+   RTTI_ADD_FUNC(create_vcp_feature_set);
+   RTTI_ADD_FUNC(create_dyn_feature_set_from_feature_set_ref);
    RTTI_ADD_FUNC(report_dyn_feature_set);
 }
-
