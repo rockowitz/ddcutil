@@ -410,13 +410,16 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
          }
 #endif
          int ct =  dyn_get_feature_set_size(fset);
-         int ndx = 0;
-         for (;ndx < ct; ndx++) {
+         for (int ndx = 0; ndx < ct; ndx++) {
             Display_Feature_Metadata * dfm = g_ptr_array_index(fset->members_dfm, ndx);
             // VCP_Feature_Table_Entry * pentry = get_vcp_feature_set_entry(fset, ndx);
             VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(dfm->feature_code);
-            assert(pentry);   // every possible feature code has a feature table entry
-            report_vcp_feature_table_entry(pentry, 0);
+            if (pentry)
+               report_vcp_feature_table_entry(pentry, 0);
+            else if (dfm->feature_code >= 0xe0)
+               rpt_vstring(0, "VCP code %02x: Reserved for manufacturer use", dfm->feature_code);
+            else
+               rpt_vstring(0, "VCP code %02x: Unrecognized feature code", dfm->feature_code);
          }
       }
       rpt_set_ornamentation_enabled(saved_prefix_report_output);
