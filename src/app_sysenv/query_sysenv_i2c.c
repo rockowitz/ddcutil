@@ -291,12 +291,15 @@ void test_edid_read_variants(Env_Accumulator * accum) {
          rpt_label(d2, "Tests using ioctl write and read...");
          bool ok = false;
          rpt_label(d2, "Without write before read...");
+#ifdef NOT_NEEDED
+         // sometimes fails w/o write before read, further testing unnecessary
          ok = simple_ioctl_read_edid(busno, 128, false, d2);
          if (!ok)
             simple_ioctl_read_edid(busno, 128, false, d2);
          simple_ioctl_read_edid(busno, 256, false, d2);
          rpt_nl();
-         rpt_label(d2, "Retrying with write before read...");
+#endif
+         rpt_label(d2, "With write before read...");
          ok = simple_ioctl_read_edid(busno, 128, true, d2);
          if (!ok)
             simple_ioctl_read_edid(busno, 128, true, d2);
