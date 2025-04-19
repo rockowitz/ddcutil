@@ -20,9 +20,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#ifdef USE_X11
-// #include <X11/extensions/dpmsconst.h>
-#endif
 /** \endcond */
 
 #include "util/coredefs_base.h"
@@ -407,6 +404,7 @@ Status_Errno i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
    }
    return result;
 }
+
 
 /** Closes an open I2C bus device.
  *
@@ -1010,7 +1008,6 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
    }
    free_sysfs_connector_names_contents(cnames);
 
-
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       dbgrpt_found_sys_drm_connector(result, 1);
    }
@@ -1304,7 +1301,6 @@ Byte * get_connector_edid(const char * connector_name) {
     return result;
  }
 #endif
-
 
 
  /** Sets the card-connector related fields in a #I2C_Bus_Info instance,
@@ -1936,10 +1932,6 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
 // Attached buses
 //
 
-
-// moved from udev_i2c_util.c
-
-
 /** Gets the numbers of I2C devices
  *
  *  \param  include_ignorable_devices  if true, do not exclude SMBus and other ignorable devices
@@ -1968,13 +1960,9 @@ get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
    char * s = bva_as_string(bva, /*as_hex*/ false, ",");
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning I2C bus numbers: %s", s);
    free(s);
-   // bva_report(bva, "Returning I2c bus numbers:");
 
    return bva;
 }
-
-
-Bit_Set_256 attached_buses;
 
 
 /** Returns the bus numbers for /dev/i2c buses that could possibly be
@@ -2135,7 +2123,6 @@ I2C_Bus_Info * i2c_get_and_check_bus_info(int busno) {
 }
 
 
-
 /** Detect buses if not already detected.
  *
  *  Stores the result in global array all_i2c_buses and also
@@ -2156,7 +2143,6 @@ int i2c_detect_buses() {
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %d", result);
    return result;
 }
-
 
 
 // used only by main.c, not shared library, does not need mutex protection
@@ -2210,8 +2196,6 @@ Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", bs256_to_string_decimal_t(result, "", ", "));
    return result;
 }
-
-
 
 
 //
@@ -2292,6 +2276,9 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p", businfo);
    assert(businfo);
 
+#define DO_OUTPUT(_indent, _title_width, _title, _value) \
+      rpt_vstring(_indent, "%-*s%s", _title_width, _title, _value);
+
    int d1 = depth+1;
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= DDCA_OL_NORMAL)
@@ -2302,41 +2289,42 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
    // if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED))
    //    i2c_check_businfo_connector(businfo);
 
-   int title_width = (output_level >= DDCA_OL_VERBOSE) ? 39 : 25;
+   int title_width = (output_level >= DDCA_OL_VERBOSE) ? 43 : 25;
+   int d = (output_level >= DDCA_OL_VERBOSE) ? d1 : depth;
    if (businfo->drm_connector_name && output_level >= DDCA_OL_NORMAL) {
-      int d = (output_level >= DDCA_OL_VERBOSE) ? d1 : depth;
-      rpt_vstring( d, "%-*s%s", title_width, "DRM connector:",
-                   (businfo->drm_connector_name) ? businfo->drm_connector_name : "Not found" );
-      if (output_level >= DDCA_OL_VERBOSE) {
-         if (businfo->drm_connector_name) {
-            char title_buf[100];
-            int tw = title_width; // 35;  // title_width;
-            char * attr_value = NULL;
+      DO_OUTPUT(d, title_width, "DRM_connector:",
+            (businfo->drm_connector_name) ? businfo->drm_connector_name : "Not found" );
+   }
 
-            char * attr = "dpms";
-            attr_value = i2c_get_drm_connector_attribute(businfo, attr);
-            g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
-            rpt_vstring(d, "%-*s%s", tw, title_buf, attr_value);
-            free(attr_value);
+   if (output_level >= DDCA_OL_VERBOSE) {
+      if (businfo->drm_connector_name) {
+         char title_buf[100];
+         int tw = title_width; // 35;  // title_width;
+         char * attr_value = NULL;
 
-            attr = "enabled";
-            attr_value = i2c_get_drm_connector_attribute(businfo, attr);
-            g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
-            rpt_vstring(d, "%-*s%s", tw, title_buf, attr_value);
-            free(attr_value);
+         char * attr = "dpms";
+         attr_value = i2c_get_drm_connector_attribute(businfo, attr);
+         g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
+         DO_OUTPUT(d, tw, title_buf, attr_value);
+         free(attr_value);
 
-            attr = "status";
-            attr_value = i2c_get_drm_connector_attribute(businfo, attr);
-            g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
-            rpt_vstring(d, "%-*s%s", tw, title_buf, attr_value);
-            free(attr_value);
+         attr = "enabled";
+         attr_value = i2c_get_drm_connector_attribute(businfo, attr);
+         g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
+         DO_OUTPUT(d, tw, title_buf, attr_value);
+         free(attr_value);
 
-            attr = "connector_id";
-            attr_value = i2c_get_drm_connector_attribute(businfo, attr);
-            g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
-            rpt_vstring(d, "%-*s%s", tw, title_buf, attr_value);
-            free(attr_value);
-         }
+         attr = "status";
+         attr_value = i2c_get_drm_connector_attribute(businfo, attr);
+         g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
+         DO_OUTPUT(d, tw, title_buf, attr_value);
+         free(attr_value);
+
+         attr = "connector_id";
+         attr_value = i2c_get_drm_connector_attribute(businfo, attr);
+         g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
+         DO_OUTPUT(d, tw, title_buf, attr_value);
+         free(attr_value);
       }
    }
 
@@ -2348,19 +2336,19 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
    // rpt_vstring(depth, "Supports DDC:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level >= DDCA_OL_VERBOSE) {
-      rpt_vstring(d1, "Driver:                                %s", (businfo->driver) ? businfo->driver : "Unknown");
-#ifdef DETECT_SLAVE_ADDRS
-      rpt_vstring(d1, "I2C address 0x30 (EDID block#)  present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X30));
-#endif
-      rpt_vstring(d1, "EDID exists:                           %-5s", sbool(businfo->flags & I2C_BUS_HAS_EDID));
-      rpt_vstring(d1, "I2C address 0x37 (DDC)  responsive:    %-5s", sbool(businfo->flags & I2C_BUS_ADDR_X37));
+      DO_OUTPUT(d1, title_width, "Driver:", (businfo->driver) ? businfo->driver : "Unknown");
+// #ifdef DETECT_SLAVE_ADDRS
+      DO_OUTPUT(d1, title_width, "I2C address 0x30 (EDID block#)  present:", sbool(businfo->flags & I2C_BUS_ADDR_X30));
+// #endif
+      DO_OUTPUT(d1, title_width, "EDID exists:",  sbool(businfo->flags & I2C_BUS_HAS_EDID));
+      DO_OUTPUT(d1, title_width, "I2C address 0x37 (DDC) responsive:", sbool(businfo->flags & I2C_BUS_ADDR_X37));
 #ifdef OLD
       rpt_vstring(d1, "Is eDP device:                         %-5s", sbool(businfo->flags & I2C_BUS_EDP));
       rpt_vstring(d1, "Is LVDS device:                        %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
 #endif
-      rpt_vstring(d1, "Is LVDS or EDP display:                %-5s", sbool(businfo->flags & I2C_BUS_LVDS_OR_EDP));
-      rpt_vstring(d1, "Is laptop display by EDID:             %-5s", sbool(businfo->flags & I2C_BUS_APPARENT_LAPTOP));
-      rpt_vstring(d1, "Is laptop display:                     %-5s", sbool(businfo->flags & I2C_BUS_LAPTOP));
+      DO_OUTPUT(d1, title_width, "Is LVDS or EDP display:", sbool(businfo->flags & I2C_BUS_LVDS_OR_EDP));
+      DO_OUTPUT(d1, title_width, "Is laptop display by EDID:", sbool(businfo->flags & I2C_BUS_APPARENT_LAPTOP));
+      DO_OUTPUT(d1, title_width, "Is laptop display:",          sbool(businfo->flags & I2C_BUS_LAPTOP));
 
       // if ( !(businfo->flags & (I2C_BUS_EDP|I2C_BUS_LVDS)) )
       // rpt_vstring(d1, "I2C address 0x37 (DDC) responsive:  %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
@@ -2368,12 +2356,14 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
       char * sysattr_name = file_get_first_line(fn, /* verbose*/ false);
-      rpt_vstring(d1, "%-*s%s", title_width, fn, sysattr_name);
+      // rpt_vstring(d1, "%-*s%s", title_width, fn, sysattr_name);
+      DO_OUTPUT(d1, title_width, fn, sysattr_name);
       free(sysattr_name);
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d", businfo->busno);
       char * path = NULL;
       GET_ATTR_REALPATH(&path, fn);
-      rpt_vstring(d1, "PCI device path:                       %s", path);
+      // rpt_vstring(d1, "PCI device path:                       %s", path);
+      DO_OUTPUT(d1, title_width, "PCI device path:", path);
       free(path);
 
 #ifdef REDUNDANT
@@ -2386,6 +2376,8 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 #endif
 #endif
    }
+
+#undef DO_OUTPUT
 
    if (businfo->edid) {
       if (output_level == DDCA_OL_TERSE) {
@@ -2445,7 +2437,5 @@ void subinit_i2c_bus_core() {
 void init_i2c_bus_core() {
    init_i2c_bus_core_func_name_table();
    open_failures_reported = EMPTY_BIT_SET_256;
-   attached_buses = EMPTY_BIT_SET_256;
-   // connected_buses = EMPTY_BIT_SET_256;
 }
 
