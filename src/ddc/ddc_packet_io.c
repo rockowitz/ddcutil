@@ -188,19 +188,23 @@ static bool is_drm_conformant_driver(const char * driver_name) {
 // Open/Close Display
 //
 
-
-
 __thread GPtrArray * open_displays_for_thread;
+
 
 bool add_open_display_for_current_thread(Display_Handle * dh) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_p(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "open_displays_for_thread=%p, dh=%s",
+         open_displays_for_thread, dh_repr_p(dh));
 
+   bool found = false;
    if (!open_displays_for_thread)
       open_displays_for_thread = g_ptr_array_new();
-   bool found = g_ptr_array_find(open_displays_for_thread, dh, NULL);
-   if (!found)
+   else
+      found = g_ptr_array_find(open_displays_for_thread, dh, NULL);
+   if (!found) {
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open_displays_for_thread=%p, dh=%p", open_displays_for_thread, dh);
       g_ptr_array_add(open_displays_for_thread, dh);
+   }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, !found, "dh=%s", dh_repr_p(dh));
    return !found;
@@ -214,8 +218,10 @@ bool remove_open_display_for_current_thread(Display_Handle * dh) {
    bool found = false;
    if (open_displays_for_thread) {
       found = g_ptr_array_remove(open_displays_for_thread, dh);
-      if (open_displays_for_thread->len == 0)
+      if (open_displays_for_thread->len == 0) {
          g_ptr_array_free(open_displays_for_thread, true);
+         open_displays_for_thread = NULL;
+      }
    }
 
 
