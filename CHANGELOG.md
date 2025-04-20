@@ -1,40 +1,38 @@
-## [2.2.1-dev]
-
-
-
-
-
-
-
-
-- --enable-watch-displays/--disable-watch-displays controls whether 
-  display watch functionaliity is built
-- --disable-drm forces --disable-watch-displays
-- if built with --disable-watch-displays, API functions related 
-  to display change detection return DDCRC_UNIMPLEMENTED
-- fixed --disable-x11
-- fixed --disable-drm
-- if --disable-x11, the only watch-mode is POLL, watch-mode XEVENT does not exist;
-
-
+## [2.2.1] 2024-04-xx
 
 ### General
 
 #### Added
+
 #### Changed
 
 - Better handling for case where no sysfs card-connector directories exist
   - Avoid counfusing messages to terminal
   - Addresses issue #507
+- Command **environment --verbose**: eliminate some unneeded edid read tests
 
 #### Fixed
 
+- Avoid segfault if invalid feature code specified
 - Maximum wait time on function lock_display() not respected, possible infinte
   loop.  Addresses issue #511
-
-- Fix --verify/--noverify parsing.  Addresses eissue #118.
+- Fix --verify/--noverify parsing.  Addresses issue #512/
+- ddca_close_display(): do not respect quiesce, allowing the display lock
+  record to be released, avoiding possible deadlock
+- Fix the spelling of company name HON HAI PRECISION" (obtained from UEFI), 
+  avoiding a lintian message. Addresses issue #500
+- Fix errors reported by clang 19: unused variable, expression which evaluates
+  to 0 treated as null pointer. Addresses issue #502.
 
 ### Building
+
+- configure option ***--enable-watch-displays***/***--disable-watch-displays***
+  controls whether display watch functionaliity is built.  The default is 
+  ***--enable-watch-displays***.
+  - If built with ***--disable-watch-displays***, API functions related 
+    to display change detection return DDCRC_UNIMPLEMENTED
+- If **configure** option ***--disable-x11*** is specified, the only watch-mode 
+  is POLL. watch-mode XEVENT does not exist.
 
 #### Shared Library
 
@@ -42,17 +40,17 @@
 
 ### Changed
 
-- callback function handling made more bulletproof
-  - close any displays left open by user callback function
-  - write syslog messages with log level NOTICE  before and after executing callback function
-
-- ddca_redetect_displays(): warn/block? if calling with callback threads active
-  also block if ddca_redetect_displays() already executing.
+- Callback function handling made more bulletproof
+  - Close any unlock displays left open by user callback function
+  - Write syslog messages (with log level NOTICE) before and after executing
+    the callback function
 
 ### Fixed
 
-- ddca_close_display(): allow execution even if libddcutil quiesced, 
-  Releases display lock, avoiding possible deadlock.
+- **ddca_redetect_displays()**: block if called with callback threads active or 
+  if already executing
+- **ddca_close_display()**: allow execution even if libddcutil is quiesced.
+  Avoids a possible deadlock due to an internal display lock not being released.
 
 
 ## [2.2.0] 2024-02-10
