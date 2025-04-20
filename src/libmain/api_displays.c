@@ -740,7 +740,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
       save_thread_error_detail(public_error_detail);
    }
 
-   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc, "");
+   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, rc, "");
    return rc;
 }
 
@@ -1186,14 +1186,15 @@ ddca_get_display_info_list2(
 void
 ddca_free_display_info(DDCA_Display_Info * info_rec) {
    bool debug = false;
-   API_PROLOG(debug, "info_rec->%p", info_rec);
+   DDCA_IO_Path path = info_rec->path;
+   API_PROLOG(debug, "info_rec->%p, path=%s", info_rec, dpath_repr_t(&path));
    // DDCA_Display_Info contains no pointers, can simply be free'd
    // data structures.  Nothing to free.
    if (info_rec && memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0) {
       info_rec->marker[3] = 'x';
       free(info_rec);
    }
-   API_EPILOG_NO_RETURN(debug, false, "");
+   API_EPILOG_NO_RETURN(debug, false, "path=%s", dpath_repr_t(&path));
    // DBGTRC_DONE(debug, DDCA_TRC_API,"");
    DISABLE_API_CALL_TRACING();
 }
