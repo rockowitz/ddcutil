@@ -310,7 +310,7 @@ void unquiesce_api();
 #define API_EPILOG_NO_RETURN(_debug_flag, _respect_quiesced, _format, ...) \
    do { \
         dbgtrc( \
-          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, _format, ##__VA_ARGS__); \
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
