@@ -209,10 +209,9 @@ ddca_libddcutil_filename(void) {
 }
 
 
-
 bool increment_active_api_calls(const char * funcname) {
    bool debug = false;
-   DBGMSF(debug, "Starting. funcname=%s, active_calls=%d", funcname, active_calls);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "funcname=%s, active_calls=%d", funcname, active_calls);
 
    bool result = true;
    g_mutex_lock(&api_quiesced_mutex);  // blocks API calls from starting
@@ -227,14 +226,14 @@ bool increment_active_api_calls(const char * funcname) {
    g_mutex_unlock(&active_calls_mutex);
    g_mutex_unlock(&api_quiesced_mutex);
 
-   DBGMSF(debug, "funcname=%s, returning %s", funcname, SBOOL(result));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "funcname=%s, returning %s", funcname, SBOOL(result));
    return result;
 }
 
 
 void decrement_active_api_calls(const char * funcname) {
    bool debug = false;
-   DBGMSF(debug, "Starting. funcname=%s, active_calls=%d", funcname, active_calls);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "funcname=%s, active_calls=%d", funcname, active_calls);
 
    bool oops = false;
    g_mutex_lock(&active_calls_mutex);
@@ -249,7 +248,7 @@ void decrement_active_api_calls(const char * funcname) {
       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unmatched active call ct in %s", funcname);
    }
 
-   DBGMSF(debug, "Done    funcname=%s, oops=%s", funcname, SBOOL(oops));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "funcname=%s, oops=%s", funcname, SBOOL(oops));
 }
 
 
@@ -1520,6 +1519,8 @@ void init_api_base() {
    RTTI_ADD_FUNC(ddca_end_capture);
    RTTI_ADD_FUNC(quiesce_api);
    RTTI_ADD_FUNC(unquiesce_api);
+   RTTI_ADD_FUNC(increment_active_api_calls);
+   RTTI_ADD_FUNC(decrement_active_api_calls);
 #ifdef REMOVED
    RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
    RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);
