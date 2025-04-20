@@ -196,8 +196,7 @@ GPtrArray* display_detection_callbacks = NULL;
  *
  *  @param  func      function to register
  *  @retval DDCRC_OK
- *  @retval DDCRC_INVALID_OPERATION g_hash_table_addddcutil not built with UDEV support,
- *                                  or not all video devices support DRM
+ *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *
  *  The function must be of type DDCA_Display_Detection_Callback_Func.
  *  It is not an error if the function is already registered.
