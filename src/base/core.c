@@ -13,7 +13,7 @@
  * - debug and trace messages
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <threads.h>  // requires glibc 2.28, apparently unused
 
 #ifdef TARGET_BSD
 #include <pthread_np.h>
@@ -61,8 +60,17 @@
 
 #include "base/core.h"
 
+
+static bool timestamp_in_syslog_debug_msgs = true;
+
+
+//
+// Globals
+//
+
 bool tracing_initialized = false;
 bool library_disabled = false;
+
 
 //
 // Standard call options
@@ -602,14 +610,17 @@ static bool vdbgtrc(
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
          if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog_only) {
-#ifdef PREV
-            char * syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
-                        thread_prefix, elapsed_prefix, funcname, retval_info, base_msg,
-                        (tag_output) ? " (J)" : "");
-#endif
-            char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
-                        thread_prefix, funcname, retval_info, base_msg,
-                        (tag_output) ? " (J)" : "");
+            char * syslog_msg = NULL;
+            if (timestamp_in_syslog_debug_msgs) {
+               syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
+                           thread_prefix, elapsed_prefix, funcname, retval_info, base_msg,
+                           (tag_output) ? " (J)" : "");
+            }
+            else {
+               syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
+                           thread_prefix, funcname, retval_info, base_msg,
+                           (tag_output) ? " (J)" : "");
+            }
             syslog(LOG_DEBUG, "%s", syslog_msg);
             free(syslog_msg);
          }
