@@ -384,6 +384,8 @@ void dw_emit_display_status_record(
 
    int callback_ct = (display_detection_callbacks) ? display_detection_callbacks->len : 0;
    if (callback_ct > 0) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Starting %d callback threads", display_detection_callbacks->len);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting %d callback threads", display_detection_callbacks->len);
       for (int ndx = 0; ndx < callback_ct; ndx++)  {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
          Callback_Queue_Entry * cqe = calloc(1, sizeof (Callback_Queue_Entry));
@@ -395,7 +397,7 @@ void dw_emit_display_status_record(
                                        dw_execute_callback_func,
                                        cqe);
          // traced_function_stack_suspended = false;
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started callback_thread = %p", callback_thread);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "libddcutil callback thread %p started", callback_thread);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
       }
    }
