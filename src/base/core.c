@@ -61,13 +61,11 @@
 #include "base/core.h"
 
 
-static bool timestamp_in_syslog_debug_msgs = true;
-
-
 //
 // Globals
 //
 
+bool timestamp_in_syslog_debug_msgs = false;
 bool tracing_initialized = false;
 bool library_disabled = false;
 

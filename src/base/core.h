@@ -58,6 +58,7 @@
 // Indicates that all tracing facilities have been configured
 extern bool tracing_initialized;
 extern bool library_disabled;
+extern bool timestamp_in_syslog_debug_msgs;
 
 
 //
