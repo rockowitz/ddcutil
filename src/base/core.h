@@ -55,7 +55,12 @@
 #define ASSERT_MARKER(_struct_ptr, _marker_value) \
    assert(_struct_ptr && memcmp(_struct_ptr->marker, _marker_value, 4) == 0)
 
-// Indicates that all tracing facilities have been configured
+
+//
+// Global Variables
+// 
+
+// Indicates that all tracing facilities have been configured:
 extern bool tracing_initialized;
 extern bool library_disabled;
 extern bool timestamp_in_syslog_debug_msgs;
