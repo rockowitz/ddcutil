@@ -624,20 +624,21 @@ ddca_open_display(
 
 
 /** Options for opening a DDCA_Display_Ref
+ *
+ *  This is a vestigial remnant of what was once a larger set options.
  */
 
 typedef enum {
-   DDCA_OPENOPT_NONE             = 0,
-   DDCA_OPENOPT_WAIT             = 1,
-   DDCA_OPENOPT_FORCE_SLAVE_ADDR = 2
-} DDCA_Open_Options;
+   DDC_OPENOPT_NONE             = 0,
+   DDC_OPENOPT_WAIT             = 1,
+} DDC_Open_Options;
 
 
 STATIC
 DDCA_Status
 ddca_open_display3(
       DDCA_Display_Ref      ddca_dref,
-      DDCA_Open_Options     options,
+      DDC_Open_Options      options,
       DDCA_Display_Handle * dh_loc)
 {
    bool debug = false;
@@ -663,10 +664,8 @@ ddca_open_display3(
       if (!rc) {
         Display_Handle* dh = NULL;
         Call_Options callopts = CALLOPT_NONE;
-        if (options & DDCA_OPENOPT_WAIT)
+        if (options & DDC_OPENOPT_WAIT)
            callopts |= CALLOPT_WAIT;
-        if (options & DDCA_OPENOPT_FORCE_SLAVE_ADDR)
-           callopts |= CALLOPT_FORCE_SLAVE_ADDR;
         err = ddc_open_display(dref,  callopts, &dh);
         if (!err)
            *dh_loc = dh;
@@ -710,7 +709,7 @@ ddca_open_display2(
       DDCA_Display_Handle * dh_loc)
 {
    return ddca_open_display3(ddca_dref,
-                             (wait) ? DDCA_OPENOPT_WAIT : DDCA_OPENOPT_NONE,
+                             (wait) ? DDC_OPENOPT_WAIT : DDC_OPENOPT_NONE,
                              dh_loc);
 }
 
