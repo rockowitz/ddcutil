@@ -76,7 +76,6 @@ bool library_disabled = false;
 
 Value_Name_Table callopt_bitname_table2 = {
       VN(CALLOPT_ERR_MSG),
- //   VN(CALLOPT_ERR_ABORT),
       VN(CALLOPT_RDONLY),
       VN(CALLOPT_WARN_FINDEX),
       VN(CALLOPT_WAIT),
