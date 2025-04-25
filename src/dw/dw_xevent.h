@@ -19,7 +19,7 @@ typedef struct {
 } XEvent_Data;
 
 void          dw_dbgrpt_xevent_data(XEvent_Data* evdata, int depth);
-void          dw_free_xevent_data(XEvent_Data * evdata);
+void          dw_deinit_xevent_screen_change_notification(XEvent_Data * evdata);
 XEvent_Data * dw_init_xevent_screen_change_notification();
 bool          dw_detect_xevent_screen_change(XEvent_Data * evdata,  int poll_interval);
 bool          dw_next_X11_event_of_interest(XEvent_Data * evdata);

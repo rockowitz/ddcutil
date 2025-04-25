@@ -135,7 +135,7 @@ void dw_free_watch_displays_data(Watch_Displays_Data * wdd) {
       assert( memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
       wdd->marker[3] = 'x';
 #ifdef USE_X11
-      dw_free_xevent_data(wdd->evdata);
+      dw_deinit_xevent_screen_change_notification(wdd->evdata);
 #endif
       free(wdd);
    }

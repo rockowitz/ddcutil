@@ -35,7 +35,7 @@ void  dw_dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
 }
 
 
-void dw_free_xevent_data(XEvent_Data * evdata) {
+void dw_deinit_xevent_screen_change_notification(XEvent_Data * evdata) {
    if (evdata->dpy)
       XCloseDisplay(evdata->dpy);
    free(evdata);
@@ -88,7 +88,7 @@ XEvent_Data * dw_init_xevent_screen_change_notification() {
 
 bye:
    if (!ok) {
-      dw_free_xevent_data(evdata);
+      dw_deinit_xevent_screen_change_notification(evdata);
       evdata = NULL;
    }
 
