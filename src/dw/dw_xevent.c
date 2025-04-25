@@ -54,11 +54,10 @@ XEvent_Data * dw_init_xevent_screen_change_notification() {
    bool ok = false;
    // check for extension
    XEvent_Data * evdata = calloc(1, sizeof(XEvent_Data));
-   Display * display = XOpenDisplay(NULL);
-   evdata->dpy = display;
-   // dpy = display;
+   evdata->dpy = XOpenDisplay(NULL);
    if (!evdata->dpy)
       goto bye;
+
    evdata->screen = DefaultScreen(evdata->dpy);
    evdata->w = RootWindow(evdata->dpy, evdata->screen);
 
