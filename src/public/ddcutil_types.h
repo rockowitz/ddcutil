@@ -533,6 +533,9 @@ typedef struct {
 //! Type of event being reported
 //!
 //!  @since 2.1.0
+//!
+//! As of ddcutil 2.2.0, events of type DDCA_EVENT_DPMS_AWAKE and
+//! DDCA_EVENT_DPMS_ASLEEP are no longer issued.
 typedef enum {
    DDCA_EVENT_DPMS_AWAKE,
    DDCA_EVENT_DPMS_ASLEEP,
@@ -550,7 +553,7 @@ typedef enum {
 //!  @since 2.1.0
 typedef enum {
    DDCA_EVENT_CLASS_NONE               = 0,
-   DDCA_EVENT_CLASS_DPMS               = 1,
+   DDCA_EVENT_CLASS_DPMS               = 1,   // unimplemented as of 2.2.0
    DDCA_EVENT_CLASS_DISPLAY_CONNECTION = 2,
    DDCA_EVENT_CLASS_UNUSED1            = 4,
 } DDCA_Display_Event_Class;

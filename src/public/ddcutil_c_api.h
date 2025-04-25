@@ -1767,7 +1767,7 @@ const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
 
 
-/** Start the thread watching for display status changes.
+/** Start the threads watching for display status changes.
  *
  *  @param  enabled_clases  event classes to watch
  *  @retval DDCRC_OK
@@ -1776,13 +1776,17 @@ const char *
  *  @retval DDCRC_INVALID_OPERATION not all video drivers support DRM
  *  @retval DDCRC_UNIMPLEMENTED watching for DPMS changes unimplemented
  *
- *  The only valid event_type value is DDCA_EVENT_CLASS_DISPLAY_CONNECTION.
- *  DDCA_EVENT_CLASS_ALL is equivalent to DDCA_EVENT_CLSS_DISPLAY_CONNECTION.
+ *  @since 2.1.0
+ *
+ *  @remark
+ *  As of ddcutil 2.2.0, the only valid event_type value is
+ *  DDCA_EVENT_CLASS_DISPLAY_CONNECTION. DDCA_EVENT_CLASS_ALL
+ *  is equivalent to DDCA_EVENT_CLASS_DISPLAY_CONNECTION.
  */
 DDCA_Status
 ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes);
 
-/** Terminate the thread that watches for display status changes.
+/** Terminate the threads that watch for display status changes.
  *
  *  This function is a hack.  Without it, the thread can
  *  continue running even though the application has exited.

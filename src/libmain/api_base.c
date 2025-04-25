@@ -759,7 +759,7 @@ ddci_init(const char *      libopts,
           DDCA_Init_Options opts,
           char***           infomsg_loc)
 {
-   bool debug = false;
+   bool debug = true;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
       debug = true;
