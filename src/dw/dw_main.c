@@ -232,8 +232,8 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       // Start watch thread
       Watch_Displays_Data * wdd = calloc(1, sizeof(Watch_Displays_Data));
       memcpy(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-      wdd->main_process_id = pid();   // getpid();
-      wdd->main_thread_id = tid();   get_thread_id();  // alt = syscall(SYS_gettid);
+      wdd->main_process_id = pid();
+      wdd->main_thread_id = tid();    // alt = syscall(SYS_gettid);
       // event_classes &= ~DDCA_EVENT_CLASS_DPMS;     // *** TEMP ***
       wdd->event_classes = event_classes;
       wdd->watch_mode = resolved_watch_mode;
