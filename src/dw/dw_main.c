@@ -209,7 +209,6 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          initial_stabilization_millisec, stabilization_poll_millisec);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "use_sysfs_connector_id: %s", SBOOL(use_sysfs_connector_id));    // watch udev only
 
-
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
       err = ERRINFO_NEW(DDCRC_ARG, "Invalid event classes");
@@ -242,7 +241,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       if (xev_data)
          wdd->evdata = xev_data;
 #endif
-      global_wdd = wdd;
+      global_wdd = wdd;   // so that it's available to ddc_stop_watch_displays() 
 
 #ifdef CALLBACK_DISPLAYS_THREAD
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
@@ -277,7 +276,7 @@ bye:
 }
 
 
-/** Halts thread that watches for changes in display connection status.
+/** Halts threads that watch for changes in display connection status.
  *
  *  @param   wait                if true, does not return until the watch thread exits,
  *                               if false, returns immediately
