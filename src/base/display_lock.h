@@ -14,7 +14,6 @@
 
 #include "util/error_info.h"
 #include "base/core.h"
-#include "base/displays.h"
 
 
 typedef enum {
