@@ -109,6 +109,18 @@ const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
 }
 
 
+const char * drm_connector_found_by_public_name(Drm_Connector_Found_By found_by) {
+   char * result = NULL;
+   switch(found_by) {
+   case DRM_CONNECTOR_NOT_CHECKED:    result = "Not checked";    break;
+   case DRM_CONNECTOR_NOT_FOUND:      result = "Not found";      break;
+   case DRM_CONNECTOR_FOUND_BY_BUSNO: result = "I2C bus number"; break;
+   case DRM_CONNECTOR_FOUND_BY_EDID:  result = "EDID";           break;
+   }
+   return result;
+}
+
+
 /** Retrieves the value of a text attribute (e.g. enabled) in the SYSFS
  *  DRM connector directory for an I2C bus.
  *
