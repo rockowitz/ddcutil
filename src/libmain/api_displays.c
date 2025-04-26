@@ -129,19 +129,6 @@ DDCA_Status ddci_validate_ddca_display_ref2(
 }
 
 
-#ifdef UNUSED
-Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh) {
-   Display_Handle * dh = (Display_Handle *) ddca_dh;
-   if (dh) {
-      if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0  ||
-          !ddc_is_valid_display_handle(dh) )
-         dh=NULL;
-   }
-   return dh;
-}
-#endif
-
-
 /** Validates an opaque #DDCA_Display_Handle, returning the corresponding
  *  #Display_Handle if successful.
  *
@@ -400,49 +387,6 @@ ddca_create_display_ref(
    return ddci_get_display_ref(did, dref_loc);
 }
 
-#ifdef REMOVED
-/** @deprecated All display references are persistent
- *
- *  Frees a display reference.
- *
- *  Use this function to safely release a #DDCA_Display_Ref.
- *  If the display reference was dynamically created, it is freed.
- *  If the display reference was permanently allocated (normal case), does nothing.
- *
- *  @param[in] dref  display reference to free
- *  @retval DDCRC_OK     success, or dref == NULL
- *  @retval DDCRC_ARG    dref does not point to a valid display reference
- *  @retval DDCRC_LOCKED dref is to a transient instance, and it is referenced
- *                       by an open display handle
- *
- *  @ingroup api_display_spec
- */
-// __attribute__ ((deprecated ("DDCA_Display_Refs are always persistent")))
-DDCA_Status
-ddca_free_display_ref(
-      DDCA_Display_Ref dref);
-#endif
-
-#ifdef REMOVED
-// deprecated, not needed, in library there are no transient display refs
-DDCA_Status
-ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
-   bool debug = false;
-   API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
-   DDCA_Status psc = 0;
-   free_thread_error_detail();
-   if (ddca_dref) {
-      WITH_VALIDATED_DR3(ddca_dref, psc,
-         {
-            if (dref->flags & DREF_TRANSIENT)
-               psc = free_display_ref(dref);
-         }
-      );
-   }
-   API_EPILOG_BEFORE_RETURN(debug, psc, "");
-   return psc;
-}
-#endif
 
 // GMutex ddca_redetect_active_mutex;
 static bool ddca_redetect_active = false;
@@ -593,39 +537,9 @@ ddca_validate_display_ref(DDCA_Display_Ref ddca_dref, bool require_not_asleep)
 // Open and close display
 //
 
-#ifdef DEPRECATED
-
-/** \deprecated Use #ddca_open_display2()
- * Open a display
- * @param[in]  ddca_dref    display reference for display to open
- * @param[out] ddca_dh_loc  where to return display handle
- * @return     status code
- *
- * Fails if display is already opened by another thread.
- * \ingroup api_display_spec
- */
-// __attribute__ ((deprecated ("use ddca_open_display2()")))
-DDCA_Status
-ddca_open_display(
-      DDCA_Display_Ref      ddca_dref,
-      DDCA_Display_Handle * ddca_dh_loc);
-
-DDCA_Status
-ddca_open_display(
-      DDCA_Display_Ref      ddca_dref,
-      DDCA_Display_Handle * dh_loc)
-{
-   return ddca_open_display2(ddca_dref, false, dh_loc);
-}
-#endif
-
-
-// unpublished extension
-
-
 /** Options for opening a DDCA_Display_Ref
  *
- *  This is a vestigial remnant of what was once a larger set options.
+ *  This is a vestigial remnant of what was once a larger set of options.
  */
 
 typedef enum {
@@ -941,24 +855,6 @@ ddca_mmk_from_dh(
 // Display Info
 //
 
-#ifdef DEPRECATED
-/** @deprecated use #ddca_get_display_info_list2()
- * Gets a list of the detected displays.
- *
- *  Displays that do not support DDC are not included.
- *
- *  @return list of display summaries
- */
-__attribute__ ((deprecated ("use ddca_get_display_info_list2()")))
-DDCA_Display_Info_List *
-ddca_get_display_info_list(void)
-{
-   DDCA_Display_Info_List * result = NULL;
-   ddca_get_display_info_list2(false, &result);
-   return result;
-}
-#endif
-
 STATIC
  void ddci_init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
    bool debug = false;
@@ -1121,7 +1017,6 @@ ddca_get_display_info2(
    API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "ddca_dref=%p, dref=%s", ddca_dref, dref_reprx_t(dref0));
    return ddcrc;
 }
-
 
 
 STATIC void
@@ -1533,88 +1428,8 @@ dbgrpt_display_info_list(
 
 
 //
-// Miscellaneous
-//
-
-#ifdef DEPRECATED
-
-// /** \deprecated */
-__attribute__ ((deprecated))
-DDCA_Status
-ddca_get_edid_by_dref(
-      DDCA_Display_Ref ddca_dref,
-      uint8_t **       pbytes_loc);   // pointer into ddcutil data structures, do not free
-
-
-// deprecated
-DDCA_Status
-ddca_get_edid_by_dref(
-      DDCA_Display_Ref ddca_dref,
-      uint8_t**        p_bytes)
-{
-   DDCA_Status rc = 0;
-   *p_bytes = NULL;
-   free_thread_error_detail();
-
-   assert(library_initialized);
-
-   Display_Ref * dref = (Display_Ref *) ddca_dref;
-   // if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
-   if ( !valid_display_ref(dref) )  {
-      rc = DDCRC_ARG;
-      goto bye;
-   }
-
-   // Parsed_Edid*  edid = ddc_get_parsed_edid_by_dref(dref);
-   Parsed_Edid * edid = dref->pedid;
-   assert(edid);
-   *p_bytes = edid->bytes;
-
-bye:
-   return rc;
-}
-#endif
-
-
-#ifdef UNIMPLEMENTED
-// Use ddca_get_edid_by_dref() instead
-// n. edid_buffer must be >= 128 bytes
-
-DDCA_Status
-ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);
-#endif
-
-
-//
 // Reports
 //
-
-#ifdef DEPRECATED
-/** \deprecated use #ddca_report_displays()
- * Reports on all active displays.
- *  This function hooks into the code used by command "ddcutil detect"
- *
- *  @param[in] depth  logical indentation depth
- *  @return    number of MCCS capable displays
- */
-__attribute__ ((deprecated ("use ddca_report_displays()")))
-int
-ddca_report_active_displays(
-      int depth);
-
-
-// deprecated, use ddca_report_displays()
-int
-ddca_report_active_displays(int depth) {
-   bool debug = false;
-   API_PROLOG(debug, "");
-   int display_ct = ddc_report_displays(false, depth);
-   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %d", display_ct);
-   DISABLE_API_CALL_TRACING();
-   return display_ct;
-}
-#endif
-
 
 // TODO: deprecate, does not respect quiesced
 int
@@ -1650,7 +1465,6 @@ typedef void (*DDCA_Display_Status_Callback_Func)(DDCA_Display_Detection_Report)
 DDCA_Status
 ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
 #endif
-
 
 
 //
