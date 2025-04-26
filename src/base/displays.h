@@ -1,6 +1,6 @@
 /** @file displays.h  Display Specification  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAYS_H_
@@ -20,6 +20,7 @@
 #include "ddcutil_types_internal.h"
 #include "dynamic_features.h"
 #include "feature_set_ref.h"
+#include "i2c_bus_base.h"
 #include "monitor_model_key.h"
 #include "vcp_version.h"
 
@@ -204,6 +205,7 @@ typedef struct _display_ref {
    struct Per_Display_Data* pdd;
    char *                   drm_connector;         // e.g. card0-HDMI-A-1  // REDUNDANT - IDENTICAL TO Bus_Info.drm_connector
    int                      drm_connector_id;      // identical to Bus_Info.drm_connector_id
+   Drm_Connector_Found_By   drm_connector_found_by;  // identical to Bus_Info.drm_connector_found_by
    char *                   communication_error_summary;
    uint64_t                 creation_timestamp;
    GMutex                   access_mutex;
