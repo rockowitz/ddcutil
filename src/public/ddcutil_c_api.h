@@ -497,7 +497,8 @@ ddca_get_display_refs(
       bool                include_invalid_displays,
       DDCA_Display_Ref**  drefs_loc);
 
-/** Gets publicly visible information about a display reference
+/** @deprecated use #ddca_get_get_display_info2
+ *  Gets publicly visible information about a display reference
  *
  *  The returned struct can simply be free()'d by the client.
  *
@@ -513,7 +514,8 @@ ddca_get_display_info(
       DDCA_Display_Ref  ddca_dref,
       DDCA_Display_Info ** dinfo_loc);
 
-/** Frees a #DDCA_Display_Info struct.
+/** @deprecated use #ddca_free_display_info2()
+ *  Frees a #DDCA_Display_Info struct.
  *
  *  @param[in] info_rec pointer to instance to free
  *
@@ -526,6 +528,37 @@ ddca_get_display_info(
  */
 void
 ddca_free_display_info(DDCA_Display_Info * info_rec);
+
+
+/** Gets publicly visible information about a display reference
+ *
+ *  The returned struct can simply be free()'d by the client.
+ *
+ *  @param[in]  ddca_dref display reference
+ *  @param[out] dinfo_loc where to return pointer to newly allocated #DDCA_Display_Info
+ *  @retval DDCRC_OK  no error
+ *  @retval DDCRC_ARG invalid display reference
+ *
+ *  @since 2.2.1
+ */
+DDCA_Status
+ddca_get_display_info2(
+      DDCA_Display_Ref   ddca_dref,
+      DDCA_Display_Info2 ** dinfo_loc);
+
+/** Frees a #DDCA_Display_Info2 struct.
+ *
+ *  @param[in] info_rec pointer to instance to free
+ *
+ *  @remark
+ *  This is a convenience function. #DDCA_Display_Info2 is copied to
+ *  the client and contains no pointers.  It could simply be free()'d
+ *  by the client.
+ *
+ *  @since 2.2.1
+ */
+void
+ddca_free_display_info2(DDCA_Display_Info2 * info_rec);
 
 /** Gets a list of the detected displays.
  *
@@ -551,7 +584,8 @@ void
 ddca_free_display_info_list(
       DDCA_Display_Info_List * dlist);
 
-/** Presents a report on a single display.
+/** @deprecated use report_display_info2()
+ *  Presents a report on a single display.
  *  The report is written to the current FOUT device for the current thread.
  *
  *  @param[in]  dinfo  pointer to a DDCA_Display_Info struct
@@ -567,6 +601,26 @@ DDCA_Status
 ddca_report_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth);
+
+/** Presents a report on a single display.
+ *  The report is written to the current FOUT device for the current thread.
+ *
+ *  @param[in]  dinfo  pointer to a DDCA_Display_Info struct
+ *  @param[in]  depth  logical indentation depth
+ *  @retval     DDCRC_ARG if precondition failure and precondition failures do not abort
+ *  @retval     0         normal
+ *
+ *  @remark
+ *  For a report intended for users, apply #ddca_report_display_by_dref()
+ *  to **dinfo->dref**.
+ *
+ *  @since 2.2.1
+ */
+DDCA_Status
+ddca_report_display_info2(
+      DDCA_Display_Info2 * dinfo,
+      int                 depth);
+
 
 /** Reports on all displays in a list of displays.
  *  The report is written to the current FOUT device for the current thread.
