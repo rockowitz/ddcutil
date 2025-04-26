@@ -138,19 +138,12 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
 #ifdef USE_X11
    if (resolved_watch_mode == Watch_Mode_Xevent) {
       xevdata  = dw_init_xevent_screen_change_notification();
-      // *xev_data_loc  = ddc_init_xevent_screen_change_notification();
       if (!xevdata) {
          resolved_watch_mode = Watch_Mode_Poll;
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR API unavailable. Switching to Watch_Mode_Poll");
       }
    }
-#endif
-
-   // DBG( "xevdata=%p, watch_mode = %s", xevdata, dw_watch_mode_name(resolved_watch_mode));
-
-#ifdef USE_X11
    *xev_data_loc = xevdata;
-   // ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xevdata);
    ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, *xev_data_loc);
    if (*xev_data_loc && IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       dw_dbgrpt_xevent_data(*xev_data_loc,  0);
