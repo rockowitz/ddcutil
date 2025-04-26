@@ -340,6 +340,43 @@ typedef struct {
 } DDCA_Display_Info;
 
 
+#define DDCA_DRM_CONNECTOR_FIELD_SIZE 32
+
+typedef enum {
+   DDCA_DRM_CONNECTOR_NOT_FOUND,
+   DDCA_DRM_CONNECTOR_FOUND_BY_BUSNO,
+   DDCA_DRM_CONNECTOR_FOUND_BY_EDID
+} DDCA_Drm_Connector_Found_By;
+
+
+/** Describes one monitor detected by ddcutil.
+ *
+ *  This is an extended version of DDCA_Display_Info with additional information
+ *  and space allocated to allow for future extensions without breaking
+ *  the ABI.
+ *
+ *  This struct is copied to the caller and can simply be freed.
+ */
+typedef struct {
+   char                   marker[4];        ///< always "DDIN"
+   int                    dispno;           ///< ddcutil assigned display number
+   DDCA_IO_Path           path;             ///< physical access path to display
+   int                    usb_bus;          ///< USB bus number, if USB connection
+   int                    usb_device;       ///< USB device number, if USB connection
+   char                   mfg_id[    DDCA_EDID_MFG_ID_FIELD_SIZE    ]; ///< 3 character mfg id from EDID
+   char                   model_name[DDCA_EDID_MODEL_NAME_FIELD_SIZE]; ///< model name from EDID, 13 char max
+   char                   sn[        DDCA_EDID_SN_ASCII_FIELD_SIZE  ]; ///< "serial number" from EDID, 13 char max
+   uint16_t               product_code;     ///< model product number
+   uint8_t                edid_bytes[128];  ///< first 128 bytes of EDID
+   DDCA_MCCS_Version_Spec vcp_version;      ///< VCP version as pair of numbers
+   DDCA_Display_Ref       dref;             ///< opaque display reference
+   char                   drm_card_connector[DDCA_DRM_CONNECTOR_FIELD_SIZE];
+   DDCA_Drm_Connector_Found_By drm_card_connector_found_by;
+   int16_t                drm_connector_id;   ///< -1 if undefined in sysfs
+   void *                 unused[8];
+} DDCA_Display_Info2;
+
+
 /** Collection of #DDCA_Display_Info */
 typedef struct {
    int                ct;       ///< number of records
