@@ -978,18 +978,11 @@ STATIC
    }
    memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
 
-#if __GNUC__ >= 8
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-   STRLCPY(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
-   STRLCPY(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
-   STRLCPY(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
-#pragma GCC diagnostic pop
-#else
-   STRLCPY(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
-   STRLCPY(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
-   STRLCPY(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
-#endif
+
+   g_strlcpy(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
+   g_strlcpy(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
+   g_strlcpy(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
+
    curinfo->product_code  = dref->pedid->product_code;
    curinfo->vcp_version    = vspec;
    curinfo->dref           = dref_to_ddca_dref(dref);
@@ -1005,6 +998,65 @@ STATIC
    assert(curinfo->product_code == curinfo->mmid.product_code);
 // #endif
 #endif
+
+   DBGTRC_DONE(debug, DDCA_TRC_API, "dref=%s", dref_reprx_t(dref));
+}
+
+
+STATIC
+DDCA_Drm_Connector_Found_By drm_to_ddca_connector_found_by(Drm_Connector_Found_By drm_value) {
+   DDCA_Drm_Connector_Found_By ddca_value = DDCA_DRM_CONNECTOR_NOT_FOUND;  // pointless initialization to avoid compiler warning
+   assert(drm_value != DRM_CONNECTOR_NOT_CHECKED);
+   switch (drm_value) {
+   case DRM_CONNECTOR_NOT_FOUND:      ddca_value = DDCA_DRM_CONNECTOR_NOT_FOUND;      break;
+   case DRM_CONNECTOR_FOUND_BY_BUSNO: ddca_value = DDCA_DRM_CONNECTOR_FOUND_BY_BUSNO; break;
+   case DRM_CONNECTOR_FOUND_BY_EDID:  ddca_value = DDCA_DRM_CONNECTOR_FOUND_BY_EDID;  break;
+   case DRM_CONNECTOR_NOT_CHECKED:    assert(false);
+   }
+   return ddca_value;
+}
+
+
+STATIC
+ void ddci_init_display_info2(Display_Ref * dref, DDCA_Display_Info2 * curinfo) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "dref=%s, curinfo=%p", dref_reprx_t(dref),curinfo);
+   memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
+   curinfo->dispno        = dref->dispno;
+
+   curinfo->path = dref->io_path;
+   if (dref->io_path.io_mode == DDCA_IO_USB) {
+      curinfo->usb_bus    = dref->usb_bus;
+      curinfo->usb_device = dref->usb_device;
+   }
+
+   DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_UNKNOWN;
+   if (dref->dispno > 0 && (dref->flags&DREF_DDC_COMMUNICATION_WORKING)) {
+      vspec = get_vcp_version_by_dref(dref);
+   }
+   memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
+   g_strlcpy(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
+   g_strlcpy(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
+   g_strlcpy(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
+   curinfo->product_code  = dref->pedid->product_code;
+   curinfo->vcp_version   = vspec;
+   curinfo->dref          = dref_to_ddca_dref(dref);
+
+   // Additional fields in DDCA_Display_Info2 but not DDCA_Display_Info
+
+   if (dref->io_path.io_mode == DDCA_IO_I2C) {
+      I2C_Bus_Info * businfo = dref->detail;
+      if (businfo->drm_connector_name) {
+         g_strlcpy(curinfo->drm_card_connector, businfo->drm_connector_name, DDCA_DRM_CONNECTOR_FIELD_SIZE);
+         curinfo->drm_card_connector_found_by =  drm_to_ddca_connector_found_by(businfo->drm_connector_found_by);
+         curinfo->drm_connector_id = businfo->drm_connector_id;
+      }
+      else {
+         curinfo->drm_card_connector[0] = '\0';
+         curinfo->drm_card_connector_found_by = DDCA_DRM_CONNECTOR_NOT_FOUND;
+         curinfo->drm_connector_id = -1;
+      }
+   }
 
    DBGTRC_DONE(debug, DDCA_TRC_API, "dref=%s", dref_reprx_t(dref));
 }
@@ -1038,6 +1090,38 @@ ddca_get_display_info(
    API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "ddca_dref=%p, dref=%s", ddca_dref, dref_reprx_t(dref0));
    return ddcrc;
 }
+
+
+
+DDCA_Status
+ddca_get_display_info2(
+      DDCA_Display_Ref      ddca_dref,
+      DDCA_Display_Info2 ** dinfo_loc)
+{
+   bool debug = false;
+
+   Display_Ref * dref0 = dref_from_published_ddca_dref(ddca_dref);
+
+   // causes return DDCRC_UNINTIALIZED: called after explicit ddca_init()/init2() call failed
+   API_PROLOGX(debug, RESPECT_QUIESCE, "ddca_dref=%p, dref0=%s", ddca_dref, dref_reprx_t(dref0));
+   // causes return DDCRC_ARG if dinfo_loc == NULL
+   API_PRECOND_W_EPILOG(dinfo_loc);
+   DDCA_Status ddcrc = 0;
+
+   // if ddc_validate_display_ref() fails, returns its status code
+   WITH_VALIDATED_DR4(
+         ddca_dref, ddcrc, DREF_VALIDATE_EDID | DREF_VALIDATE_DDC_COMMUNICATION_FAILURE_OK,
+         {
+            DDCA_Display_Info2 * info = calloc(1, sizeof(DDCA_Display_Info2));
+            ddci_init_display_info2(dref, info);
+            *dinfo_loc = info;
+         }
+   )
+
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "ddca_dref=%p, dref=%s", ddca_dref, dref_reprx_t(dref0));
+   return ddcrc;
+}
+
 
 
 STATIC void
@@ -1200,6 +1284,23 @@ ddca_free_display_info(DDCA_Display_Info * info_rec) {
 
 
 void
+ddca_free_display_info2(DDCA_Display_Info2 * info_rec) {
+   bool debug = false;
+   DDCA_IO_Path path = info_rec->path;
+   API_PROLOG(debug, "info_rec->%p, path=%s", info_rec, dpath_repr_t(&path));
+   // DDCA_Display_Info contains no pointers, can simply be free'd
+   // data structures.  Nothing to free.
+   if (info_rec && memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0) {
+      info_rec->marker[3] = 'x';
+      free(info_rec);
+   }
+   API_EPILOG_NO_RETURN(debug, false, "path=%s", dpath_repr_t(&path));
+   // DBGTRC_DONE(debug, DDCA_TRC_API,"");
+   DISABLE_API_CALL_TRACING();
+}
+
+
+void
 ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
    bool debug = false;
    API_PROLOG_NO_DISPLAY_IO(debug, "dlist=%p", dlist);
@@ -1242,14 +1343,15 @@ ddci_report_display_info(
          rpt_label(  d0, "Invalid display - Does not support DDC");
       // rpt_vstring(      d1, "Display ref:         %p -> %s", dinfo->dref, dref_repr_t(dinfo->dref) );
       // rpt_vstring(d1, "IO mode:             %s", io_mode_name(dinfo->path.io_mode));
+      int tw = 22;   // title width
       switch(dinfo->path.io_mode) {
       case (DDCA_IO_I2C):
-            rpt_vstring(d1, "I2C bus:              /dev/i2c-%d", dinfo->path.path.i2c_busno);
+            rpt_vstring(d1, "%-*s /dev/i2c-%d", tw, "I2C bus:", dinfo->path.path.i2c_busno);
             break;
       case (DDCA_IO_USB):
-            rpt_vstring(d1, "USB bus.device:       %d.%d",
+            rpt_vstring(d1, "%-*s %d.%d", "USB bus device:",
                             dinfo->usb_bus, dinfo->usb_device);
-            rpt_vstring(d1, "USB hiddev device:   /dev/usb/hiddev%d", dinfo->path.path.hiddev_devno);
+            rpt_vstring(d1, "%-*s /dev/usb/hiddev%d", "USB hiddev device:", dinfo->path.path.hiddev_devno);
             break;
       }
 
@@ -1257,23 +1359,25 @@ ddci_report_display_info(
       Display_Ref * dref = dref_from_published_ddca_dref(dinfo->dref);
       if (dref) {   // should never fail, but just in case
          if (dref->drm_connector_id > 0)
-            // rpt_vstring(d1, "DRM connector id:        %d",  dref->drm_connector_id);
-            rpt_vstring(d1, "DRM connector:        %s (id: %d)",  dref->drm_connector, dref->drm_connector_id);
+            // rpt_vstring(d1, "%-*s %d", tw, "DRM connector id:", dref->drm_connector_id);
+            rpt_vstring(d1, "%-*s %s (id: %d)",  tw, "DRM connector:", dref->drm_connector, dref->drm_connector_id);
          else
-            rpt_vstring(d1, "DRM connector:        %s",  dref->drm_connector);
+            rpt_vstring(d1, "%-*s %s",  tw, "DRM connector:", dref->drm_connector);
+         // TMI:
+         // rpt_vstring(d1, "%-*s %s",  tw, "DRM connector found by:",  drm_connector_found_by_public_name(dref->drm_connector_found_by));
       }
 
-      rpt_vstring(d1, "Mfg Id:               %s", dinfo->mfg_id);
-      rpt_vstring(d1, "Model:                %s", dinfo->model_name);
-      rpt_vstring(d1, "Product code:         %u", dinfo->product_code);
-      rpt_vstring(d1, "Serial number:        %s", dinfo->sn);
+      rpt_vstring(d1, "%-*s %s", tw, "Mfg id:",dinfo->mfg_id);
+      rpt_vstring(d1, "%-*s %s", tw, "Model:", dinfo->model_name);
+      rpt_vstring(d1, "%-*s %u", tw, "Product code:", dinfo->product_code);
+      rpt_vstring(d1, "%-*s %s", tw, "Serial number:",  dinfo->sn);
 
       // binary SN is not part of DDCA_Display_Info
       Parsed_Edid * edid = create_parsed_edid(dinfo->edid_bytes);
       if (edid) {     // should never fail, but being ultra-cautious
          // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
          // useful for differentiating displays that share a generic ASCII "serial number"
-         rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)",
+         rpt_vstring(d1,"%-*s %"PRIu32" (0x%08x)", tw, "Binary serial number:",
                         edid->serial_binary, edid->serial_binary);
          free_parsed_edid(edid);
       }
@@ -1300,7 +1404,7 @@ ddci_report_display_info(
       // OLD: rpt_hex_dump(dinfo->edid_bytes, 128, d2);
 
       // rpt_vstring(d1, "dref:                %p", dinfo->dref);
-      rpt_vstring(d1, "VCP Version:          %s", format_vspec(dinfo->vcp_version));
+      rpt_vstring(d1, "%-*s %s", tw, "VCP Version:", format_vspec(dinfo->vcp_version));
       // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
 
       if (dinfo->dispno == DISPNO_BUSY) {
@@ -1346,6 +1450,16 @@ ddca_report_display_info(
 	return ddci_report_display_info(dinfo, depth);
 }
 
+
+DDCA_Status
+ddca_report_display_info2(
+      DDCA_Display_Info2 * dinfo,
+      int                  depth)
+{
+   return ddci_report_display_info((DDCA_Display_Info*) dinfo, depth);
+}
+
+
 STATIC void
 dbgrpt_display_info(
       DDCA_Display_Info * dinfo,
@@ -1362,6 +1476,25 @@ dbgrpt_display_info(
    }
    DBGMSF(debug, "Done.");
 }
+
+#ifdef UNUSED
+STATIC void
+dbgrpt_display_info2(
+      DDCA_Display_Info2 * dinfo,
+      int                  depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. dinfo=%p");
+   ddci_report_display_info((DDCA_Display_Info*)dinfo, depth);
+   int d1 = depth+1;
+
+   rpt_vstring(d1, "dref:                %s", dref_repr_t(dinfo->dref));
+   if (dinfo->dref) {  // paranoid, should never be NULL
+      rpt_vstring(d1, "VCP Version (dref xdf): %s", format_vspec_verbose(((Display_Ref*)dinfo->dref)->vcp_version_xdf));
+   }
+   DBGMSF(debug, "Done.");
+}
+#endif
 
 
 void
@@ -1659,6 +1792,7 @@ void init_api_displays() {
    RTTI_ADD_FUNC(ddca_close_display);
    RTTI_ADD_FUNC(ddca_get_display_info_list2);
    RTTI_ADD_FUNC(ddca_get_display_info);
+   RTTI_ADD_FUNC(ddca_get_display_info2);
    RTTI_ADD_FUNC(ddca_get_display_ref);
    RTTI_ADD_FUNC(ddca_get_display_refs);
    RTTI_ADD_FUNC(ddca_open_display2);
@@ -1668,6 +1802,7 @@ void init_api_displays() {
    RTTI_ADD_FUNC(ddca_register_display_status_callback);
    RTTI_ADD_FUNC(ddca_unregister_display_status_callback);
    RTTI_ADD_FUNC(ddci_init_display_info);
+   RTTI_ADD_FUNC(ddci_init_display_info2);
 #ifdef OLD
    RTTI_ADD_FUNC(ddci_validate_ddca_display_ref);
 #endif
