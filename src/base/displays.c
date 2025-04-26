@@ -715,6 +715,7 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
       // dont set pdd
       copy->drm_connector = g_strdup(dref->drm_connector);
       copy->drm_connector_id = dref->drm_connector_id;
+      copy->drm_connector_found_by = dref->drm_connector_found_by;
    }
    // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, copy);
    DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", copy);
@@ -899,6 +900,7 @@ void dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth) {
       }
    }
    rpt_vstring(d1, "drm_connector:   %s", dref->drm_connector);
+   rpt_vstring(d1, "drm_connector_found_by: %s",  drm_connector_found_by_name(dref->drm_connector_found_by));
    rpt_vstring(d1, "drm_connector_id: %d", dref->drm_connector_id);
    rpt_vstring(d1, "creation_timestamp: %s", formatted_time_t(dref->creation_timestamp));
 
