@@ -410,6 +410,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             if (businfo->drm_connector_name) {
                dref->drm_connector = g_strdup(businfo->drm_connector_name);
             }
+            dref->drm_connector_found_by = businfo->drm_connector_found_by;
             dref->drm_connector_id = businfo->drm_connector_id;
             dref->pedid = copy_parsed_edid(businfo->edid);
             dref->mmid  = mmk_new(dref->pedid->mfg_id,
