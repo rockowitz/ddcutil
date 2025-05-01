@@ -19,6 +19,8 @@
 #include "util/report_util.h"
 #include "util/timestamp.h"
 
+#include "public/ddcutil_types.h"
+
 #include "base/core.h"
 #include "base/sleep.h"
 
@@ -79,6 +81,58 @@ void report_sleep_stats(int depth) {
 // Perform Sleep
 //
 
+/** General function for performing sleep.
+ *
+ *  This is a merger of the several sleep function variants previously defined
+ *  in sleep.c
+ *
+ * Sleep function variants are implemented as macros.
+ */
+void loggable_sleep(
+      int                    millisec,
+      Loggable_Sleep_Options opts,
+      DDCA_Syslog_Level      syslog_level,
+      const char *           func,
+      int                    lineno,
+      const char *           filename,
+      const char *           message)
+{
+   bool debug = false;
+
+   if (!message)
+      message = "";
+
+   if (opts & SLEEP_OPT_TRACEABLE) {
+      DBGTRC_EXECUTED(debug, DDCA_TRC_SLEEP,
+                      "Sleeping for %d milliseconds. %s", millisec, message);
+   }
+
+   uint64_t start_nanos  = cur_realtime_nanosec();
+   uint64_t nanosec = millisec * 1000;
+   if (nanosec > 0) {
+      usleep(nanosec);   // usleep takes microseconds, not milliseconds
+      if (opts&SLEEP_OPT_STATS) {
+         G_LOCK(sleep_stats);
+         sleep_stats.actual_sleep_nanos += (cur_realtime_nanosec()-start_nanos);
+         sleep_stats.requested_sleep_milliseconds += millisec;
+         sleep_stats.total_sleep_calls++;
+         G_UNLOCK(sleep_stats);
+      }
+   }
+
+   if (syslog > DDCA_SYSLOG_NEVER) {
+      // Alternatively, use syslog() instead of SYSLOG2() to ensure that msg is
+      // written to system log no matter what ddcutil log level cutoff is in effect
+#ifdef W_TID
+      SYSLOG2(syslog_level, "[%d](%s) Slept for %d millisec: %s", tid(), func, millisec, message);
+#else
+      SYSLOG2(syslog_level, "(%s) %s: Slept for %d millisec", func, message, millisec);
+#endif
+   }
+}
+
+
+#ifdef OLD
 /** Sleep for the specified number of milliseconds and
  *  record sleep statistics.
  *
@@ -93,8 +147,9 @@ void sleep_millis(int milliseconds) {
    sleep_stats.total_sleep_calls++;
    G_UNLOCK(sleep_stats);
 }
+#endif
 
-
+#ifdef OLD
 /** Sleep for the specified number of milliseconds, record
  *  sleep statistics, and perform tracing.
  *
@@ -124,8 +179,10 @@ void sleep_millis_with_trace(
    if (milliseconds > 0)
       sleep_millis(milliseconds);
 }
+#endif
 
 
+#ifdef OLD
 // Special sleep function for watching display connection changes
 // TODO: Integrate with sleep_millis_with_trace()
 
@@ -147,3 +204,4 @@ void sleep_millis_with_syslog(DDCA_Syslog_Level level,
    SYSLOG2(level, "(%s) %s: Slept for %d millisec", func, msg, millis);
 }
 
+#endif

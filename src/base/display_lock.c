@@ -236,7 +236,7 @@ lock_display(
          if (!locked) {
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "g_mutex_trylock() failed, dref=%s", 
                   dpath_short_name_t(&dlr->io_path));
-            sleep_millis(lock_wait_interval_millisec);
+            SLEEP_MILLIS_WITH_STATS(lock_wait_interval_millisec);
             total_wait_millisec += lock_wait_interval_millisec;
          }
       }

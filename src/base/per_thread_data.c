@@ -98,7 +98,7 @@ bool ptd_cross_thread_operation_start() {
       intmax_t cur_thread_id = thread_settings->tid;
       cross_thread_operation_owner = cur_thread_id;
       DBGMSF(debug, "Locked by thread %d", cur_thread_id);
-      sleep_millis(10);   // give all per-thread functions time to finish
+      SLEEP_MILLIS_WITH_STATS(10);   // give all per-thread functions time to finish
    }
    g_private_set(&lock_depth, GINT_TO_POINTER(thread_lock_depth+1));
    DBGMSF(debug, "Returning: %s", sbool(lock_performed) );
@@ -137,7 +137,7 @@ void ptd_cross_thread_operation_block() {
    if (cross_thread_operation_active && cur_threadid != cross_thread_operation_owner) {
       __sync_fetch_and_add(&cross_thread_operation_blocked_count, 1);
       do {
-         sleep_millis(10);
+         SLEEP_MILLIS_WITH_STATS(10);
       } while (cross_thread_operation_active);
    }
 }

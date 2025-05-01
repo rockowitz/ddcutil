@@ -4,7 +4,7 @@
  *  and applicable multipliers.
  */
 
-// Copyright (C) 2019-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -18,6 +18,8 @@
 #include "base/per_display_data.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
+
+#include "base/tuned_sleep.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
@@ -328,8 +330,10 @@ void tuned_sleep_with_trace(
       else
          g_snprintf(msg_buf, 100, "Event_type: %s", evname);
 
-      sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
-      pdd->total_sleep_time_millis += adjusted_sleep_time_millis;
+      // sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
+      //  general_sleep(adjusted_sleep_time_millis, true, true, DDCA_SYSLOG_NEVER, __func__, __LINE__, __FILE__, msg_buf);
+      SLEEP_MILLIS_TRACEABLE(adjusted_sleep_time_millis, msg_buf);
+       pdd->total_sleep_time_millis += adjusted_sleep_time_millis;
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -364,7 +368,8 @@ void check_deferred_sleep(
    if (dref->next_i2c_io_after > curtime) {
       int sleep_time = (dh->dref->next_i2c_io_after - curtime)/ (1000*1000);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Sleeping for %d milliseconds", sleep_time);
-      sleep_millis_with_trace(sleep_time, func, lineno, filename, "deferred");
+      //  sleep_millis_with_trace(sleep_time, func, lineno, filename, "deferred");
+      SLEEP_MILLIS_TRACEABLE(sleep_time, "deferred");
       pdd->total_sleep_time_millis += sleep_time;
       DBGTRC_DONE(debug, TRACE_GROUP,"");
    }

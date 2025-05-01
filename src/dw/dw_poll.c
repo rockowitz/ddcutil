@@ -228,7 +228,7 @@ gpointer dw_watch_display_connections(gpointer data) {
    while (!all_i2c_buses) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Waiting 1 sec for all_i2c_buses");
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Waiting 1 sec for all_i2c_buses");
-      sleep_millis(500);
+      SLEEP_MILLIS_WITH_STATS(500);
    }
 
    pid_t cur_pid = getpid();

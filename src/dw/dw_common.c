@@ -539,7 +539,7 @@ dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
    bool stable = false;
    while (!stable) {
       // DW_SLEEP_MILLIS(stabilization_poll_millisec, "Loop until stable"); // TMI
-      sleep_millis(stabilization_poll_millisec);
+      SLEEP_MILLIS_WITH_STATS(stabilization_poll_millisec);
       BS256 bs_latest = i2c_buses_w_edid_as_bitset();
       if (bs256_eq(bs_latest, bs_prior))
             stable = true;

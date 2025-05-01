@@ -159,7 +159,7 @@ bool pdd_cross_display_operation_start(const char * caller) {
       intmax_t cur_thread_id = thread_settings->tid;  // alt: get_thread_id()
       cross_thread_operation_owner = cur_thread_id;
       DBGMSF(debug, "          Locked performed by thread %d", cur_thread_id);
-      sleep_millis(10);   // give all per-thread functions time to finish
+      SLEEP_MILLIS_WITH_STATS(10);   // give all per-thread functions time to finish
    }
    display_lock_depth+=1;
    g_private_set(&pdd_lock_depth, GINT_TO_POINTER(display_lock_depth));
@@ -206,7 +206,7 @@ void pdd_cross_display_operation_block(const char * caller) {
    if (cross_thread_operation_active && cur_displayid != cross_thread_operation_owner) {
       __sync_fetch_and_add(&pdd_cross_thread_operation_blocked_count, 1);
       do {
-         sleep_millis(10);
+         SLEEP_MILLIS_WITH_STATS(10);
       } while (cross_thread_operation_active);
    }
 }

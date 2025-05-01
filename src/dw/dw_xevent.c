@@ -143,7 +143,7 @@ bool dw_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
       } else {
          // if (debug)
          //    printf(".");
-         sleep_millis(poll_interval);
+         SLEEP_MILLIS_SIMPLE(poll_interval);
       }
    }
 

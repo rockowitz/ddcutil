@@ -316,7 +316,7 @@ app_read_changes_forever(Display_Handle * dh, bool force_no_fifo) {
       }
 
       if (!changes_reported)
-         sleep_millis( 2500);
+         SLEEP_MILLIS_WITH_STATS( 2500);
    }
 }
 
