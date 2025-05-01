@@ -65,6 +65,7 @@ bool fn_any(const char * filename, const char * ignore) {
 }
 #endif
 
+
 //
 // *** Common Functions
 //
@@ -109,7 +110,7 @@ GPtrArray * get_sys_video_devices() {
 
 
 //
-// Extract bus numbers connetor_id, and name from card-connector directories
+// Extract bus numbers, connetor_id, and name from card-connector directories
 //
 
 void dbgrpt_connector_bus_numbers(Connector_Bus_Numbers * cbn, int depth) {
@@ -129,7 +130,7 @@ void free_connector_bus_numbers(Connector_Bus_Numbers * cbn) {
 
 
 /** Attempts to extract an I2C bus number and additional information from a
- * card-connector directory. This may not always be successful:
+ *  DRM card-connector directory. This is not always successful:
  *  - connector is on MST hub
  *  - Nvidia proprietary driver
  *
@@ -392,6 +393,7 @@ void dbgrpt_sysfs_basic_connector_attributes(int depth) {
 
 //
 // Get DRM connector name given an I2C bus number or connector id.
+//
 
 typedef struct {
    int    connector_id;
@@ -491,8 +493,8 @@ char * get_sys_drm_connector_name_by_connector_id(int connector_id) {
 }
 
 
-/** Given a I2C bus number, return the name of the
- *  connector for that bus number.
+/** Given a I2C bus number, return the name of the connector for that
+ *  bus number.
  *
  *  @param  busno  i2c bus number
  *  @return connector name
@@ -918,7 +920,7 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
  * status, and enabled attributes as displays are connected and
  * disconnected.
  *
- * Unfortunately depending version, the nvidia driver does not.
+ * Unfortunately depending on version, the nvidia driver does not.
  * Attribute enabled is always "disabled".  It may be the case
  * that the edid value is that of the monitor initially connected.
  * What has been observed is that if the driver does change the
@@ -1057,7 +1059,7 @@ bool is_sysfs_reliable_for_driver(const char * driver) {
          result = known_reliable_driver(driver);
    }
 
-   DBGF(debug, "Executed. Returning %s, driver=%s", SBOOL(result), driver);
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "Returning %s, driver=%s", SBOOL(result), driver);
    return result;
 }
 
@@ -1461,12 +1463,14 @@ int search_all_businfo_records_by_connector_name(char *connector_name) {
 }
 
 
+/** Module initialization */
 void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(possibly_write_detect_to_status);
    RTTI_ADD_FUNC(sysfs_find_adapter);
    RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
    RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
    RTTI_ADD_FUNC(check_connector_reliability);
+   RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);
    RTTI_ADD_FUNC(check_sysfs_reliability);
    RTTI_ADD_FUNC(find_adapter_and_get_driver);
    RTTI_ADD_FUNC(is_sysfs_reliable);
@@ -1478,6 +1482,4 @@ void init_i2c_sysfs_base() {
 #ifdef UNUSED
    RTTI_ADD_FUNC(get_sys_video_devices);
 #endif
-
 }
-
