@@ -34,10 +34,9 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
-
 GPtrArray * all_i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
-bool use_x37_detection_table = false;
 static GMutex all_i2c_buses_mutex;
+bool use_x37_detection_table = false;
 bool primitive_sysfs = false;
 
 
@@ -194,6 +193,7 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
 }
 
 
+#ifdef UNUSED
 char * i2c_get_drm_connector_name(I2C_Bus_Info * businfo) {
    bool debug = false;
    char * result = NULL;
@@ -203,15 +203,13 @@ char * i2c_get_drm_connector_name(I2C_Bus_Info * businfo) {
          businfo->drm_connector_name);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "flags: %s", i2c_interpret_bus_flags_t(businfo->flags) );
 
-
-  // if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) ) {    // ??? when can this be false? ???
-      result = businfo->drm_connector_name;
- //   }
+   assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
+   result = businfo->drm_connector_name;
 
    DBGTRC_RET_STRING(debug, TRACE_GROUP, result, "");
    return result;
 }
-
+#endif
 
 
 /** Reports on a single I2C bus.
@@ -287,6 +285,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
+
 
 //
 // Lifecycle
@@ -369,6 +368,7 @@ I2C_Bus_Info * i2c_get_bus_info(int busno, bool* new_info) {
 }
 
 
+#ifdef UNUSED
 void i2c_remove_bus_by_businfo(I2C_Bus_Info * businfo) {
    assert(businfo);
    bool debug  = false;
@@ -381,7 +381,7 @@ void i2c_remove_bus_by_businfo(I2C_Bus_Info * businfo) {
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
-
+#endif
 
 
 void i2c_discard_buses0(GPtrArray* buses) {
@@ -721,6 +721,16 @@ int i2c_device_count() {
 }
 
 
+/** Checks if the current user has R/W access to a file,
+ *  using function access()
+ *
+ *  @param dev_name  file to check
+ *  @return NULL if file can be read and written, Error_Info struct if not
+ *
+ *  Status values if Error_Info:
+ *  - -ENOENT file does not exist, or unexpected error (explanation in detail)
+ *  - -EACCES R/W permissions lacking
+ */
 Error_Info * i2c_check_device_access(char * dev_name) {
    Error_Info * err = NULL;
    if ( access(dev_name, R_OK|W_OK) < 0 ) {
@@ -753,6 +763,9 @@ Error_Info * i2c_check_device_access(char * dev_name) {
 //
 // x37 detection table - Records x37 responsiveness to avoid recheck
 //
+//  Key:   EDIDa and bus number, in text form
+//  Value: X37_Detection_State, integer, stored as a pointer
+//
 
 const char * x37_detection_state_name(X37_Detection_State state) {
    char * s = NULL;
@@ -764,33 +777,50 @@ const char * x37_detection_state_name(X37_Detection_State state) {
    return s;
 }
 
-
 static GHashTable * x37_detection_table = NULL;
 
+/** Creates hash table key
+ *
+ *  @param  busno      /dev/i2c bus number
+ *  @param  edidbytes  pointer to 128 byte EDID
+ *  @return hash table key as newly allocated string
+ */
 char * x37_detection_table_key(int busno, Byte* edidbytes) {
    char * buf = g_strdup_printf("%s%d", hexstring_t(edidbytes,128), busno);
-   //guint key = g_str_hash(buf);
-   // free(buf);
    return buf;
 }
 
 
+/** Records the X37 detection state for an EDID/busno pair
+ *
+ *  @param  busno      /dev/i2c bus number
+ *  @param  edidbytes  pointer to 128 byte EDID
+ *  @param  detected   detection state to record
+ *
+ *  The hash table is created if it does not already exist
+ */
 void  i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State detected) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "detected = %s, busno=%d, edidbytes = %s",
          x37_detection_state_name(detected), busno, hexstring_t(edidbytes+120, 8));
+   assert(detected != X37_Not_Recorded);
 
    if (!x37_detection_table)
       x37_detection_table =  g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-   assert(detected != X37_Not_Recorded);
+
    char * key = x37_detection_table_key(busno, edidbytes);
    g_hash_table_replace(x37_detection_table, key, GINT_TO_POINTER(detected));
-   // free(key);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
+/** Query the detection state for an EDID/busno pair
+ *
+ *  @param  busno      /dev/i2c bus number
+ *  @param  edidbytes  pointer to 128 byte EDID
+ *  @return detection state
+ */
 X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, edidbytes = ...%s",
@@ -822,10 +852,10 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_dbgrpt_bus_info);
    RTTI_ADD_FUNC(i2c_query_x37_detected);
    RTTI_ADD_FUNC(i2c_record_x37_detected);
-
-   // connected_buses = EMPTY_BIT_SET_256;
 }
 
+
+/** Module termination **/
 void terminate_i2c_bus_base() {
    // DBGMSG("Executing.  x37_detection_table = %p", x37_detection_table);
    if (x37_detection_table) {
@@ -838,4 +868,3 @@ void terminate_i2c_bus_base() {
       free (all_i2c_buses);
    }
 }
-
