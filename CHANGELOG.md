@@ -16,7 +16,7 @@
 - Avoid segfault if invalid feature code specified
 - Maximum wait time on function lock_display() not respected, possible infinte
   loop.  Addresses issue #511
-- Fix --verify/--noverify parsing.  Addresses issue #512/
+- Fix --verify/--noverify parsing.  Addresses issue #512.
 - ddca_close_display(): do not respect quiesce, allowing the display lock
   record to be released, avoiding possible deadlock
 - Fix the spelling of company name HON HAI PRECISION" (obtained from UEFI), 
@@ -26,7 +26,7 @@
 
 ### Building
 
-- configure option ***--enable-watch-displays***/***--disable-watch-displays***
+- **configure** option ***--enable-watch-displays***/***--disable-watch-displays***
   controls whether display watch functionaliity is built.  The default is 
   ***--enable-watch-displays***.
   - If built with ***--disable-watch-displays***, API functions related 
@@ -37,6 +37,13 @@
 #### Shared Library
 
 ### Added
+
+- Struct DDCA_Display_Info2 is an extended version of DDCA_Display_Info that 
+  adds fields for the display's sysfs card-connector directory, how that 
+  directory was determined (precisely using I2C bus number or heristically
+  using EDID), and the DRM connector id. API functions have been added to 
+  use this struct: **ddca_get_display_info2()**, **ddca_free_display_info2()**, 
+  and **ddca_report_display_info2()**.  Addresses issue #518.
 
 ### Changed
 
@@ -51,6 +58,11 @@
   if already executing
 - **ddca_close_display()**: allow execution even if libddcutil is quiesced.
   Avoids a possible deadlock due to an internal display lock not being released.
+- **ddca_stop_watch_displays()** did not release the X11/Wayland connection 
+  obtained by **ddca_start_watch_displays()**.  This also occured with each 
+  **ddca_redetect_displays()** call. As a result KDE PowerDevil eventually 
+  exhausted X11 connections of a very long running system with repeated
+  display connections and disconnections.  Pull request #519.
 
 
 ## [2.2.0] 2024-02-10
