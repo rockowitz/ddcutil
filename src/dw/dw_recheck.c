@@ -149,7 +149,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
    int pop_interval_millis   = 100;
 
    while (!terminate_watch_thread) {
-      DW_SLEEP_MILLIS(sleep_interval_millis, "Recheck interval");   // move to end of loop
+      SLEEP_MILLIS_WITH_SYSLOG(sleep_interval_millis, "Recheck interval");   // move to end of loop
       uint64_t cur_time_nanos = cur_realtime_nanosec();
 
       Recheck_Queue_Entry* rqe = NULL;

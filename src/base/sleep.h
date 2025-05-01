@@ -41,14 +41,14 @@ void         report_sleep_stats(int depth);
 
 // Perform display watch related sleeps
 
-#define DW_SLEEP_MILLIS(_millis, _msg) \
+#define SLEEP_MILLIS_WITH_SYSLOG(_millis, _msg) \
    do { \
-      dw_sleep_millis(DDCA_SYSLOG_NOTICE, __func__, __LINE__, __FILE__, _millis, _msg); \
+      sleep_millis_with_syslog(DDCA_SYSLOG_NOTICE, __func__, __LINE__, __FILE__, _millis, _msg); \
    } while(0)
-#define DW_SLEEP_MILLIS2(_syslog_level, _millis, _msg) \
+#define SLEEP_MILLIS_WITH_SYSLOG2(_syslog_level, _millis, _msg) \
    do { \
-      dw_sleep_millis(_syslog_level, __func__, __LINE__, __FILE__, _millis, _msg); \
+      sleep_millis_with_syslog(_syslog_level, __func__, __LINE__, __FILE__, _millis, _msg); \
    } while(0)
-void dw_sleep_millis(DDCA_Syslog_Level level, const char * func, int line, const char * file, uint millis, const char * msg);
+void sleep_millis_with_syslog(DDCA_Syslog_Level level, const char * func, int line, const char * file, uint millis, const char * msg);
 
 #endif /* BASE_SLEEP_H_ */

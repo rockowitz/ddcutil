@@ -129,7 +129,7 @@ void sleep_millis_with_trace(
 // Special sleep function for watching display connection changes
 // TODO: Integrate with sleep_millis_with_trace()
 
-void dw_sleep_millis(DDCA_Syslog_Level level,
+void sleep_millis_with_syslog(DDCA_Syslog_Level level,
                      const char *      func,
                      int               line,
                      const char *      file,

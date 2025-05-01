@@ -275,7 +275,7 @@ ddc_open_display(
          if (tryct == 0) {
             free(status);
             // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "status == disconnected, sleeping 1 sec and retrying");
-            DW_SLEEP_MILLIS(1000, "Delay before rechecking attribute status");
+            SLEEP_MILLIS_WITH_SYSLOG(1000, "Delay before rechecking attribute status");
             tryct++;
             goto retry_status;
          }

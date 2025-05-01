@@ -145,7 +145,7 @@ dw_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool p
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         DW_SLEEP_MILLIS(initial_stabilization_millisec, "Initial sleep");
+         SLEEP_MILLIS_WITH_SYSLOG(initial_stabilization_millisec, "Initial sleep");
       }
    }
 
@@ -153,7 +153,7 @@ dw_i2c_stabilized_single_bus_by_connector_name(char * drm_connector_name, bool p
    bool stable = false;
    while (!stable) {
       // usleep(1000*stabilization_poll_millisec);
-      DW_SLEEP_MILLIS(stabilization_poll_millisec, "Stabilization loop");
+      SLEEP_MILLIS_WITH_SYSLOG(stabilization_poll_millisec, "Stabilization loop");
 
       char * s = g_strdup_printf("/sys/class/drm/%s/edid", drm_connector_name);
       // DBGF(debug, "reading: %s", s);

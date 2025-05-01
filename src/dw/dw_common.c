@@ -531,7 +531,7 @@ dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
          DBGTRC(debug, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
-         DW_SLEEP_MILLIS(initial_stabilization_millisec,  "Initial stabilization delay");
+         SLEEP_MILLIS_WITH_SYSLOG(initial_stabilization_millisec,  "Initial stabilization delay");
       }
    }
 

@@ -330,7 +330,7 @@ check_supported_feature(Display_Handle *      dh,
          {
             if (newly_added) {
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Additional 1 second sleep for newly added display (A)");
-               DW_SLEEP_MILLIS(1000, "Additional 1 second sleep for newly added display (C)");
+               SLEEP_MILLIS_WITH_SYSLOG(1000, "Additional 1 second sleep for newly added display (C)");
             }
             // turn off optimization in case it's on
             if (dynamic_sleep_active ) {

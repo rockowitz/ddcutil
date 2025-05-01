@@ -193,7 +193,7 @@ void dw_send_x11_termination_message(XEvent_Data * evdata) {
               (XEvent *)&evt);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XSendEvent() returned %s", SBOOL(ok));
    XFlush(dpy);
-   DW_SLEEP_MILLIS(2000, "After XSendEvent");  // needed?
+   SLEEP_MILLIS_WITH_SYSLOG(2000, "After XSendEvent");  // needed?
 
    if (ok)
       DBGTRC_DONE(debug, TRACE_GROUP, "XSendEvent() succeeded");
