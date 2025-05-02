@@ -98,11 +98,7 @@ void loggable_sleep(
       const char *           filename,
       const char *           format, ...)
 {
-   bool debug = true;
-   if (debug)
-      DBG("(loggable_sleep) Starting.  func=%s, format=%s", func, format);
-
-
+   bool debug = false;
    char * message = NULL;
 
    if (opts & SLEEP_OPT_TRACEABLE || syslog_level > DDCA_SYSLOG_NEVER) {
