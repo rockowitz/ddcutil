@@ -16,6 +16,7 @@
 /** \endcond */
 
 #include "util/common_inlines.h"
+#include "util/debug_util.h"
 #include "util/report_util.h"
 #include "util/timestamp.h"
 
@@ -95,17 +96,40 @@ void loggable_sleep(
       const char *           func,
       int                    lineno,
       const char *           filename,
-      const char *           message)
+      const char *           format, ...)
 {
-   bool debug = false;
+   bool debug = true;
+   if (debug)
+      DBG("(loggable_sleep) Starting.  func=%s, format=%s", func, format);
 
-   if (!message)
-      message = "";
 
-   if (opts & SLEEP_OPT_TRACEABLE) {
+   char * message = NULL;
+
+   if (opts & SLEEP_OPT_TRACEABLE || syslog_level > DDCA_SYSLOG_NEVER) {
+      va_list(args);
+      va_start(args, format);
+      message = g_strdup_vprintf(format, args);
+      va_end(args);
+   }
+
+   bool only_syslog = syslog_level > DDCA_SYSLOG_NEVER && dbgtrc_trace_to_syslog_only;
+   if (opts & SLEEP_OPT_TRACEABLE && !only_syslog) {
       DBGTRC_EXECUTED(debug, DDCA_TRC_SLEEP,
                       "Sleeping for %d milliseconds. %s", millisec, message);
    }
+
+   if (syslog > DDCA_SYSLOG_NEVER) {
+      // Alternatively, use syslog() instead of SYSLOG2() to ensure that msg is
+      // written to system log no matter what ddcutil log level cutoff is in effect
+#ifdef W_TID
+      SYSLOG2(syslog_level, "[%d](%s) Sleeping for %d milliseconds: %s", tid(), func, millisec, message);
+#else
+      SYSLOG2(syslog_level, "(%s) %s: Sleeping for %d milliseconds", func, message, millisec);
+#endif
+   }
+
+   if (message)
+      free(message);
 
    uint64_t start_nanos  = cur_realtime_nanosec();
    uint64_t nanosec = millisec * 1000;
@@ -118,16 +142,6 @@ void loggable_sleep(
          sleep_stats.total_sleep_calls++;
          G_UNLOCK(sleep_stats);
       }
-   }
-
-   if (syslog > DDCA_SYSLOG_NEVER) {
-      // Alternatively, use syslog() instead of SYSLOG2() to ensure that msg is
-      // written to system log no matter what ddcutil log level cutoff is in effect
-#ifdef W_TID
-      SYSLOG2(syslog_level, "[%d](%s) Slept for %d millisec: %s", tid(), func, millisec, message);
-#else
-      SYSLOG2(syslog_level, "(%s) %s: Slept for %d millisec", func, message, millisec);
-#endif
    }
 }
 

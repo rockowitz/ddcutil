@@ -77,13 +77,20 @@ typedef enum {
  * Sleep function variants are implemented as macros.
  */
 void loggable_sleep(
-      int               millisec,
+      int                    millisec,
       Loggable_Sleep_Options opts,
-      DDCA_Syslog_Level syslog_level,
-      const char *      func,
-      int               lineno,
-      const char *      filename,
-      const char *      message);
+      DDCA_Syslog_Level      syslog_level,
+      const char *           func,
+      int                    lineno,
+      const char *           filename,
+      const char *           format, ...);
+
+
+#define LOGGABLE_SLEEP(_millis, _opts, _syslog_level, _msg, ...) \
+   do { \
+      loggable_sleep(_millis, _opts, _syslog_level, \
+                     __func__, __LINE__, __FILE__, _msg,  ##__VA_ARGS__); \
+   } while(0)
 
 
 /** Sleep for the specified number of milliseconds.
@@ -113,20 +120,23 @@ void loggable_sleep(
  * \param milliseconds number of milliseconds to sleep
  * \param msg
  */
-#define SLEEP_MILLIS_TRACEABLE(_millis, _msg) \
+#define SLEEP_MILLIS_TRACEABLE(_millis, _msg, ...) \
    do { \
-      loggable_sleep(_millis, SLEEP_OPT_TRACEABLE, DDCA_SYSLOG_NEVER, __func__, __LINE__, __FILE__, _msg); \
+      loggable_sleep(_millis, SLEEP_OPT_TRACEABLE, DDCA_SYSLOG_NEVER, \
+                     __func__, __LINE__, __FILE__, _msg,  ##__VA_ARGS__); \
    } while(0)
 
 
-#define SLEEP_MILLIS_WITH_SYSLOG(_millis, _msg) \
+#define SLEEP_MILLIS_WITH_SYSLOG(_millis, _msg, ...) \
    do { \
-      loggable_sleep(_millis, SLEEP_OPT_NONE, DDCA_SYSLOG_NOTICE, __func__, __LINE__, __FILE__, _msg); \
+      loggable_sleep(_millis, SLEEP_OPT_NONE, DDCA_SYSLOG_NOTICE, \
+                     __func__, __LINE__, __FILE__, _msg, ##__VA_ARGS__); \
    } while(0)
 
-#define SLEEP_MILLIS_WITH_SYSLOG2(_syslog_level, _millis, _msg) \
+#define SLEEP_MILLIS_WITH_SYSLOG2(_syslog_level, _millis, _msg, ...) \
    do { \
-      loggable_sleep(_millis, SLEEP_OPT_NONE, _syslog_level, __func__, __LINE__, __FILE__, _msg); \
+      loggable_sleep(_millis, SLEEP_OPT_NONE, _syslog_level, \
+                     __func__, __LINE__, __FILE__, _msg,  ##__VA_ARGS__); \
    } while(0)
 
 
