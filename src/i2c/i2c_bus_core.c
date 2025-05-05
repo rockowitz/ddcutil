@@ -1166,7 +1166,7 @@ Byte * get_connector_edid(const char * connector_name) {
 
  bye:
     free(drm_connector_name);
-    ERRINFO_FREE_WITH_REPORT(master_err, true);
+    ERRINFO_FREE_WITH_REPORT(master_err, IS_DBGTRC(debug, TRACE_GROUP) || is_report_ddc_errors_enabled() );
     DBGTRC_RET_BOOL(debug, TRACE_GROUP, edid_exists, "");
     return edid_exists;
  }
@@ -1210,7 +1210,7 @@ Byte * get_connector_edid(const char * connector_name) {
   }
 
 
- /** Determines if a card-connector class attribute reprsents a
+ /** Determines if a card-connector class attribute represents a
   *  display controller.
   *
   *  @param  adapter_class  class value as string
@@ -1475,7 +1475,7 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
  *  @param  businfo  pointer to #I2C_Bus_Info struct in which information will be set
  *  @return status code
  */
-Status_Errno  i2c_check_bus(I2C_Bus_Info * businfo) {
+Error_Info * i2c_check_bus(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p, primitive_sysfs=%s",
          businfo->busno, businfo, SBOOL(primitive_sysfs) );
@@ -1501,7 +1501,6 @@ Status_Errno  i2c_check_bus(I2C_Bus_Info * businfo) {
    // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
    bool drm_card_connector_directories_exist = directory_exists("/sys/class/drm");
 
-   int ddcrc = 0;
    businfo->flags |= I2C_BUS_PROBED;
    Error_Info *master_err = NULL;
    if (!i2c_device_exists(businfo->busno)) {
@@ -1680,28 +1679,14 @@ Status_Errno  i2c_check_bus(I2C_Bus_Info * businfo) {
     businfo->flags |= I2C_BUS_INITIAL_CHECK_DONE;
 
 bye:
-   if ( IS_DBGTRC(debug, TRACE_GROUP)) {
-      DBGTRC_NOPREFIX(true, TRACE_GROUP, "busno=%d, flags = %s",
-            businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
-
-      // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "businfo:");
-      // i2c_dbgrpt_bus_info(businfo, 2);
-      if (master_err) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "businfo:");
-         i2c_dbgrpt_bus_info(businfo, /* include_sysinfo */ true, 2);
-         ddcrc = master_err->status_code;
-         ERRINFO_FREE_WITH_REPORT(master_err, true);
-      }
-   }
-   else {
-      if (master_err) {
-         ddcrc = master_err->status_code;
-         ERRINFO_FREE_WITH_REPORT(master_err, false);
-      }
+   if ( IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      // DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "busno=%d, flags = %s",
+      //       businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
+      i2c_dbgrpt_bus_info(businfo, /* include_sysinfo */ true, 2);
    }
 
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, master_err, "");
+   return master_err;
 }  // i2c_check_bus
 
 
@@ -1863,12 +1848,12 @@ i2c_threaded_initial_checks_by_businfo(gpointer data) {
    TRACED_ASSERT(memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0 );
    DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d", businfo->busno );
 
-   i2c_check_bus(businfo);
+   Error_Info * err = i2c_check_bus(businfo);
    // g_thread_exit(NULL);
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. bus=/dev/i2c-%d", businfo->busno );
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "bus=/dev/i2c-%d", businfo->busno );
    free_current_traced_function_stack();
-   return NULL;
+   return err;
 }
 
 
@@ -1899,7 +1884,8 @@ i2c_async_scan(GPtrArray * i2c_buses) {
    DBGMSF(debug, "Started %d threads", threads->len);
    for (int ndx = 0; ndx < threads->len; ndx++) {
       GThread * thread = g_ptr_array_index(threads, ndx);
-      g_thread_join(thread);  // implicitly unrefs the GThread
+      Error_Info * err = g_thread_join(thread);  // implicitly unrefs the GThread
+      ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, TRACE_GROUP) || is_report_ddc_errors_enabled() );
    }
    DBGMSF(debug, "Threads joined");
    g_ptr_array_free(threads, true);
@@ -1916,12 +1902,14 @@ void
 i2c_non_async_scan(GPtrArray * i2c_buses) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "checking %d buses", i2c_buses->len);
+   Error_Info * err = NULL;
 
    for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
       I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "Calling i2c_check_bus() synchronously for bus %d", businfo->busno);
-      i2c_check_bus(businfo);
+      err = i2c_check_bus(businfo);
+      ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, TRACE_GROUP) || is_report_ddc_errors_enabled() );
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -2108,7 +2096,8 @@ I2C_Bus_Info * i2c_get_and_check_bus_info(int busno) {
    I2C_Bus_Info* businfo =  i2c_get_bus_info(busno, &new_info);
    if (!new_info)
       i2c_reset_bus_info(businfo);
-   i2c_check_bus(businfo);
+   Error_Info * err = i2c_check_bus(businfo);
+   ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, DDCA_TRC_NONE) || is_report_ddc_errors_enabled());
 #ifdef OLD
    if (new_info | !(businfo->flags&I2C_BUS_INITIAL_CHECK_DONE)) {
       i2c_check_bus(businfo);
@@ -2158,7 +2147,8 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
       }
       businfo = i2c_new_bus_info(busno);
       businfo->flags = I2C_BUS_EXISTS;
-      i2c_check_bus(businfo);
+      Error_Info * err = i2c_check_bus(businfo);
+      ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, DDCA_TRC_I2C) || is_report_ddc_errors_enabled());
       if (debug)
          i2c_dbgrpt_bus_info(businfo, true, 0);
       g_ptr_array_add(all_i2c_buses, businfo);
