@@ -442,23 +442,27 @@ char * dpath_short_name_t(DDCA_IO_Path * dpath) {
  *  suitable for diagnostic messages. The returned value is valid until the
  *  next call to this function on the current thread.
  *
- *  \param  dpath  pointer to ##DDCA_IO_Path
+ *  \param  dpath  pointer to #DDCA_IO_Path
  *  \return string representation of #DDCA_IO_Path
  */
 char * dpath_repr_t(DDCA_IO_Path * dpath) {
    static GPrivate  dpath_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dpath_repr_key, 100);
-   switch(dpath->io_mode) {
-   case DDCA_IO_I2C:
-      if (dpath->path.i2c_busno == BUSNO_NOT_SET)
-         snprintf(buf, 100, "Display Path not set");
-      else
-         snprintf(buf, 100, "Display_Path[/dev/i2c-%d]", dpath->path.i2c_busno);
-      break;
-   case DDCA_IO_USB:
-      snprintf(buf, 100, "Display_Path[/dev/usb/hiddev%d]", dpath->path.hiddev_devno);
+   if (dpath) {
+      switch(dpath->io_mode) {
+      case DDCA_IO_I2C:
+         if (dpath->path.i2c_busno == BUSNO_NOT_SET)
+            snprintf(buf, 100, "Display Path not set");
+         else
+            snprintf(buf, 100, "Display_Path[/dev/i2c-%d]", dpath->path.i2c_busno);
+         break;
+      case DDCA_IO_USB:
+         snprintf(buf, 100, "Display_Path[/dev/usb/hiddev%d]", dpath->path.hiddev_devno);
+      }
    }
+   else
+      snprintf(buf, 100, "NULL Display Path");
    return buf;
 }
 
