@@ -91,9 +91,9 @@ static char * get_busid_from_fd(int fd) {
 
 
 typedef struct {
-   char *  name;
-   int     count;
-   int *   values;
+   char *     name;
+   int        count;
+   uint64_t * values;
    char ** value_names;
 } Enum_Metadata;
 
@@ -136,14 +136,13 @@ static void free_enum_metadata(Enum_Metadata * meta) {
 #endif
 
 
-
 static void dbgrpt_enum_metadata(Enum_Metadata * meta, int depth) {
    rpt_structure_loc("Enum_Metadata", meta, depth);
    if (meta) {
       int d1 = depth+1;
       rpt_vstring(d1, "Name:  %s", meta->name);
       for (int ndx = 0; ndx < meta->count; ndx++)
-         rpt_vstring(d1, "%2d  %s", meta->values[ndx], meta->value_names[ndx]);
+         rpt_vstring(d1, "%2"PRIu64"  %s", meta->values[ndx], meta->value_names[ndx]);
    }
 }
 
