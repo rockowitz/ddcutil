@@ -114,7 +114,7 @@ void loggable_sleep(
                       "Sleeping for %d milliseconds. %s", millisec, message);
    }
 
-   if (syslog > DDCA_SYSLOG_NEVER) {
+   if (syslog_level > DDCA_SYSLOG_NEVER) {
       // Alternatively, use syslog() instead of SYSLOG2() to ensure that msg is
       // written to system log no matter what ddcutil log level cutoff is in effect
 #ifdef W_TID
@@ -128,9 +128,9 @@ void loggable_sleep(
       free(message);
 
    uint64_t start_nanos  = cur_realtime_nanosec();
-   uint64_t nanosec = millisec * 1000;
-   if (nanosec > 0) {
-      usleep(nanosec);   // usleep takes microseconds, not milliseconds
+   uint64_t microsec = MILLIS2MICROS(millisec);
+   if (microsec > 0) {
+      usleep(microsec);   // usleep takes microseconds, not milliseconds
       if (opts&SLEEP_OPT_STATS) {
          G_LOCK(sleep_stats);
          sleep_stats.actual_sleep_nanos += (cur_realtime_nanosec()-start_nanos);
