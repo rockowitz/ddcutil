@@ -872,14 +872,11 @@ STATIC
    if (dref->dispno > 0 && (dref->flags&DREF_DDC_COMMUNICATION_WORKING)) {
       vspec = get_vcp_version_by_dref(dref);
    }
-   memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
-
-
-   g_strlcpy(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
-   g_strlcpy(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
-   g_strlcpy(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
-
-   curinfo->product_code  = dref->pedid->product_code;
+   memcpy(   curinfo->edid_bytes, dref->pedid->bytes, 128);
+   G_STRLCPY(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
+   G_STRLCPY(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
+   G_STRLCPY(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
+   curinfo->product_code   = dref->pedid->product_code;
    curinfo->vcp_version    = vspec;
    curinfo->dref           = dref_to_ddca_dref(dref);
 
@@ -931,9 +928,9 @@ STATIC
       vspec = get_vcp_version_by_dref(dref);
    }
    memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
-   g_strlcpy(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
-   g_strlcpy(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
-   g_strlcpy(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
+   G_STRLCPY(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
+   G_STRLCPY(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
+   G_STRLCPY(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
    curinfo->product_code  = dref->pedid->product_code;
    curinfo->vcp_version   = vspec;
    curinfo->dref          = dref_to_ddca_dref(dref);
@@ -943,7 +940,7 @@ STATIC
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       I2C_Bus_Info * businfo = dref->detail;
       if (businfo->drm_connector_name) {
-         g_strlcpy(curinfo->drm_card_connector, businfo->drm_connector_name, DDCA_DRM_CONNECTOR_FIELD_SIZE);
+         G_STRLCPY(curinfo->drm_card_connector, businfo->drm_connector_name, DDCA_DRM_CONNECTOR_FIELD_SIZE);
          curinfo->drm_card_connector_found_by =  drm_to_ddca_connector_found_by(businfo->drm_connector_found_by);
          curinfo->drm_connector_id = businfo->drm_connector_id;
       }
@@ -1164,16 +1161,14 @@ ddca_get_display_info_list2(
 void
 ddca_free_display_info(DDCA_Display_Info * info_rec) {
    bool debug = false;
-   DDCA_IO_Path path = info_rec->path;
-   API_PROLOG(debug, "info_rec->%p, path=%s", info_rec, dpath_repr_t(&path));
-   // DDCA_Display_Info contains no pointers, can simply be free'd
-   // data structures.  Nothing to free.
+   API_PROLOG_NO_DISPLAY_IO(debug, "info_rec=%p", info_rec);
    if (info_rec && memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0) {
+      // DDCA_IO_Path path = info_rec->path;
+      // DDCA_Display_Info contains no pointers, can simply be free'd.
       info_rec->marker[3] = 'x';
       free(info_rec);
    }
-   API_EPILOG_NO_RETURN(debug, false, "path=%s", dpath_repr_t(&path));
-   // DBGTRC_DONE(debug, DDCA_TRC_API,"");
+   API_EPILOG_NO_RETURN(debug, false, "");
    DISABLE_API_CALL_TRACING();
 }
 
@@ -1181,16 +1176,13 @@ ddca_free_display_info(DDCA_Display_Info * info_rec) {
 void
 ddca_free_display_info2(DDCA_Display_Info2 * info_rec) {
    bool debug = false;
-   DDCA_IO_Path path = info_rec->path;
-   API_PROLOG(debug, "info_rec->%p, path=%s", info_rec, dpath_repr_t(&path));
-   // DDCA_Display_Info contains no pointers, can simply be free'd
-   // data structures.  Nothing to free.
+   API_PROLOG_NO_DISPLAY_IO(debug, "info_rec=%p", info_rec);
    if (info_rec && memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0) {
+      // DDCA_Display_Info contains no pointers, can simply be free'd
       info_rec->marker[3] = 'x';
       free(info_rec);
    }
-   API_EPILOG_NO_RETURN(debug, false, "path=%s", dpath_repr_t(&path));
-   // DBGTRC_DONE(debug, DDCA_TRC_API,"");
+   API_EPILOG_NO_RETURN(debug, false, "");
    DISABLE_API_CALL_TRACING();
 }
 
@@ -1244,9 +1236,9 @@ ddci_report_display_info(
             rpt_vstring(d1, "%-*s /dev/i2c-%d", tw, "I2C bus:", dinfo->path.path.i2c_busno);
             break;
       case (DDCA_IO_USB):
-            rpt_vstring(d1, "%-*s %d.%d", "USB bus device:",
+            rpt_vstring(d1, "%-*s %d.%d", tw, "USB bus device:",
                             dinfo->usb_bus, dinfo->usb_device);
-            rpt_vstring(d1, "%-*s /dev/usb/hiddev%d", "USB hiddev device:", dinfo->path.path.hiddev_devno);
+            rpt_vstring(d1, "%-*s /dev/usb/hiddev%d", tw, "USB hiddev device:", dinfo->path.path.hiddev_devno);
             break;
       }
 
