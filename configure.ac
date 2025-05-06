@@ -172,9 +172,11 @@ AC_SUBST([LIBTOOL_DEPS])
 # is --version-info "13:1:4", and the generated SO name looks like xxx.so.9.4.1
 
 dnl 7/29/19 first use, LT_CURRENT set to 1
-LT_CURRENT=7
+dnl release 2.2.0, c:r:a = 7:0:2 -> libddcutil.so.5.2.0
+dnl release 2.2.1, c:r:a = 8:0:3 -> libddcutil.so.5.3.0
+LT_CURRENT=8
 LT_REVISION=0
-LT_AGE=2
+LT_AGE=3
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
