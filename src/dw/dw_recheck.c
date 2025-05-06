@@ -201,27 +201,29 @@ gpointer dw_recheck_displays_func(gpointer data) {
          DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "unlocked process_event_mutex");
          dw_free_recheck_queue_entry(rqe);
       }
-      else if (err->status_code == DDCRC_DISCONNECTED) {
-         emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
-             "Display %s no longer detected after %"PRIu64" milliseconds",
-             dref_reprx_t(dref),
-             NANOS2MILLIS(cur_time_nanos - rqe->initial_ts_nanos));
-
-         dref->dispno = DISPNO_REMOVED;
-          dw_emit_or_queue_display_status_event(
-                DDCA_EVENT_DISPLAY_DISCONNECTED,
-                dref->drm_connector,
-                dref,
-                dref->io_path,
-                NULL);   //                    rdd->deferred_event_queue);
-          dw_free_recheck_queue_entry(rqe);
-      }
       else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                "ddc still not enabled for %s after %d milliseconds, retrying ...",
-                dref_reprx_t(rqe->dref), sleep_interval_millis);
-         g_queue_push_head(to_check_again, rqe);
+         if (err->status_code == DDCRC_DISCONNECTED) {
+            emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
+                "Display %s no longer detected after %"PRIu64" milliseconds",
+                dref_reprx_t(dref),
+                NANOS2MILLIS(cur_time_nanos - rqe->initial_ts_nanos));
 
+            dref->dispno = DISPNO_REMOVED;
+             dw_emit_or_queue_display_status_event(
+                   DDCA_EVENT_DISPLAY_DISCONNECTED,
+                   dref->drm_connector,
+                   dref,
+                   dref->io_path,
+                   NULL);   //                    rdd->deferred_event_queue);
+             dw_free_recheck_queue_entry(rqe);
+         }
+         else {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                   "ddc still not enabled for %s after %d milliseconds, retrying ...",
+                   dref_reprx_t(rqe->dref), sleep_interval_millis);
+            g_queue_push_head(to_check_again, rqe);
+         }
+         ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, DDCA_TRC_NONE) ||  is_report_ddc_errors_enabled() );
       }
    }
 
