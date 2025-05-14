@@ -492,6 +492,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    uid_t ruid, euid, suid;
    getresuid(&ruid, &euid, &suid);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ruid=%d, euid=%d", ruid, euid);
    if (euid == 0 && ruid != euid)
       running_as_root = true;
 
