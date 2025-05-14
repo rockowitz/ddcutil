@@ -490,6 +490,11 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    redirect_reports_to_syslog = parsed_cmd->flags2 & CMD_FLAG2_F8;
 
+   uid_t ruid, euid, suid;
+   getresuid(&ruid, &euid, &suid);
+   if (euid == 0 && ruid != euid)
+      running_as_root = true;
+
    final_result = init_failsim(parsed_cmd);
    if (final_result)
       goto bye;      // main_rc == EXIT_FAILURE
