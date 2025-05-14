@@ -332,36 +332,48 @@ verify_i2c_access() {
       while ( (busno = bs256_iter_next(iter)) >= 0)  {
          char fnbuf[20];   // oversize to avoid -Wformat-truncation error
          snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
-         if ( access(fnbuf, R_OK|W_OK) < 0 ) {
-            int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
-            if (errsv == ENOENT) {
+         if (running_as_root) {
+            struct stat stat_buf;
+            int rc = stat(fnbuf, &stat_buf);
+            if (rc != 0) {
                buses_without_devices = bs256_insert(buses_without_devices, busno);
                fprintf(stderr, "Device %s does not exist. Error = %s\n",
-                              fnbuf, linux_errno_desc(errsv));
-            }
-            else {
-               inaccessible_devices = bs256_insert(inaccessible_devices, busno);
-               fprintf(stderr, "Device %s is not readable and writable.  Error = %s\n",
-                           fnbuf, linux_errno_desc(errsv) );
-               include_open_failures_reported(busno);
+                               fnbuf, linux_errno_desc(-ENOENT));
+             }
+         }
+         else {
+            if ( access(fnbuf, R_OK|W_OK) < 0 ) {
+               int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
+               if (errsv == ENOENT) {
+                  buses_without_devices = bs256_insert(buses_without_devices, busno);
+                  fprintf(stderr, "Device %s does not exist. Error = %s\n",
+                                 fnbuf, linux_errno_desc(errsv));
+               }
+               else {
+                  inaccessible_devices = bs256_insert(inaccessible_devices, busno);
+                  fprintf(stderr, "Device %s is not readable and writable.  Error = %s\n",
+                              fnbuf, linux_errno_desc(errsv) );
+                  include_open_failures_reported(busno);
+               }
             }
          }
       }
       bs256_iter_free(iter);
-      buses_without_devices_ct = bs256_count(buses_without_devices);
-      inaccessible_devices_ct = bs256_count(inaccessible_devices);
+   }
 
-      if (buses_without_devices_ct > 0) {
-         fprintf(stderr, "/sys/bus/i2c buses without /dev/i2c-N devices: %s\n",
-                bs256_to_string_decimal_t(buses_without_devices, "/sys/bus/i2c/devices/i2c-", " ") );
-         fprintf(stderr, "Driver i2c_dev must be loaded or builtin\n");
-         fprintf(stderr, "See https://www.ddcutil.com/kernel_module\n");
-      }
-      if (inaccessible_devices_ct > 0) {
-         fprintf(stderr, "Devices possibly used for DDC/CI communication cannot be opened: %s\n",
-                bs256_to_string_decimal_t(inaccessible_devices, "/dev/i2c-", " "));
-         fprintf(stderr, "See https://www.ddcutil.com/i2c_permissions\n");
-      }
+   buses_without_devices_ct = bs256_count(buses_without_devices);
+   inaccessible_devices_ct = bs256_count(inaccessible_devices);
+
+   if (buses_without_devices_ct > 0) {
+      fprintf(stderr, "/sys/bus/i2c buses without /dev/i2c-N devices: %s\n",
+             bs256_to_string_decimal_t(buses_without_devices, "/sys/bus/i2c/devices/i2c-", " ") );
+      fprintf(stderr, "Driver i2c_dev must be loaded or builtin\n");
+      fprintf(stderr, "See https://www.ddcutil.com/kernel_module\n");
+   }
+   if (inaccessible_devices_ct > 0) {
+      fprintf(stderr, "Devices possibly used for DDC/CI communication cannot be opened: %s\n",
+             bs256_to_string_decimal_t(inaccessible_devices, "/dev/i2c-", " "));
+      fprintf(stderr, "See https://www.ddcutil.com/i2c_permissions\n");
    }
 
    int result = buses_ct - (buses_without_devices_ct + inaccessible_devices_ct);
@@ -392,20 +404,29 @@ int verify_i2c_access_for_single_bus(int busno) {
    else {
        char fnbuf[20];   // oversize to avoid -Wformat-truncation error
        snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
-       if ( access(fnbuf, R_OK|W_OK) < 0 ) {
-          int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
-          if (errsv == ENOENT) {
-             fprintf(stderr, "Device %s does not exist. Error = %s\n",
-                               fnbuf, linux_errno_desc(errsv));
-          }
-          else {
-             fprintf(stderr, "Device %s is not readable and writable.  Error = %s\n",
-                            fnbuf, linux_errno_desc(errsv) );
-             include_open_failures_reported(busno);
+       if (running_as_root) {
+          struct stat stat_buf;
+          int statrc = stat(fnbuf, &stat_buf);
+          if (statrc == 0) {
+             result = 1;
           }
        }
-       else
-          result = 1;
+       else {
+          if ( access(fnbuf, R_OK|W_OK) < 0 ) {
+             int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
+             if (errsv == ENOENT) {
+                fprintf(stderr, "Device %s does not exist. Error = %s\n",
+                                  fnbuf, linux_errno_desc(errsv));
+             }
+             else {
+                fprintf(stderr, "Device %s is not readable and writable.  Error = %s\n",
+                               fnbuf, linux_errno_desc(errsv) );
+                include_open_failures_reported(busno);
+             }
+          }
+          else
+             result = 1;
+       }
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d.", result);
