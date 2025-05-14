@@ -5,9 +5,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "config.h"
@@ -733,28 +733,36 @@ int i2c_device_count() {
  */
 Error_Info * i2c_check_device_access(char * dev_name) {
    Error_Info * err = NULL;
-   if ( access(dev_name, R_OK|W_OK) < 0 ) {
-      int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
-      char * s = NULL;
-      if (errsv == ENOENT) {
-         // should never occur because of prior i2c_device_exists() check
-        s = g_strdup_printf("access(%s) returned ENOENT", dev_name);
-        DBGMSG("%s", s);
-        err = ERRINFO_NEW(-ENOENT, "%s", s);
-        SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+   if (running_as_root) {
+      struct stat stat_buf;
+      int rc = stat(dev_name, &stat_buf);
+      if (rc != 0)
+         err = ERRINFO_NEW(-ENOENT, "");
+   }
+   else {
+      if ( access(dev_name, R_OK|W_OK) < 0 ) {
+         int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
+         char * s = NULL;
+         if (errsv == ENOENT) {
+            // should never occur because of prior i2c_device_exists() check
+           s = g_strdup_printf("access(%s) returned ENOENT", dev_name);
+           DBGMSG("%s", s);
+           err = ERRINFO_NEW(-ENOENT, "%s", s);
+           SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+         }
+         else if (errsv == EACCES) {
+           s = g_strdup_printf("Device %s lacks R/W permissions", dev_name);
+           // DBGMSG("%s", s);
+           err = ERRINFO_NEW(-EACCES, "%s", s);
+           SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+         }
+         else {
+           s = g_strdup_printf( "access() returned errno = %s", psc_desc(errsv));
+           SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+           err = ERRINFO_NEW(-ENOENT, "%s", s);
+         }
+         free(s);
       }
-      else if (errsv == EACCES) {
-        s = g_strdup_printf("Device %s lacks R/W permissions", dev_name);
-        // DBGMSG("%s", s);
-        err = ERRINFO_NEW(-EACCES, "%s", s);
-        SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
-      }
-      else {
-        s = g_strdup_printf( "access() returned errno = %s", psc_desc(errsv));
-        SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
-        err = ERRINFO_NEW(-ENOENT, "%s", s);
-      }
-      free(s);
    }
    return err;
 }
