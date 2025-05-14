@@ -68,6 +68,7 @@
 bool timestamp_in_syslog_debug_msgs = false;
 bool tracing_initialized = false;
 bool library_disabled = false;
+bool running_as_root = false;
 
 
 //

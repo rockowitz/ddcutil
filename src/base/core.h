@@ -64,6 +64,7 @@
 extern bool tracing_initialized;
 extern bool library_disabled;
 extern bool timestamp_in_syslog_debug_msgs;
+extern bool running_as_root;
 
 
 //
