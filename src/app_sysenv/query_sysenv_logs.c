@@ -3,7 +3,7 @@
  *  Query configuration files, logs, and output of logging commands.
  */
 
-// Copyright (C) 2017-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -56,7 +56,7 @@ static bool probe_log(
       rpt_vstring(depth, "File not found: %s", log_fn);
       goto bye;
    }
-   if ( access(log_fn, R_OK) < 0 ) {
+   if ( !running_as_root && access(log_fn, R_OK) < 0 ) {
       rpt_vstring(depth, "File not readable: %s", log_fn);
       goto bye;
    }
