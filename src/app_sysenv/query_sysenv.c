@@ -11,12 +11,13 @@
 /** \cond */
 #include "config.h"
 
-// #define _GNU_SOURCE 1       // for function group_member
+#define _GNU_SOURCE 1       // for function getresuid() in unistd.c
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/utsname.h>
+#include <unistd.h>
 #ifdef USE_X11
 #include <X11/extensions/randr.h>
 #endif
@@ -819,7 +820,12 @@ void query_sysenv(bool quick_env) {
       rpt_label(0, "Set environment variable SYSENV_QUICK_TEST or option --quickenv to skip some long-running tests.");
    }
 
-
+   uid_t ruid, euid, suid;
+   getresuid(&ruid, &euid, &suid);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ruid=%d, euid=%d", ruid, euid);
+   if (euid == 0) {  // possibly setuid bit set
+         rpt_label(0, "Running command with root privileges");
+   }
 
    i2c_forceable_slave_addr_flag = true;    // be a bully
 
