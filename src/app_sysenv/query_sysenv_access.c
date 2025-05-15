@@ -3,7 +3,7 @@
  *  Checks on the the existence of and access to /dev/i2c devices
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -189,7 +189,7 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
             int errsv;
             DBGMSF(debug, "Calling access() for %s", fnbuf);
             rc = access(fnbuf, R_OK|W_OK);
-            if (rc < 0) {
+            if (!running_as_root && rc < 0) {
                errsv = errno;
                rpt_vstring(0,"Device %s is not readable and writable.  Error = %s",
                       fnbuf, linux_errno_desc(errsv) );
