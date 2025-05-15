@@ -50,18 +50,20 @@ bool is_i2c_device_rw(int busno) {
 
    bool result = true;
 
-   char fnbuf[PATH_MAX];
-   snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
+   if (!running_as_root) {
+      char fnbuf[PATH_MAX];
+      snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
 
-   int rc;
-   int errsv;
-   DBGMSF(debug, "Calling access() for %s", fnbuf);
-   rc = access(fnbuf, R_OK|W_OK);
-   if (rc < 0) {
-      errsv = errno;
-      rpt_vstring(0,"Device %s is not readable and writable.  Error = %s",
-             fnbuf, linux_errno_desc(errsv) );
-      result = false;
+      int rc;
+      int errsv;
+      DBGMSF(debug, "Calling access() for %s", fnbuf);
+      rc = access(fnbuf, R_OK|W_OK);
+      if (rc < 0) {
+         errsv = errno;
+         rpt_vstring(0,"Device %s is not readable and writable.  Error = %s",
+                fnbuf, linux_errno_desc(errsv) );
+         result = false;
+      }
    }
 
    DBGMSF(debug, "Returning: %s", sbool(result));
