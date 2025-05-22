@@ -9,7 +9,7 @@
  *  error is retained for use by higher levels in the call stack.
  */
 
-// Copyright (C) 2017-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -727,8 +727,30 @@ errinfo_causes_string(Error_Info * erec) {
 
    if (erec) {
       assert(memcmp(erec->marker, ERROR_INFO_MARKER, 4) == 0);
-
-      errinfo_array_summary_gs(erec->causes, erec->cause_ct, gs);
+#ifdef FUTURE
+      bool complex = false;
+      if (erec->cause_ct == 1) {
+         // Special case.  There is exactly 1 cause, and that cause has multiple causes.
+         Error_Info * erec1 = erec->causes[0];
+         if (erec1->cause_ct > 0) {
+            complex = true;
+            GString* gs = g_string_new(NULL);
+            if (errinfo_name_func)
+               g_string_append(gs, errinfo_name_func(erec->status_code));
+            else {
+               char buf[20];
+               snprintf(buf, 20, "%d",erec->status_code);
+               buf[19] = '\0';
+               g_string_append(gs, buf);
+            }
+            g_string_append(gs, "(");
+            errinfo_array_summary_gs(erec1->causes, erec1->cause_ct, gs);
+            g_string_append(gs,")");
+         }
+      }
+      if (!complex)
+#endif
+         errinfo_array_summary_gs(erec->causes, erec->cause_ct, gs);
    }
    char * result = gs->str;
    g_string_free(gs, false);
