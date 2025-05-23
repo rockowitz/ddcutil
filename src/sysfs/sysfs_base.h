@@ -58,6 +58,7 @@ typedef struct {
    GPtrArray *  connectors_having_edid;
 } Sysfs_Connector_Names;
 
+bool        sysfs_connector_directories_exist();
 Sysfs_Connector_Names
             get_sysfs_drm_connector_names();
 bool        sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);

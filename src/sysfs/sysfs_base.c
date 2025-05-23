@@ -777,6 +777,54 @@ void get_sysfs_drm_add_one_connector_name(
 }
 
 
+typedef struct {
+   bool found;
+} Found_Accumulator;
+
+bool is_card_connector_dir1(
+   const char *  dirname,
+   const char *  fn,
+   void *        accumulator,
+   int           depth)
+{
+   bool debug = false;
+   DBGF(debug, "dirname=%s, fn=%s, accumulator=%p", dirname, fn, accumulator);
+
+   Found_Accumulator * accum = accumulator;
+   bool found = is_drm_connector(dirname, fn);
+   if (found)
+      accum->found = true;
+
+   DBGF(debug, "Returning %s", sbool(found));
+   return found;
+}
+
+
+bool sysfs_connector_directories_exist() {
+   bool debug = false;
+   static bool executed = false;
+   static bool found = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "executed = %s", sbool(executed));
+
+   if (!executed) {
+      char * dirname = SYS"/class/drm";
+      Found_Accumulator accumulator;
+      accumulator.found = false;
+      dir_foreach_terminatable(
+            dirname,
+            NULL,
+            is_card_connector_dir1,
+            &accumulator,
+            (debug) ? 1 : -1);
+      found = accumulator.found;
+      executed = true;
+   }
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
+   return found;
+}
+
+
 /**Checks /sys/class/drm for connectors.
  *
  * @return struct Sysfs_Connector_Names
@@ -786,12 +834,7 @@ void get_sysfs_drm_add_one_connector_name(
  */
 Sysfs_Connector_Names get_sysfs_drm_connector_names() {
    bool debug = false;
-   char * dname =
- #ifdef TARGET_BSD
-              "/compat/linux/sys/class/drm";
- #else
-              "/sys/class/drm";
- #endif
+   const char * dname = SYS"/class/drm";
    DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s", dname);
 
    Sysfs_Connector_Names connector_names = {NULL, NULL};
@@ -1479,6 +1522,7 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
    RTTI_ADD_FUNC(search_all_businfo_records_by_connector_name);
+   RTTI_ADD_FUNC(sysfs_connector_directories_exist);
 #ifdef UNUSED
    RTTI_ADD_FUNC(get_sys_video_devices);
 #endif
