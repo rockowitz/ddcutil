@@ -3,7 +3,7 @@
  *  Implement the SETVCP command
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -230,8 +230,17 @@ app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
             parsed_cmd->flags & CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE);
       if (ddc_excp) {
          f0printf(ferr(), "%s\n", ddc_excp->detail);
-         if (ddc_excp->status_code == DDCRC_RETRIES)
+         if (ddc_excp->status_code == DDCRC_RETRIES &&
+             ddc_excp->cause_ct == 1 &&
+             ddc_excp->causes[0]->status_code == DDCRC_RETRIES &&
+             ddc_excp->causes[0]->cause_ct > 0)
+         {
+             f0printf(ferr(), "   Try errors: DDCRC_RETRIES(%s)\n",
+                   errinfo_causes_string(ddc_excp->causes[0]));
+         }
+         else {
             f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
+         }
          ddcrc = ERRINFO_STATUS(ddc_excp);
          BASE_ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug,TRACE_GROUP));
          break;
