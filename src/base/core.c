@@ -1126,7 +1126,7 @@ end_capture(void) {
    // printf("(%s) Starting.\n", __func__);
    assert(fdesc->in_memory_file);
    if (fflush(fdesc->in_memory_file) < 0) {
-      set_ferr_to_default();
+      fclose(fdesc->in_memory_file);
       SEVEREMSG("flush() failed. errno=%d", errno);
       // return g_strdup(result);
       result = g_strdup("\0");
@@ -1135,7 +1135,6 @@ end_capture(void) {
       // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
       result = g_strdup(fdesc->in_memory_bufstart);
       if (fclose(fdesc->in_memory_file) < 0) {
-         set_ferr_to_default();
          SEVEREMSG("fclose() failed. errno=%d", errno);
          result = g_strdup("\0");
       }
@@ -1146,7 +1145,7 @@ end_capture(void) {
    }
    set_fout_to_default();
    if (fdesc->flags & DDCA_CAPTURE_STDERR)
-   set_ferr_to_default();
+      set_ferr_to_default();
    redirect_reports_to_syslog = fdesc->saved_rpt_to_syslog;
    fdesc->in_memory_capture_active = false;
    // traced_function_stack_suspended = false;
