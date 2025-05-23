@@ -1318,10 +1318,9 @@ Byte * get_connector_edid(const char * connector_name) {
 void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
-          "Finding DRM connector name for bus i2c-%d using EDID, sys/class/drm exists=%s",
-          businfo->busno, SBOOL(directory_exists("/sys/class/drm")));
+          "Finding DRM connector name for bus i2c-%d using EDID, connector_directories_exist=%s",
+          businfo->busno, SBOOL(sysfs_connector_directories_exist()));
    assert(businfo->edid);
-   assert(directory_exists("/sys/class/drm"));
 
    businfo->drm_connector_name = NULL;
    Found_Sys_Drm_Connector conres =    // n.b. struct returned on stack, not pointer
@@ -1335,12 +1334,14 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
                businfo->busno, businfo->drm_connector_name);
    }
    else {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "Failed to find connector name for /dev/i2c-%d using EDID %p",
              businfo->busno, businfo->edid->bytes);
-      static bool previously_written_to_log;
-       start_capture(DDCA_CAPTURE_STDERR);
+      static bool previously_written_to_log = false;
+
        if (!previously_written_to_log) {
+#ifdef NO_LONGER_NEEDED
+          start_capture(DDCA_CAPTURE_STDERR);
           rpt_vstring(0, "Failed to find connector name for /dev/i2c-%d, %s at line %d in file %s. ",
                 businfo->busno,  __func__, __LINE__, __FILE__);
           i2c_dbgrpt_bus_info(businfo, /*include_sysinfo*/ true, 1);
@@ -1356,13 +1357,14 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
                 SYSLOG2(DDCA_SYSLOG_INFO, "Directory /sys/class/drm does not exist");
              }
 #endif
-             LOGABLE_MSG(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
+             SYSLOG2(DDCA_SYSLOG_ERROR, "%s", lines[ndx]);
           }
           ntsa_free(lines, true);
+#endif
           previously_written_to_log = true;
        }
        else {
-          if (directory_exists("/sys/class/drm"))
+          if (sysfs_connector_directories_exist())
              LOGABLE_MSG(DDCA_SYSLOG_ERROR,
                    "Failed to find connector name for /dev/i2c-%d, %s at line %d in file %s. ",
                    businfo->busno,  __func__, __LINE__, __FILE__);
@@ -1370,7 +1372,7 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
              SYSLOG2(DDCA_SYSLOG_INFO,
                    "Failed to find connector name for /dev/i2c-%d, %s at line %d in file %s. ",
                    businfo->busno,  __func__, __LINE__, __FILE__);
-             SYSLOG2(DDCA_SYSLOG_INFO, "Directory /sys/class/drm does not exist");
+             SYSLOG2(DDCA_SYSLOG_INFO, "drm connector directories do not exist");
           }
        }
    }
@@ -1499,7 +1501,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo) {
    g_snprintf(dev_name,   15, "/dev/%s", i2cN);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
    // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
-   bool drm_card_connector_directories_exist = directory_exists("/sys/class/drm");
+   bool drm_card_connector_directories_exist = sysfs_connector_directories_exist();
 
    businfo->flags |= I2C_BUS_PROBED;
    Error_Info *master_err = NULL;
