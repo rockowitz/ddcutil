@@ -91,8 +91,10 @@ do { \
 
 #ifdef TARGET_BSD
 #define I2C "iic"
+#define SYS "/compat/linux/sys"
 #else
 #define I2C "i2c"
+#define SYS "/sys"
 #endif
 
 #endif /* COREDEFS_BASE_H_ */
