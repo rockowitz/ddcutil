@@ -672,7 +672,8 @@ execute_cmd_with_optional_display_handle(
       {
          assert(dh);
          if (app_check_dynamic_features(dh->dref)) {
-            ensure_vcp_version_set(dh);
+            if (parsed_cmd->output_level > DDCA_OL_TERSE)
+               ensure_vcp_version_set(dh);
 
             Public_Status_Code psc = app_show_feature_set_values_by_dh(dh, parsed_cmd);
             main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -1094,6 +1095,7 @@ main(int argc, char *argv[]) {
    // xdg_tests(); // for development
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F2) {
+      bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
       consolidated_i2c_sysfs_report(0);
 #ifdef USE_LIBDRM
       if (use_drm_connector_states)
@@ -1101,6 +1103,7 @@ main(int argc, char *argv[]) {
 #endif
       // rpt_label(0, "*** Tests Done ***");
       // rpt_nl();
+      rpt_set_ornamentation_enabled(saved_prefix_report_output);
    }
 
    Call_Options callopts = CALLOPT_NONE;
