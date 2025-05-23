@@ -758,12 +758,7 @@ void query_drm_using_sysfs()
    int depth = 1;
    int d0 = depth;
    rpt_nl();
-   char * dname =
-#ifdef TARGET_BSD
-             "/compat/linux/sys/class/drm";
-#else
-             "/sys/class/drm";
-#endif
+   char * dname = SYS"/sys/class/drm";
 
    rpt_vstring(d0, "*** Examining %s ***", dname);
    dir_filtered_ordered_foreach(
@@ -924,8 +919,6 @@ void dump_sysfs_i2c(Env_Accumulator * accum) {
    }
    // g_ptr_array_set_free_func(displaylink_devices,free);  //redundant
    g_ptr_array_free(displaylink_devices,true);
-
-
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
