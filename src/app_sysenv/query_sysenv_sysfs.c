@@ -770,10 +770,10 @@ void query_drm_using_sysfs() {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
+
 //
 // Functions for probing /sys
 //
-
 
 void show_top_level_sys_entries(int depth) {
    rpt_label(depth, "*** Character device major numbers of interest: ***");
