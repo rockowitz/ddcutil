@@ -626,30 +626,19 @@ i2c_detect_x37(int fd, char * driver) {
    //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = 0;
    int max_tries = DETECT_X37_MAX_TRIES;  //2;   // ***TEMP*** 3;
-   bool use_file_io = false;
    int poll_wait_millisec = DETECT_X37_RETRY_MILLISEC;  // 400;
-   char * s = (use_file_io) ? "i2c" : "ioctl";
    int loopctr;
    for (loopctr = 0; loopctr < max_tries; loopctr++) {  // retries seem to give no benefit
-
       // regard either a successful write() or a read() as indication slave address is valid
       Byte    writebuf = {0x00};
-
-      if (use_file_io)
-         rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
-      else
-         rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
-      // rc = 6; // for testing
+      rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                   "invoke_%s_writer() for slave address x37 returned %s", s, psc_name_code(rc));
+                   "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
       if (rc != 0) {
          Byte    readbuf[4];  //  4 byte buffer
-         if (use_file_io)
-            rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
-         else
-            rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
+         rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                   "invoke_%s_reader() for slave address x37 returned %s", s, psc_name_code(rc));
+                   "invoke_i2c_reader() for slave address x37 returned %s", psc_name_code(rc));
       }
       if (rc == 0)
          break;
@@ -662,6 +651,7 @@ i2c_detect_x37(int fd, char * driver) {
       SLEEP_MILLIS_WITH_SYSLOG(wait, "Extra x37 sleep");
       // sleep_millis(wait);
    }
+
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"loopctr=%d", loopctr);
    return rc;
 }
