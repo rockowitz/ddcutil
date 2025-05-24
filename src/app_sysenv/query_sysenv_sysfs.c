@@ -751,8 +751,7 @@ void report_one_connector(
 }
 
 
-void query_drm_using_sysfs()
-{
+void query_drm_using_sysfs() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    int depth = 1;
