@@ -34,6 +34,7 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_execute.h"
+#include "i2c/i2c_strategy_dispatcher.h"
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs.h"
@@ -77,6 +78,7 @@ bool is_i2c_device_rw(int busno) {
 static
 Public_Status_Code try_single_getvcp_call(
       int           fh,
+      int           busno,
       unsigned char vcp_feature_code,
 //    bool          use_smbus,
       int           depth)
@@ -116,11 +118,17 @@ Public_Status_Code try_single_getvcp_call(
    for (ndx=1; ndx < 5; ndx++)
       ddc_cmd_bytes[5] ^= ddc_cmd_bytes[ndx];    // calculate checksum
    int writect = sizeof(ddc_cmd_bytes)-1;
+   i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
+retry_write:
    rpt_vstring(depth, "Sending Get VCP Feature Command request packet: %s", hexstring_t(ddc_cmd_bytes+1, writect));
-   rc = i2c_ioctl_writer(fh, 0x37, writect, ddc_cmd_bytes+1);
+   rc = invoke_i2c_writer(fh, 0x37, writect, ddc_cmd_bytes+1);
    if (rc < 0) {
       int errsv = errno;
       DBGMSF(debug, "write failed, errno=%s", linux_errno_desc(errsv));
+      if (is_nvidia_einval_bug(i2c_get_io_strategy_id(), busno, -errsv)) {
+         DBGMSG("Retrying with file io");
+         goto retry_write;
+      }
       rc = -errsv;
       goto bye;
    }
@@ -129,11 +137,16 @@ Public_Status_Code try_single_getvcp_call(
    unsigned char ddc_response_bytes[12];
    int readct = sizeof(ddc_response_bytes)-1;
 
+retry_read:
    rpt_vstring(depth, "Reading Get Feature Reply response packet");
-   rc = i2c_ioctl_reader(fh, 0x37, false, readct, ddc_response_bytes+1);
+   rc = invoke_i2c_reader(fh, 0x37, false, readct, ddc_response_bytes+1);
    if (rc < 0) {
       rc = -errno;
       DBGMSF(debug, "read failed, errno=%s", linux_errno_desc(-rc));
+      if (is_nvidia_einval_bug(i2c_get_io_strategy_id(), busno, rc)) {
+         DBGMSG("Retrying with file io");
+         goto retry_read;
+      }
       goto bye;
    }
    rpt_vstring(depth, "read returned: %s", hexstring_t(ddc_response_bytes+1, readct) );
@@ -429,7 +442,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
             int maxtries = 3;
             psc = -1;
             for (int tryctr=0; tryctr<maxtries && psc < 0; tryctr++) {
-               psc = try_single_getvcp_call(fd, 0x10, d2);
+               psc = try_single_getvcp_call(fd, busno, 0x10, d2);
                if (psc == 0 || psc == DDCRC_NULL_RESPONSE || psc == DDCRC_REPORTED_UNSUPPORTED) {
                   switch (psc) {
                   case 0:
