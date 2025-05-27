@@ -1,15 +1,18 @@
-## [2.2.1] 2024-04-xx
+## [2.2.1] 2024-05-26
 
 ### General
 
 #### Added
 
+- Do not perform permission checks if running with effective user root, i.e. when 
+  running with setuid bit set. Partially addresses issue #509
+
 #### Changed
 
-- Better handling for case where no sysfs card-connector directories exist
-  - Avoid counfusing messages to terminal
-  - Addresses issue #507
+- Command **environment**: report if running as root, with sudo, or setuid bit set
 - Command **environment --verbose**: eliminate some unneeded edid read tests
+- Command **setvcp**: Emit more more useful messages when the cause of a 
+  DDCRC_RETRIES error is itself a DDCRC_RETRIES error.
 
 #### Fixed
 
@@ -23,6 +26,11 @@
   avoiding a lintian message. Addresses issue #500
 - Fix errors reported by clang 19: unused variable, expression which evaluates
   to 0 treated as null pointer. Addresses issue #502.
+- Command **getvcp --terse** Eliminate irrelevant messages regarding VCP version not set.
+- Make test for missing DRM card-connector directories more robust. Issue #507.
+- DDC communication not detected with old (340 series) Nvidia proprietary driver. Issue #507
+- Function end_capture(): call close() in case of fflush() error, ensuring that messages
+  are always sent to the terminaal after message capture complete
 
 ### Building
 
