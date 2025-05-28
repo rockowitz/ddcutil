@@ -258,9 +258,8 @@ bool dbgtrc_returning_string(
  */
 // n. using ___LINE__ instead of line in __assert_fail() causes compilation error
 #ifdef NDEBUG
-#define TRACED_ASSERT(_assertion) \
-   do { \
-   } while (0)
+#define TRACED_ASSERT(_assertion) do {} while (0)
+#define TRACED_ASSERT_IFF(_cond1,_cond2) do {} while (0)
 #else
 #define TRACED_ASSERT(_assertion) \
    do { \
@@ -280,9 +279,7 @@ bool dbgtrc_returning_string(
          /* exit(1); */  \
       } \
    } while (0)
-#endif
 
-#ifndef TRACED_ASSERT_IFF
 #define TRACED_ASSERT_IFF(_cond1, _cond2) \
    TRACED_ASSERT( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
 #endif
