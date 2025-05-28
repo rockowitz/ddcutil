@@ -248,6 +248,13 @@ bool dbgtrc_returning_string(
  * It is reported to not exist on Termux.
  * However, if  "assert(#_assertion);" is used instead of "__assert_fail(...);",
  * the program does not terminate.
+ * 05/2025:
+ * Using exit(1) to terminate apparently causes powerdevil to terminate with status
+ * success, and as a result it does not automatically restart.
+ * Revert to using __assert_fail() to terminate.
+ * tmux source itself does not reference ddcutil, so it's unclear what the
+ * compatibility issue is.  Failure to build in obscure environments where
+ * __assert_fail() does not exist is less important than powerdevil/kde integration.
  */
 // n. using ___LINE__ instead of line in __assert_fail() causes compilation error
 #ifdef NDEBUG
@@ -261,16 +268,16 @@ bool dbgtrc_returning_string(
          ;              \
       }                 \
       else {           \
-         /* int line = __LINE__; */  \
+         int line = __LINE__;  \
          dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__,   \
                       "Assertion failed: \"%s\" in file %s at line %d",  \
                       #_assertion, __FILE__,  __LINE__);   \
          SYSLOG2(DDCA_SYSLOG_ERROR, "Assertion failed: \"%s\" in file %s at line %d",  \
                          #_assertion, __FILE__,  __LINE__);   \
          /* assert(#_assertion); */ \
-         /*  __assert_fail(#_assertion, __FILE__, line, __func__); */  \
+         __assert_fail(#_assertion, __FILE__, line, __func__);  \
          /* don't need assertion info, dbgtrc() and dbgtrc() have been called */ \
-         exit(1); \
+         /* exit(1); */  \
       } \
    } while (0)
 #endif
