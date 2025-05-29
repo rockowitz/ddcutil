@@ -1,4 +1,4 @@
-## [2.2.1] 2024-05-26
+## [2.2.1] 2024-05-29
 
 ### General
 
@@ -30,7 +30,7 @@
 - Make test for missing DRM card-connector directories more robust. Issue #507.
 - DDC communication not detected with old (340 series) Nvidia proprietary driver. Issue #507
 - Function end_capture(): call close() in case of fflush() error, ensuring that messages
-  are always sent to the terminaal after message capture complete
+  are always sent to the terminal after message capture complete
 
 ### Building
 
@@ -71,7 +71,10 @@
   **ddca_redetect_displays()** call. As a result KDE PowerDevil eventually 
   exhausted X11 connections of a very long running system with repeated
   display connections and disconnections.  Pull request #519.
-
+- KDE powerdevil was terminating with status success instead of failure if
+  libddcutil terminated with a traced assertion, causing the powerdevil 
+  service to not restart automatically. Macro TRACE_ASSERT() is modified to
+  use **__assert_fail()** instead of **exit()** for termination. 
 
 ## [2.2.0] 2024-02-10
 
