@@ -251,6 +251,7 @@ ddc_open_display(
       Display_Handle** dh_loc)
 {
    bool debug = false;
+   assert(dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, callopts=%s, dh_loc=%p",
                       dref_reprx_t(dref), interpret_call_options_t(callopts), dh_loc );
    TRACED_ASSERT(dh_loc);
@@ -259,6 +260,22 @@ ddc_open_display(
    Display_Handle * dh = NULL;
    Error_Info * err = NULL;
    int fd = -1;
+
+   if (dref->flags & DREF_REMOVED) {
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to open disconnected display reference %s",
+            dref_repr_t(dref));
+      err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Attempting to open disconnected display reference %s",
+            dref_repr_t(dref));
+      goto bye;
+   }
+   if (!dref->detail) {
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Display_Ref.detail == NULL, but DREF_REMOVED not set, dref=%s",
+            dref_repr_t(dref));
+      dref->flags |= DREF_REMOVED;
+      err = ERRINFO_NEW(DDCRC_DISCONNECTED,
+            "Display_Ref.detail == NULL, but DREF_REMOVED not set, dref=%s", dref_repr_t(dref));
+      goto bye;
+   }
 
    const char * driver_name = dref_get_i2c_driver(dref);
    DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "driver_name: %s", driver_name);
