@@ -76,7 +76,6 @@
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-// #include "ddc/ddc_dw_main.h"
 
 #include "ddc/ddc_displays.h"
 
@@ -113,7 +112,6 @@ threaded_initial_checks_by_dref(gpointer data) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref) );
 
    Error_Info * erec = ddc_initial_checks_by_dref(dref, false);
-   // g_thread_exit(NULL);
    ERRINFO_FREE_WITH_REPORT(erec, debug);
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. dref = %s,", dref_repr_t(dref) );
    free_current_traced_function_stack();
@@ -170,6 +168,7 @@ ddc_non_async_scan(GPtrArray * all_displays) {
       Error_Info * err = ddc_initial_checks_by_dref(dref, false);
       free(err);
    }
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
@@ -215,6 +214,7 @@ ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_remove
          g_ptr_array_add(result, cur);
       }
    }
+
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning array of size %d", result->len);
    if (debug || IS_TRACING()) {
       ddc_dbgrpt_drefs("Display_Refs:", result, 2);
@@ -284,7 +284,6 @@ GPtrArray *
 ddc_get_bus_open_errors() {
    return display_open_errors;
 }
-
 
 
 /** Emits a debug report of a list of #Bus_Open_Error.
