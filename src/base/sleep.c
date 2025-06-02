@@ -99,6 +99,8 @@ void loggable_sleep(
       const char *           format, ...)
 {
    bool debug = false;
+   DBGMSF(debug, "Starting. millisec=%d, opts=0x%02x", millisec, opts);
+
    char * message = NULL;
 
    if (opts & SLEEP_OPT_TRACEABLE || syslog_level > DDCA_SYSLOG_NEVER) {
@@ -130,8 +132,10 @@ void loggable_sleep(
    uint64_t start_nanos  = cur_realtime_nanosec();
    uint64_t microsec = MILLIS2MICROS(millisec);
    if (microsec > 0) {
+      // DBGMSF(debug, "Sleeping for %"PRIu64" microseconds...", microsec);
       usleep(microsec);   // usleep takes microseconds, not milliseconds
       if (opts&SLEEP_OPT_STATS) {
+         // DBGMSF(debug, "Logging stats");
          G_LOCK(sleep_stats);
          sleep_stats.actual_sleep_nanos += (cur_realtime_nanosec()-start_nanos);
          sleep_stats.requested_sleep_milliseconds += millisec;
@@ -139,6 +143,8 @@ void loggable_sleep(
          G_UNLOCK(sleep_stats);
       }
    }
+
+   DBGMSF(debug, "Done");
 }
 
 
