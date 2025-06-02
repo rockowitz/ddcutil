@@ -122,7 +122,7 @@ void loggable_sleep(
  */
 #define SLEEP_MILLIS_TRACEABLE(_millis, _msg, ...) \
    do { \
-      loggable_sleep(_millis, SLEEP_OPT_TRACEABLE, DDCA_SYSLOG_NEVER, \
+      loggable_sleep(_millis, SLEEP_OPT_TRACEABLE|SLEEP_OPT_STATS, DDCA_SYSLOG_NEVER, \
                      __func__, __LINE__, __FILE__, _msg,  ##__VA_ARGS__); \
    } while(0)
 
