@@ -635,6 +635,7 @@ ddc_ensure_displays_detected() {
  *  - The list of errors in #display_open_errors is discarded
  *  - The list of detected I2C buses is discarded
  *  - The USB monitor list is discarded
+ *  - The list of display references recognized by the API is discarded.
  */
 void
 ddc_discard_detected_displays() {
@@ -710,7 +711,7 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  indicating why a display ref is invalid.
  *
  *  @param   dref   display reference to validate
- *  #param   validation_options
+ *  @param   validation_options
  *  @retval  DDCRC_OK
  *  @retval  DDCRC_ARG             dref is null or does not point to a Display_Ref
  *  @retval  DDCRC_DISCONNECTED    display has been disconnected
