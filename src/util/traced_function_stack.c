@@ -77,15 +77,15 @@ void debug_traced_function_stack(GQueue * stack, bool reverse) {
       printf(PRItid" Traced function stack %p:\n", TID(), stack);
       int queue_len = g_queue_get_length(stack);
       if (queue_len > 0) {
-         // printf(PRItid"traced function stack (addr=%p, len=%d:\n", TID(), stack, queue_len );
+         // printf("%"PRItid"traced function stack (addr=%p, len=%d:\n", TID(), stack, queue_len );
          if (reverse) {
             for (int ndx =  g_queue_get_length(stack)-1; ndx >=0 ; ndx--) {
-               printf("   %s\n", (char*) g_queue_peek_nth(stack, ndx));
+               printf("   %2d: %s\n", ndx, (char*) g_queue_peek_nth(stack, ndx));
             }
          }
          else {
             for (int ndx = 0; ndx < g_queue_get_length(stack); ndx++) {
-               printf("   %s\n", (char*) g_queue_peek_nth(stack, ndx));
+               printf("   %2d: %s\n", ndx, (char*) g_queue_peek_nth(stack, ndx));
             }
          }
       }
@@ -101,18 +101,24 @@ void collect_traced_function_stack(GPtrArray* collector,
                                    bool       reverse,
                                    int        stack_adjust)
 {
+   bool debug = false;
+   if (debug)
+      debug_traced_function_stack(stack, false);
+
    if (stack && collector) {
-      // printf(PRItid" Traced function stack %p:\n", TID(), stack);
-      int queue_len = g_queue_get_length(stack) - stack_adjust;
-      if (queue_len > 0) {
-         // printf(PRItid"traced function stack (addr=%p, len=%d:\n", TID(), stack, queue_len );
+      DBGF(debug, PRItid" reverse=%s, stack_adjust=%d, Traced function stack %p:",
+            TID(), sbool(reverse), stack_adjust, stack);
+      int full_len = g_queue_get_length(stack);
+      int adjusted_len = full_len - stack_adjust;
+      if (adjusted_len > 0) {
+         DBGF(debug, PRItid"traced function stack (addr=%p, adjusted_len=%d:", TID(), stack, adjusted_len );
          if (reverse) {
-            for (int ndx =  g_queue_get_length(stack)-stack_adjust; ndx >=0 ; ndx--) {
+            for (int ndx =  full_len-1; ndx >=stack_adjust ; ndx--) {
                g_ptr_array_add(collector, strdup(g_queue_peek_nth(stack, ndx)));
             }
          }
          else {
-            for (int ndx = 0; ndx < g_queue_get_length(stack); ndx++) {
+            for (int ndx = stack_adjust; ndx < full_len; ndx++) {
                g_ptr_array_add(collector, strdup(g_queue_peek_nth(stack, ndx)));
             }
          }
@@ -127,7 +133,7 @@ void traced_function_stack_to_syslog(GQueue* callstack, int syslog_priority, boo
    }
    else {
       GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
-      collect_traced_function_stack(collector, callstack, reverse, 2);  // was 2
+      collect_traced_function_stack(collector, callstack, reverse, 0);
       // syslog(syslog_priority, "Traced function stack %p:", callstack);
 
       if (collector->len == 0)
@@ -268,18 +274,18 @@ void push_traced_function(const char * funcname) {
    bool debug = false;
    debug = debug | debug_tfs;
    if (debug) {
-      printf(PRItid"(push_traced_function) funcname = %s, traced_function_stack_enabled=%d\n",
-            TID(), funcname, traced_function_stack_enabled);
-      syslog(LOG_DEBUG, PRItid"(push_traced_function) funcname = %s, traced_function_stack_enabled=%d\n",
-            TID(), funcname, traced_function_stack_enabled);
+      printf(PRItid"(%s) funcname = %s, traced_function_stack_enabled=%d\n",
+            TID(), __func__, funcname, traced_function_stack_enabled);
+      syslog(LOG_DEBUG, PRItid"(%s) funcname = %s, traced_function_stack_enabled=%d\n",
+            TID(), __func__, funcname, traced_function_stack_enabled);
    }
 
    if (traced_function_stack_enabled && !traced_function_stack_suspended) {
       if (!traced_function_stack) {
          traced_function_stack = new_traced_function_stack(funcname);
          if (debug)
-            printf(PRItid"(push_traced_function) allocated new traced_function_stack %p, starting with %s\n",
-                  TID(), traced_function_stack, funcname);
+            printf(PRItid"%s) allocated new traced_function_stack %p, starting with %s\n",
+                  TID(), __func__, traced_function_stack, funcname);
       }
       g_queue_push_head(traced_function_stack, g_strdup(funcname));
    }
