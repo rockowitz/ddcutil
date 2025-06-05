@@ -263,7 +263,7 @@ bool dbgtrc_returning_string(
 #else
 #define TRACED_ASSERT(_assertion) \
    do { \
-      if (_assertion) { \
+         if (_assertion) { \
          ;              \
       }                 \
       else {           \
