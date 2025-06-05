@@ -950,7 +950,9 @@ parse_command(
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
    gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
-   gboolean traced_function_stack_flag = false;
+   gboolean enable_tfs_flag    = DEFAULT_ENABLE_TRACED_FUNCTION_STACK;
+   const char * enable_tfs_expl  = (DEFAULT_ENABLE_TRACED_FUNCTION_STACK) ? "Enable Traced Function Stack (default)" : "Enable Traced Function Stack";
+   const char * disable_tfs_expl = (DEFAULT_ENABLE_TRACED_FUNCTION_STACK) ? "Disable Traced Function Stack" : "Disable Traced Function Stack (default)";
    gboolean traced_function_stack_errors_fatal_flag = false;
    // int      i2c_bus_check_async_min = DEFAULT_I2C_BUS_CHECK_ASYNC_MIN;
    // int      ddc_check_async_min = DEFAULT_DDC_CHECK_ASYNC_MIN;
@@ -1362,8 +1364,11 @@ parse_command(
       {"trcfunc",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_functions,  "Trace functions","function name" },
       {"trcfrom",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,      "Trace call stack from function","function name" },
       {"trcfile",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
-      {"enable-traced-function-stack",
-                  '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &traced_function_stack_flag, "Enable traced function stack", NULL},
+      {"enable-traced-function-stack", '\0', G_OPTION_FLAG_NONE,
+                                           G_OPTION_ARG_NONE, &enable_tfs_flag,  enable_tfs_expl, NULL},
+      {"disable-traced-function-stack",'\0', G_OPTION_FLAG_REVERSE,
+                                           G_OPTION_ARG_NONE, &enable_tfs_flag,  disable_tfs_expl, NULL},
+
 //    {"traced-function-stack-errors-fatal",
 //                '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &traced_function_stack_errors_fatal_flag, "Traced function stack errors are fatal", NULL},
 
@@ -1771,7 +1776,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
    SET_CMDFLAG(CMD_FLAG_FLOCK,             enable_flock_flag);
    SET_CMDFLAG(CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK,
-                                           traced_function_stack_flag);
+                                           enable_tfs_flag);
    SET_CMDFLAG(CMD_FLAG_TRACED_FUNCTION_STACK_ERRORS_FATAL,
                                            traced_function_stack_errors_fatal_flag);
 
