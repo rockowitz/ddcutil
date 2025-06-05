@@ -157,7 +157,7 @@ free_callback_queue_entry(Callback_Queue_Entry* q) {
 gpointer dw_execute_callback_func(gpointer data) {
    bool debug = false;
 
-   traced_function_stack_suspended = true;
+   // traced_function_stack_suspended = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
    Callback_Queue_Entry *  cqe = (Callback_Queue_Entry *) data;
 
@@ -179,7 +179,7 @@ gpointer dw_execute_callback_func(gpointer data) {
    ddc_close_all_displays_for_current_thread(/*error_if_open=*/ true);   // in case client left some open
    unlock_all_displays_for_current_thread();      // should never be needed
 
-   traced_function_stack_suspended = false;
+   // traced_function_stack_suspended = false;
 
    free_current_traced_function_stack();
    return NULL;   // terminates thread
