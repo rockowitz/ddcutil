@@ -252,7 +252,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
          dbgrpt_display_ref(dref,  true,  2);
          debug_current_traced_function_stack(/*reverse*/ true);
          SYSLOG2(DDCA_SYSLOG_ERROR, "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
-         current_traced_function_stack_to_syslog(LOG_ERR, /* reverse */ true);
+         current_traced_function_stack_to_syslog(LOG_ERR, /* reverse */ false);
          backtrace_to_syslog(LOG_ERR, 0);
 
          // ASSERT_WITH_BACKTRACE(false);
