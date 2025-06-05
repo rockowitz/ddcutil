@@ -252,8 +252,10 @@ ddc_open_display(
 {
    bool debug = false;
    assert(dref);
+   // static int ctr = 0;
+   // ctr++;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, callopts=%s, dh_loc=%p",
-                      dref_reprx_t(dref), interpret_call_options_t(callopts), dh_loc );
+                      dref_reprx_t(dref), interpret_call_options_t(callopts), dh_loc);
    TRACED_ASSERT(dh_loc);
    // TRACED_ASSERT(1==5);    // for testing
 
@@ -261,6 +263,9 @@ ddc_open_display(
    Error_Info * err = NULL;
    int fd = -1;
 
+
+   // if (ctr % 8 == 0)
+   //    dref->detail = NULL;
    if (dref->flags & DREF_REMOVED) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to open disconnected display reference %s",
             dref_repr_t(dref));
@@ -271,6 +276,9 @@ ddc_open_display(
    if (!dref->detail) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "Display_Ref.detail == NULL, but DREF_REMOVED not set, dref=%s",
             dref_repr_t(dref));
+      // show_backtrace(1);
+      // backtrace_to_syslog(LOG_ERR, 1);
+      current_traced_function_stack_to_syslog(LOG_ERR, /*everse*/ false);
       dref->flags |= DREF_REMOVED;
       err = ERRINFO_NEW(DDCRC_DISCONNECTED,
             "Display_Ref.detail == NULL, but DREF_REMOVED not set, dref=%s", dref_repr_t(dref));
