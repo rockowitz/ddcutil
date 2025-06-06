@@ -549,70 +549,59 @@ typedef enum {
 
 
 STATIC
-DDCA_Status
-ddca_open_display3(
+Error_Info *
+ddci_open_display3(
       DDCA_Display_Ref      ddca_dref,
       DDC_Open_Options      options,
       DDCA_Display_Handle * dh_loc)
 {
    bool debug = false;
-   free_thread_error_detail();
-   API_PROLOGX(debug, RESPECT_QUIESCE,
+   DBGTRC_STARTING(debug, DDCA_TRC_API,
           "ddca_dref=%p, options=0x%02x, dh_loc=%p, on thread %d",
           ddca_dref, options, dh_loc, get_thread_id());
+
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API,
-          "library_initialized=%s, ddc_displays_already_detected() = %ld",
-          sbool(library_initialized), ddc_displays_already_detected());
+          "library_initialized=%s, ddc_displays_already_detected() = %s",
+          sbool(library_initialized), sbool(ddc_displays_already_detected()));
    TRACED_ASSERT(library_initialized);
    TRACED_ASSERT(ddc_displays_already_detected());
 
-   API_PRECOND_W_EPILOG(dh_loc);
    Display_Ref * dref = NULL;
    *dh_loc = NULL;        // in case of error
    DDCA_Status rc = 0;
    Error_Info * err = NULL;
    Display_Ref * dref0 = dref_from_published_ddca_dref(ddca_dref);
-   if (dref0) {
-      // rc  = ddci_validate_ddca_display_ref(ddca_dref, /* basic_only*/ false, /* require_not_asleep */ true, &dref);
-      rc  = ddci_validate_ddca_display_ref2(ddca_dref, DREF_VALIDATE_EDID | DREF_VALIDATE_AWAKE, &dref);
-      if (!rc) {
-        Display_Handle* dh = NULL;
-        Call_Options callopts = CALLOPT_NONE;
-        if (options & DDC_OPENOPT_WAIT)
-           callopts |= CALLOPT_WAIT;
-        err = ddc_open_display(dref,  callopts, &dh);
-        if (!err)
-           *dh_loc = dh;
-        else {
-           rc = err->status_code;
-           char * detail2 = g_strdup_printf("%s, Internal display ref: %s", err->detail, dref_reprx_t(dref));
-           free(err->detail);
-           err->detail = detail2;
-
-           DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
-           errinfo_free_with_report(err, debug, __func__);
-           save_thread_error_detail(public_error_detail);
-        }
-      }
-      else {
-         Error_Info * err = ERRINFO_NEW(DDCRC_INVALID_DISPLAY, "Invalid display ref");
-         DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
-         errinfo_free_with_report(err, debug, __func__);
-         save_thread_error_detail(public_error_detail);
-      }
+   if (!dref0) {
+      err = ERRINFO_NEW(DDCRC_INVALID_DISPLAY, "Unknown display ref");
    }
    else {
-      Error_Info * err = ERRINFO_NEW(DDCRC_INVALID_DISPLAY, "Unknown display ref");
-      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
-      errinfo_free_with_report(err, debug, __func__);
-      save_thread_error_detail(public_error_detail);
+      rc = ddci_validate_ddca_display_ref2(
+            ddca_dref, DREF_VALIDATE_EDID | DREF_VALIDATE_AWAKE, &dref);
+      if (rc) {
+         err = ERRINFO_NEW(DDCRC_INVALID_DISPLAY,
+               "Invalid display ref, ddci_validate_ddca_display_ref2 returned %s", psc_desc(rc));
+      }
+      else {
+         Display_Handle * dh;
+         Call_Options callopts = CALLOPT_NONE;
+         if (options & DDC_OPENOPT_WAIT)
+            callopts |= CALLOPT_WAIT;
+         err = ddc_open_display(dref,  callopts, &dh);
+         if (err) {
+            char * detail2 = g_strdup_printf("%s, Internal display ref: %s",
+                                             err->detail, dref_reprx_t(dref));
+            free(err->detail);
+            err->detail = detail2;
+         }
+         else {
+            *dh_loc = dh;
+         }
+      }
    }
 
-
-   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc,
-                        "*dh_loc=%p -> %s", *dh_loc, dh_repr(*dh_loc));
-   TRACED_ASSERT_IFF(rc==0, *dh_loc);
-   return rc;
+   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_API, err, "*dh_loc=%p -> %s", *dh_loc, dh_repr(*dh_loc));
+   TRACED_ASSERT_IFF(!err, *dh_loc);
+   return err;
 }
 
 
@@ -622,9 +611,29 @@ ddca_open_display2(
       bool                  wait,
       DDCA_Display_Handle * dh_loc)
 {
-   return ddca_open_display3(ddca_dref,
+   bool debug = false;
+   free_thread_error_detail();
+   API_PROLOGX(debug, RESPECT_QUIESCE,
+           "ddca_dref=%p, wait=%s, dh_loc=%p, on thread %d",
+           ddca_dref, SBOOL(wait), dh_loc, get_thread_id());
+   API_PRECOND_W_EPILOG(dh_loc);
+
+   Error_Info * err = ddci_open_display3(ddca_dref,
                              (wait) ? DDC_OPENOPT_WAIT : DDC_OPENOPT_NONE,
                              dh_loc);
+   int ddcrc = 0;
+   if (err) {
+      ddcrc = err->status_code;
+      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
+      errinfo_free_with_report(err, debug, __func__);
+      save_thread_error_detail(public_error_detail);
+   }
+
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc,
+                        "*dh_loc=%p -> %s", *dh_loc, dh_repr(*dh_loc));
+   TRACED_ASSERT_IFF(ddcrc==0, *dh_loc);
+   return ddcrc;
+
 }
 
 
@@ -1602,7 +1611,7 @@ void init_api_displays() {
    RTTI_ADD_FUNC(ddca_get_display_ref);
    RTTI_ADD_FUNC(ddca_get_display_refs);
    RTTI_ADD_FUNC(ddca_open_display2);
-   RTTI_ADD_FUNC(ddca_open_display3);
+   RTTI_ADD_FUNC(ddci_open_display3);
    RTTI_ADD_FUNC(ddca_redetect_displays);
    RTTI_ADD_FUNC(ddca_report_display_by_dref);
    RTTI_ADD_FUNC(ddca_register_display_status_callback);
