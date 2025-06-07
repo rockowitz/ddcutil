@@ -926,6 +926,7 @@ ddca_init(const char *      libopts,
    return ddci_init(libopts, syslog_level_arg, opts, NULL);
 }
 
+
 DDCA_Status
 ddca_init2(const char *     libopts,
           DDCA_Syslog_Level syslog_level_arg,
