@@ -1,6 +1,6 @@
 /** @file displays.c   Monitor identifier, reference, handle  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -379,7 +379,6 @@ char * io_mode_name(DDCA_IO_Mode val) {
          ? IO_Mode_Names[val]
          : NULL;
 }
-
 
 
 /** A simple function allowing for the assignment of a value to a
