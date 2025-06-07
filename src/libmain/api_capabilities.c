@@ -591,4 +591,5 @@ void init_api_capabilities() {
    RTTI_ADD_FUNC(ddci_report_parsed_capabilities_by_dref);
    RTTI_ADD_FUNC(ddca_report_parsed_capabilities_by_dref);
    RTTI_ADD_FUNC(ddca_report_parsed_capabilities_by_dh);
+   RTTI_ADD_FUNC(ddca_report_parsed_capabilities);
 }
