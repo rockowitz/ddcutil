@@ -489,7 +489,14 @@ ddca_report_parsed_capabilities(
       DDCA_Capabilities *      p_caps,
       int                      depth)
 {
+   bool debug = false;
+   free_thread_error_detail();
+   API_PROLOG(debug, "Starting. p_caps=%p", //  ddca_dref=%s",
+                      p_caps);      // , dref_repr_t((Display_Ref*) ddca_dref));
+
    ddci_report_parsed_capabilities_by_dref(p_caps, NULL, depth);
+
+   API_EPILOG_NO_RETURN_BASIC(debug, "");
 }
 
 
