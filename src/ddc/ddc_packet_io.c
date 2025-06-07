@@ -263,7 +263,6 @@ ddc_open_display(
    Error_Info * err = NULL;
    int fd = -1;
 
-
    // if (ctr % 8 == 0)
    //    dref->detail = NULL;
    if (dref->flags & DREF_REMOVED) {
@@ -278,7 +277,7 @@ ddc_open_display(
             dref_repr_t(dref));
       // show_backtrace(1);
       // backtrace_to_syslog(LOG_ERR, 1);
-      current_traced_function_stack_to_syslog(LOG_ERR, /*everse*/ false);
+      current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
       dref->flags |= DREF_REMOVED;
       err = ERRINFO_NEW(DDCRC_DISCONNECTED,
             "Display_Ref.detail == NULL, but DREF_REMOVED not set, dref=%s", dref_repr_t(dref));
