@@ -466,7 +466,18 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 }
 
 
-// *** Display_Ref ***
+//
+// *** Published Display Reference Table
+//
+// Converts between the internal (pointer) and external (integer) display
+// reference form, and maintains a table of all display references that
+// have been exposed by the API. This table is used to validate display
+// reference arguments on API calls.
+//
+// The external display reference is the unique dref_id stored in each
+// Display_Reference when it is created. Table published_dref_hash has
+// entries whose keys are the external DDCA_Display_Ref and whose values
+// are pointers to the internal Display_Ref.
 
 static uint max_dref_id = 0;
 static GMutex max_dref_id_mutex;
@@ -609,6 +620,7 @@ DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref) {
 }
 
 
+// *** Display_Ref ***
 
 Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    bool debug = false;
@@ -879,7 +891,6 @@ void dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth) {
       rpt_int("usb_device",      NULL, dref->usb_device,      d1);
       rpt_str("usb_hiddev_name", NULL, dref->usb_hiddev_name, d1);
    }
-
    rpt_vstring(d1, "vcp_version_xdf:     %s", format_vspec(dref->vcp_version_xdf) );
    rpt_vstring(d1, "vcp_version_cmdline: %s", format_vspec(dref->vcp_version_cmdline) );
    rpt_vstring(d1, "flags:               %s", interpret_dref_flags_t(dref->flags) );
@@ -888,7 +899,6 @@ void dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth) {
    rpt_vstring(d1, "dispno:              %d", dref->dispno);
    rpt_vstring(d1, "pedid:               %p", dref->pedid);
    report_parsed_edid(dref->pedid, /*verbose*/ false, depth+1);
-
 #ifdef OLD
    rpt_vstring(d1, "driver:           %s", dref->driver_name);
 #endif
@@ -910,10 +920,12 @@ void dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth) {
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
+
 // for use by DBGTRC_RET_STRUCT()
 void dbgrpt_display_ref0(Display_Ref * dref, int depth) {
    dbgrpt_display_ref(dref, true, depth);
 }
+
 
 void dbgrpt_display_ref_summary(Display_Ref * dref, bool include_businfo, int depth) {
    bool debug = false;
@@ -943,6 +955,7 @@ void dbgrpt_display_ref_summary(Display_Ref * dref, bool include_businfo, int de
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
+
 
 /** Thread safe function that returns a short description of a #Display_Ref.
  *  The returned value is valid until the next call to this function on
