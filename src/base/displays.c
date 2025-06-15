@@ -318,7 +318,6 @@ char * did_repr(Display_Identifier * pdid) {
 }
 
 
-
 /** Frees a #Display_Identifier instance
  *
  * \param pdid pointer to #Display_Identifier to free
@@ -1138,6 +1137,7 @@ Display_Ref * get_dref_by_busno_or_connector(
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %p= %s", result, dref_repr_t(result));
    return result;
 }
+
 
 #ifdef UNUSED
 Display_Ref *
