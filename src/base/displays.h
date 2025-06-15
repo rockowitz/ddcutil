@@ -35,7 +35,7 @@ Display Specification
 
 Monitors are specified in different ways in different contexts:
 
-1) Display_Identifier contains the identifiers specified on the command line.
+1) Display_Identifier represents an identifier specified on the command line.
 
 2) Display_Ref is a logical display identifier.   It can be an I2C identifier
 or a USB identifier.
@@ -313,6 +313,5 @@ bool add_disabled_display(Monitor_Model_Key * mmk);
 bool add_disabled_mmk_by_string(const char * mmid);
 void dbgrpt_ddc_disabled_table(int depth);
 bool is_disabled_mmk(Monitor_Model_Key mmk);
-
 
 #endif /* DISPLAYS_H_ */
