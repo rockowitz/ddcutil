@@ -24,6 +24,8 @@ extern uint16_t   udev_watch_loop_millisec;
 extern uint16_t   poll_watch_loop_millisec;
 extern uint16_t   xevent_watch_loop_millisec;
 
+
+extern bool       terminate_watch_thread;
 extern bool       terminate_using_x11_event;
 
 uint32_t  dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);

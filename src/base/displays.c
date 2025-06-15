@@ -42,8 +42,6 @@ GPtrArray * all_display_refs = NULL;         // all detected displays, array of 
 GMutex      all_display_refs_mutex;
 bool        debug_locks = false;
 
-bool      terminate_watch_thread = false;
-
 // *** DDCA_IO_Path ***
 
 /** Tests 2 #DDCA_IO_Path instances for equality
