@@ -198,9 +198,6 @@ typedef struct _display_ref {
    uint64_t                 next_i2c_io_after;     // nanosec
    struct _display_ref *    actual_display;        // if dispno == -2
    DDCA_IO_Path *           actual_display_path;   // alt to actual_display
-#ifdef OLD
-   char *                   driver_name;           //
-#endif
    struct Per_Display_Data* pdd;
    char *                   drm_connector;         // e.g. card0-HDMI-A-1  // REDUNDANT - IDENTICAL TO Bus_Info.drm_connector
    int                      drm_connector_id;      // identical to Bus_Info.drm_connector_id

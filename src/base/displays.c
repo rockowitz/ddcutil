@@ -652,10 +652,6 @@ Display_Ref * create_bus_display_ref(int busno) {
    io_path.io_mode   = DDCA_IO_I2C;
    io_path.path.i2c_busno = busno;
    Display_Ref * dref = create_base_display_ref(io_path);
-
-#ifdef OLD
-   dref->driver_name = get_i2c_sysfs_driver_by_busno(busno);
-#endif
    if (debug) {
       DBGMSG("Done.  Constructed bus display ref %s:", dref_repr_t(dref));
       dbgrpt_display_ref(dref, true, 0);
@@ -722,9 +718,6 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
       // do not set dfr
       // do not set actual_display
       copy->actual_display_path = dref->actual_display_path;
-#ifdef OLD
-      copy->driver_name = g_strdup(dref->driver_name);
-#endif
       // dont set pdd
       copy->drm_connector = g_strdup(dref->drm_connector);
       copy->drm_connector_id = dref->drm_connector_id;
@@ -767,9 +760,6 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
                free_parsed_edid(dref->pedid);  // private copy
             }
             dfr_free(dref->dfr);
-#ifdef OLD
-            free(dref->driver_name);
-#endif
             free(dref->drm_connector);
             free(dref->communication_error_summary);
             g_mutex_clear(&dref->access_mutex);
@@ -897,9 +887,6 @@ void dbgrpt_display_ref(Display_Ref * dref, bool include_businfo, int depth) {
    rpt_vstring(d1, "dispno:              %d", dref->dispno);
    rpt_vstring(d1, "pedid:               %p", dref->pedid);
    report_parsed_edid(dref->pedid, /*verbose*/ false, depth+1);
-#ifdef OLD
-   rpt_vstring(d1, "driver:           %s", dref->driver_name);
-#endif
    rpt_vstring(d1, "actual_display:   %p", dref->actual_display);
    rpt_vstring(d1, "actual_display_path: %s",
          (dref->actual_display_path) ? dpath_repr_t(dref->actual_display_path) : "NULL");
