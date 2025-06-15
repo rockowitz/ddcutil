@@ -23,8 +23,6 @@ extern uint16_t   stabilization_poll_millisec;
 extern uint16_t   udev_watch_loop_millisec;
 extern uint16_t   poll_watch_loop_millisec;
 extern uint16_t   xevent_watch_loop_millisec;
-
-
 extern bool       terminate_watch_thread;
 extern bool       terminate_using_x11_event;
 
