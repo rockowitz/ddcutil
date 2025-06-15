@@ -144,7 +144,6 @@ void dw_free_watch_displays_data(Watch_Displays_Data * wdd) {
 }
 
 
-
 void dw_free_recheck_displays_data(Recheck_Displays_Data * rdd) {
    if (rdd) {
       assert( memcmp(rdd->marker, RECHECK_DISPLAYS_DATA_MARKER, 4) == 0 );
@@ -167,8 +166,6 @@ void dw_free_callback_displays_data(Callback_Displays_Data * cdd) {
       free(cdd);
    }
 }
-
-
 
 
 #ifdef UNUSED
