@@ -550,7 +550,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
    Error_Info * err = NULL;
    I2C_Bus_Info * businfo = NULL;
 
-   bool disabled_mmk = is_disabled_mmk(*dref->mmid); // is this monitor model disabled?
+   bool disabled_mmk = is_ignored_mmk(*dref->mmid); // is this monitor model disabled?
    if (disabled_mmk) {
       dref->flags |= DREF_DDC_DISABLED;
       dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;

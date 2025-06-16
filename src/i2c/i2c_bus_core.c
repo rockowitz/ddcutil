@@ -1643,7 +1643,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo) {
    else  if (businfo->edid) {  // start, x37 check
 
       Monitor_Model_Key mmk = mmk_value_from_edid(businfo->edid);
-      bool disabled_mmk = is_disabled_mmk(mmk);
+      bool disabled_mmk = is_ignored_mmk(mmk);
       if (disabled_mmk) {
          businfo->flags |= I2C_BUS_DDC_DISABLED;
       }

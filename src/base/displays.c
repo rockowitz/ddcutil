@@ -1444,7 +1444,7 @@ static GPtrArray  * ddc_disabled_table = NULL;
  *  @remark
  *  If the **ddc_disabled_table** does not already exist, it is created.
  */
-bool add_disabled_display(Monitor_Model_Key * p_mmk) {
+bool ignore_mmk(Monitor_Model_Key * p_mmk) {
    bool debug = false;
    char * repr = NULL;
    if (debug) {
@@ -1477,18 +1477,18 @@ bool add_disabled_display(Monitor_Model_Key * p_mmk) {
 }
 
 
-bool add_disabled_mmk_by_string(const char * mmid) {
+bool ignore_mmk_by_string(const char * mmid) {
    bool result = false;
    Monitor_Model_Key* p_mmk = mmk_new_from_string(mmid);
    if (p_mmk) {
-      add_disabled_display(p_mmk);
+      ignore_mmk(p_mmk);
       result = true;
    }
    return result;
 }
 
 
-void dbgrpt_ddc_disabled_table(int depth) {
+void dbgrpt_ignored_mmk_table(int depth) {
    const char * table_name = "ddc_disabled_table";
    GPtrArray* table = ddc_disabled_table;
    if (table) {
@@ -1512,7 +1512,7 @@ void dbgrpt_ddc_disabled_table(int depth) {
  *  @param mmk  monitor-model-id
  *  @return **true** if the display type is disabled, **false** if not
  */
-bool is_disabled_mmk(Monitor_Model_Key mmk) {
+bool is_ignored_mmk(Monitor_Model_Key mmk) {
    bool debug = false;
    DBGF(debug, "Starting. mmk=%s", mmk_repr(mmk));
 

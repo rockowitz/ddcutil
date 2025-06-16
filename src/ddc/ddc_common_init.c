@@ -212,7 +212,7 @@ STATIC Error_Info * init_disabled_displays(Parsed_Cmd * parsed_cmd) {
     for (int ndx = 0; ndx < ntsa_length(parsed_cmd->ddc_disabled); ndx++) {
           // DBGF(debug, "Adding disabled_mmid: %s", parsed_cmd->ddc_disabled[ndx]);
           char * cur_mmid = parsed_cmd->ddc_disabled[ndx];
-          bool found = add_disabled_mmk_by_string(cur_mmid);
+          bool found = ignore_mmk_by_string(cur_mmid);
           if (!found) {
              Error_Info * err = errinfo_new(DDCRC_CONFIG_ERROR, "Invalid mmid: %s", cur_mmid);
              g_ptr_array_add(errinfo_accumulator, err);
@@ -221,7 +221,7 @@ STATIC Error_Info * init_disabled_displays(Parsed_Cmd * parsed_cmd) {
     }
 
    if (debug)
-      dbgrpt_ddc_disabled_table(2);
+      dbgrpt_ignored_mmk_table(2);
 
    if (errinfo_accumulator->len > 0)
       errinfo = errinfo_new_with_causes_gptr(
