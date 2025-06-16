@@ -1438,11 +1438,11 @@ static GPtrArray  * ignored_mmk_table = NULL;
 
 /** Adds a Monitor Model Id to the list of monitors for which DDC is disabled
  *
- *  @param  mmid  monitor model key string
+ *  @param  mmid  monitor model key struct
  *  @return true  if mmid is defined, false if not
  *
  *  @remark
- *  If the **ddc_disabled_table** does not already exist, it is created.
+ *  If the **ignored_mmk_table** does not already exist, it is created.
  */
 bool ignore_mmk(Monitor_Model_Key * p_mmk) {
    bool debug = false;
