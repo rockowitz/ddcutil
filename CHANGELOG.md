@@ -1,4 +1,4 @@
-## [2.2.1] 2024-05-29
+## [2.2.1] 2024-06-16
 
 ### General
 
@@ -13,6 +13,8 @@
 - Command **environment --verbose**: eliminate some unneeded edid read tests
 - Command **setvcp**: Emit more more useful messages when the cause of a 
   DDCRC_RETRIES error is itself a DDCRC_RETRIES error.
+- Add option ***--disable-traced-function-stack***
+  The default traced-function-stack option value is set in parms.h. 
 
 #### Fixed
 
@@ -26,11 +28,23 @@
   avoiding a lintian message. Addresses issue #500
 - Fix errors reported by clang 19: unused variable, expression which evaluates
   to 0 treated as null pointer. Addresses issue #502.
-- Command **getvcp --terse** Eliminate irrelevant messages regarding VCP version not set.
+- Command **getvcp --terse**: Eliminate irrelevant messages regarding VCP version not set.
 - Make test for missing DRM card-connector directories more robust. Issue #507.
 - DDC communication not detected with old (340 series) Nvidia proprietary driver. Issue #507
-- Function end_capture(): call close() in case of fflush() error, ensuring that messages
-  are always sent to the terminal after message capture complete
+- Function end_capture(): call close() in case of fflush() error, ensuring that 
+  messages are always sent to the terminal after message capture complete
+- Functions **ddca_find_display_ref()** and **ddca_get_display_ref()** were 
+  returning a pointer to the internal Display_Ref struct rather than an external 
+  integer DDCA_Display_Ref, causing segfault or return code DDCRC_INVALID_DISPLAY
+  on a subsequent api call such as **ddca_open_display2()**.  Addresses issue #528.
+- Several API functions were not recognized as arguments to ***--trcfunc*** and ***--trcfrom***. 
+  These included **ddca_find_display_ref()**, **ddca_get_display_ref()**, **report_parsed_capabilities()** 
+- Option ***--stats*** was not reporting data 
+- **ddc_open_display()**: return DDCRC_DISCONNECTED instead of an assert failure if 
+  bus_info == NULL.  Addresses KDE Powerdevil issue #504861 (powerdevil crash from 
+  libddcutil, no restart happens)
+- Macro TRACED_ASSERT() calls **__assert_fail()** instead of exit(1). 
+  Addresses Powerdevil issue #504861.
 
 ### Building
 
