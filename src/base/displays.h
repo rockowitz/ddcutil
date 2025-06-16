@@ -59,11 +59,11 @@ void terminate_displays();
 
 #define BUSNO_NOT_SET 255
 
-char *  io_mode_name(DDCA_IO_Mode val);
-bool    dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2);
-char *  dpath_short_name_t(DDCA_IO_Path * dpath);
-char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
-int     dpath_hash(DDCA_IO_Path path);
+char *       io_mode_name(DDCA_IO_Mode val);
+bool         dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2);
+char *       dpath_short_name_t(DDCA_IO_Path * dpath);
+char *       dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
+int          dpath_hash(DDCA_IO_Path path);
 DDCA_IO_Path i2c_io_path(int busno);
 DDCA_IO_Path usb_io_path(int hiddev_devno);
 
