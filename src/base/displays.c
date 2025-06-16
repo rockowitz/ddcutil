@@ -1433,7 +1433,7 @@ void free_bus_open_error(Bus_Open_Error * boe) {
 // Monitor models for which DDC is disabled
 //
 
-static GPtrArray  * ddc_disabled_table = NULL;
+static GPtrArray  * ignored_mmk_table = NULL;
 
 
 /** Adds a Monitor Model Id to the list of monitors for which DDC is disabled
@@ -1456,18 +1456,18 @@ bool ignore_mmk(Monitor_Model_Key * p_mmk) {
    bool missing = true;
    if (p_mmk->defined) {  // if it's a valid monitor model id string
       DBGF(debug, "%s is valid:", repr);
-      if (!ddc_disabled_table)
-         ddc_disabled_table = g_ptr_array_new();
+      if (!ignored_mmk_table)
+         ignored_mmk_table = g_ptr_array_new();
       // n. g_ptr_array_find_with_equal_func() requires glib 2.54
-      for (int ndx = 0; ndx < ddc_disabled_table->len; ndx++) {
-         Monitor_Model_Key* p = g_ptr_array_index(ddc_disabled_table, ndx);
+      for (int ndx = 0; ndx < ignored_mmk_table->len; ndx++) {
+         Monitor_Model_Key* p = g_ptr_array_index(ignored_mmk_table, ndx);
          if (monitor_model_key_eq(*p_mmk, *p)) {
             missing = false;
             break;
          }
       }
       if (missing)
-         g_ptr_array_add(ddc_disabled_table, p_mmk);
+         g_ptr_array_add(ignored_mmk_table, p_mmk);
       result = true;
    }
 
@@ -1490,7 +1490,7 @@ bool ignore_mmk_by_string(const char * mmid) {
 
 void dbgrpt_ignored_mmk_table(int depth) {
    const char * table_name = "ddc_disabled_table";
-   GPtrArray* table = ddc_disabled_table;
+   GPtrArray* table = ignored_mmk_table;
    if (table) {
       if (table->len == 0)
          rpt_vstring(depth, "%s: empty", table_name);
@@ -1519,9 +1519,9 @@ bool is_ignored_mmk(Monitor_Model_Key mmk) {
   // dbgrpt_ddc_disabled_table(2);
 
    bool result = false;
-   if (ddc_disabled_table) {
-      for (int ndx = 0; ndx < ddc_disabled_table->len; ndx++) {
-         Monitor_Model_Key* p = g_ptr_array_index(ddc_disabled_table, ndx);
+   if (ignored_mmk_table) {
+      for (int ndx = 0; ndx < ignored_mmk_table->len; ndx++) {
+         Monitor_Model_Key* p = g_ptr_array_index(ignored_mmk_table, ndx);
          DBGF(debug, "Comparing vs p = %p -> %s", p, mmk_repr(*p));
          if (monitor_model_key_eq(mmk, *p)) {
             result = true;
