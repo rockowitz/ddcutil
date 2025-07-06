@@ -336,7 +336,8 @@ bool dbgtrc_returning_string(
 
 #define DBGTRC_STARTING(debug_flag, trace_group, format, ...) \
    do { \
-      push_traced_function(__func__); \
+      if (traced_function_stack_enabled) \
+         push_traced_function(__func__); \
       dbgtrc( (debug_flag) || trace_callstack_call_depth > 0 || is_traced_callstack_call(__func__) \
                  ? DDCA_TRC_ALL : (trace_group), \
               DBGTRC_OPTIONS_STARTING, \
@@ -348,7 +349,8 @@ bool dbgtrc_returning_string(
       dbgtrc( (debug_flag) || trace_callstack_call_depth > 0  \
               ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
               __func__, __LINE__, __FILE__, "Done      "format, ##__VA_ARGS__); \
-      pop_traced_function(__func__);  \
+      if (traced_function_stack_enabled) \
+         pop_traced_function(__func__);  \
    } while (0)
 
 #define DBGTRC_DONE_WO_TRACED_FUNCTION_STACK(debug_flag , trace_group, format, ...) \
@@ -373,7 +375,8 @@ bool dbgtrc_returning_string(
              ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, _result, format, ##__VA_ARGS__); \
-       pop_traced_function(__func__);  \
+       if (traced_function_stack_enabled) \
+          pop_traced_function(__func__);  \
     } while (0)
 
 /* Notes on macros that have ENABLE_FAILSIM variants.
@@ -402,7 +405,8 @@ bool dbgtrc_returning_string(
       dbgtrc_ret_ddcrc( \
          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
          __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
-      pop_traced_function(__func__);
+      if (traced_function_stack_enabled) \
+         pop_traced_function(__func__);
   } while (0)
 #define DBGTRC_RET_DDCRC2(debug_flag, trace_group, _rc, _data_pointer, format, ...) \
    do { \
@@ -420,7 +424,8 @@ bool dbgtrc_returning_string(
       dbgtrc_ret_ddcrc( \
          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
          __func__, __LINE__, __FILE__, _rc, format, ##__VA_ARGS__); \
-      pop_traced_function(__func__);
+      if (traced_function_stack_enabled) \
+         pop_traced_function(__func__);
   } while (0)
 #else
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
@@ -429,7 +434,8 @@ bool dbgtrc_returning_string(
          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
          DBGTRC_OPTIONS_DONE, \
          __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
-      pop_traced_function(__func__);  \
+      if (traced_function_stack_enabled) \
+         pop_traced_function(__func__);  \
    } while (0)
 
 #define DBGTRC_RET_DDCRC2(debug_flag, trace_group, rc, data_pointer, format, ...) \
@@ -437,7 +443,8 @@ bool dbgtrc_returning_string(
    dbgtrc_ret_ddcrc( \
       (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
       __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
-      pop_traced_function(__func__);  \
+      if (traced_function_stack_enabled) \
+         pop_traced_function(__func__);  \
    } while (0)
 #endif
 
@@ -454,7 +461,8 @@ bool dbgtrc_returning_string(
       dbgtrc_returning_errinfo( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
-      pop_traced_function(__func__); \
+      if (traced_function_stack_enabled) \
+         pop_traced_function(__func__); \
    } while(0)
 #define DBGTRC_RET_ERRINFO2(debug_flag, trace_group, errinfo_result, data_pointer, format, ...) \
    do { \
@@ -472,7 +480,8 @@ bool dbgtrc_returning_string(
       dbgtrc_returning_errinfo( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
-      pop_traced_function(__func__); \
+      if (traced_function_stack_enabled) \
+         pop_traced_function(__func__); \
    } while(0)
 #else
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
@@ -480,7 +489,8 @@ bool dbgtrc_returning_string(
       dbgtrc_returning_errinfo( \
              (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
              DBGTRC_OPTIONS_DONE, __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
-      pop_traced_function(__func__);  \
+      if (traced_function_stack_enabled) \
+         pop_traced_function(__func__);  \
    } while (0)
 #define DBGTRC_RET_ERRINFO2(debug_flag, trace_group, errinfo_result, pointer, format, ...) \
       do { \
@@ -488,7 +498,8 @@ bool dbgtrc_returning_string(
              (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
              DBGTRC_OPTIONS_DONE, \
              __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
-         pop_traced_function(__func__);  \
+         if (traced_function_stack_enabled) \
+            pop_traced_function(__func__);  \
       } while (0)
 #endif
 
@@ -500,7 +511,8 @@ bool dbgtrc_returning_string(
          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
          DBGTRC_OPTIONS_DONE, \
          __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__); \
-     pop_traced_function(__func__);  \
+     if (traced_function_stack_enabled) \
+        pop_traced_function(__func__);  \
   } while (0)
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
@@ -513,7 +525,8 @@ bool dbgtrc_returning_string(
             _dbgfunc(_structptr, 1); \
          } \
       } \
-      pop_traced_function(__func__);  \
+      if (traced_function_stack_enabled) \
+         pop_traced_function(__func__);  \
    } while (0)
 
 #define DBGTRC_RET_STRUCT(_flag, _trace_group, _structname, _dbgfunc, _structptr) \
@@ -526,7 +539,8 @@ do { \
          _dbgfunc(_structptr, 1); \
       } \
    } \
-   pop_traced_function(__func__);  \
+   if (traced_function_stack_enabled) \
+      pop_traced_function(__func__);  \
 } while(0)
 
 #define DBGTRC_RET_STRUCT_VALUE(_flag, _trace_group, _structname, _dbgfunc, _structval) \
@@ -537,7 +551,8 @@ do { \
              "Returning %s value:", #_structname); \
       _dbgfunc(_structval, 2); \
    } \
-   pop_traced_function(__func__);  \
+   if (traced_function_stack_enabled) \
+      pop_traced_function(__func__);  \
 } while(0)
 
 
@@ -552,7 +567,8 @@ do { \
          _dbgfunc(*_structptr_loc, 1);                                        \
       }     \
    } \
-   pop_traced_function(__func__);  \
+   if (traced_function_stack_enabled) \
+      pop_traced_function(__func__);  \
 } while(0)
 
 
