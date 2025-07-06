@@ -27,6 +27,7 @@ void       pop_traced_function(const char * funcname);
 
 void       collect_traced_function_stack(GPtrArray* collector, GQueue * stack, bool reverse, int stack_adjust);
 void       debug_current_traced_function_stack(bool reverse);
+int        current_traced_function_stack_size();
 GPtrArray* get_current_traced_function_stack_contents(bool most_recent_last);
 void       current_traced_function_stack_to_syslog(int syslog_priority, bool reverse);
 
