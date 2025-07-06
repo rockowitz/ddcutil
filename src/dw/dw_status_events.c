@@ -142,7 +142,6 @@ gpointer dw_callback_displays_func(gpointer data) {
 #endif
 
 
-
 STATIC void
 free_callback_queue_entry(Callback_Queue_Entry* q) {
    free(q);
@@ -156,32 +155,37 @@ free_callback_queue_entry(Callback_Queue_Entry* q) {
  */
 gpointer dw_execute_callback_func(gpointer data) {
    bool debug = false;
-
-   // traced_function_stack_suspended = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
+
+   // set_debug_thread_tfs(true);  // turn on traced function stack debug msgs for current thread
    Callback_Queue_Entry *  cqe = (Callback_Queue_Entry *) data;
 
    char * buf = g_strdup_printf("Invoking callback function %p for event %s in this thread "PRItid,
          cqe->func, display_status_event_repr_t(cqe->event), TID());
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", buf);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
+   free(buf);
+
    record_active_callback_thread(g_thread_self());
    cqe->func(cqe->event);
+   // in case the callback function calls an API function that resets the traced function stack:
+   if (traced_function_stack_enabled && current_traced_function_stack_size() == 0)
+      push_traced_function(__func__);
    remove_active_callback_thread(g_thread_self());
-   free(buf);
 
    buf = g_strdup_printf("Callback function %p for event %s complete",
          cqe->func, display_status_event_repr_t(cqe->event));
-   DBGTRC_DONE(debug, TRACE_GROUP, "%s", buf);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    free_callback_queue_entry(cqe);
-   free(buf);
+
    ddc_close_all_displays_for_current_thread(/*error_if_open=*/ true);   // in case client left some open
    unlock_all_displays_for_current_thread();      // should never be needed
 
-   // traced_function_stack_suspended = false;
+   if (traced_function_stack_enabled)
+      free_current_traced_function_stack();
 
-   free_current_traced_function_stack();
+   DBGTRC_DONE(debug, TRACE_GROUP, "%s", buf);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
+   free(buf);
    return NULL;   // terminates thread
 }
 
