@@ -16,8 +16,6 @@ extern "C" {
 extern bool traced_function_stack_enabled;
 extern bool traced_function_stack_errors_fatal;
 extern __thread GQueue * traced_function_stack;
-extern __thread bool traced_function_stack_suspended;
-extern __thread bool debug_tfs;
 
 bool       set_debug_thread_tfs(bool newval);
 
