@@ -177,8 +177,10 @@ void unquiesce_api();
          syslog(LOG_WARNING, "%s called before ddca_init2() or ddca_init()", __func__); \
          ddci_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE, NULL); \
       } \
-      reset_current_traced_function_stack(); \
-      push_traced_function(__func__); \
+      if (traced_function_stack_enabled) { \
+         reset_current_traced_function_stack(); \
+         push_traced_function(__func__); \
+      } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_STARTING, \
@@ -230,8 +232,10 @@ void unquiesce_api();
             return DDCRC_QUIESCED; \
          } \
       } \
-      reset_current_traced_function_stack(); \
-      push_traced_function(__func__); \
+      if (traced_function_stack_enabled) { \
+         reset_current_traced_function_stack(); \
+         push_traced_function(__func__); \
+      } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_STARTING, \
@@ -242,8 +246,10 @@ void unquiesce_api();
 
 #define API_PROLOG_NO_DISPLAY_IO(debug_flag, format, ...) \
    do { \
-      reset_current_traced_function_stack(); \
-      push_traced_function(__func__); \
+      if (traced_function_stack_enabled) { \
+         reset_current_traced_function_stack(); \
+         push_traced_function(__func__); \
+      } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_STARTING, \
