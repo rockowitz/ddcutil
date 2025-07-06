@@ -33,6 +33,7 @@
 #include "i2c_bus_base.h"
 #include "monitor_model_key.h"
 #include "per_display_data.h"
+#include "sleep.h"
 #include "rtti.h"
 #include "vcp_version.h"
 
@@ -773,16 +774,48 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
 }
 
 
-void dref_lock(Display_Ref * dref) {
+/** Locks a display reference.
+ *
+ *  Repeatedly calls g_mutex_trylock() until the lock is obtained,
+ *  or the maximum elapsed time is elapsed.
+ *
+ *  The maximum time and frequency of calls to g_mutex_trylock() is
+ *  hardcoded.
+ *
+ *  @param  dref         display refrence
+ *  @retval DDCRC_OK     lock was obtained
+ *  @retval DDCRC_LOCKED maximum elapsed time exceeded
+ */
+DDCA_Status dref_lock(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "locking dref %s ...", dref_reprx_t(dref));
-   bool was_locked = !g_mutex_trylock(&(dref->access_mutex));
-   if (was_locked ) {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "dref %s is locked,  waiting ... ", dref_reprx_t(dref));
-      g_mutex_lock(&(dref->access_mutex));
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "obtained lock on %s",  dref_reprx_t(dref));
+   int max_wait_millisec = 1000;
+   int wait_interval_millisec = 50;
+   int total_elapsed_millisec = 0;
+   bool lock_succeeded = false;
+   while (!lock_succeeded && total_elapsed_millisec < max_wait_millisec) {
+      lock_succeeded = g_mutex_trylock(&(dref->access_mutex));
+      if (!lock_succeeded) {
+         if (total_elapsed_millisec == 0)
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "dref %s is locked,  waiting ... ", dref_reprx_t(dref));
+         SLEEP_MILLIS_WITH_STATS(wait_interval_millisec);
+         total_elapsed_millisec += wait_interval_millisec;
+         wait_interval_millisec *= 2;
+      }
    }
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "dref %s", dref_reprx_t(dref));
+   DDCA_Status ddcrc = (lock_succeeded) ? 0 : DDCRC_LOCKED;
+
+   if (total_elapsed_millisec == 0)
+      SYSLOG2(DDCA_SYSLOG_DEBUG, "dref %s, lock succeeded with no wait", dref_reprx_t(dref));
+   else if (total_elapsed_millisec < max_wait_millisec)
+      SYSLOG2(DDCA_SYSLOG_DEBUG, "dref %s, lock succeeded after %d milliseconds",
+              dref_reprx_t(dref), max_wait_millisec);
+   else
+      SYSLOG2(DDCA_SYSLOG_ERROR, "dref %s, max lock wait time exceeded, %d milliseconds",
+            dref_reprx_t(dref), max_wait_millisec);
+
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, ddcrc, "dref %s", dref_reprx_t(dref));
+   return ddcrc;
 }
 
 

@@ -234,7 +234,7 @@ char *        dref_reprx_t(Display_Ref * dref);  // value valid until next call
 char *        ddci_dref_repr_t(DDCA_Display_Ref * ddca_dref);  // value valid until next call
 DDCA_Status   free_display_ref(Display_Ref * dref);
 Display_Ref * copy_display_ref(Display_Ref * dref);
-void          dref_lock(Display_Ref * dref);
+DDCA_Status   dref_lock(Display_Ref * dref);
 void          dref_unlock(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
