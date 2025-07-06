@@ -1320,7 +1320,8 @@ double
 ddca_set_sleep_multiplier(double multiplier)
 {
    bool debug = false;
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, DDCA_TRC_API, "Setting multiplier = %6.3f", multiplier);
 
    double old_value = -1.0;
@@ -1341,7 +1342,8 @@ double
 ddca_get_sleep_multiplier()
 {
    bool debug = false;
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    DBGTRC(debug, DDCA_TRC_API, "");
 
    Per_Thread_Data * ptd = ptd_get_per_thread_data();
