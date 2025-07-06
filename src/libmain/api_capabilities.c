@@ -237,7 +237,8 @@ ddca_free_parsed_capabilities(
       DDCA_Capabilities * pcaps)
 {
    bool debug = false;
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, DDCA_TRC_API, "pcaps=%p", pcaps);
    if (pcaps) {
       assert(memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
