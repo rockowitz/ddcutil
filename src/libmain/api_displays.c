@@ -182,7 +182,8 @@ ddca_create_dispno_display_identifier(
       DDCA_Display_Identifier* did_loc)
 {
    free_thread_error_detail();
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+     reset_current_traced_function_stack();
    // assert(did_loc);
    API_PRECOND(did_loc);
    Display_Identifier* did = create_dispno_display_identifier(dispno);
@@ -199,7 +200,8 @@ ddca_create_busno_display_identifier(
 {
    free_thread_error_detail();
    // assert(did_loc);
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    Display_Identifier* did = create_busno_display_identifier(busno);
    *did_loc = did;
@@ -216,7 +218,8 @@ ddca_create_mfg_model_sn_display_identifier(
       DDCA_Display_Identifier* did_loc)
 {
    free_thread_error_detail();
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    // assert(did_loc);
    API_PRECOND(did_loc);
    *did_loc = NULL;
@@ -255,7 +258,8 @@ ddca_create_edid_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    *did_loc = NULL;
    DDCA_Status rc = 0;
@@ -279,7 +283,8 @@ ddca_create_usb_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    Display_Identifier* did = create_usb_display_identifier(bus, device);
    *did_loc = did;
@@ -295,7 +300,8 @@ ddca_create_usb_hiddev_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    Display_Identifier* did = create_usb_hiddev_display_identifier(hiddev_devno);
    *did_loc = did;
@@ -456,7 +462,8 @@ ddca_redetect_displays() {
 const char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref=%p", ddca_dref);
 
    Display_Ref * dref = dref_from_published_ddca_dref(ddca_dref);
@@ -473,7 +480,8 @@ ddca_dbgrpt_display_ref(
       int              depth)
 {
    bool debug = false;
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
    Display_Ref * dref = ddca_dref;
    if (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) {
