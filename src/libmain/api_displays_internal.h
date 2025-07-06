@@ -22,35 +22,6 @@ DDCA_Status      ddci_validate_ddca_display_ref2(
 
 DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc);
 
-#ifdef UNUSED
-#define WITH_VALIDATED_DR3(_ddca_dref, _ddcrc, _action) \
-   do { \
-      assert(library_initialized); \
-      _ddcrc = 0; \
-      free_thread_error_detail(); \
-      Display_Ref * dref = NULL; \
-      _ddcrc = ddci_validate_ddca_display_ref(_ddca_dref, false, false, &dref); \
-      if (_ddcrc == 0) { \
-         (_action); \
-      } \
-   } while(0);
-#endif
-
-#ifdef OLD
-#define WITH_BASIC_VALIDATED_DR3(_ddca_dref, _ddcrc, _action) \
-   do { \
-      assert(library_initialized); \
-      _ddcrc = 0; \
-      free_thread_error_detail(); \
-      Display_Ref * dref = NULL; \
-      _ddcrc = ddci_validate_ddca_display_ref(_ddca_dref, /*basic_only*/ true, false, &dref); \
-      if (_ddcrc == 0) { \
-         (_action); \
-      } \
-   } while(0);
-#endif
-
-
 #define WITH_VALIDATED_DR4(_ddca_dref, _ddcrc, _validation_options, _action) \
    do { \
       assert(library_initialized); \
@@ -68,26 +39,6 @@ DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Ha
       if (dref0) \
          dref_unlock(dref0); \
    } while(0);
-
-
-#ifdef UNUSED
-#define WITH_VALIDATED_DH2(ddca_dh, action) \
-   do { \
-      assert(library_initialized); \
-      DDCA_Status psc = 0; \
-      free_thread_error_detail(); \
-      Display_Handle * dh = validated_ddca_display_handle(ddca_dh); \
-      if (!dh)  { \
-         psc = DDCRC_ARG; \
-         DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "ddca_dh=%p", ddca_dh); \
-      } \
-      else { \
-         (action); \
-      } \
-      /* DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, ""); */ \
-      return psc; \
-   } while(0);
-#endif
 
 #define WITH_VALIDATED_DH3(ddca_dh, _ddcrc, action) \
    do { \
