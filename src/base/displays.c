@@ -623,6 +623,7 @@ DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref) {
 Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "io_path=%s", dpath_repr_t(&io_path));
+
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
    dref->io_path = io_path;
@@ -633,6 +634,7 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    // Per_Display_Data * pdd = pdd_get_per_display_data(io_path, true);
    // dref->pdd = pdd;
    g_mutex_init(&dref->access_mutex);
+
    // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
    DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
    return dref;
@@ -648,6 +650,7 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
 Display_Ref * create_bus_display_ref(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "busno=%d", busno);
+
    DDCA_IO_Path io_path;
    io_path.io_mode   = DDCA_IO_I2C;
    io_path.path.i2c_busno = busno;
@@ -675,11 +678,11 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "usb_bus=%d, usb_device=%d, hiddev_devname=%s",
          usb_bus, usb_device, hiddev_devname);
+
    DDCA_IO_Path io_path;
    io_path.io_mode      = DDCA_IO_USB;
    io_path.path.hiddev_devno = hiddev_name_to_number(hiddev_devname);
    Display_Ref * dref = create_base_display_ref(io_path);
-
    dref->usb_bus     = usb_bus;
    dref->usb_device  = usb_device;
    dref->usb_hiddev_name = g_strdup(hiddev_devname);
@@ -693,7 +696,9 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
 
 Display_Ref * copy_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%p, iopath=%s", dref, (dref) ? dpath_repr_t(&dref->io_path) : NULL);
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%p, iopath=%s",
+         dref, (dref) ? dpath_repr_t(&dref->io_path) : NULL);
+
    Display_Ref * copy = NULL;
    if (dref) {
       DDCA_IO_Path iopath = dref->io_path;
@@ -723,6 +728,7 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
       copy->drm_connector_id = dref->drm_connector_id;
       copy->drm_connector_found_by = dref->drm_connector_found_by;
    }
+
    // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, copy);
    DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", copy);
    return copy;
@@ -741,6 +747,7 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
 DDCA_Status free_display_ref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%p", dref);
+
    DDCA_Status ddcrc = 0;
    if (dref) {
       assert ( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
@@ -769,6 +776,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
          }
       }
    }
+
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE, ddcrc, "");
    return ddcrc;
 }
@@ -779,7 +787,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
  *  Repeatedly calls g_mutex_trylock() until the lock is obtained,
  *  or the maximum elapsed time is elapsed.
  *
- *  The maximum time and frequency of calls to g_mutex_trylock() is
+ *  The maximum elapsed time and frequency of calls to g_mutex_trylock() is
  *  hardcoded.
  *
  *  @param  dref         display refrence
@@ -789,12 +797,15 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
 DDCA_Status dref_lock(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "locking dref %s ...", dref_reprx_t(dref));
+
    int max_wait_millisec = 1000;
    int wait_interval_millisec = 50;
    int total_elapsed_millisec = 0;
    bool lock_succeeded = false;
+   int trylock_ctr = 0;
    while (!lock_succeeded && total_elapsed_millisec < max_wait_millisec) {
       lock_succeeded = g_mutex_trylock(&(dref->access_mutex));
+      trylock_ctr++;
       if (!lock_succeeded) {
          if (total_elapsed_millisec == 0)
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "dref %s is locked,  waiting ... ", dref_reprx_t(dref));
@@ -808,11 +819,11 @@ DDCA_Status dref_lock(Display_Ref * dref) {
    if (total_elapsed_millisec == 0)
       SYSLOG2(DDCA_SYSLOG_DEBUG, "dref %s, lock succeeded with no wait", dref_reprx_t(dref));
    else if (total_elapsed_millisec < max_wait_millisec)
-      SYSLOG2(DDCA_SYSLOG_DEBUG, "dref %s, lock succeeded after %d milliseconds",
-              dref_reprx_t(dref), max_wait_millisec);
+      SYSLOG2(DDCA_SYSLOG_DEBUG, "dref %s, lock succeeded after %d milliseconds, %d g_mutex_trylock() calls",
+              dref_reprx_t(dref), max_wait_millisec, trylock_ctr);
    else
-      SYSLOG2(DDCA_SYSLOG_ERROR, "dref %s, max lock wait time exceeded, %d milliseconds",
-            dref_reprx_t(dref), max_wait_millisec);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "dref %s, max lock wait time exceeded, %d milliseconds, %d g_mutex_trylock() calls",
+            dref_reprx_t(dref), max_wait_millisec, trylock_ctr);
 
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, ddcrc, "dref %s", dref_reprx_t(dref));
    return ddcrc;
