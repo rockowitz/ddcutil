@@ -937,7 +937,8 @@ ddca_dbgrpt_feature_metadata(
       int                     depth)
 {
    bool debug = false;
-   reset_current_traced_function_stack();
+   if (traced_function_stack_enabled)
+      reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    // rpt_push_output_dest(stdout);
    dbgrpt_ddca_feature_metadata(md, depth);
