@@ -126,7 +126,7 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
       dref->drm_connector_id = businfo->drm_connector_id;
 
       DDCA_Status rc = dref_lock(dref);
-      if (!rc != 0) {
+      if (rc != 0) {
          DBGMSG("dref_lock() returned %s",psc_desc(rc));
          err = ERRINFO_NEW(rc, "dref_lock() failed");
          SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() returned %s",psc_desc(rc));
