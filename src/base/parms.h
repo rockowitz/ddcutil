@@ -28,7 +28,7 @@
 #define STATIC static
 #endif
 
-#define DEFAULT_ENABLE_TRACED_FUNCTION_STACK true
+#define DEFAULT_ENABLE_TRACED_FUNCTION_STACK false
 
 
 //
