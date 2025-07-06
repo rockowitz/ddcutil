@@ -125,12 +125,20 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
       dref->drm_connector = g_strdup(businfo->drm_connector_name);
       dref->drm_connector_id = businfo->drm_connector_id;
 
-      dref_lock(dref);
-      err = ddc_initial_checks_by_dref(dref, true);
-      dref_unlock(dref);
-      if (err) {
-         DBGMSG("ddc_initial_checks_by_dref() returned error:");
-         errinfo_report(err, 2);
+      DDCA_Status rc = dref_lock(dref);
+      if (!rc != 0) {
+         DBGMSG("dref_lock() returned %s",psc_desc(rc));
+         err = ERRINFO_NEW(rc, "dref_lock() failed");
+         SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() returned %s",psc_desc(rc));
+      }
+      else {
+         err = ddc_initial_checks_by_dref(dref, true);
+         dref_unlock(dref);
+         if (err) {
+            DBGMSG("ddc_initial_checks_by_dref() returned error:");
+            SYSLOG2(DDCA_SYSLOG_ERROR, "ddc_initial_checks_by_dref() returned %s",psc_desc(err->status_code));
+            errinfo_report(err, 2);
+         }
       }
 
       if (err && err->status_code == DDCRC_DISCONNECTED) {
@@ -205,12 +213,18 @@ dw_recheck_dref(Display_Ref * dref) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
    Error_Info * err = NULL;
 
-   dref_lock(dref);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Obtained lock on %s:", dref_reprx_t(dref));
-   dref->flags = 0;
-   err = ddc_initial_checks_by_dref(dref, false);
-   dref_unlock(dref);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Released lock on %s:", dref_reprx_t(dref));
+   DDCA_Status ddcrc = dref_lock(dref);
+   if (ddcrc != 0) {
+      err = ERRINFO_NEW(ddcrc, "dref_lock() failed for %s", dref_reprx_t(dref));
+      SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() failed for %s", dref_reprx_t(dref));
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Obtained lock on %s:", dref_reprx_t(dref));
+      dref->flags = 0;
+      err = ddc_initial_checks_by_dref(dref, false);
+      dref_unlock(dref);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Released lock on %s:", dref_reprx_t(dref));
+   }
 
    DBGTRC_RET_ERRINFO(debug, DDCA_TRC_NONE, err, "");
    return err;
