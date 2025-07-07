@@ -340,6 +340,7 @@ void push_traced_function(const char * funcname) {
  */
 char * peek_traced_function() {
    bool debug = false;
+   debug = debug || debug_tfs;
    if (debug)
       printf(PRItid"(%s) Starting.\n", TID(), __func__);
 
@@ -483,6 +484,7 @@ static void free_traced_function_stack(GQueue * stack) {
  */
 void free_current_traced_function_stack() {
    bool debug = false;
+   debug = debug || debug_tfs;
    if (traced_function_stack) {
       if (debug) {
          printf(PRItid"(free_current_traced_function_stack) traced_function_stack=%p. Executing.\n",
