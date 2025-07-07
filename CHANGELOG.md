@@ -1,4 +1,4 @@
-## [2.2.1] 2024-06-26
+## [2.2.1] 2025-07-07
 
 ### General
 
@@ -14,7 +14,7 @@
 - Command **setvcp**: Emit more more useful messages when the cause of a 
   DDCRC_RETRIES error is itself a DDCRC_RETRIES error.
 - Add option ***--disable-traced-function-stack***
-  The default traced-function-stack option value is set in parms.h. 
+  The default traced-function-stack option value (disabled) is set in parms.h. 
 
 #### Fixed
 
@@ -45,6 +45,7 @@
   libddcutil, no restart happens)
 - Macro TRACED_ASSERT() calls **__assert_fail()** instead of exit(1). 
   Addresses Powerdevil issue #504861.
+- Fix troff formatting in ddcutil man page. Pull request #531.
 
 ### Building
 
@@ -90,7 +91,7 @@
   service to not restart automatically. Macro TRACE_ASSERT() is modified to
   use **__assert_fail()** instead of **exit()** for termination. 
 
-## [2.2.0] 2024-02-10
+## [2.2.0] 2025-02-10
 
 ### General
 
