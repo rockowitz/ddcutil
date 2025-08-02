@@ -418,7 +418,6 @@ ddca_create_display_ref(
 
 
 // GMutex ddca_redetect_active_mutex;
-static bool ddca_redetect_active = false;
 
 DDCA_Status
 ddca_redetect_displays() {
@@ -426,6 +425,8 @@ ddca_redetect_displays() {
    API_PROLOGX(debug, NORESPECT_QUIESCE, "");
 
    DDCA_Status ddcrc = 0;
+#ifdef WATCH_DISPLAYS
+   static bool ddca_redetect_active = false;
    bool perform_detect = true;
 
 //   g_mutex_lock(ddca_redetect_active_mutex);
@@ -436,24 +437,32 @@ ddca_redetect_displays() {
    }
    // g_mutex_unlock(ddca_redetect_active_mutex);
 
-#ifdef WATCH_DISPLAYS
    if (perform_detect) {
       if (active_callback_thread_ct() > 0) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_display() when callback threads are active");
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when callback threads are active");
          SYSLOG2(DDCA_SYSLOG_ERROR, "Behavior is indeterminate.");
          // ddcrc = DDCRC_INVALID_OPERATION;
          // perform_detect = false;
       }
    }
-#endif
 
    if (perform_detect) {
-	  ddca_redetect_active = true;
+      ddca_redetect_active = true;
       quiesce_api();
       dw_redetect_displays();
       unquiesce_api();
       ddca_redetect_active = false;
    }
+#else
+#ifdef FUTURE
+   ddc_discard_detected_displays();
+   ddc_ensure_displays_detected();
+   set_ddca_error_detail_from_open_errors();
+#endif
+
+   ddcrc = DDCRC_INVALID_OPERATION;
+   SYSLOG2(DDCA_SYSLOG_ERROR, "ddca_redetect_displays() unsupported - libddcutil not built with support for watching display connection changes");
+#endif
 
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
 }

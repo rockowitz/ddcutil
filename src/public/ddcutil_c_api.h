@@ -657,6 +657,9 @@ ddca_report_displays(
  *  - rescans i2c buses
  *  - redetects displays
  *
+ *  @retval 0     normal execution
+ *  @retval DDCRC_INVALID_OPERATION recursive call, or display watch unimplemented
+ *  
  *  @since 1.2.0
  */
 DDCA_Status
