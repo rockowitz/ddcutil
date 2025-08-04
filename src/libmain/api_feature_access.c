@@ -11,11 +11,12 @@
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "public/ddcutil_c_api.h"
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_types.h"
- 
+
 #include "util/error_info.h"
 #include "util/report_util.h"
 
@@ -1250,6 +1251,115 @@ void init_api_feature_access() {
    RTTI_ADD_FUNC(ddca_get_non_table_vcp_value);
    RTTI_ADD_FUNC(ddca_set_non_table_vcp_value);
    RTTI_ADD_FUNC(ddci_set_single_vcp_value);
+   RTTI_ADD_FUNC(ddca_check_brightness_support);
 }
 
 
+DDCA_Status
+ddca_check_brightness_support(
+      DDCA_Display_Handle  ddca_dh,
+      bool*               is_supported,
+      uint16_t*           current_value,
+      uint16_t*           max_value)
+{
+   bool debug = false;
+   free_thread_error_detail();
+   API_PROLOGX(debug, true, "ddca_dh=%p, is_supported=%p, current_value=%p, max_value=%p",
+                               ddca_dh, is_supported, current_value, max_value);
+
+   DDCA_Status psc = API_PRECOND_RVALUE(is_supported) || API_PRECOND_RVALUE(current_value) || API_PRECOND_RVALUE(max_value);
+   if (psc != 0)
+      goto bye;
+
+   WITH_VALIDATED_DH3(ddca_dh, psc, {
+      // 1. Read current brightness value
+      Parsed_Nontable_Vcp_Response * parsed_response;
+      Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response);
+      if (ddc_excp) {
+         psc = ddc_excp->status_code;
+         save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+         ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, DDCA_TRC_API));
+         goto bye;
+      }
+
+      *current_value = RESPONSE_CUR_VALUE(parsed_response);
+      *max_value = RESPONSE_MAX_VALUE(parsed_response);
+
+      // Check if maximum value is 0
+      if (*max_value == 0) {
+         *is_supported = false;
+         psc = 0;
+         goto bye;
+      }
+
+      // 2. Calculate test value (minimum change)
+      uint16_t test_value;
+      if (*current_value < *max_value) {
+         test_value = *current_value + 1;
+      } else {
+         test_value = *current_value - 1;
+      }
+
+      // 3. Save original verification setting
+      bool original_verify = ddc_get_verify_setvcp();
+
+      // 4. Disable verification to avoid verification failures affecting the test
+      ddc_set_verify_setvcp(false);
+
+      // 5. Attempt to set test value
+      ddc_excp = ddc_set_nontable_vcp_value(dh, 0x10, test_value);
+      if (ddc_excp) {
+         // Set failed, brightness control not supported
+         *is_supported = false;
+         psc = 0;  // Test completed, return success
+         ddc_set_verify_setvcp(original_verify);
+         ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, DDCA_TRC_API));
+         goto bye;
+      }
+
+      // 6. Verify if the set operation actually took effect (key improvement!)
+      usleep(50000);  // 50ms wait
+
+      Parsed_Nontable_Vcp_Response * verify_parsed_response;
+      ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &verify_parsed_response);
+
+      if (!ddc_excp) {
+         uint16_t verify_value = RESPONSE_CUR_VALUE(verify_parsed_response);
+         // Verify if the set value actually took effect
+         *is_supported = verify_value == test_value;
+         free(verify_parsed_response);
+      } else {
+         // Read verification failed, but set command succeeded, assume brightness control supported
+         *is_supported = true;
+         ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, DDCA_TRC_API));
+      }
+
+      // 7. Restore original value
+      ddc_excp = ddc_set_nontable_vcp_value(dh, 0x10, *current_value);
+
+      // 8. Restore verification setting
+      ddc_set_verify_setvcp(original_verify);
+
+      if (ddc_excp) {
+         // Restore failed, but set succeeded, so brightness control is supported
+         *is_supported = true;
+         psc = 0;  // Test completed, return success
+         ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, DDCA_TRC_API));
+         goto bye;
+      }
+
+      // Free memory
+      free(parsed_response);
+
+      psc = 0;  // Test completed, return success
+   });
+
+bye:
+   if (psc == 0)
+      API_EPILOG_BEFORE_RETURN(debug, true, psc,
+            "is_supported=%s, current_value=%d, max_value=%d",
+             *is_supported ? "true" : "false", *current_value, *max_value);
+   else
+      API_EPILOG_BEFORE_RETURN(debug, true, psc, "");
+   return psc;
+}

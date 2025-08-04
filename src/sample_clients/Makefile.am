@@ -24,6 +24,8 @@ check_PROGRAMS += \
   demo_vcpinfo
 endif
 
+bin_PROGRAMS = clmain demo_capabilities demo_display_selection demo_feature_list demo_get_set_vcp demo_global_settings demo_profile_features demo_redirection demo_vcpinfo demo_check_brightness_support
+
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
 demo_display_selection_SOURCES = demo_display_selection.c
@@ -33,12 +35,18 @@ demo_global_settings_SOURCES   = demo_global_settings.c
 demo_profile_features_SOURCES  = demo_profile_features.c
 demo_redirection_SOURCES       = demo_redirection.c
 demo_vcpinfo_SOURCES           = demo_vcpinfo.c
+demo_vcpinfo_LDADD            = $(top_builddir)/src/libddcutil.la
+
+demo_check_brightness_support_SOURCES   = demo_check_brightness_support.c
+demo_check_brightness_support_LDADD     = $(top_builddir)/src/libddcutil.la
+
+
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
 
 
-clean-local: 
+clean-local:
 	@echo "(src/sample_clients/Makefile) clean-local"
 
 mostlyclean-local:
