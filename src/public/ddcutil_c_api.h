@@ -659,7 +659,7 @@ ddca_report_displays(
  *
  *  @retval 0     normal execution
  *  @retval DDCRC_INVALID_OPERATION recursive call, or display watch unimplemented
- *  
+ *
  *  @since 1.2.0
  */
 DDCA_Status
@@ -1895,6 +1895,38 @@ ddca_get_display_watch_settings(DDCA_DW_Settings * settings_buffer);
 DDCA_Status
 ddca_set_display_watch_settings(DDCA_DW_Settings * settings_buffer);
 
+/** Tests if a display actually supports brightness control by performing a real set operation.
+ *
+ *  This function performs the most reliable test for brightness support by:
+ *  1. Reading the current brightness value
+ *  2. Attempting to set a slightly different value
+ *  3. Immediately restoring the original value
+ *  4. Verifying the operation was successful
+ *
+ *  @param[in]  ddca_dh        display handle
+ *  @param[out] is_supported   where to return the result
+ *  @param[out] current_value  where to return current brightness value (0-65535)
+ *  @param[out] max_value      where to return maximum brightness value (0-65535)
+ *  @return     status code, 0 if test completed successfully
+ *
+ *  @remark
+ *  This function will briefly change the display brightness during testing.
+ *  The original value is restored immediately after the test.
+ *  @remark
+ *  This is the most reliable method to determine if brightness control actually works,
+ *  as it tests the actual set functionality rather than just checking capabilities.
+ *  @remark
+ *  If the function returns 0, *is_supported indicates whether brightness control works.
+ *  If the function returns a non-zero status code, the test failed and *is_supported is undefined.
+ *
+ *  @since 1.4.0
+ */
+DDCA_Status
+ddca_check_brightness_support(
+      DDCA_Display_Handle  ddca_dh,
+      bool*               is_supported,
+      uint16_t*           current_value,
+      uint16_t*           max_value);
 
 #ifdef __cplusplus
 }
