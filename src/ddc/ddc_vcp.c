@@ -651,11 +651,12 @@ ddc_set_nontable_vcp_value(
           "Writing feature 0x%02x , new value = %d, dh=%s",
           feature_code, new_value, dh_repr(dh) );
 
-   Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef ENABLE_USB
-      psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
+      Public_Status_Code psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
+      if (psc)
+         ddc_excp = errinfo_new(psc, "usb_set_nontable_vcp_value", NULL);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
@@ -665,14 +666,11 @@ ddc_set_nontable_vcp_value(
          create_ddc_setvcp_request_packet(feature_code, new_value, "set_vcp:request packet");
       // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
       // dump_packet(request_packet_ptr);
-
       ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
-      psc = (ddc_excp) ? ddc_excp->status_code : 0;
-
       free_ddc_packet(request_packet_ptr);
    }
 
-   if ( psc==DDCRC_RETRIES )
+   if (ERRINFO_STATUS(ddc_excp))
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Try errors: %s", errinfo_causes_string(ddc_excp));  // needed?
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
@@ -772,7 +770,6 @@ ddc_set_vcp_value(
    }
 
    if (!ddc_excp && ddc_get_verify_setvcp()) {
-      Public_Status_Code psc = 0;
       if ( is_rereadable_feature(dh, vrec->opcode) &&
            ( vrec->value_type != DDCA_NON_TABLE_VCP_VALUE ||
              !is_unreadable_sl_value(vrec->opcode, vrec->val.c_nc.sl)
@@ -787,24 +784,33 @@ ddc_set_vcp_value(
              vrec->opcode,
              vrec->value_type,
              &newval);
-         psc = (ddc_excp) ? ddc_excp->status_code : 0;
          if (ddc_excp) {
             f0printf(verbose_msg_dest,
                   "(%s) Read after write failed. get_vcp_value() returned: %s\n",
-                  __func__, psc_desc(psc));
-            if (psc == DDCRC_RETRIES)
+                  __func__, psc_desc(ERRINFO_STATUS(ddc_excp)));
+            if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES)
                f0printf(verbose_msg_dest,
                      "(%s)    Try errors: %s\n", __func__, errinfo_causes_string(ddc_excp));
             // psc = DDCRC_VERIFY;
          }
          else {
             assert(vrec && newval);    // silence clang complaint
-            // dbgrpt_ddca_single_vcp_value(vrec, 2);
-            // dbgrpt_ddca_single_vcp_value(newval, 3);
+            // newval->val.c_nc.sl = newval->val.c_nc.sl + 1;  // force error for testing
+            // dbgrpt_single_vcp_value(vrec, 2);
+            // dbgrpt_single_vcp_value(newval, 3);
+
 
             if (! single_vcp_value_equal(vrec,newval)) {
-               ddc_excp = ERRINFO_NEW(DDCRC_VERIFY, "Current value does not match value set");
-               f0printf(verbose_msg_dest, "Current value does not match value set.\n");
+               char * v0 = strdup(summarize_single_vcp_value(vrec));
+               char * v1 = strdup(summarize_single_vcp_value(newval));
+               // ddc_excp = ERRINFO_NEW(DDCRC_VERIFY, "Current value does not match value set");
+               // f0printf(verbose_msg_dest, "Current value does not match value set.\n");
+               ddc_excp = ERRINFO_NEW(DDCRC_VERIFY, "Current value %s does not match requested value %s", v1, v0);
+               // TMI:
+               // f0printf(verbose_msg_dest, "Current value %s does not match requested value %s\n", v1, v0);
+               f0printf(verbose_msg_dest, "Current value does not match requested value\n");
+               free(v0);
+               free(v1);
             }
             else {
                f0printf(verbose_msg_dest, "Verification succeeded\n");
@@ -857,7 +863,8 @@ ddc_set_verified_vcp_value_with_retry(
       GPtrArray * verification_failures = g_ptr_array_new();
 
       for (int try_ctr = 0; try_ctr < max_setvcp_verify_tries; try_ctr++) {
-         erec = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
+         // erec = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
+         erec = ddc_set_vcp_value(dh, vrec, newval_loc);
          if (!erec || ERRINFO_STATUS(erec) != DDCRC_VERIFY)
             break;
          g_ptr_array_add(verification_failures, erec);
