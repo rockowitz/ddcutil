@@ -644,7 +644,7 @@ static DDCA_Status
 ddci_format_non_table_vcp_value(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
-      Monitor_Model_Key *    mmid,
+      Monitor_Model_Key *         mmid,
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc)
 {
@@ -656,6 +656,7 @@ ddci_format_non_table_vcp_value(
              formatted_value_loc);
    DDCA_Status ddcrc = API_PRECOND_RVALUE(formatted_value_loc);
    if (ddcrc != 0) {
+      DBGTRC(debug, DDCA_TRC_API, "API_PRECOND_RVALUE() returned %d", ddcrc);
       // DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc, "");
       goto bye;
    }
