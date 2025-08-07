@@ -623,7 +623,8 @@ ddc_get_formatted_value_for_dfm(
       if (output_level >= DDCA_OL_VERBOSE || debug) {
          rpt_push_output_dest(msg_fh);
          // report_single_vcp_value(pvalrec, 0);
-         rpt_vstring(0, "Raw value: %s", summarize_single_vcp_value(pvalrec));
+         // rpt_vstring(0, "Raw value: %s", summarize_single_vcp_value(pvalrec));
+         fprintf(msg_fh, "Raw value: %s\n", summarize_single_vcp_value(pvalrec));
          rpt_pop_output_dest();
       }
 
