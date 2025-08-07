@@ -734,7 +734,7 @@ ddca_display_ref_from_handle(
    DDCA_Display_Ref result = NULL;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (valid_display_handle(dh))
-      result = dh->dref;
+      result = dref_to_ddca_dref(dh->dref);
    return result;
 }
 
