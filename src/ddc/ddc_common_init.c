@@ -153,6 +153,18 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        }
     }
 
+   if (parsed_cmd->backtraced_functions) {
+       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->backtraced_functions); ndx++) {
+          DBGF(debug, "Adding backtraced function: %s", parsed_cmd->backtraced_functions[ndx]);
+          char * curfunc = parsed_cmd->backtraced_functions[ndx];
+          bool found = add_backtraced_function(curfunc);
+          if (!found) {
+             emit_init_tracing_error(errinfo_accumulator, __func__, -EINVAL,
+                                     "Back traced function not found: %s", curfunc);
+          }
+       }
+    }
+
     if (parsed_cmd->traced_api_calls) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_api_calls); ndx++) {
           char * curfunc = parsed_cmd->traced_api_calls[ndx];
@@ -194,7 +206,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    g_ptr_array_free(errinfo_accumulator, true);
 
    traced_function_stack_enabled = parsed_cmd->flags & CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK;
-   DBGF(debug, "traced_function_stack_enabled=&s", SBOOL(traced_function_stack_enabled));
+   DBGF(debug, "traced_function_stack_enabled=%s", SBOOL(traced_function_stack_enabled));
    traced_function_stack_errors_fatal = parsed_cmd->flags & CMD_FLAG_TRACED_FUNCTION_STACK_ERRORS_FATAL;
    if (parsed_cmd->flags2 & CMD_FLAG2_F26)
       traced_function_stack_errors_fatal = true;
