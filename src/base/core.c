@@ -19,8 +19,8 @@
 #include "config.h"
 
 //* \cond */
-#include <glib-2.0/glib.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <limits.h>
 #include <rtti.h>
 #include <stdio.h>
@@ -420,6 +420,20 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
 }
 
 
+bool is_backtracing(const char * funcname) {
+   bool debug = false;  //str_starts_with(funcname, "ddca_");
+   DBGF(debug, "Starting. funcname=%s", funcname);
+
+   bool result = false;
+   result = is_backtraced_function(funcname);
+
+   DBGF(debug, "Done.     funcname=%s, returning %d\n",
+               funcname, trace_levels);
+   return result;
+}
+
+
+
 #ifdef UNUSED
 
  #define INIT_CALLSTACK() \
@@ -427,7 +441,6 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
     trace_callstack = g_ptr_array_sized_new(100); \
     g_ptr_array_set_free_func(trace_callstack, g_free); \
  }
-
 
 
 static void report_callstack() {
@@ -721,6 +734,16 @@ bool dbgtrc(
                " filename=%s, lineno=%d, thread=%jd, trace_callstack_call_depth=%d, fout() %s sysout",
                TID(), trace_group, options, funcname, filename, lineno, get_thread_id(),
                trace_callstack_call_depth, (fout() == stdout) ? "==" : "!=");
+
+   if (traced_function_stack_enabled && is_backtracing(funcname) && (options&DBGTRC_OPTIONS_STARTING)) {
+	   GPtrArray* contents = get_current_traced_function_stack_contents(true /* most_recent_last */);
+	   for (int ndx = 0; ndx < contents->len; ndx++) {
+	      if (ndx == 0)
+	         rpt_vstring(0, "Backtrace of function %s:", g_ptr_array_index(contents,ndx));
+	      else
+	         rpt_vstring(0, "     %s", g_ptr_array_index(contents,ndx));
+	   }
+   }
 
    bool msg_emitted = false;
    bool in_callstack = check_callstack(options, funcname);

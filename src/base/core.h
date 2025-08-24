@@ -114,6 +114,7 @@ typedef uint16_t Dbgtrc_Options;
 #define DBGTRC_OPTIONS_DONE      0x10
 
 bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
+bool is_backtracing(const char * funcname);
 
 //
 //  Error_Info reporting
