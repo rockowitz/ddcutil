@@ -36,7 +36,9 @@ void add_traced_file(const char * filename);
 bool is_traced_file( const char * filename);
 
 DDCA_Trace_Group trace_class_name_to_value(const char * name);
+#ifdef UNUSED
 void set_trace_groups(DDCA_Trace_Group trace_flags);
+#endif
 void add_trace_groups(DDCA_Trace_Group trace_flags);
 // char * get_active_trace_group_names();  // unimplemented
 

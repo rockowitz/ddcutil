@@ -67,6 +67,7 @@ DDCA_Trace_Group trace_class_name_to_value(const char * name) {
 
 DDCA_Trace_Group trace_levels = DDCA_TRC_NONE;   // 0x00
 
+#ifdef UNUSED
 /** Replaces the groups to be traced.
  *
  * @param trace_flags bit flags indicating groups to trace
@@ -80,6 +81,7 @@ void set_trace_groups(DDCA_Trace_Group trace_flags) {
 
    trace_levels = trace_flags;
 }
+#endif
 
 
 /** Adds to the groups to be traced.
@@ -109,6 +111,7 @@ static GPtrArray  * traced_api_call_table = NULL;
 static GPtrArray  * traced_callstack_call_table = NULL;
 
 
+static
 void dbgrpt_traced_object_table(GPtrArray * table, const char * table_name, int depth) {
    if (table) {
       rpt_vstring(depth, "%s:", table_name);
@@ -403,7 +406,6 @@ bool is_backtraced_function(const char * funcname) {
 }
 
 
-
 /** Checks if an API call function is being traced.
  *
  *  @param funcname function name
@@ -500,6 +502,4 @@ void report_tracing(int depth) {
    buf = get_gptrarray_as_joined_string(traced_file_table, true);
    rpt_vstring(d1, "Traced files:            %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
-
 }
-
