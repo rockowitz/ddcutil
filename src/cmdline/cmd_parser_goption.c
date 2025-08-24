@@ -1363,6 +1363,7 @@ parse_command(
       {"trcapi",     '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_api_calls,      "Trace API call", "function name"},
       {"trcfunc",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_functions,  "Trace functions","function name" },
       {"trcfrom",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,      "Trace call stack from function","function name" },
+	   {"trcback",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->backtraced_functions, "Report caller stack of function","function name" },
       {"trcfile",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
       {"enable-traced-function-stack", '\0', G_OPTION_FLAG_NONE,
                                            G_OPTION_ARG_NONE, &enable_tfs_flag,  enable_tfs_expl, NULL},
@@ -1675,6 +1676,10 @@ parse_command(
    else if (noverify_set_flag)
       verify_flag = false;
 
+   if (parsed_cmd->backtraced_functions && !enable_tfs_flag) {
+      EMIT_PARSER_ERROR(errmsgs, "Option --trcback forces --enable-traced-function-stack");
+      enable_tfs_flag = true;
+   }
 
 #define LIBDDCUTIL_ONLY_OPTION(_name,_val) \
    do \

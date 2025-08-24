@@ -271,6 +271,7 @@ struct {
    gchar **               traced_functions;
    gchar **               traced_calls;
    gchar **               traced_api_calls;
+   gchar **               backtraced_functions;
    char *                 trace_destination;
    DDCA_Syslog_Level      syslog_level;
 

@@ -168,6 +168,7 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
       free(parsed_cmd->trace_destination);
       ntsa_free(parsed_cmd->traced_files, true);
       ntsa_free(parsed_cmd->traced_functions, true);
+      ntsa_free(parsed_cmd->backtraced_functions, true);
       ntsa_free(parsed_cmd->traced_calls, true);
       ntsa_free(parsed_cmd->traced_api_calls, true);
       g_array_free(parsed_cmd->setvcp_values, true);
@@ -360,6 +361,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_int_as_hex(
                "traced_groups",    NULL,  parsed_cmd->traced_groups,                            d1);
       dbgrpt_ntsa(d1, "traced_functions", parsed_cmd->traced_functions);
+      dbgrpt_ntsa(d1, "backtraced_functions", parsed_cmd->backtraced_functions);
       dbgrpt_ntsa(d1, "traced_files", parsed_cmd->traced_files);
       dbgrpt_ntsa(d1, "traced_api_calls", parsed_cmd->traced_api_calls);
       dbgrpt_ntsa(d1, "traced_calls", parsed_cmd->traced_calls);
