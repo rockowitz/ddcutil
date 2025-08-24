@@ -3,7 +3,7 @@
  *  Manage whether tracing is performed
  */
 
-// Copyright (C) 2023-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef TRACE_CONTROL_H_
@@ -20,7 +20,9 @@
 extern DDCA_Trace_Group trace_levels;
 
 bool add_traced_function(const char * funcname);
+bool add_backtraced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
+bool is_backtraced_function( const char * funcname);
 void dbgrpt_traced_function_table(int depth);
 
 bool add_traced_api_call(const char * funcname);

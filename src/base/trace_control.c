@@ -103,6 +103,7 @@ void add_trace_groups(DDCA_Trace_Group trace_flags) {
 // tables, a simpler GPtrArray implementation is used.
 
 static GPtrArray  * traced_function_table = NULL;
+static GPtrArray  * backtraced_function_table = NULL;
 static GPtrArray  * traced_file_table     = NULL;
 static GPtrArray  * traced_api_call_table = NULL;
 static GPtrArray  * traced_callstack_call_table = NULL;
@@ -126,6 +127,11 @@ void dbgrpt_traced_object_table(GPtrArray * table, const char * table_name, int 
 
 void dbgrpt_traced_function_table(int depth) {
    dbgrpt_traced_object_table(traced_function_table, "traced_function_table", depth);
+}
+
+
+void dbgrpt_backtraced_function_table(int depth) {
+   dbgrpt_traced_object_table(backtraced_function_table, "backtraced_function_table", depth);
 }
 
 
@@ -161,6 +167,41 @@ bool add_traced_function(const char * funcname) {
       missing = (gaux_string_ptr_array_find(traced_function_table, funcname) < 0);
       if (missing)
          g_ptr_array_add(traced_function_table, g_strdup(funcname));
+      result = true;
+   }
+
+   DBGF(debug, "Done. funcname=|%s|, missing=%s, returning: %s", funcname,
+               sbool(missing), sbool(result));
+   return result;
+}
+
+
+/** Adds a function to the list of functions to be backtraced.
+ *
+ *  @param  funcname function name
+ *  @return true  if funcname has been registered as a traceable function,
+ *          false if not
+ *
+ *  @emark
+ *  If the **backtraced_function_table** does not already exist, it is created.
+ */
+bool add_backtraced_function(const char * funcname) {
+   bool debug = false;
+   if (debug) {
+      DBG("Starting. funcname=|%s|", funcname);
+      //  report_rtti_func_name_table(2, "current function name table:");
+   }
+
+   bool result = false;
+   bool missing = false;
+   if (rtti_get_func_addr_by_name(funcname)) {  // if it's a traceable function
+      DBGF(debug, "%s is a tracable function", funcname);
+      if (!backtraced_function_table)
+         backtraced_function_table = g_ptr_array_new();
+      // n. g_ptr_array_find_with_equal_func() requires glib 2.54
+      missing = (gaux_string_ptr_array_find(backtraced_function_table, funcname) < 0);
+      if (missing)
+         g_ptr_array_add(backtraced_function_table, g_strdup(funcname));
       result = true;
    }
 
@@ -346,6 +387,23 @@ bool is_traced_function(const char * funcname) {
 }
 
 
+/** Checks if a function is being backtraced.
+ *
+ *  @param funcname function name
+ *  @return **true** if the function is being backtraced, **false** if not
+ */
+bool is_backtraced_function(const char * funcname) {
+   bool debug = false;
+
+   bool result = (backtraced_function_table &&
+                  gaux_string_ptr_array_find(backtraced_function_table, funcname) >= 0);
+
+   DBGF(debug, "funcname=|%s|, returning: %s", funcname, SBOOL(result));
+   return result;
+}
+
+
+
 /** Checks if an API call function is being traced.
  *
  *  @param funcname function name
@@ -425,6 +483,10 @@ void report_tracing(int depth) {
 
    buf = get_gptrarray_as_joined_string(traced_function_table, true);
    rpt_vstring(d1, "Traced functions:        %s", (buf && strlen(buf)>0) ? buf : "none");
+   free(buf);
+
+   buf = get_gptrarray_as_joined_string(backtraced_function_table, true);
+   rpt_vstring(d1, "Backtraced functions:    %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
    buf = get_gptrarray_as_joined_string(traced_api_call_table, true);
