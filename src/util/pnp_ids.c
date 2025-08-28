@@ -3,29 +3,33 @@
  *  Provides a lookup table of 3 character Plug and Play manufacturer codes,
  *  which are used, e.g. in EDIDs.
  *
- *  The list, originally created by Microsoft, is now maintained at the UEFI
- *  web site.
- *
- *  \TODO
- *  Instead of the list hard coded here, consider using file
- *  /usr/share/hwdata/pnp.ids from package hwdata, or a flat file extracted
- *  from the UEFI web site.
+ *  Attempts to read the list of PNP codes from the file system.
+ *  If that fails, a hard coded list, originally created by Microsoft,
+ *  but now obtained from the UEFI web site is used.
  */
 
 // Copyright (C) 2022-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 /** \endcond */
 
 #include "coredefs_base.h"
+#include "debug_util.h"
+#include "file_util.h"
+#include "report_util.h"
 #include "string_util.h"
 
 #include "pnp_ids.h"
 
+//
+// Hardcoded list
+//
 
 typedef struct    {
    char* mfg_code;
@@ -2273,8 +2277,7 @@ Pnp_Id_Table_Entry pnp_id_table[] =   {
 };
 const int pnp_table_size = sizeof(pnp_id_table) / sizeof(Pnp_Id_Table_Entry); // ARRAY_SIZE(pnp_id_table);
 
-
-static char * pnp_name0(char * id, int first, int last) {
+static char * pnp_name_from_internal_table(char * id, int first, int last) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting, id=%s, first=%d, last=%d\n",  __func__, id, first, last);
@@ -2289,9 +2292,9 @@ static char * pnp_name0(char * id, int first, int last) {
       if (cmprc == 0)
             result = pnp_id_table[middle].mfg_name;
       else if (cmprc < 0)
-         result = pnp_name0(id, first, middle-1);
+         result = pnp_name_from_internal_table(id, first, middle-1);
       else
-         result = pnp_name0(id, middle+1, last);
+         result = pnp_name_from_internal_table(id, middle+1, last);
    }
 
    if (debug)
@@ -2300,15 +2303,109 @@ static char * pnp_name0(char * id, int first, int last) {
 }
 
 
+//
+// Read list from file system
+//
+
+static GHashTable * ids_hash = NULL;
+static bool hwdata_checked = false;
+
+static void dbgrpt_ids_hash(int depth) {
+   int d1 = depth+1;
+   if (ids_hash) {
+      rpt_vstring(depth, "PNP id hash table at %p", ids_hash);
+
+      GList *keys_list = g_hash_table_get_keys(ids_hash);
+      GPtrArray *keys = g_ptr_array_new();
+      for (GList *l = keys_list; l != NULL; l = l->next) {
+          g_ptr_array_add(keys, l->data);
+      }
+      g_list_free(keys_list);    // Free GList container (not the keys themselves)
+      g_ptr_array_sort(keys, gaux_ptr_scomp);
+      for (int ndx = 0; ndx < keys->len; ndx++) {
+         char * next_key = g_ptr_array_index(keys, ndx);
+         char * v = g_hash_table_lookup(ids_hash, next_key);
+         rpt_vstring(d1, "%s -> %s", next_key, v);
+      }
+      g_ptr_array_free(keys, true);
+   }
+   else {
+      rpt_label(depth, "No PNP id hash table");
+   }
+}
+
+
+static void load_pnp_ids_from_hwdata_file() {
+   bool debug = false;
+
+   char * pnp_ids_fn = "/usr/local/share/hwdata/pnp.ids";
+   if (!regular_file_exists(pnp_ids_fn)) {
+      pnp_ids_fn = "/usr/share/hwdata/pnp.ids";
+      if (!regular_file_exists(pnp_ids_fn)) {
+         pnp_ids_fn = NULL;
+      }
+   }
+
+   if (pnp_ids_fn) {
+      GPtrArray * lines = g_ptr_array_new_full(5000, g_free);
+      Error_Info * err = file_getlines_errinfo(pnp_ids_fn, lines);
+      if (err) {
+         DBGF(debug, "file_getlines_errinfo() for %s returned %d", pnp_ids_fn, err->status_code);
+         syslog(LOG_ERR, "file_getlines_errinfo() for %s returned %d", pnp_ids_fn, err->status_code);
+         pnp_ids_fn = NULL;
+      }
+      else {
+         ids_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free , g_free);
+         for (int ndx = 0; ndx < lines->len; ndx++) {
+            char * s = g_ptr_array_index(lines, ndx);
+            char * id = lsub(s,3);
+            char * name = strtrim(s+3);
+            bool new_key = g_hash_table_insert(ids_hash, id, name);
+            if (!new_key) {
+               DBGF(debug, "g_hash_table_insert(%s,%s) returned true", id, name);
+               syslog(LOG_ERR, "g_hash_table_insert(%s,%s) returned true", id, name);
+            }
+         }
+         g_ptr_array_free(lines, true);
+      }
+   }
+   if (debug)
+      dbgrpt_ids_hash(0);
+}
+
+
+static char * pnp_name_from_hash(char * id) {
+   bool debug = false;
+   DBGF(debug, "Starting, id=%s", id);
+
+   char * result = g_hash_table_lookup(ids_hash, id);
+   if (!result)
+      result = "UNK";
+
+   DBGF(debug, "Done.    Returning: %s", result);
+   return result;
+}
+
+
 /** Returns the name associated with a 3 character manufacturer id.
  *
- * \param id manufacturer id
- * \param manufacturer name, or "UNK" if not found
+ * \param  id  manufacturer id
+ * \return manufacturer name, or "UNK" if not found
  */
 char * pnp_name(char * id) {
    char * result = NULL;
-   strupper(id);      // "inu" is a lower case code
-   result = pnp_name0(id, 0, pnp_table_size-1);
+   if (!hwdata_checked) {
+      load_pnp_ids_from_hwdata_file();
+      hwdata_checked = true;
+   }
+
+   if (ids_hash) {
+      result = pnp_name_from_hash(id);
+   }
+   else {
+      strupper(id);      // "inu" is a lower case code
+      result = pnp_name_from_internal_table(id, 0, pnp_table_size-1);
+   }
    return result;
 }
 
