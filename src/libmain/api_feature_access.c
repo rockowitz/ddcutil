@@ -955,6 +955,7 @@ ddci_set_non_table_vcp_value_verify(
    DBGTRC_STARTING(debug, DDCA_TRC_API,
           "ddca_dh=%p, feature_code=0x%02x, hi_byte=0x%02x, lo_byte=0x%02x",
           ddca_dh, feature_code, hi_byte, lo_byte);
+   // __assert_fail("OOPS", __FILE__, __LINE__, __func__);
    DDCA_Status rc = 0;
    free_thread_error_detail();
    if ( ( verified_hi_byte_loc && !verified_lo_byte_loc) ||
