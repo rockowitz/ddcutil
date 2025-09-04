@@ -4,6 +4,7 @@ AM_CPPFLAGS =         \
   $(LIBDRM_CFLAGS)    \
   $(GLIB_CFLAGS)      \
   -I$(top_srcdir)/src \
+  -I$(top_builddir)/src \
   -I$(top_srcdir)/src/public
 
 AM_CFLAGS = $(AM_CFLAGS_STD)
