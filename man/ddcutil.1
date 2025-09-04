@@ -371,8 +371,8 @@ Force \fBddcutil\fI to ignore a particular USB device, specified by /dev/usb/hid
 .TQ
 .BI "--use-file-io | --use-ioctl-io"
 Cause \fBddcutil\fP to use the write()/read() interface or the ioctl interface of driver dev-i2c to send and receive I2C packets.
-By default, \fBddcutil\fP uses the ioctl interface.  Nvidia proprietary
-driver are built in a way such that the ioctl interface can fail, in which case \fBddcutil\fP switches to using the file io interface.
+By default, \fBddcutil\fP uses the ioctl interface. The Nvidia proprietary
+driver is built in a way such that the ioctl interface can fail, in which case \fBddcutil\fP switches to using the file io interface.
 .TQ
 .B "--force-slave-address"
 Take control of slave addresses on the I2C bus even they are in use.
