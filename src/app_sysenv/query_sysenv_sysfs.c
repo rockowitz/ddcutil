@@ -757,7 +757,7 @@ void query_drm_using_sysfs() {
    int depth = 1;
    int d0 = depth;
    rpt_nl();
-   char * dname = SYS"/sys/class/drm";
+   char * dname = SYS"/class/drm";
 
    rpt_vstring(d0, "*** Examining %s ***", dname);
    dir_filtered_ordered_foreach(
