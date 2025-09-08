@@ -128,6 +128,42 @@ static void emit_error_msg(GPtrArray * errmsgs, char * format, ...)
 }
 
 
+/** Verifies that a section name is valid
+ *
+ *  @param  section_name  section name to check
+ *  @param  lineno        line number
+ *  @param  valid_segment_key_pairs
+ *  @param  valid_segment_key_pairs_ct  number of pairs
+ *  @param  errmsgs       accumulates error messages
+ */
+bool validate_section_name(char *          section_name,
+                           int             lineno,
+                           Ini_Valid_Section_Key_Pairs valid_section_key_pairs[],
+                           int             valid_section_key_pairs_ct,
+                           GPtrArray *     errmsgs)
+{
+   bool debug = false;
+   bool found = false;
+   for (int ndx = 0; ndx < valid_section_key_pairs_ct; ndx++) {
+      Ini_Valid_Section_Key_Pairs valid_kvp = valid_section_key_pairs[ndx];
+      bool matched = streq(section_name, valid_kvp.segment_name);
+      DBGF(debug, "section_name=|%s|, valid section name = %s, matched=%s",
+                  section_name, valid_kvp.segment_name, sbool(matched));
+      if (matched) {
+        found = true;
+        break;
+      }
+   }
+#ifdef NOT_HERE
+   if (!found) {
+      g_ptr_array_add(errmsgs, g_strdup_printf("Invalid section name: %s at line %d", section_name, lineno));
+   }
+#endif
+   return found;
+}
+
+
+
 /** Verifies that a section name/key name pair is valid, i.e.
  *  that the key is valid for the specified section.
  *
@@ -157,9 +193,11 @@ bool validate_section_key(char *          section_key,
         break;
       }
    }
+#ifdef NOT_HERE
    if (!found) {
       g_ptr_array_add(errmsgs, g_strdup_printf("Invalid segment/key pair: %s at line %d", section_key, lineno));
    }
+#endif
    return found;
 }
 
@@ -240,6 +278,13 @@ int ini_file_load(
             if (cur_segment)
                free(cur_segment);
             cur_segment = seg_name;
+            bool is_valid = validate_section_name(
+                                cur_segment, ndx+1,
+                                valid_section_key_pairs, valid_section_key_pair_ct, errmsgs);
+            if (!is_valid) {
+               emit_error_msg(errmsgs, "Line %d: Invalid section name: %s", ndx+1, seg_name);
+               error_ct++;
+            }
          }
 
          else if ( is_kv(trimmed, &key, &value) ) {  // allocates key, value
@@ -268,7 +313,7 @@ int ini_file_load(
                }
                else {
                   emit_error_msg(errmsgs,
-                        "Line %d: Invalid key name: %s", ndx+1, trimmed);
+                        "Line %d: Invalid key name \"%s\" in section %s", ndx+1, key, cur_segment);
                   error_ct++;
                }
             }
