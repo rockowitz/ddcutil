@@ -6,7 +6,7 @@
  *  the ddcui source tree.
  */
 
-// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -86,11 +86,15 @@ int read_ddcutil_config_file(
    DBGF(debug, "Starting. ddcutil_application=%s, errmsgs=%p",
                ddcutil_application, (void*)errmsgs);
 
+   Ini_Valid_Section_Key_Pairs valid_pairs[] = {{"global",     "options"},
+                                                {"ddcutil",    "options"},
+                                                {"libddcutil", "options"}};
+    int kvpct = sizeof(valid_pairs)/sizeof(Ini_Valid_Section_Key_Pairs);
+
    int result = 0;
    *untokenized_option_string_loc = NULL;
    *config_fn_loc = NULL;
 
-// char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
    char * config_fn = (streq(ddcutil_application, "ddcui"))
          ? find_xdg_config_file("ddcutil", "ddcuirc")
          : find_xdg_config_file("ddcutil", "ddcutilrc");
@@ -103,22 +107,13 @@ int read_ddcutil_config_file(
    *config_fn_loc = config_fn;
 
    Parsed_Ini_File * ini_file = NULL;
-   int load_rc = ini_file_load(config_fn, errmsgs, &ini_file);
+   int load_rc = ini_file_load(config_fn, valid_pairs, kvpct, errmsgs, &ini_file);
+   if (load_rc && debug) {
+      ini_file_dump(ini_file);
+   }
    ASSERT_IFF(load_rc==0, ini_file);
    DBGF(debug, "ini_file_load() returned %d", load_rc);
-   if (debug) {
-      if (errmsgs && errmsgs->len > 0) {
-         fprintf(stderr, "(read_ddcutil_config_file) Error(s) processing configuration file: %s\n", config_fn);
-         for (guint ndx = 0; ndx < errmsgs->len; ndx++) {
-            fprintf(stderr, "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
-         }
-      }
-   }
-
    if (load_rc == 0) {
-      if (debug) {
-         ini_file_dump(ini_file);
-      }
       char * global_options  = ini_file_get_value(ini_file, "global",  "options");
       char * ddcutil_options = ini_file_get_value(ini_file, ddcutil_application, "options");
 
