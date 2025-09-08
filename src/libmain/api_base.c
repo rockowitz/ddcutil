@@ -373,7 +373,7 @@ get_parsed_libmain_config(const char * libopts_string,
                           Parsed_Cmd** parsed_cmd_loc)
 {
    bool debug = false;
-   DBGF(debug, "Starting. disable_config_file = %s, libopts_string = %sn",
+   DBGF(debug, "Starting. disable_config_file = %s, libopts_string = %s",
                sbool(disable_config_file), libopts_string);
 
    char * msg = g_strdup_printf("Options passed from client: %s",
@@ -789,6 +789,7 @@ ddci_init(const char *      libopts,
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
       syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;
    enable_syslog = (syslog_level_arg == DDCA_SYSLOG_NEVER) ? false : true;  // global in core.c
+   DBGF(debug, "enable_syslog=%s", sbool(enable_syslog));
 
    if (enable_syslog) {
       if (!client_opened_syslog) {
@@ -797,14 +798,13 @@ ddci_init(const char *      libopts,
                                      // include caller's process id
                  LOG_USER);          // generic user program, syslogger can use to determine how to handle
       }
-
       // special handling for start and termination msgs
       // always output if syslog is opened
       syslog(LOG_NOTICE, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
                    get_full_ddcutil_version(), ddci_libddcutil_filename());
-
+      syslog(LOG_NOTICE, "                          library built %s at %s. stdout_stderr_redirected=%s",
+                         BUILD_DATE, BUILD_TIME, sbool(stdout_stderr_redirected));
       syslog_level = syslog_level_arg;  // global in trace_control.h
-
    }
 
    DBGF(debug, "syslog_level_arg = %s, syslog_level=%s, enable_syslog=%s",
