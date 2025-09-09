@@ -28,6 +28,7 @@ bool dbgtrc_show_wall_time =  false;  ///< include wall time in debug/trace outp
 bool dbgtrc_show_thread_id =  false;  ///< include thread id in debug/trace output
 bool dbgtrc_show_process_id = false;  ///< include process id in debug/trace output
 bool dbgtrc_trace_to_syslog_only = false; ///< send trace output only to system log
+bool dbgtrc_trace_to_syslog = false;
 bool stdout_stderr_redirected = false;
 
 bool __thread msg_decoration_suspended = false;

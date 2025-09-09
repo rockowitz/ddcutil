@@ -1,3 +1,47 @@
+## [2.2.2] 2025-09-xx
+
+#### Added
+
+- Option ***--trcback***: report call stack that led to specified function
+  (initial implementation)
+ - Option ***--trace-to_syslog***
+
+#### Changed
+
+implement --watch-mode udev
+
+better error messages if invalid config file, validate section names/key names
+
+#### Fixed
+
+- Command **environment --verbose**: incorrectly formed path name for examining 
+  /sys/class/drm
+- Out-of-tree build reference to generated file /src/base/build_details.h. 
+  Pull request #544
+- Command **getvcp --verbose**: output was partially in format intended for syslog
+- Command **getvcp --verify** and API function **ddca_set_non_table_vcp_value()**: 
+  were not performing verification
+- **ddca_display_ref_from_handle()**: was not converting internal to external display ref
+
+- Relax the check of device class when checking if a device is a video controller
+  Look only at the first byte.  An AMD Ryzen AI 9 365 based system was seen to 
+  report 0x038000, not 0x030000.  Addresses issue # 539?  #530?
+
+- **ddca_redetect_displays()**: return DDCRC_INVALID_OPERATION if built without display 
+fails to build with ***--disable-drm***
+  configure option that cuases***--disable-watch-displays*** 
+    Addresses issue #506
+
+    Commit 2ed9275 in branch 2.2.2-dev allows building to complete without the undefined reference error when configure option --disable-drm was specified. API function ddca_redetect_displays() returns DDCA_INVALID_OPERATION in this case. (An alternative code path through ddca_redetect_displays() is possible for the --disable-drm case, but is non-trivial and so not implemented for now.)
+
+ man page: correct typo in hyperlink qbarnes patch #535
+
+
+
+#### Building
+
+-  out of tree builds pull request #544
+
 ## [2.2.1] 2025-07-07
 
 ### General

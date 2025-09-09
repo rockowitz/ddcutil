@@ -619,7 +619,7 @@ static bool vdbgtrc(
 #endif
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
-         if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog_only) {
+         if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog_only || dbgtrc_trace_to_syslog) {
             char * syslog_msg = NULL;
             if (timestamp_in_syslog_debug_msgs) {
                syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
@@ -1230,7 +1230,7 @@ base_errinfo_free_with_report(
 {
    if (erec) {
       if (report || report_freed_exceptions) {
-         if ( dbgtrc_trace_to_syslog_only || redirect_reports_to_syslog) {
+         if ( dbgtrc_trace_to_syslog_only || redirect_reports_to_syslog || dbgtrc_trace_to_syslog) {
             GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
             rpt_vstring_collect(0, collector, "(%s) Freeing exception:", func);
             for (int ndx = 0; ndx < collector->len; ndx++) {

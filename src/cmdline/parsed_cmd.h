@@ -113,8 +113,8 @@ typedef enum {
                            = 0x10000000000000,
    CMD_FLAG_TRACE_TO_SYSLOG_ONLY
                            = 0x20000000000000,
+   CMD_FLAG_TRACE_TO_SYSLOG= 0x40000000000000,
    CMD_FLAG_STATS_TO_SYSLOG
-
                          = 0x0100000000000000,
    CMD_FLAG_INTERNAL_STATS
                          = 0x0200000000000000,

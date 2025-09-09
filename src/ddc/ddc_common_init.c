@@ -135,6 +135,10 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        dbgtrc_show_process_id = true;                   // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
        dbgtrc_trace_to_syslog_only = true;              // extern in core.h
+   if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG) { //  ??
+        dbgtrc_trace_to_syslog = true;
+        syslog_level = DDCA_SYSLOG_DEBUG;               // extern in core.h // why doesn't this work?
+   }
 
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
    add_trace_groups(parsed_cmd->traced_groups);

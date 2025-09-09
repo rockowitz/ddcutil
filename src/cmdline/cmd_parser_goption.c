@@ -1002,6 +1002,7 @@ parse_command(
    gint     dispwork        = -1;
    char *   maxtrywork      = NULL;
 // char *   trace_destination = NULL;
+   gboolean trace_to_syslog_flag      = false;
    gboolean trace_to_syslog_only_flag = false;
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
@@ -1385,6 +1386,9 @@ parse_command(
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
       {"trace-to-syslog-only",'\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &trace_to_syslog_only_flag,  "Direct trace output only to syslog", NULL},
+      {"trace-to-syslog",'\0', G_OPTION_FLAG_HIDDEN,
+                                                 G_OPTION_ARG_NONE,         &trace_to_syslog_flag,  "Direct trace output to syslog", NULL},
+
       {"libddcutil-trace-file",'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
       {"stats-to-syslog",'\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &stats_to_syslog_only_flag,  "Direct stats to syslog", NULL},
@@ -1775,6 +1779,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_MOCK,              mock_data_flag);
    SET_CMDFLAG(CMD_FLAG_PROFILE_API,       profile_api_flag);
    SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG_ONLY, trace_to_syslog_only_flag);
+   SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG,   trace_to_syslog_flag);
    SET_CMDFLAG(CMD_FLAG_STATS_TO_SYSLOG, stats_to_syslog_only_flag);
    SET_CMDFLAG(CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, null_msg_for_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, enable_heuristic_unsupported_flag);
