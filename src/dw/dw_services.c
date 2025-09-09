@@ -14,7 +14,7 @@
 #include "dw/dw_poll.h"
 #include "dw/dw_recheck.h"
 #include "dw/dw_status_events.h"
-#include "dw/dw_udev.h"
+#include "dw/dw_udev2.h"
 #ifdef USE_X11
 #include "dw/dw_xevent.h"
 #endif
@@ -33,7 +33,7 @@ void init_dw_services() {
    init_dw_poll();
    init_dw_recheck();
    init_dw_status_events();
-   init_dw_udev();
+   init_dw2_udev();
 #ifdef USE_X11
    init_dw_xevent();
 #endif
