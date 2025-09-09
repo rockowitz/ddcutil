@@ -3,7 +3,7 @@
  *  Functions and strings that are independent of the parser package used.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -70,8 +70,7 @@ static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
  *  Called during parser initialization.
  */
 void validate_cmdinfo() {
-   int ndx = 0;
-   for (; ndx < cmdct; ndx++) {
+   for (int ndx=0; ndx < cmdct; ndx++) {
       assert( cmdinfo[ndx].max_arg_ct <= MAX_ARGS);
    }
 }
