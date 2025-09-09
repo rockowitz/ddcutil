@@ -22,6 +22,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef USE_X11
+#include <X11/Xlib.h>
+#endif
 
 #include "util/common_inlines.h"
 #include "util/coredefs.h"
@@ -62,6 +65,7 @@
 #include "dw_dref.h"
 #include "dw_recheck.h"
 #include "dw_status_events.h"
+#include "dw_udev2.h"
 #ifdef USE_X11
 #include "dw_xevent.h"
 #endif
@@ -207,7 +211,7 @@ gpointer dw_watch_display_connections(gpointer data) {
    bool use_deferred_event_queue = false;
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
-   assert(wdd->watch_mode == Watch_Mode_Xevent  || wdd->watch_mode == Watch_Mode_Poll);
+   assert(wdd->watch_mode == Watch_Mode_Xevent  || wdd->watch_mode == Watch_Mode_Poll || wdd->watch_mode == Watch_Mode_Udev);
 #ifdef USE_X11
    if (wdd->watch_mode == Watch_Mode_Xevent)
       assert(wdd->evdata);
@@ -219,6 +223,7 @@ gpointer dw_watch_display_connections(gpointer data) {
          wdd->main_process_id, wdd->main_thread_id, tid(), wdd->event_classes, sbool(terminate_using_x11_event));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Watching for display connection events: %s",
          sbool(wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "watch_mode = %s", watch_mode_name(wdd->watch_mode));
 #ifdef WATCH_DPMS
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for dpms events: %s",
           sbool(wdd->event_classes & DDCA_EVENT_CLASS_DPMS));
@@ -263,6 +268,11 @@ gpointer dw_watch_display_connections(gpointer data) {
                                     false,      // clear
                                     sizeof(DDCA_Display_Status_Event));
    }
+
+   if (wdd->watch_mode == Watch_Mode_Udev) {
+      dw2_setup();
+   }
+
    bool skip_next_sleep = false;
    int slept = 0;   // will contain length of final sleep
 
@@ -280,7 +290,15 @@ gpointer dw_watch_display_connections(gpointer data) {
          continue;
       dw_terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
 
+      if (wdd->watch_mode == Watch_Mode_Udev) {
+         // sem_wait(&sem);
+         // close the door behind us:
+         // sem_post(&sem);
+         dw2_watch();
+      }
+
 #ifdef USE_X11
+      else
       if (wdd->watch_mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {
             bool event_found = dw_next_X11_event_of_interest(wdd->evdata);
@@ -327,6 +345,10 @@ gpointer dw_watch_display_connections(gpointer data) {
       g_mutex_unlock(&process_event_mutex);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "unlocked process_event_mutex");
    } // while()
+
+   if (wdd->watch_mode == Watch_Mode_Udev) {
+      dw2_teardown();
+   }
 
    // n. slept == 0 if no sleep was performed
    DBGTRC_DONE(debug, TRACE_GROUP,
