@@ -67,44 +67,27 @@ static DDCA_Display_Event_Class active_watch_displays_classes = DDCA_EVENT_CLASS
 static Watch_Displays_Data * global_wdd;     // needed to pass to dw_stop_watch_displays()
 
 
-// ***
-// Iftesting out resolve_watch_mode() if X11 is not defined is a quick and dirty hack.
-// It relies on the fact that currently the only mode other than XEVENT is POLL
-// ***
+typedef enum {
+   unchecked,
+   failed,
+   succeeded,
+} Watch_Mode_X11_Initialization;
 
+Watch_Mode_X11_Initialization x11_init_state = unchecked;
+
+STATIC bool is_watch_mode_x11_available() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   bool result = false;
 #ifdef USE_X11
-/** Determines the actual watch mode to be used
- *
- *  @param  initial_mode  mode requested
- *  @param  xev_data_loc  address at which to set the address of a newly allocated
- *                        XEvent_Data struct, if the resolved mode is Watch_Mode_Xevent
- *  @return actual watch mode to be used
- */
-STATIC DDC_Watch_Mode
-resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s xev_data_loc=%p", watch_mode_name(initial_mode), xev_data_loc);
-
-   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
-#ifdef USE_X11
-   XEvent_Data * xevdata = NULL;
-   *xev_data_loc = NULL;
-#endif
-
-#ifndef ENABLE_UDEV
-   if (initial_mode == Watch_Mode_Udev)
-      initial_mode = Watch_Mode_Poll;
-#endif
-
-   if (initial_mode == Watch_Mode_Dynamic) {
-      resolved_watch_mode = Watch_Mode_Poll;    // always works, may be slow
-#ifdef USE_X11
+   if (!(x11_init_state == failed)) {
       char * xdg_session_type = getenv("XDG_SESSION_TYPE");
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE=|%s|", xdg_session_type);
       if (xdg_session_type &&         // can xdg_session_type ever not be set
-          (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
+           (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
       {
-         resolved_watch_mode = Watch_Mode_Xevent;
+         result = true;
+         // resolved_watch_mode = Watch_Mode_Xevent;
       }
       else {
          // assert xdg_session_type == "tty"  ?
@@ -113,47 +96,68 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
          // possibility of coming in on ssh with a x11 proxy running
          // see https://stackoverflow.com/questions/45536141/how-i-can-find-out-if-a-linux-system-uses-wayland-or-x11
          if (display) {
-            resolved_watch_mode = Watch_Mode_Xevent;
+            result = true;
+            // resolved_watch_mode = Watch_Mode_Xevent;
          }
       }
-
-      //     dw_watch_mode = Watch_Mode_Udev;
-      // sysfs_fully_reliable = is_sysfs_reliable();
-      // if (!sysfs_fully_reliable)
-      //    dw_watch_mode = Watch_Mode_Poll;
+   }
 #endif
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+STATIC bool is_watch_mode_libdrm_available() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   bool result = false;
+#ifdef USE_LIBDRM
+   result = true;
+#ifdef NO
+   if (!sysfs_fully_reliable)  // ???
+      result = false;
+#endif
+#endif
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+/** Determines the actual watch mode to be used
+ *
+ *  @param  initial_mode  mode requested
+ *  @param  xev_data_loc  address at which to set the address of a newly allocated
+ *                        XEvent_Data struct, if the resolved mode is Watch_Mode_Xevent
+ *  @return actual watch mode to be used
+ */
+STATIC DDC_Watch_Mode
+resolve_watch_mode(DDC_Watch_Mode initial_mode) {
+  bool debug = true;
+  DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s ", watch_mode_name(initial_mode));
+
+  DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;   // always works, may be slow
+  if (initial_mode == Watch_Mode_Xevent && !is_watch_mode_x11_available())
+     initial_mode = Watch_Mode_Dynamic;
+  if (initial_mode == Watch_Mode_Udev && !is_watch_mode_libdrm_available())
+     initial_mode = Watch_Mode_Dynamic;
+
+  DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "after initial check, initial_mode = %s", watch_mode_name(initial_mode));
+
+   if (initial_mode == Watch_Mode_Dynamic) {
+      if (is_watch_mode_libdrm_available() )
+
+         resolved_watch_mode = Watch_Mode_Udev;
+      else if (is_watch_mode_x11_available())
+         resolved_watch_mode = Watch_Mode_Xevent;
    }
    else {
       resolved_watch_mode = initial_mode;
    }
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "initially resolved watch mode = %s", watch_mode_name(resolved_watch_mode));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "after resolving dynamic, resolved_watch_mode = %s", watch_mode_name(resolved_watch_mode));
 
-#ifdef NO
-    if (resolved_watch_mode  == Watch_Mode_Udev) {
-      if (!sysfs_fully_reliable)  // ???
-         resolved_watch_mode = Watch_Mode_Poll;
-   }
-#endif
-
-#ifdef USE_X11
-   if (resolved_watch_mode == Watch_Mode_Xevent) {
-      xevdata  = dw_init_xevent_screen_change_notification();
-      if (!xevdata) {
-         resolved_watch_mode = Watch_Mode_Poll;
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR API unavailable. Switching to Watch_Mode_Poll");
-      }
-   }
-   *xev_data_loc = xevdata;
-   ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, *xev_data_loc);
-   if (*xev_data_loc && IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      dw_dbgrpt_xevent_data(*xev_data_loc,  0);
-   }
-#endif
-   DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s. *xev_data_loc: %p",
-         watch_mode_name(resolved_watch_mode),  *xev_data_loc);
+   // DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s. *xev_data_loc: %p",
+   //       watch_mode_name(resolved_watch_mode),  *xev_data_loc);
+   DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s",   watch_mode_name(resolved_watch_mode));
    return resolved_watch_mode;
 }
-#endif
 
 
 /** Starts thread that watches for changes in display connection status.
@@ -165,15 +169,12 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
  */
 Error_Info *
 dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP,
         "dw_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
         watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "thread_id = %d, traced_function_stack=%p", TID(), traced_function_stack);
    Error_Info * err = NULL;
-#ifdef USE_X11
-   XEvent_Data * xev_data = NULL;
-#endif
 
    if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
@@ -185,11 +186,18 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
+   DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(watch_displays_mode);
 #ifdef USE_X11
-   DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(watch_displays_mode, &xev_data);
-   ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
-#else
-   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
+   XEvent_Data * xevdata  = NULL;
+   if (resolved_watch_mode == Watch_Mode_Xevent) {
+      xevdata  = dw_init_xevent_screen_change_notification();
+      x11_init_state = succeeded;
+      if (!xevdata) {
+         x11_init_state = failed;
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR API unavailable. Switching to Watch_Mode_Dynamic");
+         resolved_watch_mode = resolve_watch_mode(Watch_Mode_Dynamic);
+      }
+   }
 #endif
 
    int calculated_watch_loop_millisec = dw_calc_watch_loop_millisec(resolved_watch_mode);
@@ -231,8 +239,8 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       wdd->watch_mode = resolved_watch_mode;
       wdd->watch_loop_millisec = calculated_watch_loop_millisec;
 #ifdef USE_X11
-      if (xev_data)
-         wdd->evdata = xev_data;
+      if (xevdata)
+         wdd->evdata = xevdata;
 #endif
       global_wdd = wdd;   // so that it's available to ddc_stop_watch_displays() 
 
@@ -247,10 +255,14 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
 #endif
 
+
       GThreadFunc watch_thread_func =
+#ifdef OLD
             (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
                  ? dw_watch_display_connections
                  : dw_watch_displays_udev;
+#endif
+      watch_thread_func = dw_watch_display_connections;
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
       watch_thread = g_thread_new(
