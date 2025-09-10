@@ -8,6 +8,7 @@
 /** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>
+#include <libudev.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,7 +58,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
-bool             enable_watch_displays = true;
+bool            enable_watch_displays = true;
 
 static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
@@ -76,8 +77,9 @@ typedef enum {
 Watch_Mode_X11_Initialization x11_init_state = unchecked;
 
 STATIC bool is_watch_mode_x11_available() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
    bool result = false;
 #ifdef USE_X11
    if (!(x11_init_state == failed)) {
@@ -87,7 +89,6 @@ STATIC bool is_watch_mode_x11_available() {
            (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
       {
          result = true;
-         // resolved_watch_mode = Watch_Mode_Xevent;
       }
       else {
          // assert xdg_session_type == "tty"  ?
@@ -97,52 +98,58 @@ STATIC bool is_watch_mode_x11_available() {
          // see https://stackoverflow.com/questions/45536141/how-i-can-find-out-if-a-linux-system-uses-wayland-or-x11
          if (display) {
             result = true;
-            // resolved_watch_mode = Watch_Mode_Xevent;
          }
       }
    }
 #endif
+
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
 
-STATIC bool is_watch_mode_libdrm_available() {
-   bool debug = true;
+
+STATIC bool is_watch_mode_udev_available() {
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
    bool result = false;
-#ifdef USE_LIBDRM
-   result = true;
+#ifdef ENABLE_UDEV
+   struct udev* udev = udev_new();
+   if (udev) {
+      result = true;
+      udev_unref(udev);
+   }
 #ifdef NO
    if (!sysfs_fully_reliable)  // ???
       result = false;
 #endif
 #endif
+
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
 
+
 /** Determines the actual watch mode to be used
  *
  *  @param  initial_mode  mode requested
- *  @param  xev_data_loc  address at which to set the address of a newly allocated
- *                        XEvent_Data struct, if the resolved mode is Watch_Mode_Xevent
  *  @return actual watch mode to be used
  */
 STATIC DDC_Watch_Mode
 resolve_watch_mode(DDC_Watch_Mode initial_mode) {
-  bool debug = true;
+  bool debug = false;
   DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s ", watch_mode_name(initial_mode));
 
   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;   // always works, may be slow
   if (initial_mode == Watch_Mode_Xevent && !is_watch_mode_x11_available())
      initial_mode = Watch_Mode_Dynamic;
-  if (initial_mode == Watch_Mode_Udev && !is_watch_mode_libdrm_available())
+  if (initial_mode == Watch_Mode_Udev && !is_watch_mode_udev_available())
      initial_mode = Watch_Mode_Dynamic;
 
   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "after initial check, initial_mode = %s", watch_mode_name(initial_mode));
 
    if (initial_mode == Watch_Mode_Dynamic) {
-      if (is_watch_mode_libdrm_available() )
+      if (is_watch_mode_udev_available() )
 
          resolved_watch_mode = Watch_Mode_Udev;
       else if (is_watch_mode_x11_available())
@@ -169,7 +176,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode) {
  */
 Error_Info *
 dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
         "dw_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
         watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
