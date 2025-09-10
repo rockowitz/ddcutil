@@ -72,45 +72,6 @@ bool    use_sysfs_connector_id = true;
 bool    report_udev_events = false;
 
 
-void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
-   rpt_structure_loc("udev_device", dev, depth);
-   int d1 = depth+1;
-   // printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
-   // printf("   Subsystem: %s\n", udev_device_get_subsystem(dev));  // drm
-   // printf("   Devtype: %s\n", udev_device_get_devtype(dev));      // drm_minor
-
-   rpt_vstring(d1, "Action:      %s", udev_device_get_action(   dev));     // "change"
-   rpt_vstring(d1, "devpath:     %s", udev_device_get_devpath(  dev));
-   rpt_vstring(d1, "subsystem:   %s", udev_device_get_subsystem(dev));     // drm
-   rpt_vstring(d1, "devtype:     %s", udev_device_get_devtype(  dev));     // drm_minor
-   rpt_vstring(d1, "syspath:     %s", udev_device_get_syspath(  dev));
-   rpt_vstring(d1, "sysname:     %s", udev_device_get_sysname(  dev));
-   rpt_vstring(d1, "sysnum:      %s", udev_device_get_sysnum(   dev));
-   rpt_vstring(d1, "devnode:     %s", udev_device_get_devnode(  dev));     // /dev/dri/card0
-   rpt_vstring(d1, "initialized: %d", udev_device_get_is_initialized(  dev));
-   rpt_vstring(d1, "driver:      %s", udev_device_get_driver(  dev));
-
-   if (verbose) {
-      struct udev_list_entry * entries = NULL;
-
-#ifdef NOT_USEFUL     // see udevadm -p
-      entries = udev_device_get_devlinks_list_entry(dev);
-      show_udev_list_entries(entries, "devlinks");
-
-      entries = udev_device_get_tags_list_entry(dev);
-      show_udev_list_entries(entries, "tags");
-#endif
-
-      entries = udev_device_get_properties_list_entry(dev);
-      show_udev_list_entries(entries, "properties");
-
-      entries = udev_device_get_sysattr_list_entry(dev);
-      //show_udev_list_entries(entries, "sysattrs");
-      show_sysattr_list_entries(dev,entries);
-   }
-}
-
-
 #ifdef ENABLE_UDEV
 
 //
@@ -379,48 +340,6 @@ Bit_Set_256 dw_i2c_check_bus_changes_for_connector(
 }
 #endif
 
-
-typedef struct {
-   const char * prop_subsystem;
-   const char * prop_action;
-   const char * prop_connector;
-   const char * prop_devname;
-   const char * prop_hotplug;
-   const char * sysname;
-   const char * attr_name;
-} Udev_Event_Detail;
-
-
-Udev_Event_Detail* collect_udev_event_detail(struct udev_device * dev) {
-   Udev_Event_Detail * cd = calloc(1, sizeof(Udev_Event_Detail));
-   cd->prop_subsystem = udev_device_get_property_value(dev, "SUBSYSTEM");
-   cd->prop_action    = udev_device_get_property_value(dev, "ACTION");     // always "changed"
-   cd->prop_connector = udev_device_get_property_value(dev, "CONNECTOR");  // drm connector number
-   cd->prop_devname   = udev_device_get_property_value(dev, "DEVNAME");    // e.g. /dev/dri/card0
-   cd->prop_hotplug   = udev_device_get_property_value(dev, "HOTPLUG");    // always 1
-   cd->sysname        = udev_device_get_sysname(dev);                      // e.g. card0, i2c-27
-   cd-> attr_name     = udev_device_get_sysattr_value(dev, "name");
-   return cd;
-}
-
-
-void free_udev_event_detail(Udev_Event_Detail * detail) {
-   free(detail);
-}
-
-
-void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth) {
-   assert(detail);
-   rpt_structure_loc("Udev_Event_Detail", detail, depth);
-   int d1 = depth + 1;
-   rpt_vstring(d1, "prop_subsystem:  %s", detail->prop_subsystem);
-   rpt_vstring(d1, "prop_action:     %s", detail->prop_action);
-   rpt_vstring(d1, "prop_connector:  %s", detail->prop_connector);
-   rpt_vstring(d1, "prop_devname:    %s", detail->prop_devname);
-   rpt_vstring(d1, "prop_hotplug:    %s", detail->prop_hotplug);
-   rpt_vstring(d1, "sysname:         %s", detail->sysname);
-   rpt_vstring(d1, "attr_name:       %s", detail->attr_name);
-}
 
 
 void debug_watch_state(int connector_number, char * cname) {
