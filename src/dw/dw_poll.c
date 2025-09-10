@@ -223,7 +223,7 @@ gpointer dw_watch_display_connections(gpointer data) {
          wdd->main_process_id, wdd->main_thread_id, tid(), wdd->event_classes, sbool(terminate_using_x11_event));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Watching for display connection events: %s",
          sbool(wdd->event_classes & DDCA_EVENT_CLASS_DISPLAY_CONNECTION));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "watch_mode = %s", watch_mode_name(wdd->watch_mode));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "watch_mode = %s, watch_loop_millisec=%d", watch_mode_name(wdd->watch_mode), wdd->watch_loop_millisec);
 #ifdef WATCH_DPMS
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for dpms events: %s",
           sbool(wdd->event_classes & DDCA_EVENT_CLASS_DPMS));
@@ -294,7 +294,7 @@ gpointer dw_watch_display_connections(gpointer data) {
          // sem_wait(&sem);
          // close the door behind us:
          // sem_post(&sem);
-         dw2_watch();
+         dw2_watch(wdd->watch_loop_millisec);
       }
 
 #ifdef USE_X11
