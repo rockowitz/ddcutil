@@ -111,11 +111,7 @@
 #define DEFAULT_DDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_WARNING
 #define DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_NOTICE
 
-#ifdef USE_X11
 #define DEFAULT_WATCH_MODE Watch_Mode_Dynamic
-#else
-#define DEFAULT_WATCH_MODE Watch_Mode_Poll
-#endif
 
 //
 // Asynchronous Initialization
