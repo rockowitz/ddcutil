@@ -348,3 +348,175 @@ void show_sysattr_list_entries(
    }
 }
 
+
+void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
+   rpt_structure_loc("udev_device", dev, depth);
+   int d1 = depth+1;
+   // printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
+   // printf("   Subsystem: %s\n", udev_device_get_subsystem(dev));  // drm
+   // printf("   Devtype: %s\n", udev_device_get_devtype(dev));      // drm_minor
+
+   rpt_vstring(d1, "action:      %s", udev_device_get_action(   dev));     // "change"
+   rpt_vstring(d1, "devnode:     %s", udev_device_get_devnode(  dev));     // /dev/dri/card0
+   rpt_vstring(d1, "devpath:     %s", udev_device_get_devpath(  dev));
+   rpt_vstring(d1, "devtype:     %s", udev_device_get_devtype(  dev));     // drm_minor
+   rpt_vstring(d1, "driver:      %s", udev_device_get_driver(  dev));
+   rpt_vstring(d1, "initialized: %d", udev_device_get_is_initialized(  dev));
+   rpt_vstring(d1, "subsystem:   %s", udev_device_get_subsystem(dev));     // drm
+   rpt_vstring(d1, "sysname:     %s", udev_device_get_sysname(  dev));
+   rpt_vstring(d1, "sysnum:      %s", udev_device_get_sysnum(   dev));
+   rpt_vstring(d1, "syspath:     %s", udev_device_get_syspath(  dev));
+
+   if (verbose) {
+      struct udev_list_entry * entries = NULL;
+
+#ifdef NOT_USEFUL     // see udevadm -p
+      entries = udev_device_get_devlinks_list_entry(dev);
+      show_udev_list_entries(entries, "devlinks");
+
+      entries = udev_device_get_tags_list_entry(dev);
+      show_udev_list_entries(entries, "tags");
+#endif
+
+      entries = udev_device_get_properties_list_entry(dev);
+      show_udev_list_entries(entries, "properties");
+
+      entries = udev_device_get_sysattr_list_entry(dev);
+      //show_udev_list_entries(entries, "sysattrs");
+      show_sysattr_list_entries(dev,entries);
+   }
+}
+
+//
+// Udev_Event_Detail
+//
+
+Udev_Event_Detail* collect_udev_event_detail(struct udev_device * dev) {
+   Udev_Event_Detail * cd = calloc(1, sizeof(Udev_Event_Detail));
+   cd->attr_name      = udev_device_get_sysattr_value(dev, "name");
+   cd->prop_action    = udev_device_get_property_value(dev, "ACTION");     // always "changed"
+   cd->prop_connector = udev_device_get_property_value(dev, "CONNECTOR");  // drm connector number
+   cd->prop_devname   = udev_device_get_property_value(dev, "DEVNAME");    // e.g. /dev/dri/card0
+   cd->prop_hotplug   = udev_device_get_property_value(dev, "HOTPLUG");    // always 1
+   cd->prop_subsystem = udev_device_get_property_value(dev, "SUBSYSTEM");
+   cd->sysname        = udev_device_get_sysname(dev);                      // e.g. card0, i2c-27
+   cd->syspath        = udev_device_get_syspath(  dev);
+   return cd;
+}
+
+
+void free_udev_event_detail(Udev_Event_Detail * detail) {
+   free(detail);
+}
+
+
+void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth) {
+   assert(detail);
+   rpt_structure_loc("Udev_Event_Detail", detail, depth);
+   int d1 = depth + 1;
+   rpt_vstring(d1, "prop_subsystem:  %s", detail->prop_subsystem);
+   rpt_vstring(d1, "prop_action:     %s", detail->prop_action);
+   rpt_vstring(d1, "prop_connector:  %s", detail->prop_connector);
+   rpt_vstring(d1, "prop_devname:    %s", detail->prop_devname);
+   rpt_vstring(d1, "prop_hotplug:    %s", detail->prop_hotplug);
+   rpt_vstring(d1, "sysname:         %s", detail->sysname);
+   rpt_vstring(d1, "syspath:         %s", detail->syspath);
+   rpt_vstring(d1, "attr_name:       %s", detail->attr_name);
+}
+
+
+
+#ifdef OLD
+
+// use RPT_ATTR_TEXT(depth, return value loc, syspath, "status") instead
+
+// Read sysfs "status" file for a DRM connector
+const char* get_connector_status(const char *syspath) {
+    static char status[32];
+    char path[512];
+    snprintf(path, sizeof(path), "%s/status", syspath);
+
+    FILE *f = fopen(path, "r");
+    if (!f) return "unknown";
+
+    if (fgets(status, sizeof(status), f)) {
+        // Strip newline
+        status[strcspn(status, "\n")] = 0;
+        fclose(f);
+        return status;
+    }
+
+    fclose(f);
+    return "unknown";
+}
+
+// RPT_ATTR_TEXT(depth, <value_loc>, syspath, "status");
+
+#endif
+
+
+void dbgrpt_udev_device_by_function_call(struct udev_device * dev, int depth) {
+   int d0 = depth;
+
+   rpt_vstring(d0, "action:      %s", udev_device_get_action(dev));    // changed
+   rpt_vstring(d0, "devnode:     %s", udev_device_get_devnode(  dev));     // /dev/dri/card0
+   rpt_vstring(d0, "devpath:     %s", udev_device_get_devpath(  dev));
+   rpt_vstring(d0, "devtype:     %s", udev_device_get_devtype(  dev));     // drm_minor
+   rpt_vstring(d0, "driver:      %s", udev_device_get_driver(  dev));
+   rpt_vstring(d0, "initialized: %d", udev_device_get_is_initialized(  dev));
+   rpt_vstring(d0, "subsystem:   %s", udev_device_get_subsystem(dev));     // drm
+   rpt_vstring(d0, "sysname:     %s", udev_device_get_sysname(dev));
+   rpt_vstring(d0, "sysnum:      %s", udev_device_get_sysnum(   dev));
+   rpt_vstring(d0, "syspath:     %s", udev_device_get_syspath(dev));
+   rpt_vstring(d0, "syspath:     %s", udev_device_get_syspath(  dev));
+}
+
+
+
+
+void dbgrpt_udev_list_entries(struct udev_list_entry * entries, char * title, int depth)
+{
+   int d1 = depth+1;
+   rpt_vstring(depth, "%s:", title);
+   struct udev_list_entry * cur = NULL;
+   udev_list_entry_foreach(cur, entries) {
+       const char * name  = udev_list_entry_get_name(cur);
+       const char * value = udev_list_entry_get_value(cur);
+       rpt_vstring(d1, "%s  -> %s", name, value);
+   }
+ }
+
+void dbgrpt_udev_device_properties(struct udev_device* dev, int depth) {
+   struct udev_list_entry * entries = NULL;
+   entries = udev_device_get_properties_list_entry(dev);
+   dbgrpt_udev_list_entries(entries, "properties",depth);
+}
+
+
+void dbgrpt_udev_device_sysattrs(struct udev_device* dev, int depth) {
+   struct udev_list_entry * entries = NULL;
+   entries = udev_device_get_sysattr_list_entry(dev);
+   //show_udev_list_entries(entries, "sysattrs");
+   show_sysattr_list_entries(dev,entries);
+}
+
+
+void dbgrpt_udev_device_lists(struct udev_device* dev, int depth) {
+   rpt_vstring(depth, "Properties:");
+   dbgrpt_udev_device_properties(dev, depth+1);
+   dbgrpt_udev_device_sysattrs(dev, depth+1);
+
+   struct udev_list_entry * entries = NULL;
+
+#ifdef NOT_USEFUL     // see udevadm -p
+   entries = udev_device_get_devlinks_list_entry(dev);
+   show_udev_list_entries(entries, "devlinks");
+
+   entries = udev_device_get_tags_list_entry(dev);
+   show_udev_list_entries(entries, "tags");
+#endif
+
+   show_sysattr_list_entries(dev,entries);
+
+}
+
