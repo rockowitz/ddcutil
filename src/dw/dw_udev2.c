@@ -14,9 +14,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
-#ifdef ENABLE_UDEV
 #include <libudev.h>
-#endif
 #include <poll.h>
 #include <stdbool.h>
 #include <stdlib.h>
