@@ -17,6 +17,7 @@
 #include "util/traced_function_stack.h"
 
 #include "base/core.h"
+#include "base/dw_base.h"
 #include "base/sleep.h"
 #include "base/rtti.h"
 
@@ -246,56 +247,6 @@ DDCA_Status dw_unregister_display_status_callback(DDCA_Display_Status_Callback_F
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
-}
-
-
-const char * dw_display_event_class_name(DDCA_Display_Event_Class class) {
-   char * result = NULL;
-   switch(class) {
-   case DDCA_EVENT_CLASS_NONE:               result = "DDCA_EVENT_CLASS_NONE";               break;
-   case DDCA_EVENT_CLASS_DPMS:               result = "DDCA_EVENT_CLASS_DPMS";               break;
-   case DDCA_EVENT_CLASS_DISPLAY_CONNECTION: result = "DDCA_EVENT_CLASS_DISPLAY_CONNECTION"; break;
-   case DDCA_EVENT_CLASS_UNUSED1:            result = "DDCA_EVENT_CLASS_UNUSED1";            break;
-   }
-   return result;
-}
-
-
-const char * dw_display_event_type_name(DDCA_Display_Event_Type event_type) {
-   char * result = NULL;
-   switch(event_type) {
-   case DDCA_EVENT_DISPLAY_CONNECTED:    result = "DDCA_EVENT_DISPLAY_CONNECTED";    break;
-   case DDCA_EVENT_DISPLAY_DISCONNECTED: result = "DDCA_EVENT_DISPLAY_DISCONNECTED"; break;
-   case DDCA_EVENT_DPMS_AWAKE:           result = "DDCA_EVENT_DPMS_AWAKE";           break;
-   case DDCA_EVENT_DPMS_ASLEEP:          result = "DDCA_EVENT_DPMS_ASLEEP";          break;
-   case DDCA_EVENT_DDC_ENABLED:          result = "DDCA_EVENT_DDC_ENABLED";          break;
-   case DDCA_EVENT_UNUSED2:              result = "DDCA_EVENT_UNUSED2";              break;
-   }
-   return result;
-}
-
-
-char * display_status_event_repr(DDCA_Display_Status_Event evt) {
-   char * s = g_strdup_printf(
-      "DDCA_Display_Status_Event[%s:  %s, %s, dref: %s, io_path:/dev/i2c-%d, ddc working: %s]",
-      formatted_time_t(evt.timestamp_nanos),   // will this clobber a wrapping DBGTRC?
-      dw_display_event_type_name(evt.event_type),
-                                  evt.connector_name,
-                                  ddci_dref_repr_t(evt.dref),
-                                  evt.io_path.path.i2c_busno,
-                                  sbool(evt.flags&DDCA_DISPLAY_EVENT_DDC_WORKING));
-   return s;
-}
-
-
-char * display_status_event_repr_t(DDCA_Display_Status_Event evt) {
-   static GPrivate  display_status_repr_key = G_PRIVATE_INIT(g_free);
-   char * buf = get_thread_fixed_buffer(&display_status_repr_key, 200);
-
-   char * repr = display_status_event_repr(evt);
-   g_snprintf(buf, 200, "%s", repr);
-   free(repr);
-   return buf;
 }
 
 

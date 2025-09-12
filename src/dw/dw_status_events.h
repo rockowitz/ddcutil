@@ -12,7 +12,6 @@
 
 #include "base/displays.h"
 
-
 typedef struct {
    DDCA_Display_Status_Callback_Func func;
    DDCA_Display_Status_Event         event;
@@ -24,10 +23,6 @@ gpointer dw_execute_callback_func(gpointer data);
 // Display Status Events
 DDCA_Status  dw_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
 DDCA_Status  dw_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
-const char * dw_display_event_class_name(DDCA_Display_Event_Class class);
-const char*  dw_display_event_type_name(DDCA_Display_Event_Type event_type);
-char *       display_status_event_repr(DDCA_Display_Status_Event evt);
-char *       display_status_event_repr_t(DDCA_Display_Status_Event evt);
 DDCA_Display_Status_Event
              dw_create_display_status_event(DDCA_Display_Event_Type event_type,
                                              const char *            connector_name,
