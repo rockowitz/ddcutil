@@ -40,7 +40,6 @@
 #include "dw/dw_common.h"
 #include "dw/dw_main.h"
 #include "dw/dw_status_events.h"
-#include "dw/dw_udev.h"
 
 #include "libmain/api_base_internal.h"
 #include "libmain/api_error_info_internal.h"
