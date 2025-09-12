@@ -44,7 +44,7 @@
 
 #include "dw_status_events.h"
 #include "dw_common.h"
-#include "dw_udev.h"
+#include "dw_udev2.h"
 #include "dw_recheck.h"
 #include "dw_poll.h"
 #ifdef USE_X11
@@ -113,17 +113,11 @@ STATIC bool is_watch_mode_udev_available() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    bool result = false;
-#ifdef ENABLE_UDEV
    struct udev* udev = udev_new();
    if (udev) {
       result = true;
       udev_unref(udev);
    }
-#ifdef NO
-   if (!sysfs_fully_reliable)  // ???
-      result = false;
-#endif
-#endif
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
@@ -304,7 +298,6 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
 
    DDCA_Status ddcrc = DDCRC_OK;
 
-#ifdef ENABLE_UDEV
    if (enabled_classes_loc)
       *enabled_classes_loc = DDCA_EVENT_CLASS_NONE;
 
@@ -350,7 +343,6 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
    }
 
    g_mutex_unlock(&watch_thread_mutex);
-#endif
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return ddcrc;
