@@ -60,6 +60,7 @@ ddc_packets.c             \
 display_lock.c            \
 displays.c                \
 dsa2.c                    \
+dw_base.c                 \
 dynamic_features.c        \
 execution_stats.c         \
 feature_lists.c           \
