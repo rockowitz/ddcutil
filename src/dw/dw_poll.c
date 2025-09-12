@@ -295,6 +295,8 @@ gpointer dw_watch_display_connections(gpointer data) {
          // close the door behind us:
          // sem_post(&sem);
          dw2_watch(wdd->watch_loop_millisec);
+         if (terminate_watch_thread)
+            continue;
       }
 
 #ifdef USE_X11
