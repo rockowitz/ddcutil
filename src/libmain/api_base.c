@@ -36,6 +36,7 @@
 #include "base/display_lock.h"
 #include "base/core.h"
 #include "base/dsa2.h"
+#include "base/dw_base.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
 #include "base/per_thread_data.h"
@@ -63,6 +64,7 @@
 #ifdef WATCH_DISPLAYS
 #include "dw/dw_main.h"
 #include "dw/dw_services.h"
+#include "dw/dw_status_events.h"
 #endif
 
 #include "libmain/api_error_info_internal.h"
@@ -941,7 +943,8 @@ ddca_init2(const char *     libopts,
 DDCA_Status
 ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
-   API_PROLOGX(debug, RESPECT_QUIESCE, "enabled_classes=0x%02x", enabled_classes);
+   API_PROLOGX(debug, RESPECT_QUIESCE, "enabled_classes=0x%02x=%s",
+                      enabled_classes, dw_event_classes_repr_t(enabled_classes));
 
 #ifdef WATCH_DISPLAYS
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "all_video_adapters_implement_drm=%s",
@@ -1022,7 +1025,8 @@ ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
 #else
    DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
 #endif
-   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "*classes_loc=0x%02x", *classes_loc);
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "*classes_loc=0x%02x=%s",
+         *classes_loc, (*classes_loc) ? dw_event_classes_repr_t(*classes_loc):"NULL" );
 }
 
 DDCA_Status
