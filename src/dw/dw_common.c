@@ -41,6 +41,7 @@
 #include "base/displays.h"
 #include "base/ddc_errno.h"
 #include "base/drm_connector_state.h"
+#include "base/dw_base.h"
 #include "base/i2c_bus_base.h"
 #include "base/linux_errno.h"
 #include "base/rtti.h"
@@ -76,7 +77,6 @@ uint16_t  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 
 bool      terminate_watch_thread         = false;
 bool      terminate_using_x11_event      = false;
-
 
 
 uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
@@ -137,7 +137,8 @@ void dw_free_watch_displays_data(Watch_Displays_Data * wdd) {
       assert( memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
       wdd->marker[3] = 'x';
 #ifdef USE_X11
-      dw_deinit_xevent_screen_change_notification(wdd->evdata);
+      if (wdd->evdata)
+         dw_deinit_xevent_screen_change_notification(wdd->evdata);
 #endif
       free(wdd);
    }
@@ -579,7 +580,7 @@ void record_active_callback_thread(GThread* pthread){
 
 void remove_active_callback_thread(GThread* pthread){
 	bool debug = false;
-	DBGTRC_STARTING(debug,TRACE_GROUP, "pthread=p", pthread);
+	DBGTRC_STARTING(debug,TRACE_GROUP, "pthread=%p", pthread);
 
 	if (active_callback_threads) {
 		g_hash_table_remove(active_callback_threads, pthread);
