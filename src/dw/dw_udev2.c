@@ -108,7 +108,13 @@ void dw2_teardown() {
 }
 
 
-void dw2_watch(int watch_loop_millisec) {
+/** Poll udev to watch for display connection/disconnection
+ *
+ *  @param  watch_loop_millisec
+ *  @retval true   returning because watching terminated
+ *  @retval false  display change detected
+ */
+bool dw2_watch(int watch_loop_millisec) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_loop_millisec=%d", watch_loop_millisec);
    int poll_timeout_millisec = watch_loop_millisec;
@@ -139,15 +145,23 @@ void dw2_watch(int watch_loop_millisec) {
       else {
          if (fds.events&POLLIN) {
             struct udev_device *dev = udev_monitor_receive_device(mon);
+            if (dev) {
+               DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
+               SYSLOG2(DDCA_SYSLOG_NOTICE, "Udev event detected");
 
-            if (dev&& debug) {
-               Udev_Event_Detail * detail = collect_udev_event_detail(dev);
-               dbgrpt_udev_event_detail(detail,1);
-               free_udev_event_detail(detail);
+               if (debug) {
+                  Udev_Event_Detail * detail = collect_udev_event_detail(dev);
+                  dbgrpt_udev_event_detail(detail,1);
+                  free_udev_event_detail(detail);
+               }
+
+               udev_device_unref(dev);
+               found = true;
             }
-
-            udev_device_unref(dev);
-            found = true;
+            else {
+               DBGTRC(true, DDCA_TRC_NONE, "udev_monitor_receive_device() failed");
+               SYSLOG2(DDCA_SYSLOG_ERROR,  "udev_monitor_receive_device() failed");
+            }
          }
          else {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not for us. fds.events=0x%04x", fds.events);
@@ -155,8 +169,8 @@ void dw2_watch(int watch_loop_millisec) {
       }
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP,"");
-   return;
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, terminate_watch_thread, "");
+   return terminate_watch_thread;
 }
 
 

@@ -20,7 +20,7 @@ extern bool report_udev_events;
 
 void dw2_setup();
 void dw2_teardown();
-void dw2_watch();
+bool dw2_watch();
 
 void init_dw2_udev();
 #endif /* DW_UDEV_H_ */
