@@ -68,7 +68,7 @@
 #include "dw/dw_common.h"
 #include "dw/dw_main.h"
 #include "dw/dw_poll.h"
-#include "dw/dw_udev.h"
+#include "dw/dw_udev2.h"
 #endif
 
 #include "ddc_common_init.h"
