@@ -188,6 +188,7 @@ bool validate_section_key(char *          section_key,
       char * valid_seg_val_name = g_strdup_printf("%s/%s", valid_kvp.segment_name, valid_kvp.key_name);
       bool matched = (streq(section_key,  valid_seg_val_name));
       DBGF(debug, "valid_seg_val_name=|%s| matched=%s", valid_seg_val_name, sbool(matched));
+      free(valid_seg_val_name);
       if (matched) {
         found = true;
         break;
