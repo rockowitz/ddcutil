@@ -22,6 +22,7 @@
 #include "base/core.h"
 #include "base/dsa2.h"
 #include "base/displays.h"
+#include "base/dw_base.h"
 #include "base/monitor_model_key.h"
 #include "base/per_display_data.h"
 #include "base/rtti.h"
