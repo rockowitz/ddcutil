@@ -12,69 +12,37 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <glib-2.0/glib.h>
 #include <libudev.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include "util/coredefs.h"
-#include "util/data_structures.h"
 #include "util/debug_util.h"
-#include "util/file_util.h"
-#include "util/glib_string_util.h"
-#include "util/glib_util.h"
-#include "util/i2c_util.h"
-#include "util/libdrm_aux_util.h"
-#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/subprocess_util.h"
-#include "util/sysfs_util.h"
-#include "util/traced_function_stack.h"
 #include "util/udev_util.h"
 
 #include "base/core.h"
-#include "base/displays.h"
-#include "base/ddc_errno.h"
-#include "base/drm_connector_state.h"
-#include "base/i2c_bus_base.h"
-#include "base/linux_errno.h"
 #include "base/rtti.h"
-#include "base/sleep.h"
 /** \endcond */
 
-#include "sysfs/sysfs_base.h"
-#include "sysfs/sysfs_dpms.h"
-
-#include "i2c/i2c_bus_core.h"
-
-#include "ddc/ddc_displays.h"
-#include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_vcp.h"
-
 #include "dw_common.h"
-#include "dw_status_events.h"
 
 #include "dw/dw_udev2.h"
-
-
-// globals
-bool    report_udev_events = false;
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
+// globals
+bool    report_udev_events = false;
 
-// typedef struct udev_monitor Udev_Monitor;
-// static Udev_Monitor * mon;
-static struct udev_monitor *mon = NULL;
 static struct udev* udev = NULL;
-static int fd= 0;
+static struct udev_monitor *mon = NULL;
+static int monitor_fd= 0;
+
 
 void dw_udev_setup() {
    bool debug = false;
@@ -84,18 +52,13 @@ void dw_udev_setup() {
    mon = udev_monitor_new_from_netlink(udev, "udev");
    // Alternative subsystem devtype values that did not detect changes:
    // drm_dp_aux_dev, kernel, i2c-dev, i2c, hidraw
-    udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // detects
-   // testing for hub changes
-// #ifdef UDEV_I2C_DEV
-    // i2c-dev report i2c device number, i2c does not, but still not useful
-    udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c-dev", NULL);
-// #endif
-   // udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c", NULL);
+   udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);
    udev_monitor_enable_receiving(mon);
-   fd = udev_monitor_get_fd(mon);
+   monitor_fd = udev_monitor_get_fd(mon);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
+
 
 void dw_udev_teardown() {
    bool debug = false;
@@ -121,7 +84,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
    }
 
    struct pollfd fds;
-   fds.fd = fd;
+   fds.fd = monitor_fd;
    fds.events = POLLIN;
 
    bool found = false;

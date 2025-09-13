@@ -2,7 +2,7 @@
  *  Watch for monitor addition and removal using UDEV
  */
 
-// Copyright (C) 2019-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DW_UDEV2_H_
