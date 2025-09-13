@@ -15,7 +15,6 @@
 #include "public/ddcutil_types.h"
 /** \endcond */
 
-extern bool use_sysfs_connector_id;
 extern bool report_udev_events;
 
 void dw2_setup();

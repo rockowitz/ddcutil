@@ -64,7 +64,6 @@
 
 
 // globals
-bool    use_sysfs_connector_id = true;
 bool    report_udev_events = false;
 
 // Trace class for this file

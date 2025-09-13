@@ -209,7 +209,6 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
          "                                         extra_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
          initial_stabilization_millisec, stabilization_poll_millisec);
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "use_sysfs_connector_id: %s", SBOOL(use_sysfs_connector_id));    // watch udev only
 
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
