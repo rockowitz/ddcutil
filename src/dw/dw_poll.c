@@ -268,7 +268,7 @@ gpointer dw_watch_display_connections(gpointer data) {
    }
 
    if (wdd->watch_mode == Watch_Mode_Udev) {
-      dw2_setup();
+      dw_udev_setup();
    }
 
    bool skip_next_sleep = false;
@@ -292,7 +292,7 @@ gpointer dw_watch_display_connections(gpointer data) {
          // sem_wait(&sem);
          // close the door behind us:
          // sem_post(&sem);
-         dw2_watch(wdd->watch_loop_millisec);
+         dw_udev_watch(wdd->watch_loop_millisec);
          if (terminate_watch_thread)
             continue;
       }
@@ -347,7 +347,7 @@ gpointer dw_watch_display_connections(gpointer data) {
    } // while()
 
    if (wdd->watch_mode == Watch_Mode_Udev) {
-      dw2_teardown();
+      dw_udev_teardown();
    }
 
    // n. slept == 0 if no sleep was performed

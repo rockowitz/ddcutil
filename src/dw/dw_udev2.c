@@ -76,7 +76,7 @@ static struct udev_monitor *mon = NULL;
 static struct udev* udev = NULL;
 static int fd= 0;
 
-void dw2_setup() {
+void dw_udev_setup() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
@@ -97,7 +97,7 @@ void dw2_setup() {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
-void dw2_teardown() {
+void dw_udev_teardown() {
    bool debug = false;
    udev_monitor_unref(mon);
    udev_unref(udev);
@@ -111,7 +111,7 @@ void dw2_teardown() {
  *  @retval true   returning because watching terminated
  *  @retval false  display change detected
  */
-bool dw2_watch(int watch_loop_millisec) {
+bool dw_udev_watch(int watch_loop_millisec) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_loop_millisec=%d", watch_loop_millisec);
    int poll_timeout_millisec = watch_loop_millisec;
@@ -171,8 +171,8 @@ bool dw2_watch(int watch_loop_millisec) {
 }
 
 
-void init_dw2_udev() {
-   RTTI_ADD_FUNC(dw2_setup);
-   RTTI_ADD_FUNC(dw2_teardown);
-   RTTI_ADD_FUNC(dw2_watch);
+void init_dw_udev2() {
+   RTTI_ADD_FUNC(dw_udev_setup);
+   RTTI_ADD_FUNC(dw_udev_teardown);
+   RTTI_ADD_FUNC(dw_udev_watch);
 }
