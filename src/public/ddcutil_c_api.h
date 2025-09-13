@@ -950,8 +950,8 @@ ddca_get_capabilities_string(
 /** Parse the capabilities string.
  *
  *  @param[in] capabilities_string      unparsed capabilities string
- *  @param[out] parsed_capabilities_loc address at which to return pointer to newly allocated
- *                                      #DDCA_Capabilities struct
+ *  @param[out] parsed_capabilities_loc address at which to return pointer to newly
+ *                                      allocated #DDCA_Capabilities struct
  *  @return     status code
  *
  *  It is the responsibility of the caller to free the returned struct
@@ -986,7 +986,8 @@ ddca_free_parsed_capabilities(
  *  @param[in]  depth  logical       indentation depth
  *
  *  @remark
- *  If ddca_dref is not NULL, feature value names will reflect any loaded monitor definition files
+ *  If ddca_dref is not NULL, feature value names will reflect any loaded
+ *  monitor definition files.
  *  @since 0.9.3
  */
 DDCA_Status
@@ -1009,7 +1010,8 @@ ddca_report_parsed_capabilities_by_dref(
  *  @retval     DDCRC_ARG            invalid display handle
  *
  *  @remark
- *  If ddca_dh is not NULL, feature value names will reflect any loaded monitor definition files
+ *  If ddca_dh is not NULL, feature value names will reflect any loaded
+ *  monitor definition files.
  *  @since 0.9.3
  */
 DDCA_Status
