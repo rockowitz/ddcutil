@@ -146,7 +146,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
                DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
                SYSLOG2(DDCA_SYSLOG_NOTICE, "Udev event detected");
 
-               if (debug) {
+               if (debug || report_udev_events) {
                   Udev_Event_Detail * detail = collect_udev_event_detail(dev);
                   dbgrpt_udev_event_detail(detail,1);
                   free_udev_event_detail(detail);
