@@ -555,7 +555,6 @@ find_dref(
             if (err) {
                f0printf(outf, "DDC communication failed for monitor on bus /dev/i2c-%d\n", busno);
                free_display_ref(dref);
-               // i2c_free_bus_info(businfo);  // double free
                dref = NULL;
                ERRINFO_FREE_WITH_REPORT(err, debug);
                final_result = DDCRC_INVALID_DISPLAY;
@@ -571,7 +570,6 @@ find_dref(
          }  // has edid
          else {   // no EDID found
             f0printf(fout(), "No monitor detected on bus /dev/i2c-%d\n", busno);
-            // i2c_free_bus_info(businfo);    // double free
             final_result = DDCRC_INVALID_DISPLAY;
          }
       }    // businfo allocated
