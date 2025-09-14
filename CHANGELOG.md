@@ -2,45 +2,49 @@
 
 #### Added
 
+- Option ***--watch-mode udev***
+  Uses libudev to watch for display connection and disconnection. This is now 
+  the default watch mode if ddcutil was built to use libudev, which normally 
+  the case (configure option ***--enable-udev**). A specific watch mode
+  can be forced using ***--watch-mode udev***, ***--watch-mode xevent***, or 
+  ***--watch-mode poll***.  Addresses KDE-Plasma bug report #xxx. 
 - Option ***--trcback***: report call stack that led to specified function
   (initial implementation)
- - Option ***--trace-to_syslog***
+- Option ***--trace-to_syslog***: Direct trace output to system log, without 
+  disabling other destinations.
 
 #### Changed
 
-implement --watch-mode udev
-
-better error messages if invalid config file, validate section names/key names
+- Additional messages reporting configuration file errors. In particular, 
+  section names and the names of keys within each section are validated.
+- If possible, obtain list of PNP ids from /usr/share/hwdata/pnp.ids instead
+  of using hardcoded list.
 
 #### Fixed
 
-- Command **environment --verbose**: incorrectly formed path name for examining 
-  /sys/class/drm
-- Out-of-tree build reference to generated file /src/base/build_details.h. 
-  Pull request #544
-- Command **getvcp --verbose**: output was partially in format intended for syslog
 - Command **getvcp --verify** and API function **ddca_set_non_table_vcp_value()**: 
-  were not performing verification
-- **ddca_display_ref_from_handle()**: was not converting internal to external display ref
-
-- Relax the check of device class when checking if a device is a video controller
-  Look only at the first byte.  An AMD Ryzen AI 9 365 based system was seen to 
-  report 0x038000, not 0x030000.  Addresses issue # 539?  #530?
-
-- **ddca_redetect_displays()**: return DDCRC_INVALID_OPERATION if built without display 
-fails to build with ***--disable-drm***
-  configure option that cuases***--disable-watch-displays*** 
-    Addresses issue #506
-
-    Commit 2ed9275 in branch 2.2.2-dev allows building to complete without the undefined reference error when configure option --disable-drm was specified. API function ddca_redetect_displays() returns DDCA_INVALID_OPERATION in this case. (An alternative code path through ddca_redetect_displays() is possible for the --disable-drm case, but is non-trivial and so not implemented for now.)
-
- man page: correct typo in hyperlink qbarnes patch #535
-
-
+  were not performing verification,
+- Command **environment --verbose**: incorrectly formed path name for 
+  examining /sys/class/drm
+- Command **getvcp --verbose**: output was partially in a format intended for syslog
+- **ddca_display_ref_from_handle()**: was not converting internal to external display 
+  reference, causing a segfault. Issue #528.
+- Relax the check of the device class when determining if a device is a video 
+  controller.   Look only at the first byte in sysfs device attribute class.  
+  An AMD Ryzen AI 9 365 based system was seen to report 0x038000, not 0x030000.  
+  Addresses issue #530.
+- Build failed with an undefined eference error when configure option ***--disable-drm**
+  was specified. API function **ddca_redetect_displays()** now returns 
+  DDCRC_INVALID_OPERATION if ddcutil was built with ***--disable-drm***.  
+  (An alternative code path through **ddca_redetect_displays()** is possible for
+  the ***--disable-drm*** case, but is non-trivial and so not implemented for now.)
+  Also option ***--disable-drm*** forces ***--disable-watch-displays***. 
+  Addresses issue #506
+- man page ddcutil: correct typo in hyperlink. Patch #535
 
 #### Building
 
--  out of tree builds pull request #544
+- Fix out-of-tree build reference to generated file /src/base/build_details.h. Pull request #544
 
 ## [2.2.1] 2025-07-07
 
