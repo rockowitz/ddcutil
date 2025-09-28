@@ -918,10 +918,10 @@ parse_command(
    gboolean wall_timestamp_trace_flag = false;
    gboolean thread_id_trace_flag = false;
    gboolean process_id_trace_flag = false;
-   const char * verify_expl   = (DEFAULT_SETVCP_VERIFY) ? "Verify value set by setvcp (default)"
-                                                        : "Verify value set by setvcp";
-   const char * noverify_expl = (DEFAULT_SETVCP_VERIFY) ? "Do not verify value by setvcp"
-                                                        : "Do not verify value set by setvcp (default)";
+   const char * verify_expl   = (DEFAULT_SETVCP_VERIFY) ? "Verify the value set by setvcp (default)"
+                                                        : "Verify the value set by setvcp";
+   const char * noverify_expl = (DEFAULT_SETVCP_VERIFY) ? "Do not verify the value by setvcp"
+                                                        : "Do not verify the value set by setvcp (default)";
    gboolean verify_set_flag    = false;
    gboolean noverify_set_flag  = false;
    gboolean async_flag     = false;
