@@ -1,4 +1,4 @@
-## [2.2.2] 2025-09-xx
+## [2.2.2] 2025-09-30
 
 #### Added
 
@@ -19,6 +19,8 @@
   section names and the names of keys within each section are validated.
 - If possible, obtain list of PNP ids from /usr/share/hwdata/pnp.ids instead
   of using hardcoded list.
+- Reword the parser explanation of options ***--verify*** and ***--noverify**
+  for clarity.
 
 #### Fixed
 
