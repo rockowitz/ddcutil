@@ -81,66 +81,65 @@ file_get_last_lines(
       bool         verbose)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. fn=%s, maxlines=%d\n", __func__, fn, maxlines );
+   DBGF(debug, "Starting. fn=%s, maxlines=%d\n", fn, maxlines );
 
    int rc = 0;
    FILE * fp = fopen(fn, "r");
    if (!fp) {
-      int errsv = errno;
       rc = -errno;
       if (verbose)
-         fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errsv));
+         fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errno));
    }
    else {
       Circular_String_Buffer* csb = csb_new(maxlines);
-      // if line == NULL && len == 0, then getline allocates buffer for line
+      // line == NULL => getline() allocates buffer, caller must free
       char * line = NULL;
       size_t len = 0;
       int    linectr = 0;
       errno = 0;
-      // line == NULL and len == 0 => getline() allocates buffer, caller must free
       while (getline(&line, &len, fp) >= 0) {
          linectr++;
          rtrim_in_place(line);     // strip trailing newline
          csb_add(csb, line, /*copy=*/ true);
-
          // printf("(%s) Retrieved line of length %zu: %s\n", __func__, read, line);
          free(line);
          line = NULL;  // reset for next getline() call
-         len  = 0;
       }
-      if (errno != 0)  {   // getline error?
-         rc = -errno;
+      int errsv = errno;
+      free(line);
+      if (errsv != 0)  {   // getline error?
+         rc = -errsv;
          if (verbose)
-            fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(-rc));
+            fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(errsv));
       }
-      rc = linectr;
-      if (debug)
-         printf("(%s) Read %d lines\n", __func__, linectr);
-      if (rc > maxlines)
-         rc = maxlines;
-
-      *line_array_loc = csb_to_g_ptr_array(csb);
-      csb_free(csb,false);
-//      if (debug) {
-//         GPtrArray * la = *line_array_loc;
-//         printf("(%s) (*line_array_loc)->len=%d\n", __func__, la->len);
-//         if (la->len > 0)
-//            printf("(%s) Line 0: %s\n", __func__, (char*)g_ptr_array_index(la, 0));
-//         if (la->len > 1)
-//            printf("(%s) Line 1: %s\n", __func__, (char*)g_ptr_array_index(la, 1));
-//         if (la->len > 2) {
-//            printf("(%s) Line %d: %s\n", __func__, la->len-2, (char*)g_ptr_array_index(la, la->len-2));
-//            printf("(%s) Line %d: %s\n", __func__, la->len-1, (char*)g_ptr_array_index(la, la->len-1));
-//         }
-//      }
+      else {
+         rc = linectr;
+         if (debug)
+            printf("(%s) Read %d lines\n", __func__, linectr);
+         if (rc > maxlines)
+            rc = maxlines;
+         *line_array_loc = csb_to_g_ptr_array(csb);
+         csb_free(csb,false);
+#ifdef OUT
+         if (debug) {
+            GPtrArray * la = *line_array_loc;
+            printf("(%s) (*line_array_loc)->len=%d\n", __func__, la->len);
+            if (la->len > 0)
+               printf("(%s) Line 0: %s\n", __func__, (char*)g_ptr_array_index(la, 0));
+            if (la->len > 1)
+               printf("(%s) Line 1: %s\n", __func__, (char*)g_ptr_array_index(la, 1));
+            if (la->len > 2) {
+               printf("(%s) Line %d: %s\n", __func__, la->len-2, (char*)g_ptr_array_index(la, la->len-2));
+               printf("(%s) Line %d: %s\n", __func__, la->len-1, (char*)g_ptr_array_index(la, la->len-1));
+            }
+         }
+#endif
+      }
 
       fclose(fp);
    }
 
-   if (debug)
-      printf("(%s) Done. returning: %d\n", __func__, rc);
+   DBGF(debug, "Done. returning: %d\n", rc);
    return rc;
 }
 
