@@ -255,14 +255,13 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
 #endif
 
-
-      GThreadFunc watch_thread_func =
 #ifdef OLD
+      GThreadFunc watch_thread_func =
             (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
                  ? dw_watch_display_connections
                  : dw_watch_displays_udev;
 #endif
-      watch_thread_func = dw_watch_display_connections;
+      GThreadFunc watch_thread_func = dw_watch_display_connections;
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
       watch_thread = g_thread_new(
