@@ -289,17 +289,16 @@ int ini_file_load(
          }
 
          else if ( is_kv(trimmed, &key, &value) ) {  // allocates key, value
-            bool valid_segment_key = false;
+            bool valid_segment_key_pair = false;
             if (cur_segment) {
                char * full_key = g_strdup_printf("%s/%s", cur_segment, key); // allocates full_key
-               valid_segment_key = validate_section_key(full_key, ndx+1,
+               valid_segment_key_pair = validate_section_key(full_key, ndx+1,
                         valid_section_key_pairs, valid_section_key_pair_ct, errmsgs);
-               if (valid_segment_key) {
+               if (valid_segment_key_pair) {
                   char * old_value = g_hash_table_lookup(ini_file_hash, full_key);
                   if (old_value) {
                      DBGF(debug, "old value = %p -> %s", old_value, old_value);
                      char * new_value = g_strdup_printf("%s %s", old_value, value);  // free's old_value
-                     free(value);
                      DBGF(debug, "Replacing %s -> %p = %s", full_key, new_value, new_value);
                      g_hash_table_replace(ini_file_hash, full_key, new_value);
                      if (debug) {
@@ -309,7 +308,7 @@ int ini_file_load(
                   }
                   else {
                      DBGF(debug, "Inserting %s -> %s", full_key, value);
-                     g_hash_table_insert(ini_file_hash, full_key, value);
+                     g_hash_table_insert(ini_file_hash, strdup(full_key), strdup(value));
                   }
                }
                else {
@@ -317,15 +316,16 @@ int ini_file_load(
                         "Line %d: Invalid key name \"%s\" in section %s", ndx+1, key, cur_segment);
                   error_ct++;
                }
+               free(full_key);
             }
             else {
                DBGF(debug, "trimmed: |%s|", trimmed);
                emit_error_msg(errmsgs,
                    "Line %d: Invalid before section header: %s", ndx+1, trimmed);
                error_ct++;
-               free(value);
             }
             free(key);
+            free(value);
          }
 
          else {
