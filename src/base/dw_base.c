@@ -37,6 +37,7 @@ void dw_event_classes_repr(char * buf, int bufsz, DDCA_Display_Event_Class class
          (classes&DDCA_EVENT_CLASS_UNUSED1)            ? "DDCA_EVENT_CLASS_UNUSED1," : "");
    if (strlen(buf) == 0)
       strcpy(buf,"NONE,");
+   assert(strlen(buf) > 0);   // avoid coverity warning
    buf[strlen(buf)-1] = '\0';
    return;
 }
