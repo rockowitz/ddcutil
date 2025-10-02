@@ -292,15 +292,17 @@ int ini_file_load(
             bool valid_segment_key_pair = false;
             if (cur_segment) {
                char * full_key = g_strdup_printf("%s/%s", cur_segment, key); // allocates full_key
+               DBGF(debug, "full_key: %p -> |%s|", full_key, full_key);
                valid_segment_key_pair = validate_section_key(full_key, ndx+1,
                         valid_section_key_pairs, valid_section_key_pair_ct, errmsgs);
                if (valid_segment_key_pair) {
                   char * old_value = g_hash_table_lookup(ini_file_hash, full_key);
                   if (old_value) {
+                     // Append the value from this line to the existing value for the key
                      DBGF(debug, "old value = %p -> %s", old_value, old_value);
                      char * new_value = g_strdup_printf("%s %s", old_value, value);  // free's old_value
                      DBGF(debug, "Replacing %s -> %p = %s", full_key, new_value, new_value);
-                     g_hash_table_replace(ini_file_hash, full_key, new_value);
+                     g_hash_table_replace(ini_file_hash, strdup(full_key), new_value);
                      if (debug) {
                         char * updated_value = g_hash_table_lookup(ini_file_hash, full_key);
                         DBGF(debug, "updated value = %p = %s", updated_value, updated_value);
