@@ -1,4 +1,4 @@
-## [2.2.2] 2025-09-30
+## [2.2.2] 2025-10-01
 
 #### Added
 
@@ -43,6 +43,8 @@
   Also option ***--disable-drm*** forces ***--disable-watch-displays***. 
   Addresses issue #506
 - man page ddcutil: correct typo in hyperlink. Patch #535
+- Permission denied errors corrupted find command used to scan for DisplayLink
+  devices.
 
 #### Building
 
