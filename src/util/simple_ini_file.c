@@ -250,7 +250,6 @@ int ini_file_load(
       if (getlines_rc != -ENOENT) {
          emit_error_msg(errmsgs,
                "Error reading configuration file %s: %s", ini_file_name, strerror(-getlines_rc));
-         result = -getlines_rc;
       }
    }  // error reading lines
    else {  //process the lines
