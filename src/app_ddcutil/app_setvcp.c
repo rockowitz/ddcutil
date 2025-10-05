@@ -240,7 +240,9 @@ app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
              free(s);
          }
          else {
-            f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
+            char * s = errinfo_causes_string(ddc_excp);
+            f0printf(ferr(), "    Try errors: %s\n", s);
+            free(s);
          }
          ddcrc = ERRINFO_STATUS(ddc_excp);
          BASE_ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug,TRACE_GROUP));
