@@ -19,12 +19,12 @@
   section names and the names of keys within each section are validated.
 - If possible, obtain list of PNP ids from /usr/share/hwdata/pnp.ids instead
   of using hardcoded list.
-- Reword the parser explanation of options ***--verify*** and ***--noverify**
+- Reword the parser explanation of options ***--verify*** and ***--noverify***
   for clarity.
 
 #### Fixed
 
-- Command **getvcp --verify** and API function **ddca_set_non_table_vcp_value()**: 
+- Command **setvcp --verify** and API function **ddca_set_non_table_vcp_value()**: 
   were not performing verification,
 - Command **environment --verbose**: incorrectly formed path name for 
   examining /sys/class/drm
