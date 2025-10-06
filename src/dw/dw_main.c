@@ -144,7 +144,6 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode) {
 
    if (initial_mode == Watch_Mode_Dynamic) {
       if (is_watch_mode_udev_available() )
-
          resolved_watch_mode = Watch_Mode_Udev;
       else if (is_watch_mode_x11_available())
          resolved_watch_mode = Watch_Mode_Xevent;
