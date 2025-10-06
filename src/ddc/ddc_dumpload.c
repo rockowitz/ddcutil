@@ -425,7 +425,9 @@ loadvcp_by_dumpload_data(
    if ( IS_DBGTRC(debug, TRACE_GROUP) )
         dbgrpt_dumpload_data(pdata, 0);
 
-   Error_Info * ddc_excp = NULL;
+   Error_Info * ddc_excp  = NULL;
+   Error_Info * ddc_excp1 = NULL;
+   Error_Info * ddc_excp2 = NULL;
    Display_Handle * dh_argument = dh;
 
    if (dh) {
@@ -436,16 +438,29 @@ loadvcp_by_dumpload_data(
          const char * fmt =
             "Monitor model in data (%s) does not match that for specified device (%s)";
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, fmt, pdata->model, dh->dref->pedid->model_name);
-         ddc_excp = errinfo_new(DDCRC_INVALID_DISPLAY, __func__, fmt, pdata->model, dh->dref->pedid->model_name);
+         ddc_excp1 = errinfo_new(DDCRC_INVALID_DISPLAY, __func__, fmt, pdata->model, dh->dref->pedid->model_name);
          ok = false;
       }
       if (!streq(dh->dref->pedid->serial_ascii, pdata->serial_ascii) ) {
          const char * fmt = "Monitor serial number in data (%s) does not match that for specified device (%s)";
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, fmt, pdata->serial_ascii, dh->dref->pedid->serial_ascii);
-         ddc_excp = errinfo_new(DDCRC_INVALID_DISPLAY, pdata->serial_ascii, dh->dref->pedid->serial_ascii);
+         ddc_excp2 = errinfo_new(DDCRC_INVALID_DISPLAY, pdata->serial_ascii, dh->dref->pedid->serial_ascii);
          ok = false;
       }
       if (!ok) {
+         if (ddc_excp1 && ddc_excp2) {
+            ddc_excp = ERRINFO_NEW(DDCRC_INVALID_DISPLAY,
+                  "Monitor info in data does not match that for specified device");
+            errinfo_add_cause(ddc_excp, ddc_excp1);
+            errinfo_add_cause(ddc_excp, ddc_excp2);
+         }
+         else if (ddc_excp1) {
+            ddc_excp = ddc_excp1;
+         }
+         else {
+            assert(ddc_excp2);
+            ddc_excp=ddc_excp2;
+         }
          goto bye;
       }
    }
