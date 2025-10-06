@@ -214,16 +214,6 @@ errinfo_free_with_report(
 }
 
 
-#ifdef ALT
-// signature satisfying GDestroyNotify()
-
-static void ddc_error_free2(void * erec) {
-   Error_Info* erec2 = (Error_Info *) erec;
-   VALID_ERROR_INFO_PTR(erec2);
-   errinfo_free(erec2);
-}
-#endif
-
 //
 // Instance modification
 //
