@@ -166,7 +166,7 @@ ddc_non_async_scan(GPtrArray * all_displays) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       Error_Info * err = ddc_initial_checks_by_dref(dref, false);
-      free(err);
+      BASE_ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug,TRACE_GROUP));
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
