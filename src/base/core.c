@@ -743,6 +743,7 @@ bool dbgtrc(
 	      else
 	         rpt_vstring(0, "     %s", g_ptr_array_index(contents,ndx));
 	   }
+	   g_ptr_array_free(contents, true);
    }
 
    bool msg_emitted = false;
@@ -1228,23 +1229,34 @@ base_errinfo_free_with_report(
       bool         report,
       const char * func)
 {
+   bool debug = false;
+   DBGF(debug, "erec=%p, report=%s, func=%s", erec, SBOOL(report), func);
+   DBGF(debug, "report_freed_exceptions=%s, dbgtrc_to_syslog_only=%s, redirect_reports_to_syslog=%s, dbgtrc_trace_to_syslog=%s",
+         sbool(report_freed_exceptions), sbool(dbgtrc_trace_to_syslog_only),
+         sbool(redirect_reports_to_syslog), sbool(dbgtrc_trace_to_syslog));
+
    if (erec) {
       if (report || report_freed_exceptions) {
-         if ( dbgtrc_trace_to_syslog_only || redirect_reports_to_syslog || dbgtrc_trace_to_syslog) {
+         bool emit_to_syslog =  dbgtrc_trace_to_syslog_only || redirect_reports_to_syslog || dbgtrc_trace_to_syslog;
+         bool emit_to_terminal = !dbgtrc_trace_to_syslog_only && !redirect_reports_to_syslog;
+         if ( emit_to_syslog) {
             GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
             rpt_vstring_collect(0, collector, "(%s) Freeing exception:", func);
+            errinfo_report_collect(erec, collector, 1);
             for (int ndx = 0; ndx < collector->len; ndx++) {
               syslog(LOG_NOTICE, "%s", (char*) g_ptr_array_index(collector, ndx));
             }
             g_ptr_array_free(collector, true);
          }
-         else {
-            rpt_vstring(0, "(%s) Freeing exception:", func);
-            errinfo_report(erec, 1);
+         if (emit_to_terminal) {
+            // rpt_vstring(0, "(%s) Freeing exception:", func);
+            errinfo_free_with_report(erec, report, func);
          }
       }
-      errinfo_free(erec);
+      // errinfo_free(erec);
    }
+
+   DBGF(debug, "Done");
 }
 
 
