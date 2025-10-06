@@ -1,16 +1,17 @@
-## [2.2.2] 2025-10-01
+## [2.2.2] 2025-10-06
 
 #### Added
 
 - Option ***--watch-mode udev***
   Uses libudev to watch for display connection and disconnection. This is now 
-  the default watch mode if ddcutil was built to use libudev, which normally 
-  the case (configure option ***--enable-udev**). A specific watch mode
+  the default watch mode if ddcutil was built to use libudev, which is normally 
+  the case (configure option ***--enable-udev***). A specific watch mode
   can be forced using ***--watch-mode udev***, ***--watch-mode xevent***, or 
-  ***--watch-mode poll***.  Addresses KDE-Plasma bug report #xxx. 
+  ***--watch-mode poll***.  Addresses issues in [KDE-Plasma Powerdevil merge request 542)
+  (https://invent.kde.org/plasma/powerdevil/-/merge_requests/542)
 - Option ***--trcback***: report call stack that led to specified function
   (initial implementation)
-- Option ***--trace-to_syslog***: Direct trace output to system log, without 
+- Option ***--trace-to_syslog***: Direct trace output to the system log, without 
   disabling other destinations.
 
 #### Changed
@@ -26,8 +27,6 @@
 
 - Command **setvcp --verify** and API function **ddca_set_non_table_vcp_value()**: 
   were not performing verification,
-- Command **environment --verbose**: incorrectly formed path name for 
-  examining /sys/class/drm
 - Command **getvcp --verbose**: output was partially in a format intended for syslog
 - **ddca_display_ref_from_handle()**: was not converting internal to external display 
   reference, causing a segfault. Issue #528.
@@ -35,7 +34,7 @@
   controller.   Look only at the first byte in sysfs device attribute class.  
   An AMD Ryzen AI 9 365 based system was seen to report 0x038000, not 0x030000.  
   Addresses issue #530.
-- Build failed with an undefined eference error when configure option ***--disable-drm**
+- Build failed with an undefined reference error when configure option ***--disable-drm***
   was specified. API function **ddca_redetect_displays()** now returns 
   DDCRC_INVALID_OPERATION if ddcutil was built with ***--disable-drm***.  
   (An alternative code path through **ddca_redetect_displays()** is possible for
@@ -43,8 +42,10 @@
   Also option ***--disable-drm*** forces ***--disable-watch-displays***. 
   Addresses issue #506
 - man page ddcutil: correct typo in hyperlink. Patch #535
-- Permission denied errors corrupted find command used to scan for DisplayLink
-  devices.
+- Command **environment --verbose**: 
+  - Permission denied errors corrupted output of the find command used to scan for DisplayLink
+    devices.
+  - incorrectly formed path name for examining /sys/class/drm
 
 #### Building
 
