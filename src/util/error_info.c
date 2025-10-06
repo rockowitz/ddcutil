@@ -199,6 +199,9 @@ errinfo_free_with_report(
       bool         report,
       const char * func)
 {
+   bool debug = false;
+   DBGF(debug, "Starting.  erec=%p, report=%s, func=%s", erec, SBOOL(report), func);
+
    if (erec) {
       if (report) {
          rpt_vstring(0, "(%s) Freeing exception:", func);
@@ -206,6 +209,8 @@ errinfo_free_with_report(
       }
       errinfo_free(erec);
    }
+
+   DBGF(debug, "Done.");
 }
 
 
