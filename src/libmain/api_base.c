@@ -950,7 +950,6 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "all_video_adapters_implement_drm=%s",
          sbool(all_video_adapters_implement_drm));
 
-
 #ifdef OUT
    if (enabled_classes == DDCA_EVENT_CLASS_ALL)
       enabled_classes = DDCA_EVENT_CLASS_DISPLAY_CONNECTION;
