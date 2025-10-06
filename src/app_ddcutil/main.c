@@ -646,7 +646,8 @@ execute_cmd_with_optional_display_handle(
       {
          // loadvcp will search monitors to find the one matching the
          // identifiers in the record
-         ddc_ensure_displays_detected();
+         if (!dh)
+            ddc_ensure_displays_detected();
          Status_Errno_DDC ddcrc = app_loadvcp_by_file(parsed_cmd->args[0], dh);
          main_rc = (ddcrc == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
          break;
