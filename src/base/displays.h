@@ -121,22 +121,28 @@ typedef struct {
    char *          serial_ascii;
    int             usb_bus;
    int             usb_device;
+   int             hiddev_devno;
    Byte *          edidbytes;   // always 128 bytes
 } Display_Selector;
 
-#ifdef FUTURE
+// #ifdef FUTURE
 Display_Selector * dsel_new();
-void               dsel_free(              Display_Selector * dsel);
-Display_Selector * dsel_set_display_number(Display_Selector* dsel, int dispno);
-Display_Selector * dsel_set_i2c_busno(     Display_Selector* dsel, int busno);
-Display_Selector * dsel_set_usb_numbers(   Display_Selector* dsel, int bus, int device);
-Display_Selector * dsel_set_mfg_id(        Display_Selector* dsel, char*  mfg_id);
-Display_Selector * dsel_set_model_name(    Display_Selector* dsel, char* model_name);
-Display_Selector * dsel_set_sn(            Display_Selector* dsel, char * serial_ascii);
-Display_Selector * dsel_set_edid_bytes(    Display_Selector* dsel, Byte * edidbytes);
-Display_Selector * dsel_set_edid_hex(      Display_Selector* dsel, char * hexstring);
-bool               dsel_validate(          Display_Selector * dsel);
+void               dsel_free(              Display_Selector* dsel);
+bool               dsel_is_empty(          Display_Selector* dsel);
+#ifdef NOT_NEEDED
+void               dsel_set_display_number(Display_Selector* dsel, int dispno);
+void               dsel_set_i2c_busno(     Display_Selector* dsel, int busno);
+void               dsel_set_hiddev_devno(  Display_Selector* dsel, int hiddev_devno);
+void               dsel_set_usb_numbers(   Display_Selector* dsel, int bus, int device);
+void               dsel_set_mfg_id(        Display_Selector* dsel, char*  mfg_id);
+void               dsel_set_model_name(    Display_Selector* dsel, char* model_name);
+void               dsel_set_sn(            Display_Selector* dsel, char * serial_ascii);
+void               dsel_set_edid_bytes(    Display_Selector* dsel, Byte * edidbytes);
+void               dsel_set_edid_hex(      Display_Selector* dsel, char * hexstring);
+bool               dsel_validate(          Display_Selector* dsel);
 #endif
+void               dbgrpt_display_selector(Display_Selector* dsel, int depth);
+// #endif
 
 
 // *** Display_Ref ***

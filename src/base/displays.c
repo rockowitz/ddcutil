@@ -341,19 +341,61 @@ Display_Selector * dsel_new() {
    memcpy(dsel->marker, DISPLAY_SELECTOR_MARKER, 4);
    dsel->dispno        = -1;
    dsel->busno         = -1;
+   dsel->hiddev_devno  = -1;
    dsel->usb_bus       = -1;
    dsel->usb_device    = -1;
    return dsel;
 }
 
 void dsel_free(Display_Selector * dsel) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dsel=%p", dsel);
    if (dsel) {
       assert(memcmp(dsel->marker, DISPLAY_SELECTOR_MARKER, 4) == 0);
       free(dsel->mfg_id);
       free(dsel->model_name);
       free(dsel->serial_ascii);
       free(dsel->edidbytes);
+      free(dsel);
    }
+   DBGMSF(debug, "Done");
+}
+
+
+bool dsel_is_empty(Display_Selector* dsel) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
+
+   bool result =  dsel->dispno       == -1 &&
+                  dsel->busno        == -1 &&
+                  dsel->hiddev_devno == -1 &&
+                  dsel->usb_bus      == -1 &&
+                  dsel->usb_device   == -1 &&
+                  !dsel->mfg_id            &&
+                  !dsel->model_name        &&
+                  !dsel->serial_ascii      &&
+                  !dsel->edidbytes;
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   return result;
+}
+
+
+void dbgrpt_display_selector(Display_Selector* dsel, int depth) {
+   int d1 = depth+1;
+   rpt_vstring(depth, "Display_Selector at %p", dsel);
+   rpt_vstring(d1, "dispno:        %d", dsel->dispno);
+   rpt_vstring(d1, "busno:         %d", dsel->busno);
+   rpt_vstring(d1, "hiddev_devno:  %d", dsel->hiddev_devno);
+   rpt_vstring(d1, "usb_bus:       %d", dsel->usb_bus);
+   rpt_vstring(d1, "usb_device:    %d", dsel->usb_device);
+   rpt_vstring(d1, "mfg_id:        %s", dsel->mfg_id);
+   rpt_vstring(d1, "model_name:    %s", dsel->model_name);
+   rpt_vstring(d1, "serial_ascii:  %s", dsel->serial_ascii);
+   if (dsel->edidbytes)
+      rpt_vstring(d1, "edidbytes:     %s",  hexstring_t(dsel->edidbytes, 128));
+   else
+      rpt_vstring(d1, "edidbytes:     NULL");
 }
 
 // #endif
@@ -1593,6 +1635,8 @@ void init_displays() {
    RTTI_ADD_FUNC(dref_lock);
    RTTI_ADD_FUNC(dref_unlock);
    RTTI_ADD_FUNC(get_dref_by_busno_or_connector);
+
+   RTTI_ADD_FUNC(dsel_is_empty);
 
    init_published_dref_hash();
 }
