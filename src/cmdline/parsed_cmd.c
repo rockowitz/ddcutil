@@ -162,6 +162,7 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
          free(parsed_cmd->args[ndx]);
       if (parsed_cmd->pdid)
          free_display_identifier(parsed_cmd->pdid);
+      dsel_free(parsed_cmd->dsel);
       free(parsed_cmd->raw_command);
       free(parsed_cmd->failsim_control_fn);
       free(parsed_cmd->fref);
@@ -279,6 +280,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_structure_loc("pdid", parsed_cmd->pdid,                                               d1);
       if (parsed_cmd->pdid)
           dbgrpt_display_identifier(parsed_cmd->pdid,                                           d2);
+      rpt_structure_loc("dsel", parsed_cmd->dsel, d2);
+      if (parsed_cmd->dsel)
+         dbgrpt_display_selector(parsed_cmd->dsel, d2);
       char buf2[BIT_SET_32_MAX+1];
       bs32_to_bitstring(parsed_cmd->ignored_hiddevs, buf2, BIT_SET_32_MAX+1);
       rpt_vstring(d1, "ignored_hiddevs                                          : 0x%08x = |%s|",

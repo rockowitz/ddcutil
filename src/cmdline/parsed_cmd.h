@@ -244,7 +244,7 @@ struct {
 
    // Display Selection
    Display_Identifier*    pdid;
-// Display_Selector*      display_selector;   // for future use
+   Display_Selector*      dsel;   // for future use
    Bit_Set_32             ignored_hiddevs;
    uint8_t                ignored_usb_vid_pid_ct;
    uint32_t               ignored_usb_vid_pids[IGNORED_VID_PID_MAX];
