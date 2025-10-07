@@ -380,6 +380,24 @@ bool dsel_is_empty(Display_Selector* dsel) {
    return result;
 }
 
+bool dsel_only_busno(Display_Selector* dsel) {
+         bool debug = false;
+         DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
+
+         bool result =  dsel->dispno       == -1 &&
+                        dsel->busno        >=  0 &&
+                        dsel->hiddev_devno == -1 &&
+                        dsel->usb_bus      == -1 &&
+                        dsel->usb_device   == -1 &&
+                        !dsel->mfg_id            &&
+                        !dsel->model_name        &&
+                        !dsel->serial_ascii      &&
+                        !dsel->edidbytes;
+
+         DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+         return result;
+      }
+
 
 void dbgrpt_display_selector(Display_Selector* dsel, int depth) {
    int d1 = depth+1;
@@ -1637,6 +1655,7 @@ void init_displays() {
    RTTI_ADD_FUNC(get_dref_by_busno_or_connector);
 
    RTTI_ADD_FUNC(dsel_is_empty);
+   RTTI_ADD_FUNC(dsel_only_busno);
 
    init_published_dref_hash();
 }

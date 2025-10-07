@@ -129,6 +129,7 @@ typedef struct {
 Display_Selector * dsel_new();
 void               dsel_free(              Display_Selector* dsel);
 bool               dsel_is_empty(          Display_Selector* dsel);
+bool               dsel_only_busno(        Display_Selector* dsel);
 #ifdef NOT_NEEDED
 void               dsel_set_display_number(Display_Selector* dsel, int dispno);
 void               dsel_set_i2c_busno(     Display_Selector* dsel, int busno);
