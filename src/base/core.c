@@ -1251,9 +1251,10 @@ base_errinfo_free_with_report(
          if (emit_to_terminal) {
             // rpt_vstring(0, "(%s) Freeing exception:", func);
             errinfo_free_with_report(erec, report, func);
+            erec = NULL;
          }
       }
-      // errinfo_free(erec);
+      errinfo_free(erec);
    }
 
    DBGF(debug, "Done");
