@@ -307,6 +307,8 @@ static bool parse_display_identifier(
    bool parsing_ok = true;
    int  explicit_display_spec_ct = 0;
 
+   parsed_cmd->dsel = dsel_new();
+
    if (usbwork) {
 #ifdef ENABLE_USB
       bool debug = false;
@@ -326,6 +328,8 @@ static bool parse_display_identifier(
             free_display_identifier(parsed_cmd->pdid);
          }
          parsed_cmd->pdid = create_usb_display_identifier(busnum, devicenum);
+         parsed_cmd->dsel->usb_bus = busnum;
+         parsed_cmd->dsel->usb_device = devicenum;
       }
       explicit_display_spec_ct++;
 #else
@@ -340,6 +344,7 @@ static bool parse_display_identifier(
       if (parsed_cmd->pdid)
          free_display_identifier(parsed_cmd->pdid);
       parsed_cmd->pdid = create_busno_display_identifier(buswork);
+      parsed_cmd->dsel->busno = buswork;
       explicit_display_spec_ct++;
    }
 
@@ -349,6 +354,7 @@ static bool parse_display_identifier(
       if (parsed_cmd->pdid)
          free_display_identifier(parsed_cmd->pdid);
       parsed_cmd->pdid = create_usb_hiddev_display_identifier(hidwork);
+      parsed_cmd->dsel->hiddev_devno = hidwork;
       explicit_display_spec_ct++;
 #else
       EMIT_PARSER_ERROR(errmsgs,
@@ -362,6 +368,7 @@ static bool parse_display_identifier(
       if (parsed_cmd->pdid)
          free_display_identifier(parsed_cmd->pdid);
       parsed_cmd->pdid = create_dispno_display_identifier(dispwork);
+      parsed_cmd->dsel->dispno = dispwork;
       explicit_display_spec_ct++;
    }
 
@@ -382,6 +389,8 @@ static bool parse_display_identifier(
             if (parsed_cmd->pdid)
                free_display_identifier(parsed_cmd->pdid);
             parsed_cmd->pdid = create_edid_display_identifier(pba);  // new way
+            parsed_cmd->dsel->edidbytes = malloc(128);
+            memcpy(parsed_cmd->dsel->edidbytes, pba, 128);
          }
          if (pba)
             free(pba);
@@ -399,6 +408,13 @@ static bool parse_display_identifier(
                           snwork);
       explicit_display_spec_ct++;
    }
+
+   if (mfg_id_work)
+      parsed_cmd->dsel->mfg_id = strdup(mfg_id_work);
+   if (modelwork)
+      parsed_cmd->dsel->model_name = strdup(modelwork);
+   if (snwork)
+      parsed_cmd->dsel->serial_ascii = strdup(snwork);
 
    if (explicit_display_spec_ct > 1) {
       EMIT_PARSER_ERROR(errmsgs, "Monitor specified in more than one way");
@@ -1878,6 +1894,8 @@ parse_command(
    FREE(mfg_id_work);
    FREE(modelwork);
    FREE(snwork);
+
+   dbgrpt_display_selector(parsed_cmd->dsel, 0);
 
    if (maxtrywork) {
       parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errmsgs);
