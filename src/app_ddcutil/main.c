@@ -596,8 +596,115 @@ find_dref(
          ddc_ensure_displays_detected();
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
          dref = get_display_ref_for_display_identifier(did_work, CALLOPT_NONE);
+         // dref = ddc_find_display_ref_by_selector(dsel);
          if (temporary_did_work)
             free_display_identifier(did_work);
+         if (!dref)
+            f0printf(ferr(), "Display not found\n");
+         final_result = (dref) ? DDCRC_OK : DDCRC_INVALID_DISPLAY;
+      }
+   }  // !DISP_ID_BUSNO
+
+   *dref_loc = dref;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, final_result,
+                   "*dref_loc = %p -> %s",
+                   *dref_loc, dref_repr_t(*dref_loc) );
+   return final_result;
+}
+
+
+
+/** Returns a display reference for the display specified on the command line,
+ *  or, if a display is not optional for the command, a reference to the
+ *  default display (--display 1).
+ *
+ *  \param  parsed_cmd  parsed command line
+ *  \param  displayid_required how to handle no display specified on command line
+ *  \param  dref_loc  where to return display reference
+ *  \retval DDCRC_OK
+ *  \retval DDCRC_INVALID_DISPLAY
+ */
+Status_Errno_DDC
+find_dref_by_dsel(
+      Display_Selector * dsel,
+      Displayid_Requirement displayid_required,
+      Display_Ref ** dref_loc)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dsel %p, displayid_required: %s",
+                                    dsel,
+                                    displayid_requirement_name(displayid_required));
+   FILE * outf = fout();
+   Status_Errno_DDC final_result = DDCRC_OK;
+   Display_Ref * dref = NULL;
+
+   if (dsel_only_busno(dsel)) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Special handling for explicit --busno");
+      int busno = dsel->busno;
+      // is this really a monitor?
+      I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
+      if (businfo) {
+         if (businfo->edid)  {
+            dref = create_bus_display_ref(busno);
+            dref->dispno = DISPNO_INVALID;      // or should it be DISPNO_NOT_SET?
+            dref->pedid = copy_parsed_edid(businfo->edid);
+            dref->mmid  = mmk_new(
+                             dref->pedid->mfg_id,
+                             dref->pedid->model_name,
+                             dref->pedid->product_code);
+            // dref->driver_name = get_i2c_device_sysfs_driver(busno);
+            // DBGMSG("driver_name = %p -> %s", dref->driver_name, dref->driver_name);
+            dref->drm_connector = g_strdup(businfo->drm_connector_name);
+            dref->drm_connector_id = businfo->drm_connector_id;
+
+            // dref->pedid = i2c_get_parsed_edid_by_busno(did_work->busno);
+            dref->detail = businfo;
+            dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+            dref->flags |= DREF_DDC_IS_MONITOR;
+            dref->flags |= DREF_TRANSIENT;
+            Error_Info * err = ddc_initial_checks_by_dref(dref, false);
+            if (err) {
+               f0printf(outf, "DDC communication failed for monitor on bus /dev/i2c-%d\n", busno);
+               free_display_ref(dref);
+               dref = NULL;
+               ERRINFO_FREE_WITH_REPORT(err, debug);
+               final_result = DDCRC_INVALID_DISPLAY;
+            }
+            else {
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Synthetic Display_Ref");
+               final_result = DDCRC_OK;
+            }
+            if (dref && (dref->flags&DREF_DPMS_SUSPEND_STANDBY_OFF)) {
+               // should go nowhere, but just in case:
+               f0printf(outf, "Monitor on bus /dev/i2c-%d is in a DPMS sleep mode. Expect DDC errors.", busno);
+            }
+         }  // has edid
+         else {   // no EDID found
+            f0printf(fout(), "No monitor detected on bus /dev/i2c-%d\n", busno);
+            final_result = DDCRC_INVALID_DISPLAY;
+         }
+      }    // businfo allocated
+      else {
+         f0printf(fout(), "Bus /dev/i2c-%d not found\n", busno);
+         final_result = DDCRC_INVALID_DISPLAY;
+      }
+   }       // DISP_ID_BUSNO
+   else {
+      if (dsel_is_empty(dsel) && displayid_required == DISPLAY_ID_OPTIONAL) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No monitor specified, none required for command");
+         dref = NULL;
+         final_result = DDCRC_OK;
+      }
+      else {
+         if (dsel_is_empty(dsel)) {
+            dsel->dispno = 1;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No monitor specified, treat as  --display 1");
+         }
+         // assert(did_work);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Detecting displays...");
+         ddc_ensure_displays_detected();
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
+         dref = ddc_find_display_ref_by_selector(dsel);
          if (!dref)
             f0printf(ferr(), "Display not found\n");
          final_result = (dref) ? DDCRC_OK : DDCRC_INVALID_DISPLAY;
@@ -1283,6 +1390,7 @@ main(int argc, char *argv[]) {
       Status_Errno_DDC  rc = 0;
       int useful_bus_ct = 0;
       Display_Ref * dref = NULL;
+      Display_Ref * dref2 = NULL;
       if (parsed_cmd->pdid && parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
          useful_bus_ct = verify_i2c_access_for_single_bus(parsed_cmd->pdid->busno);
       }
@@ -1296,6 +1404,12 @@ main(int argc, char *argv[]) {
          rc = find_dref(parsed_cmd,
                (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
                &dref);
+         int rc2 = find_dref_by_dsel(parsed_cmd->dsel, (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
+               &dref2);
+
+         assert(rc == rc2);
+         if (rc == 0)
+            TRACED_ASSERT(dref == dref2);
 
          if (rc != DDCRC_OK) {
             main_rc = EXIT_FAILURE;
@@ -1396,6 +1510,7 @@ static void add_local_rtti_functions() {
    RTTI_ADD_FUNC(main);
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
    RTTI_ADD_FUNC(find_dref);
+   RTTI_ADD_FUNC(find_dref_by_dsel);
    RTTI_ADD_FUNC(verify_i2c_access);
    RTTI_ADD_FUNC(verify_i2c_access_for_single_bus);
 #ifdef UNUSED
