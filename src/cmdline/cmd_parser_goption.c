@@ -1895,7 +1895,7 @@ parse_command(
    FREE(modelwork);
    FREE(snwork);
 
-   dbgrpt_display_selector(parsed_cmd->dsel, 0);
+   // dbgrpt_display_selector(parsed_cmd->dsel, 0);
 
    if (maxtrywork) {
       parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errmsgs);
