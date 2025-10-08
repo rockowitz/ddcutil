@@ -337,6 +337,9 @@ void free_display_identifier(Display_Identifier * pdid) {
 // *** Display Selector *** (future)
 
 Display_Selector * dsel_new() {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
    Display_Selector * dsel = calloc(1, sizeof(Display_Selector));
    memcpy(dsel->marker, DISPLAY_SELECTOR_MARKER, 4);
    dsel->dispno        = -1;
@@ -344,12 +347,15 @@ Display_Selector * dsel_new() {
    dsel->hiddev_devno  = -1;
    dsel->usb_bus       = -1;
    dsel->usb_device    = -1;
+
+   DBGMSF(debug, "Done.  Returning %p", dsel);
    return dsel;
 }
 
 void dsel_free(Display_Selector * dsel) {
    bool debug = false;
    DBGMSF(debug, "Starting. dsel=%p", dsel);
+
    if (dsel) {
       assert(memcmp(dsel->marker, DISPLAY_SELECTOR_MARKER, 4) == 0);
       free(dsel->mfg_id);
@@ -358,6 +364,7 @@ void dsel_free(Display_Selector * dsel) {
       free(dsel->edidbytes);
       free(dsel);
    }
+
    DBGMSF(debug, "Done");
 }
 
@@ -381,22 +388,73 @@ bool dsel_is_empty(Display_Selector* dsel) {
 }
 
 bool dsel_only_busno(Display_Selector* dsel) {
-         bool debug = false;
-         DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
 
-         bool result =  dsel->dispno       == -1 &&
-                        dsel->busno        >=  0 &&
-                        dsel->hiddev_devno == -1 &&
-                        dsel->usb_bus      == -1 &&
-                        dsel->usb_device   == -1 &&
-                        !dsel->mfg_id            &&
-                        !dsel->model_name        &&
-                        !dsel->serial_ascii      &&
-                        !dsel->edidbytes;
+   bool result =  dsel->dispno       == -1 &&
+                  dsel->busno        >=  0 &&
+                  dsel->hiddev_devno == -1 &&
+                  dsel->usb_bus      == -1 &&
+                  dsel->usb_device   == -1 &&
+                  !dsel->mfg_id            &&
+                  !dsel->model_name        &&
+                  !dsel->serial_ascii      &&
+                  !dsel->edidbytes;
 
-         DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
-         return result;
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   return result;
+}
+
+
+#define APPEND_IVAL(_repr_buf, _dsel, _field) \
+      if (_dsel->_field >= 0) { \
+         char buf[20]; \
+         g_snprintf(buf, 20, "%s:%d, ", #_field, (int) _dsel->_field); \
+         strcat(_repr_buf, buf); \
       }
+
+#define APPEND_CVAL(_repr_buf, _dsel, _field) \
+      if (_dsel->_field) { \
+         strcat(_repr_buf, #_field); \
+         strcat(_repr_buf, ":"); \
+         strcat(_repr_buf, _dsel->_field); \
+         strcat(_repr_buf, ","); \
+      }
+
+
+char * dsel_repr(Display_Selector* dsel) {
+   static char dsel_repr_buf[200];
+   strcpy(dsel_repr_buf, "Display_Selector[");
+   if (dsel->busno >= 0) {
+      char buf[20];
+      // int i = dsel->busno;
+      g_snprintf(buf, 20, "busno: %d, ", (int) dsel->busno);
+      strcat(dsel_repr_buf, buf);
+   }
+   APPEND_IVAL(dsel_repr_buf, dsel, dispno);
+   APPEND_IVAL(dsel_repr_buf, dsel, hiddev_devno);
+   APPEND_IVAL(dsel_repr_buf, dsel, usb_bus);
+   APPEND_IVAL(dsel_repr_buf, dsel, usb_device);
+
+   APPEND_CVAL(dsel_repr_buf, dsel, mfg_id);
+   APPEND_CVAL(dsel_repr_buf, dsel, model_name);
+   APPEND_CVAL(dsel_repr_buf, dsel, serial_ascii);
+
+   if (dsel->edidbytes) {
+      strcat(dsel_repr_buf, "edidbytes: ...");
+      strcat(dsel_repr_buf, hexstring_t(dsel->edidbytes+120,8));
+      strcat(dsel_repr_buf, ","); \
+   }
+
+   if (dsel_repr_buf[strlen(dsel_repr_buf)-1] == ',')
+      dsel_repr_buf[strlen(dsel_repr_buf)-1] = '\0';
+   strcat(dsel_repr_buf, "]");
+
+   return dsel_repr_buf;
+}
+
+#undef APPEND_IVAL
+#undef APPEND_CVAL
 
 
 void dbgrpt_display_selector(Display_Selector* dsel, int depth) {
@@ -413,7 +471,7 @@ void dbgrpt_display_selector(Display_Selector* dsel, int depth) {
    if (dsel->edidbytes)
       rpt_vstring(d1, "edidbytes:     %s",  hexstring_t(dsel->edidbytes, 128));
    else
-      rpt_vstring(d1, "edidbytes:     NULL");
+      rpt_vstring(d1, "edidbytes:     (null)");
 }
 
 // #endif

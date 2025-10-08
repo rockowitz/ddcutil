@@ -130,6 +130,8 @@ Display_Selector * dsel_new();
 void               dsel_free(              Display_Selector* dsel);
 bool               dsel_is_empty(          Display_Selector* dsel);
 bool               dsel_only_busno(        Display_Selector* dsel);
+char *             dsel_repr(              Display_Selector* dsel);
+void               dbgrpt_display_selector(Display_Selector* dsel, int depth);
 #ifdef NOT_NEEDED
 void               dsel_set_display_number(Display_Selector* dsel, int dispno);
 void               dsel_set_i2c_busno(     Display_Selector* dsel, int busno);
@@ -142,7 +144,6 @@ void               dsel_set_edid_bytes(    Display_Selector* dsel, Byte * edidby
 void               dsel_set_edid_hex(      Display_Selector* dsel, char * hexstring);
 bool               dsel_validate(          Display_Selector* dsel);
 #endif
-void               dbgrpt_display_selector(Display_Selector* dsel, int depth);
 // #endif
 
 
