@@ -287,6 +287,9 @@ get_display_ref_for_display_identifier(
 static bool
 ddc_test_display_ref_by_selector(Display_Ref * dref, Display_Selector * dsel) {
    TRACED_ASSERT(dref && dsel);
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, dsel=%s", dref_repr_t(dref), dsel_repr(dsel));
+
    bool result = false;
 
    if (dsel->dispno >= 0 && dsel->dispno != dref->dispno)
@@ -355,6 +358,7 @@ ddc_test_display_ref_by_selector(Display_Ref * dref, Display_Selector * dsel) {
    result = true;
 
 bye:
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -383,7 +387,7 @@ ddc_find_display_ref_by_selector(Display_Selector * dsel) {
       }
    }
 
-   DBGTRC_RET_STRING(debug, TRACE_GROUP, "%s", dref_repr_t(result));
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, dref_repr_t(result), "");
    return result;
 }
 
@@ -392,5 +396,6 @@ void
 init_ddc_display_selection() {
    RTTI_ADD_FUNC(ddc_find_display_ref_by_display_identifier);
    RTTI_ADD_FUNC(ddc_find_display_ref_by_selector);
+   RTTI_ADD_FUNC(ddc_test_display_ref_by_selector);
 }
 
