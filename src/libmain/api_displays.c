@@ -309,18 +309,6 @@ ddca_create_usb_hiddev_display_identifier(
    return 0;
 }
 
-#ifdef REF
-API_PROLOGX(debug, RESPECT_QUIESCE, "did=%p, dref_loc=%p", did, dref_loc);
-assert(library_initialized);
-API_PRECOND_W_EPILOG(dref_loc);
-
-DDCA_Status rc = ddci_get_display_ref(did, dref_loc);
-
-API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc,
-                    "*dref_loc=%p", psc_name_code(rc), *dref_loc);
-return rc;
-#endif
-
 
 DDCA_Status
 ddca_free_display_identifier(
