@@ -1404,8 +1404,9 @@ main(int argc, char *argv[]) {
          rc = find_dref(parsed_cmd,
                (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
                &dref);
-         int rc2 = find_dref_by_dsel(parsed_cmd->dsel, (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
-               &dref2);
+         int rc2 = find_dref_by_dsel(parsed_cmd->dsel,
+                      (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
+                      &dref2);
 
          assert(rc == rc2);
          if (rc == 0)
