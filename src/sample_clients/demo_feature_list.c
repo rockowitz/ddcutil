@@ -3,7 +3,7 @@
  * Demonstrate feature list functions.
  */
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -23,13 +23,13 @@ void assert_ddcrc_ok(DDCA_Status ddcrc, const char * ddc_func, const char * call
     }
 }
 
+
 void report_ddcrc_error(DDCA_Status ddcrc, const char * ddc_func, const char * caller) {
     if (ddcrc) {
         printf("Error in %s(): %s() returned %d (%s): %s\n",
                caller, ddc_func, ddcrc, ddca_rc_name(ddcrc), ddca_rc_desc(ddcrc));
     }
 }
-
 
 
 DDCA_Display_Ref  get_dref_by_dispno(int dispno) {
@@ -41,9 +41,9 @@ DDCA_Display_Ref  get_dref_by_dispno(int dispno) {
    DDCA_Status rc = ddca_get_display_ref(did, &dref);
    report_ddcrc_error(rc, "ddca_create_display_ref", __func__);
    assert( (rc==0 && dref) || (rc!=0 && !dref));
+   ddca_free_display_identifier(did);
    return dref;
 }
-
 
 
 void demo_feature_lists_for_dref(DDCA_Display_Ref dref) {
