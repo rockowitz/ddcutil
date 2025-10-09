@@ -1,14 +1,9 @@
-## [2.2.2] 2025-10-06
+## [2.2.2] 2025-10-09
+
+### General
 
 #### Added
 
-- Option ***--watch-mode udev***
-  Uses libudev to watch for display connection and disconnection. This is now 
-  the default watch mode if ddcutil was built to use libudev, which is normally 
-  the case (configure option ***--enable-udev***). A specific watch mode
-  can be forced using ***--watch-mode udev***, ***--watch-mode xevent***, or 
-  ***--watch-mode poll***.  Addresses issues in [KDE-Plasma Powerdevil merge request 542)
-  (https://invent.kde.org/plasma/powerdevil/-/merge_requests/542)
 - Option ***--trcback***: report call stack that led to specified function
   (initial implementation)
 - Option ***--trace-to_syslog***: Direct trace output to the system log, without 
@@ -45,11 +40,28 @@
 - Command **environment --verbose**: 
   - Permission denied errors corrupted output of the find command used to scan for DisplayLink
     devices.
-  - incorrectly formed path name for examining /sys/class/drm
+  - Incorrectly formed path name for examining /sys/class/drm
 
 #### Building
 
 - Fix out-of-tree build reference to generated file /src/base/build_details.h. Pull request #544
+
+### Shared library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.4.0. 
+
+#### Added
+
+- Option ***--watch-mode udev***
+  Uses libudev to watch for display connection and disconnection. This is now 
+  the default watch mode if ddcutil was built to use libudev, which is normally 
+  the case (configure option ***--enable-udev***). A specific watch mode
+  can be forced using ***--watch-mode udev***, ***--watch-mode xevent***, or 
+  ***--watch-mode poll***.  Addresses issues in [KDE-Plasma Powerdevil merge request 542)
+  (https://invent.kde.org/plasma/powerdevil/-/merge_requests/542)
+
 
 ## [2.2.1] 2025-07-07
 
@@ -274,7 +286,6 @@
   If set, storage class specifier "static" is removed from many functions so
   that their names appear in backtrace reports from valgrind, asan, and glibc 
   function backtrace().
-
 
 ### Shared Library
 
