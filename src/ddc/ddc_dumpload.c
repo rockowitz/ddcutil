@@ -542,6 +542,7 @@ loadvcp_by_ntsa(
    GPtrArray * garray = ntsa_to_g_ptr_array(ntsa);
    Dumpload_Data * pdata = NULL;
    ddc_excp = create_dumpload_data_from_g_ptr_array(garray, &pdata);
+   g_ptr_array_free(garray, true);
    DBGMSF(debug, "create_dumpload_data_from_g_ptr_array() returned %p", pdata);
    assert( (ddc_excp == NULL && pdata != NULL) ||
            (ddc_excp != NULL && pdata == NULL) );
