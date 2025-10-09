@@ -375,6 +375,7 @@ ddc_find_display_ref_by_selector(Display_Selector * dsel) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "dsel=%p", dsel);
 
    Display_Ref * result = NULL;
+
    GPtrArray * all_displays = ddc_get_all_display_refs();
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * drec = g_ptr_array_index(all_displays, ndx);
@@ -387,7 +388,7 @@ ddc_find_display_ref_by_selector(Display_Selector * dsel) {
       }
    }
 
-   DBGTRC_RET_STRING(debug, TRACE_GROUP, dref_repr_t(result), "");
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, dref_repr_t(result), "result=%p", result);
    return result;
 }
 
