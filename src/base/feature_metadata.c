@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -641,6 +641,7 @@ free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
       free(metadata->feature_desc);
       free_sl_value_table(metadata->sl_values);
       metadata->marker[3] = 'x';
+      free(metadata);
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_VCP, "");
