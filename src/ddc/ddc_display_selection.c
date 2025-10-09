@@ -288,7 +288,7 @@ static bool
 ddc_test_display_ref_by_selector(Display_Ref * dref, Display_Selector * dsel) {
    TRACED_ASSERT(dref && dsel);
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, dsel=%s", dref_repr_t(dref), dsel_repr(dsel));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, dsel=%s", dref_repr_t(dref), dsel_repr_t(dsel));
 
    bool result = false;
 
