@@ -309,12 +309,27 @@ ddca_create_usb_hiddev_display_identifier(
    return 0;
 }
 
+#ifdef REF
+API_PROLOGX(debug, RESPECT_QUIESCE, "did=%p, dref_loc=%p", did, dref_loc);
+assert(library_initialized);
+API_PRECOND_W_EPILOG(dref_loc);
+
+DDCA_Status rc = ddci_get_display_ref(did, dref_loc);
+
+API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc,
+                    "*dref_loc=%p", psc_name_code(rc), *dref_loc);
+return rc;
+#endif
+
 
 DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did)
 {
+   bool debug = false;
    free_thread_error_detail();
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "did=%p", did);
+
    DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
    if (pdid) {
@@ -323,6 +338,8 @@ ddca_free_display_identifier(
       else
          free_display_identifier(pdid);
    }
+
+   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, rc, "");
    return rc;
 }
 
@@ -350,7 +367,7 @@ ddci_get_display_ref(
       DDCA_Display_Ref*       dref_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "did=%s, dref_loc=%p", did_repr(did), dref_loc);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref_loc=%p", dref_loc);
 
    *dref_loc = NULL;
    DDCA_Status rc = 0;
@@ -363,6 +380,13 @@ ddci_get_display_ref(
    else {
       Display_Ref* dref = get_display_ref_for_display_identifier(pdid, CALLOPT_NONE);
       DBGMSF(debug, "get_display_ref_for_display_identifier() returned %p", dref);
+
+      Display_Selector * dsel = display_id_to_dsel(pdid);
+      Display_Ref* dref2;
+      dref2 = ddc_find_display_ref_by_selector(dsel);
+      assert(dref == dref2);
+      dsel_free(dsel);
+
       if (dref) {
          DDCA_Display_Ref ddca_dref = dref_to_ddca_dref(dref);
          add_published_dref_id_by_dref(dref);
@@ -1645,6 +1669,7 @@ bool ddca_is_dynamic_sleep_enabled()
 
 void init_api_displays() {
    RTTI_ADD_FUNC(ddca_close_display);
+   RTTI_ADD_FUNC(ddca_free_display_identifier);
    RTTI_ADD_FUNC(ddca_get_display_info_list2);
    RTTI_ADD_FUNC(ddca_get_display_info);
    RTTI_ADD_FUNC(ddca_get_display_info2);
