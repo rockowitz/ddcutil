@@ -13,6 +13,8 @@
 
 - Additional messages reporting configuration file errors. In particular, 
   section names and the names of keys within each section are validated.
+  Section names other than [global], [ddcutil], and [libddcutil] are flagged
+  as errors.
 - If possible, obtain list of PNP ids from /usr/share/hwdata/pnp.ids instead
   of using hardcoded list.
 - Reword the parser explanation of options ***--verify*** and ***--noverify***
@@ -38,8 +40,8 @@
   Addresses issue #506
 - man page ddcutil: correct typo in hyperlink. Patch #535
 - Command **environment --verbose**: 
-  - Permission denied errors corrupted output of the find command used to scan for DisplayLink
-    devices.
+  - Permission denied errors corrupted output of the find command used to scan for 
+    DisplayLink devices.
   - Incorrectly formed path name for examining /sys/class/drm
 
 #### Building
