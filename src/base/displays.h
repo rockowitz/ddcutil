@@ -25,11 +25,6 @@
 #include "vcp_version.h"
 
 
-extern GPtrArray * all_display_refs;         // all detected displays, array of Display_Ref *
-extern GMutex      all_display_refs_mutex;
-extern bool        debug_locks;
-
-
 /** \file
 Display Specification
 
@@ -48,6 +43,13 @@ Otherwise, displays are searched to find the monitor.
 
 For I2C displays, the device must be opened.  Display_Handle then contains the open file handle.
 */
+
+
+// *** Globals ***
+
+extern GPtrArray * all_display_refs;         // all detected displays, array of Display_Ref *
+extern GMutex      all_display_refs_mutex;
+extern bool        debug_locks;
 
 // *** Initialization ***
 
@@ -109,8 +111,8 @@ char *              did_repr(Display_Identifier * pdid);
 void                dbgrpt_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
 
-//  #ifdef FUTURE
-// new way
+// Display_Selector with replace Display_Identifier
+// Maintain both in parallel for testing
 #define DISPLAY_SELECTOR_MARKER "DSEL"
 typedef struct {
    char            marker[4];         // always "DSEL"
@@ -125,13 +127,14 @@ typedef struct {
    Byte *          edidbytes;   // always 128 bytes
 } Display_Selector;
 
-// #ifdef FUTURE
+
 Display_Selector * dsel_new();
 void               dsel_free(              Display_Selector* dsel);
 bool               dsel_is_empty(          Display_Selector* dsel);
 bool               dsel_only_busno(        Display_Selector* dsel);
 char *             dsel_repr(              Display_Selector* dsel);
 void               dbgrpt_display_selector(Display_Selector* dsel, int depth);
+Display_Selector * display_id_to_dsel(     Display_Identifier * pdid);
 #ifdef NOT_NEEDED
 void               dsel_set_display_number(Display_Selector* dsel, int dispno);
 void               dsel_set_i2c_busno(     Display_Selector* dsel, int busno);
@@ -144,7 +147,6 @@ void               dsel_set_edid_bytes(    Display_Selector* dsel, Byte * edidby
 void               dsel_set_edid_hex(      Display_Selector* dsel, char * hexstring);
 bool               dsel_validate(          Display_Selector* dsel);
 #endif
-// #endif
 
 
 // *** Display_Ref ***

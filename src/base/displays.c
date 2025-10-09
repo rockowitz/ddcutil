@@ -100,6 +100,9 @@ char * display_id_type_name(Display_Id_Type val) {
 
 static
 Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "id_type=%s", display_id_type_name(id_type));
+
    Display_Identifier* pIdent = calloc(1, sizeof(Display_Identifier));
    memcpy(pIdent->marker, DISPLAY_IDENTIFIER_MARKER, 4);
    pIdent->id_type = id_type;
@@ -109,6 +112,8 @@ Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
    memset(pIdent->edidbytes, '\0', 128);
    *pIdent->model_name = '\0';
    *pIdent->serial_ascii = '\0';
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning %p", pIdent);
    return pIdent;
 }
 
@@ -269,6 +274,9 @@ void dbgrpt_display_identifier(Display_Identifier * pdid, int depth) {
 /** Returns a succinct representation of a #Display_Identifier for
  *  debugging purposes.
  *
+ *  If not already computed, the representation is saved in the
+ *  #Display_Identifier struct.
+ *
  *  \param pdid pointer to #Display_Identifier
  *  \return pointer to string description
  *
@@ -276,6 +284,9 @@ void dbgrpt_display_identifier(Display_Identifier * pdid, int depth) {
  *  The returned pointer is valid until the #Display_Identifier is freed.
  */
 char * did_repr(Display_Identifier * pdid) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. pdid=%p", pdid);
+
    char * result = NULL;
    if (pdid) {
       if (!pdid->repr) {
@@ -315,6 +326,8 @@ char * did_repr(Display_Identifier * pdid) {
       } // !pdid->repr
       result = pdid->repr;
    }
+
+   DBGMSF(debug, "Done.  Returning %s", result);
    return result;
 }
 
@@ -324,16 +337,20 @@ char * did_repr(Display_Identifier * pdid) {
  * \param pdid pointer to #Display_Identifier to free
  */
 void free_display_identifier(Display_Identifier * pdid) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "pdid=%p -> %s", pdid, did_repr(pdid));
+
    if (pdid) {
       assert( memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0);
       pdid->marker[3] = 'x';
       free(pdid->repr);   // may be null, that's ok
       free(pdid);
    }
+
+   DBGTRC_DONE(debug, DDCA_TRC_BASE, "");
 }
 
 
-// #ifdef FUTURE
 // *** Display Selector *** (future)
 
 Display_Selector * dsel_new() {
@@ -387,6 +404,7 @@ bool dsel_is_empty(Display_Selector* dsel) {
    return result;
 }
 
+
 bool dsel_only_busno(Display_Selector* dsel) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
@@ -421,7 +439,6 @@ bool dsel_only_busno(Display_Selector* dsel) {
          strcat(_repr_buf, ","); \
       }
 
-
 char * dsel_repr(Display_Selector* dsel) {
    static char dsel_repr_buf[200];
    strcpy(dsel_repr_buf, "Display_Selector[");
@@ -446,8 +463,9 @@ char * dsel_repr(Display_Selector* dsel) {
       strcat(dsel_repr_buf, ","); \
    }
 
-   if (dsel_repr_buf[strlen(dsel_repr_buf)-1] == ',')
-      dsel_repr_buf[strlen(dsel_repr_buf)-1] = '\0';
+   int l = strlen(dsel_repr_buf);
+   if (dsel_repr_buf[l-2] == ',' &&  dsel_repr_buf[l-1] == '=')
+      dsel_repr_buf[l-2] = '\0';
    strcat(dsel_repr_buf, "]");
 
    return dsel_repr_buf;
@@ -474,7 +492,38 @@ void dbgrpt_display_selector(Display_Selector* dsel, int depth) {
       rpt_vstring(d1, "edidbytes:     (null)");
 }
 
-// #endif
+
+Display_Selector * display_id_to_dsel(Display_Identifier * pdid) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "pdid = %p -> %s", pdid, did_repr(pdid));
+
+   Display_Selector * dsel = dsel_new();
+   switch(pdid->id_type) {
+   case DISP_ID_DISPNO:    dsel->dispno = pdid->dispno;   break;
+   case DISP_ID_BUSNO:     dsel->busno = pdid->busno;  break;
+   case DISP_ID_HIDDEV:    dsel->hiddev_devno = pdid->hiddev_devno; break;
+   case DISP_ID_USB:       dsel->usb_bus = pdid->usb_bus;
+                           dsel->usb_device = pdid->usb_device; break;
+   case DISP_ID_EDID:
+      { dsel->edidbytes = malloc(128);
+        memcpy(dsel->edidbytes, &pdid->edidbytes[0], 128);
+        break;
+      }
+   case DISP_ID_MONSER:
+      {
+         dsel->mfg_id = malloc(sizeof(pdid->mfg_id));
+         memcpy(dsel->mfg_id, &pdid->mfg_id[0], sizeof(pdid->mfg_id));
+         dsel->model_name = malloc(sizeof(pdid->model_name));
+         memcpy(dsel->model_name, &pdid->model_name[0], sizeof(pdid->model_name));
+         dsel->serial_ascii = malloc(sizeof(pdid->serial_ascii));
+         memcpy(dsel->serial_ascii, &pdid->serial_ascii[0], sizeof(pdid->serial_ascii));
+         break;
+      }
+   }
+
+   DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p -> %s", dsel, dsel_repr(dsel));
+   return dsel;
+}
 
 
 // *** DDCA_IO_Mode and DDCA_IO_Path ***
@@ -1465,15 +1514,17 @@ char * dh_repr_p(Display_Handle * dh) {
  *
  * \param  dh  display handle to free
  */
-void   free_display_handle(Display_Handle * dh) {
+void free_display_handle(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dh=%p -> %s", dh, dh_repr(dh));
+
    if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
       dh->marker[3] = 'x';
       free(dh->repr);
       free(dh->repr_p);
       free(dh);
    }
+
    DBGTRC_DONE(debug, DDCA_TRC_BASE, "");
 }
 
@@ -1708,12 +1759,14 @@ void init_displays() {
    RTTI_ADD_FUNC(dbgrpt_display_ref);
    RTTI_ADD_FUNC(free_display_handle);
    RTTI_ADD_FUNC(free_display_ref);
+   RTTI_ADD_FUNC(free_display_identifier);
    RTTI_ADD_FUNC(dref_lock);
    RTTI_ADD_FUNC(dref_unlock);
    RTTI_ADD_FUNC(get_dref_by_busno_or_connector);
 
    RTTI_ADD_FUNC(dsel_is_empty);
    RTTI_ADD_FUNC(dsel_only_busno);
+   RTTI_ADD_FUNC(display_id_to_dsel);
 
    init_published_dref_hash();
 }
