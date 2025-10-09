@@ -371,7 +371,7 @@ Display_Selector * dsel_new() {
 
 void dsel_free(Display_Selector * dsel) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dsel=%p", dsel);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
 
    if (dsel) {
       assert(memcmp(dsel->marker, DISPLAY_SELECTOR_MARKER, 4) == 0);
@@ -382,10 +382,15 @@ void dsel_free(Display_Selector * dsel) {
       free(dsel);
    }
 
-   DBGMSF(debug, "Done");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
+/** Tests if no fields are set in a #Display_Selector.
+ *
+ *  @param  dsel  display selector to test
+ *  @return true/false
+ */
 bool dsel_is_empty(Display_Selector* dsel) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
@@ -405,6 +410,12 @@ bool dsel_is_empty(Display_Selector* dsel) {
 }
 
 
+/** Tests if the busno field and only the busno field
+ *  is set in a #Display_Selector.
+ *
+ *  @param  dsel  display selector to test
+ *  @return true/false
+ */
 bool dsel_only_busno(Display_Selector* dsel) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
@@ -424,55 +435,57 @@ bool dsel_only_busno(Display_Selector* dsel) {
 }
 
 
+/** Thread safe function that returns a string representation of a
+ *  #Display_Selector suitable for diagnostic messages. The returned value
+ *  is valid until the next call to this function on the current thread.
+ *
+ *  \param  dsel  pointer to #Display_Selector
+ *  \return string representation
+ */
+char * dsel_repr_t(Display_Selector* dsel) {
+
 #define APPEND_IVAL(_repr_buf, _dsel, _field) \
       if (_dsel->_field >= 0) { \
-         char buf[20]; \
-         g_snprintf(buf, 20, "%s:%d, ", #_field, (int) _dsel->_field); \
-         strcat(_repr_buf, buf); \
-      }
-
+         g_snprintf( _repr_buf+strlen(_repr_buf), \
+                     sizeof(_repr_buf)-strlen(_repr_buf), \
+                    "%s:%d, ", #_field, _dsel->_field); \
+         }
 #define APPEND_CVAL(_repr_buf, _dsel, _field) \
       if (_dsel->_field) { \
-         strcat(_repr_buf, #_field); \
-         strcat(_repr_buf, ":"); \
-         strcat(_repr_buf, _dsel->_field); \
-         strcat(_repr_buf, ","); \
+         int len  = strlen(_repr_buf); \
+         printf("l=%d\n", len ); \
+         printf("_repr_buf+len=%p\n", _repr_buf+len); \
+         printf("sizeof(_repr_buf)-len=%lu\n", sizeof(_repr_buf)-len); \
+         g_snprintf( _repr_buf+len, sizeof(_repr_buf)-len, \
+                    "%s:%s, ", #_field, _dsel->_field); \
       }
 
-char * dsel_repr(Display_Selector* dsel) {
-   static char dsel_repr_buf[200];
+   static GPrivate  dsel_repr_key = G_PRIVATE_INIT(g_free);
+   char * dsel_repr_buf = get_thread_fixed_buffer(&dsel_repr_key, 200);
+
    strcpy(dsel_repr_buf, "Display_Selector[");
-   if (dsel->busno >= 0) {
-      char buf[20];
-      // int i = dsel->busno;
-      g_snprintf(buf, 20, "busno: %d, ", (int) dsel->busno);
-      strcat(dsel_repr_buf, buf);
-   }
+   APPEND_IVAL(dsel_repr_buf, dsel, busno);
    APPEND_IVAL(dsel_repr_buf, dsel, dispno);
    APPEND_IVAL(dsel_repr_buf, dsel, hiddev_devno);
    APPEND_IVAL(dsel_repr_buf, dsel, usb_bus);
    APPEND_IVAL(dsel_repr_buf, dsel, usb_device);
-
    APPEND_CVAL(dsel_repr_buf, dsel, mfg_id);
    APPEND_CVAL(dsel_repr_buf, dsel, model_name);
    APPEND_CVAL(dsel_repr_buf, dsel, serial_ascii);
-
    if (dsel->edidbytes) {
-      strcat(dsel_repr_buf, "edidbytes: ...");
-      strcat(dsel_repr_buf, hexstring_t(dsel->edidbytes+120,8));
+      strcat(dsel_repr_buf, "edidbytes:..");
+      strcat(dsel_repr_buf, hexstring3_t(dsel->edidbytes+120,8, " ", 0, true));
       strcat(dsel_repr_buf, ","); \
    }
-
    int l = strlen(dsel_repr_buf);
-   if (dsel_repr_buf[l-2] == ',' &&  dsel_repr_buf[l-1] == '=')
-      dsel_repr_buf[l-2] = '\0';
+   if (streq(dsel_repr_buf+strlen(dsel_repr_buf)-1, ","))
+      dsel_repr_buf[l-1] = '\0';
    strcat(dsel_repr_buf, "]");
-
    return dsel_repr_buf;
-}
 
 #undef APPEND_IVAL
 #undef APPEND_CVAL
+}
 
 
 void dbgrpt_display_selector(Display_Selector* dsel, int depth) {
@@ -521,7 +534,7 @@ Display_Selector * display_id_to_dsel(Display_Identifier * pdid) {
       }
    }
 
-   DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p -> %s", dsel, dsel_repr(dsel));
+   DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p -> %s", dsel, dsel_repr_t(dsel));
    return dsel;
 }
 
@@ -1027,7 +1040,14 @@ void gdestroy_display_ref(void * data) {
  *  \retval false different displays
  */
 bool dref_eq(Display_Ref* this, Display_Ref* that) {
-   return dpath_eq(this->io_path, that->io_path);
+   bool result = false;
+   if (this == NULL && that == NULL)
+      result = true;
+   else if (this == NULL || that == NULL)
+      result = false;
+   else
+      result = dpath_eq(this->io_path, that->io_path);
+   return result;
 }
 
 
@@ -1767,6 +1787,7 @@ void init_displays() {
    RTTI_ADD_FUNC(dsel_is_empty);
    RTTI_ADD_FUNC(dsel_only_busno);
    RTTI_ADD_FUNC(display_id_to_dsel);
+   RTTI_ADD_FUNC(dsel_free);
 
    init_published_dref_hash();
 }

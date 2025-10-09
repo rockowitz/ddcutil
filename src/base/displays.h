@@ -132,7 +132,7 @@ Display_Selector * dsel_new();
 void               dsel_free(              Display_Selector* dsel);
 bool               dsel_is_empty(          Display_Selector* dsel);
 bool               dsel_only_busno(        Display_Selector* dsel);
-char *             dsel_repr(              Display_Selector* dsel);
+char *             dsel_repr_t(              Display_Selector* dsel);
 void               dbgrpt_display_selector(Display_Selector* dsel, int depth);
 Display_Selector * display_id_to_dsel(     Display_Identifier * pdid);
 #ifdef NOT_NEEDED
