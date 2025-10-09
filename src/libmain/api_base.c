@@ -825,7 +825,7 @@ ddci_init(const char *      libopts,
                         &parsed_cmd);
       ASSERT_IFF(master_error, !parsed_cmd);
 
-      if (infomsgs && infomsgs->len > 0) {
+      if (infomsgs->len > 0) {
          DBGF(debug, "emit infomsgs starting. enable_init_msgs=%s, stdout_stderr_redirected=%s, infomsgs->len=%d",
                sbool(enable_init_msgs), sbool(stdout_stderr_redirected), infomsgs->len);
          for (int ndx = 0; ndx < infomsgs->len; ndx++) {
@@ -839,9 +839,9 @@ ddci_init(const char *      libopts,
          if (infomsg_loc) {
             *infomsg_loc = g_ptr_array_to_ntsa(infomsgs, /*duplicate=*/true);
          }
-         g_ptr_array_free(infomsgs, true);
       }
    }
+   g_ptr_array_free(infomsgs, true);
    DBGF(debug, "parsing complete");
 
    if (!master_error) {
@@ -1468,7 +1468,7 @@ ddca_is_force_slave_address_enabled(void) {
 
 void
 ddca_reset_stats(void) {
-   DBGMSG("Executing");
+   // DBGMSG("Executing");
    g_mutex_lock(&api_quiesced_mutex);
    g_mutex_lock(&active_calls_mutex);
 
