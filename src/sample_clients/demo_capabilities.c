@@ -37,7 +37,6 @@ DDCA_Display_Handle * open_first_display_by_dispno() {
 
    ddca_create_dispno_display_identifier(1, &did);     // always succeeds
    DDCA_Status rc = ddca_get_display_ref(did, &dref);
-   printf("Calling ddca_free_display_identifier():\n");
    ddca_free_display_identifier(did);
    if (rc != 0) {
       DDC_ERRMSG("ddca_create_display_ref", rc);
@@ -76,15 +75,12 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle
 
       char * feature_name = "";
       DDCA_Feature_Value_Entry * feature_value_table = NULL;
-      // DDCA_Feature_Metadata metadata = {{0}};
       DDCA_Feature_Metadata * metadata = NULL;
-      // printf("(%s) Before ddca_get_feature_metadata_by_dh(),  &metadata=%p", __func__, &metadata);
       DDCA_Status ddcrc = ddca_get_feature_metadata_by_dh(
                              cur_vcp->feature_code,
                              dh,
                              true,     // create_default_if_not_found,
                              &metadata);
-      // printf("(%s) ddca_get_feature_metadata_by_dh() returned: %s\n", __func__, ddca_rc_name(ddcrc));
       if (ddcrc == 0) {
          feature_value_table = metadata->sl_values;
          feature_name = metadata->feature_name;
