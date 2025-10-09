@@ -371,7 +371,7 @@ ddci_report_parsed_capabilities_by_dref(
       Display_Ref *            dref,
       int                      depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "");
 
    int d0 = depth;
