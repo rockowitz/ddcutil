@@ -179,6 +179,7 @@ test_continuous_value(
        ok = true;
 
 bye:
+   ddca_free_feature_metadata(info);
    // Uncomment to see statistics:
    // printf("\nStatistics for one execution of %s()", __func__);
    // ddca_show_stats(DDCA_STATS_ALL, 0);
@@ -283,6 +284,8 @@ test_simple_nc_value(
        ok = true;
 
 bye:
+    ddca_free_feature_metadata(info);
+
     // uncomment to show statistics:
     // printf("\nStatistics for one execution of %s()", __func__);
     // ddca_show_stats(DDCA_STATS_ALL, 0);
@@ -354,6 +357,7 @@ test_complex_nc_value(
 
 
 bye:
+    ddca_free_feature_metadata(info);
     // uncomment to show statistics:
     // printf("\nStatistics for one execution of %s()", __func__);
     // ddca_show_stats(DDCA_STATS_ALL, 0);
