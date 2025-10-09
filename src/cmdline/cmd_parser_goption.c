@@ -2145,6 +2145,8 @@ parse_command(
       if (debug)
          printf("cmd=|%s|\n", cmd);
       Cmd_Desc * cmdInfo = find_command(cmd);
+      if (debug)
+         printf("find_command() returned %p\n", cmdInfo);
       if (cmdInfo == NULL) {
          EMIT_PARSER_ERROR(errmsgs,  "Unrecognized ddcutil command: %s", cmd);
          parsing_ok = false;
