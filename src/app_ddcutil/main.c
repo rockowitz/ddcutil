@@ -1407,10 +1407,14 @@ main(int argc, char *argv[]) {
          int rc2 = find_dref_by_dsel(parsed_cmd->dsel,
                       (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
                       &dref2);
-
+         // DBGMSG("dref=%p=%s, dref2=%p=%s", dref, dref_repr_t(dref), dref2, dref_repr_t(dref2));
          assert(rc == rc2);
          if (rc == 0)
-            TRACED_ASSERT(dref == dref2);
+            TRACED_ASSERT(dref_eq(dref,dref2));
+         if (dref != dref2) {
+            if (dref2->flags & DREF_TRANSIENT)
+               free_display_ref(dref2);
+         }
 
          if (rc != DDCRC_OK) {
             main_rc = EXIT_FAILURE;
