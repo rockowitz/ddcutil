@@ -2,9 +2,8 @@
  *
  * Demonstrates save and restore of profile related features.
  */
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
 
 #include <assert.h>
 #include <stdio.h>
@@ -38,6 +37,7 @@ DDCA_Display_Ref  get_dref_by_dispno(int dispno) {
    if (rc != 0) {
       DDC_ERRMSG("ddca_create_display_ref", rc);
    }
+   ddca_free_display_identifier(did);
    return dref;
 }
 
@@ -112,6 +112,7 @@ demo_get_set_profile_related_values(
    }
 
 bye:
+   free(profile_values_string);
    // uncomment if you want to see stats:
    // printf("\nStatistics for one execution of %s()", __func__);
    // ddca_show_stats(DDCA_STATS_ALL, 0);
