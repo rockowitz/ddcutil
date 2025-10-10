@@ -453,9 +453,6 @@ char * dsel_repr_t(Display_Selector* dsel) {
 #define APPEND_CVAL(_repr_buf, _dsel, _field) \
       if (_dsel->_field) { \
          int len  = strlen(_repr_buf); \
-         printf("l=%d\n", len ); \
-         printf("_repr_buf+len=%p\n", _repr_buf+len); \
-         printf("sizeof(_repr_buf)-len=%lu\n", sizeof(_repr_buf)-len); \
          g_snprintf( _repr_buf+len, sizeof(_repr_buf)-len, \
                     "%s:%s, ", #_field, _dsel->_field); \
       }
