@@ -45,11 +45,14 @@ For I2C displays, the device must be opened.  Display_Handle then contains the o
 */
 
 
+// #define DISPSEL_ONLY 1
+
 // *** Globals ***
 
 extern GPtrArray * all_display_refs;         // all detected displays, array of Display_Ref *
 extern GMutex      all_display_refs_mutex;
 extern bool        debug_locks;
+extern bool        dispsel_transition;
 
 // *** Initialization ***
 

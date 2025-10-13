@@ -42,6 +42,7 @@
 GPtrArray * all_display_refs = NULL;         // all detected displays, array of Display_Ref *
 GMutex      all_display_refs_mutex;
 bool        debug_locks = false;
+bool        dispsel_transition = true;
 
 // *** DDCA_IO_Path ***
 

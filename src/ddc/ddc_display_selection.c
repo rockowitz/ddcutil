@@ -43,6 +43,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 // Display Selection
 //
 
+#ifndef DISPSEL_ONLY
 /** Display selection criteria */
 typedef struct {
    int     dispno;
@@ -269,6 +270,7 @@ get_display_ref_for_display_identifier(
 
    return dref;
 }
+#endif
 
 
 // NEW WAY
@@ -395,7 +397,9 @@ ddc_find_display_ref_by_selector(Display_Selector * dsel) {
 
 void
 init_ddc_display_selection() {
+#ifndef DISPSEL_ONLY
    RTTI_ADD_FUNC(ddc_find_display_ref_by_display_identifier);
+#endif
    RTTI_ADD_FUNC(ddc_find_display_ref_by_selector);
    RTTI_ADD_FUNC(ddc_test_display_ref_by_selector);
 }

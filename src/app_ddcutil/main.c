@@ -502,6 +502,7 @@ displayid_requirement_name(Displayid_Requirement id) {
 }
 
 
+#ifndef DISPSEL_ONLY
 /** Returns a display reference for the display specified on the command line,
  *  or, if a display is not optional for the command, a reference to the
  *  default display (--display 1).
@@ -611,7 +612,7 @@ find_dref(
                    *dref_loc, dref_repr_t(*dref_loc) );
    return final_result;
 }
-
+#endif
 
 
 /** Returns a display reference for the display specified on the command line,
@@ -632,7 +633,7 @@ find_dref_by_dsel(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dsel %p, displayid_required: %s",
-                                    dsel,
+                                    dsel_repr_t(dsel),
                                     displayid_requirement_name(displayid_required));
    FILE * outf = fout();
    Status_Errno_DDC final_result = DDCRC_OK;
@@ -1390,6 +1391,14 @@ main(int argc, char *argv[]) {
       Status_Errno_DDC  rc = 0;
       int useful_bus_ct = 0;
       Display_Ref * dref = NULL;
+ #ifdef DISPSEL_ONLY
+      if (dsel_only_busno(parsed_cmd->dsel)) {
+         useful_bus_ct = verify_i2c_access_for_single_bus(parsed_cmd->dsel->busno);
+      }
+      else {
+         useful_bus_ct = verify_i2c_access();
+      }
+#else
       Display_Ref * dref2 = NULL;
       if (parsed_cmd->pdid && parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
          useful_bus_ct = verify_i2c_access_for_single_bus(parsed_cmd->pdid->busno);
@@ -1397,10 +1406,16 @@ main(int argc, char *argv[]) {
       else {
          useful_bus_ct = verify_i2c_access();
       }
+#endif
       if (useful_bus_ct == 0) {
          main_rc = EXIT_FAILURE;
       }
       else {
+#ifdef DISPSEL_ONLY
+         rc = find_dref_by_dsel(parsed_cmd->dsel,
+                      (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
+                      &dref);
+#else
          rc = find_dref(parsed_cmd,
                (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
                &dref);
@@ -1415,7 +1430,7 @@ main(int argc, char *argv[]) {
             if (dref2->flags & DREF_TRANSIENT)
                free_display_ref(dref2);
          }
-
+#endif
          if (rc != DDCRC_OK) {
             main_rc = EXIT_FAILURE;
          }
@@ -1453,8 +1468,12 @@ main(int argc, char *argv[]) {
 
    if (parsed_cmd->stats_types != DDCA_STATS_NONE
          && ( ddc_displays_already_detected() ||
+#ifdef DISPSEL_ONLY
+              (dsel_only_busno(parsed_cmd->dsel))
+#else
               (parsed_cmd->pdid && parsed_cmd->pdid->id_type == DISP_ID_BUSNO)
-            )
+#endif
+         )
 #ifdef ENABLE_ENVCMDS
          && parsed_cmd->cmd_id != CMDID_INTERROGATE
 #endif
@@ -1514,7 +1533,9 @@ bye:
 static void add_local_rtti_functions() {
    RTTI_ADD_FUNC(main);
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
+#ifndef DISPSEL_ONLY
    RTTI_ADD_FUNC(find_dref);
+#endif
    RTTI_ADD_FUNC(find_dref_by_dsel);
    RTTI_ADD_FUNC(verify_i2c_access);
    RTTI_ADD_FUNC(verify_i2c_access_for_single_bus);

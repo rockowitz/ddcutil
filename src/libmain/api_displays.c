@@ -366,6 +366,7 @@ ddci_get_display_ref(
       rc = DDCRC_ARG;
    }
    else {
+#ifndef DISPSEL_ONLY
       Display_Ref* dref = get_display_ref_for_display_identifier(pdid, CALLOPT_NONE);
       DBGMSF(debug, "get_display_ref_for_display_identifier() returned %p", dref);
 
@@ -374,6 +375,12 @@ ddci_get_display_ref(
       dref2 = ddc_find_display_ref_by_selector(dsel);
       assert(dref == dref2);
       dsel_free(dsel);
+#else
+      Display_Selector * dsel = display_id_to_dsel(pdid);
+      Display_Ref* dref;
+      dref = ddc_find_display_ref_by_selector(dsel);
+      DBGMSF(debug, "ddc_find_display_ref_by_selector() returned %s", dref_repr_t(dref));
+#endif
 
       if (dref) {
          DDCA_Display_Ref ddca_dref = dref_to_ddca_dref(dref);

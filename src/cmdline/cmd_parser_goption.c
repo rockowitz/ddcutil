@@ -291,6 +291,95 @@ static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArr
     return parsing_ok;
 }
 
+#ifdef DISPSEL_ONLY
+static bool parse_display_identifier(
+      Parsed_Cmd *  parsed_cmd,
+      GPtrArray *   errmsgs,
+      int           dispwork,
+      int           buswork,
+      int           hidwork,
+      char *        usbwork,
+      char *        edidwork,
+      char *        mfg_id_work,
+      char *        modelwork,
+      char *        snwork)
+{
+   bool parsing_ok = true;
+
+   parsed_cmd->dsel = dsel_new();
+
+   if (usbwork) {
+#ifdef ENABLE_USB
+      bool debug = false;
+      DBGMSF(debug, "usbwork = |%s|", usbwork);
+      int busnum;
+      int devicenum;
+      bool arg_ok = parse_dot_separated_arg(usbwork, &busnum, &devicenum);
+      if (!arg_ok)
+         arg_ok = parse_colon_separated_arg(usbwork, &busnum, &devicenum);
+      if (!arg_ok) {
+         EMIT_PARSER_ERROR(errmsgs, "Invalid USB argument: %s", usbwork );
+         parsing_ok = false;
+      }
+      else {
+         parsed_cmd->dsel->usb_bus = busnum;
+         parsed_cmd->dsel->usb_device = devicenum;
+      }
+#else
+      EMIT_PARSER_ERROR(errmsgs,
+            "ddcutil not built with support for USB connected monitors.  --usb option invalid.");
+      parsing_ok = false;
+#endif
+   }
+
+   if (buswork >= 0) {
+      parsed_cmd->dsel->busno = buswork;
+   }
+
+   if (hidwork >= 0) {
+#ifdef ENABLE_USB
+      parsed_cmd->dsel->hiddev_devno = hidwork;
+#else
+      EMIT_PARSER_ERROR(errmsgs,
+            "ddcutil not built with support for USB connected monitors.  --hid option invalid.");
+      parsing_ok = false;
+#endif
+   }
+
+   if (dispwork >= 0) {
+      parsed_cmd->dsel->dispno = dispwork;
+   }
+
+   if (edidwork) {
+      if (strlen(edidwork) != 256) {
+         EMIT_PARSER_ERROR(errmsgs,  "EDID hex string not 256 characters");
+         parsing_ok = false;
+      }
+      else {
+         Byte * pba = NULL;
+         int bytect = hhs_to_byte_array(edidwork, &pba);
+         if (bytect < 0 || bytect != 128) {
+            EMIT_PARSER_ERROR(errmsgs,  "Invalid EDID hex string");
+            parsing_ok = false;
+         }
+         else {
+            parsed_cmd->dsel->edidbytes = malloc(128);
+            memcpy(parsed_cmd->dsel->edidbytes, pba, 128);
+         }
+      }
+   }
+
+
+   if (mfg_id_work)
+      parsed_cmd->dsel->mfg_id = strdup(mfg_id_work);
+   if (modelwork)
+      parsed_cmd->dsel->model_name = strdup(modelwork);
+   if (snwork)
+      parsed_cmd->dsel->serial_ascii = strdup(snwork);
+
+   return parsing_ok;
+}
+#else
 
 static bool parse_display_identifier(
       Parsed_Cmd *  parsed_cmd,
@@ -425,6 +514,7 @@ static bool parse_display_identifier(
 
    return parsing_ok;
 }
+#endif
 
 
 static bool parse_mccswork(char * mccswork, Parsed_Cmd * parsed_cmd, GPtrArray * errmsgs) {
@@ -916,8 +1006,6 @@ parse_command(
 
    Parsed_Cmd * parsed_cmd = new_parsed_cmd();
    parsed_cmd->parser_mode = parser_mode;
-   // parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
-   // DBGMSG("After new_parsed_cmd(), parsed_cmd->output_level_name = %s", output_level_name(parsed_cmd->output_level));
 
    gchar * original_command = g_strjoinv(" ",argv);
    DBGF(debug, "original command: %s", original_command);
@@ -2210,12 +2298,17 @@ parse_command(
          if (parsing_ok && parsed_cmd->cmd_id == CMDID_SETVCP)
             parsing_ok &= parse_setvcp_args(parsed_cmd,errmsgs);
 
+#ifndef DISPSEL_ONLY
          if (parsing_ok && parsed_cmd->pdid) {
+#else
+         if (parsing_ok && !dsel_is_empty(parsed_cmd->dsel)) {
+#endif
             if (!cmdInfo->supported_options & Option_Explicit_Display) {
                EMIT_PARSER_ERROR(errmsgs,  "%s does not support explicit display option\n", cmdInfo->cmd_name);
                parsing_ok = false;
             }
          }
+
 
 #ifdef OUT
          if (parsing_ok && !(parsed_cmd->cmd_id == CMDID_GETVCP || parsed_cmd->cmd_id == CMDID_SETVCP)) {

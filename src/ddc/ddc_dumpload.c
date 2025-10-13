@@ -474,6 +474,17 @@ loadvcp_by_dumpload_data(
    }
 
    else {
+#ifdef DISPSEL_ONLY
+      Display_Selector* dsel = dsel_new();
+      dsel->mfg_id = strdup( pdata->mfg_id);
+      dsel->model_name = strdup(pdata->model);
+      dsel->serial_ascii = strdup(pdata->serial_ascii);
+      // rpt_str( "edid",         NULL, pdata->edidstr,      2);
+      int bytect =  hhs_to_byte_array(pdata->edidstr, &dsel->edidbytes);
+      assert(bytect == 128);
+
+      Display_Ref * dref = ddc_find_display_ref_by_selector(dsel);
+#else
      // no Display_Ref passed as argument, just use the identifiers in the data to pick the display
       Display_Identifier * did = create_mfg_model_sn_display_identifier(
                              pdata->mfg_id,
@@ -494,6 +505,7 @@ loadvcp_by_dumpload_data(
       Display_Ref * dref2 = ddc_find_display_ref_by_selector(dsel);
       TRACED_ASSERT(dref2 == dref);
       dsel_free(dsel);
+#endif
 
       if (!dref) {
          SYSLOG2(DDCA_SYSLOG_ERROR, "Monitor not connected: %s - %s", pdata->model, pdata->serial_ascii );

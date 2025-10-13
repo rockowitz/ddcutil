@@ -243,7 +243,9 @@ struct {
    gchar **               ddc_disabled;
 
    // Display Selection
+#ifndef DISPSEL_ONLY
    Display_Identifier*    pdid;
+#endif
    Display_Selector*      dsel;   // for future use
    Bit_Set_32             ignored_hiddevs;
    uint8_t                ignored_usb_vid_pid_ct;

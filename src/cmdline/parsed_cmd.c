@@ -160,8 +160,10 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
       int ndx = 0;
       for (; ndx < parsed_cmd->argct; ndx++)
          free(parsed_cmd->args[ndx]);
+#ifndef DISPSEL_ONLY
       if (parsed_cmd->pdid)
          free_display_identifier(parsed_cmd->pdid);
+#endif
       dsel_free(parsed_cmd->dsel);
       free(parsed_cmd->raw_command);
       free(parsed_cmd->failsim_control_fn);
@@ -277,9 +279,11 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 #ifdef ENABLE_USB
       rpt_bool("enable usb",        NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_USB,              d1);
 #endif
+#ifndef DISPSEL_ONLY
       rpt_structure_loc("pdid", parsed_cmd->pdid,                                               d1);
       if (parsed_cmd->pdid)
           dbgrpt_display_identifier(parsed_cmd->pdid,                                           d2);
+#endif
       rpt_structure_loc("dsel", parsed_cmd->dsel, d2);
       if (parsed_cmd->dsel)
          dbgrpt_display_selector(parsed_cmd->dsel, d2);
