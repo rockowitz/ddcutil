@@ -132,29 +132,40 @@ STATIC bool is_watch_mode_udev_available() {
 STATIC DDC_Watch_Mode
 resolve_watch_mode(DDC_Watch_Mode initial_mode) {
   bool debug = false;
-  DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s ", watch_mode_name(initial_mode));
+  DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s", watch_mode_name(initial_mode));
 
-  DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;   // always works, may be slow
-  if (initial_mode == Watch_Mode_Xevent && !is_watch_mode_x11_available())
-     initial_mode = Watch_Mode_Dynamic;
-  if (initial_mode == Watch_Mode_Udev && !is_watch_mode_udev_available())
-     initial_mode = Watch_Mode_Dynamic;
+   if (initial_mode == Watch_Mode_Xevent && !is_watch_mode_x11_available())
+      initial_mode = Watch_Mode_Dynamic;
+   if (initial_mode == Watch_Mode_Udev && !is_watch_mode_udev_available())
+      initial_mode = Watch_Mode_Dynamic;
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After availability check, initial_mode = %s",
+                                         watch_mode_name(initial_mode));
 
-  DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "after initial check, initial_mode = %s", watch_mode_name(initial_mode));
-
+   char * xdg_session_type = getenv("xdg_session_type");
+   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;   // always works, may be slow
    if (initial_mode == Watch_Mode_Dynamic) {
-      if (is_watch_mode_udev_available() )
-         resolved_watch_mode = Watch_Mode_Udev;
-      else if (is_watch_mode_x11_available())
-         resolved_watch_mode = Watch_Mode_Xevent;
+      if (streq(xdg_session_type, "x11")) {
+         if ( is_watch_mode_x11_available())
+            resolved_watch_mode = Watch_Mode_Xevent;
+         else if ( is_watch_mode_udev_available() )
+            resolved_watch_mode = Watch_Mode_Udev;
+      }
+      else if (streq(xdg_session_type, "wayland")) {
+         if (is_watch_mode_udev_available() )     // pathological if false
+            resolved_watch_mode = Watch_Mode_Udev;
+      }
+      else {    // other session type, almost certainly "tty"
+         if (is_watch_mode_udev_available() )
+            resolved_watch_mode = Watch_Mode_Udev;
+      }
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "After resolving watch_mode dynamic, resolved_watch_mode = %s",
+            watch_mode_name(resolved_watch_mode));
    }
    else {
       resolved_watch_mode = initial_mode;
    }
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "after resolving dynamic, resolved_watch_mode = %s", watch_mode_name(resolved_watch_mode));
 
-   // DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s. *xev_data_loc: %p",
-   //       watch_mode_name(resolved_watch_mode),  *xev_data_loc);
    DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s",   watch_mode_name(resolved_watch_mode));
    return resolved_watch_mode;
 }
@@ -426,22 +437,30 @@ dw_redetect_displays() {
 }
 
 
-
+/** Returns the current Display Watch parameter settings in a
+ *  buffer provided by the caller.
+ *
+ *  @param settings  #DDCA_DW_Settings struct to fill ine
+ */
 void dw_get_display_watch_settings(DDCA_DW_Settings * settings) {
    assert(settings);
    // settings->watch_mode = dw_watch_mode;
 
    // settings->udev_watch_interval_millisec   = udev_watch_loop_millisec;
-   settings->poll_watch_interval_millisec   = poll_watch_loop_millisec;
-   settings->xevent_watch_interval_millisec = xevent_watch_loop_millisec;
+   settings->poll_watch_interval_millisec    = poll_watch_loop_millisec;
+   settings->xevent_watch_interval_millisec  = xevent_watch_loop_millisec;
 
-   settings->initial_stabilization_millisec      = initial_stabilization_millisec;
-   settings->stabilization_poll_millisec         = stabilization_poll_millisec;
+   settings->initial_stabilization_millisec  = initial_stabilization_millisec;
+   settings->stabilization_poll_millisec     = stabilization_poll_millisec;
 
    settings->watch_retry_interval_millisec = retry_thread_sleep_factor_millisec;
 }
 
 
+/** Updates Display Watch tuning parameters
+ *
+ *  @param settings  #DDCA_DW_Settings struct containing the parameters
+ */
 DDCA_Status dw_set_display_watch_settings(DDCA_DW_Settings * settings) {
    assert(settings);
    // udev_watch_loop_millisec   =     settings->udev_watch_udev_interval_millisec;
@@ -458,13 +477,12 @@ DDCA_Status dw_set_display_watch_settings(DDCA_DW_Settings * settings) {
 
 
 void init_dw_main() {
+   RTTI_ADD_FUNC(dw_get_active_watch_classes);
+   RTTI_ADD_FUNC(dw_redetect_displays);
    RTTI_ADD_FUNC(dw_start_watch_displays);
    RTTI_ADD_FUNC(dw_stop_watch_displays);
-   RTTI_ADD_FUNC(dw_get_active_watch_classes);
-#ifdef USE_X11
+   RTTI_ADD_FUNC(is_watch_mode_udev_available);
+   RTTI_ADD_FUNC(is_watch_mode_x11_available);
    RTTI_ADD_FUNC(resolve_watch_mode);
-#endif
-   RTTI_ADD_FUNC(dw_redetect_displays);
 }
-
 
