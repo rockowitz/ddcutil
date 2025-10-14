@@ -1,4 +1,4 @@
-## [2.2.2] 2025-10-09
+## [2.2.2] 2025-10-14
 
 ### General
 
@@ -39,6 +39,9 @@
   Also option ***--disable-drm*** forces ***--disable-watch-displays***. 
   Addresses issue #506
 - man page ddcutil: correct typo in hyperlink. Patch #535
+- man page ddcutil: document that **loadvcp** uses the display identifier on the 
+  command line if one was specified, and ensures it identifies the same display as
+  the one identified by the data in the file being loaded.  Noted in issue #552.
 - Command **environment --verbose**: 
   - Permission denied errors corrupted output of the find command used to scan for 
     DisplayLink devices.
@@ -58,10 +61,11 @@ file is libddcutil.so.5.4.0.
 
 - Option ***--watch-mode udev***
   Uses libudev to watch for display connection and disconnection. This is now 
-  the default watch mode if ddcutil was built to use libudev, which is normally 
-  the case (configure option ***--enable-udev***). A specific watch mode
-  can be forced using ***--watch-mode udev***, ***--watch-mode xevent***, or 
-  ***--watch-mode poll***.  Addresses issues in [KDE-Plasma Powerdevil merge request 542)
+  the default watch mode when executing on wayland if ddcutil was built to use 
+  libudev, which is normally the case (configure option ***--enable-udev***). 
+  Xevent continues to be the default watch mode when executing on X11. A specific
+  watch mode can be forced using ***--watch-mode udev***, ***--watch-mode xevent***, 
+  or ***--watch-mode poll***.  Addresses issues in [KDE-Plasma Powerdevil merge request 542]
   (https://invent.kde.org/plasma/powerdevil/-/merge_requests/542)
 
 
