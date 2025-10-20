@@ -370,11 +370,13 @@ ddci_get_display_ref(
       Display_Ref* dref = get_display_ref_for_display_identifier(pdid, CALLOPT_NONE);
       DBGMSF(debug, "get_display_ref_for_display_identifier() returned %p", dref);
 
+#ifdef TEST_DISPSEL
       Display_Selector * dsel = display_id_to_dsel(pdid);
       Display_Ref* dref2;
       dref2 = ddc_find_display_ref_by_selector(dsel);
       assert(dref == dref2);
       dsel_free(dsel);
+#endif
 #else
       Display_Selector * dsel = display_id_to_dsel(pdid);
       Display_Ref* dref;

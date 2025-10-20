@@ -1399,7 +1399,7 @@ main(int argc, char *argv[]) {
          useful_bus_ct = verify_i2c_access();
       }
 #else
-      Display_Ref * dref2 = NULL;
+
       if (parsed_cmd->pdid && parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
          useful_bus_ct = verify_i2c_access_for_single_bus(parsed_cmd->pdid->busno);
       }
@@ -1419,10 +1419,12 @@ main(int argc, char *argv[]) {
          rc = find_dref(parsed_cmd,
                (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
                &dref);
+#ifdef TEST_DISPSEL
+         Display_Ref * dref2 = NULL;
          int rc2 = find_dref_by_dsel(parsed_cmd->dsel,
                       (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
                       &dref2);
-         // DBGMSG("dref=%p=%s, dref2=%p=%s", dref, dref_repr_t(dref), dref2, dref_repr_t(dref2));
+         DBGMSG("dref=%p=%s, dref2=%p=%s", dref, dref_repr_t(dref), dref2, dref_repr_t(dref2));
          assert(rc == rc2);
          if (rc == 0)
             TRACED_ASSERT(dref_eq(dref,dref2));
@@ -1430,6 +1432,7 @@ main(int argc, char *argv[]) {
             if (dref2->flags & DREF_TRANSIENT)
                free_display_ref(dref2);
          }
+#endif
 #endif
          if (rc != DDCRC_OK) {
             main_rc = EXIT_FAILURE;

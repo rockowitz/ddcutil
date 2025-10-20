@@ -479,7 +479,7 @@ loadvcp_by_dumpload_data(
       dsel->mfg_id = strdup( pdata->mfg_id);
       dsel->model_name = strdup(pdata->model);
       dsel->serial_ascii = strdup(pdata->serial_ascii);
-      // rpt_str( "edid",         NULL, pdata->edidstr,      2);
+      // rpt_str( "edid",         NULL, pdata->edidstr,      2);S
       int bytect =  hhs_to_byte_array(pdata->edidstr, &dsel->edidbytes);
       assert(bytect == 128);
 
@@ -494,6 +494,7 @@ loadvcp_by_dumpload_data(
       Display_Ref * dref = get_display_ref_for_display_identifier(did, CALLOPT_NONE);
       free_display_identifier(did);
 
+#ifdef TEST_DISPSEL
       Display_Selector* dsel = dsel_new();
       dsel->mfg_id = strdup( pdata->mfg_id);
       dsel->model_name = strdup(pdata->model);
@@ -505,6 +506,7 @@ loadvcp_by_dumpload_data(
       Display_Ref * dref2 = ddc_find_display_ref_by_selector(dsel);
       TRACED_ASSERT(dref2 == dref);
       dsel_free(dsel);
+#endif
 #endif
 
       if (!dref) {
