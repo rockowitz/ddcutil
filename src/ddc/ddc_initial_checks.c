@@ -276,6 +276,14 @@ check_how_unsupported_reported(Display_Handle * dh) {
 }
 
 
+/** Checks that feature is supported
+ *
+ *  @param dh           pointer to #Display_Handle for open monitor device
+ *  @param newly_added  called by display watch when adding a display
+ *  @param feature_code VCP feature to check
+ *  @param p_shsl       where to return value of feature
+ *  @return #Error_Info struct if error, caller responsible for freeing
+ */
 STATIC Error_Info *
 check_supported_feature(Display_Handle *      dh,
                         bool                  newly_added,
@@ -530,8 +538,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
 /** Given a #Display_Ref, opens the monitor device and calls #ddc_initial_checks_by_dh()
  *  to perform initial monitor checks.
  *
- *  @param dref pointer to #Display_Ref for monitor
- *  @param newly_added
+ *  @param dref         pointer to #Display_Ref for monitor
+ *  @param newly_added  special handling when monitor added by display change detection
  *  @return **true** if DDC communication with the display succeeded, **false** otherwise.
  *
  *  @remark
