@@ -141,7 +141,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After availability check, initial_mode = %s",
                                          watch_mode_name(initial_mode));
 
-   char * xdg_session_type = getenv("xdg_session_type");
+   char * xdg_session_type = getenv("XDG_SESSION_TYPE");
    DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;   // always works, may be slow
    if (initial_mode == Watch_Mode_Dynamic) {
       if (streq(xdg_session_type, "x11")) {
