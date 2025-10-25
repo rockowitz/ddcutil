@@ -328,23 +328,23 @@ ddc_open_display(
 
    case DDCA_IO_I2C:
       {
-         I2C_Bus_Info * bus_info = dref->detail;
+         I2C_Bus_Info * businfo = dref->detail;
 
-         // Issue #556, powerdevil bug report, says that bus_info == NULL,
+         // Issue #556, powerdevil bug report, says that businfo == NULL,
          // which is logically impossible at this point.
          // Perhaps it was actually the memcmp() on the next line that failed.
          // Lacking further detail in the bug report for proper diagnosis,
          // all we can do at this point is return an internal error.
-         // TRACED_ASSERT(bus_info);   // need to convert to a test?
-         // TRACED_ASSERT( bus_info && memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
+         // TRACED_ASSERT(businfo);   // need to convert to a test?
+         // TRACED_ASSERT( businfo && memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
          // if (true) { // *** TEMP ***
-         if (!bus_info || memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) != 0) {
+         if (!businfo || memcmp(businfo, I2C_BUS_INFO_MARKER, 4) != 0) {
             char * msg = NULL;
-            if (!bus_info)
+            if (!businfo)
                msg = g_strdup_printf("dref=%s, dref->detail = businfo = NULL", dref_reprx_t(dref));
             else {
                msg = g_strdup_printf("dref=%s, businfo->marker = |%.4s| = %s",
-                     dref_reprx_t(dref), (char*)bus_info, hexstring_t((unsigned char*) bus_info->marker, 4));
+                     dref_reprx_t(dref), (char*)businfo, hexstring_t((unsigned char*) businfo->marker, 4));
             }
             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
             err = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "%s", msg);
@@ -353,7 +353,7 @@ ddc_open_display(
          }
 
 
-         if (!bus_info->edid) {
+         if (!businfo->edid) {
             // How is this even possible?
             // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
             //          close(fd) fails
@@ -376,7 +376,7 @@ ddc_open_display(
          if (!err) {
             dh = create_base_display_handle(fd, dref);
             if (!dref->pedid)
-               dref->pedid = copy_parsed_edid(bus_info->edid);
+               dref->pedid = copy_parsed_edid(businfo->edid);
             if (!dref->pdd)
                dref->pdd = pdd_get_per_display_data(dref->io_path, true);
          }
