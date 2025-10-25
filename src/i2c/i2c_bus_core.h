@@ -39,9 +39,6 @@ extern bool cross_instance_locks_enabled;
 
 Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices);
 
-// Lifecycle
-I2C_Bus_Info *   remove_i2c_bus_info();
-
 // Bus open and close
 void             add_open_failures_reported(Bit_Set_256 failures);
 void             include_open_failures_reported(int busno);
