@@ -1,4 +1,4 @@
-## [2.2.2] 2025-10-14
+## [2.2.2] 2025-10-25
 
 ### General
 
@@ -67,6 +67,13 @@ file is libddcutil.so.5.4.0.
   watch mode can be forced using ***--watch-mode udev***, ***--watch-mode xevent***, 
   or ***--watch-mode poll***.  Addresses issues in [KDE-Plasma Powerdevil merge request 542]
   (https://invent.kde.org/plasma/powerdevil/-/merge_requests/542)
+
+#### Fixed
+
+- **ddca_open_display2()**: Return DDCRC_INTERNAL_ERROR instead of terminating 
+  with assert() failure in certain ill-defined situations.  Addresses issue #556
+  reported by PowerDevil.
+  
 
 
 ## [2.2.1] 2025-07-07
