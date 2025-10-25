@@ -274,8 +274,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             RPT_ATTR_TEXT(-1, &drm_enabled, "/sys/class/drm", drm_connector_name, "enabled");  //enabled, disabled
          }
 
-         I2C_Bus_Info * bus_info = dref->detail;
-         if (!(bus_info->flags & I2C_BUS_LVDS_OR_EDP) && bus_info->flags & I2C_BUS_ADDR_X37) {
+         I2C_Bus_Info * businfo = dref->detail;
+         if (!(businfo->flags & I2C_BUS_LVDS_OR_EDP) && businfo->flags & I2C_BUS_ADDR_X37) {
             rpt_vstring(d1, "DDC communication failed");
             if (output_level >= DDCA_OL_VERBOSE && dref->communication_error_summary) {
                rpt_vstring(d1, "Failure detail: getvcp of feature x10 returned %s",
