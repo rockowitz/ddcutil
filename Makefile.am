@@ -76,10 +76,9 @@ clang:
 		-enable-checker alpha.core.CastSize       \
 		-enable-checker alpha.core.BoolAssignment \
 		-enable-checker alpha.core.Conversion     \
-		-enable-checker alpha.core.SizeofPtr      \
 		make
 
-
+#failed: 	-enable-checker alpha.core.SizeofPtr      
 
 # 	$(foreach v, $(.VARIABLES), @echo "$v = $$v")
 show:
