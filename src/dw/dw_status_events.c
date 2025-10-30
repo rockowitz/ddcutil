@@ -168,10 +168,20 @@ gpointer dw_execute_callback_func(gpointer data) {
    free(buf);
 
    record_active_callback_thread(g_thread_self());
-   cqe->func(cqe->event);
+
    // in case the callback function calls an API function that resets the traced function stack:
-   if (traced_function_stack_enabled && current_traced_function_stack_size() == 0)
-      push_traced_function(__func__);
+   GPtrArray* stashed = NULL;
+   if (traced_function_stack_enabled)
+      stashed = stash_current_traced_function_stack();
+
+   cqe->func(cqe->event);
+
+   // in case the callback function calls an API function that resets the traced function stack:
+   // if (traced_function_stack_enabled && current_traced_function_stack_size() == 0)
+   //    push_traced_function(__func__);
+   if (stashed)
+      restore_current_traced_function_stack(stashed);
+
    remove_active_callback_thread(g_thread_self());
 
    buf = g_strdup_printf("Callback function %p for event %s complete",
@@ -181,11 +191,11 @@ gpointer dw_execute_callback_func(gpointer data) {
    ddc_close_all_displays_for_current_thread(/*error_if_open=*/ true);   // in case client left some open
    unlock_all_displays_for_current_thread();      // should never be needed
 
+   DBGTRC_DONE(debug, TRACE_GROUP, "%s", buf);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    if (traced_function_stack_enabled)
       free_current_traced_function_stack();
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "%s", buf);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    free(buf);
    return NULL;   // terminates thread
 }
