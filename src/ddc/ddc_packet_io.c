@@ -335,8 +335,10 @@ ddc_open_display(
          // Perhaps it was actually the memcmp() on the next line that failed.
          // Lacking further detail in the bug report for proper diagnosis,
          // all we can do at this point is return an internal error.
-         // TRACED_ASSERT(businfo);   // need to convert to a test?
-         // TRACED_ASSERT( businfo && memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
+#ifndef RECOVERY
+         TRACED_ASSERT(businfo);   // need to convert to a test?
+         TRACED_ASSERT( businfo && memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
+#else
          // if (true) { // *** TEMP ***
          if (!businfo || memcmp(businfo, I2C_BUS_INFO_MARKER, 4) != 0) {
             char * msg = NULL;
@@ -351,6 +353,7 @@ ddc_open_display(
             free(msg);
             goto bye;
          }
+#endif
 
 
          if (!businfo->edid) {
