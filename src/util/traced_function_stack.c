@@ -54,6 +54,7 @@ bool set_debug_thread_tfs(bool newval) {
 void reset_current_traced_function_stack() {
    bool debug = false;
    debug = debug || debug_tfs;
+
    DBGF(debug, PRItid "Starting", TID());
 
    if (traced_function_stack) {
@@ -226,6 +227,35 @@ GPtrArray * get_current_traced_function_stack_contents(bool most_recent_last) {
        }
    }
    return callstack;
+}
+
+
+GPtrArray * stash_current_traced_function_stack() {
+   bool debug = true;
+   if (debug) {
+      DBG("Starting. Traced function stack to be stashed:");
+      debug_current_traced_function_stack(true);
+   }
+   GPtrArray * result = get_current_traced_function_stack_contents(true);
+   g_ptr_array_set_free_func(result, free);
+   DBGF(debug, "Done.  Returning %p", result);
+   return result;
+}
+
+void restore_current_traced_function_stack(GPtrArray* stashed) {
+   bool debug = true;
+   DBGF(debug, "Starting. Restoring stashed stack %p", stashed);
+   reset_current_traced_function_stack();
+   if (stashed) {
+      for (int ndx = 0; ndx < stashed->len; ndx++) {
+         push_traced_function(g_ptr_array_index(stashed, ndx));
+      }
+      g_ptr_array_free(stashed, true);
+   }
+   if (debug) {
+      DBG("Done.    Restored traced function stack:");
+      debug_current_traced_function_stack(true);
+   }
 }
 
 

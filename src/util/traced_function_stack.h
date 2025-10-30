@@ -29,6 +29,9 @@ int        current_traced_function_stack_size();
 GPtrArray* get_current_traced_function_stack_contents(bool most_recent_last);
 void       current_traced_function_stack_to_syslog(int syslog_priority, bool reverse);
 
+GPtrArray* stash_current_traced_function_stack();
+void       restore_current_traced_function_stack(GPtrArray* stashed);
+
 void       reset_current_traced_function_stack();
 void       free_current_traced_function_stack();
 void       free_all_traced_function_stacks();
