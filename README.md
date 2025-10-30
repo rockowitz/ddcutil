@@ -29,7 +29,7 @@ i2c-dev, see [Post-Installation Checklist](https://www.ddcutil.com/config_steps)
 More generally, for instructions on building and configuring **ddcutil**, see
 [Installation and Configuration](https://www.ddcutil.com/install_config_main/)
 
-The [ddcutil FAQ](https://ddcutil.com/faq) describes the causes and workarounds for
+The [ddcutil FAQ](https://www.ddcutil.com/faq) describes the causes and workarounds for
 many common (and not so common) issues.
 
 Once **ddcutil** is installed, online help is also available.
