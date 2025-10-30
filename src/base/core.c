@@ -65,7 +65,7 @@
 // Globals
 //
 
-bool timestamp_in_syslog_debug_msgs = false;
+bool timestamp_in_syslog_debug_msgs = true;
 bool tracing_initialized = false;
 bool library_disabled = false;
 bool running_as_root = false;
@@ -427,8 +427,7 @@ bool is_backtracing(const char * funcname) {
    bool result = false;
    result = is_backtraced_function(funcname);
 
-   DBGF(debug, "Done.     funcname=%s, returning %d\n",
-               funcname, trace_levels);
+   DBGF(debug, "Done.     funcname=%s, returning %s\n", funcname, SBOOL(result));
    return result;
 }
 
@@ -619,7 +618,7 @@ static bool vdbgtrc(
 #endif
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
-         if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog_only || dbgtrc_trace_to_syslog) {
+         if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog) {
             char * syslog_msg = NULL;
             if (timestamp_in_syslog_debug_msgs) {
                syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
@@ -738,10 +737,26 @@ bool dbgtrc(
    if (traced_function_stack_enabled && is_backtracing(funcname) && (options&DBGTRC_OPTIONS_STARTING)) {
 	   GPtrArray* contents = get_current_traced_function_stack_contents(true /* most_recent_last */);
 	   for (int ndx = 0; ndx < contents->len; ndx++) {
-	      if (ndx == 0)
-	         rpt_vstring(0, "Backtrace of function %s:", g_ptr_array_index(contents,ndx));
-	      else
-	         rpt_vstring(0, "     %s", g_ptr_array_index(contents,ndx));
+	      if (ndx == 0) {
+	         char * s = g_strdup_printf( "Backtrace of function %s:", (char*) g_ptr_array_index(contents,ndx));
+	         if (!dbgtrc_trace_to_syslog_only) {
+	            rpt_vstring(0, "%s", s);
+	         }
+	         if (dbgtrc_trace_to_syslog) {
+	            syslog(LOG_DEBUG, "%s", s);
+	         }
+	         free(s);
+	      }
+	      else {
+	         char * s = g_strdup_printf("     %s", (char*) g_ptr_array_index(contents,ndx));
+	         if (!dbgtrc_trace_to_syslog_only) {
+	            rpt_vstring(0, "%s", s);
+	         }
+            if (dbgtrc_trace_to_syslog) {
+               syslog(LOG_DEBUG, "%s", s);
+            }
+            free(s);
+	      }
 	   }
 	   g_ptr_array_free(contents, true);
    }
