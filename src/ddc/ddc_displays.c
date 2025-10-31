@@ -714,7 +714,6 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  @retval  DDCRC_OK
  *  @retval  DDCRC_ARG             dref is null or does not point to a Display_Ref
  *  @retval  DDCRC_DISCONNECTED    display has been disconnected
- *  @retval  DDCRC_DPMS_ASLEEP     possible if require_not_asleep == true
  */
 DDCA_Status
 ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation_options) {
