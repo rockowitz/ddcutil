@@ -72,7 +72,7 @@ void rpt_vstring(int depth, char * format, ...) ;
 void rpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...);
 void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth);
 void rpt_structure_loc(const char * name, const void * ptr, int depth);
-void drpt_structure_loc(const char * name, const void * ptr, int depth)
+void drpt_structure_loc(const char * name, const void * ptr, int depth);
 void rpt_hex_dump(const Byte * data, int size, int depth);
 void rpt_ntsa(Null_Terminated_String_Array ntsa, int depth);
 int rpt_file_contents(const char * fn, bool verbose, int depth);
