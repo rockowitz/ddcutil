@@ -83,7 +83,10 @@ DDCA_Status ddci_validate_ddca_display_ref(
  *
  *  @param  ddca_dref DDCA_Display_Ref
  *  @param  dh_loc    address at which to return the underlying Display_Handle.
- *  @return
+ *  @retval DDCRC_OK
+ *  @retval DDCRC_ARG
+ *  @retval DDCRC_DISCONNECTED
+ *
  */
 DDCA_Status ddci_validate_ddca_display_ref2(
       DDCA_Display_Ref        ddca_dref,
@@ -101,12 +104,19 @@ DDCA_Status ddci_validate_ddca_display_ref2(
    Display_Ref * dref = dref_from_published_ddca_dref(ddca_dref);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref_from_ddca_dref() returned %s", dref_reprx_t(dref));
    if (!dref) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Unrecognized external display ref %p", dref);
+      SYSLOG2(DDCA_SYSLOG_WARNING, "Unrecognized external display ref %p", dref);
+      result = DDCRC_ARG;
+   }
+   else if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Invalid marker");
+      SYSLOG2(DDCA_SYSLOG_WARNING, "Invalid marker for %s", dref_reprx_t(dref));
       result = DDCRC_ARG;
    }
    else {
       // should be redundant with ddc_validate_display_ref2(), but something not being caught
       if (dref->flags & DREF_REMOVED) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED set!");
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_REMOVED set!");
          SYSLOG2(DDCA_SYSLOG_WARNING, "DREF_REMOVED set for %s", dref_reprx_t(dref));
          result = DDCRC_DISCONNECTED;
       }
