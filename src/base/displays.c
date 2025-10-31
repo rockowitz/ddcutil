@@ -661,23 +661,11 @@ static GHashTable * published_dref_hash = NULL;
 static GMutex dref_hash_mutex;
 
 
-void init_published_dref_hash() {
-   published_dref_hash = g_hash_table_new(g_direct_hash, NULL);
-}
-
-
-void reset_published_dref_hash() {
-   if (published_dref_hash)
-      g_hash_table_destroy(published_dref_hash);
-   init_published_dref_hash();
-}
-
-
 void dbgrpt_published_dref_hash(const char * msg, int depth) {
-    if (msg)
-       rpt_vstring(depth, "%s: dref_hash_contents:", msg);
-    else
-       rpt_label(depth, "dref_hash contents: ");
+   if (msg)
+      drpt_vstring(depth, "%s: dref_hash_contents:", msg);
+   else
+      drpt_label(depth, "dref_hash contents: ");
 
     GHashTableIter iter;
     gpointer key, value;
@@ -685,8 +673,33 @@ void dbgrpt_published_dref_hash(const char * msg, int depth) {
     while (g_hash_table_iter_next (&iter, &key, &value)) {
        uint dref_id = GPOINTER_TO_UINT(key);
        Display_Ref * dref = (Display_Ref *) value;
-       rpt_vstring(depth+1, "dref_id %d -> %s", dref_id, dref_reprx_t(dref));
+       drpt_vstring(depth+1, "dref_id %d -> %s", dref_id, dref_reprx_t(dref));
     }
+}
+
+
+void init_published_dref_hash() {
+   published_dref_hash = g_hash_table_new(g_direct_hash, NULL);
+}
+
+
+void reset_published_dref_hash() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+
+   GHashTableIter iter;
+   gpointer key, value;
+   g_hash_table_iter_init (&iter, published_dref_hash);
+   while (g_hash_table_iter_next (&iter, &key, &value)) {
+      // uint dref_id = GPOINTER_TO_UINT(key);
+      Display_Ref * dref = (Display_Ref *) value;
+      dref->flags |= DREF_REMOVED;
+      // drpt_vstring(depth+1, "(reset_published_dref_hash) dref_id %d -> %s", dref_id, dref_reprx_t(dref));
+   }
+
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+      dbgrpt_published_dref_hash("After reset:", 1);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -702,6 +715,8 @@ static uint next_dref_id(Display_Ref * dref) {
 
 void add_published_dref_id_by_dref(Display_Ref * dref) {
    bool debug = false;
+   // DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
+
    g_mutex_lock (&dref_hash_mutex);
    g_hash_table_insert(published_dref_hash, GUINT_TO_POINTER(dref->dref_id), dref);
    if (debug) {
@@ -710,9 +725,9 @@ void add_published_dref_id_by_dref(Display_Ref * dref) {
       dbgrpt_published_dref_hash(msgbuf, 0);
    }
    g_mutex_unlock(&dref_hash_mutex);
+
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "%s -> %d", dref_reprx_t(dref), dref->dref_id);
 }
-
 
 static void delete_published_dref_id(uint dref_id) {
    bool debug = false;
@@ -776,7 +791,6 @@ Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
       DBGTRC_DONE(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning %p", ddca_dref, dref);
    return dref;
 }
-
 
 DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref) {
    bool debug = false;
@@ -1786,6 +1800,9 @@ void init_displays() {
    RTTI_ADD_FUNC(dsel_only_busno);
    RTTI_ADD_FUNC(display_id_to_dsel);
    RTTI_ADD_FUNC(dsel_free);
+
+   RTTI_ADD_FUNC(reset_published_dref_hash);
+   RTTI_ADD_FUNC(add_published_dref_id_by_dref);
 
    init_published_dref_hash();
 }
