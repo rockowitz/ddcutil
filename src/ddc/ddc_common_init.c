@@ -133,11 +133,14 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        dbgtrc_show_thread_id = true;                    // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_PROCESS_ID_TRACE)   // process id on debug and trace messages?
        dbgtrc_show_process_id = true;                   // extern in core.h
-   if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
+   if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY) {
        dbgtrc_trace_to_syslog_only = true;              // extern in core.h
+       xrpt_trc_to_syslog_only = true;
+   }
    if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG ||
        parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
    {
+      xrpt_trc_to_syslog = true;
        dbgtrc_trace_to_syslog = true;
        syslog_level = DDCA_SYSLOG_DEBUG;               // extern in core.h // why doesn't this work?
    }
