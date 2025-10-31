@@ -739,22 +739,28 @@ bool dbgtrc(
 	   for (int ndx = 0; ndx < contents->len; ndx++) {
 	      if (ndx == 0) {
 	         char * s = g_strdup_printf( "Backtrace of function %s:", (char*) g_ptr_array_index(contents,ndx));
+#ifdef OLD
 	         if (!dbgtrc_trace_to_syslog_only) {
 	            rpt_vstring(0, "%s", s);
 	         }
 	         if (dbgtrc_trace_to_syslog) {
 	            syslog(LOG_DEBUG, "%s", s);
 	         }
+#endif
+	         drpt_vstring(0, "%s", s);
 	         free(s);
 	      }
 	      else {
 	         char * s = g_strdup_printf("     %s", (char*) g_ptr_array_index(contents,ndx));
+#ifdef OLD
 	         if (!dbgtrc_trace_to_syslog_only) {
 	            rpt_vstring(0, "%s", s);
 	         }
             if (dbgtrc_trace_to_syslog) {
                syslog(LOG_DEBUG, "%s", s);
             }
+#endif
+            drpt_vstring(0, "%s", s);
             free(s);
 	      }
 	   }
