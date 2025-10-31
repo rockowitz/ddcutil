@@ -288,7 +288,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
          DBGMSG("Flock diagnostics:");
          show_flock(filename, false);
          show_backtrace(0);
-         debug_current_traced_function_stack(/*reverse*/ false);
+         dbgrpt_current_traced_function_stack(/*reverse*/ false);
          current_traced_function_stack_to_syslog(DDCA_SYSLOG_ERROR, /*reverse=*/ false);
       }
 

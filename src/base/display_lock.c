@@ -169,7 +169,7 @@ do { \
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, _format, ##__VA_ARGS__); \
       if (IS_DBGTRC(debug, DDCA_TRC_NONE)) { \
          show_backtrace(0);          \
-         debug_current_traced_function_stack(false); \
+         dbgrpt_current_traced_function_stack(false); \
       } \
    } \
    if (test_emit_syslog(_ddcutil_severity)) { \
