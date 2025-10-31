@@ -54,6 +54,9 @@ int rpt_get_indent(int depth);
 
 void rpt_flush();
 
+extern bool xrpt_trc_to_syslog_only;
+extern bool xrpt_trc_to_syslog;
+
 void rpt_nl();
 void rpt_title(const char * title, int depth);
 void rpt_label(int depth, const char * text);
@@ -61,10 +64,15 @@ void rpt_label_collect(int depth, GPtrArray* collector, const char * text);
 void rpt_multiline(int depth, ...);
 void rpt_g_ptr_array(int depth, GPtrArray * strings);
 
+void drpt_label(int depth, const char * text);
+void drpt_vstring(int depth, char * format, ...) ;
+void drpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...);
+
 void rpt_vstring(int depth, char * format, ...) ;
 void rpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...);
 void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth);
 void rpt_structure_loc(const char * name, const void * ptr, int depth);
+void drpt_structure_loc(const char * name, const void * ptr, int depth)
 void rpt_hex_dump(const Byte * data, int size, int depth);
 void rpt_ntsa(Null_Terminated_String_Array ntsa, int depth);
 int rpt_file_contents(const char * fn, bool verbose, int depth);
