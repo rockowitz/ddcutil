@@ -37,7 +37,7 @@
    if (memcmp(ptr->marker, ERROR_INFO_MARKER, 4) != 0) { \
       DBG("Invalid ptr->marker, ptr=%p", ptr); \
       show_backtrace(1); \
-      dbgrpt_current_traced_function_stack(false); \
+      dbgrpt_current_traced_function_stack(false, true); \
    } \
    assert(memcmp(ptr->marker, ERROR_INFO_MARKER, 4) == 0);
 
