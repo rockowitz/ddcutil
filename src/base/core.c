@@ -565,7 +565,7 @@ static bool vdbgtrc(
          char thread_prefix[15]   = "";
          char process_prefix[15]  = "";
          if (dbgtrc_show_time      && !(options & DBGTRC_OPTIONS_SEVERE))
-            g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(4));
+            g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(6));
          if (dbgtrc_show_wall_time && !(options & DBGTRC_OPTIONS_SEVERE))
             g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
          if (dbgtrc_show_thread_id && !(options & DBGTRC_OPTIONS_SEVERE) ) {
@@ -630,18 +630,18 @@ static bool vdbgtrc(
                            thread_prefix, funcname, retval_info, base_msg,
                            (tag_output) ? " (J)" : "");
             }
-            syslog(LOG_DEBUG, "%s", syslog_msg);
+            syslog(LOG_DEBUG, "$$%s", syslog_msg);
             free(syslog_msg);
          }
          else if ( (options & DBGTRC_OPTIONS_SEVERE) && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
             char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
                                      thread_prefix, funcname, retval_info, base_msg,
                                      (tag_output) ? " (K)" : ""  );
-            syslog(LOG_ERR, "%s", syslog_msg);
+            syslog(LOG_ERR, "$$%s", syslog_msg);
             free(syslog_msg);
          }
          else if (redirect_reports_to_syslog) {
-            syslog(LOG_NOTICE, "%s(%-30s) %s%s%s",
+            syslog(LOG_NOTICE, "$$%s(%-30s) %s%s%s",
                   thread_prefix, funcname, retval_info, base_msg,
                   (tag_output) ? " (L)" : ""  );
          }
