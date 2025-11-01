@@ -230,6 +230,28 @@ bool remove_open_display_for_current_thread(Display_Handle * dh) {
 }
 
 
+bool in_ddci_open_display() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   bool found = false;
+   GPtrArray* callers = get_current_traced_function_stack_contents(true);
+   for (int ndx = 0; ndx < callers->len; ndx++) {
+      char * cur = g_ptr_array_index(callers, ndx);
+      // rpt_vstring(0, "cur=|%s|", cur);
+      // drpt_vstring(0, "cur=|%s|", cur);
+      if (streq(cur, "ddci_open_display3")) {
+         found = true;
+         // drpt_vstring(0, "FOUND");
+         break;
+      }
+   }
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, found, "");
+   return found;
+}
+
+
+
+
 /** Opens a DDC display.
  *
  *  \param  dref            display reference
@@ -335,8 +357,28 @@ ddc_open_display(
          // Perhaps it was actually the memcmp() on the next line that failed.
          // Lacking further detail in the bug report for proper diagnosis,
          // all we can do at this point is return an internal error.
+
+         bool reported = false;
+         if (in_ddci_open_display()) {
+            dbgrpt_current_traced_function_stack(true, false);
+            dbgrpt_published_dref_hash("In ddc_open_display", 0);
+            reported = true;
+         }
+
+         TRACED_ASSERT(businfo);
+         if (memcmp(businfo, I2C_BUS_INFO_MARKER, 4) != 0) {
+            if (!reported) {
+               dbgrpt_current_traced_function_stack(true, false);
+               dbgrpt_published_dref_hash("In ddc_open_display", 0);
+            }
+             char * msg = NULL;
+                msg = g_strdup_printf("dref=%s, businfo->marker = |%.4s| = %s",
+                      dref_reprx_t(dref), (char*)businfo, hexstring_t((unsigned char*) businfo->marker, 4));
+             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+             free(msg);
+         }
+
 #ifndef RECOVERY
-         TRACED_ASSERT(businfo);   // need to convert to a test?
          TRACED_ASSERT( businfo && memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
 #else
          // if (true) { // *** TEMP ***
