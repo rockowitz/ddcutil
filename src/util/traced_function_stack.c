@@ -86,6 +86,9 @@ bool suspend_traced_function_stack(bool onoff) {
  *
  *  @param stack    traced function stack to report
  *  @param reverse  order of entries
+ *  @param show_tid prefix entries with thread id
+ *
+ *  @remark thread is redundant in certain contexts
  */
 void dbgrpt_traced_function_stack(GQueue * stack, bool reverse, bool show_tid) {
    int d0 = 0;
@@ -186,9 +189,12 @@ void current_traced_function_stack_to_syslog(int syslog_priority, bool reverse) 
 
 
 /** Reports the contents of the specified traced function stack for the
- *  current thread.
+ *  current thread using report_util functions for writing debug information.
  *
  *  @param reverse  order of entries
+ *  @param show_tid prefix entries with thread id
+ *
+ *  @remark thread is redundant in certain contexts
  */
 void dbgrpt_current_traced_function_stack(bool reverse, bool show_tid) {
    bool debug = false;
@@ -199,9 +205,9 @@ void dbgrpt_current_traced_function_stack(bool reverse, bool show_tid) {
    }
    else {
       if (show_tid)
-         printf(PRItid" no traced function stack\n", TID());
+         drpt_vstring(0, PRItid" no traced function stack\n", TID());
       else
-         printf(" no traced function stack\n");
+         drpt_vstring(0, " no traced function stack\n");
    }
 }
 
