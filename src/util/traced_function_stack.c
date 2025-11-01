@@ -87,11 +87,12 @@ bool suspend_traced_function_stack(bool onoff) {
  *  @param stack    traced function stack to report
  *  @param reverse  order of entries
  *  @param show_tid prefix entries with thread id
+ *  @param depth    logical indentation depth
  *
  *  @remark thread is redundant in certain contexts
  */
-void dbgrpt_traced_function_stack(GQueue * stack, bool reverse, bool show_tid) {
-   int d0 = 0;
+void dbgrpt_traced_function_stack(GQueue * stack, bool reverse, bool show_tid, int depth) {
+   int d0 = depth;
    int d1 = d0+1;
 
    if (stack) {
@@ -130,7 +131,7 @@ void collect_traced_function_stack(GPtrArray* collector,
 {
    bool debug = false;
    if (debug)
-      dbgrpt_traced_function_stack(stack, false, true);
+      dbgrpt_traced_function_stack(stack, false, true, 0);
 
    if (stack && collector) {
       DBGF(debug, PRItid" reverse=%s, stack_adjust=%d, Traced function stack %p:",
@@ -193,21 +194,22 @@ void current_traced_function_stack_to_syslog(int syslog_priority, bool reverse) 
  *
  *  @param reverse  order of entries
  *  @param show_tid prefix entries with thread id
+ *  @param depth    logical indentation depth
  *
  *  @remark thread is redundant in certain contexts
  */
-void dbgrpt_current_traced_function_stack(bool reverse, bool show_tid) {
+void dbgrpt_current_traced_function_stack(bool reverse, bool show_tid, int depth) {
    bool debug = false;
    if (debug)
       list_traced_function_stacks();
    if (traced_function_stack) {
-      dbgrpt_traced_function_stack(traced_function_stack, reverse, show_tid);
+      dbgrpt_traced_function_stack(traced_function_stack, reverse, show_tid, depth);
    }
    else {
       if (show_tid)
-         drpt_vstring(0, PRItid" no traced function stack\n", TID());
+         drpt_vstring(depth, PRItid" no traced function stack", TID());
       else
-         drpt_vstring(0, " no traced function stack\n");
+         drpt_vstring(depth, "no traced function stack");
    }
 }
 
@@ -249,8 +251,8 @@ GPtrArray * get_current_traced_function_stack_contents(bool most_recent_last) {
 GPtrArray * stash_current_traced_function_stack() {
    bool debug = true;
    if (debug) {
-      DBG("Starting. Traced function stack to be stashed:");
-      dbgrpt_current_traced_function_stack(true, true);
+      drpt_label(0, "Starting. Traced function stack to be stashed:");
+      dbgrpt_current_traced_function_stack(true, true, 0);
    }
    GPtrArray * result = get_current_traced_function_stack_contents(true);
    g_ptr_array_set_free_func(result, free);
@@ -269,8 +271,8 @@ void restore_current_traced_function_stack(GPtrArray* stashed) {
       g_ptr_array_free(stashed, true);
    }
    if (debug) {
-      DBG("Done.    Restored traced function stack:");
-      dbgrpt_current_traced_function_stack(true, true);
+      drpt_label(0, "Done.    Restored traced function stack:");
+      dbgrpt_current_traced_function_stack(true, true, 0);
    }
 }
 
@@ -375,7 +377,7 @@ void push_traced_function(const char * funcname) {
    if (debug) {
       printf(PRItid" (%s) Done\n", TID(), __func__);
       // show_backtrace(0);
-      dbgrpt_current_traced_function_stack(false, true);
+      dbgrpt_current_traced_function_stack(false, true, 0);
    }
 }
 
@@ -476,7 +478,7 @@ void pop_traced_function(const char * funcname) {
                         TID(), funcname);
                }
 
-               dbgrpt_current_traced_function_stack(/*reverse=*/ false, true);
+               dbgrpt_current_traced_function_stack(/*reverse=*/ false, true, 0);
                // show_backtrace(1);
                backtrace_to_syslog(LOG_ERR, /* stack_adjust */ 1);
                current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
@@ -510,7 +512,7 @@ static void free_traced_function_stack(GQueue * stack) {
       printf(PRItid"(%s) Starting. stack=%p\n", TID(), __func__, traced_function_stack);
       if (stack) {
          printf(PRItid"(free_traced_function_stack) Final contents of traced_function_stack:\n", TID());
-         dbgrpt_traced_function_stack(stack, true, true);
+         dbgrpt_traced_function_stack(stack, true, true, 0);
       }
    }
 

@@ -360,7 +360,7 @@ ddc_open_display(
 
          bool reported = false;
          if (in_ddci_open_display()) {
-            dbgrpt_current_traced_function_stack(true, false);
+            dbgrpt_current_traced_function_stack(true, false, 0);
             dbgrpt_published_dref_hash("In ddc_open_display", 0);
             reported = true;
          }
@@ -368,7 +368,7 @@ ddc_open_display(
          TRACED_ASSERT(businfo);
          if (memcmp(businfo, I2C_BUS_INFO_MARKER, 4) != 0) {
             if (!reported) {
-               dbgrpt_current_traced_function_stack(true, false);
+               dbgrpt_current_traced_function_stack(true, false, 0);
                dbgrpt_published_dref_hash("In ddc_open_display", 0);
             }
              char * msg = NULL;
