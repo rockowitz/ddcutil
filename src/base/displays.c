@@ -715,7 +715,7 @@ static uint next_dref_id(Display_Ref * dref) {
 
 void add_published_dref_id_by_dref(Display_Ref * dref) {
    bool debug = false;
-   // DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
 
    g_mutex_lock (&dref_hash_mutex);
    g_hash_table_insert(published_dref_hash, GUINT_TO_POINTER(dref->dref_id), dref);
@@ -726,7 +726,7 @@ void add_published_dref_id_by_dref(Display_Ref * dref) {
    }
    g_mutex_unlock(&dref_hash_mutex);
 
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "%s -> %d", dref_reprx_t(dref), dref->dref_id);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "%s -> %d", dref_reprx_t(dref), dref->dref_id);
 }
 
 static void delete_published_dref_id(uint dref_id) {
