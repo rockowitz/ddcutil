@@ -719,8 +719,29 @@ void rpt_multiline(int depth, ...) {
 }
 
 
-/** Writes all strings in a GPtrArray to the current report destination
+/** Convenience function that writes multiple constant strings to the
+ *  debug destination(s).
  *
+ *  @param depth    logical indentation depth
+ *  @param ...      pointers to constant strings,
+ *                  last pointer is NULL to terminate list
+ */
+void drpt_multiline(int depth, ...) {
+   va_list args;
+   va_start(args, depth);
+   char * s = NULL;
+   while( (s = va_arg(args, char *)) != NULL) {
+      // rpt_title(s, depth);
+      xrpt_label_collect(XRPT_TRC, depth, s, NULL);
+   }
+   va_end(args);
+}
+
+
+/** Writes all strings in a GPtrArray to the current output destination
+ *  and/or debug messages destinations.
+ *
+ * @param  opts    determines destinations
  * @param  depth   logical indentation depth
  * @param  strings pointer to GPtrArray of strings
  */
@@ -743,8 +764,21 @@ void rpt_g_ptr_array(int depth, GPtrArray * strings) {
 }
 
 
-/** Writes a hex dump with indentation.
- *  Output is written to the current report destination
+/** Writes all strings in a GPtrArray to the debug destinations
+ *
+ * @param  depth   logical indentation depth
+ * @param  strings pointer to GPtrArray of strings
+ */
+void drpt_g_ptr_array(int depth, GPtrArray * strings) {
+      xrpt_g_ptr_array(XRPT_RPT, depth, strings);
+}
+
+
+/** Writes a hex dump to the current output destination or the system log,
+ *  with indentation, but without ornamentation.
+ *
+ *  Global redirect_reports_to_syslog determines whether output goes
+ *  to the system log.
  *
  *  @param data  start of bytes to dump
  *  @param size  number of bytes to dump
@@ -851,8 +885,8 @@ int rpt_file_contents(const char * fn, bool verbose, int depth) {
 }
 
 
-/* The remaining rpt_ functions various data types share a common formatting so that they can
- * be use together.  All channel their output through rpt_str().
+/* The remaining rpt_ functions for various data types share a common formatting
+ * for use together.  All channel their output through rpt_str().
  *
  * Depending on whether the info parm is null, output takes one of the following forms:
  *    name       (info) : value
