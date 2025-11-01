@@ -697,6 +697,41 @@ bool check_callstack(Dbgtrc_Options options, const char * funcname) {
 }
 
 
+void output_traced_function_stack() {
+   GPtrArray* contents = get_current_traced_function_stack_contents(true /* most_recent_last */);
+        for (int ndx = 0; ndx < contents->len; ndx++) {
+           if (ndx == 0) {
+              char * s = g_strdup_printf( "Backtrace of function %s:", (char*) g_ptr_array_index(contents,ndx));
+  #ifdef OLD
+              if (!dbgtrc_trace_to_syslog_only) {
+                 rpt_vstring(0, "%s", s);
+              }
+              if (dbgtrc_trace_to_syslog) {
+                 syslog(LOG_DEBUG, "%s", s);
+              }
+  #endif
+              drpt_vstring(0, "%s", s);
+              free(s);
+           }
+           else {
+              char * s = g_strdup_printf("     %s", (char*) g_ptr_array_index(contents,ndx));
+  #ifdef OLD
+              if (!dbgtrc_trace_to_syslog_only) {
+                 rpt_vstring(0, "%s", s);
+              }
+              if (dbgtrc_trace_to_syslog) {
+                 syslog(LOG_DEBUG, "%s", s);
+              }
+  #endif
+              drpt_vstring(0, "%s", s);
+              free(s);
+           }
+        }
+        g_ptr_array_free(contents, true);
+}
+
+
+
 /** Basic function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or DBGTRC macro to simplify calling.
  *
@@ -734,42 +769,15 @@ bool dbgtrc(
                TID(), trace_group, options, funcname, filename, lineno, get_thread_id(),
                trace_callstack_call_depth, (fout() == stdout) ? "==" : "!=");
 
+   bool in_callstack = check_callstack(options, funcname);
+   bool tracing_active = in_callstack || is_tracing(trace_group, filename, funcname);
+
    if (traced_function_stack_enabled && is_backtracing(funcname) && (options&DBGTRC_OPTIONS_STARTING)) {
-	   GPtrArray* contents = get_current_traced_function_stack_contents(true /* most_recent_last */);
-	   for (int ndx = 0; ndx < contents->len; ndx++) {
-	      if (ndx == 0) {
-	         char * s = g_strdup_printf( "Backtrace of function %s:", (char*) g_ptr_array_index(contents,ndx));
-#ifdef OLD
-	         if (!dbgtrc_trace_to_syslog_only) {
-	            rpt_vstring(0, "%s", s);
-	         }
-	         if (dbgtrc_trace_to_syslog) {
-	            syslog(LOG_DEBUG, "%s", s);
-	         }
-#endif
-	         drpt_vstring(0, "%s", s);
-	         free(s);
-	      }
-	      else {
-	         char * s = g_strdup_printf("     %s", (char*) g_ptr_array_index(contents,ndx));
-#ifdef OLD
-	         if (!dbgtrc_trace_to_syslog_only) {
-	            rpt_vstring(0, "%s", s);
-	         }
-            if (dbgtrc_trace_to_syslog) {
-               syslog(LOG_DEBUG, "%s", s);
-            }
-#endif
-            drpt_vstring(0, "%s", s);
-            free(s);
-	      }
-	   }
-	   g_ptr_array_free(contents, true);
+      output_traced_function_stack();
    }
 
    bool msg_emitted = false;
-   bool in_callstack = check_callstack(options, funcname);
-   if ( in_callstack || is_tracing(trace_group, filename, funcname) ) {
+   if ( tracing_active ) {
       va_list(args);
       va_start(args, format);
       // DBGF(debug, "&args=%p, args=%p", &args, args);
