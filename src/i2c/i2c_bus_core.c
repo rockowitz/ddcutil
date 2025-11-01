@@ -679,7 +679,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Traced function stack on entry to i2c_check_open_bus_alive","");
       // show_backtrace(0);   // all blank lines
-      dbgrpt_current_traced_function_stack(false);
+      dbgrpt_current_traced_function_stack(false, true);
    }
    syslog(LOG_DEBUG, "Traced function stack on entry to i2c_check_open_bus_alive()");
    current_traced_function_stack_to_syslog(LOG_DEBUG, /*reverse*/ false);

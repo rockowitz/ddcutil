@@ -731,14 +731,18 @@ void add_published_dref_id_by_dref(Display_Ref * dref) {
 
 static void delete_published_dref_id(uint dref_id) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref_id=%u", dref_id);
+
    g_mutex_lock (&dref_hash_mutex);
    g_hash_table_remove(published_dref_hash, GUINT_TO_POINTER(dref_id));
-   if (debug) {
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       char msgbuf[50];
       g_snprintf(msgbuf, 50, "After dref_id %d removed", dref_id);
       dbgrpt_published_dref_hash(msgbuf, 0);
    }
    g_mutex_unlock(&dref_hash_mutex);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -951,6 +955,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
          }
          else {
             uint dref_id = dref->dref_id;
+            delete_published_dref_id(dref_id);
             free(dref->usb_hiddev_name);        // private copy
             free(dref->capabilities_string);    // private copy
             free(dref->mmid);                   // private copy
@@ -964,7 +969,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             g_mutex_clear(&dref->access_mutex);
             dref->marker[3] = 'x';
             free(dref);
-            delete_published_dref_id(dref_id);
+
          }
       }
    }
@@ -1803,6 +1808,7 @@ void init_displays() {
 
    RTTI_ADD_FUNC(reset_published_dref_hash);
    RTTI_ADD_FUNC(add_published_dref_id_by_dref);
+   RTTI_ADD_FUNC(delete_published_dref_id);
 
    init_published_dref_hash();
 }
