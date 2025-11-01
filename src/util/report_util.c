@@ -306,7 +306,9 @@ void rpt_flush() {
 bool xrpt_trc_to_syslog_only = false;
 bool xrpt_trc_to_syslog = false;
 
-/** Writes a newline to the current output destination.
+
+/** Writes a newline to the current output destination
+ *  and/or the system log.
  */
 void xrpt_nl(Byte opts) {
    if (opts & XRPT_TRC) {
@@ -428,6 +430,11 @@ void drpt_title_collect(const char * title, GPtrArray * collector, int depth) {
  *
  * @param title string to write
  * @param depth logical indentation depth.
+ *
+ * @remark
+ * Use of this function, though widespread, is deprecated in
+ * favor of rpt_label(), which puts the depth argument first
+ * for consistency with other rpt... functions.
  */
 void rpt_title(const char * title, int depth) {
    xrpt_label_collect(XRPT_RPT, depth, title, NULL);
@@ -458,7 +465,7 @@ void rpt_label_collect(int depth, GPtrArray * collector, const char * text) {
  * The output is indented per the specified indentation depth.
  *
  * @param depth logical indentation depth.
- * @param title string to write
+ * @param text  string to write
  *
  * @remark
  * This function is logically equivalent to #rpt_title(), except that
@@ -472,13 +479,34 @@ void rpt_label(int depth, const char * text) {
    xrpt_label_collect(XRPT_RPT, depth, text, NULL);
 }
 
+
+/** Writes a constant string to the debug output destination(s).
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param depth logical indentation depth.
+ * @param text  string to write
+ */
 void drpt_label(int depth, const char * text) {
    //rpt_title(text, depth);
    xrpt_label_collect(XRPT_TRC, depth, text, NULL);
 }
 
 
-
+/** Writes a formatted string to the current output destination and/or
+ *  the debug locations.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param opts      control where output is sent
+ * @param depth     logical indentation depth.
+ * @param format    format string
+ * @param ap        substitution arguments
+ */
 void xvrpt_vstring(Byte opts, int depth, char* format, va_list ap) {
    // printf("(xvrpt_vstring) format=|%s|\n, ap=%p", format, ap);
    int buffer_size = 200;
@@ -491,13 +519,24 @@ void xvrpt_vstring(Byte opts, int depth, char* format, va_list ap) {
       buf = malloc(reqd_size+1);
       vsnprintf(buf, reqd_size+1, format, ap);
    }
-
    xrpt_label_collect(opts, depth, buf, NULL);
-
    if (buf != buffer)
       free(buf);
 }
 
+
+/** Writes a formatted string to the current output destination and/or
+ *  the debug locations.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param opts      control where output is sent
+ * @param depth     logical indentation depth.
+ * @param format    format string
+ * @param ...       substitution arguments
+ */
 void xrpt_vstring(Byte opts, int depth, char * format, ...) {
    va_list(args);
    va_start(args, format);
@@ -505,6 +544,17 @@ void xrpt_vstring(Byte opts, int depth, char * format, ...) {
    va_end(args);
 }
 
+
+/** Writes a formatted string to the current output destination.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param depth     logical indentation depth.
+ * @param format    format string
+ * @param ...       substitution arguments
+ */
 void rpt_vstring(int depth, char * format, ...) {
    va_list(args);
    va_start(args, format);
@@ -513,14 +563,23 @@ void rpt_vstring(int depth, char * format, ...) {
    va_end(args);
 }
 
+
+/** Writes a formatted string to debug string destinations.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param depth     logical indentation depth.
+ * @param format    format string
+ * @param ...       substitution arguments
+ */
 void drpt_vstring(int depth, char * format, ...) {
    va_list(args);
    va_start(args, format);
    xvrpt_vstring(XRPT_TRC, depth, format, args);
    va_end(args);
 }
-
-
 
 
 #ifdef OLD
@@ -580,7 +639,7 @@ void vrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_li
 }
 
 
-/** Writes a formatted string to the current output destination, or
+/** Writes a formatted string to the debug destinations, or
  *  adds the string to a collector array.
  *
  * A newline is appended to the string specified
@@ -599,7 +658,6 @@ void vdrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_l
    xrpt_label_collect(XRPT_TRC, depth, s, collector);
    free(s);
 }
-
 
 
 /** Writes a formatted string to the current output destination.
@@ -621,6 +679,19 @@ void rpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...) {
    va_end(args);
 }
 
+
+/** Writes a formatted string to the destinations for debug output.
+ *
+ * A newline is appended to the string specified
+ *
+ * @param  depth     logical indentation depth
+ * @param  collector if non-NULL, add string to GPtrArray instead of
+ *                   writing to current output destination
+ * @param  format    format string (normal printf argument)
+ * @param  ...       arguments
+ *
+ * @remark Note that the depth parm is first on this function because of variable args
+ */
 void drpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...) {
    va_list(args);
    va_start(args, format);
@@ -629,11 +700,8 @@ void drpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...) {
 }
 
 
-
-
-
-
-/** Convenience function that writes multiple constant strings.
+/** Convenience function that writes multiple constant strings to the
+ *  current output destination.
  *
  *  @param depth    logical indentation depth
  *  @param ...      pointers to constant strings,
@@ -649,6 +717,7 @@ void rpt_multiline(int depth, ...) {
    }
    va_end(args);
 }
+
 
 /** Writes all strings in a GPtrArray to the current report destination
  *
