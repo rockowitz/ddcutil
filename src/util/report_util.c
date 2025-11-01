@@ -394,7 +394,7 @@ void xrpt_label_collect(Byte opts, int depth, const char * title, GPtrArray * co
 }
 
 
-
+#ifdef DEPRECATED
 /** Writes a constant string to the current output destination, or adds
  *  the string to a specified GPtrArray.
  *
@@ -416,6 +416,7 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
 void drpt_title_collect(const char * title, GPtrArray * collector, int depth) {
    xrpt_label_collect(XRPT_TRC, depth, title, collector);
 }
+#endif
 
 
 
@@ -573,7 +574,8 @@ void rpt_vstring(int depth, char * format, ...) {
  */
 void vrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_list ap) {
    char * s = g_strdup_vprintf(format, ap);
-   rpt_title_collect(s, collector, depth);
+   // rpt_title_collect(s, collector, depth);
+   rpt_label_collect(depth, collector, s);
    free(s);
 }
 
@@ -593,7 +595,8 @@ void vrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_li
  */
 void vdrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_list ap) {
    char * s = g_strdup_vprintf(format, ap);
-   drpt_title_collect(s, collector, depth);
+   // drpt_title_collect(s, collector, depth);
+   xrpt_label_collect(XRPT_TRC, depth, s, collector);
    free(s);
 }
 
