@@ -413,7 +413,7 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
    xrpt_label_collect(XRPT_RPT, depth, title, collector);
 }
 
-void trpt_title_collect(const char * title, GPtrArray * collector, int depth) {
+void drpt_title_collect(const char * title, GPtrArray * collector, int depth) {
    xrpt_label_collect(XRPT_TRC, depth, title, collector);
 }
 
@@ -577,9 +577,23 @@ void vrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_li
    free(s);
 }
 
-void vtrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_list ap) {
+
+/** Writes a formatted string to the current output destination, or
+ *  adds the string to a collector array.
+ *
+ * A newline is appended to the string specified
+ *
+ * @param  depth     logical indentation depth
+ * @param  collector if non-NULL, add string to GPtrArray instead of
+ *                   writing to current output destination
+ * @param  format    format string (normal printf argument)
+ * @param  ap        va_list array of arguments
+ *
+ * @remark Note that the depth parm is first on this function because of variable args
+ */
+void vdrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_list ap) {
    char * s = g_strdup_vprintf(format, ap);
-   trpt_title_collect(s, collector, depth);
+   drpt_title_collect(s, collector, depth);
    free(s);
 }
 
@@ -607,7 +621,7 @@ void rpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...) {
 void drpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...) {
    va_list(args);
    va_start(args, format);
-   vtrpt_vstring_collect(depth, collector, format, args);
+   vdrpt_vstring_collect(depth, collector, format, args);
    va_end(args);
 }
 
