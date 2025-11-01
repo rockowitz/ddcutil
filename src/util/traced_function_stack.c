@@ -87,12 +87,15 @@ bool suspend_traced_function_stack(bool onoff) {
  *  @param stack    traced function stack to report
  *  @param reverse  order of entries
  */
-void dbgrpt_traced_function_stack(GQueue * stack, bool reverse) {
+void dbgrpt_traced_function_stack(GQueue * stack, bool reverse, bool show_tid) {
    int d0 = 0;
    int d1 = d0+1;
 
    if (stack) {
-      drpt_vstring(d0, PRItid" Traced function stack %p:", TID(), stack);
+      if (show_tid)
+         drpt_vstring(d0, PRItid" Traced function stack %p:", TID(), stack);
+      else
+         drpt_vstring(d0, "Traced function stack %p:", stack);
       int queue_len = g_queue_get_length(stack);
       if (queue_len > 0) {
          // printf("%"PRItid"traced function stack (addr=%p, len=%d:\n", TID(), stack, queue_len );
@@ -124,7 +127,7 @@ void collect_traced_function_stack(GPtrArray* collector,
 {
    bool debug = false;
    if (debug)
-      dbgrpt_traced_function_stack(stack, false);
+      dbgrpt_traced_function_stack(stack, false, true);
 
    if (stack && collector) {
       DBGF(debug, PRItid" reverse=%s, stack_adjust=%d, Traced function stack %p:",
@@ -187,15 +190,18 @@ void current_traced_function_stack_to_syslog(int syslog_priority, bool reverse) 
  *
  *  @param reverse  order of entries
  */
-void dbgrpt_current_traced_function_stack(bool reverse) {
+void dbgrpt_current_traced_function_stack(bool reverse, bool show_tid) {
    bool debug = false;
    if (debug)
       list_traced_function_stacks();
    if (traced_function_stack) {
-      dbgrpt_traced_function_stack(traced_function_stack, reverse);
+      dbgrpt_traced_function_stack(traced_function_stack, reverse, show_tid);
    }
    else {
-      printf(PRItid" no traced function stack\n", TID());
+      if (show_tid)
+         printf(PRItid" no traced function stack\n", TID());
+      else
+         printf(" no traced function stack\n");
    }
 }
 
@@ -238,7 +244,7 @@ GPtrArray * stash_current_traced_function_stack() {
    bool debug = true;
    if (debug) {
       DBG("Starting. Traced function stack to be stashed:");
-      dbgrpt_current_traced_function_stack(true);
+      dbgrpt_current_traced_function_stack(true, true);
    }
    GPtrArray * result = get_current_traced_function_stack_contents(true);
    g_ptr_array_set_free_func(result, free);
@@ -258,7 +264,7 @@ void restore_current_traced_function_stack(GPtrArray* stashed) {
    }
    if (debug) {
       DBG("Done.    Restored traced function stack:");
-      dbgrpt_current_traced_function_stack(true);
+      dbgrpt_current_traced_function_stack(true, true);
    }
 }
 
@@ -363,7 +369,7 @@ void push_traced_function(const char * funcname) {
    if (debug) {
       printf(PRItid" (%s) Done\n", TID(), __func__);
       // show_backtrace(0);
-      dbgrpt_current_traced_function_stack(false);
+      dbgrpt_current_traced_function_stack(false, true);
    }
 }
 
@@ -464,7 +470,7 @@ void pop_traced_function(const char * funcname) {
                         TID(), funcname);
                }
 
-               dbgrpt_current_traced_function_stack(/*reverse=*/ false);
+               dbgrpt_current_traced_function_stack(/*reverse=*/ false, true);
                // show_backtrace(1);
                backtrace_to_syslog(LOG_ERR, /* stack_adjust */ 1);
                current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
@@ -498,7 +504,7 @@ static void free_traced_function_stack(GQueue * stack) {
       printf(PRItid"(%s) Starting. stack=%p\n", TID(), __func__, traced_function_stack);
       if (stack) {
          printf(PRItid"(free_traced_function_stack) Final contents of traced_function_stack:\n", TID());
-         dbgrpt_traced_function_stack(stack, true);
+         dbgrpt_traced_function_stack(stack, true, true);
       }
    }
 
