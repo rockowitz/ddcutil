@@ -1290,37 +1290,25 @@ base_errinfo_free_with_report(
 }
 
 
+/** Determine if stdout and stderr are being redirected the system log,
+ *  e.g. if executing under KDE PowerDevil.
+ *
+ *  Sets global #stdout_stderr_redirected.
+ *
+ *  Used to avoid duplicate messages being written to the system log.
+ *
+ *  Note the assumption that if stdout is redirected then stderr is as well.
+ */
 void detect_stdout_stderr_redirection() {
    bool debug = false;
    DBGF(debug, "Starting");
-   // syslog(LOG_ERR,  "(%s)",msg);
-  //  msg_to_syslog_only = true;
+
+   // msg_to_syslog_only = true;
    // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = true");
    // msg_to_syslog_only = false;
    // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = false");
 
-   char * s = realpath("/sbin/init", NULL);
-   char * initsys = NULL;
-   if (!s) {   // pathological
-      initsys = g_strdup_printf("UNKNOWN");
-   }
-   else {
-      initsys = g_path_get_basename(s);
-      free(s);
-   }
-   DBGF(debug, "Init system: %s", initsys);
-   free(initsys);
-
-   char * stdout_fn = NULL;
-   filename_for_fd(1, &stdout_fn);
-   DBGF(debug, "stdout file name: %s",  stdout_fn);
-   stdout_stderr_redirected = (str_contains(stdout_fn, "socket") >= 0);
-   free(stdout_fn);
-   DBGF(debug, "set stdout_stderr_redirected = %s", SBOOL(stdout_stderr_redirected));
-   // stdout_stderr_redirected = false;    // *** TEMP ****
-   // DBG("Forced stdout_stderr_redirected = false for testing");
-
-
+   if (debug) {
 #ifdef OLD
    char * initsys = execute_shell_cmd_one_line_result("ps -p 1 -o comm=");
    DBGF(debug, "Using init system: %s", initsys);
@@ -1328,17 +1316,37 @@ void detect_stdout_stderr_redirection() {
    free(initsys);
 #endif
 
-   // shows nothing
-   // show_backtrace(1);
+      char * s = realpath("/sbin/init", NULL);
+      char * initsys = NULL;
+      if (!s) {   // pathological
+         initsys = g_strdup_printf("UNKNOWN");
+      }
+      else {
+         initsys = g_path_get_basename(s);
+         free(s);
+      }
+      DBG("Init system: %s", initsys);
+      free(initsys);
 
-   // syslog(LOG_ERR, "stdout file name: %s",  filename_for_fd_t(1));
+      char * journalstream = getenv("JOURNAL_STREAM");  // do not free
+      DBG("$JOURNAL_STREAM = %s", journalstream);
+     //  MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$JOURNAL_STREAM = %s", journalstream);
+      // char * s = getenv("INVOCATION_ID");  // do not free
+      // DBG("$INVOCATION_ID = %s", s);
+      // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$INVOCATION_ID = %s", s);
+   }
 
-   char * journalstream = getenv("JOURNAL_STREAM");  // do not free
-   DBGF(debug, "$JOURNAL_STREAM = %s", journalstream);
-  //  MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$JOURNAL_STREAM = %s", journalstream);
-   // char * s = getenv("INVOCATION_ID");  // do not free
-   // DBG("$INVOCATION_ID = %s", s);
-   // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$INVOCATION_ID = %s", s);
+   char * stdout_fn = NULL;
+   filename_for_fd(1, &stdout_fn);
+   DBGF(debug, "stdout file name: %s",  stdout_fn);
+   // syslog(LOG_ERR, "stdout file name: %s",  stdout_fn);
+   stdout_stderr_redirected = (str_contains(stdout_fn, "socket") >= 0);
+   free(stdout_fn);
+   DBGF(debug, "set stdout_stderr_redirected = %s", SBOOL(stdout_stderr_redirected));
+
+   // stdout_stderr_redirected = false;    // *** TEMP ****
+   // DBG("Forced stdout_stderr_redirected = false for testing");
+
    DBGF(debug, "Done");
 }
 
