@@ -298,7 +298,7 @@ ddc_open_display(
       SYSLOG2(DDCA_SYSLOG_ERROR, "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s",
             dref_repr_t(dref));
       // show_backtrace(1);
-      // backtrace_to_syslog(LOG_ERR, 1);
+      backtrace_to_syslog(LOG_ERR, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
       dref->flags |= DREF_DISCONNECTED;
       err = ERRINFO_NEW(DDCRC_DISCONNECTED,
@@ -359,11 +359,14 @@ ddc_open_display(
          // all we can do at this point is return an internal error.
 
          bool reported = false;
+#define DEBUG_556
+#ifdef DEBUG_556
          if (in_ddci_open_display()) {
             dbgrpt_current_traced_function_stack(true, false, 0);
             dbgrpt_published_dref_hash("In ddc_open_display", 0);
             reported = true;
          }
+#endif
 
          TRACED_ASSERT(businfo);
          if (memcmp(businfo, I2C_BUS_INFO_MARKER, 4) != 0) {
@@ -371,31 +374,21 @@ ddc_open_display(
                dbgrpt_current_traced_function_stack(true, false, 0);
                dbgrpt_published_dref_hash("In ddc_open_display", 0);
             }
-             char * msg = NULL;
-                msg = g_strdup_printf("dref=%s, businfo->marker = |%.4s| = %s",
+            char * msg = g_strdup_printf("dref=%s, businfo->marker = |%.4s| = %s",
                       dref_reprx_t(dref), (char*)businfo, hexstring_t((unsigned char*) businfo->marker, 4));
-             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
-             free(msg);
-         }
-
-#ifndef RECOVERY
-         TRACED_ASSERT( businfo && memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
-#else
-         // if (true) { // *** TEMP ***
-         if (!businfo || memcmp(businfo, I2C_BUS_INFO_MARKER, 4) != 0) {
-            char * msg = NULL;
-            if (!businfo)
-               msg = g_strdup_printf("dref=%s, dref->detail = businfo = NULL", dref_reprx_t(dref));
-            else {
-               msg = g_strdup_printf("dref=%s, businfo->marker = |%.4s| = %s",
-                     dref_reprx_t(dref), (char*)businfo, hexstring_t((unsigned char*) businfo->marker, 4));
-            }
             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+            current_traced_function_stack_to_syslog(LOG_ERR, /*reverse=*/true);
+            published_dref_hash_to_syslog(LOG_ERR, "In ddc_open_display()");
+            free(msg);
+
+#ifndef RECOVER_556
+            TRACED_ASSERT(memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
+#else
             err = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "%s", msg);
             free(msg);
             goto bye;
-         }
 #endif
+         }
 
 
          if (!businfo->edid) {
