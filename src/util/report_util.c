@@ -371,24 +371,31 @@ void xrpt_label_collect(Byte opts, int depth, const char * title, GPtrArray * co
              if (!xrpt_trc_to_syslog_only) {
                 if (rpt_get_ornamentation_enabled())
                    get_msg_decoration(prefix, 100, false);
-                f0printf(rpt_cur_output_dest(), "??%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
+                f0printf(rpt_cur_output_dest(), "%s%s%*s%s\n",
+                      (tag_output) ? "??" : "",
+                      prefix, rpt_get_indent(depth), "", title);
              }
              if (xrpt_trc_to_syslog) {
                 if (rpt_get_ornamentation_enabled())
                    get_msg_decoration(prefix, 100, true);
-                syslog(LOG_DEBUG,  "--%s%*s%s%s",
-                      prefix, rpt_get_indent(depth), "", title, (tag_output) ? " (I)" : "");
+                syslog(LOG_DEBUG,  "%s%s%*s%s",
+                      (tag_output) ? "--" : "",
+                      prefix, rpt_get_indent(depth), "", title);
              }
          }
          else {
             if (rpt_get_ornamentation_enabled())
                get_msg_decoration(prefix, 100, redirect_reports_to_syslog);
             if (redirect_reports_to_syslog) {
-               syslog(LOG_NOTICE, "%s%*s%s%s",
-                     prefix, rpt_get_indent(depth), "++", title, (tag_output) ? " (I)" : "");
+               syslog(LOG_NOTICE, "%s%s%*s",
+                     (tag_output) ? "++" : "",
+                     prefix,
+                     rpt_get_indent(depth), title);
             }
             else {
-               f0printf(rpt_cur_output_dest(), "!!%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
+               f0printf(rpt_cur_output_dest(), "%s%s%*s%s\n",
+                     (tag_output) ? "!!" : "",
+                     prefix, rpt_get_indent(depth), "", title);
             }
          }
       }
