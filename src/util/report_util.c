@@ -36,7 +36,7 @@
 bool redirect_reports_to_syslog = false;
 bool tag_output = false;
 
-static bool default_prefix_report_output = false;
+static bool default_ornament_report_output = false;
 
 /** Sets the initial report ornamentation status.
  *
@@ -45,7 +45,7 @@ static bool default_prefix_report_output = false;
  *  @param output_dest  default output destination
  */
 void rpt_set_default_ornamentation_enabled(bool onoff) {
-   default_prefix_report_output = onoff;
+   default_ornament_report_output = onoff;
 }
 
 
@@ -110,7 +110,7 @@ static Per_Thread_Settings *  get_thread_settings() {
       settings = g_new0(Per_Thread_Settings, 1);
       settings->indent_spaces_stack_pos = -1;
       settings->output_dest_stack_pos   = -1;
-      settings->ornament_report_output = default_prefix_report_output;
+      settings->ornament_report_output = default_ornament_report_output;
 
       if (default_output_dest)
          settings->output_dest_stack[++settings->output_dest_stack_pos] = default_output_dest;
