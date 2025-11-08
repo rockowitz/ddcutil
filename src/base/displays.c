@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
@@ -675,6 +676,23 @@ void dbgrpt_published_dref_hash(const char * msg, int depth) {
        Display_Ref * dref = (Display_Ref *) value;
        drpt_vstring(depth+1, "dref_id %d -> %s", dref_id, dref_reprx_t(dref));
     }
+}
+
+
+void published_dref_hash_to_syslog(int priority, const char * msg) {
+   if (msg)
+      syslog(priority, "%s: dref_hash_contents:", msg);
+   else
+      syslog(priority, "dref_hash contents: ");
+
+   GHashTableIter iter;
+   gpointer key, value;
+   g_hash_table_iter_init (&iter, published_dref_hash);
+   while (g_hash_table_iter_next (&iter, &key, &value)) {
+      uint dref_id = GPOINTER_TO_UINT(key);
+      Display_Ref * dref = (Display_Ref *) value;
+      syslog(priority, "dref_id %d -> %s", dref_id, dref_reprx_t(dref));
+   }
 }
 
 

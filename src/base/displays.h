@@ -223,6 +223,7 @@ typedef struct _display_ref {
 
 
 void             dbgrpt_published_dref_hash(const char * msg, int depth);
+void             published_dref_hash_to_syslog(int priority, const char * msg);
 void             init_published_dref_hash();
 void             reset_published_dref_hash();
 void             add_published_dref_id_by_dref(Display_Ref * dref);
