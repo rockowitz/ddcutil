@@ -86,18 +86,32 @@ int read_ddcutil_config_file(
    DBGF(debug, "Starting. ddcutil_application=%s, errmsgs=%p",
                ddcutil_application, (void*)errmsgs);
 
-   Ini_Valid_Section_Key_Pairs valid_pairs[] = {{"global",     "options"},
-                                                {"ddcutil",    "options"},
-                                                {"libddcutil", "options"}};
-    int kvpct = sizeof(valid_pairs)/sizeof(Ini_Valid_Section_Key_Pairs);
+   Ini_Valid_Section_Key_Pairs valid_ddcutil_pairs[] = {{"global",     "options"},
+                                                        {"ddcutil",    "options"},
+                                                        {"libddcutil", "options"}};
+   int ddcutil_kvpct = sizeof(valid_ddcutil_pairs)/sizeof(Ini_Valid_Section_Key_Pairs);
+   Ini_Valid_Section_Key_Pairs valid_ddcui_pairs[] = {{"global",     "options"},
+                                                      {"ddcui",      "options"}};
+   int ddcui_kvpct = sizeof(valid_ddcui_pairs)/sizeof(Ini_Valid_Section_Key_Pairs);
 
-   int result = 0;
+
    *untokenized_option_string_loc = NULL;
    *config_fn_loc = NULL;
+   int result = 0;
 
-   char * config_fn = (streq(ddcutil_application, "ddcui"))
-         ? find_xdg_config_file("ddcutil", "ddcuirc")
-         : find_xdg_config_file("ddcutil", "ddcutilrc");
+   int kvpct = 0;
+   char * config_fn = NULL;
+   Ini_Valid_Section_Key_Pairs*  valid_pairs = NULL;
+   if (streq(ddcutil_application, "ddcui")) {
+      config_fn = find_xdg_config_file("ddcutil", "ddcuirc");
+      valid_pairs = valid_ddcui_pairs;
+      kvpct = ddcui_kvpct;
+   }
+   else {
+      config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
+      valid_pairs = valid_ddcutil_pairs;
+      kvpct = ddcutil_kvpct;
+   }
    if (!config_fn) {
       DBGF(debug, "Configuration file not found");
       result = -ENOENT;
@@ -105,6 +119,8 @@ int read_ddcutil_config_file(
    }
    DBGF(debug, "Found configuration file: %s", config_fn);
    *config_fn_loc = config_fn;
+
+
 
    Parsed_Ini_File * ini_file = NULL;
    int load_rc = ini_file_load(config_fn, valid_pairs, kvpct, errmsgs, &ini_file);
