@@ -175,7 +175,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_TRANSIENT                                 0x0400
 #define DREF_OPEN                                      0x0800
 #define DREF_DDC_BUSY                                  0x1000
-#define DREF_REMOVED                                   0x2000
+#define DREF_DISCONNECTED                                   0x2000
 #define DREF_DDC_DISABLED                              0x4000
 #define DREF_DPMS_SUSPEND_STANDBY_OFF                  0x8000
 

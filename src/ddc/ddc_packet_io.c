@@ -143,7 +143,7 @@ ddc_validate_display_handle2(Display_Handle * dh) {
    DDCA_Status result = DDCRC_OK;
    // DDCA_Status result = ddc_validate_display_ref2(dh->dref,  DREF_VALIDATE_EDID|DREF_VALIDATE_AWAKE);
    // DDCA_Status result = ddc_validate_display_ref2(dh->dref,  DREF_VALIDATE_BASIC_ONLY);
-   if (dh->dref->flags & DREF_REMOVED) {
+   if (dh->dref->flags & DREF_DISCONNECTED) {
       result = DDCRC_DISCONNECTED;
    }
 
@@ -287,7 +287,7 @@ ddc_open_display(
 
    // if (ctr % 8 == 0)
    //    dref->detail = NULL;
-   if (dref->flags & DREF_REMOVED) {
+   if (dref->flags & DREF_DISCONNECTED) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to open disconnected display reference %s",
             dref_repr_t(dref));
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Attempting to open disconnected display reference %s",
@@ -295,14 +295,14 @@ ddc_open_display(
       goto bye;
    }
    if (!dref->detail) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Display_Ref.detail == NULL, but DREF_REMOVED not set, dref=%s",
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s",
             dref_repr_t(dref));
       // show_backtrace(1);
       // backtrace_to_syslog(LOG_ERR, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
-      dref->flags |= DREF_REMOVED;
+      dref->flags |= DREF_DISCONNECTED;
       err = ERRINFO_NEW(DDCRC_DISCONNECTED,
-            "Display_Ref.detail == NULL, but DREF_REMOVED not set, dref=%s", dref_repr_t(dref));
+            "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s", dref_repr_t(dref));
       goto bye;
    }
 

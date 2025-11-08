@@ -693,7 +693,7 @@ void reset_published_dref_hash() {
    while (g_hash_table_iter_next (&iter, &key, &value)) {
       // uint dref_id = GPOINTER_TO_UINT(key);
       Display_Ref * dref = (Display_Ref *) value;
-      dref->flags |= DREF_REMOVED;
+      dref->flags |= DREF_DISCONNECTED;
       // drpt_vstring(depth+1, "(reset_published_dref_hash) dref_id %d -> %s", dref_id, dref_reprx_t(dref));
    }
 
@@ -1241,7 +1241,7 @@ char * dref_reprx_t(Display_Ref * dref) {
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    if (dref)
       g_snprintf(buf, 200, "Display_Ref[%s%d:%s @%p]",
-            (dref->flags & DREF_REMOVED) ? "Disconnected: " : "",
+            (dref->flags & DREF_DISCONNECTED) ? "Disconnected: " : "",
             dref->dref_id,
             dpath_short_name_t(&dref->io_path),
             (void*) dref);
@@ -1274,8 +1274,8 @@ char * ddci_dref_repr_t(DDCA_Display_Ref * ddca_dref) {
 
 
 /** Locates the currently live Display_Ref for the specified bus.
- *  Discarded display references, i.e. ones marked removed (flag DREF_REMOVED)
- *  are ignored. There should be at most one non-removed Display_Ref.
+ *  Discarded display references, i.e. ones marked removed (flag DREF_DISCONNECTED)
+ *  are ignored. There should be at most one non-disconnected Display_Ref.
  *
  *  @param  busno    I2C_Bus_Number
  *  @param  connector
@@ -1316,11 +1316,11 @@ Display_Ref * get_dref_by_busno_or_connector(
       }
 
       // I2C_Bus_Info * businfo = (I2C_Bus_Info*) cur_dref->detail;
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED=%s, dref_detail=%p -> /dev/i2c-%d",
-      //       sbool(cur_dref->flags&DREF_REMOVED), cur_dref->detail,  businfo->busno);
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_DISCONNECTED=%s, dref_detail=%p -> /dev/i2c-%d",
+      //       sbool(cur_dref->flags&DREF_DISCONNECTED), cur_dref->detail,  businfo->busno);
 
-      if (ignore_invalid && (cur_dref->flags&DREF_REMOVED)) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p DREF_REMOVED set, Ignoring",
+      if (ignore_invalid && (cur_dref->flags&DREF_DISCONNECTED)) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p DREF_DISCONNECTED set, Ignoring",
                 dref_repr_t(cur_dref), cur_dref);
          continue;
       }
@@ -1365,7 +1365,7 @@ Display_Ref * get_dref_by_busno_or_connector(
          Display_Ref * cur_dref = g_ptr_array_index(all_display_refs, ndx);
          if (ignore_invalid && cur_dref->dispno <= 0)
             continue;
-         if (ignore_invalid && (cur_dref->flags&DREF_REMOVED))
+         if (ignore_invalid && (cur_dref->flags&DREF_DISCONNECTED))
             continue;
          if (cur_dref->io_path.io_mode != DDCA_IO_I2C)
             continue;
@@ -1375,7 +1375,7 @@ Display_Ref * get_dref_by_busno_or_connector(
             if (cur_dref->creation_timestamp < highest_non_removed_creation_timestamp) {
                SEVEREMSG("Marking dref %s removed", dref_reprx_t(cur_dref));
                //ddc_mark_display_ref_removed(cur_dref);
-               cur_dref->flags |= DREF_REMOVED;
+               cur_dref->flags |= DREF_DISCONNECTED;
             }
          }
       }
@@ -1404,7 +1404,7 @@ ddc_get_display_ref_by_drm_connector(
       // ddc_dbgrpt_display_ref(cur, 4);
       bool pass_filter = true;
       if (ignore_invalid) {
-         pass_filter = (cur->dispno > 0 || !(cur->flags&DREF_REMOVED));
+         pass_filter = (cur->dispno > 0 || !(cur->flags&DREF_DISCONNECTED));
       }
       if (pass_filter) {
          if (cur->io_path.io_mode == DDCA_IO_I2C) {
@@ -1633,7 +1633,7 @@ Value_Name_Table dref_flags_table = {
       VN(DREF_DYNAMIC_FEATURES_CHECKED),
       VN(DREF_OPEN),
       VN(DREF_DDC_BUSY),
-      VN(DREF_REMOVED),
+      VN(DREF_DISCONNECTED),
       VN(DREF_DDC_DISABLED),
       VN(DREF_DPMS_SUSPEND_STANDBY_OFF),
 //    VN(CALLOPT_NONE),                // special entry

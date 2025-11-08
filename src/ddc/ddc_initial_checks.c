@@ -491,7 +491,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          }
          else if (psc == DDCRC_DISCONNECTED)
          {
-            dref->flags = DREF_REMOVED;
+            dref->flags = DREF_DISCONNECTED;
          }
          else if (psc == -EBUSY) {
              // communication failed, do not set DDCRC_COMMUNICATION_WORKING
@@ -603,7 +603,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
          }
          ddc_close_display_wo_return(dh);
       }
-      if (!(dref->flags & DREF_REMOVED))
+      if (!(dref->flags & DREF_DISCONNECTED))
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
 
       if (err && err->status_code == -EBUSY)

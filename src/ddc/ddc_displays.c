@@ -209,7 +209,7 @@ ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_remove
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
       if ((include_invalid_displays || cur->dispno > 0) &&
-          (!(cur->flags&DREF_REMOVED) || include_removed_drefs) )
+          (!(cur->flags&DREF_DISCONNECTED) || include_removed_drefs) )
       {
          g_ptr_array_add(result, cur);
       }
@@ -731,7 +731,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
       if (IS_DBGTRC(debug, DDCA_TRC_NONE))
          dbgrpt_display_ref(dref, /*include_businfo*/ false, 1);
       // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
-      if (dref->flags & DREF_REMOVED) {
+      if (dref->flags & DREF_DISCONNECTED) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Already marked removed");
          ddcrc = DDCRC_DISCONNECTED;
       }

@@ -71,7 +71,7 @@ void dw_mark_display_ref_removed(Display_Ref* dref) {
       show_backtrace(2);
       backtrace_to_syslog(LOG_NOTICE, 0);
    }
-   dref->flags |= DREF_REMOVED;
+   dref->flags |= DREF_DISCONNECTED;
    g_mutex_unlock(&all_display_refs_mutex);
    DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
 }
@@ -142,7 +142,7 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
       }
 
       if (err && err->status_code == DDCRC_DISCONNECTED) {
-         assert(dref->flags & DREF_REMOVED);
+         assert(dref->flags & DREF_DISCONNECTED);
          DBGTRC_NOPREFIX(true, DDCA_TRC_CONN, "pathological case, dref=%s", dref_reprx_t(dref));
          // pathological case, monitor went away
          dref->flags |= DREF_TRANSIENT;   // allow free_display_ref() to free
@@ -171,8 +171,8 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
 
 /** Given a #I2C_Bus_Info instance, checks if there is a currently active #Display_Ref
- *  for that bus (i.e. one with the DREF_REMOVED flag not set).
- *  If found, sets the DREF_REMOVED flag.
+ *  for that bus (i.e. one with the DREF_DISCONNECTED flag not set).
+ *  If found, sets the DREF_DISCONNECTED flag.
  *
  *  @param  businfo
  *  @return Display_Ref
@@ -190,7 +190,7 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
    if (dref) {
-      assert(!(dref->flags & DREF_REMOVED));
+      assert(!(dref->flags & DREF_DISCONNECTED));
       dw_mark_display_ref_removed(dref);
       dref->detail = NULL;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updated flags: %s", interpret_dref_flags_t(dref->flags));

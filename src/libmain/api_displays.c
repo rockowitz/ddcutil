@@ -115,9 +115,9 @@ DDCA_Status ddci_validate_ddca_display_ref2(
    }
    else {
       // should be redundant with ddc_validate_display_ref2(), but something not being caught
-      if (dref->flags & DREF_REMOVED) {
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_REMOVED set!");
-         SYSLOG2(DDCA_SYSLOG_WARNING, "DREF_REMOVED set for %s", dref_reprx_t(dref));
+      if (dref->flags & DREF_DISCONNECTED) {
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "DREF_DISCONNECTED set!");
+         SYSLOG2(DDCA_SYSLOG_WARNING, "DREF_DISCONNECTED set for %s", dref_reprx_t(dref));
          result = DDCRC_DISCONNECTED;
       }
       else if ( !(dref->flags & DREF_DDC_COMMUNICATION_WORKING) &&
