@@ -630,18 +630,19 @@ static bool vdbgtrc(
                            thread_prefix, funcname, retval_info, base_msg,
                            (tag_output) ? " (J)" : "");
             }
-            syslog(LOG_DEBUG, "$$%s", syslog_msg);
+            syslog(LOG_DEBUG, "%s%s", (tag_output) ? "&&" : "", syslog_msg);
             free(syslog_msg);
          }
          else if ( (options & DBGTRC_OPTIONS_SEVERE) && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
             char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
                                      thread_prefix, funcname, retval_info, base_msg,
                                      (tag_output) ? " (K)" : ""  );
-            syslog(LOG_ERR, "$$%s", syslog_msg);
+            syslog(LOG_ERR, "%s%s", (tag_output) ? "&&" : "", syslog_msg);
             free(syslog_msg);
          }
          else if (redirect_reports_to_syslog) {
-            syslog(LOG_NOTICE, "$$%s(%-30s) %s%s%s",
+            syslog(LOG_NOTICE, "%s%s(%-30s) %s%s%s",
+                  (tag_output) ? "&&" : "",
                   thread_prefix, funcname, retval_info, base_msg,
                   (tag_output) ? " (L)" : ""  );
          }
@@ -650,7 +651,9 @@ static bool vdbgtrc(
             FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
                               ? thread_settings->ferr
                               : thread_settings->fout;
-            f0printf(where, "%s%s\n", decorated_msg, (tag_output) ? " (M)" : ""  );
+            f0printf(where, "%s%s%s\n",
+                  (tag_output) ? "&&" : "",
+                  decorated_msg, (tag_output) ? " (M)" : ""  );
             // f0puts(decorated_msg, where);
             // f0putc('\n', where);
             fflush(where);
