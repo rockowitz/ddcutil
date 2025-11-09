@@ -358,12 +358,13 @@ ddc_open_display(
          // Lacking further detail in the bug report for proper diagnosis,
          // all we can do at this point is return an internal error.
 
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "businfo=%p", businfo);
          bool reported = false;
-#define DEBUG_556
+// #define DEBUG_556
 #ifdef DEBUG_556
          if (in_ddci_open_display()) {
             dbgrpt_current_traced_function_stack(true, false, 0);
-            dbgrpt_published_dref_hash("In ddc_open_display", 0);
+            dbgrpt_published_dref_hash("In ddc_open_display (1)", 0);
             reported = true;
          }
 #endif
@@ -372,19 +373,20 @@ ddc_open_display(
          if (memcmp(businfo, I2C_BUS_INFO_MARKER, 4) != 0) {
             if (!reported) {
                dbgrpt_current_traced_function_stack(true, false, 0);
-               dbgrpt_published_dref_hash("In ddc_open_display", 0);
+               dbgrpt_published_dref_hash("In ddc_open_display (2)", 0);
             }
             char * msg = g_strdup_printf("dref=%s, businfo->marker = |%.4s| = %s",
                       dref_reprx_t(dref), (char*)businfo, hexstring_t((unsigned char*) businfo->marker, 4));
             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
             current_traced_function_stack_to_syslog(LOG_ERR, /*reverse=*/true);
-            published_dref_hash_to_syslog(LOG_ERR, "In ddc_open_display()");
-            free(msg);
+            published_dref_hash_to_syslog(LOG_ERR, "In ddc_open_display() (3)");
 
+#define RECOVER_556
 #ifndef RECOVER_556
+            free(msg);
             TRACED_ASSERT(memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
 #else
-            err = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "%s", msg);
+            err = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "%s", 1);
             free(msg);
             goto bye;
 #endif
