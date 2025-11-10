@@ -119,7 +119,7 @@ interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
    char * buffer = get_thread_fixed_buffer(&buf_key, 100);
 
-   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
        // Exactly 1 of the following should be set in DDCA_Version_Feature_Flags:
        flags & DDCA_RO                  ? "DDCA_RO|"             : "",
        flags & DDCA_WO                  ? "DDCA_WO|"             : "",
@@ -134,7 +134,9 @@ interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
        flags & DDCA_WO_NC               ? "DDCA_WO_CONT|"        : "",
        flags & DDCA_NORMAL_TABLE        ? "DDCA_NORMAL_TABLE|"   : "",
        flags & DDCA_WO_TABLE            ? "DDCA_WO_TABLE|"       : "",
+       // Other
        flags & DDCA_DEPRECATED          ? "DDCA_DEPRECATED|"     : "",
+       flags & DDCA_NOVERIFY            ? "DDCA_NOVERIFY|"       : "",
 
        // Lifecycle in DDCA_Global_Feature_Flags:
        flags & DDCA_PERSISTENT_METADATA ? "DDCA_PERSISTENT_METADATA|"    : "",
@@ -143,9 +145,8 @@ interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
        // Provenance in DDCA_Global_Feature_Flags:
        flags & DDCA_USER_DEFINED        ? "DDCA_USER_DEFINED|"   : "",
        flags & DDCA_SYNTHETIC           ? "DDCA_SYNTHESIZED|"    : ""
-
    );
-   // remove final comma and blank
+   // remove final comma
    if (strlen(buffer) > 0)
       buffer[strlen(buffer)-1] = '\0';
 
@@ -162,8 +163,6 @@ interpret_ddca_global_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
    char * buffer = get_thread_fixed_buffer(&buf_key, 100);
 
    g_snprintf(buffer, 100, "%s%s%s%s",
-
-
        // Lifecycle in DDCA_Global_Feature_Flags:
        flags & DDCA_PERSISTENT_METADATA ? "DDCA_PERSISTENT_METADATA|"    : "",
        flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY
@@ -171,9 +170,8 @@ interpret_ddca_global_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
        // Provenance in DDCA_Global_Feature_Flags:
        flags & DDCA_USER_DEFINED        ? "DDCA_USER_DEFINED|"   : "",
        flags & DDCA_SYNTHETIC           ? "DDCA_SYNTHESIZED|"    : ""
-
    );
-   // remove final comma and blank
+   // remove final comma
    if (strlen(buffer) > 0)
       buffer[strlen(buffer)-1] = '\0';
 
@@ -190,7 +188,7 @@ interpret_ddca_version_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
    char * buffer = get_thread_fixed_buffer(&buf_key, 100);
 
-   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s",
+   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
        // Exactly 1 of the following should be set in DDCA_Version_Feature_Flags:
        flags & DDCA_RO                  ? "DDCA_RO|"             : "",
        flags & DDCA_WO                  ? "DDCA_WO|"             : "",
@@ -205,9 +203,10 @@ interpret_ddca_version_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
        flags & DDCA_WO_NC               ? "DDCA_WO_CONT|"        : "",
        flags & DDCA_NORMAL_TABLE        ? "DDCA_NORMAL_TABLE|"   : "",
        flags & DDCA_WO_TABLE            ? "DDCA_WO_TABLE|"       : "",
-       flags & DDCA_DEPRECATED          ? "DDCA_DEPRECATED|"     : ""
+       flags & DDCA_DEPRECATED          ? "DDCA_DEPRECATED|"     : "",
+       flags & DDCA_NOVERIFY            ? "DDCA_NOVERIFY|"       : ""
    );
-   // remove final comma and blank
+   // remove final comma
    if (strlen(buffer) > 0)
       buffer[strlen(buffer)-1] = '\0';
 
