@@ -536,7 +536,7 @@ do { \
       dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE, \
              __func__, __LINE__, __FILE__, \
              "Returning %s at %p", #_structname, _structptr); \
-      if (_structptr) { \
+      if (IS_DBGTRC((_flag), _trace_group) && _structptr) { \
          _dbgfunc(_structptr, 1); \
       } \
    } \
