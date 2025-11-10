@@ -1137,9 +1137,9 @@ parse_command(
    }
    char watch_mode_expl[80];
 #ifdef USE_X11
-   g_snprintf(watch_mode_expl, 80, "DYNAMIC|XEVENT|POLL, default: %s", default_watch_mode_keyword);
+   g_snprintf(watch_mode_expl, 80, "DYNAMIC|XEVENT|UDEV|POLL, default: %s", default_watch_mode_keyword);
 #else
-   g_snprintf(watch_mode_expl, 80, "DYNAMIC|POLL, default: %s", default_watch_mode_keyword);
+   g_snprintf(watch_mode_expl, 80, "DYNAMIC|UDEV|POLL, default: %s", default_watch_mode_keyword);
 #endif
    gboolean enable_watch_displays = true;
 #ifdef USE_X11
