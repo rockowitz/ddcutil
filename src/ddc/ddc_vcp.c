@@ -535,7 +535,7 @@ is_rereadable_feature(
       DDCA_Vcp_Feature_Code opcode)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "opcode = 0x%02x", opcode);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, opcode=0x%02x", dh_repr(dh), opcode);
 
    // readable features that should not be read after write
    DDCA_Vcp_Feature_Code unrereadable_features[] = {
@@ -559,7 +559,7 @@ is_rereadable_feature(
             dyn_get_feature_metadata_by_dh(opcode, dh, /*check_udf=*/ true, /*with_default*/false);
       // if not found, assume readable  ??
       if (dfm) {
-         result = dfm->version_feature_flags & DDCA_READABLE;
+         result = dfm->version_feature_flags & DDCA_READABLE && !(dfm->version_feature_flags & DDCA_NOVERIFY);
          dfm_free(dfm);
       }
    }
