@@ -282,7 +282,7 @@ void unquiesce_api();
  */
 #define API_EPILOG_RET_BOOL(_debug_flag, _respect_quiesced,  _result, _format, ...) \
    do { \
-      dbgtrc_returning_expression( \
+      dbgtrc_returning_string( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, sbool(_result), _format, ##__VA_ARGS__); \
         if (trace_api_call_depth > 0) \
