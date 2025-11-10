@@ -954,16 +954,22 @@ ddca_dbgrpt_feature_metadata(
 bool
 ddca_enable_udf(bool onoff)
 {
+   bool debug = false;
+   API_PROLOG(debug, "onoff=%s", SBOOL(onoff));
+
    bool oldval = enable_dynamic_features;
    enable_dynamic_features = onoff;
-   return oldval;
+
+   API_EPILOG_RET_BOOL(debug, NORESPECT_QUIESCE, oldval, "");
 }
 
 
 bool
 ddca_is_udf_enabled(void)
 {
-   return enable_dynamic_features;
+   bool debug = false;
+   API_PROLOG(debug, "");
+   API_EPILOG_RET_BOOL(debug, NORESPECT_QUIESCE, enable_dynamic_features, "");
 }
 
 
@@ -1027,6 +1033,8 @@ void init_api_metadata() {
    RTTI_ADD_FUNC(ddca_get_feature_metadata_by_dh);
    // RTTI_ADD_FUNC(ddca_get_feature_name_by_dref); // error because deprecated
    RTTI_ADD_FUNC(ddca_get_simple_nc_feature_value_name_by_table);
+   RTTI_ADD_FUNC(ddca_enable_udf);
+   RTTI_ADD_FUNC(ddca_is_udf_enabled);
    RTTI_ADD_FUNC(ddca_dfr_check_by_dref);   // error because deprecated
    RTTI_ADD_FUNC(ddca_dfr_check_by_dh);
 }
