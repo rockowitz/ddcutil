@@ -433,6 +433,8 @@ typedef uint16_t DDCA_Version_Feature_Flags;
 
 // Additional bits:
 #define DDCA_DEPRECATED   0x0001     /**< Feature is deprecated in the specified VCP version */
+// not really version specific:
+#define DDCA_NOVERIFY     0x8000     /**< Do not attempt to verify, verification known to fail */
 
 ///@}
 
