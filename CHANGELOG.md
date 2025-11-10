@@ -155,6 +155,9 @@ file is libddcutil.so.5.4.0.
 
 ### Changed
 
+- By default, watching for display connection and disconnection by default uses
+  watch-mode **XEVENT** if X11 is the display manager, watch-mode **UDEV**
+  otherwise.
 - Callback function handling made more bulletproof
   - Close any unlock displays left open by user callback function
   - Write syslog messages (with log level NOTICE) before and after executing
