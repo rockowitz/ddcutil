@@ -1,4 +1,4 @@
-## [2.2.2] 2025-10-25
+## [2.2.2] 2025-11-10
 
 ### General
 
@@ -8,6 +8,9 @@
   (initial implementation)
 - Option ***--trace-to_syslog***: Direct trace output to the system log, without 
   disabling other destinations.
+- User defined features: Add feature attribute **NOVERIFY**.  Never perform 
+  verification on a **setvcp** operation.  Monitors exist that never 
+  or only sometimes correctly report the value set. 
 
 #### Changed
 
@@ -46,6 +49,7 @@
   - Permission denied errors corrupted output of the find command used to scan for 
     DisplayLink devices.
   - Incorrectly formed path name for examining /sys/class/drm
+- Fix invalid hyperlink in README.md. Pull Request #558
 
 #### Building
 
@@ -67,13 +71,16 @@ file is libddcutil.so.5.4.0.
   watch mode can be forced using ***--watch-mode udev***, ***--watch-mode xevent***, 
   or ***--watch-mode poll***.  Addresses issues in [KDE-Plasma Powerdevil merge request 542]
   (https://invent.kde.org/plasma/powerdevil/-/merge_requests/542)
+- Define bit **DDCA_NOVERIFY** in **DDCA_Version_Feature_Flags**. 
 
 #### Fixed
 
 - **ddca_open_display2()**: Return DDCRC_INTERNAL_ERROR instead of terminating 
   with assert() failure in certain ill-defined situations.  Addresses issue #556
   reported by PowerDevil.
-  
+- **ddca_redetect_displays()**: Set the **DREF_REMOVED** bit in all entries
+  in the table of published display references, i.e. references that have been 
+  reported to the client program, instead of emptying the table.
 
 
 ## [2.2.1] 2025-07-07
