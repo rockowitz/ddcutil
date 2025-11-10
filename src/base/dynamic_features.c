@@ -181,7 +181,7 @@ dyn_get_dynamic_feature_metadata(
    if (dfr && dfr->features)
       result = g_hash_table_lookup(dfr->features, GINT_TO_POINTER(feature_code));
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", result);
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, Dyn_Feature_Metadata, dbgrpt_dyn_feature_metadata, result);
    return result;
 }
 
@@ -365,6 +365,8 @@ attr_keyword(
       *pflags |= DDCA_EXTENDED_NC;
    else if (streq(keyword, "T"))
       *pflags |= DDCA_TABLE;
+   else if (streq(keyword, "NOVERIFY"))
+      *pflags |= DDCA_NOVERIFY;
 
    else
       ok = false;
