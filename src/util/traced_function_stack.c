@@ -249,7 +249,7 @@ GPtrArray * get_current_traced_function_stack_contents(bool most_recent_last) {
 
 
 GPtrArray * stash_current_traced_function_stack() {
-   bool debug = true;
+   bool debug = false;
    if (debug) {
       drpt_label(0, "Starting. Traced function stack to be stashed:");
       dbgrpt_current_traced_function_stack(true, true, 0);
@@ -261,7 +261,7 @@ GPtrArray * stash_current_traced_function_stack() {
 }
 
 void restore_current_traced_function_stack(GPtrArray* stashed) {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting. Restoring stashed stack %p", stashed);
    reset_current_traced_function_stack();
    if (stashed) {
