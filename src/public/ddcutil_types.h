@@ -308,7 +308,7 @@ typedef struct {
    DDCA_IO_Mode io_mode;        ///< physical access mode
    union {
       int        i2c_busno;     ///< I2C bus number
-      int        hiddev_devno;  ///* USB hiddev device number
+      int        hiddev_devno;  ///< USB hiddev device number
    } path;
 } DDCA_IO_Path;
 
