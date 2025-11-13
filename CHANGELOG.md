@@ -5,7 +5,7 @@
 #### Added
 
 - Option ***--trcback***: report call stack that led to specified function
-  (initial implementation)
+  (initial implementation). Requires ***--enable-traced-function-stack***.
 - Option ***--trace-to_syslog***: Direct trace output to the system log, without 
   disabling other destinations.
 - User defined features: Add feature attribute **NOVERIFY**.  Never perform 
@@ -14,6 +14,7 @@
 
 #### Changed
 
+- Option ***--enable-traced-function-stack*** is now the default.
 - Additional messages reporting configuration file errors. In particular, 
   section names and the names of keys within each section are validated.
   Section names other than [global], [ddcutil], and [libddcutil] are flagged
