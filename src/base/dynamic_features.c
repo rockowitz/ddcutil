@@ -365,8 +365,10 @@ attr_keyword(
       *pflags |= DDCA_EXTENDED_NC;
    else if (streq(keyword, "T"))
       *pflags |= DDCA_TABLE;
+#ifdef ATTR_NOVERIFY
    else if (streq(keyword, "NOVERIFY"))
       *pflags |= DDCA_NOVERIFY;
+#endif
 
    else
       ok = false;

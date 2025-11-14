@@ -136,7 +136,11 @@ interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
        flags & DDCA_WO_TABLE            ? "DDCA_WO_TABLE|"       : "",
        // Other
        flags & DDCA_DEPRECATED          ? "DDCA_DEPRECATED|"     : "",
+#ifdef ATTR_NOVERIFY
        flags & DDCA_NOVERIFY            ? "DDCA_NOVERIFY|"       : "",
+#else
+        "",
+#endif
 
        // Lifecycle in DDCA_Global_Feature_Flags:
        flags & DDCA_PERSISTENT_METADATA ? "DDCA_PERSISTENT_METADATA|"    : "",
@@ -204,8 +208,12 @@ interpret_ddca_version_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
        flags & DDCA_NORMAL_TABLE        ? "DDCA_NORMAL_TABLE|"   : "",
        flags & DDCA_WO_TABLE            ? "DDCA_WO_TABLE|"       : "",
        flags & DDCA_DEPRECATED          ? "DDCA_DEPRECATED|"     : "",
+#ifdef ATTR_NOVERIFY
        flags & DDCA_NOVERIFY            ? "DDCA_NOVERIFY|"       : ""
+#else
+       ""
    );
+#endif
    // remove final comma
    if (strlen(buffer) > 0)
       buffer[strlen(buffer)-1] = '\0';
