@@ -8,9 +8,6 @@
   (initial implementation). Requires ***--enable-traced-function-stack***.
 - Option ***--trace-to_syslog***: Direct trace output to the system log, without 
   disabling other destinations.
-- User defined features: Add feature attribute **NOVERIFY**.  Never perform 
-  verification on a **setvcp** operation.  Monitors exist that never 
-  or only sometimes correctly report the value set. 
 
 #### Changed
 
