@@ -308,7 +308,7 @@ typedef struct {
    DDCA_IO_Mode io_mode;        ///< physical access mode
    union {
       int        i2c_busno;     ///< I2C bus number
-      int        hiddev_devno;  ///< USB hiddev device number
+      int        hiddev_devno;  ///* USB hiddev device  number
    } path;
 } DDCA_IO_Path;
 
@@ -433,8 +433,6 @@ typedef uint16_t DDCA_Version_Feature_Flags;
 
 // Additional bits:
 #define DDCA_DEPRECATED   0x0001     /**< Feature is deprecated in the specified VCP version */
-// not really version specific:
-#define DDCA_NOVERIFY     0x8000     /**< Do not attempt to verify, verification known to fail */
 
 ///@}
 
