@@ -36,7 +36,7 @@ void  dw_dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
 
 
 void dw_deinit_xevent_screen_change_notification(XEvent_Data * evdata) {
-   if (evdata->dpy)
+   if (evdata && evdata->dpy)
       XCloseDisplay(evdata->dpy);
    free(evdata);
 }
