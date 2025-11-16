@@ -202,8 +202,10 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    XEvent_Data * xevdata  = NULL;
    if (resolved_watch_mode == Watch_Mode_Xevent) {
       xevdata  = dw_init_xevent_screen_change_notification();
-      x11_init_state = succeeded;
-      if (!xevdata) {
+      if (xevdata) {
+         x11_init_state = succeeded;
+      }
+      else {
          x11_init_state = failed;
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR API unavailable. Switching to Watch_Mode_Dynamic");
          resolved_watch_mode = resolve_watch_mode(Watch_Mode_Dynamic);
