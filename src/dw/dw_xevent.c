@@ -36,7 +36,8 @@ void  dw_dbgrpt_xevent_data(XEvent_Data* evdata, int depth) {
 
 
 void dw_deinit_xevent_screen_change_notification(XEvent_Data * evdata) {
-   if (evdata->dpy)
+   // evdata should never be null, but just in case we test it per PR#563
+   if (evdata && evdata->dpy)
       XCloseDisplay(evdata->dpy);
    free(evdata);
 }
