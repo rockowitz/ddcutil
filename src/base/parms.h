@@ -187,4 +187,10 @@
 // #define MAX_ARGS (MAX_SETVCP_VALUES*2)   // causes CMDID_* undefined
 #define MAX_ARGS 100        // hack
 
+
+// TEMPORARY FOR DEVELOPMENT
+#define TEST_DISPSEL 1
+
+
+
 #endif /* PARMS_H_ */
