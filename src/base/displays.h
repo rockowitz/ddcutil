@@ -115,7 +115,7 @@ char *              did_repr(Display_Identifier * pdid);
 void                dbgrpt_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
 
-// Display_Selector with replace Display_Identifier
+// Display_Selector will replace Display_Identifier
 // Maintain both in parallel for testing
 #define DISPLAY_SELECTOR_MARKER "DSEL"
 typedef struct {
