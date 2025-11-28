@@ -516,24 +516,9 @@ void drpt_label(int depth, const char * text) {
  */
 void xvrpt_vstring(Byte opts, int depth, char* format, va_list ap) {
    // printf("(xvrpt_vstring) format=|%s|\n, ap=%p", format, ap);
-   va_list ap_copy;
-   va_copy(ap_copy, ap);
-   int buffer_size = 200;
-   char buffer[buffer_size];
-   char * buf = buffer;
-   int reqd_size = vsnprintf(buffer, buffer_size, format, ap_copy);
-   va_end(ap_copy);
-   // if buffer wasn't sufficiently large, allocate a temporary buffer
-   if (reqd_size >= buffer_size) {
-      // printf("(%s) Allocating temp buffer, reqd_size=%d\n", __func__, reqd_size);
-      va_copy(ap_copy, ap);
-      buf = malloc(reqd_size+1);
-      vsnprintf(buf, reqd_size+1, format, ap_copy);
-      va_end(ap_copy);
-   }
+   char * buf = g_strdup_vprintf(format, ap);
    xrpt_label_collect(opts, depth, buf, NULL);
-   if (buf != buffer)
-      free(buf);
+   free(buf);
 }
 
 
