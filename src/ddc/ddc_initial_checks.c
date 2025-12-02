@@ -351,21 +351,16 @@ check_supported_feature(Display_Handle *      dh,
                   *p_shsl = HI_LO_BYTES_TO_SHORT(parsed_response_loc->sh, parsed_response_loc->sl);
                }
 
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                     "busno=%d, sleep-multiplier=%5.2f. "
-                     "Retesting for supported feature 0x%02x returned %s",
-                     businfo->busno,
-                     pdd_get_adjusted_sleep_multiplier(pdd),
-                     feature_code,
-                     errinfo_summary(ddc_excp));
                dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-               SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_NOTICE,
-                     "busno=%d, sleep-multiplier=%5.2f."
-                     "Retesting for supported feature 0x%02x returned %s",
+               char * s = g_strdup_printf(
+                     "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
                      businfo->busno,
                      pdd_get_adjusted_sleep_multiplier(pdd),
                      feature_code,
-                     errinfo_summary(ddc_excp));
+                     dref->communication_error_summary);
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
+               SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_NOTICE, "%s", s);
+               free(s);
             }
          }
       }
