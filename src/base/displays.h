@@ -45,7 +45,7 @@ For I2C displays, the device must be opened.  Display_Handle then contains the o
 */
 
 
-// #define DISPSEL_ONLY 1
+#define DISPSEL_ONLY 1
 // #define TEST_DISPSEL 1
 
 // *** Globals ***
