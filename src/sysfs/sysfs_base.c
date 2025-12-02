@@ -1426,6 +1426,14 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
          }
       }
    }
+   char * mem_sleep = file_get_first_line("/sys/power/mem_sleep", false);
+   if (mem_sleep) {
+      if (strstr(mem_sleep, "[s2idle]") && (streq(driver, "i915") || streq(driver, "xe"))) {
+         // Accessing i2c on Modern Standby platforms with Intel graphics may break s0ix
+         result = true;
+      }
+      free(mem_sleep);
+   }
    // printf("(%s) name=|%s|, driver=|%s|, returning: %s\n", __func__, name, driver, sbool(result));
    return result;
 }
