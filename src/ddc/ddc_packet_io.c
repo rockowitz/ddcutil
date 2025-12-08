@@ -332,6 +332,10 @@ ddc_open_display(
          err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
       }
       free(status);
+      // In case dw_remove_display_by_businfo() called during the one second window,
+      // per Charistian Gudrian
+      if (dref->flags & DREF_DISCONNECTED)
+         err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
       if (err)
          goto bye;
    }
