@@ -333,10 +333,12 @@ ddc_open_display(
          err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
       }
       free(status);
+#ifdef MADE_UNECESSARY_BY_MUTEX
       // In case dw_remove_display_by_businfo() called during the one second window,
       // per Charistian Gudrian
       if (dref->flags & DREF_DISCONNECTED)
          err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
+#endif
       if (err)
          goto bye;
    }
