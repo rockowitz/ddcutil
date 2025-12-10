@@ -711,7 +711,10 @@ void reset_published_dref_hash() {
    while (g_hash_table_iter_next (&iter, &key, &value)) {
       // uint dref_id = GPOINTER_TO_UINT(key);
       Display_Ref * dref = (Display_Ref *) value;
+      g_mutex_lock (&dref->disconnect_mutex);
       dref->flags |= DREF_DISCONNECTED;
+      dref->detail = NULL;
+      g_mutex_unlock(&dref->disconnect_mutex);
       // drpt_vstring(depth+1, "(reset_published_dref_hash) dref_id %d -> %s", dref_id, dref_reprx_t(dref));
    }
 
@@ -1377,7 +1380,7 @@ Display_Ref * get_dref_by_busno_or_connector(
          assert(non_removed_ct <= 1);
       }
       SEVEREMSG("Multiple non-removed displays on device %s detected. "
-                "All but the most recent are being marked DDC_REMOVED",
+                "All but the most recent are being marked DREF_DISCONNECTED.",
                 dpath_repr_t(&result->io_path));
       for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
          Display_Ref * cur_dref = g_ptr_array_index(all_display_refs, ndx);
@@ -1393,7 +1396,10 @@ Display_Ref * get_dref_by_busno_or_connector(
             if (cur_dref->creation_timestamp < highest_non_removed_creation_timestamp) {
                SEVEREMSG("Marking dref %s removed", dref_reprx_t(cur_dref));
                //ddc_mark_display_ref_removed(cur_dref);
+               g_mutex_lock(&cur_dref->disconnect_mutex);
                cur_dref->flags |= DREF_DISCONNECTED;
+               cur_dref->detail = NULL;
+               g_mutex_unlock(&cur_dref->disconnect_mutex);
             }
          }
       }

@@ -219,6 +219,7 @@ typedef struct _display_ref {
    char *                   communication_error_summary;
    uint64_t                 creation_timestamp;
    GMutex                   access_mutex;
+   GMutex                   disconnect_mutex;
 } Display_Ref;
 
 

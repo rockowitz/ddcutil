@@ -486,7 +486,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          }
          else if (psc == DDCRC_DISCONNECTED)
          {
+            g_mutex_lock(&dref->disconnect_mutex);
             dref->flags = DREF_DISCONNECTED;
+            dref->detail = NULL;
+            g_mutex_unlock(&dref->disconnect_mutex);
          }
          else if (psc == -EBUSY) {
              // communication failed, do not set DDCRC_COMMUNICATION_WORKING

@@ -71,7 +71,9 @@ void dw_mark_display_ref_removed(Display_Ref* dref) {
       show_backtrace(2);
       backtrace_to_syslog(LOG_NOTICE, 0);
    }
+   g_mutex_lock(&dref->disconnect_mutex);
    dref->flags |= DREF_DISCONNECTED;
+   g_mutex_unlock(&dref->disconnect_mutex);
    g_mutex_unlock(&all_display_refs_mutex);
    DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
 }

@@ -285,6 +285,7 @@ ddc_open_display(
    Error_Info * err = NULL;
    int fd = -1;
 
+   g_mutex_lock (&dref->disconnect_mutex);
    // if (ctr % 8 == 0)
    //    dref->detail = NULL;
    if (dref->flags & DREF_DISCONNECTED) {
@@ -475,6 +476,7 @@ ddc_open_display(
    }
 
 bye:
+   g_mutex_unlock (&dref->disconnect_mutex);
    if (err) {
       COUNT_STATUS_CODE(err->status_code);
    }
