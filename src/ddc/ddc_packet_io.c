@@ -393,7 +393,7 @@ ddc_open_display(
             free(msg);
             TRACED_ASSERT(memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
 #else
-            err = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "%s", 1);
+            err = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "%s", msg);
             free(msg);
             goto bye;
 #endif
