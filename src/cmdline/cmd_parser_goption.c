@@ -43,6 +43,7 @@ static Cache_Types       discarded_caches_work = NO_CACHES;
 static bool              verbose_stats  = false;
 static bool              internal_stats = false;
 static Bit_Set_32        ignored_hiddev_work = 0;    // gcc claims not const??? EMPTY_BIT_SET_32;
+static Bit_Set_256       ignored_busnos_work = {{0}};;
 
 
 // Callback function for processing --terse, --verbose and synonyms
@@ -160,6 +161,32 @@ discard_cache_arg_func(
    if (!ok) {
       g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "invalid cache type: %s", value );
    }
+   return ok;
+}
+
+
+
+// Callback function for processing --ignore-busno
+
+static gboolean
+ignored_busno_arg_func(const    gchar* option_name,
+               const    gchar* value,
+               gpointer data,
+               GError** error)
+{
+   bool debug = false;
+   DBGMSF(debug,"option_name=|%s|, value|%s|, data=%p", option_name, value, data);
+
+   int ival;
+   bool ok =  str_to_int(value, &ival, 10);
+   // DBGMSG("ival=%d", ival);
+   if (!ok || ival < 0 || ival >= BIT_SET_256_MAX) {
+      g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "Invalid i2c bus number: %s", value);
+      ok = false;
+   }
+   else
+      ignored_busnos_work = bs256_insert(ignored_busnos_work, ival);
+   // DBGMSF(debug, "Returning %s", sbool(ok));
    return ok;
 }
 
@@ -1423,6 +1450,8 @@ parse_command(
       {"ignore-usb-vid-pid", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored_vid_pid, "USB device to ignore","vid:pid" },
       {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
 #endif
+      {"ignore-i2c-bus", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_busno_arg_func,  "I2C bus to ignore", "bus number"},
+
       {"disable-ddc",   '\0', G_OPTION_FLAG_HIDDEN,
                                  G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
       {"ignore-mmid",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
@@ -1840,6 +1869,7 @@ parse_command(
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->ignored_hiddevs  = ignored_hiddev_work;
+   parsed_cmd->ignored_i2c_buses = ignored_busnos_work;
    SET_CMDFLAG(CMD_FLAG_VERBOSE_STATS,     verbose_stats);
    SET_CMDFLAG(CMD_FLAG_INTERNAL_STATS,    internal_stats);
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
