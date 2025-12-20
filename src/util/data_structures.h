@@ -200,6 +200,7 @@ typedef struct {
 } Bit_Set_256;
 
 extern const Bit_Set_256 EMPTY_BIT_SET_256;
+extern const int BIT_SET_256_MAX;
 
 bool           bs256_eq(Bit_Set_256 set1, Bit_Set_256 set2);
 int            bs256_count(Bit_Set_256 set);
