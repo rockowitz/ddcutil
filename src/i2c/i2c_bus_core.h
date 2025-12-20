@@ -70,6 +70,8 @@ Byte_Value_Array i2c_detect_attached_buses();
 Bit_Set_256      i2c_detect_attached_buses_as_bitset();
 Bit_Set_256      i2c_filter_buses_w_edid_as_bitset(BS256 bs_all_buses) ;
 Bit_Set_256      i2c_buses_w_edid_as_bitset();
+void             i2c_ignore_buses(Bit_Set_256 ignored_busnos_flags);;
+
 
 // Reports
 void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);

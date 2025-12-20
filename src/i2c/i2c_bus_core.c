@@ -111,6 +111,24 @@ char * edid_summary_from_bytes(Byte * edidbytes) {
 }
 
 
+static Bit_Set_256 ignored_i2c_buses = {0};
+
+
+/** Specify /dev/i2c-N devices to be ignored, i2c bus numbers.
+ *
+ *  @param ignored_busno_flags bits indicate i2c bus numbers to ignore
+ */
+void
+i2c_ignore_buses(Bit_Set_256 ignored_busno_flags) {
+   bool debug = false;
+   ignored_i2c_buses = ignored_busno_flags;
+
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "ignored_i2c_buses: %s",
+         bs256_to_string_decimal_t(ignored_i2c_buses, "", " "));
+}
+
+
+
 /** Gets a list of all /dev/i2c devices by checking the file system
  *  if devices named /dev/i2c-N exist.
  *
@@ -119,7 +137,7 @@ char * edid_summary_from_bytes(Byte * edidbytes) {
 Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices) {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
-      if (i2c_device_exists(busno)) {
+      if (!bs256_contains(ignored_i2c_buses, busno) && i2c_device_exists(busno)) {
          if (include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno))
             bva_append(bva, busno);
       }
@@ -676,13 +694,16 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    assert( (businfo->flags & I2C_BUS_EXISTS) &&
            (businfo->flags & I2C_BUS_PROBED)
          );
-   if (IS_DBGTRC(debug, TRACE_GROUP)) {
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Traced function stack on entry to i2c_check_open_bus_alive","");
-      // show_backtrace(0);   // all blank lines
-      dbgrpt_current_traced_function_stack(false, true, 0);
+
+   if (current_traced_function_stack_size() > 0) {
+      if (IS_DBGTRC(debug, TRACE_GROUP)) {
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Traced function stack on entry to i2c_check_open_bus_alive","");
+         // show_backtrace(0);   // all blank lines
+         dbgrpt_current_traced_function_stack(false, true, 0);
+      }
+      syslog(LOG_DEBUG, "Traced function stack on entry to i2c_check_open_bus_alive()");
+      current_traced_function_stack_to_syslog(LOG_DEBUG, /*reverse*/ false);
    }
-   syslog(LOG_DEBUG, "Traced function stack on entry to i2c_check_open_bus_alive()");
-   current_traced_function_stack_to_syslog(LOG_DEBUG, /*reverse*/ false);
 
    Error_Info * err = NULL;
    bool edid_exists = false;
@@ -695,7 +716,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
          // SYSLOG2(DDCA_SYSLOG_WARNING,
          //       "!!! (B) Retrying i2c_check_edid_exists_by_dh, tryctr=%d, dh=%s", tryctr, dh_repr(dh));
          SLEEP_MILLIS_WITH_SYSLOG2(DDCA_SYSLOG_WARNING, CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC,
-                          "Retrying i2c_check_edid_exists_by_dh() (c)");
+                          "Retrying i2c_check_edid_exists_by_dh() tryctr=%d, dh=%s", tryctr, dh_repr(dh));
       }
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
       if (businfo->drm_connector_name) {
@@ -1903,8 +1924,10 @@ get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
          int busno = udev_i2c_device_summary_busno(summary);
          assert(busno >= 0);
          assert(busno <= 127);
-         if ( include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno) )
-            bva_append(bva, busno);
+         if (!bs256_contains(ignored_i2c_buses, busno))  {
+            if ( include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno) )
+               bva_append(bva, busno);
+         }
       }
       free_udev_device_summaries(summaries);
    }
