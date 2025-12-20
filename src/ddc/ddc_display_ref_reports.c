@@ -259,6 +259,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    DDCA_Output_Level output_level = get_output_level();
    Monitor_Model_Key mmk = mmk_value_from_edid(dref->pedid);
    // DBGMSG("mmk = %s", mmk_repr(mmk) );
+   bool is_laptop = false;
 
    if (output_level >= DDCA_OL_NORMAL) {
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
@@ -310,10 +311,14 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
 #endif
 
-                if (businfo->flags & I2C_BUS_LVDS_OR_EDP)
+                if (businfo->flags & I2C_BUS_LVDS_OR_EDP) {
                    msg = "This is a laptop display.  Laptop displays do not support DDC/CI.";
-                else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP)
+                   is_laptop = true;
+                }
+                else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP) {
                    msg = "This appears to be a laptop display.  Laptop displays do not support DDC/CI.";
+                   is_laptop = true;
+                }
                 else if (!(businfo->flags & I2C_BUS_ADDR_X37)) {
                    msg = "This monitor does not support DDC/CI. (I2C slave address x37 is unresponsive.)";
                    vmsg = "If the monitor's on screen display has a DDC/CI setting, check it is enabled.";
@@ -454,7 +459,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                rpt_vstring(d1, msg);
          }
       }
-      if (output_level >= DDCA_OL_VERBOSE) {
+      if (output_level >= DDCA_OL_VERBOSE && !is_laptop) {
          char * smmk = mmk_model_id_string(mmk.mfg_id, mmk.model_name, mmk.product_code);
          rpt_vstring(d1, "Monitor Model Id:  %s", smmk);
          char * fqfn = dfr_find_feature_def_file(smmk);
