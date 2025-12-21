@@ -619,6 +619,15 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // if (parsed_cmd->flags & CMD_FLAG2_F16)
    //    dbgrpt_sysfs_basic_connector_attributes(1);
 
+   i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
+
+   i2c_ignore_buses(parsed_cmd->ignored_i2c_buses);
+#ifdef ENABLE_USB
+   usb_ignore_hiddevs(parsed_cmd->ignored_hiddevs);
+   Vid_Pid_Value * values = (parsed_cmd->ignored_usb_vid_pid_ct == 0) ? NULL : parsed_cmd->ignored_usb_vid_pids;
+   usb_ignore_vid_pid_values(parsed_cmd->ignored_usb_vid_pid_ct, values);
+#endif
+
    init_performance_options(parsed_cmd);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
    skip_ddc_checks = parsed_cmd->flags & CMD_FLAG_SKIP_DDC_CHECKS;

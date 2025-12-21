@@ -1215,13 +1215,6 @@ main(int argc, char *argv[]) {
    }
 
    Call_Options callopts = CALLOPT_NONE;
-   i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
-
-#ifdef ENABLE_USB
-   usb_ignore_hiddevs(parsed_cmd->ignored_hiddevs);
-   Vid_Pid_Value * values = (parsed_cmd->ignored_usb_vid_pid_ct == 0) ? NULL : parsed_cmd->ignored_usb_vid_pids;
-   usb_ignore_vid_pid_values(parsed_cmd->ignored_usb_vid_pid_ct, values);
-#endif
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    // DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");
