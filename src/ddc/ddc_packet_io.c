@@ -310,8 +310,7 @@ ddc_open_display(
    const char * driver_name = dref_get_i2c_driver(dref);
    DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "driver_name: %s", driver_name);
    if (driver_name && is_drm_conformant_driver(driver_name) &&
-       dref->drm_connector &&
-       strlen(dref->drm_connector) > 0)
+       dref->drm_connector && strlen(dref->drm_connector) > 0)
    {
       possibly_write_detect_to_status_by_dref(dref);
       char * status;
