@@ -1944,7 +1944,7 @@ Byte_Value_Array i2c_detect_attached_buses() {
             i2c_get_devices_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
 
-   Byte_Value_Array bva = bva_filter(bva0, i2c_bus_is_not_ignored);
+   Byte_Value_Array bva = bva_filter(bva0, i2c_bus_is_not_excluded);
    bva_free(bva0);
 
    char * s = bva_as_string(bva,  false,  ", ");

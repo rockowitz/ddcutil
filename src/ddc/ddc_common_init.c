@@ -621,7 +621,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
 
-   i2c_ignore_buses(parsed_cmd->ignored_i2c_buses);
+   i2c_exclude_buses(parsed_cmd->ignored_i2c_buses);
 #ifdef ENABLE_USB
    usb_ignore_hiddevs(parsed_cmd->ignored_hiddevs);
    Vid_Pid_Value * values = (parsed_cmd->ignored_usb_vid_pid_ct == 0) ? NULL : parsed_cmd->ignored_usb_vid_pids;

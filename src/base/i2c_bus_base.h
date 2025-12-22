@@ -143,9 +143,9 @@ const char *         x37_detection_state_name(X37_Detection_State state);
 void                 i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State deteted);
 X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes);
 
-void             i2c_ignore_buses(Bit_Set_256 ignored_busnos_flags);
-bool             i2c_bus_is_ignored(int busno);
-bool             i2c_bus_is_not_ignored(int busno);
+void             i2c_exclude_buses(Bit_Set_256 excluded_busnos_flags);
+bool             i2c_bus_is_excluded(int busno);
+bool             i2c_bus_is_not_excluded(int busno);
 
 
 // Initialization and termination

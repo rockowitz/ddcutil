@@ -855,7 +855,7 @@ static Bit_Set_256 ignored_i2c_buses = {0};
  *  @param ignored_busno_flags bits indicate i2c bus numbers to ignore
  */
 void
-i2c_ignore_buses(Bit_Set_256 ignored_busno_flags) {
+i2c_exclude_buses(Bit_Set_256 ignored_busno_flags) {
    bool debug = false;
    ignored_i2c_buses = ignored_busno_flags;
 
@@ -864,7 +864,7 @@ i2c_ignore_buses(Bit_Set_256 ignored_busno_flags) {
 }
 
 
-bool  i2c_bus_is_ignored(int busno) {
+bool  i2c_bus_is_excluded(int busno) {
    bool debug = false;
    bool result = bs256_contains(ignored_i2c_buses, busno);
 
@@ -875,7 +875,7 @@ bool  i2c_bus_is_ignored(int busno) {
 
 
 // for use as Byte_Value_Array filter function
-bool  i2c_bus_is_not_ignored(int busno) {
+bool  i2c_bus_is_not_excluded(int busno) {
    bool debug = false;
    bool result = !bs256_contains(ignored_i2c_buses, busno);
 
@@ -898,9 +898,9 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_dbgrpt_bus_info);
    RTTI_ADD_FUNC(i2c_query_x37_detected);
    RTTI_ADD_FUNC(i2c_record_x37_detected);
-   RTTI_ADD_FUNC(i2c_ignore_buses);
-   RTTI_ADD_FUNC(i2c_bus_is_ignored);
-   RTTI_ADD_FUNC(i2c_bus_is_not_ignored);
+   RTTI_ADD_FUNC(i2c_exclude_buses);
+   RTTI_ADD_FUNC(i2c_bus_is_excluded);
+   RTTI_ADD_FUNC(i2c_bus_is_not_excluded);
 }
 
 
