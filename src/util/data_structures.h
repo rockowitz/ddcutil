@@ -167,7 +167,7 @@ char * vnt_interpret_flags_t(
 // Byte Value Array
 //
 
-typedef bool *IFilter(int i);
+typedef bool IFilter(int i);
 
 /** An opaque structure containing an array of bytes that
  *  can grow dynamically.  Note that the same byte value can
