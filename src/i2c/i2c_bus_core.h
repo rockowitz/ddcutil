@@ -37,7 +37,7 @@ extern bool try_get_edid_from_sysfs_first;
 extern int  i2c_businfo_async_threshold;
 extern bool cross_instance_locks_enabled;
 
-Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices);
+Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices);
 
 // Bus open and close
 void             add_open_failures_reported(Bit_Set_256 failures);

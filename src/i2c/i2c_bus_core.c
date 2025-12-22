@@ -119,7 +119,7 @@ char * edid_summary_from_bytes(Byte * edidbytes) {
  *
  *  @return Byte_Value_Array containing the valid bus numbers
  */
-Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices) {
+Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       // if (!i2c_bus_is_ignored(busno)) { // done in i2c_device_exists()
@@ -1941,7 +1941,7 @@ Byte_Value_Array i2c_detect_attached_buses() {
             get_i2c_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
 #else
    Byte_Value_Array bva0 =
-            get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ false);
+            i2c_get_devices_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
 
    Byte_Value_Array bva = bva_filter(bva0, i2c_bus_is_not_ignored);
