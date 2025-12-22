@@ -111,21 +111,6 @@ char * edid_summary_from_bytes(Byte * edidbytes) {
 }
 
 
-static Bit_Set_256 ignored_i2c_buses = {0};
-
-
-/** Specify /dev/i2c-N devices to be ignored, i2c bus numbers.
- *
- *  @param ignored_busno_flags bits indicate i2c bus numbers to ignore
- */
-void
-i2c_ignore_buses(Bit_Set_256 ignored_busno_flags) {
-   bool debug = false;
-   ignored_i2c_buses = ignored_busno_flags;
-
-   DBGTRC_EXECUTED(debug, TRACE_GROUP, "ignored_i2c_buses: %s",
-         bs256_to_string_decimal_t(ignored_i2c_buses, "", " "));
-}
 
 
 
@@ -137,10 +122,12 @@ i2c_ignore_buses(Bit_Set_256 ignored_busno_flags) {
 Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices) {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
-      if (!bs256_contains(ignored_i2c_buses, busno) && i2c_device_exists(busno)) {
-         if (include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno))
-            bva_append(bva, busno);
-      }
+      // if (!i2c_bus_is_ignored(busno)) { // done in i2c_device_exists()
+         if (i2c_device_exists(busno)) {
+            if (include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno))
+               bva_append(bva, busno);
+         }
+      // }
    }
    return bva;
 }
@@ -1924,10 +1911,10 @@ get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
          int busno = udev_i2c_device_summary_busno(summary);
          assert(busno >= 0);
          assert(busno <= 127);
-         if (!bs256_contains(ignored_i2c_buses, busno))  {
+         // if (!i2c_bus_is_ignored(busno))  { // done by caller
             if ( include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno) )
                bva_append(bva, busno);
-         }
+         // }
       }
       free_udev_device_summaries(summaries);
    }
@@ -1950,17 +1937,20 @@ Byte_Value_Array i2c_detect_attached_buses() {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
 #ifdef ENABLE_UDEV    // perhaps slightly faster   TODO: perform test
    // do not include devices with ignorable name, etc.:
-   Byte_Value_Array i2c_bus_bva =
+   Byte_Value_Array bva0 =
             get_i2c_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
 #else
-   Byte_Value_Array i2c_bus_bva =
+   Byte_Value_Array bva0 =
             get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
 
-   char * s = bva_as_string(i2c_bus_bva,  false,  ", ");
+   Byte_Value_Array bva = bva_filter(bva0, i2c_bus_is_not_ignored);
+   bva_free(bva0);
+
+   char * s = bva_as_string(bva,  false,  ", ");
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
    free(s);
-   return i2c_bus_bva;;
+   return bva;;
 }
 
 
