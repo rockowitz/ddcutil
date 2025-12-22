@@ -59,7 +59,7 @@ Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 // Bus inventory - detect and probe buses
 
 Byte_Value_Array                // one byte for each I2C bus number
-get_i2c_device_numbers_using_udev(bool include_ignorable_devices);
+i2c_get_device_numbers_using_udev(bool include_ignorable_devices);
 
 
 Bit_Set_256      buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info

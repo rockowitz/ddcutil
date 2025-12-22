@@ -1898,7 +1898,7 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
  *  \return sorted #Byte_Value_Array of I2C device numbers, caller is responsible for freeing
  */
 Byte_Value_Array
-get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
+i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "include_ignorable_devices=%s", SBOOL(include_ignorable_devices));
 
@@ -1938,7 +1938,7 @@ Byte_Value_Array i2c_detect_attached_buses() {
 #ifdef ENABLE_UDEV    // perhaps slightly faster   TODO: perform test
    // do not include devices with ignorable name, etc.:
    Byte_Value_Array bva0 =
-            get_i2c_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
+            i2c_get_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
 #else
    Byte_Value_Array bva0 =
             i2c_get_devices_by_existence_test(/*include_ignorable_devices=*/ false);
@@ -2371,7 +2371,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
    RTTI_ADD_FUNC(check_x37_for_businfo);
    RTTI_ADD_FUNC(get_connector_edid);
-   RTTI_ADD_FUNC(get_i2c_device_numbers_using_udev);
+   RTTI_ADD_FUNC(i2c_get_device_numbers_using_udev);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
    RTTI_ADD_FUNC(i2c_async_scan);
    RTTI_ADD_FUNC(i2c_check_bus);
