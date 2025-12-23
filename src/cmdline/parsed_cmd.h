@@ -315,7 +315,7 @@ typedef struct {
 } Preparsed_Cmd;
 #endif
 
-const char *  parser_mode_name(Execution_Mode mode);
+const char *  execution_mode_name(Execution_Mode mode);
 const char *  cmdid_name(Cmd_Id_Type id);
 const char *  setvcp_value_type_name(Setvcp_Value_Type value_type);
 Parsed_Cmd *  new_parsed_cmd();

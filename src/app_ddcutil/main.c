@@ -1165,7 +1165,7 @@ main(int argc, char *argv[]) {
                          main_debug;
    DBGF(main_debug, "start_time_reported = %s", SBOOL(start_time_reported));
    DBGF(start_time_reported, "Starting %s execution, %s",
-               parser_mode_name(parsed_cmd->parser_mode),
+               execution_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting.  ddcutil version %s", get_full_ddcutil_version());

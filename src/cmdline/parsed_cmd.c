@@ -26,7 +26,7 @@
 // Parsed_Cmd data structure
 //
 
-const char *  parser_mode_name(Execution_Mode mode) {
+const char *  execution_mode_name(Execution_Mode mode) {
    // use switch to force compilation error if a mode is added but not named
    char * name = NULL;
    switch(mode) {
@@ -222,7 +222,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_nl();
       rpt_label(depth, "General");
       rpt_str("raw_command",       NULL, parsed_cmd->raw_command,                               d1);
-      rpt_str("parser mode",       NULL, parser_mode_name(parsed_cmd->parser_mode),             d1);
+      rpt_str("parser mode",       NULL, execution_mode_name(parsed_cmd->parser_mode),             d1);
       rpt_int_as_hex( "cmd_id",    NULL, parsed_cmd->cmd_id,                                    d1);
       rpt_int( "argct",       NULL,  parsed_cmd->argct, d1);
       int ndx = 0;
