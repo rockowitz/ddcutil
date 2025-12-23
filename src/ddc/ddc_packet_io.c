@@ -992,12 +992,9 @@ ddc_write_read_with_retry(
               retryable = true;     // for now
          }
 
-         if (psc == -EIO || psc == -ENXIO) {
-            Error_Info * err = i2c_check_open_bus_alive(dh) ;
+         if ((psc == -EIO || psc == -ENXIO) && execution_mode == MODE_LIBDDCUTIL) {
+            Error_Info * err = i2c_check_open_bus_alive(dh);
             if (err) {
-               // psc = err->status_code;
-               // retryable = false;
-               // errinfo_free(err);
                master_error = err;
                goto bye;
             }
