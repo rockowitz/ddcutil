@@ -1080,7 +1080,7 @@ parse_command(
    gboolean debug_parse_flag   = false;
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
-   gboolean edp_always_laptop_flag = false;
+   gboolean edp_always_laptop_flag = true;
    gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
    gboolean enable_tfs_flag    = DEFAULT_ENABLE_TRACED_FUNCTION_STACK;
    const char * enable_tfs_expl  = (DEFAULT_ENABLE_TRACED_FUNCTION_STACK) ? "Enable Traced Function Stack (default)" : "Enable Traced Function Stack";
@@ -1918,7 +1918,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_PROFILE_API,       profile_api_flag);
    SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG_ONLY, trace_to_syslog_only_flag);
    SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG,   trace_to_syslog_flag);
-   SET_CMDFLAG(CMD_FLAG_STATS_TO_SYSLOG, stats_to_syslog_only_flag);
+   SET_CMDFLAG(CMD_FLAG_STATS_TO_SYSLOG,   stats_to_syslog_only_flag);
    SET_CMDFLAG(CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, null_msg_for_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, enable_heuristic_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
