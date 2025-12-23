@@ -1080,6 +1080,7 @@ parse_command(
    gboolean debug_parse_flag   = false;
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
+   gboolean edp_always_laptop_flag = false;
    gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
    gboolean enable_tfs_flag    = DEFAULT_ENABLE_TRACED_FUNCTION_STACK;
    const char * enable_tfs_expl  = (DEFAULT_ENABLE_TRACED_FUNCTION_STACK) ? "Enable Traced Function Stack (default)" : "Enable Traced Function Stack";
@@ -1447,6 +1448,8 @@ parse_command(
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
       {"nousb",      '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
+      {"edp-ambiguous", '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
+                               G_OPTION_ARG_NONE, &edp_always_laptop_flag,  "DRM connector name eDP not always laptop display", NULL},
       {"ignore-usb-vid-pid", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored_vid_pid, "USB device to ignore","vid:pid" },
       {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
 #endif
@@ -1894,6 +1897,7 @@ parse_command(
 #ifdef ENABLE_USB
    SET_CMDFLAG(CMD_FLAG_ENABLE_USB,        enable_usb_flag);
 #endif
+   SET_CMDFLAG(CMD_FLAG_EDP_ALWAYS_LAPTOP, edp_always_laptop_flag);
 #ifdef OLD
    SET_CMDFLAG(CMD_FLAG_TIMEOUT_I2C_IO,    timeout_i2c_io_flag);
    SET_CMDFLAG(CMD_FLAG_REDUCE_SLEEPS,     reduce_sleeps_flag);
