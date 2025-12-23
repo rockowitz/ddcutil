@@ -1349,21 +1349,26 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
    DBGTRC_DONE(debug, DDCA_TRC_NONE,"");
 }
 
+bool edp_always_laptop = true;
 
 bool is_laptop_for_businfo(I2C_Bus_Info * businfo) {
    bool debug  = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d, edp_always_laptop=%s",
+         businfo, businfo->busno, SBOOL(edp_always_laptop));
 
    bool is_laptop = false;
    if (businfo->drm_connector_name) {
       if ( is_laptop_drm_connector_name(businfo->drm_connector_name) ) {
-         // double check, eDP has been seen to be applied to external display, see:
-         //   ddcutil issue #384
-         //   freedesktop.org issue #10389, DRM connector for external monitor has name card1-eDP-1
-         bool b = is_laptop_parsed_edid(businfo->edid);
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         bool b = true;
+         if (!edp_always_laptop) {
+            // double check, eDP has been seen to be applied to external display, see:
+            //   ddcutil issue #384
+            //   freedesktop.org issue #10389, DRM connector for external monitor has name card1-eDP-1
+            b = is_laptop_parsed_edid(businfo->edid);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                    "connector name = %s, is_laptop_parsed_edid() returned %s",
                    businfo->drm_connector_name, SBOOL(b));
+         }
          if (b) {
             businfo->flags |= I2C_BUS_LVDS_OR_EDP;
             is_laptop = true;

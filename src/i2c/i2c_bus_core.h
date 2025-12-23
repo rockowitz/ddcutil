@@ -36,6 +36,7 @@ extern bool use_drm_connector_states;
 extern bool try_get_edid_from_sysfs_first;
 extern int  i2c_businfo_async_threshold;
 extern bool cross_instance_locks_enabled;
+extern bool edp_always_laptop;
 
 Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices);
 
