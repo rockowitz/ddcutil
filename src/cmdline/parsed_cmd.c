@@ -26,17 +26,6 @@
 // Parsed_Cmd data structure
 //
 
-const char *  execution_mode_name(Execution_Mode mode) {
-   // use switch to force compilation error if a mode is added but not named
-   char * name = NULL;
-   switch(mode) {
-   case MODE_DDCUTIL:    name = "ddcutil";    break;
-   case MODE_LIBDDCUTIL: name = "libddcutil"; break;
-   }
-   return name;
-}
-
-
 // Must be kept in sync with Cmd_Id_Type
 Value_Name_Table cmd_id_table = {
       VNT(CMDID_NONE          , "none"),

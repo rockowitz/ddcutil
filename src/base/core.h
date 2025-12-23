@@ -67,6 +67,14 @@ extern bool timestamp_in_syslog_debug_msgs;
 extern bool running_as_root;
 
 
+typedef enum {
+   MODE_DDCUTIL,
+   MODE_LIBDDCUTIL
+} Execution_Mode;
+
+extern Execution_Mode execution_mode;
+const char *  execution_mode_name(Execution_Mode mode);
+
 //
 // Standard function call arguments and return values
 //

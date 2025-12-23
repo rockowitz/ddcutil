@@ -17,11 +17,6 @@
 #include "base/parms.h"
 
 typedef enum {
-   MODE_DDCUTIL,
-   MODE_LIBDDCUTIL
-} Execution_Mode;
-
-typedef enum {
    CMDID_NONE          =   0x0000,
    CMDID_DETECT        =   0x0001,
    CMDID_CAPABILITIES  =   0x0002,
@@ -315,7 +310,6 @@ typedef struct {
 } Preparsed_Cmd;
 #endif
 
-const char *  execution_mode_name(Execution_Mode mode);
 const char *  cmdid_name(Cmd_Id_Type id);
 const char *  setvcp_value_type_name(Setvcp_Value_Type value_type);
 Parsed_Cmd *  new_parsed_cmd();
