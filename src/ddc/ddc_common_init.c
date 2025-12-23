@@ -517,6 +517,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    final_result = init_disabled_displays(parsed_cmd);
 
+   edp_always_laptop = parsed_cmd->flags&CMD_FLAG_EDP_ALWAYS_LAPTOP;
+
    if (parsed_cmd->flags & CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE) {
       DBGMSF(debug, "setting simulate_null_msg_means_unspported = true");
       simulate_null_msg_means_unsupported = true;
