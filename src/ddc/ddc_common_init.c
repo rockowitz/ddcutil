@@ -225,7 +225,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 }
 
 
-STATIC Error_Info * init_disabled_displays(Parsed_Cmd * parsed_cmd) {
+STATIC Error_Info * init_ignored_display_models(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    Error_Info * errinfo = NULL;
    GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func((GDestroyNotify) errinfo_free);
@@ -515,7 +515,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (final_result)
       goto bye;      // main_rc == EXIT_FAILURE
 
-   final_result = init_disabled_displays(parsed_cmd);
+   final_result = init_ignored_display_models(parsed_cmd);
 
    edp_always_laptop = parsed_cmd->flags&CMD_FLAG_EDP_ALWAYS_LAPTOP;
 
