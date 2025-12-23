@@ -262,13 +262,13 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_int( "xevent_watch_loop_millisec",     NULL,  parsed_cmd->xevent_watch_loop_millisec, d1);
       rpt_int( "poll_watch_loop_millisec",       NULL,  parsed_cmd->poll_watch_loop_millisec,   d1);
       RPT_CMDFLAG("disable API",          CMD_FLAG_DISABLE_API,                                 d1);
+      RPT_CMDFLAG("eDP always laptop",    CMD_FLAG_EDP_ALWAYS_LAPTOP,                           d1);
 
       rpt_nl();
       rpt_label(depth, "Display Selection");
 #ifdef ENABLE_USB
       rpt_bool("enable usb",        NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_USB,              d1);
 #endif
-      RPT_CMDFLAG("eDP always laptop",   CMD_FLAG_EDP_ALWAYS_LAPTOP,                            d1);
 #ifndef DISPSEL_ONLY
       rpt_structure_loc("pdid", parsed_cmd->pdid,                                               d1);
       if (parsed_cmd->pdid)
