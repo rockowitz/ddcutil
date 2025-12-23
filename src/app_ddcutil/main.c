@@ -957,6 +957,7 @@ main(int argc, char *argv[]) {
    if (s && strlen(s) > 0)
       main_debug = true;
 
+   execution_mode = MODE_DDCUTIL;
    int main_rc = EXIT_FAILURE;
    bool start_time_reported = false;
 

@@ -772,6 +772,7 @@ ddci_init(const char *      libopts,
    if (infomsg_loc)
       *infomsg_loc = NULL;
 
+   execution_mode = MODE_LIBDDCUTIL;  // global in core.c
    Parsed_Cmd * parsed_cmd = NULL;
    Error_Info * master_error = NULL;
    DDCA_Status ddcrc = 0;
