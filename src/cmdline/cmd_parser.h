@@ -26,7 +26,7 @@ bool parse_syslog_level(
 Parsed_Cmd * parse_command(
       int         argc,
       char *      argv[],
-      Parser_Mode parser_mode,
+      Execution_Mode parser_mode,
       GPtrArray * errmsgs);
 
 #endif /* CMD_PARSER_H_ */

@@ -916,7 +916,7 @@ static void report_ddcutil_build_info() {
 Preparsed_Cmd * preparse_command(
       int         argc,
       char *      argv[],
-      Parser_Mode parser_mode,
+      Execution_Mode parser_mode,
       GPtrArray * errmsgs)
 {
    bool debug = false;
@@ -1011,7 +1011,7 @@ Parsed_Cmd *
 parse_command(
       int         argc,
       char *      argv[],
-      Parser_Mode parser_mode,
+      Execution_Mode parser_mode,
       GPtrArray * errmsgs)
 {
    bool debug = false;

@@ -26,7 +26,7 @@
 // Parsed_Cmd data structure
 //
 
-const char *  parser_mode_name(Parser_Mode mode) {
+const char *  parser_mode_name(Execution_Mode mode) {
    // use switch to force compilation error if a mode is added but not named
    char * name = NULL;
    switch(mode) {

@@ -19,7 +19,7 @@
 typedef enum {
    MODE_DDCUTIL,
    MODE_LIBDDCUTIL
-} Parser_Mode;
+} Execution_Mode;
 
 typedef enum {
    CMDID_NONE          =   0x0000,
@@ -224,7 +224,7 @@ struct {
 
    // General
    char *                 raw_command;
-   Parser_Mode            parser_mode;
+   Execution_Mode            parser_mode;
    int                    argct;
    char *                 args[MAX_ARGS];
    uint64_t               flags;      // Parsed_Cmd_Flags
@@ -315,7 +315,7 @@ typedef struct {
 } Preparsed_Cmd;
 #endif
 
-const char *  parser_mode_name(Parser_Mode mode);
+const char *  parser_mode_name(Execution_Mode mode);
 const char *  cmdid_name(Cmd_Id_Type id);
 const char *  setvcp_value_type_name(Setvcp_Value_Type value_type);
 Parsed_Cmd *  new_parsed_cmd();
