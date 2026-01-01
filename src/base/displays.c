@@ -1,6 +1,6 @@
 /** @file displays.c   Monitor identifier, reference, handle  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -43,7 +43,6 @@
 GPtrArray * all_display_refs = NULL;         // all detected displays, array of Display_Ref *
 GMutex      all_display_refs_mutex;
 bool        debug_locks = false;
-bool        dispsel_transition = true;
 
 // *** DDCA_IO_Path ***
 

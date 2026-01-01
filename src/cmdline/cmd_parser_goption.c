@@ -3,7 +3,7 @@
  *  Parse the command line using the glib goption functions.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -318,7 +318,7 @@ static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArr
     return parsing_ok;
 }
 
-#ifdef DISPSEL_ONLY
+
 static bool parse_display_identifier(
       Parsed_Cmd *  parsed_cmd,
       GPtrArray *   errmsgs,
@@ -396,7 +396,6 @@ static bool parse_display_identifier(
       }
    }
 
-
    if (mfg_id_work)
       parsed_cmd->dsel->mfg_id = strdup(mfg_id_work);
    if (modelwork)
@@ -406,142 +405,6 @@ static bool parse_display_identifier(
 
    return parsing_ok;
 }
-#else
-
-static bool parse_display_identifier(
-      Parsed_Cmd *  parsed_cmd,
-      GPtrArray *   errmsgs,
-      int           dispwork,
-      int           buswork,
-      int           hidwork,
-      char *        usbwork,
-      char *        edidwork,
-      char *        mfg_id_work,
-      char *        modelwork,
-      char *        snwork)
-{
-   bool parsing_ok = true;
-   int  explicit_display_spec_ct = 0;
-
-   parsed_cmd->dsel = dsel_new();
-
-   if (usbwork) {
-#ifdef ENABLE_USB
-      bool debug = false;
-      DBGMSF(debug, "usbwork = |%s|", usbwork);
-      int busnum;
-      int devicenum;
-      bool arg_ok = parse_dot_separated_arg(usbwork, &busnum, &devicenum);
-      if (!arg_ok)
-         arg_ok = parse_colon_separated_arg(usbwork, &busnum, &devicenum);
-      if (!arg_ok) {
-         EMIT_PARSER_ERROR(errmsgs, "Invalid USB argument: %s", usbwork );
-         parsing_ok = false;
-      }
-      else {
-         // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-         if (parsed_cmd->pdid) {
-            free_display_identifier(parsed_cmd->pdid);
-         }
-         parsed_cmd->pdid = create_usb_display_identifier(busnum, devicenum);
-         parsed_cmd->dsel->usb_bus = busnum;
-         parsed_cmd->dsel->usb_device = devicenum;
-      }
-      explicit_display_spec_ct++;
-#else
-      EMIT_PARSER_ERROR(errmsgs,
-            "ddcutil not built with support for USB connected monitors.  --usb option invalid.");
-      parsing_ok = false;
-#endif
-   }
-
-   if (buswork >= 0) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_busno_display_identifier(buswork);
-      parsed_cmd->dsel->busno = buswork;
-      explicit_display_spec_ct++;
-   }
-
-   if (hidwork >= 0) {
-#ifdef ENABLE_USB
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_usb_hiddev_display_identifier(hidwork);
-      parsed_cmd->dsel->hiddev_devno = hidwork;
-      explicit_display_spec_ct++;
-#else
-      EMIT_PARSER_ERROR(errmsgs,
-            "ddcutil not built with support for USB connected monitors.  --hid option invalid.");
-      parsing_ok = false;
-#endif
-   }
-
-   if (dispwork >= 0) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_dispno_display_identifier(dispwork);
-      parsed_cmd->dsel->dispno = dispwork;
-      explicit_display_spec_ct++;
-   }
-
-   if (edidwork) {
-      if (strlen(edidwork) != 256) {
-         EMIT_PARSER_ERROR(errmsgs,  "EDID hex string not 256 characters");
-         parsing_ok = false;
-      }
-      else {
-         Byte * pba = NULL;
-         int bytect = hhs_to_byte_array(edidwork, &pba);
-         if (bytect < 0 || bytect != 128) {
-            EMIT_PARSER_ERROR(errmsgs,  "Invalid EDID hex string");
-            parsing_ok = false;
-         }
-         else {
-            // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-            if (parsed_cmd->pdid)
-               free_display_identifier(parsed_cmd->pdid);
-            parsed_cmd->pdid = create_edid_display_identifier(pba);  // new way
-            parsed_cmd->dsel->edidbytes = malloc(128);
-            memcpy(parsed_cmd->dsel->edidbytes, pba, 128);
-         }
-         if (pba)
-            free(pba);
-      }
-      explicit_display_spec_ct++;
-   }
-
-   if (mfg_id_work || modelwork || snwork) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_mfg_model_sn_display_identifier(
-                          mfg_id_work,
-                          modelwork,
-                          snwork);
-      explicit_display_spec_ct++;
-   }
-
-   if (mfg_id_work)
-      parsed_cmd->dsel->mfg_id = strdup(mfg_id_work);
-   if (modelwork)
-      parsed_cmd->dsel->model_name = strdup(modelwork);
-   if (snwork)
-      parsed_cmd->dsel->serial_ascii = strdup(snwork);
-
-   if (explicit_display_spec_ct > 1) {
-      EMIT_PARSER_ERROR(errmsgs, "Monitor specified in more than one way");
-      free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = NULL;
-      parsing_ok = false;
-   }
-
-   return parsing_ok;
-}
-#endif
 
 
 static bool parse_mccswork(char * mccswork, Parsed_Cmd * parsed_cmd, GPtrArray * errmsgs) {
@@ -2332,11 +2195,7 @@ parse_command(
          if (parsing_ok && parsed_cmd->cmd_id == CMDID_SETVCP)
             parsing_ok &= parse_setvcp_args(parsed_cmd,errmsgs);
 
-#ifndef DISPSEL_ONLY
-         if (parsing_ok && parsed_cmd->pdid) {
-#else
          if (parsing_ok && !dsel_is_empty(parsed_cmd->dsel)) {
-#endif
             if (!cmdInfo->supported_options & Option_Explicit_Display) {
                EMIT_PARSER_ERROR(errmsgs,  "%s does not support explicit display option\n", cmdInfo->cmd_name);
                parsing_ok = false;

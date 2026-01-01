@@ -1,6 +1,6 @@
 /** @file displays.h  Display Specification  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAYS_H_
@@ -44,16 +44,11 @@ Otherwise, displays are searched to find the monitor.
 For I2C displays, the device must be opened.  Display_Handle then contains the open file handle.
 */
 
-
-#define DISPSEL_ONLY 1
-// #define TEST_DISPSEL 1
-
 // *** Globals ***
 
 extern GPtrArray * all_display_refs;         // all detected displays, array of Display_Ref *
 extern GMutex      all_display_refs_mutex;
 extern bool        debug_locks;
-extern bool        dispsel_transition;
 
 // *** Initialization ***
 
@@ -230,7 +225,6 @@ void             reset_published_dref_hash();
 void             add_published_dref_id_by_dref(Display_Ref * dref);
 Display_Ref *    dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref);
 DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref);
-
 
 #define DREF_BUSNO(_dref) ((_dref)->io_path.path.i2c_busno)
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \

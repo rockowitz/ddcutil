@@ -3,7 +3,7 @@
  *  System configuration and tuning
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARMS_H_
@@ -186,11 +186,5 @@
 /** Maximum command arguments */
 // #define MAX_ARGS (MAX_SETVCP_VALUES*2)   // causes CMDID_* undefined
 #define MAX_ARGS 100        // hack
-
-
-// TEMPORARY FOR DEVELOPMENT
-#define TEST_DISPSEL 1
-
-
 
 #endif /* PARMS_H_ */

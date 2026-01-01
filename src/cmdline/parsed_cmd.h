@@ -1,7 +1,7 @@
 /** @file parsed_cmd.h
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARSED_CMD_H_
@@ -239,9 +239,6 @@ struct {
    gchar **               ddc_disabled;
 
    // Display Selection
-#ifndef DISPSEL_ONLY
-   Display_Identifier*    pdid;
-#endif
    Display_Selector*      dsel;   // for future use
    Bit_Set_256            ignored_i2c_buses;;
    Bit_Set_32             ignored_hiddevs;

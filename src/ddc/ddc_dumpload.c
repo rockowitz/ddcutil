@@ -3,7 +3,7 @@
  *  Load/store VCP settings from/to file.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -474,7 +474,6 @@ loadvcp_by_dumpload_data(
    }
 
    else {
-#ifdef DISPSEL_ONLY
       Display_Selector* dsel = dsel_new();
       dsel->mfg_id = strdup( pdata->mfg_id);
       dsel->model_name = strdup(pdata->model);
@@ -484,31 +483,6 @@ loadvcp_by_dumpload_data(
       assert(bytect == 128);
 
       Display_Ref * dref = ddc_find_display_ref_by_selector(dsel);
-#else
-     // no Display_Ref passed as argument, just use the identifiers in the data to pick the display
-      Display_Identifier * did = create_mfg_model_sn_display_identifier(
-                             pdata->mfg_id,
-                             pdata->model,
-                             pdata->serial_ascii);
-      assert(did);
-      Display_Ref * dref = get_display_ref_for_display_identifier(did, CALLOPT_NONE);
-      free_display_identifier(did);
-
-#ifdef TEST_DISPSEL
-      Display_Selector* dsel = dsel_new();
-      dsel->mfg_id = strdup( pdata->mfg_id);
-      dsel->model_name = strdup(pdata->model);
-      dsel->serial_ascii = strdup(pdata->serial_ascii);
-      // rpt_str( "edid",         NULL, pdata->edidstr,      2);
-      int bytect =  hhs_to_byte_array(pdata->edidstr, &dsel->edidbytes);
-      assert(bytect == 128);
-
-      Display_Ref * dref2 = ddc_find_display_ref_by_selector(dsel);
-      TRACED_ASSERT(dref2 == dref);
-      dsel_free(dsel);
-#endif
-#endif
-
       if (!dref) {
          SYSLOG2(DDCA_SYSLOG_ERROR, "Monitor not connected: %s - %s", pdata->model, pdata->serial_ascii );
          ddc_excp = errinfo_new(DDCRC_INVALID_DISPLAY, __func__,
