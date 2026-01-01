@@ -1,4 +1,73 @@
+
+
+eDP once again always implies laptop
+add option --edp-ambiguous
+
+The workaround for issue #384  in commit 8580c3d56716a051d12b69d7a1a06abd6ee3a889
+    caused some laptops to not be detected.
+    
+    Revert to always regarding edDP in DRM connector nameas indicating laptop
+    display. This option enables the special case handling of not assuming
+    that eDP alawys implies laptop diaplay,
+
+
+if write/read operation faile, only check open bus alive if libddcutil
+
+
+ddc_write_read_with_retry(): only call ddc_check_open_bus_alive() if execution_mode = MODE_LIBDDCUTIL
+
+only meaningful for libddcutil
+
+if EDID in sysfs but not readable, ddc_write_read_with_retry() calls i2c_check_open_bus_alive(),
+which will fails with multiple waits
+
+Addresses issue #559
+ 
+add optipm --ignore-bus
+
+option --ignore-hiddev was not being applied to ligddcutil
+
+
+  detect cmd: if laptop, do not output monitor-model-id and UDF file name
+
+
+   xvrpt_vstring(): do not segfault when ap parm is NULL
+    
+    partially addresses issue #568
+:
+
+ use mutex to make setting DREF_DISCONNECTED and dref->detail NULL atomic
+    
+    guard ddc_open_display() with the same mutex
+    
+    more correct solution to race condition identified in issue #556
+
+
+  ddc_open_display(): patch for race condition with dw_remove_display_by_businfo()
+    
+    per Christian Gudrian
+    
+    addresses issue $556
+:
+
+  detect --verbose: avoid ambiguity reporting how unsupported feature indicated
+    
+    insert "correctly" into "Monitor currectly uses unsupported feature flag ..."
+
+    dw_deinit_xevent_screen_change_notification(): handle arg evdata==NULL
+    
+    per PR 563
+
+   dw_start_watch_displays(): handle dw_init_xevent_screen_change_notification() failure
+    
+    possible if Wayland-X11 bridge not running
+
+
+Display Selection
+
+
 ## [2.2.2] 2025-11-13
+
 
 ### General
 
