@@ -589,6 +589,11 @@ void report_parsed_edid_base(
          rpt_hex_dump(edid->bytes, 128, d1);
       }
 
+#ifdef IS_THIS_USEFUL
+      char * string64 = g_base64_encode(edid->bytes, 128);
+      rpt_vstring(depth, "EDID base64: %s", string64);
+      free(string64);
+#endif
    }  // if (edid)
    else {
        if (verbose_synopsis)
