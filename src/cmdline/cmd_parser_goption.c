@@ -378,20 +378,33 @@ static bool parse_display_identifier(
    }
 
    if (edidwork) {
-      if (strlen(edidwork) != 256) {
-         EMIT_PARSER_ERROR(errmsgs,  "EDID hex string not 256 characters");
-         parsing_ok = false;
+      int edid_charct = 256;
+      if (str_starts_with(edidwork, "...")) {
+         edidwork += 3;
+         edid_charct = strlen(edidwork);
+         if (edid_charct == 0 || edid_charct % 2 != 0) {
+            EMIT_PARSER_ERROR(errmsgs,  "EDID hex string with ... prefix must have even number of characters");
+            parsing_ok = false;
+         }
       }
       else {
+         if (strlen(edidwork) != 256) {
+            EMIT_PARSER_ERROR(errmsgs,  "EDID hex string not 256 characters");
+            parsing_ok = false;
+         }
+      }
+
+      if (parsing_ok) {
          Byte * pba = NULL;
          int bytect = hhs_to_byte_array(edidwork, &pba);
-         if (bytect < 0 || bytect != 128) {
+         if (bytect == 0 || bytect > 128) {
             EMIT_PARSER_ERROR(errmsgs,  "Invalid EDID hex string");
             parsing_ok = false;
          }
          else {
             parsed_cmd->dsel->edidbytes = malloc(128);
             memcpy(parsed_cmd->dsel->edidbytes, pba, 128);
+            parsed_cmd->dsel->edidbytect = bytect;
          }
       }
    }

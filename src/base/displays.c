@@ -444,6 +444,7 @@ bool dsel_only_busno(Display_Selector* dsel) {
  *  \return string representation
  */
 char * dsel_repr_t(Display_Selector* dsel) {
+   // dbgrpt_display_selector(dsel, 0);
 
 #define APPEND_IVAL(_repr_buf, _dsel, _field) \
       if (_dsel->_field >= 0) { \
@@ -472,7 +473,13 @@ char * dsel_repr_t(Display_Selector* dsel) {
    APPEND_CVAL(dsel_repr_buf, dsel, serial_ascii);
    if (dsel->edidbytes) {
       strcat(dsel_repr_buf, "edidbytes:..");
-      strcat(dsel_repr_buf, hexstring3_t(dsel->edidbytes+120,8, " ", 0, true));
+      if (dsel->edidbytect == 128) {
+         // show last 8 bytes
+         strcat(dsel_repr_buf, hexstring3_t(dsel->edidbytes+120,8, " ", 0, true));
+      }
+      else {
+         strcat(dsel_repr_buf, hexstring3_t(dsel->edidbytes, dsel->edidbytect, " ", 0, true));
+      }
       strcat(dsel_repr_buf, ","); \
    }
    int l = strlen(dsel_repr_buf);
@@ -497,8 +504,9 @@ void dbgrpt_display_selector(Display_Selector* dsel, int depth) {
    rpt_vstring(d1, "mfg_id:        %s", dsel->mfg_id);
    rpt_vstring(d1, "model_name:    %s", dsel->model_name);
    rpt_vstring(d1, "serial_ascii:  %s", dsel->serial_ascii);
+   rpt_vstring(d1, "edidbytect:    %d", dsel->edidbytect);
    if (dsel->edidbytes)
-      rpt_vstring(d1, "edidbytes:     %s",  hexstring_t(dsel->edidbytes, 128));
+      rpt_vstring(d1, "edidbytes:     %s",  hexstring_t(dsel->edidbytes, dsel->edidbytect));
    else
       rpt_vstring(d1, "edidbytes:     (null)");
 }

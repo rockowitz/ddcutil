@@ -220,7 +220,7 @@ struct {
 
    // General
    char *                 raw_command;
-   Execution_Mode            parser_mode;
+   Execution_Mode         parser_mode;
    int                    argct;
    char *                 args[MAX_ARGS];
    uint64_t               flags;      // Parsed_Cmd_Flags
@@ -239,7 +239,7 @@ struct {
    gchar **               ddc_disabled;
 
    // Display Selection
-   Display_Selector*      dsel;   // for future use
+   Display_Selector*      dsel;
    Bit_Set_256            ignored_i2c_buses;;
    Bit_Set_32             ignored_hiddevs;
    uint8_t                ignored_usb_vid_pid_ct;

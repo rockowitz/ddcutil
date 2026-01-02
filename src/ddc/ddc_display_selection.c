@@ -122,9 +122,12 @@ ddc_test_display_ref_by_selector(Display_Ref * dref, Display_Selector * dsel) {
          !streq(dref->pedid->serial_ascii, dsel->serial_ascii) )
       goto bye;
 
-   if (dsel->edidbytes && memcmp(dref->pedid->bytes, dsel->edidbytes, 128) != 0)
-      goto bye;
-
+   if (dsel->edidbytes) {
+      assert(dsel->edidbytect > 0 && dsel->edidbytect <= 128);
+      int startpos = 128 - dsel->edidbytect;
+      if (memcmp(dref->pedid->bytes+startpos, dsel->edidbytes, dsel->edidbytect) != 0)
+         goto bye;
+   }
    result = true;
 
 bye:
