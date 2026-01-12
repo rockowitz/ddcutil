@@ -1,14 +1,55 @@
+## [2.2.4] 2026-01-21
 
 
-eDP once again always implies laptop
-add option --edp-ambiguous
+### General
 
-The workaround for issue #384  in commit 8580c3d56716a051d12b69d7a1a06abd6ee3a889
-    caused some laptops to not be detected.
-    
-    Revert to always regarding edDP in DRM connector nameas indicating laptop
-    display. This option enables the special case handling of not assuming
-    that eDP alawys implies laptop diaplay,
+#### Added
+
+- Option ***--edp-ambiguous***. Normally, if the DRM connector name contains the string "eDP", it
+  is a reliable indicator of a display, typically a laptop display, that cannot support DDC/CI, 
+  and no further checking is needed.  Owing to a bug in the amdgpu driver, there have been 
+  instances where "eDP" is in the DRM connector name for an external display that does support DDC/CI.
+  The bug is in a section of driver code slated for removal and will not be fixed. 
+  If this option is given, the contents of the EDID is also checked. This test is imperfect,
+  so ***--edp-ambiguous*** should only be used as workaround for the amdgpu bug.
+- Option ***--ignore bus*** takes as it's argument the /dev/i2c bus number for I2C bus 
+  that should be completely ignored. This option can be specified multiple times.  
+  It provides a workaround for obscure bugs.
+
+ #### Changed
+
+- Option ***--edid***: If the value given starts with "...", the remainder of the value is some number 
+  of hex digits, which are compared against the final digits of the EDID for display selection.
+- Command **detect**:  Insert the word "correctly" into the message "Monitor currectly uses 
+  unsupported feature flag ..." to make it clear that this is not an error.
+
+#### Fixed
+
+- "eDP" in a DRM connector name once again always implies a laptop or other display.
+  This test was relaxed (in release 2.x.x, commit 8580c3d56716a051d12b69d7a1a06abd6ee3a889)
+  as a workaround for issue #384 caused by a bug in the amdgpu driver. 
+  Unfortunately, the workaround caused some laptop displays to be treated as if they implemented DDC/CI.
+  For handling the extremely rare case of "eDP" in the DRM connector name for an external monitor, 
+  option ***--edp-ambiguous*** has been added. Addresses issue #????
+- Command **detect**: For laptop displays, do not output a monitor-model-id and UDF file name 
+  as these are invalid.
+- Segfault in function xvrpt_vstring() caused by null argument.  Partially addresses
+  issue #568
+
+
+
+### Building
+
+### Shared Library
+
+#### Added
+
+#### Changed
+
+#### Fixed
+- Option ***--ignore-hiddev*** was not being processed for libdcutil.
+
+<!--
 
 
 if write/read operation faile, only check open bus alive if libddcutil
@@ -23,20 +64,9 @@ which will fails with multiple waits
 
 Addresses issue #559
  
-add optipm --ignore-bus
 
-option --ignore-hiddev was not being applied to ligddcutil
-
-
-  detect cmd: if laptop, do not output monitor-model-id and UDF file name
-
-
-   xvrpt_vstring(): do not segfault when ap parm is NULL
-    
-    partially addresses issue #568
-:
-
- use mutex to make setting DREF_DISCONNECTED and dref->detail NULL atomic
+ use mutex to make setting Display Ref flag DREF_DISCONNECTED and Display Ref variable detail=NULL 
+ an atomic operation.
     
     guard ddc_open_display() with the same mutex
     
@@ -50,9 +80,7 @@ option --ignore-hiddev was not being applied to ligddcutil
     addresses issue $556
 :
 
-  detect --verbose: avoid ambiguity reporting how unsupported feature indicated
-    
-    insert "correctly" into "Monitor currectly uses unsupported feature flag ..."
+
 
     dw_deinit_xevent_screen_change_notification(): handle arg evdata==NULL
     
@@ -65,6 +93,8 @@ option --ignore-hiddev was not being applied to ligddcutil
 
 Display Selection
 
+
+-->
 
 ## [2.2.2] 2025-11-13
 
