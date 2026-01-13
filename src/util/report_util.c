@@ -11,7 +11,7 @@
  * - destination stack
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -512,16 +512,15 @@ void drpt_label(int depth, const char * text) {
  * @param opts      control where output is sent
  * @param depth     logical indentation depth.
  * @param format    format string
- * @param ap        substitution arguments
  */
 void xvrpt_vstring(Byte opts, int depth, char* format, va_list ap) {
-   // printf("(xvrpt_vstring) format=|%s|\n, ap=%p", format, ap);
    if (ap) {
       char * buf = g_strdup_vprintf(format, ap);
       xrpt_label_collect(opts, depth, buf, NULL);
       free(buf);
    }
    else {
+	  // printf("(xvrpt_vstring) ap=%p, format=|%s|\n", ap, format);
       xrpt_label_collect(opts, depth, format, NULL);
       syslog(LOG_ERR, "(%s) NULL va_list, format=|%s|", __func__, format);
    }
