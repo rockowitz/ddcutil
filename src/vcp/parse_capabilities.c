@@ -2,7 +2,7 @@
  *  Parse the capabilities string returned by DDC, query the parsed data structure.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -37,6 +37,8 @@ static DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 #ifdef CAPABILITIES_TESTS
 // not made static to avoid warning about unused variable
 char* test_cap_strings[] = {
+	  // simple
+	  "(alpha(adsf)vcp(10 20 30(31 32) ))",
       // GSM LG Ultra HD
       "(prot(monitor)type(LED)model(25UM65)cmds(01 02 03 0C E33 F3)"
       "vcp(0203(10 00)0405080B0C101214(05 07 08 0B) 16181A5260(3033 04)6C6E70"
@@ -47,7 +49,28 @@ char* test_cap_strings[] = {
       "vcp(02 04 05 08 0B 0C 10 12 14(05 06 08 0B) 16 18 1A 60(11 12 0F) "
       "62 6C 6E 70 8D(01 02) A8 AC AE B6 C6 C8 C9 D6(01 04) DF) "
       "mccs_ver(2.1)asset_eep(32)mpu(01)mswhql(1))",
-
+	  // WAC-Wacom_One_13-4208:
+	  "(prot(monitor)type(LCD)model(Wacom One 13)cmds(01 02 03 06 07 E3 F3)"
+	  "vcp(04 05 08 12 14(04 05 06 08 0B) 16 18 1A 6B AC AE B2 B6 C8 C9 "
+	  "CC(01 02 03 04 05 06 07 08 09 0A 0D 14 1E 26) D6(01 04 ) DA(00 01) DF"
+	  " E1(00 01 02) E4(04 05 06 08 0B) EF(00 01 02 03) F2)"
+	  "mswhql(1)asset_eep(40)mccs_ver(2.2))",
+	  // LEN-27U_10-26577:
+	  "(prot(monitor)type(LCD)model(Lenovo Legion 27U-10)cmds(01 02 03 07 0C E3 F3)"
+	  "vcp(02 04 05 08 10 12 14(01 05 06 08 0B 0F) 16 18 1A 52 60(11 12 0F FF 11 12 0F 31) "
+	  "72(05 78 FB 00 50 64 78 8C A0) 86(02 05) A5(00 01 02) AC AE B2 B6 "
+	  "C6(03 02 9F 00 E0 85 00 78 00 88 88 00 C8 00 74 00 00 00 00) C8 C9 CA "
+	  "CC(02 03 04 05 06 09 0A 0D) D6(01 05) DF E0(00 03 04 05 06) EA(00 01) "
+	  "EB(00 01 02) EC(00 01 FF 00 02 03) EF(00 01) F2(00 01) F4(00 01 02) "
+	  "F5(00 01 02 FF 00 01 04) F6(07) F7(01(01) 02 09(01 02(00 03 04 05 06) "
+	  "03(05 78 FB 50 64 78 8C A0)) 0A(01 02(00 03 04 05 06) "
+	  "03(05 78 FB 50 64 78 8C A0)) 0B(00 01) 0D(00 02) 15(00 01 02 03 04) "
+	  "1A(00 01) 1D(00 01 02 03 05 06 07) 21(00 01) 28(00 01) 29(00 01 02 03) "
+	  "2A(00 01)) F8(01(07) 02 09(01 03(05 78 FB 50 64 78 8C A0)) "
+	  "0A(01 03(05 78 FB 50 64 78 8C A0)) 0B(00 01) 0D(00 02) 15(00 01 02 03 04) "
+	  "1A(00 01) 1D(00 01 02 03 05 06 07) 21(00 01) 28(00 01) 29(00 01 02 03) "
+	  "2A(00 01)) F9(01 02 03 04 05 06 0A) FA(00 10 12 14 86 A5 E0 EA EF(00 01 07 08 09) "
+	  "F7(0B 13 15 21) F9) FB FC FD)mswhql(1)asset_eep(40)mccs_ver(2.2))",
 };
 #endif
 
@@ -771,9 +794,8 @@ Parsed_Capabilities* parse_capabilities_string(
 {
    assert(caps);
 #ifdef CAPABILITIES_TESTS
-   // Uncomment to enable test
-   DBGMSG("Substituting test capabilities string");
-   caps = test_cap_strings[1];
+   DBGMSG("Substituting test capabilities string: %s", test_cap_strings[2]);
+   caps = test_cap_strings[3];
 #endif
 
    return parse_capabilities(caps, strlen(caps));
@@ -874,7 +896,7 @@ void test_segments() {
 
 
 void test_parse_caps() {
-   Parsed_Capabilities * pcaps = parse_capabilities_string("(alpha(adsf)vcp(10 20 30(31 32) ))");
+   Parsed_Capabilities * pcaps = parse_capabilities_string(test_cap_strings[0]);
    dbgrpt_parsed_capabilities(pcaps,0);
    free_parsed_capabilities(pcaps);
 }
@@ -885,6 +907,4 @@ void test_parse_caps() {
 void init_parse_capabilities() {
    RTTI_ADD_FUNC(parse_capabilities);
 }
-
-
 
