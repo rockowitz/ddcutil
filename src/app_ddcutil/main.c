@@ -1071,9 +1071,10 @@ main(int argc, char *argv[]) {
       }
    }
 
-   // FOR TESTING
+#ifdef HACK_FOR_PARSING_TEST_CAPABILITIES_STRING
    Parsed_Capabilities * pcaps = parse_capabilities_string("dummy");
    dyn_report_parsed_capabilities(pcaps, NULL, NULL, 0);
+#endif
 
 #ifdef UNUSED
 #ifdef USE_X11
