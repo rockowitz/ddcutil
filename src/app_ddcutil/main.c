@@ -598,7 +598,10 @@ find_dref_by_dsel(
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
          dref = ddc_find_display_ref_by_selector(dsel);
          if (!dref)
-            f0printf(ferr(), "Display not found\n");
+            f0printf(ferr(),
+            		(ddc_get_display_count(/*include_invalid_displays*/ false) > 0)
+					    ? "Display not found\n"
+					    : "No displays implementing DDC/CI found\n");
          final_result = (dref) ? DDCRC_OK : DDCRC_INVALID_DISPLAY;
       }
    }  // !DISP_ID_BUSNO
@@ -1067,6 +1070,10 @@ main(int argc, char *argv[]) {
          SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
       }
    }
+
+   // FOR TESTING
+   Parsed_Capabilities * pcaps = parse_capabilities_string("dummy");
+   dyn_report_parsed_capabilities(pcaps, NULL, NULL, 0);
 
 #ifdef UNUSED
 #ifdef USE_X11
