@@ -1,72 +1,81 @@
-## [2.2.4] 2026-01-16
+## [2.2.4] 2026-01-18
 
 ### General
 
-Display seletion has been reworked to be more flexible while also simpler internally. 
-Previously, ***--display***, ***--bus***, ***--edid***, etc. were regarded as identifiers
-that uniquely picked a display.  Generally speaking, only identifier could be given, 
-with special handling for the combination of ***--mfg***, ***--model***, and ***-sn***.  
+Display selection has been reworked to be more flexible while also simpler internally. 
+Previously, options ***--display***, ***--bus***, ***--edid***, etc. were regarded as 
+identifiers that uniquely picked a display.  Generally speaking, only one identifier
+could be given, with special handling for the combination of ***--mfg***, ***--model***,
+and ***-sn***.  
 
-With this change the identifiers are now treated as selection criteria. To be chosen, 
-the display must satisfy all the criteria given.  As before if no seletion options
-are given, ***--display 1*** is assumed.
+With this change identifiers are now treated as selection criteria. More than one
+can be specified.  To be chosen, the display must satisfy all the criteria given.  
+As before if no selection options are specified, ***--display 1*** is assumed.
 
 #### Added
 
-- Option ***--edp-ambiguous***. Normally, if the DRM connector name contains the string "eDP", 
-  it is a reliable indicator that the connected display, typically a laptop display, does not
-  implement DDC/CI, and no further checking is needed.  Owing to a bug in the amdgpu driver, 
-  there have been instances where "eDP" is in the DRM connector name for an external display 
-  that does support DDC/CI. There will be no fix for this bug, which occurs only when the BIOS 
-  is operating in CSM mode, not EFI mode. If this option is given, the contents of the EDID 
-  are also checked when "eDP" is in the connector name. This test is imperfect, 
-  so ***--edp-ambiguous*** should only be used as workaround for the amdgpu bug.
+- Option ***--edp-ambiguous***. Normally, if the DRM connector name contains the string 
+  "eDP", it reliably indicates that the connected display, typically a laptop display, 
+  does not implement DDC/CI, and no further checking is needed.  Owing to a bug in the 
+  amdgpu driver, there have been instances where "eDP" is in the DRM connector name for 
+  an external display that does support DDC/CI. There will be no fix for this bug, which
+  occurs only when the BIOS is operating in CSM mode, not EFI mode. If this option is 
+  given, the contents of the EDID are also checked when "eDP" is in the connector name
+  to confirm that display really is a laptop display. This test is imperfect, so 
+  ***--edp-ambiguous*** should only be used as workaround for the amdgpu bug.
 - Option ***--ignore bus*** takes as its argument the /dev/i2c bus number for I2C bus 
   that should be completely ignored. This option can be specified multiple times.  
   It provides a workaround for obscure bugs.
 
- #### Changed
+#### Changed
 
-- Option ***--edid***: If the value given starts with "...", the remainder of the value is
-  some number of hex digits, which are compared against the final digits of the EDID for 
-  display selection.
-- Command **detect**:  Insert the word "correctly" into the phrase "Monitor correctly uses 
-  unsupported feature flag" to make it clear that this is not an error.
+- Option ***--edid***: If the value given starts with "...", the remainder of the value 
+  is some number of hex digits, which are compared against the final bytes of the EDID
+  for display selection.
+- For commands that require a monitor, if no monitors implementing DDC/CI exist,
+  the error message is "No displays implementing DDC/CI found" instead of "Display not 
+  found". Suggested in issue #540. 
+- Command **detect**:  Insert the word "correctly" into the phrase "Monitor correctly
+  uses unsupported feature flag" to make clear that this is not an error.
+- Command **capabilities**: Change message "Read cached capabilities string from ..."
+  to "Obtained cached capabilities string from ..." so as to be clear that the 
+  string was read from a file, not that it possibly will be.
 
 #### Fixed
 
-- "eDP" in a DRM connector name once again always implies a laptop or other display that 
-  does not implement DDC/CI. This test was relaxed in release 2.2.1 (commit 
-  8580c3d56716a051d12b69d7a1a06abd6ee3a889) as a workaround for issue #384 caused by a bug 
-  in the amdgpu driver. Unfortunately, the workaround caused some laptop displays to be 
-  treated as if they implemented DDC/CI. For handling the extremely rare case of "eDP" 
-  in the DRM connector name for an external monitor, option ***--edp-ambiguous*** has 
-  been added. Addresses issue #????
-- Command **detect**: For laptop displays, do not output a monitor-model-id and UDF file name 
-  as these are invalid.
+- "eDP" in a DRM connector name once again always implies a laptop or other display 
+  that does not implement DDC/CI. This test was relaxed in release 2.2.1 (commit 
+  8580c3d...) as a workaround for issue #384 caused by a bug in the amdgpu driver. 
+  Unfortunately, the workaround caused some laptop displays to be treated as if 
+  they implemented DDC/CI, with resulting errors. 
+  For handling the extremely rare case of "eDP" in the DRM connector name for an
+  external monitor, option ***--edp-ambiguous*** has been added.
+- Command **detect**: For laptop displays, do not output a monitor-model-id and UDF 
+  file name as these are meaningless.
 - Segfault in function xvrpt_vstring() caused by a null argument.  Partially addresses
   issue #568.
   If ddc_wrire_read() fails, only call ddc_check_open_bus_alive() when executing in
   libdcutil. The test is not meaningful when executing in command line ddcutil.
-  In the case where a display's EDID was obtained from sysfs but is not readable using I2C, 
-  ddc_write_read_with_retry() repeatedly calls i2c_check_open_bus_alive(), which fails
-  with multiple waits, markedly slowing command **detect** As a result, GNOME extensions
-  were seen to hang the user interface.  Addresses issue #559.
+  In the case where a display's EDID was obtained from sysfs but is not readable
+  using I2C, ddc_write_read_with_retry() repeatedly calls i2c_check_open_bus_alive(), 
+  which fails with multiple waits, markedly slowing command **detect**. As a result, 
+  GNOME extensions were seen to hang the user interface.  Addresses issue #559.
 
 ### Shared Library
 
 The shared library **libddcutil** is backwardly compatible with the one in 
 ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
-file is libddcutil.so.5.x.x. 
+file is libddcutil.so.5.4.1. 
 
 #### Fixed
-- Option ***--ignore-hiddev*** was not being processed for libdcutil.
+
 - Segfault in dw_start_watch_displays() when Wayland-X11 bridge is not running.
-  Change based on pull request 563. 
+  Change based on pull request #563. 
 - Race condition failure in ddca_open_display2() triggered by disconnecting and 
   connecting display in KDE PowerDevil.  Make setting Display_Ref flag 
   DREF_DISCONNECTED and Display_Ref variable detail=NULL an atomic operation. 
-  Fixes the problem identified in issue # 556,
+  Fixes the problem identified in issue #556.
+- Option ***--ignore-hiddev*** was not being processed for libdcutil.
 
 
 ## [2.2.2] 2025-11-13
