@@ -135,12 +135,12 @@ bool rpt_get_ornamentation_enabled()  {
 
 
 bool rpt_set_ornamentation_enabled(bool enabled) {
+   // printf("(%s) enabled=%s\n", __func__, sbool(enabled));
    Per_Thread_Settings * settings = get_thread_settings();
    bool old = settings->ornament_report_output;
    settings->ornament_report_output = enabled;
    return old;
 }
-
 
 
 //
