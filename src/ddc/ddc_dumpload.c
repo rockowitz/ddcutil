@@ -420,8 +420,9 @@ loadvcp_by_dumpload_data(
    assert(pdata);
 
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Loading VCP settings for monitor \"%s\", sn \"%s\", dh=%p \n",
-               pdata->model, pdata->serial_ascii, dh);
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+                          "Loading VCP settings for monitor \"%s\", sn \"%s\", dh=%p",
+                          pdata->model, pdata->serial_ascii, dh);
    if ( IS_DBGTRC(debug, TRACE_GROUP) )
         dbgrpt_dumpload_data(pdata, 0);
 
@@ -435,16 +436,20 @@ loadvcp_by_dumpload_data(
       assert(dh->dref->pedid);
       bool ok = true;
       if ( !streq(dh->dref->pedid->model_name, pdata->model) ) {
-         const char * fmt =
-            "Monitor model in data (%s) does not match that for specified device (%s)";
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, fmt, pdata->model, dh->dref->pedid->model_name);
-         ddc_excp1 = errinfo_new(DDCRC_INVALID_DISPLAY, __func__, fmt, pdata->model, dh->dref->pedid->model_name);
+         char * msg = g_strdup_printf(
+            "Monitor model in data (%s) does not match that for specified device (%s)",
+            pdata->model, dh->dref->pedid->model_name);
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s",msg);
+         ddc_excp1 = ERRINFO_NEW(DDCRC_INVALID_DISPLAY, "%s",msg);
+         free(msg);
          ok = false;
       }
       if (!streq(dh->dref->pedid->serial_ascii, pdata->serial_ascii) ) {
-         const char * fmt = "Monitor serial number in data (%s) does not match that for specified device (%s)";
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, fmt, pdata->serial_ascii, dh->dref->pedid->serial_ascii);
-         ddc_excp2 = errinfo_new(DDCRC_INVALID_DISPLAY, pdata->serial_ascii, dh->dref->pedid->serial_ascii);
+         char * msg = g_strdup_printf(
+               "Monitor serial number in data (%s) does not match that for specified device (%s)",
+               pdata->serial_ascii, dh->dref->pedid->serial_ascii);
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+         ddc_excp2 = ERRINFO_NEW(DDCRC_INVALID_DISPLAY, "%s", msg);
          ok = false;
       }
       if (!ok) {
@@ -467,9 +472,9 @@ loadvcp_by_dumpload_data(
 
    else if ( strlen(pdata->mfg_id) + strlen(pdata->model) + strlen(pdata->serial_ascii) == 0) {
       // Pathological.  Someone's been messing with the VCP file.
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Monitor manufacturer id, model, and serial number all missing from input.");
-      ddc_excp = errinfo_new(DDCRC_INVALID_DISPLAY, __func__,
-            "Monitor manufacturer id, model, and serial number all missing from input.");
+      const char * msg = "Monitor manufacturer id, model, and serial number all missing from input.";
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+      ddc_excp = ERRINFO_NEW(DDCRC_INVALID_DISPLAY, "%s", msg);
       goto bye;
    }
 
@@ -478,15 +483,18 @@ loadvcp_by_dumpload_data(
       dsel->mfg_id = strdup( pdata->mfg_id);
       dsel->model_name = strdup(pdata->model);
       dsel->serial_ascii = strdup(pdata->serial_ascii);
-      // rpt_str( "edid",         NULL, pdata->edidstr,      2);S
+      // rpt_str( "edid",         NULL, pdata->edidstr,      2);
       int bytect =  hhs_to_byte_array(pdata->edidstr, &dsel->edidbytes);
       assert(bytect == 128);
 
       Display_Ref * dref = ddc_find_display_ref_by_selector(dsel);
+      dsel_free(dsel);
       if (!dref) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Monitor not connected: %s - %s", pdata->model, pdata->serial_ascii );
-         ddc_excp = errinfo_new(DDCRC_INVALID_DISPLAY, __func__,
-               "Monitor not connected: %s - %s", pdata->model, pdata->serial_ascii );
+         char * msg = g_strdup_printf("Monitor not connected: %s - %s",
+                                      pdata->model, pdata->serial_ascii );
+         SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msg);
+         ddc_excp = ERRINFO_NEW(DDCRC_INVALID_DISPLAY, "%s", msg);
+         g_free(msg);
          goto bye;
       }
 
@@ -494,7 +502,8 @@ loadvcp_by_dumpload_data(
       ddc_excp = ddc_open_display(dref, CALLOPT_NONE, &dh);
       ASSERT_IFF(dh, !ddc_excp);    // avoid bogus coverity error
       if (ddc_excp) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening display %s: %s", dref_repr_t(dref), ddcrc_desc_t(ddc_excp->status_code));
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening display %s: %s",
+                                    dref_repr_t(dref), ddcrc_desc_t(ddc_excp->status_code));
          goto bye;
       }
    }
