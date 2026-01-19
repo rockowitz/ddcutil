@@ -113,7 +113,7 @@ interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
  *  DDCA_Feature_Flags.
  */
 const char *
-interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
+interpret_internal_feature_flags_symbolic_t(Internal_Feature_Flags flags) {
    bool debug = false;
 
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
@@ -160,7 +160,7 @@ interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
 }
 
 const char *
-interpret_ddca_global_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
+interpret_internal_global_feature_flags_symbolic_t(Internal_Feature_Flags flags) {
    bool debug = false;
 
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
@@ -186,7 +186,7 @@ interpret_ddca_global_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
 
 
 const char *
-interpret_ddca_version_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
+interpret_internal_version_feature_flags_symbolic_t(Internal_Feature_Flags flags) {
    bool debug = false;
 
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
@@ -207,13 +207,14 @@ interpret_ddca_version_feature_flags_symbolic_t(DDCA_Feature_Flags flags) {
        flags & DDCA_WO_NC               ? "DDCA_WO_CONT|"        : "",
        flags & DDCA_NORMAL_TABLE        ? "DDCA_NORMAL_TABLE|"   : "",
        flags & DDCA_WO_TABLE            ? "DDCA_WO_TABLE|"       : "",
+       // Other
        flags & DDCA_DEPRECATED          ? "DDCA_DEPRECATED|"     : "",
 #ifdef ATTR_NOVERIFY
        flags & DDCA_NOVERIFY            ? "DDCA_NOVERIFY|"       : ""
 #else
        ""
-   );
 #endif
+   );
    // remove final comma
    if (strlen(buffer) > 0)
       buffer[strlen(buffer)-1] = '\0';
@@ -402,9 +403,9 @@ dbgrpt_dyn_feature_metadata(
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
    rpt_vstring(d1, "Global feature flags:     0x%04x", md->global_feature_flags);
-   rpt_vstring(d1, "Interpreted global feature flags: %s", interpret_ddca_global_feature_flags_symbolic_t(md->global_feature_flags));
+   rpt_vstring(d1, "Interpreted global feature flags: %s", interpret_internal_global_feature_flags_symbolic_t(md->global_feature_flags));
    rpt_vstring(d1, "Version feature flags:     0x%04x", md->version_feature_flags);
-   rpt_vstring(d1, "Interpreted version feature flags: %s", interpret_ddca_version_feature_flags_symbolic_t(md->version_feature_flags));
+   rpt_vstring(d1, "Interpreted version feature flags: %s", interpret_internal_version_feature_flags_symbolic_t(md->version_feature_flags));
    dbgrpt_sl_value_table(md->sl_values, "Feature values", d1);
 }
 
@@ -434,9 +435,9 @@ dbgrpt_display_feature_metadata(
                       meta->vcp_version.major, meta->vcp_version.minor, format_vspec(meta->vcp_version));
       rpt_vstring(d1, "feature_name:    %s", meta->feature_name);
       rpt_vstring(d1, "feature_desc:    %s", meta->feature_desc);
-      const char * s = interpret_ddca_global_feature_flags_symbolic_t(meta->global_feature_flags);
+      const char * s = interpret_internal_global_feature_flags_symbolic_t(meta->global_feature_flags);
       rpt_vstring(d1, "global flags:    0x%04x = %s", meta->global_feature_flags, s);
-      const char * t = interpret_ddca_version_feature_flags_symbolic_t(meta->version_feature_flags);
+      const char * t = interpret_internal_version_feature_flags_symbolic_t(meta->version_feature_flags);
       rpt_vstring(d1, "version flags:    0x%04x = %s", meta->version_feature_flags, t);
       dbgrpt_sl_value_table(meta->sl_values, "Feature values", d1);
       rpt_vstring(d1, "nontable_formatter:           %p - %s",
@@ -587,7 +588,7 @@ dbgrpt_ddca_feature_metadata(
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
-   rpt_vstring(d1, "Interpreted flags: %s", interpret_ddca_feature_flags_symbolic_t(md->feature_flags));
+   rpt_vstring(d1, "Interpreted flags: %s", interpret_internal_feature_flags_symbolic_t(md->feature_flags));
    dbgrpt_sl_value_table(md->sl_values, "Feature values", d1);
 }
 
