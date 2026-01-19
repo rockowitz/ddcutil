@@ -3,7 +3,7 @@
  *  Dynamic Feature Record definition, creation, destruction, and conversion
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -345,7 +345,7 @@ attr_keyword(
    bool debug = false;
    DBGMSF(debug, "keyword=|%s|", keyword);
    bool ok = true;
-   DDCA_Feature_Flags * pflags = &cur_feature_metadata->version_feature_flags;
+   Internal_Feature_Flags * pflags = &cur_feature_metadata->version_feature_flags;
    if (streq(keyword, "RW"))
       *pflags |= DDCA_RW;
    else if (streq(keyword, "RO"))
@@ -369,7 +369,6 @@ attr_keyword(
    else if (streq(keyword, "NOVERIFY"))
       *pflags |= DDCA_NOVERIFY;
 #endif
-
    else
       ok = false;
 
@@ -380,9 +379,9 @@ attr_keyword(
 
 static void
 switch_bits(
-      DDCA_Feature_Flags * pflags,
-      uint16_t             old_bit,
-      uint16_t             new_bit)
+      Internal_Feature_Flags * pflags,
+      Internal_Feature_Flags   old_bit,
+      Internal_Feature_Flags   new_bit)
 {
    *pflags &= ~old_bit;
    *pflags |= new_bit;
