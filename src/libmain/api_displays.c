@@ -379,6 +379,7 @@ ddci_get_display_ref(
       Display_Selector * dsel = display_id_to_dsel(pdid);
       Display_Ref* dref;
       dref = ddc_find_display_ref_by_selector(dsel);
+      dsel_free(dsel);
       DBGMSF(debug, "ddc_find_display_ref_by_selector() returned %s", dref_repr_t(dref));
       if (dref) {
          DDCA_Display_Ref ddca_dref = dref_to_ddca_dref(dref);
