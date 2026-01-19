@@ -406,6 +406,7 @@ static bool parse_display_identifier(
             memcpy(parsed_cmd->dsel->edidbytes, pba, 128);
             parsed_cmd->dsel->edidbytect = bytect;
          }
+         free(pba);
       }
    }
 
