@@ -661,7 +661,9 @@ execute_cmd_with_optional_display_handle(
          if (app_check_dynamic_features(dh->dref)) {
             ensure_vcp_version_set(dh);
 
+            bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
             DDCA_Status ddcrc = app_capabilities(dh);
+            rpt_set_ornamentation_enabled(saved_prefix_report_output);
             main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
          }
          else
