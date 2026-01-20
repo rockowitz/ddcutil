@@ -171,7 +171,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_TRANSIENT                                 0x0400
 #define DREF_OPEN                                      0x0800
 #define DREF_DDC_BUSY                                  0x1000
-#define DREF_DISCONNECTED                                   0x2000
+#define DREF_DISCONNECTED                              0x2000 // use Display_Ref.disconnected instead
 #define DREF_DDC_DISABLED                              0x4000
 #define DREF_DPMS_SUSPEND_STANDBY_OFF                  0x8000
 
@@ -199,6 +199,7 @@ typedef struct _display_ref {
    DDCA_MCCS_Version_Spec   vcp_version_xdf;
    DDCA_MCCS_Version_Spec   vcp_version_cmdline;
    Dref_Flags               flags;
+   bool                     disconnected;
    char *                   capabilities_string;   // added 4/2017, private copy
    Parsed_Edid *            pedid;                 // added 4/2017
    Monitor_Model_Key *      mmid;                  // will be set iff pedid
@@ -218,10 +219,10 @@ typedef struct _display_ref {
    GMutex                   disconnect_mutex;
 } Display_Ref;
 
-
 void             dbgrpt_published_dref_hash(const char * msg, int depth);
 void             published_dref_hash_to_syslog(int priority, const char * msg);
 void             init_published_dref_hash();
+void             mark_display_ref_removed(Display_Ref* dref);
 void             reset_published_dref_hash();
 void             add_published_dref_id_by_dref(Display_Ref * dref);
 Display_Ref *    dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref);

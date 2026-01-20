@@ -5,7 +5,7 @@
  *  This file and ddc_display_ref_reports.c cross-reference each other.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -209,7 +209,7 @@ ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_remove
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
       if ((include_invalid_displays || cur->dispno > 0) &&
-          (!(cur->flags&DREF_DISCONNECTED) || include_removed_drefs) )
+          (!(cur->disconnected) || include_removed_drefs) )
       {
          g_ptr_array_add(result, cur);
       }
@@ -730,8 +730,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
    else {
       if (IS_DBGTRC(debug, DDCA_TRC_NONE))
          dbgrpt_display_ref(dref, /*include_businfo*/ false, 1);
-      // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
-      if (dref->flags & DREF_DISCONNECTED) {
+      if (dref->disconnected) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Already marked removed");
          ddcrc = DDCRC_DISCONNECTED;
       }

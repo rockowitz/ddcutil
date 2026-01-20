@@ -390,8 +390,8 @@ void dw_emit_or_queue_display_status_event(
 {
    bool debug = false;
    if (dref) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, dispno=%d, DREF_DISCONNECTED=%s, event_type=%d=%s, connector_name=%s",
-            dref, dref_reprx_t(dref), dref->dispno, SBOOL(dref->flags&DREF_DISCONNECTED),
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, dispno=%d, disconnected=%s, event_type=%d=%s, connector_name=%s",
+            dref, dref_reprx_t(dref), dref->dispno, sbool(dref->disconnected),
             event_type, dw_display_event_type_name(event_type), connector_name);
 #ifdef NEW
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",

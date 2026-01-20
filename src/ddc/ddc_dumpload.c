@@ -450,6 +450,7 @@ loadvcp_by_dumpload_data(
                pdata->serial_ascii, dh->dref->pedid->serial_ascii);
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
          ddc_excp2 = ERRINFO_NEW(DDCRC_INVALID_DISPLAY, "%s", msg);
+         free(msg);
          ok = false;
       }
       if (!ok) {

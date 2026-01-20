@@ -708,6 +708,28 @@ void init_published_dref_hash() {
 }
 
 
+/** Marks a Display_Ref as removed, in a thread safe manner.
+ *
+ *  Ensures Display_Ref.disconnected and Display_Ref.detail are consistent.
+ *
+ * @param dref pointer to Display_Ref to mark removed.
+ */
+void mark_display_ref_removed(Display_Ref* dref) {
+   bool debug = false;
+   debug = debug || debug_locks;
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      show_backtrace(2);
+      backtrace_to_syslog(LOG_NOTICE, 0);
+   }
+   g_mutex_lock(&dref->disconnect_mutex);
+   dref->disconnected = true;
+   dref->detail = NULL;
+   g_mutex_unlock(&dref->disconnect_mutex);
+   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+}
+
+
 void reset_published_dref_hash() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
@@ -718,10 +740,7 @@ void reset_published_dref_hash() {
    while (g_hash_table_iter_next (&iter, &key, &value)) {
       // uint dref_id = GPOINTER_TO_UINT(key);
       Display_Ref * dref = (Display_Ref *) value;
-      g_mutex_lock (&dref->disconnect_mutex);
-      dref->flags |= DREF_DISCONNECTED;
-      dref->detail = NULL;
-      g_mutex_unlock(&dref->disconnect_mutex);
+      mark_display_ref_removed(dref);
       // drpt_vstring(depth+1, "(reset_published_dref_hash) dref_id %d -> %s", dref_id, dref_reprx_t(dref));
    }
 
@@ -1269,7 +1288,7 @@ char * dref_reprx_t(Display_Ref * dref) {
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    if (dref)
       g_snprintf(buf, 200, "Display_Ref[%s%d:%s @%p]",
-            (dref->flags & DREF_DISCONNECTED) ? "Disconnected: " : "",
+            (dref->disconnected) ? "Disconnected: " : "",
             dref->dref_id,
             dpath_short_name_t(&dref->io_path),
             (void*) dref);
@@ -1347,8 +1366,8 @@ Display_Ref * get_dref_by_busno_or_connector(
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_DISCONNECTED=%s, dref_detail=%p -> /dev/i2c-%d",
       //       sbool(cur_dref->flags&DREF_DISCONNECTED), cur_dref->detail,  businfo->busno);
 
-      if (ignore_invalid && (cur_dref->flags&DREF_DISCONNECTED)) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p DREF_DISCONNECTED set, Ignoring",
+      if (ignore_invalid && cur_dref->disconnected) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p disconnected is set, Ignoring",
                 dref_repr_t(cur_dref), cur_dref);
          continue;
       }
@@ -1393,7 +1412,7 @@ Display_Ref * get_dref_by_busno_or_connector(
          Display_Ref * cur_dref = g_ptr_array_index(all_display_refs, ndx);
          if (ignore_invalid && cur_dref->dispno <= 0)
             continue;
-         if (ignore_invalid && (cur_dref->flags&DREF_DISCONNECTED))
+         if (ignore_invalid && cur_dref->disconnected)
             continue;
          if (cur_dref->io_path.io_mode != DDCA_IO_I2C)
             continue;
@@ -1402,11 +1421,7 @@ Display_Ref * get_dref_by_busno_or_connector(
          {
             if (cur_dref->creation_timestamp < highest_non_removed_creation_timestamp) {
                SEVEREMSG("Marking dref %s removed", dref_reprx_t(cur_dref));
-               //ddc_mark_display_ref_removed(cur_dref);
-               g_mutex_lock(&cur_dref->disconnect_mutex);
-               cur_dref->flags |= DREF_DISCONNECTED;
-               cur_dref->detail = NULL;
-               g_mutex_unlock(&cur_dref->disconnect_mutex);
+               mark_display_ref_removed(cur_dref);
             }
          }
       }
@@ -1837,6 +1852,7 @@ void init_displays() {
    RTTI_ADD_FUNC(display_id_to_dsel);
    RTTI_ADD_FUNC(dsel_free);
 
+   RTTI_ADD_FUNC(mark_display_ref_removed);
    RTTI_ADD_FUNC(reset_published_dref_hash);
    RTTI_ADD_FUNC(add_published_dref_id_by_dref);
    RTTI_ADD_FUNC(delete_published_dref_id);

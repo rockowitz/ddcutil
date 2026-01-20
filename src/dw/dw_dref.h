@@ -3,7 +3,7 @@
  *  display connection and disconnection are detected.
  */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <stdbool.h>
@@ -17,7 +17,6 @@
 #define DW_DREF_H_
 
 void         dw_add_display_ref(Display_Ref * dref);
-void         dw_mark_display_ref_removed(Display_Ref* dref);
 Display_Ref* dw_add_display_by_businfo(I2C_Bus_Info * businfo);
 Display_Ref* dw_remove_display_by_businfo(I2C_Bus_Info * businfo);
 Error_Info*  dw_recheck_dref(Display_Ref * dref);

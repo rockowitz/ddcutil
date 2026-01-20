@@ -1,6 +1,6 @@
 /** @file ddc_initial_checks.c */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 /** \cond */
@@ -486,10 +486,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          }
          else if (psc == DDCRC_DISCONNECTED)
          {
-            g_mutex_lock(&dref->disconnect_mutex);
-            dref->flags = DREF_DISCONNECTED;
-            dref->detail = NULL;
-            g_mutex_unlock(&dref->disconnect_mutex);
+            mark_display_ref_removed(dref);
          }
          else if (psc == -EBUSY) {
              // communication failed, do not set DDCRC_COMMUNICATION_WORKING
@@ -601,7 +598,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
          }
          ddc_close_display_wo_return(dh);
       }
-      if (!(dref->flags & DREF_DISCONNECTED))
+      if (!dref->disconnected)
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
 
       if (err && err->status_code == -EBUSY)
