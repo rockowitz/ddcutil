@@ -21,6 +21,7 @@
 #include "util/string_util.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/timestamp.h"
+#include "util/traced_function_stack.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_util.h"
 #include "util/udev_usb_util.h"
@@ -721,6 +722,7 @@ void mark_display_ref_removed(Display_Ref* dref) {
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       show_backtrace(2);
       backtrace_to_syslog(LOG_NOTICE, 0);
+      current_traced_function_stack_to_syslog(LOG_DEBUG, /*reverse*/ true);
    }
    g_mutex_lock(&dref->disconnect_mutex);
    dref->disconnected = true;
