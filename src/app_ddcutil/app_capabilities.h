@@ -3,7 +3,7 @@
  *  Implement the CAPABILITIES command
  */
 
-// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef APP_CAPABILITIES_H_
@@ -27,6 +27,9 @@ app_show_parsed_capabilities(
 DDCA_Status
 app_capabilities(              // implements the CAPABILITIES command
       Display_Handle * dh);
+
+DDCA_Status
+app_test_capabilities_string(char * caps_string);
 
 void init_app_capabilities();
 

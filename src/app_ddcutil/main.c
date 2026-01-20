@@ -1179,9 +1179,19 @@ main(int argc, char *argv[]) {
       rpt_set_ornamentation_enabled(saved_prefix_report_output);
    }
 #endif
+   else if (parsed_cmd->cmd_id == CMDID_C2) {
+      if (parsed_cmd->argct != 1) {
+         f0printf(fout(), "Command C2 requires one argument, %d found\n", parsed_cmd->argct);
+         main_rc = EXIT_FAILURE;
+      }
+      else {
+         // f0printf(fout(), "args[0] = |%s|\n", parsed_cmd->args[0]);
+         app_test_capabilities_string(parsed_cmd->args[0]);
+         main_rc = EXIT_SUCCESS;
+      }
+   }
 
-   else if (parsed_cmd->cmd_id == CMDID_C2 ||
-            parsed_cmd->cmd_id == CMDID_C3 ||
+   else if (parsed_cmd->cmd_id == CMDID_C3 ||
 #ifndef WATCH_DISPLAYS
             parsed_cmd->cmd_id == CMDID_C1 ||
 #endif

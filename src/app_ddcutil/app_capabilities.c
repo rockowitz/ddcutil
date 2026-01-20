@@ -3,7 +3,7 @@
  *  Implement the CAPABILITIES command
  */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -144,6 +144,39 @@ app_capabilities(Display_Handle * dh)
    return ddcrc;
 }
 
+
+/** Parses and reports a capabilities string.
+ *
+ *  Used for analyzing a bad string submitted by a user.
+ *
+ *  @param  caps_string capabilities string
+ *  @return status code
+ */
+DDCA_Status
+app_test_capabilities_string(char * caps_string) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "caps_string=|%s|", caps_string ? caps_string : "NULL");
+
+   if (!caps_string) {
+      f0printf(stdout, "No capabilities string specified\n");
+      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, DDCRC_ARG, "No capabilities string specified");
+      return DDCRC_ARG;
+   }
+
+   f0printf(stdout, "Testing capabilities string: |%s|\n", caps_string );
+   Parsed_Capabilities * pcaps = parse_capabilities_string(caps_string);
+   if (!pcaps) {
+      f0printf(stdout, "Error parsing capabilities string\n");
+      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, DDCRC_ARG, "Error parsing capabilities string");
+      return DDCRC_ARG;
+   }
+
+   dyn_report_parsed_capabilities(pcaps, /* dh */ NULL, /* dref */ NULL, 0);
+   free_parsed_capabilities(pcaps);
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, 0, "");
+   return 0;
+}
 void init_app_capabilities() {
    RTTI_ADD_FUNC(app_get_capabilities_string);
    RTTI_ADD_FUNC(app_show_parsed_capabilities);
