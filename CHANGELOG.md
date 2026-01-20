@@ -1,4 +1,4 @@
-## [2.2.4] 2026-01-18
+## [2.2.4] 2026-01-20
 
 ### General
 
@@ -54,7 +54,7 @@ As before if no selection options are specified, ***--display 1*** is assumed.
   file name as these are meaningless.
 - Segfault in function xvrpt_vstring() caused by a null argument.  Partially addresses
   issue #568.
-  If ddc_write_read() fails, only call ddc_check_open_bus_alive() when executing in
+- If ddc_write_read() fails, only call ddc_check_open_bus_alive() when executing in
   libdcutil. The test is not meaningful when executing in command line ddcutil.
   In the case where a display's EDID was obtained from sysfs but is not readable
   using I2C, ddc_write_read_with_retry() repeatedly calls i2c_check_open_bus_alive(), 
