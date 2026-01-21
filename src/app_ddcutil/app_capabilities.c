@@ -157,26 +157,27 @@ app_test_capabilities_string(char * caps_string) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "caps_string=|%s|", caps_string ? caps_string : "NULL");
 
+   DDCA_Status ddcrc = 0;
    if (!caps_string) {
+      ddcrc = DDCRC_ARG;
       f0printf(stdout, "No capabilities string specified\n");
-      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, DDCRC_ARG, "No capabilities string specified");
-      return DDCRC_ARG;
+      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "No capabilities string specified");
+      goto bye;
    }
 
    f0printf(stdout, "Testing capabilities string: |%s|\n", caps_string );
    Parsed_Capabilities * pcaps = parse_capabilities_string(caps_string);
-   if (!pcaps) {
-      f0printf(stdout, "Error parsing capabilities string\n");
-      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, DDCRC_ARG, "Error parsing capabilities string");
-      return DDCRC_ARG;
-   }
+   // n. pcaps is always set, but may indicate parsing errors
 
    dyn_report_parsed_capabilities(pcaps, /* dh */ NULL, /* dref */ NULL, 0);
    free_parsed_capabilities(pcaps);
 
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, 0, "");
-   return 0;
+bye:
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
 }
+
+
 void init_app_capabilities() {
    RTTI_ADD_FUNC(app_get_capabilities_string);
    RTTI_ADD_FUNC(app_show_parsed_capabilities);
