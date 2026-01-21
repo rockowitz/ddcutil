@@ -152,8 +152,11 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
          g_ptr_array_remove_index(pcaps->vcp_features, ndx);
       }
       g_ptr_array_free(pcaps->vcp_features, true);
-      if (pcaps->messages)
-         g_ptr_array_free(pcaps->messages, true);
+   }
+
+   if (pcaps->messages) {
+      g_ptr_array_set_free_func(pcaps->messages, free);
+      g_ptr_array_free(pcaps->messages, true);
    }
 
    pcaps->marker[3] = 'x';
@@ -652,6 +655,12 @@ bye:
  *  @param  buf_len     length of string (not including trailing null)
  *
  *  @return pointer to newly allocated ParsedCapabilities structure
+ *
+ *  @remark
+ *  A pointer to a #Parsed_Capabilities struct is always returned.
+ *  If an error occured during parsing, the #caps_validity field
+ *  will be set to CAPABILITIES_INVALID or CAPABILITIES_USABLE,
+ *  and error messages will be accumulated in the #messages field.
  */
 Parsed_Capabilities * parse_capabilities(
       char * buf_start,
