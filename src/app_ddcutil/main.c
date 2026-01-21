@@ -1179,6 +1179,7 @@ main(int argc, char *argv[]) {
       rpt_set_ornamentation_enabled(saved_prefix_report_output);
    }
 #endif
+   
    else if (parsed_cmd->cmd_id == CMDID_C2) {
       if (parsed_cmd->argct != 1) {
          f0printf(fout(), "Command C2 requires one argument, %d found\n", parsed_cmd->argct);
