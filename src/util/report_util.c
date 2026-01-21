@@ -293,7 +293,6 @@ bool rpt_set_reports_to_syslog_override(bool onoff) {
 #endif
 
 
-
 // should not be needed, for diagnosing a problem
 void rpt_flush() {
    if (!redirect_reports_to_syslog)
@@ -343,10 +342,11 @@ void rpt_nl() {
  *
  * The output is indented per the specified indentation depth.
  *
+ * @param opts      control where output is sent
+ * @param depth     logical indentation depth.
  * @param title     string to write
  * @param collector if non-NULL, add string to this GPtrArray instead of
  *                  writing it to the current output destination
- * @param depth     logical indentation depth.
  *
  * @remark This is the core function through which all output is funneled.
  */
@@ -356,8 +356,6 @@ void xrpt_label_collect(Byte opts, int depth, const char * title, GPtrArray * co
       printf("(%s) Writing to %p\n", __func__, (void*)rpt_cur_output_dest());
 
    char prefix[100] = {0};
-
-
    if (collector) {
       g_ptr_array_add(collector, g_strdup_printf("%*s%s", rpt_get_indent(depth), "", title));
    }
@@ -401,32 +399,6 @@ void xrpt_label_collect(Byte opts, int depth, const char * title, GPtrArray * co
       }
    }
 }
-
-
-#ifdef DEPRECATED
-/** Writes a constant string to the current output destination, or adds
- *  the string to a specified GPtrArray.
- *
- * A newline is appended to the string specified.
- *
- * The output is indented per the specified indentation depth.
- *
- * @param title     string to write
- * @param collector if non-NULL, add string to this GPtrArray instead of
- *                  writing it to the current output destination
- * @param depth     logical indentation depth.
- *
- * @remark This is the core function through which all output is funneled.
- */
-void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
-   xrpt_label_collect(XRPT_RPT, depth, title, collector);
-}
-
-void drpt_title_collect(const char * title, GPtrArray * collector, int depth) {
-   xrpt_label_collect(XRPT_TRC, depth, title, collector);
-}
-#endif
-
 
 
 /** Writes a constant string to the current output destination.
@@ -512,20 +484,13 @@ void drpt_label(int depth, const char * text) {
  * @param opts      control where output is sent
  * @param depth     logical indentation depth.
  * @param format    format string
+ * @param ap        substitution arguments
  */
 void xvrpt_vstring(Byte opts, int depth, char* format, va_list ap) {
-   if (ap) {
-      char * buf = g_strdup_vprintf(format, ap);
-      xrpt_label_collect(opts, depth, buf, NULL);
-      free(buf);
-   }
-   else {
-	  // printf("(xvrpt_vstring) ap=%p, format=|%s|\n", ap, format);
-      xrpt_label_collect(opts, depth, format, NULL);
-      syslog(LOG_ERR, "(%s) NULL va_list, format=|%s|", __func__, format);
-   }
+   char * buf = g_strdup_vprintf(format, ap);
+   xrpt_label_collect(opts, depth, buf, NULL);
+   free(buf);
 }
-
 
 
 /** Writes a formatted string to the current output destination and/or
@@ -585,42 +550,6 @@ void drpt_vstring(int depth, char * format, ...) {
 }
 
 
-#ifdef OLD
-/** Writes a formatted string to the current output destination.
- *
- * A newline is appended to the string specified
- *
- * @param  depth    logical indentation depth
- * @param  format   format string (normal printf)
- * @param  ...      arguments
- *
- * @remark Note that the depth parm is first on this function because of variable args
- */
-void rpt_vstring(int depth, char * format, ...) {
-   int buffer_size = 200;
-   char buffer[buffer_size];
-   char * buf = buffer;
-   va_list(args);
-   va_start(args, format);
-   int reqd_size = vsnprintf(buffer, buffer_size, format, args);
-   // if buffer wasn't sufficiently large, allocate a temporary buffer
-   if (reqd_size >= buffer_size) {
-      // printf("(%s) Allocating temp buffer, reqd_size=%d\n", __func__, reqd_size);
-      buf = malloc(reqd_size+1);
-      va_start(args, format);
-      vsnprintf(buf, reqd_size+1, format, args);
-   }
-   va_end(args);
-
-   rpt_title(buf, depth);
-
-   if (buf != buffer)
-      free(buf);
-}
-#endif
-
-
-
 /** Writes a formatted string to the current output destination, or
  *  adds the string to a collector array.
  *
@@ -630,7 +559,7 @@ void rpt_vstring(int depth, char * format, ...) {
  * @param  collector if non-NULL, add string to GPtrArray instead of
  *                   writing to current output destination
  * @param  format    format string (normal printf argument)
- * @param  ap        va_list array of arguments
+ * @param  ap        va_list of arguments
  *
  * @remark Note that the depth parm is first on this function because of variable args
  */
@@ -985,7 +914,6 @@ void rpt_unsigned(char * name, char * info, int val, int depth) {
    snprintf(buf, 9, "%u", val);
    rpt_str(name, info, buf, depth);
 }
-
 
 
 /** Writes a string to the current output destination describing a 4 byte integer value,
