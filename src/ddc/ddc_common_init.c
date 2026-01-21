@@ -2,7 +2,7 @@
  *  Initialization that must be performed very early by both ddcutil and libddcutil
  */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Contains initialization functions extracted from main.c so they can
@@ -94,7 +94,6 @@ emit_init_tracing_error(
    va_start(args, format);
    char buffer[200];
    vsnprintf(buffer, 200, format, args);
-   va_end(args);
    va_end(args);
    g_ptr_array_add(errinfo_accumulator, errinfo_new(errcode, func, buffer));
 }
