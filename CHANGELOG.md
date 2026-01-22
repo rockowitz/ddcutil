@@ -1,4 +1,4 @@
-## [2.2.4] 2026-01-20
+## [2.2.5] 2026-01-21
 
 ### General
 
@@ -41,7 +41,7 @@ As before if no selection options are specified, ***--display 1*** is assumed.
   to "Obtained cached capabilities string from ..." so as to be clear that the 
   string was read from a file, not that it possibly will be.
 
-#### Fixed
+#### Fixed 
 
 - "eDP" in a DRM connector name once again always implies a laptop or other display 
   that does not implement DDC/CI. This test was relaxed in release 2.2.1 (commit 
@@ -52,8 +52,8 @@ As before if no selection options are specified, ***--display 1*** is assumed.
   external monitor, option ***--edp-ambiguous*** has been added.
 - Command **detect**: For laptop displays, do not output a monitor-model-id and UDF 
   file name as these are meaningless.
-- Segfault in function xvrpt_vstring() caused by a null argument.  Partially addresses
-  issue #568.
+- Segfault in function xvrpt_vstring() caused by an extermely log capabilities string.
+  Addresses issue #568.
 - If ddc_write_read() fails, only call ddc_check_open_bus_alive() when executing in
   libdcutil. The test is not meaningful when executing in command line ddcutil.
   In the case where a display's EDID was obtained from sysfs but is not readable
