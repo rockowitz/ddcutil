@@ -135,8 +135,8 @@
 
 // Retry interval and max tries when checking that a display handle
 // is still valid
-#define CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC 1000
-#define CHECK_OPEN_BUS_ALIVE_MAX_TRIES 3
+#define CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC 100
+#define CHECK_OPEN_BUS_ALIVE_MAX_TRIES 2
 
 // During bus detection, retry interval and max tries for X37 detection
 #define DETECT_X37_MAX_TRIES 3
