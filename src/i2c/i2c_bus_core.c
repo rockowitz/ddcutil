@@ -90,8 +90,8 @@ int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 
 
 // quick and dirty for debugging
-static
-char * edid_summary_from_bytes(Byte * edidbytes) {
+static char *
+edid_summary_from_bytes(Byte * edidbytes) {
    static GPrivate  key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&key, 200);
@@ -111,15 +111,13 @@ char * edid_summary_from_bytes(Byte * edidbytes) {
 }
 
 
-
-
-
 /** Gets a list of all /dev/i2c devices by checking the file system
  *  if devices named /dev/i2c-N exist.
  *
  *  @return Byte_Value_Array containing the valid bus numbers
  */
-Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
+Byte_Value_Array
+i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       // if (!i2c_bus_is_ignored(busno)) { // done in i2c_device_exists()
@@ -146,7 +144,8 @@ static Bit_Set_256 open_failures_reported;
  *
  *  @param failures   set of bus numbers
  */
-void add_open_failures_reported(Bit_Set_256 failures) {
+void
+add_open_failures_reported(Bit_Set_256 failures) {
    g_mutex_lock(&open_failures_mutex);
    open_failures_reported = bs256_or(open_failures_reported, failures);
    g_mutex_unlock(&open_failures_mutex);
@@ -157,7 +156,8 @@ void add_open_failures_reported(Bit_Set_256 failures) {
  *
  *  @param  busno     /dev/i2c-N bus number
  */
-void include_open_failures_reported(int busno) {
+void
+include_open_failures_reported(int busno) {
    g_mutex_lock(&open_failures_mutex);
    open_failures_reported = bs256_insert(open_failures_reported, busno);
    g_mutex_unlock(&open_failures_mutex);
@@ -191,7 +191,14 @@ unlock_display_by_businfo(I2C_Bus_Info * businfo) {
 #endif
 
 
-Error_Info * i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
+/** Opens a I2C device specified by its file name, without further checks
+ *  @param  filename   name of file to open
+ *  @param  callopts   if bit CALLOPT_RDONLY set, open RO, otherwise open RW
+ *  @param  fd_loc     address which to return file descriptor, -1 if failure
+ *  @return Error_Info struct if error, NULl if success
+ */
+Error_Info *
+i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    bool debug = false;
    Error_Info * err = NULL;
    RECORD_IO_EVENT(
@@ -205,7 +212,21 @@ Error_Info * i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_l
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) failed. errno=%s", filename, psc_desc(errsv));
       err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s", filename, psc_desc(errsv));
    }
+   return err;
+}
 
+
+/** Opens a /dev/i2c device specified by its bus number, without further checks
+ *  @param  busno      I2c bus number
+ *  @param  callopts   if bit CALLOPT_RDONLY set, open RO, otherwise open RW
+ *  @param  fd_loc     address which to return file descriptor, -1 if failure
+ *  @return Error_Info struct if error, NULl if success
+ */
+Error_Info *
+i2c_open_bus_basic_by_busno(int busno,  Byte callopts, int* fd_loc) {
+   char busname[12];
+   g_snprintf(busname, 20, "/dev/i2c-%d", busno);
+   Error_Info * err = i2c_open_bus_basic(busname, callopts, fd_loc);
    return err;
 }
 
@@ -221,7 +242,8 @@ Error_Info * i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_l
  *  Call options recognized
  *  - CALLOPT_WAIT
  */
-Error_Info * i2c_open_bus(
+Error_Info *
+i2c_open_bus(
       int busno,
 #ifdef ALT_LOCK_RECORD
       Display_Lock_Record * lockrec,
@@ -389,7 +411,16 @@ Error_Info * i2c_open_bus(
 }
 
 
-Status_Errno i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
+/** Close an open /dev/i2c device
+ *  @param  busno  /dev/i2c bus number
+ *  @param  fd     file descriptor for open device
+ *  @param  callopts  if bit CALOPT_ERR_MSG set, write error message to terminal
+ *  @return 0 if success, -errno if error
+ *
+ *  If an error occurs, a message is written to the system log
+ */
+Status_Errno
+i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
    int rc;
    Status_Errno result = 0;
    RECORD_IO_EVENT(fd, IE_CLOSE, ( rc = close(fd) ) );
@@ -411,7 +442,8 @@ Status_Errno i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
 }
 
 
-/** Closes an open I2C bus device.
+/** Closes an open I2C bus device, releasing cross-instance and
+ *  cross-thread locks
  *
  * @param  busno     i2c_bus_number
  * @param  fd        Linux file descriptor
@@ -420,7 +452,8 @@ Status_Errno i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
  * @retval 0  success
  * @retval <0 negative Linux errno value if close fails
  */
-Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
+Status_Errno
+i2c_close_bus(int busno, int fd, Call_Options callopts) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "busno=%d, fd=%d - %s, callopts=%s",
@@ -429,7 +462,7 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
 #ifdef ALT_LOCK_BASIC
    I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
    assert(businfo);
-   #endif
+#endif
 
    Status_Errno result = 0;
 
@@ -447,9 +480,8 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
    // 2) Close the device
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_close_bus for /dev/i2c-%d...", busno);
    result = i2c_close_bus_basic(busno, fd, callopts);
-   assert(result == 0);   // TODO; handle failure
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "/dev/i2c-%d.  i2c_close_bus_basic() returned %d", busno, result);
-   assert(result == 0);   // TODO; handle failure
+   // assert(result == 0);   // TODO; handle failure
 
    // 1) Release the cross-thread lock
    DDCA_IO_Path dpath;
@@ -525,6 +557,7 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
 
 #endif
 
+
 STATIC bool
 is_laptop_drm_connector_name(const char * connector_name) {
    bool debug = false;
@@ -546,7 +579,7 @@ is_laptop_drm_connector_name(const char * connector_name) {
  *  @param  dh  display handle
  *  @return true if the EDID can be read, false if not
  */
-STATIC bool
+bool
 i2c_check_edid_exists_by_dh(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dh = %s", dh_repr(dh));
@@ -682,6 +715,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
            (businfo->flags & I2C_BUS_PROBED)
          );
 
+#ifdef REDUNDANT
    if (current_traced_function_stack_size() > 0) {
       if (IS_DBGTRC(debug, TRACE_GROUP)) {
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Traced function stack on entry to i2c_check_open_bus_alive","");
@@ -691,12 +725,13 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
       syslog(LOG_DEBUG, "Traced function stack on entry to i2c_check_open_bus_alive()");
       current_traced_function_stack_to_syslog(LOG_DEBUG, /*reverse*/ false);
    }
+#endif
 
    Error_Info * err = NULL;
    bool edid_exists = false;
-   int tryctr = 1;
-   for (; !edid_exists && tryctr <= CHECK_OPEN_BUS_ALIVE_MAX_TRIES; tryctr++) {
-      if (tryctr > 1) {
+   int tryctr = 0;
+   for (; !edid_exists && tryctr < CHECK_OPEN_BUS_ALIVE_MAX_TRIES; tryctr++) {
+      if (tryctr > 0) {
          // DBGTRC_NOPREFIX(debug, TRACE_GROUP,
          //       "!!! (A) Retrying i2c_check_edid_exists, busno=%d, tryctr=%d, dh=%s",
          //       businfo->busno, tryctr, dh_repr(dh));
@@ -721,10 +756,10 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
 
    if (!edid_exists) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "/dev/i2c-%d, Checking EDID failed after %d tries (B)",
-            businfo->busno, CHECK_OPEN_BUS_ALIVE_MAX_TRIES);
+            businfo->busno, tryctr);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "/dev/i2c-%d: Checking EDID failed (A)", businfo->busno);
-      err = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d", businfo->busno);
-      businfo->flags &= ~(I2C_BUS_HAS_EDID|I2C_BUS_ADDR_X37);
+      err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Unable to read EDID for /dev/i2c-%d", businfo->busno);
+      businfo->flags &= ~(I2C_BUS_HAS_EDID|I2C_BUS_ADDR_X37);   // ???
    }
    else {
       if (tryctr > 1) {
@@ -736,9 +771,10 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
       char * driver = businfo->driver;
       int ddcrc = i2c_detect_x37(dh->fd, driver);
       if (ddcrc){
-         err = ERRINFO_NEW(DDCRC_OTHER, "/dev/i2c-%d: Slave address x37 unresponsive. io status = %s",
+         // would DDCRC_DDC_DISABLED, DDCRC_DEAD, DDCRC_UNAVAILBLE be better?
+         err = ERRINFO_NEW(DDCRC_DISCONNECTED, "/dev/i2c-%d: Slave address x37 unresponsive. io status = %s",
                businfo->busno, psc_desc(ddcrc));
-         businfo->flags &= ~I2C_BUS_ADDR_X37;
+         businfo->flags &= ~I2C_BUS_ADDR_X37;   // ???
       }
    }
    if (!err) {

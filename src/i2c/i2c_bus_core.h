@@ -2,7 +2,7 @@
  *
  *  I2C bus detection and inspection
  */
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_BUS_CORE_H_
@@ -45,6 +45,7 @@ void             add_open_failures_reported(Bit_Set_256 failures);
 void             include_open_failures_reported(int busno);
 Error_Info *     open_bus_basic(const char * filename,  Byte callopts, int* fd_loc);
 Error_Info *     i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc);
+Error_Info *     i2c_open_bus_basic_by_busno(int busno,  Byte callopts, int* fd_loc);
 Error_Info *     i2c_open_bus(int busno, Byte callopts, int * fd_loc);
 #ifdef ALT_LOCK_REC
 Error_Info *     i2c_open_bus(int busno, Display_Lock_Record lockrec, Byte callopts, int * fd_loc);
@@ -54,6 +55,7 @@ Status_Errno     i2c_close_bus(int busno, int fd, Call_Options callopts);
 // Bus inspection
 I2C_Bus_Info *   i2c_get_and_check_bus_info(int busno);
 bool             i2c_edid_exists(int busno);
+bool             i2c_check_edid_exists_by_dh(Display_Handle * dh);
 Error_Info *     i2c_check_bus(I2C_Bus_Info * businfo);
 Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 
