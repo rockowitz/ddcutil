@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
@@ -1187,7 +1187,7 @@ ddc_write_only_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "" );
 
    TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
@@ -1196,6 +1196,7 @@ ddc_write_only_with_retry(
    int                tryctr;
    bool               retryable;
    Error_Info *       try_errors[MAX_MAX_TRIES];
+   Error_Info *       ddc_excp = NULL;
 
    int max_tries = try_data_get_maxtries2(WRITE_ONLY_TRIES_OP);
    TRACED_ASSERT(max_tries > 0);
@@ -1212,9 +1213,15 @@ ddc_write_only_with_retry(
       try_errors[tryctr] = cur_excp;
       if (psc == -EBUSY)
          retryable = false;
-   }
 
-   Error_Info * ddc_excp = NULL;
+      if ((psc == -EIO || psc == -ENXIO) && execution_mode == MODE_LIBDDCUTIL) {
+         Error_Info * err = i2c_check_open_bus_alive(dh);
+         if (err) {
+            ddc_excp = err;
+            goto bye;
+         }
+      }
+   }
 
    if (psc < 0) {
       // now:
@@ -1227,7 +1234,6 @@ ddc_write_only_with_retry(
       // int last_try_index = tryctr-1;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s",
                                            tryctr, sbool(retryable));
-
       if (retryable) {
          psc = DDCRC_RETRIES;
          ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__, NULL);
@@ -1248,8 +1254,9 @@ ddc_write_only_with_retry(
          BASE_ERRINFO_FREE_WITH_REPORT(try_errors[ndx], IS_DBGTRC(debug, TRACE_GROUP) );
       }
    }
-   try_data_record_tries2(dh, WRITE_ONLY_TRIES_OP, psc, tryctr);
 
+bye:
+   try_data_record_tries2(dh, WRITE_ONLY_TRIES_OP, psc, tryctr);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
