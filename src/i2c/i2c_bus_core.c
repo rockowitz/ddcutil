@@ -224,7 +224,7 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
  */
 Error_Info *
 i2c_open_bus_basic_by_busno(int busno,  Byte callopts, int* fd_loc) {
-   char busname[12];
+   char busname[20];
    g_snprintf(busname, 20, "/dev/i2c-%d", busno);
    Error_Info * err = i2c_open_bus_basic(busname, callopts, fd_loc);
    return err;
