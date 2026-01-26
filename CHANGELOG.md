@@ -40,7 +40,7 @@ As before if no selection options are specified, ***--display 1*** is assumed.
   occurs only when the BIOS is operating in CSM mode, not EFI mode. If this option is 
   given, the contents of the EDID are also checked when "eDP" is in the connector name
   to confirm that display really is a laptop display. This test is imperfect, so 
-  ***--edp-ambiguous*** should only be used as workaround for the amdgpu bug.
+  ***--edp-ambiguous*** should only be used as a workaround for the amdgpu bug.
 - Option ***--ignore bus*** takes as its argument the /dev/i2c bus number for I2C bus 
   that should be completely ignored. This option can be specified multiple times.  
   It provides a workaround for obscure bugs.
