@@ -225,15 +225,16 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   if (!all_edids_readable_using_i2c()) {
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Display change detection requires EDIDs readable using I2C");
-      err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires EDIDs readable using I2C");
-      goto bye;
-   }
-
    if (!enable_watch_displays) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Watching for display changes disabled");
       goto bye;
+   }
+
+   if (!all_edids_readable_using_i2c()) {
+      MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+            "EDID readable from /sys but not using I2C. Display change detection unreliable.");
+      // err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires EDIDs readable using I2C");
+      // goto bye;
    }
 
    DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(watch_displays_mode);
