@@ -1682,7 +1682,7 @@ Value_Name_Table dref_flags_table = {
       VN(DREF_OPEN),
       VN(DREF_DDC_BUSY),
       VN(DREF_DISCONNECTED),
-      VN(DREF_DDC_DISABLED),
+      VN(DREF_MMK_IGNORED),
       VN(DREF_DPMS_SUSPEND_STANDBY_OFF),
 //    VN(CALLOPT_NONE),                // special entry
       VN_END

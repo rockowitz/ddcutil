@@ -559,7 +559,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          DBGTRC(debug, DDCA_TRC_NONE,"dref=%s, DREF_DDC_COMMUNICATON_WORKING not set", dref_repr_t(dref));
       // if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
       //    dref->dispno = DISPNO_INVALID;  // does this need to be different?
-      if (dref->flags & DREF_DDC_DISABLED)
+      if (dref->flags & DREF_MMK_IGNORED)
          dref->dispno = DISPNO_DDC_DISABLED;
       else if (dref->flags & DREF_DDC_BUSY)
          dref->dispno = DISPNO_BUSY;

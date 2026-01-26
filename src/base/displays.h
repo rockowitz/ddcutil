@@ -172,7 +172,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_OPEN                                      0x0800
 #define DREF_DDC_BUSY                                  0x1000
 #define DREF_DISCONNECTED                              0x2000 // use Display_Ref.disconnected instead
-#define DREF_DDC_DISABLED                              0x4000
+#define DREF_MMK_IGNORED                              0x4000
 #define DREF_DPMS_SUSPEND_STANDBY_OFF                  0x8000
 
 char * interpret_dref_flags_t(Dref_Flags flags);

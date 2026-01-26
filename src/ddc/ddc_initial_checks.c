@@ -555,7 +555,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
 
    bool disabled_mmk = is_ignored_mmk(*dref->mmid); // is this monitor model disabled?
    if (disabled_mmk) {
-      dref->flags |= DREF_DDC_DISABLED;
+      dref->flags |= DREF_MMK_IGNORED;
       dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       goto bye;
    }
