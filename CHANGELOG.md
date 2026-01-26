@@ -1,4 +1,22 @@
-## [2.2.5] 2026-01-21
+## [2.2.5] 2026-01-26 
+
+Release 2.2.5 replaces release 2.2.4 which failed to build on aarch64.
+
+#### Fixed
+- Compilation failure in function xvrpt_vstring() when building on aarch64. 
+  Issue $574.
+
+#### Changed
+
+- **ddca_start_watch_displays()**: issue warning if displays exist for which 
+  the EDID is readable using sysfs but not I2C.
+- API functions that write a feature value (**ddca_set_non_table_vcp_value()** etc.) 
+  return DDCRC_DISCONNECTED if called before libddcutil has been notified by UDEV 
+  that the display has been removed.
+- ddca_report_display_info(), ddca_report_display_info2(): do not include the
+  display number in the report as this is meaningless for shared library clients.
+
+## [2.2.4] 2026-01-21
 
 ### General
 
@@ -60,6 +78,7 @@ As before if no selection options are specified, ***--display 1*** is assumed.
   using I2C, ddc_write_read_with_retry() repeatedly calls i2c_check_open_bus_alive(), 
   which fails with multiple waits, markedly slowing command **detect**. As a result, 
   GNOME extensions were seen to hang the user interface.  Addresses issue #559.
+- Build failure on aarch64
 
 ### Shared Library
 
