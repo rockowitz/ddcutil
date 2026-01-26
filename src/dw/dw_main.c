@@ -1,6 +1,6 @@
 /** @file dw_main.c */
 
-// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -38,6 +38,7 @@
 #include "sysfs/sysfs_base.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_edid.h"
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
@@ -170,6 +171,38 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode) {
    return resolved_watch_mode;
 }
 
+bool all_edids_readable_using_i2c() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   bool result = true;
+   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
+      if (dref->io_path.io_mode != DDCA_IO_I2C) {
+         result = false;
+         break;
+      }
+      I2C_Bus_Info * businfo =  dref->detail;
+      if (businfo->flags & I2C_BUS_SYSFS_EDID) {
+         // try reading bus using I2C
+         int fd;
+         Error_Info * err = i2c_open_bus_basic_by_busno(businfo->busno, CALLOPT_NONE, &fd);
+         if (err) {
+            result = false;
+            break;
+         }
+         Buffer * edidbuf = buffer_new(256,  "");
+         Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf);
+         if (rc != 0) {
+            result = false;
+            break;
+         }
+         buffer_free(edidbuf, "");
+      }
+   }
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE,result, "");
+   return result;
+}
+
 
 /** Starts thread that watches for changes in display connection status.
  *
@@ -189,6 +222,12 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
    if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
+      goto bye;
+   }
+
+   if (!all_edids_readable_using_i2c()) {
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Display change detection requires EDIDs readable using I2C");
+      err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires EDIDs readable using I2C");
       goto bye;
    }
 
@@ -486,5 +525,6 @@ void init_dw_main() {
    RTTI_ADD_FUNC(is_watch_mode_udev_available);
    RTTI_ADD_FUNC(is_watch_mode_x11_available);
    RTTI_ADD_FUNC(resolve_watch_mode);
+   RTTI_ADD_FUNC(all_edids_readable_using_i2c);
 }
 
