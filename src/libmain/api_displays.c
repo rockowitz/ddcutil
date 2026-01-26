@@ -1291,8 +1291,9 @@ ddci_report_display_info(
       int d0 = depth;
       int d1 = depth+1;
       int d2 = depth+2;
-      if (dinfo->dispno > 0)
-         rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
+      if (dinfo->dispno > 0) {
+         // rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
+      }
       else if (dinfo->dispno == DISPNO_BUSY)
          rpt_vstring(d0, "Busy display - Cannot communicate DDC");
       else
