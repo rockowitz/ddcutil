@@ -2,7 +2,7 @@ ddcutil
 =======
 
 **ddcutil** is a Linux program for querying and changing monitor settings, such as 
-brightness and color levels.
+brightness, color levels, and input connector.
 
 Most monitors, other than laptop displays, have a Virtual Control Panel (VCP), 
 which implements features defined in the Monitor Control Command Set (MCCS).
@@ -56,7 +56,7 @@ When posting questions regarding **ddcutil** configuration, please execute the f
 capture its output in a file, and submit the output as an attachement.
 
 ~~~
-$ ddcutil interrogate 
+$ sudo ddcutil interrogate 
 ~~~
 
 For further information about technical support, see https://www.ddcutil.com/tech_support.
@@ -66,7 +66,13 @@ For further information about technical support, see https://www.ddcutil.com/tec
 Those responsible for maintaining **ddcutil** related packages in Linux distributions should see
 [Notes for Linux Distribution Maintainers](https://www.ddcutil.com/mult_shared_libs).
 
-
 ## Author
 
 Sanford Rockowitz  <rockowitz@minsoft.com>
+
+## Supporting **ddcutil**
+
+If you find **ddcutil** useful, please consider making a small contribution to its ongoing development and maintenance.
+You can do this either using the [Buy Me A Coffee](https://buymeacoffee.com/ddcutil) page for Sanford Rockowitz, the developer of **ddcutil**, 
+or as a [github sponsor](https://github.com/sponsors/rockowitz).
+ 
