@@ -183,7 +183,7 @@ bool predicate_exact_D_00hh(const char * value, const char * sbusno) {
    bool b1 = compile_and_eval_regex(D_00hh_pattern, value);
    if (b1) {
       // our utilities don't support extracting match groups
-      char * hypos = strchr(value, '-'); // must succeed because of regex match
+      const char * hypos = strchr(value, '-'); // must succeed because of regex match
       char * s = substr(value, 0, (hypos-value));
       b1 = streq(s, sbusno);
       free(s);
