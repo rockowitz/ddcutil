@@ -883,7 +883,7 @@ void filter_and_limit_g_ptr_array(
  *  https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
  */
 int rek_mkdir(
-      const char *path,
+      char *path,
       FILE *      ferr)
 {
    bool debug = false;
@@ -935,7 +935,7 @@ int fopen_mkdir(
 
    int rc = 0;
    *fp_loc = NULL;
-   char *sep = strrchr(path, '/');
+   const char *sep = strrchr(path, '/');
    if (sep) {
       char *path0 = g_strdup(path);
       path0[ sep - path ] = 0;

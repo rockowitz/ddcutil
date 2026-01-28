@@ -155,7 +155,7 @@ int read_file_with_filter(
       bool         free_strings);
 
 int rek_mkdir(
-      const char * path,
+      char * path,
       FILE *       ferr);
 
 int fopen_mkdir(

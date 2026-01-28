@@ -297,7 +297,7 @@ void             free_display_handle(Display_Handle * dh);
 //* Option flags for display selection functions */
 typedef Byte Display_Selection_Options;
 
-int    hiddev_name_to_number(const char * hiddev_name);
+int    hiddev_name_to_number(char * hiddev_name);
 #ifdef UNUSED
 char * hiddev_number_to_name(int hiddev_number);
 #endif
