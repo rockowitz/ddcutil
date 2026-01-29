@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -890,24 +890,26 @@ int rek_mkdir(
    if (debug)
       printf("(%s) Starting, path=%s\n", __func__, path);
 
+   char * path0 = strdup(path);  // for building on glib 2.43
    int result = 0;
-   if (!directory_exists(path)) {
-      char *sep = strrchr(path, '/');
+   if (!directory_exists(path0)) {
+      char *sep = strrchr(path0, '/');
       if (sep) {
          *sep = 0;
-         result = rek_mkdir(path, ferr);  // create parent dir
+         result = rek_mkdir(path0, ferr);  // create parent dir
          *sep = '/';
       }
       if (result == 0) {
          if (debug)
-            printf("(%s) Creating path %s\n", __func__, path);
-         if ( mkdir(path, 0777) < 0) {
+            printf("(%s) Creating path %s\n", __func__, path0);
+         if ( mkdir(path0, 0777) < 0) {
             result = -errno;
             if (ferr)
-               f0printf(ferr, "Unable to create '%s', %s\n", path, strerror(errno));
+               f0printf(ferr, "Unable to create '%s', %s\n", path0, strerror(errno));
          }
       }
    }
+   free(path0);
 
    if (debug)
       printf("(%s) Done. returning %d\n", __func__, result);
