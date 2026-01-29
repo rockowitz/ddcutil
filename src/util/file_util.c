@@ -231,7 +231,6 @@ read_binary_file(
    fclose(fp);
 
 bye:
-   // printf("(%s) bye\n", __func__);
    if (debug) {
       if (gbarray)
          DBG("Done. Returning GByteArray at %p, gbarray->data=%p, gbarray->len=%d",
@@ -239,7 +238,6 @@ bye:
       else
          DBG("Returning NULL");
    }
-   // printf("(%s) byebye\n", __func__);
    return gbarray;
 }
 
@@ -253,7 +251,8 @@ bye:
  *  @param  verbose    white error message to stderr if unable to read
  *  @return pointer to newly allocated buffer, NULL if file not read
  */
-char * read_file_single_string(const char * filename, bool verbose) {
+char *
+read_file_single_string(const char * filename, bool verbose) {
    char * buffer = NULL;
    long length;
    FILE * fp = fopen (filename, "rb");
@@ -498,7 +497,8 @@ dir_foreach(
 }
 
 
-void dir_foreach_terminatable(
+void
+dir_foreach_terminatable(
       const char *          dirname,
       Filename_Filter_Func  fn_filter,
       Terminating_Dir_Foreach_Func      func,
@@ -707,7 +707,8 @@ dir_filtered_ordered_foreach(
  *  Returning the count of unfiltered lines is a bit odd, but the caller can
  *  get the filtered count from line_array->len
  */
-int read_file_with_filter(
+int
+read_file_with_filter(
       GPtrArray *  line_array,
       const char * fn,
       char **      filter_terms,
@@ -766,7 +767,8 @@ int read_file_with_filter(
  *
  *  1/2024: rare segfault seen
  */
-void filter_and_limit_g_ptr_array(
+void
+filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
       char **     filter_terms,
       bool        ignore_case,
@@ -810,12 +812,13 @@ void filter_and_limit_g_ptr_array(
 }
 
 
-   void filter_and_limit_g_ptr_array2(
-         GPtrArray * line_array,
-         char **     filter_terms,
-         bool        ignore_case,
-         int         limit)
-   {
+void
+filter_and_limit_g_ptr_array2(
+      GPtrArray * line_array,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit)
+{
    bool debug = false;
    if (debug) {
      DBG("line_array=%p, line_array->len=%d, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
@@ -854,7 +857,6 @@ void filter_and_limit_g_ptr_array(
 }
 
 
-
 /** Given a directory, if the directory does not already exist,
  *  creates the directory along with any required parent directories.
  *
@@ -866,7 +868,8 @@ void filter_and_limit_g_ptr_array(
  *  Based on answer by Jens Harms to
  *  https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
  */
-int rek_mkdir(
+int
+rek_mkdir(
       const char *path,
       FILE *      ferr)
 {
@@ -906,7 +909,8 @@ int rek_mkdir(
  *  \param  fp_loc address at which a pointer to the open file is returned
  *  \return 0 if successful, -errno if error
  */
-int fopen_mkdir(
+int
+fopen_mkdir(
       const char *path,
       const char *mode,
       FILE       *ferr,
@@ -939,7 +943,8 @@ int fopen_mkdir(
 }
 
 
-long get_inode_by_fn(const char * fqfn) {
+long
+get_inode_by_fn(const char * fqfn) {
    long result = -1;
    if (fqfn) {
       struct stat stat_buf;
@@ -952,7 +957,8 @@ long get_inode_by_fn(const char * fqfn) {
 }
 
 
-long get_inode_by_fd(int fd) {
+long
+get_inode_by_fd(int fd) {
    long result = -1;
    struct stat stat_buf;
    int rc = fstat(fd, &stat_buf);
@@ -961,7 +967,6 @@ long get_inode_by_fd(int fd) {
    }
    return result;
 }
-
 
 
 #ifdef UNUSED
@@ -973,5 +978,3 @@ void set_fd_blocking(int fd) {
    assert(rc != -1);
 }
 #endif
-
-
