@@ -1625,8 +1625,8 @@ void free_display_handle(Display_Handle * dh) {
  */
 int hiddev_name_to_number(const char * hiddev_name) {
    assert(hiddev_name);
-   char * p = strstr(hiddev_name, "hiddev");
-
+   char * hiddev_name_copy = strdup(hiddev_name);  // for glib 2.43
+   char * p = strstr(hiddev_name_copy, "hiddev");
    int hiddev_number = -1;
    if (p) {
       p = p + strlen("hiddev");
@@ -1638,6 +1638,7 @@ int hiddev_name_to_number(const char * hiddev_name) {
             hiddev_number = -1;   // not necessary, but makes coverity happy
       }
    }
+   free(hiddev_name_copy);
    // DBGMSG("hiddev_name = |%s|, returning: %d", hiddev_name, hiddev_number);
    return hiddev_number;
 }
