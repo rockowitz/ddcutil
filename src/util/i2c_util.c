@@ -3,7 +3,7 @@
  * I2C utility functions
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -60,7 +60,7 @@ int extract_number_after_hyphen(const char * name) {
    int result = -1;
 
    if (name) {
-      char * hyphen = strchr(name, '-');
+      const char * hyphen = strchr(name, '-');
       if (hyphen && *(hyphen+1) != '\0') {
          int ival;
          if ( str_to_int(hyphen+1, &ival, 10) )
