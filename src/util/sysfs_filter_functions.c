@@ -1,6 +1,6 @@
 /** @file sysfs_filter_functions.c */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -183,7 +183,7 @@ bool predicate_exact_D_00hh(const char * value, const char * sbusno) {
    bool b1 = compile_and_eval_regex(D_00hh_pattern, value);
    if (b1) {
       // our utilities don't support extracting match groups
-      char * hypos = strchr(value, '-'); // must succeed because of regex match
+      const char * hypos = strchr(value, '-'); // must succeed because of regex match
       char * s = substr(value, 0, (hypos-value));
       b1 = streq(s, sbusno);
       free(s);
