@@ -114,8 +114,7 @@ file_get_last_lines(
       }
       else {
          rc = linectr;
-         if (debug)
-            printf("(%s) Read %d lines\n", __func__, linectr);
+         DBGF(debug, "Read %d lines", linectr);
          if (rc > maxlines)
             rc = maxlines;
          *line_array_loc = csb_to_g_ptr_array(csb);
@@ -203,8 +202,7 @@ read_binary_file(
    assert(fn);
 
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. fn=%s,est_size=%d\n", __func__, fn, est_size);
+   DBGF(debug, "Starting. fn=%s,est_size=%d", fn, est_size);
 
    Byte  buf[1];
 
@@ -236,10 +234,10 @@ bye:
    // printf("(%s) bye\n", __func__);
    if (debug) {
       if (gbarray)
-         printf("(%s) Done. Returning GByteArray at %p, gbarray->data=%p, gbarray->len=%d\n",
-                __func__, (void*)gbarray, (void*)gbarray->data, gbarray->len);
+         DBG("Done. Returning GByteArray at %p, gbarray->data=%p, gbarray->len=%d",
+                (void*)gbarray, (void*)gbarray->data, gbarray->len);
       else
-         printf("(%s) Returning NULL\n", __func__);
+         DBG("Returning NULL");
    }
    // printf("(%s) byebye\n", __func__);
    return gbarray;
@@ -378,7 +376,7 @@ get_filenames_by_filter(
    }
 
    if (debug) {
-      printf("(%s) Found %d file names:\n", __func__, devnames->len);
+      DBG("Found %d file names:", devnames->len);
       for (int ndx = 0; ndx < devnames->len; ndx++)
          printf("   %s\n", (char *) g_ptr_array_index(devnames, ndx) );
    }
@@ -398,14 +396,12 @@ get_filenames_by_filter(
 int
 filename_for_fd(int fd, char** filename_loc) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. fd=%d, filname_loc=%p\n", __func__, fd, filename_loc);
+   DBGF(debug, "Starting. fd=%d, filname_loc=%p", fd, filename_loc);
    char * result = calloc(1, PATH_MAX+1);
    char workbuf[40];
    int rc = 0;
    snprintf(workbuf, 40, "/proc/self/fd/%d", fd);
-   if (debug)
-      printf("(%s) workbuf = |%s|\n", __func__, workbuf);
+   DBGF(debug, "workbuf = |%s|", workbuf);
 
    ssize_t ct = readlink(workbuf, result, PATH_MAX);
    if (debug) {
@@ -423,9 +419,8 @@ filename_for_fd(int fd, char** filename_loc) {
       result[ct] = '\0';
       *filename_loc = result;
    }
-   if (debug)
-      printf("(%s) fd=%d, ct=%zd, returning: %d, *filename_loc=%p -> |%s|\n",
-          __func__, fd, ct, rc, *filename_loc, *filename_loc);
+   DBGF(debug, "fd=%d, ct=%zd, returning: %d, *filename_loc=%p -> |%s|",
+          fd, ct, rc, *filename_loc, *filename_loc);
    return rc;
 }
 
@@ -441,26 +436,22 @@ filename_for_fd(int fd, char** filename_loc) {
 char *
 filename_for_fd_t(int fd) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. fd=%d\n", __func__, fd);
+   DBGF(debug, "Starting. fd=%d", fd);
+
    static GPrivate  key = G_PRIVATE_INIT(g_free);
    char * fn_buf = get_thread_fixed_buffer(&key, PATH_MAX);
-
    char * result = NULL;  // value to return
-
    char * filename;
    int rc = filename_for_fd(fd, &filename);
-   if (debug)
-      printf("(%s) filename_for_fd() returned rc=%d filename->|%s|\n", __func__, rc, filename);
+   DBGF(debug, "filename_for_fd() returned rc=%d filename->|%s|", rc, filename);
    if (rc == 0) {
       int ct = g_strlcpy(fn_buf, filename, PATH_MAX);
-      if (debug)
-         printf("(%s) ct=%d\n", __func__, ct);
+      DBGF(debug, "ct=%d", ct);
       free(filename);
       result = fn_buf;
    }
-   if (debug)
-      printf("(%s) Returning: |%s|\n", __func__, result);
+
+   DBGF(debug, "Returning: |%s|", result);
    return result;
 }
 
@@ -600,8 +591,7 @@ dir_ordered_foreach_with_arg(
         int                   depth)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. dirname=%s, fn_filter_argument=|%s|\n", __func__, dirname, fn_filter_argument);
+   DBGF(debug, "Starting. dirname=%s, fn_filter_argument=|%s|", dirname, fn_filter_argument);
    GPtrArray * simple_filenames = g_ptr_array_new_with_free_func(g_free);
 
    struct dirent *dent;
@@ -612,12 +602,10 @@ dir_ordered_foreach_with_arg(
    }
    else {
       while ((dent = readdir(d)) != NULL) {
-         if (debug)
-            printf("(%s) %s\n", __func__, dent->d_name);
+         DBGF(debug, "%s", dent->d_name);
          if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
             if (!fn_filter || fn_filter(dent->d_name, fn_filter_argument)) {
-               if (debug)
-                  printf("(%s) Adding simple filename |%s|\n", __func__, dent->d_name);
+               DBGF(debug, "Adding simple filename |%s|", dent->d_name);
                g_ptr_array_add(simple_filenames, g_strdup(dent->d_name));
             }
          }
@@ -631,14 +619,13 @@ dir_ordered_foreach_with_arg(
 
       for (int ndx = 0; ndx < simple_filenames->len; ndx++) {
          char * fn = g_ptr_array_index(simple_filenames, ndx);
-         if (debug)
-            printf("(%s) Calling Dir_Foreach_Func, dirname=%s, fn=%s\n", __func__, dirname, fn);
+         DBGF(debug, "Calling Dir_Foreach_Func, dirname=%s, fn=%s", __func__, dirname, fn);
          func(dirname, fn, accumulator, depth);
       }
       g_ptr_array_free(simple_filenames, true);
    }
-   if (debug)
-      printf("(%s) Done.\n", __func__);
+
+   DBGF(debug, "Done.");
 }
 
 
@@ -730,12 +717,12 @@ int read_file_with_filter(
 {
    bool debug = false;
    if (debug) {
-      printf("(%s) line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d\n",
-             __func__, (void*)line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
+      DBG("line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+             (void*)line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
       if (ntsa_length(filter_terms) > 0) {
-         printf("(%s) filter_terms:\n", __func__);
+         DBG("filter_terms:");
          for (char ** term_ptr = filter_terms; *term_ptr; term_ptr++)
-            printf("(%s)    |%s|\n", __func__, *term_ptr);
+            DBG("    |%s|", *term_ptr);
       }
    }
 
@@ -743,8 +730,7 @@ int read_file_with_filter(
    g_ptr_array_remove_range(line_array, 0, line_array->len);
 
    int rc = file_getlines(fn, line_array, /*verbose*/ false);
-   if (debug)
-      printf("(%s) file_getlines() returned %d\n", __func__, rc);
+   DBGF(debug, "file_getlines() returned %d", rc);
 
    if (rc > 0) {
       filter_and_limit_g_ptr_array(
@@ -755,12 +741,10 @@ int read_file_with_filter(
          free_strings);
    }
    else { // rc == 0
-      if (debug)
-         printf("(%s) Empty file\n", __func__);
+      DBGF(debug, "Empty file");
    }
 
-   if (debug)
-      printf("(%s) Done. Returning: %d\n", __func__, rc);
+   DBGF(debug, "Done. Returning: %d",rc);
    return rc;
 }
 
@@ -887,8 +871,7 @@ int rek_mkdir(
       FILE *      ferr)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting, path=%s\n", __func__, path);
+   DBGF(debug, "Starting, path=%s", path);
 
    char * path0 = strdup(path);  // for building on glib 2.43
    int result = 0;
@@ -900,8 +883,7 @@ int rek_mkdir(
          *sep = '/';
       }
       if (result == 0) {
-         if (debug)
-            printf("(%s) Creating path %s\n", __func__, path0);
+         DBGF(debug, "Creating path %s", path0);
          if ( mkdir(path0, 0777) < 0) {
             result = -errno;
             if (ferr)
@@ -911,8 +893,7 @@ int rek_mkdir(
    }
    free(path0);
 
-   if (debug)
-      printf("(%s) Done. returning %d\n", __func__, result);
+   DBGF(debug, "Done. returning %d", result);
    return result;
 }
 
@@ -932,8 +913,7 @@ int fopen_mkdir(
       FILE      **fp_loc)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. path=%s, mode=%s, fp_loc=%p\n", __func__, path, mode, (void*)fp_loc);
+   DBGF(debug, "Starting. path=%s, mode=%s, fp_loc=%p", path, mode, (void*)fp_loc);
 
    int rc = 0;
    *fp_loc = NULL;
@@ -954,8 +934,7 @@ int fopen_mkdir(
    }
    assert( (rc == 0 && *fp_loc) || (rc != 0 && !*fp_loc ) );
 
-   if (debug)
-       printf("(%s) Done. returning %d\n", __func__, rc);
+   DBGF(debug, "Done. returning %d", rc);
    return rc;
 }
 
