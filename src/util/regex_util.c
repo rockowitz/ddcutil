@@ -1,6 +1,6 @@
 /** @file regex_util.c */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -69,7 +69,7 @@ void free_regex_hash_table() {
    if (regex_hash_table) {
       if (debug) {
          printf("(%s) Hash table contents:\n", __func__);
-         dbgrpt_regex_hash_table(regex_hash_table);
+         dbgrpt_regex_hash_table();
       }
       g_hash_table_destroy(regex_hash_table);
       regex_hash_table = NULL;
