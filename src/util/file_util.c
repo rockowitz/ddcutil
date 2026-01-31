@@ -921,13 +921,13 @@ fopen_mkdir(
 
    int rc = 0;
    *fp_loc = NULL;
-   char *sep = strrchr(path, '/');
+   char *path0 = g_strdup(path);
+   char *sep = strrchr(path0, '/');
    if (sep) {
-      char *path0 = g_strdup(path);
-      path0[ sep - path ] = 0;
+      path0[ sep - path0 ] = 0;
       rc = rek_mkdir(path0, ferr);
-      free(path0);
    }
+   g_free(path0);
    if (!rc) {
       *fp_loc = fopen(path,mode);
       if (!*fp_loc) {
