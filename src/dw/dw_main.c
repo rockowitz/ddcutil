@@ -172,7 +172,7 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode) {
 }
 
 bool all_edids_readable_using_i2c() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    bool result = true;
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
