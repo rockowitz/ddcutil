@@ -1,6 +1,6 @@
 /** @file sysfs_base.c */
 
- // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+ // Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
