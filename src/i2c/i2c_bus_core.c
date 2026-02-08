@@ -196,6 +196,9 @@ unlock_display_by_businfo(I2C_Bus_Info * businfo) {
  *  @param  callopts   if bit CALLOPT_RDONLY set, open RO, otherwise open RW
  *  @param  fd_loc     address which to return file descriptor, -1 if failure
  *  @return Error_Info struct if error, NULl if success
+ *
+ *  @remark
+ *  Common error codes: -ENOENT, -EACCES
  */
 Error_Info *
 i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
@@ -1125,11 +1128,13 @@ Byte * get_connector_edid(const char * connector_name) {
        goto bye;
     }
 
+#ifdef OUT
     Error_Info * err = i2c_check_device_access(dev_name);
     if (err != NULL) {
        errinfo_free(err);   // for now
        goto bye;
     }
+#endif
 
     if ( sysfs_is_ignorable_i2c_device(busno) ) {
        goto bye;
@@ -1535,17 +1540,16 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo) {
          businfo->driver = g_strdup(driver_info->driver);  // ** LEAKY
          // perhaps save businfo->driver_version
          // assert(driver_info->adapter_class);
-         bool is_video_driver = false;
-         if (driver_info->adapter_class) {
-            is_video_driver = is_adapter_class_display_controller(driver_info->adapter_class);
-         }
-         if (!is_video_driver) {
-            master_err = ERRINFO_NEW(DDCRC_OTHER, "Display controller for bus %d has class %s",
-                  businfo->busno, driver_info->adapter_class);
-            free_sysfs_i2c_info(driver_info);
-            goto bye;
+         if (driver_info->adapter_class && 
+             !is_adapter_class_display_controller(driver_info->adapter_class) ) 
+         {
+               master_err = ERRINFO_NEW(DDCRC_OTHER, "Display controller for bus %d has class %s",
+                   businfo->busno, driver_info->adapter_class);
          }
          free_sysfs_i2c_info(driver_info);
+         if (master_err) {
+            goto bye;
+         }
       }
    }
 
