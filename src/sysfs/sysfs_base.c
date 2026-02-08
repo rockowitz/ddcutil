@@ -1374,7 +1374,7 @@ get_i2c_sysfs_driver_by_fd(int fd) {
  *
  *  \param  busno   I2C bus number
  *  \return device class
- *          0 if not found (should never occur)
+ *          0 if not found (invalid bus number)
  */
 uint32_t
 get_i2c_device_sysfs_class(int busno) {
@@ -1436,6 +1436,9 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
  *
  *  \param  busno  I2C bus number
  *  \return true if ignorable, false if not
+ *
+ *  \remark
+ *  returns true if invalid bus number
  */
 bool
 sysfs_is_ignorable_i2c_device(int busno) {
@@ -1460,7 +1463,9 @@ sysfs_is_ignorable_i2c_device(int busno) {
 
    if (!ignorable) {
       uint32_t class = get_i2c_device_sysfs_class(busno);
-      if (class) {
+      if (class == 0)
+         ignorable = true;
+      else {
          DBGF(debug, "   class = 0x%08x", class);
          uint32_t cl2 = class & 0xffff0000;
          DBGF(debug, "   cl2 = 0x%08x", cl2);
