@@ -33,7 +33,7 @@ dnl sets among several output vars including  PACKAGE_NAME, PACKAGE_VERSION,
 dnl PACKAGE_TARNAME (name of output package)
 dnl causes VERSION to be set in config.h
 AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com])
-AC_GNU_SOURCE
+AC_USE_SYSTEM_EXTENSIONS
 
 dnl define preprocessor symbols
 dnl was AC_DEFINE_UNQUOTED, but don't need extra handling?
@@ -122,9 +122,11 @@ required_packages=
 dnl Determines C compiler to use, sets output variable cc, ac_cv_prog_cc_c89
 dnl Called by other macros, but must be called explicitly at top level for proper initialization
 # AC_PROG_C99 for CENTOS 7 in OBS, EOL 6/30/2024
-m4_version_prereq(2.70, [AC_PROG_CC], [AC_PROG_CC_C99])
+m4_version_prereq(2.70, [AC_PROG_CC], [m4_warn([obsolete],
+[AC_PROG_CC_C99 is obsolete; use AC_PROG_CC
+])dnl
+AC_REQUIRE(AC_PROG_CC)])
 
-dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
 LT_INIT([disable-static])
 
