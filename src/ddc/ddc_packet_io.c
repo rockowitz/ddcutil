@@ -1187,7 +1187,7 @@ ddc_write_only_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "" );
 
    TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
