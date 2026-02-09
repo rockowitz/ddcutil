@@ -20,6 +20,7 @@
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
+#include "util/error_info.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
@@ -171,9 +172,17 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode) {
    return resolved_watch_mode;
 }
 
+
+/** Checks that all EDIDS for Display_Refs of type I2C are actually
+ *  readable using I2C. There are some, e.g. for DisplayLink devices
+ *  for which the EDID can be read only from /sys.
+ *
+ * @return true/false
+ */
 bool all_edids_readable_using_i2c() {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "");
+
    bool result = true;
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
@@ -187,19 +196,27 @@ bool all_edids_readable_using_i2c() {
          int fd;
          Error_Info * err = i2c_open_bus_basic_by_busno(businfo->busno, CALLOPT_NONE, &fd);
          if (err) {
+            syslog(LOG_WARNING, "Error opening /dev/i2c-%d: %s",
+                                businfo->busno, errinfo_summary(err));
+            // errinfo_report_to_syslog(LOG_WARNING, err, 1);
+            ERRINFO_FREE_WITH_REPORT(err, false);
             result = false;
-            break;
          }
-         Buffer * edidbuf = buffer_new(256,  "");
-         Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf);
-         if (rc != 0) {
-            result = false;
-            break;
+         else {
+            Buffer * edidbuf = buffer_new(256,  "");
+            Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf);
+            if (rc != 0) {
+               syslog(LOG_WARNING, "Error reading EDID from /dev/i2c-%d: %s",
+                                   businfo->busno, psc_desc(rc));
+               result = false;
+            }
+            buffer_free(edidbuf, "");
          }
-         buffer_free(edidbuf, "");
+         i2c_close_bus_basic(businfo->busno, fd, CALLOPT_ERR_MSG);
       }
    }
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE,result, "");
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_CONN,result, "");
    return result;
 }
 
