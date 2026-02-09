@@ -1526,6 +1526,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo) {
       goto bye;
    }
 
+#ifdef OUT
    master_err = i2c_check_device_access(dev_name);
    if (master_err != NULL) {
       // if (err->status_code != -ENOENT)
@@ -1533,6 +1534,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo) {
       // errinfo_free(err);   // for now
       goto bye;
    }
+#endif
 
    if (!primitive_sysfs) {
       if (!businfo->driver) {
