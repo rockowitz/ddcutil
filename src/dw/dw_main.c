@@ -192,14 +192,15 @@ bool all_edids_readable_using_i2c() {
       }
       I2C_Bus_Info * businfo =  dref->detail;
       if (businfo->flags & I2C_BUS_SYSFS_EDID) {
-         // try reading bus using I2C
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                                "Attempting to read EDID on /dev/i2c-%d", businfo->busno);
          int fd;
          Error_Info * err = i2c_open_bus_basic_by_busno(businfo->busno, CALLOPT_NONE, &fd);
          if (err) {
             syslog(LOG_WARNING, "Error opening /dev/i2c-%d: %s",
                                 businfo->busno, errinfo_summary(err));
             // errinfo_report_to_syslog(LOG_WARNING, err, 1);
-            ERRINFO_FREE_WITH_REPORT(err, false);
+            ERRINFO_FREE_WITH_REPORT(err, true);
             result = false;
          }
          else {
