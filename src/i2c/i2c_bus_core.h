@@ -50,6 +50,7 @@ Error_Info *     i2c_open_bus(int busno, Byte callopts, int * fd_loc);
 #ifdef ALT_LOCK_REC
 Error_Info *     i2c_open_bus(int busno, Display_Lock_Record lockrec, Byte callopts, int * fd_loc);
 #endif
+Status_Errno     i2c_close_bus_basic(int busno, int fd, Call_Options callopts);
 Status_Errno     i2c_close_bus(int busno, int fd, Call_Options callopts);
 
 // Bus inspection
