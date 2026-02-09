@@ -1250,7 +1250,7 @@ char * sysfs_find_adapter(char * path) {
    char * rp1 = strdup(path);
    char * rp2 = NULL;
 
-   // strlen(rp1) > 1  shuld be unnecessary, but just in case:
+   // strlen(rp1) > 1  should be unnecessary, but just in case:
    while(!devpath && strlen(rp1) > 0 && !streq(rp1, "/")) {
       if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
           devpath = rp1;
@@ -1379,24 +1379,31 @@ get_i2c_sysfs_driver_by_fd(int fd) {
 uint32_t
 get_i2c_device_sysfs_class(int busno) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
 
    uint32_t result = 0;
-   char workbuf[100];
-   snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device", busno);
-
-   char * s_class = read_sysfs_attr(workbuf, "class", /*verbose*/ false);
-   if (!s_class) {
-     snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/device/device", busno);
-     s_class = read_sysfs_attr(workbuf, "class", /*verbose*/ false);
-   }
-   if (s_class) {
-      // printf("(%s) Found %s/class\n", __func__, workbuf);
-      /* bool ok =*/  str_to_int(s_class, (int*) &result, 16);   // if fails, &result unchanged
-      free(s_class);
-   }
-   else{
-      // printf("(%s) class for bus %d not found\n", __func__, busno);
+   char device_path1[100];
+   char device_path2[100];
+   snprintf(device_path1, 100, "/sys/bus/i2c/devices/i2c-%d/device", busno);
+   snprintf(device_path2, 100, "/sys/bus/i2c/devices/i2c-%d/i2c-dev/i2c-%d/device", busno, busno);
+   
+   char * rpath = realpath(device_path1, NULL);
+   if (!rpath)
+      rpath = realpath(device_path2, NULL);
+   // DBGF(debug, "rpath=%s", rpath);
+   if (rpath) {
+      char * adapter_path = sysfs_find_adapter(rpath);
+      // DBGF(debug, "adapter_path=%s", adapter_path);
+      if (adapter_path)  {
+         char * s_class = read_sysfs_attr(adapter_path, "class", /*verbose*/ true);
+         if (s_class) {
+            // DBGF(debug, "Found %s/class", adapter_path);
+            str_to_int(s_class, (int*) &result, 16);   // if fails, &result unchanged
+            free(s_class);
+         }
+         free(adapter_path);
+      }
+      free(rpath);
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning 0x%08x", busno, result);
@@ -1443,8 +1450,9 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
 bool
 sysfs_is_ignorable_i2c_device(int busno) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
+
    bool ignorable = false;
-   DBGF(debug, "Starting.  busno=%d", busno);
 
    // It is possible for a display device to have an I2C bus
    // that should be ignored.  Recent AMD Navi board (e.g. RX 6000)
@@ -1456,13 +1464,15 @@ sysfs_is_ignorable_i2c_device(int busno) {
    char * driver = get_i2c_sysfs_driver_by_busno(busno);
    if (name) {
       ignorable = ignorable_i2c_device_sysfs_name(name, driver);
-      DBGF(debug, "   busno=%d, name=|%s|, ignorable_i2c_sysfs_name() returned %s", busno, name, sbool(ignorable));
+      // DBGF(debug, "   busno=%d, name=|%s|, ignorable_i2c_sysfs_name() returned %s",
+      //                 busno, name, sbool(ignorable));
    }
    free(name);    // safe if NULL
    free(driver);  // ditto
 
    if (!ignorable) {
       uint32_t class = get_i2c_device_sysfs_class(busno);
+      DBGF(debug, "get_i2c_device_sysfs_class(%d) returned 0x%08x ", busno, class);
       if (class == 0)
          ignorable = true;
       else {
@@ -1474,7 +1484,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
       }
    }
 
-   DBGF(debug, "busno=%d, returning: %s", busno, sbool(ignorable));
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE,ignorable, "busno=%d", busno);
    return ignorable;
 }
 
@@ -1513,21 +1523,22 @@ int search_all_businfo_records_by_connector_name(char *connector_name) {
 
 /** Module initialization */
 void init_i2c_sysfs_base() {
-   RTTI_ADD_FUNC(possibly_write_detect_to_status);
-   RTTI_ADD_FUNC(sysfs_find_adapter);
-   RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
-   RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
    RTTI_ADD_FUNC(check_connector_reliability);
-   RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);
    RTTI_ADD_FUNC(check_sysfs_reliability);
-   RTTI_ADD_FUNC(find_adapter_and_get_driver);
-   RTTI_ADD_FUNC(is_sysfs_reliable);
    RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
+   RTTI_ADD_FUNC(find_adapter_and_get_driver);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
+   RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
+   RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
+   RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);
+   RTTI_ADD_FUNC(is_sysfs_reliable);
+   RTTI_ADD_FUNC(possibly_write_detect_to_status);
    RTTI_ADD_FUNC(search_all_businfo_records_by_connector_name);
    RTTI_ADD_FUNC(sysfs_connector_directories_exist);
+   RTTI_ADD_FUNC(sysfs_find_adapter);
+   RTTI_ADD_FUNC(sysfs_is_ignorable_i2c_device);
 #ifdef UNUSED
    RTTI_ADD_FUNC(get_sys_video_devices);
 #endif
