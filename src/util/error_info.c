@@ -19,6 +19,7 @@
 #include <glib-2.0/glib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 /** \endcond */
 
 #include "debug_util.h"
@@ -909,6 +910,25 @@ errinfo_report_collect(Error_Info * erec, GPtrArray* collector, int depth) {
 void
 errinfo_report(Error_Info * erec, int depth) {
       errinfo_report_collect(erec, NULL, depth);
+}
+
+
+/** Writes a full report of the contents of the specified #Error_Info
+ *  to the system log, using the specified syslog priority.
+ *
+ *  \param  syslog_priority  syslog priority to use for log entries
+ *  \param  erec             pointer to #Error_Info
+ *  \param  depth            logical indentation depth
+ */
+void
+errinfo_report_to_syslog(int syslog_priority, Error_Info * erec, int depth) {
+   GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
+   errinfo_report_collect(erec, collector, depth);
+   for (int ndx = 0; ndx < collector->len; ndx++) {
+      char * line = g_ptr_array_index(collector, ndx);
+      syslog(syslog_priority, "%s", line);
+   }
+   g_ptr_array_free(collector, true);
 }
 
 
