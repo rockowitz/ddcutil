@@ -1,6 +1,6 @@
 /** @file dw_main.h */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DW_MAIN_H_
@@ -15,7 +15,8 @@
 /** \endcond */
 
 extern DDC_Watch_Mode watch_displays_mode;
-extern bool            enable_watch_displays;
+extern bool           enable_watch_displays;
+extern bool           disable_check_all_edids_readable_using_i2c;
 
 Error_Info * dw_start_watch_displays(DDCA_Display_Event_Class event_classes);
 DDCA_Status  dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes);

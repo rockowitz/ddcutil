@@ -1,6 +1,6 @@
 /** @file app_experimental.c */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -75,7 +75,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(24, "Write detect to status if nvidia driver");
    REPORT_FLAG_OPTION(25, "Unused");
    REPORT_FLAG_OPTION(26, "Traced function stack errors are fatal");
-   REPORT_FLAG_OPTION(27, "Unused");
+   REPORT_FLAG_OPTION(27, "Disable dw_start() check that all EDIDs readable using I2C");
    REPORT_FLAG_OPTION(28, "Unused");
    REPORT_FLAG_OPTION(29, "Unused");
    REPORT_FLAG_OPTION(30, "Unused");
