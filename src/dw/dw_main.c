@@ -192,7 +192,7 @@ bool all_edids_readable_using_i2c() {
          break;
       }
       I2C_Bus_Info * businfo =  dref->detail;
-      if (businfo->flags & I2C_BUS_SYSFS_EDID) {
+      if ( (businfo->flags&I2C_BUS_SYSFS_EDID) && !(businfo->flags&I2C_BUS_LAPTOP)) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                                 "Attempting to read EDID on /dev/i2c-%d", businfo->busno);
          int fd;
