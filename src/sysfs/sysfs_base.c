@@ -1422,6 +1422,7 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
          "mac-io",       // Mac G5
          "u4",           // Mac G5
          "AMDGPU SMU",   // AMD Navi2 variants, e.g. RX 6000 series
+         "AMDGPU i2c bit bus",
          NULL };
    if (name) {
       if (starts_with_any(name, ignorable_prefixes) >= 0)
