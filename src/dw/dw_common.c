@@ -385,21 +385,27 @@ bool dw_hotplug_change_handler(
       int busno = bs256_iter_next(iter);
       if (busno < 0)
          break;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing bus %d", busno);
+
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
-      Display_Ref* dref = dw_remove_display_by_businfo(businfo);
-      if (dref) {
-         dw_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
-               dref->drm_connector, dref, dref->io_path, events_queue);
-         event_emitted = true;
-      }
-      if (i2c_device_exists(busno)) {
-         // i2c_reset_bus_info(businfo);  // already done in ddc_remove_display_by_businfo2()
+      if (businfo->flags & I2C_BUS_LAPTOP) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Ignoring removal of laptop on bus %d", busno);
       }
       else {
-         // is this possible?
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Device /dev/i2c-%d no longer exists.", busno);
-         i2c_remove_bus_by_busno(busno);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removing bus %d", busno);
+         Display_Ref* dref = dw_remove_display_by_businfo(businfo);
+         if (dref) {
+            dw_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
+                  dref->drm_connector, dref, dref->io_path, events_queue);
+            event_emitted = true;
+         }
+         if (i2c_device_exists(busno)) {
+            // i2c_reset_bus_info(businfo);  // already done in ddc_remove_display_by_businfo2()
+         }
+         else {
+            // is this possible?
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Device /dev/i2c-%d no longer exists.", busno);
+            i2c_remove_bus_by_busno(busno);
+         }
       }
    }
    bs256_iter_free(iter);
@@ -409,31 +415,37 @@ bool dw_hotplug_change_handler(
       int busno = bs256_iter_next(iter);
       if (busno < 0)
          break;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding display ref for bus: %d", busno);
+
        // need to protect ?
       I2C_Bus_Info * businfo = i2c_get_and_check_bus_info(busno);
-
-       char buf[100];
-       g_snprintf(buf, 100, "Adding connected display with bus %d", busno);
-       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
-       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
-       DDCA_IO_Path path;
-       path.io_mode = DDCA_IO_I2C;
-       path.path.i2c_busno = busno;
-       Display_Ref* dref = dw_add_display_by_businfo(businfo);
-       if (dref && !(dref->flags& DREF_TRANSIENT)) {
-          add_published_dref_id_by_dref(dref);
-          if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) && drefs_to_recheck) {
-             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
-             g_ptr_array_add(drefs_to_recheck, dref);
-          }
-          dw_emit_or_queue_display_status_event(
-             DDCA_EVENT_DISPLAY_CONNECTED, businfo->drm_connector_name, dref, path, events_queue);
-          event_emitted = true;
-       }
-       else {
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Newly detected display has disappeared!!!");
-          event_emitted = false;
+      if (businfo->flags & I2C_BUS_LAPTOP) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                                "Bus %d is for laptop display, not adding display ref", busno);
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Adding display ref for bus: %d", busno);
+         char buf[100];
+         g_snprintf(buf, 100, "Adding connected display with bus %d", busno);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
+         DDCA_IO_Path path;
+         path.io_mode = DDCA_IO_I2C;
+         path.path.i2c_busno = busno;
+         Display_Ref* dref = dw_add_display_by_businfo(businfo);
+         if (dref && !(dref->flags& DREF_TRANSIENT)) {
+            add_published_dref_id_by_dref(dref);
+            if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) && drefs_to_recheck) {
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
+               g_ptr_array_add(drefs_to_recheck, dref);
+            }
+            dw_emit_or_queue_display_status_event(
+               DDCA_EVENT_DISPLAY_CONNECTED, businfo->drm_connector_name, dref, path, events_queue);
+            event_emitted = true;
+         }
+         else {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Newly detected display has disappeared!!!");
+            event_emitted = false;
+         }
       }
    }
    bs256_iter_free(iter);
