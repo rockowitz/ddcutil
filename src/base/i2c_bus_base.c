@@ -1,7 +1,7 @@
 /** @file i2c_bus_base.c
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -721,6 +721,7 @@ int i2c_device_count() {
 }
 
 
+#ifdef UNUSED
 /** Checks if the current user has R/W access to a file,
  *  using function access()
  *
@@ -766,6 +767,7 @@ Error_Info * i2c_check_device_access(char * dev_name) {
    }
    return err;
 }
+#endif
 
 
 //
