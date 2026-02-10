@@ -242,8 +242,8 @@ gpointer dw_watch_display_connections(gpointer data) {
    bool watch_dpms = wdd->event_classes & DDCA_EVENT_CLASS_DPMS;
    BS256 bs_sleepy_buses   = EMPTY_BIT_SET_256;
 #endif
-   BS256 bs_old_attached_buses = buses_bitset_from_businfo_array(all_i2c_buses, false);
-   BS256 bs_old_buses_w_edid   = buses_bitset_from_businfo_array(all_i2c_buses, true);
+   BS256 bs_old_attached_buses = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, false);
+   BS256 bs_old_buses_w_edid   = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, true);
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial i2c buses with edids: %s",
           BS256_REPR(bs_old_buses_w_edid));
