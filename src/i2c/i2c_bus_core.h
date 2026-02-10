@@ -67,6 +67,7 @@ i2c_get_device_numbers_using_udev(bool include_ignorable_devices);
 
 
 Bit_Set_256      buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
+Bit_Set_256      nonlaptop_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 GPtrArray *      i2c_detect_buses0();
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);

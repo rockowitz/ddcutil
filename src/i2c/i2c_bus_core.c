@@ -2212,6 +2212,28 @@ Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only
 }
 
 
+Bit_Set_256 nonlaptop_buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only_connected) {
+   bool debug = false;
+   assert(businfo_array);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo_array=%p, len=%d, only_connected=%s",
+         businfo_array, businfo_array->len, SBOOL(only_connected));
+
+   Bit_Set_256 result = EMPTY_BIT_SET_256;
+   for (int ndx = 0; ndx < businfo_array->len; ndx++) {
+      I2C_Bus_Info * businfo = g_ptr_array_index(businfo_array, ndx);
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "businfo=%p", businfo);
+      if ( (!only_connected || businfo->edid) && !(businfo->flags&I2C_BUS_LAPTOP)  ) {
+         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "EDID exists");
+         result = bs256_insert(result, businfo->busno);
+      }
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", bs256_to_string_decimal_t(result, "", ", "));
+   return result;
+}
+
+
+
 //
 // I2C Bus Inquiry
 //
@@ -2415,6 +2437,8 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 
 
 static void init_i2c_bus_core_func_name_table() {
+   RTTI_ADD_FUNC(buses_bitset_from_businfo_array);
+   RTTI_ADD_FUNC(nonlaptop_buses_bitset_from_businfo_array);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
    RTTI_ADD_FUNC(check_x37_for_businfo);
    RTTI_ADD_FUNC(get_connector_edid);
