@@ -86,13 +86,13 @@ int read_ddcutil_config_file(
    DBGF(debug, "Starting. ddcutil_application=%s, errmsgs=%p",
                ddcutil_application, (void*)errmsgs);
 
-   Ini_Valid_Section_Key_Pairs valid_ddcutil_pairs[] = {{"global",     "options"},
+   Ini_Valid_Section_Key_Pair valid_ddcutil_pairs[] = {{"global",     "options"},
                                                         {"ddcutil",    "options"},
                                                         {"libddcutil", "options"}};
-   int ddcutil_kvpct = sizeof(valid_ddcutil_pairs)/sizeof(Ini_Valid_Section_Key_Pairs);
-   Ini_Valid_Section_Key_Pairs valid_ddcui_pairs[] = {{"global",     "options"},
+   int ddcutil_kvpct = sizeof(valid_ddcutil_pairs)/sizeof(Ini_Valid_Section_Key_Pair);
+   Ini_Valid_Section_Key_Pair valid_ddcui_pairs[] = {{"global",     "options"},
                                                       {"ddcui",      "options"}};
-   int ddcui_kvpct = sizeof(valid_ddcui_pairs)/sizeof(Ini_Valid_Section_Key_Pairs);
+   int ddcui_kvpct = sizeof(valid_ddcui_pairs)/sizeof(Ini_Valid_Section_Key_Pair);
 
 
    *untokenized_option_string_loc = NULL;
@@ -101,7 +101,7 @@ int read_ddcutil_config_file(
 
    int kvpct = 0;
    char * config_fn = NULL;
-   Ini_Valid_Section_Key_Pairs*  valid_pairs = NULL;
+   Ini_Valid_Section_Key_Pair*  valid_pairs = NULL;
    if (streq(ddcutil_application, "ddcui")) {
       config_fn = find_xdg_config_file("ddcutil", "ddcuirc");
       valid_pairs = valid_ddcui_pairs;

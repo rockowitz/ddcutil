@@ -138,14 +138,14 @@ static void emit_error_msg(GPtrArray * errmsgs, char * format, ...)
  */
 bool validate_section_name(char *          section_name,
                            int             lineno,
-                           Ini_Valid_Section_Key_Pairs valid_section_key_pairs[],
+                           Ini_Valid_Section_Key_Pair valid_section_key_pairs[],
                            int             valid_section_key_pairs_ct,
                            GPtrArray *     errmsgs)
 {
    bool debug = false;
    bool found = false;
    for (int ndx = 0; ndx < valid_section_key_pairs_ct; ndx++) {
-      Ini_Valid_Section_Key_Pairs valid_kvp = valid_section_key_pairs[ndx];
+      Ini_Valid_Section_Key_Pair valid_kvp = valid_section_key_pairs[ndx];
       bool matched = streq(section_name, valid_kvp.segment_name);
       DBGF(debug, "section_name=|%s|, valid section name = %s, matched=%s",
                   section_name, valid_kvp.segment_name, sbool(matched));
@@ -172,14 +172,14 @@ bool validate_section_name(char *          section_name,
  */
 bool validate_section_key(char *          section_key,
                           int             lineno,
-                          Ini_Valid_Section_Key_Pairs valid_section_key_pairs[],
+                          Ini_Valid_Section_Key_Pair valid_section_key_pairs[],
                           int             valid_section_key_pairs_ct,
                           GPtrArray *     errmsgs)
 {
    bool debug = false;
    bool found = false;
    for (int ndx = 0; ndx < valid_section_key_pairs_ct; ndx++) {
-      Ini_Valid_Section_Key_Pairs valid_kvp = valid_section_key_pairs[ndx];
+      Ini_Valid_Section_Key_Pair valid_kvp = valid_section_key_pairs[ndx];
       char * valid_seg_val_name = g_strdup_printf("%s/%s", valid_kvp.segment_name, valid_kvp.key_name);
       bool matched = (streq(section_key,  valid_seg_val_name));
       DBGF(debug, "valid_seg_val_name=|%s| matched=%s", valid_seg_val_name, sbool(matched));
@@ -218,7 +218,7 @@ bool validate_section_key(char *          section_key,
  */
 int ini_file_load(
            const char *                ini_file_name,
-           Ini_Valid_Section_Key_Pairs valid_section_key_pairs[],
+           Ini_Valid_Section_Key_Pair  valid_section_key_pairs[],
            int                         valid_section_key_pair_ct,
            GPtrArray *                 errmsgs,
            Parsed_Ini_File**           parsed_ini_loc)
@@ -369,7 +369,7 @@ int ini_file_load(
 
 #ifdef UNUSED
 bool ini_file_validate(Parsed_Ini_File *          parsed_ini_file,
-                       Ini_Valid_Section_Key_Pairs   valid_segment_key_pairs[],
+                       Ini_Valid_Section_Key_Pair valid_segment_key_pairs[],
                        int                        kvp_ct,
                        GPtrArray *                errmsgs)
 {
@@ -392,7 +392,7 @@ bool ini_file_validate(Parsed_Ini_File *          parsed_ini_file,
       DBGF(debug, "Read key/value pair %s", hash_key);
       bool found_kv = false;
       for (int ndx = 0; ndx < kvp_ct; ndx++) {
-         Ini_Valid_Section_Key_Pairs valid_kvp = valid_segment_key_pairs[ndx];
+         Ini_Valid_Section_Key_Pair valid_kvp = valid_segment_key_pairs[ndx];
          char * valid_seg_val_name = g_strdup_printf("%s/%s", valid_kvp.segment_name, valid_kvp.key_name);
 
          bool matched = (streq(hash_key,  valid_seg_val_name));

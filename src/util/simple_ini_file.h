@@ -3,7 +3,7 @@
  *  Reads an INI style configuration file
  */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SIMPLE_INI_FILE_H_
@@ -29,11 +29,11 @@ typedef struct {
 typedef struct  {
    char * segment_name;
    char * key_name;
-} Ini_Valid_Section_Key_Pairs;
+} Ini_Valid_Section_Key_Pair;
 
 int    ini_file_load(
            const char *      ini_filename,
-           Ini_Valid_Section_Key_Pairs   valid_segment_key_pairs[],
+           Ini_Valid_Section_Key_Pair   valid_segment_key_pairs[],
            int               valid_segment_key_pair_ct,
            GPtrArray*        errmsgs,
            Parsed_Ini_File** ini_file_loc);
@@ -41,7 +41,7 @@ int    ini_file_load(
 #ifdef UNUSED
 
 bool ini_file_validate(Parsed_Ini_File *            parsed_ini_file,
-                       Ini_Valid_Section_Key_Pairs   valid_segment_key_pairs[],
+                       Ini_Valid_Section_Key_Pair   valid_segment_key_pairs[],
                        int                          kvp_ct,
                        GPtrArray *                  errmsgs);
 #endif
