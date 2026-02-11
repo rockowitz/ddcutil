@@ -3,7 +3,7 @@
  *  Reads an INI style configuration file
  */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -154,11 +154,6 @@ bool validate_section_name(char *          section_name,
         break;
       }
    }
-#ifdef NOT_HERE
-   if (!found) {
-      g_ptr_array_add(errmsgs, g_strdup_printf("Invalid section name: %s at line %d", section_name, lineno));
-   }
-#endif
    return found;
 }
 
@@ -194,11 +189,6 @@ bool validate_section_key(char *          section_key,
         break;
       }
    }
-#ifdef NOT_HERE
-   if (!found) {
-      g_ptr_array_add(errmsgs, g_strdup_printf("Invalid segment/key pair: %s at line %d", section_key, lineno));
-   }
-#endif
    return found;
 }
 
@@ -344,17 +334,6 @@ int ini_file_load(
       if (cur_segment)
          free(cur_segment);
       if ( error_ct > 0 ) {
-#ifdef NO
-         if (errinfo_accum) {
-            Error_Info * master_err = errinfo_new(-EBADMSG, __func__,
-                                        "Errors processing configuration file %s", ini_file_name);
-            for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-               errinfo_add_cause(master_err,
-                                 errinfo_new(-EBADMSG, __func__, g_ptr_array_index(errmsgs, ndx)));
-            }
-            g_ptr_array_add(errinfo_accum, master_err);
-         }
-#endif
          result = -EBADMSG;
          g_hash_table_destroy(ini_file_hash);
          ini_file_hash = NULL;
@@ -386,6 +365,7 @@ int ini_file_load(
    ASSERT_IFF(result==0, *parsed_ini_loc);
    return result;
 }
+
 
 #ifdef UNUSED
 bool ini_file_validate(Parsed_Ini_File *          parsed_ini_file,
