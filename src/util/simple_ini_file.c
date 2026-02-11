@@ -462,19 +462,19 @@ char * ini_file_get_value(
    assert(memcmp(parsed_ini_file->marker, PARSED_INI_FILE_MARKER, 4) == 0);
    assert(segment);
    assert(id);
-   DBGF(debug, "(%s) parsed_ini_file=|%p|, parsed_ini_file->hash_table=%p, segment=|%s|. id=|%s|",
-               __func__, parsed_ini_file, parsed_ini_file->hash_table, segment,id);
+   DBGF(debug, "parsed_ini_file=|%p|, parsed_ini_file->hash_table=%p, segment=|%s|. id=|%s|",
+               parsed_ini_file, parsed_ini_file->hash_table, segment,id);
 
    char * result = NULL;
    if (parsed_ini_file->hash_table) {
       char * full_key = g_strdup_printf("%s/%s", segment, id);
       strlower(full_key);
-      DBGF(debug, "(%s) parsed_ini_file->hash_table=%p, full_key=|%s|",
-                  __func__, parsed_ini_file->hash_table,full_key);
+      DBGF(debug, "parsed_ini_file->hash_table=%p, full_key=|%s|",
+                  parsed_ini_file->hash_table,full_key);
       result = g_hash_table_lookup(parsed_ini_file->hash_table, full_key);
       free(full_key);
    }
-   DBGF(debug, "(%s) segment=%s, id=%s, returning: %s", __func__, segment, id, result);
+   DBGF(debug, "segment=%s, id=%s, returning: %s", segment, id, result);
    return result;
 }
 
