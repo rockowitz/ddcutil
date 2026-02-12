@@ -1413,6 +1413,9 @@ get_i2c_device_sysfs_class(int busno) {
 
 static bool
 ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "name=|%s|, driver=|%s|", name, driver);
+
    bool result = false;
    const char * ignorable_prefixes[] = {
          "SMBus",
@@ -1434,7 +1437,8 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
          }
       }
    }
-   // printf("(%s) name=|%s|, driver=|%s|, returning: %s\n", __func__, name, driver, sbool(result));
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "name=|%s|, driver=|%s|", name, driver);
    return result;
 }
 
@@ -1533,6 +1537,7 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
    RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
+   RTTI_ADD_FUNC(ignorable_i2c_device_sysfs_name);
    RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);
    RTTI_ADD_FUNC(is_sysfs_reliable);
    RTTI_ADD_FUNC(possibly_write_detect_to_status);
