@@ -1,6 +1,6 @@
 /** @file displays.c   Monitor identifier, reference, handle  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
@@ -20,6 +21,7 @@
 #include "util/string_util.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/timestamp.h"
+#include "util/traced_function_stack.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_util.h"
 #include "util/udev_usb_util.h"
@@ -100,6 +102,9 @@ char * display_id_type_name(Display_Id_Type val) {
 
 static
 Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "id_type=%s", display_id_type_name(id_type));
+
    Display_Identifier* pIdent = calloc(1, sizeof(Display_Identifier));
    memcpy(pIdent->marker, DISPLAY_IDENTIFIER_MARKER, 4);
    pIdent->id_type = id_type;
@@ -109,6 +114,8 @@ Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
    memset(pIdent->edidbytes, '\0', 128);
    *pIdent->model_name = '\0';
    *pIdent->serial_ascii = '\0';
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning %p", pIdent);
    return pIdent;
 }
 
@@ -269,6 +276,9 @@ void dbgrpt_display_identifier(Display_Identifier * pdid, int depth) {
 /** Returns a succinct representation of a #Display_Identifier for
  *  debugging purposes.
  *
+ *  If not already computed, the representation is saved in the
+ *  #Display_Identifier struct.
+ *
  *  \param pdid pointer to #Display_Identifier
  *  \return pointer to string description
  *
@@ -276,6 +286,9 @@ void dbgrpt_display_identifier(Display_Identifier * pdid, int depth) {
  *  The returned pointer is valid until the #Display_Identifier is freed.
  */
 char * did_repr(Display_Identifier * pdid) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. pdid=%p", pdid);
+
    char * result = NULL;
    if (pdid) {
       if (!pdid->repr) {
@@ -315,6 +328,8 @@ char * did_repr(Display_Identifier * pdid) {
       } // !pdid->repr
       result = pdid->repr;
    }
+
+   DBGMSF(debug, "Done.  Returning %s", result);
    return result;
 }
 
@@ -324,39 +339,211 @@ char * did_repr(Display_Identifier * pdid) {
  * \param pdid pointer to #Display_Identifier to free
  */
 void free_display_identifier(Display_Identifier * pdid) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "pdid=%p -> %s", pdid, did_repr(pdid));
+
    if (pdid) {
       assert( memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0);
       pdid->marker[3] = 'x';
       free(pdid->repr);   // may be null, that's ok
       free(pdid);
    }
+
+   DBGTRC_DONE(debug, DDCA_TRC_BASE, "");
 }
 
 
-// #ifdef FUTURE
 // *** Display Selector *** (future)
 
 Display_Selector * dsel_new() {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
    Display_Selector * dsel = calloc(1, sizeof(Display_Selector));
    memcpy(dsel->marker, DISPLAY_SELECTOR_MARKER, 4);
    dsel->dispno        = -1;
    dsel->busno         = -1;
+   dsel->hiddev_devno  = -1;
    dsel->usb_bus       = -1;
    dsel->usb_device    = -1;
+
+   DBGMSF(debug, "Done.  Returning %p", dsel);
    return dsel;
 }
 
 void dsel_free(Display_Selector * dsel) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
+
    if (dsel) {
       assert(memcmp(dsel->marker, DISPLAY_SELECTOR_MARKER, 4) == 0);
       free(dsel->mfg_id);
       free(dsel->model_name);
       free(dsel->serial_ascii);
       free(dsel->edidbytes);
+      free(dsel);
    }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
-// #endif
+
+/** Tests if no fields are set in a #Display_Selector.
+ *
+ *  @param  dsel  display selector to test
+ *  @return true/false
+ */
+bool dsel_is_empty(Display_Selector* dsel) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
+
+   bool result =  dsel->dispno       == -1 &&
+                  dsel->busno        == -1 &&
+                  dsel->hiddev_devno == -1 &&
+                  dsel->usb_bus      == -1 &&
+                  dsel->usb_device   == -1 &&
+                  !dsel->mfg_id            &&
+                  !dsel->model_name        &&
+                  !dsel->serial_ascii      &&
+                  !dsel->edidbytes;
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   return result;
+}
+
+
+/** Tests if the busno field and only the busno field
+ *  is set in a #Display_Selector.
+ *
+ *  @param  dsel  display selector to test
+ *  @return true/false
+ */
+bool dsel_only_busno(Display_Selector* dsel) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsel=%p", dsel);
+
+   bool result =  dsel->dispno       == -1 &&
+                  dsel->busno        >=  0 &&
+                  dsel->hiddev_devno == -1 &&
+                  dsel->usb_bus      == -1 &&
+                  dsel->usb_device   == -1 &&
+                  !dsel->mfg_id            &&
+                  !dsel->model_name        &&
+                  !dsel->serial_ascii      &&
+                  !dsel->edidbytes;
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   return result;
+}
+
+
+/** Thread safe function that returns a string representation of a
+ *  #Display_Selector suitable for diagnostic messages. The returned value
+ *  is valid until the next call to this function on the current thread.
+ *
+ *  \param  dsel  pointer to #Display_Selector
+ *  \return string representation
+ */
+char * dsel_repr_t(Display_Selector* dsel) {
+   // dbgrpt_display_selector(dsel, 0);
+
+#define APPEND_IVAL(_repr_buf, _dsel, _field) \
+      if (_dsel->_field >= 0) { \
+         g_snprintf( _repr_buf+strlen(_repr_buf), \
+                     sizeof(_repr_buf)-strlen(_repr_buf), \
+                    "%s:%d, ", #_field, _dsel->_field); \
+         }
+#define APPEND_CVAL(_repr_buf, _dsel, _field) \
+      if (_dsel->_field) { \
+         int len  = strlen(_repr_buf); \
+         g_snprintf( _repr_buf+len, sizeof(_repr_buf)-len, \
+                    "%s:%s, ", #_field, _dsel->_field); \
+      }
+
+   static GPrivate  dsel_repr_key = G_PRIVATE_INIT(g_free);
+   char * dsel_repr_buf = get_thread_fixed_buffer(&dsel_repr_key, 200);
+
+   strcpy(dsel_repr_buf, "Display_Selector[");
+   APPEND_IVAL(dsel_repr_buf, dsel, busno);
+   APPEND_IVAL(dsel_repr_buf, dsel, dispno);
+   APPEND_IVAL(dsel_repr_buf, dsel, hiddev_devno);
+   APPEND_IVAL(dsel_repr_buf, dsel, usb_bus);
+   APPEND_IVAL(dsel_repr_buf, dsel, usb_device);
+   APPEND_CVAL(dsel_repr_buf, dsel, mfg_id);
+   APPEND_CVAL(dsel_repr_buf, dsel, model_name);
+   APPEND_CVAL(dsel_repr_buf, dsel, serial_ascii);
+   if (dsel->edidbytes) {
+      strcat(dsel_repr_buf, "edidbytes:..");
+      if (dsel->edidbytect == 128) {
+         // show last 8 bytes
+         strcat(dsel_repr_buf, hexstring3_t(dsel->edidbytes+120,8, " ", 0, true));
+      }
+      else {
+         strcat(dsel_repr_buf, hexstring3_t(dsel->edidbytes, dsel->edidbytect, " ", 0, true));
+      }
+      strcat(dsel_repr_buf, ","); \
+   }
+   int l = strlen(dsel_repr_buf);
+   if (streq(dsel_repr_buf+strlen(dsel_repr_buf)-1, ","))
+      dsel_repr_buf[l-1] = '\0';
+   strcat(dsel_repr_buf, "]");
+   return dsel_repr_buf;
+
+#undef APPEND_IVAL
+#undef APPEND_CVAL
+}
+
+
+void dbgrpt_display_selector(Display_Selector* dsel, int depth) {
+   int d1 = depth+1;
+   rpt_vstring(depth, "Display_Selector at %p", dsel);
+   rpt_vstring(d1, "dispno:        %d", dsel->dispno);
+   rpt_vstring(d1, "busno:         %d", dsel->busno);
+   rpt_vstring(d1, "hiddev_devno:  %d", dsel->hiddev_devno);
+   rpt_vstring(d1, "usb_bus:       %d", dsel->usb_bus);
+   rpt_vstring(d1, "usb_device:    %d", dsel->usb_device);
+   rpt_vstring(d1, "mfg_id:        %s", dsel->mfg_id);
+   rpt_vstring(d1, "model_name:    %s", dsel->model_name);
+   rpt_vstring(d1, "serial_ascii:  %s", dsel->serial_ascii);
+   rpt_vstring(d1, "edidbytect:    %d", dsel->edidbytect);
+   if (dsel->edidbytes)
+      rpt_vstring(d1, "edidbytes:     %s",  hexstring_t(dsel->edidbytes, dsel->edidbytect));
+   else
+      rpt_vstring(d1, "edidbytes:     (null)");
+}
+
+
+Display_Selector * display_id_to_dsel(Display_Identifier * pdid) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "pdid = %p -> %s", pdid, did_repr(pdid));
+
+   Display_Selector * dsel = dsel_new();
+   switch(pdid->id_type) {
+   case DISP_ID_DISPNO:    dsel->dispno = pdid->dispno;   break;
+   case DISP_ID_BUSNO:     dsel->busno = pdid->busno;  break;
+   case DISP_ID_HIDDEV:    dsel->hiddev_devno = pdid->hiddev_devno; break;
+   case DISP_ID_USB:       dsel->usb_bus = pdid->usb_bus;
+                           dsel->usb_device = pdid->usb_device; break;
+   case DISP_ID_EDID:
+      { dsel->edidbytes = malloc(128);
+        memcpy(dsel->edidbytes, &pdid->edidbytes[0], 128);
+        break;
+      }
+   case DISP_ID_MONSER:
+      {
+         dsel->mfg_id = malloc(sizeof(pdid->mfg_id));
+         memcpy(dsel->mfg_id, &pdid->mfg_id[0], sizeof(pdid->mfg_id));
+         dsel->model_name = malloc(sizeof(pdid->model_name));
+         memcpy(dsel->model_name, &pdid->model_name[0], sizeof(pdid->model_name));
+         dsel->serial_ascii = malloc(sizeof(pdid->serial_ascii));
+         memcpy(dsel->serial_ascii, &pdid->serial_ascii[0], sizeof(pdid->serial_ascii));
+         break;
+      }
+   }
+
+   DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p -> %s", dsel, dsel_repr_t(dsel));
+   return dsel;
+}
 
 
 // *** DDCA_IO_Mode and DDCA_IO_Path ***
@@ -483,23 +670,11 @@ static GHashTable * published_dref_hash = NULL;
 static GMutex dref_hash_mutex;
 
 
-void init_published_dref_hash() {
-   published_dref_hash = g_hash_table_new(g_direct_hash, NULL);
-}
-
-
-void reset_published_dref_hash() {
-   if (published_dref_hash)
-      g_hash_table_destroy(published_dref_hash);
-   init_published_dref_hash();
-}
-
-
 void dbgrpt_published_dref_hash(const char * msg, int depth) {
-    if (msg)
-       rpt_vstring(depth, "%s: dref_hash_contents:", msg);
-    else
-       rpt_label(depth, "dref_hash contents: ");
+   if (msg)
+      drpt_vstring(depth, "%s: dref_hash_contents:", msg);
+   else
+      drpt_label(depth, "dref_hash contents: ");
 
     GHashTableIter iter;
     gpointer key, value;
@@ -507,8 +682,73 @@ void dbgrpt_published_dref_hash(const char * msg, int depth) {
     while (g_hash_table_iter_next (&iter, &key, &value)) {
        uint dref_id = GPOINTER_TO_UINT(key);
        Display_Ref * dref = (Display_Ref *) value;
-       rpt_vstring(depth+1, "dref_id %d -> %s", dref_id, dref_reprx_t(dref));
+       drpt_vstring(depth+1, "dref_id %d -> %s", dref_id, dref_reprx_t(dref));
     }
+}
+
+
+void published_dref_hash_to_syslog(int priority, const char * msg) {
+   if (msg)
+      syslog(priority, "%s: dref_hash_contents:", msg);
+   else
+      syslog(priority, "dref_hash contents: ");
+
+   GHashTableIter iter;
+   gpointer key, value;
+   g_hash_table_iter_init (&iter, published_dref_hash);
+   while (g_hash_table_iter_next (&iter, &key, &value)) {
+      uint dref_id = GPOINTER_TO_UINT(key);
+      Display_Ref * dref = (Display_Ref *) value;
+      syslog(priority, "dref_id %d -> %s", dref_id, dref_reprx_t(dref));
+   }
+}
+
+
+void init_published_dref_hash() {
+   published_dref_hash = g_hash_table_new(g_direct_hash, NULL);
+}
+
+
+/** Marks a Display_Ref as removed, in a thread safe manner.
+ *
+ *  Ensures Display_Ref.disconnected and Display_Ref.detail are consistent.
+ *
+ * @param dref pointer to Display_Ref to mark removed.
+ */
+void mark_display_ref_removed(Display_Ref* dref) {
+   bool debug = false;
+   debug = debug || debug_locks;
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      show_backtrace(2);
+      backtrace_to_syslog(LOG_NOTICE, 0);
+      current_traced_function_stack_to_syslog(LOG_DEBUG, /*reverse*/ true);
+   }
+   g_mutex_lock(&dref->disconnect_mutex);
+   dref->disconnected = true;
+   dref->detail = NULL;
+   g_mutex_unlock(&dref->disconnect_mutex);
+   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+}
+
+
+void reset_published_dref_hash() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+
+   GHashTableIter iter;
+   gpointer key, value;
+   g_hash_table_iter_init (&iter, published_dref_hash);
+   while (g_hash_table_iter_next (&iter, &key, &value)) {
+      // uint dref_id = GPOINTER_TO_UINT(key);
+      Display_Ref * dref = (Display_Ref *) value;
+      mark_display_ref_removed(dref);
+      // drpt_vstring(depth+1, "(reset_published_dref_hash) dref_id %d -> %s", dref_id, dref_reprx_t(dref));
+   }
+
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+      dbgrpt_published_dref_hash("After reset:", 1);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -524,6 +764,8 @@ static uint next_dref_id(Display_Ref * dref) {
 
 void add_published_dref_id_by_dref(Display_Ref * dref) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
+
    g_mutex_lock (&dref_hash_mutex);
    g_hash_table_insert(published_dref_hash, GUINT_TO_POINTER(dref->dref_id), dref);
    if (debug) {
@@ -532,20 +774,24 @@ void add_published_dref_id_by_dref(Display_Ref * dref) {
       dbgrpt_published_dref_hash(msgbuf, 0);
    }
    g_mutex_unlock(&dref_hash_mutex);
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "%s -> %d", dref_reprx_t(dref), dref->dref_id);
-}
 
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "%s -> %d", dref_reprx_t(dref), dref->dref_id);
+}
 
 static void delete_published_dref_id(uint dref_id) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref_id=%u", dref_id);
+
    g_mutex_lock (&dref_hash_mutex);
    g_hash_table_remove(published_dref_hash, GUINT_TO_POINTER(dref_id));
-   if (debug) {
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       char msgbuf[50];
       g_snprintf(msgbuf, 50, "After dref_id %d removed", dref_id);
       dbgrpt_published_dref_hash(msgbuf, 0);
    }
    g_mutex_unlock(&dref_hash_mutex);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -598,7 +844,6 @@ Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
       DBGTRC_DONE(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning %p", ddca_dref, dref);
    return dref;
 }
-
 
 DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref) {
    bool debug = false;
@@ -759,6 +1004,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
          }
          else {
             uint dref_id = dref->dref_id;
+            delete_published_dref_id(dref_id);
             free(dref->usb_hiddev_name);        // private copy
             free(dref->capabilities_string);    // private copy
             free(dref->mmid);                   // private copy
@@ -772,7 +1018,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             g_mutex_clear(&dref->access_mutex);
             dref->marker[3] = 'x';
             free(dref);
-            delete_published_dref_id(dref_id);
+
          }
       }
    }
@@ -860,7 +1106,14 @@ void gdestroy_display_ref(void * data) {
  *  \retval false different displays
  */
 bool dref_eq(Display_Ref* this, Display_Ref* that) {
-   return dpath_eq(this->io_path, that->io_path);
+   bool result = false;
+   if (this == NULL && that == NULL)
+      result = true;
+   else if (this == NULL || that == NULL)
+      result = false;
+   else
+      result = dpath_eq(this->io_path, that->io_path);
+   return result;
 }
 
 
@@ -1037,7 +1290,7 @@ char * dref_reprx_t(Display_Ref * dref) {
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    if (dref)
       g_snprintf(buf, 200, "Display_Ref[%s%d:%s @%p]",
-            (dref->flags & DREF_REMOVED) ? "Disconnected: " : "",
+            (dref->disconnected) ? "Disconnected: " : "",
             dref->dref_id,
             dpath_short_name_t(&dref->io_path),
             (void*) dref);
@@ -1070,8 +1323,8 @@ char * ddci_dref_repr_t(DDCA_Display_Ref * ddca_dref) {
 
 
 /** Locates the currently live Display_Ref for the specified bus.
- *  Discarded display references, i.e. ones marked removed (flag DREF_REMOVED)
- *  are ignored. There should be at most one non-removed Display_Ref.
+ *  Discarded display references, i.e. ones marked removed (flag DREF_DISCONNECTED)
+ *  are ignored. There should be at most one non-disconnected Display_Ref.
  *
  *  @param  busno    I2C_Bus_Number
  *  @param  connector
@@ -1112,11 +1365,11 @@ Display_Ref * get_dref_by_busno_or_connector(
       }
 
       // I2C_Bus_Info * businfo = (I2C_Bus_Info*) cur_dref->detail;
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED=%s, dref_detail=%p -> /dev/i2c-%d",
-      //       sbool(cur_dref->flags&DREF_REMOVED), cur_dref->detail,  businfo->busno);
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_DISCONNECTED=%s, dref_detail=%p -> /dev/i2c-%d",
+      //       sbool(cur_dref->flags&DREF_DISCONNECTED), cur_dref->detail,  businfo->busno);
 
-      if (ignore_invalid && (cur_dref->flags&DREF_REMOVED)) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p DREF_REMOVED set, Ignoring",
+      if (ignore_invalid && cur_dref->disconnected) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_dref=%s@%p disconnected is set, Ignoring",
                 dref_repr_t(cur_dref), cur_dref);
          continue;
       }
@@ -1155,13 +1408,13 @@ Display_Ref * get_dref_by_busno_or_connector(
          assert(non_removed_ct <= 1);
       }
       SEVEREMSG("Multiple non-removed displays on device %s detected. "
-                "All but the most recent are being marked DDC_REMOVED",
+                "All but the most recent are being marked DREF_DISCONNECTED.",
                 dpath_repr_t(&result->io_path));
       for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
          Display_Ref * cur_dref = g_ptr_array_index(all_display_refs, ndx);
          if (ignore_invalid && cur_dref->dispno <= 0)
             continue;
-         if (ignore_invalid && (cur_dref->flags&DREF_REMOVED))
+         if (ignore_invalid && cur_dref->disconnected)
             continue;
          if (cur_dref->io_path.io_mode != DDCA_IO_I2C)
             continue;
@@ -1170,8 +1423,7 @@ Display_Ref * get_dref_by_busno_or_connector(
          {
             if (cur_dref->creation_timestamp < highest_non_removed_creation_timestamp) {
                SEVEREMSG("Marking dref %s removed", dref_reprx_t(cur_dref));
-               //ddc_mark_display_ref_removed(cur_dref);
-               cur_dref->flags |= DREF_REMOVED;
+               mark_display_ref_removed(cur_dref);
             }
          }
       }
@@ -1200,7 +1452,7 @@ ddc_get_display_ref_by_drm_connector(
       // ddc_dbgrpt_display_ref(cur, 4);
       bool pass_filter = true;
       if (ignore_invalid) {
-         pass_filter = (cur->dispno > 0 || !(cur->flags&DREF_REMOVED));
+         pass_filter = (cur->dispno > 0 || !(cur->flags&DREF_DISCONNECTED));
       }
       if (pass_filter) {
          if (cur->io_path.io_mode == DDCA_IO_I2C) {
@@ -1347,15 +1599,17 @@ char * dh_repr_p(Display_Handle * dh) {
  *
  * \param  dh  display handle to free
  */
-void   free_display_handle(Display_Handle * dh) {
+void free_display_handle(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dh=%p -> %s", dh, dh_repr(dh));
+
    if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
       dh->marker[3] = 'x';
       free(dh->repr);
       free(dh->repr_p);
       free(dh);
    }
+
    DBGTRC_DONE(debug, DDCA_TRC_BASE, "");
 }
 
@@ -1371,8 +1625,8 @@ void   free_display_handle(Display_Handle * dh) {
  */
 int hiddev_name_to_number(const char * hiddev_name) {
    assert(hiddev_name);
-   char * p = strstr(hiddev_name, "hiddev");
-
+   char * hiddev_name_copy = strdup(hiddev_name);  // for glib 2.43
+   char * p = strstr(hiddev_name_copy, "hiddev");
    int hiddev_number = -1;
    if (p) {
       p = p + strlen("hiddev");
@@ -1384,6 +1638,7 @@ int hiddev_name_to_number(const char * hiddev_name) {
             hiddev_number = -1;   // not necessary, but makes coverity happy
       }
    }
+   free(hiddev_name_copy);
    // DBGMSG("hiddev_name = |%s|, returning: %d", hiddev_name, hiddev_number);
    return hiddev_number;
 }
@@ -1427,8 +1682,8 @@ Value_Name_Table dref_flags_table = {
       VN(DREF_DYNAMIC_FEATURES_CHECKED),
       VN(DREF_OPEN),
       VN(DREF_DDC_BUSY),
-      VN(DREF_REMOVED),
-      VN(DREF_DDC_DISABLED),
+      VN(DREF_DISCONNECTED),
+      VN(DREF_MMK_IGNORED),
       VN(DREF_DPMS_SUSPEND_STANDBY_OFF),
 //    VN(CALLOPT_NONE),                // special entry
       VN_END
@@ -1590,9 +1845,20 @@ void init_displays() {
    RTTI_ADD_FUNC(dbgrpt_display_ref);
    RTTI_ADD_FUNC(free_display_handle);
    RTTI_ADD_FUNC(free_display_ref);
+   RTTI_ADD_FUNC(free_display_identifier);
    RTTI_ADD_FUNC(dref_lock);
    RTTI_ADD_FUNC(dref_unlock);
    RTTI_ADD_FUNC(get_dref_by_busno_or_connector);
+
+   RTTI_ADD_FUNC(dsel_is_empty);
+   RTTI_ADD_FUNC(dsel_only_busno);
+   RTTI_ADD_FUNC(display_id_to_dsel);
+   RTTI_ADD_FUNC(dsel_free);
+
+   RTTI_ADD_FUNC(mark_display_ref_removed);
+   RTTI_ADD_FUNC(reset_published_dref_hash);
+   RTTI_ADD_FUNC(add_published_dref_id_by_dref);
+   RTTI_ADD_FUNC(delete_published_dref_id);
 
    init_published_dref_hash();
 }

@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
@@ -143,7 +143,7 @@ ddc_validate_display_handle2(Display_Handle * dh) {
    DDCA_Status result = DDCRC_OK;
    // DDCA_Status result = ddc_validate_display_ref2(dh->dref,  DREF_VALIDATE_EDID|DREF_VALIDATE_AWAKE);
    // DDCA_Status result = ddc_validate_display_ref2(dh->dref,  DREF_VALIDATE_BASIC_ONLY);
-   if (dh->dref->flags & DREF_REMOVED) {
+   if (dh->dref->disconnected) {
       result = DDCRC_DISCONNECTED;
    }
 
@@ -230,6 +230,28 @@ bool remove_open_display_for_current_thread(Display_Handle * dh) {
 }
 
 
+bool in_ddci_open_display() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   bool found = false;
+   GPtrArray* callers = get_current_traced_function_stack_contents(true);
+   for (int ndx = 0; ndx < callers->len; ndx++) {
+      char * cur = g_ptr_array_index(callers, ndx);
+      // rpt_vstring(0, "cur=|%s|", cur);
+      // drpt_vstring(0, "cur=|%s|", cur);
+      if (streq(cur, "ddci_open_display3")) {
+         found = true;
+         // drpt_vstring(0, "FOUND");
+         break;
+      }
+   }
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, found, "");
+   return found;
+}
+
+
+
+
 /** Opens a DDC display.
  *
  *  \param  dref            display reference
@@ -263,9 +285,10 @@ ddc_open_display(
    Error_Info * err = NULL;
    int fd = -1;
 
+   g_mutex_lock (&dref->disconnect_mutex);
    // if (ctr % 8 == 0)
    //    dref->detail = NULL;
-   if (dref->flags & DREF_REMOVED) {
+   if (dref->disconnected) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to open disconnected display reference %s",
             dref_repr_t(dref));
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Attempting to open disconnected display reference %s",
@@ -273,22 +296,22 @@ ddc_open_display(
       goto bye;
    }
    if (!dref->detail) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Display_Ref.detail == NULL, but DREF_REMOVED not set, dref=%s",
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s",
             dref_repr_t(dref));
       // show_backtrace(1);
-      // backtrace_to_syslog(LOG_ERR, 1);
+      backtrace_to_syslog(LOG_ERR, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
-      dref->flags |= DREF_REMOVED;
+      // dref->flags |= DREF_DISCONNECTED;
+      dref->disconnected = true;
       err = ERRINFO_NEW(DDCRC_DISCONNECTED,
-            "Display_Ref.detail == NULL, but DREF_REMOVED not set, dref=%s", dref_repr_t(dref));
+            "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s", dref_repr_t(dref));
       goto bye;
    }
 
    const char * driver_name = dref_get_i2c_driver(dref);
    DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "driver_name: %s", driver_name);
    if (driver_name && is_drm_conformant_driver(driver_name) &&
-       dref->drm_connector &&
-       strlen(dref->drm_connector) > 0)
+       dref->drm_connector && strlen(dref->drm_connector) > 0)
    {
       possibly_write_detect_to_status_by_dref(dref);
       char * status;
@@ -310,6 +333,12 @@ ddc_open_display(
          err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
       }
       free(status);
+#ifdef MADE_UNECESSARY_BY_MUTEX
+      // In case dw_remove_display_by_businfo() called during the one second window,
+      // per Charistian Gudrian
+      if (dref->flags & DREF_DISCONNECTED)
+         err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
+#endif
       if (err)
          goto bye;
    }
@@ -328,11 +357,50 @@ ddc_open_display(
 
    case DDCA_IO_I2C:
       {
-         I2C_Bus_Info * bus_info = dref->detail;
-         TRACED_ASSERT(bus_info);   // need to convert to a test?
-         TRACED_ASSERT( bus_info && memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
+         I2C_Bus_Info * businfo = dref->detail;
 
-         if (!bus_info->edid) {
+         // Issue #556, powerdevil bug report, says that businfo == NULL,
+         // which is logically impossible at this point.
+         // Perhaps it was actually the memcmp() on the next line that failed.
+         // Lacking further detail in the bug report for proper diagnosis,
+         // all we can do at this point is return an internal error.
+
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "businfo=%p", businfo);
+         bool reported = false;
+// #define DEBUG_556
+#ifdef DEBUG_556
+         if (in_ddci_open_display()) {
+            dbgrpt_current_traced_function_stack(true, false, 0);
+            dbgrpt_published_dref_hash("In ddc_open_display (1)", 0);
+            reported = true;
+         }
+#endif
+
+         TRACED_ASSERT(businfo);
+         if (memcmp(businfo, I2C_BUS_INFO_MARKER, 4) != 0) {
+            if (!reported) {
+               dbgrpt_current_traced_function_stack(true, false, 0);
+               dbgrpt_published_dref_hash("In ddc_open_display (2)", 0);
+            }
+            char * msg = g_strdup_printf("dref=%s, businfo->marker = |%.4s| = %s",
+                      dref_reprx_t(dref), (char*)businfo, hexstring_t((unsigned char*) businfo->marker, 4));
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+            current_traced_function_stack_to_syslog(LOG_ERR, /*reverse=*/true);
+            published_dref_hash_to_syslog(LOG_ERR, "In ddc_open_display() (3)");
+
+#define RECOVER_556
+#ifndef RECOVER_556
+            free(msg);
+            TRACED_ASSERT(memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
+#else
+            err = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "%s", msg);
+            free(msg);
+            goto bye;
+#endif
+         }
+
+
+         if (!businfo->edid) {
             // How is this even possible?
             // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
             //          close(fd) fails
@@ -355,7 +423,7 @@ ddc_open_display(
          if (!err) {
             dh = create_base_display_handle(fd, dref);
             if (!dref->pedid)
-               dref->pedid = copy_parsed_edid(bus_info->edid);
+               dref->pedid = copy_parsed_edid(businfo->edid);
             if (!dref->pdd)
                dref->pdd = pdd_get_per_display_data(dref->io_path, true);
          }
@@ -410,6 +478,7 @@ ddc_open_display(
    }
 
 bye:
+   g_mutex_unlock (&dref->disconnect_mutex);
    if (err) {
       COUNT_STATUS_CODE(err->status_code);
    }
@@ -924,12 +993,9 @@ ddc_write_read_with_retry(
               retryable = true;     // for now
          }
 
-         if (psc == -EIO || psc == -ENXIO) {
-            Error_Info * err = i2c_check_open_bus_alive(dh) ;
+         if ((psc == -EIO || psc == -ENXIO) && execution_mode == MODE_LIBDDCUTIL) {
+            Error_Info * err = i2c_check_open_bus_alive(dh);
             if (err) {
-               // psc = err->status_code;
-               // retryable = false;
-               // errinfo_free(err);
                master_error = err;
                goto bye;
             }
@@ -1130,6 +1196,7 @@ ddc_write_only_with_retry(
    int                tryctr;
    bool               retryable;
    Error_Info *       try_errors[MAX_MAX_TRIES];
+   Error_Info *       ddc_excp = NULL;
 
    int max_tries = try_data_get_maxtries2(WRITE_ONLY_TRIES_OP);
    TRACED_ASSERT(max_tries > 0);
@@ -1146,9 +1213,15 @@ ddc_write_only_with_retry(
       try_errors[tryctr] = cur_excp;
       if (psc == -EBUSY)
          retryable = false;
-   }
 
-   Error_Info * ddc_excp = NULL;
+      if ((psc == -EIO || psc == -ENXIO) && execution_mode == MODE_LIBDDCUTIL) {
+         Error_Info * err = i2c_check_open_bus_alive(dh);
+         if (err) {
+            ddc_excp = err;
+            goto bye;
+         }
+      }
+   }
 
    if (psc < 0) {
       // now:
@@ -1161,7 +1234,6 @@ ddc_write_only_with_retry(
       // int last_try_index = tryctr-1;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s",
                                            tryctr, sbool(retryable));
-
       if (retryable) {
          psc = DDCRC_RETRIES;
          ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__, NULL);
@@ -1182,8 +1254,9 @@ ddc_write_only_with_retry(
          BASE_ERRINFO_FREE_WITH_REPORT(try_errors[ndx], IS_DBGTRC(debug, TRACE_GROUP) );
       }
    }
-   try_data_record_tries2(dh, WRITE_ONLY_TRIES_OP, psc, tryctr);
 
+bye:
+   try_data_record_tries2(dh, WRITE_ONLY_TRIES_OP, psc, tryctr);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }

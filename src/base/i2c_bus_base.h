@@ -114,7 +114,7 @@ extern GPtrArray * all_i2c_buses;
 
 I2C_Bus_Info *   i2c_add_bus(int busno);
 // void             i2c_add_bus_info(I2C_Bus_Info * businfo);
-I2C_Bus_Info    * i2c_get_bus_info(int busno, bool* new_info);
+I2C_Bus_Info *   i2c_get_bus_info(int busno, bool* new_info);
 void             i2c_remove_bus_by_businfo(I2C_Bus_Info * businfo);
 void             i2c_discard_buses0(GPtrArray* buses);
 void             i2c_discard_buses();
@@ -142,6 +142,11 @@ extern bool use_x37_detection_table;
 const char *         x37_detection_state_name(X37_Detection_State state);
 void                 i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State deteted);
 X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes);
+
+void             i2c_exclude_buses(Bit_Set_256 excluded_busnos_flags);
+bool             i2c_bus_is_excluded(int busno);
+bool             i2c_bus_is_not_excluded(int busno);
+
 
 // Initialization and termination
 void init_i2c_bus_base();

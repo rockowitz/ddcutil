@@ -18,6 +18,7 @@ extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall tim
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
 extern bool dbgtrc_show_process_id; // prefix debug/trace messages with process id
 extern bool dbgtrc_trace_to_syslog_only;
+extern bool dbgtrc_trace_to_syslog;
 extern bool stdout_stderr_redirected;
 
 extern __thread bool msg_decoration_suspended;

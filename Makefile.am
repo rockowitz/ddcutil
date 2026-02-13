@@ -52,6 +52,7 @@ dist-hook:
 	find ${distdir}  -name "*old"  -type d -prune -exec rm -fv {} \;
 	find ${distdir}  -name "*new"  -type d -prune -exec rm -fv {} \;
 	find ${distdir}  -name ".gitignore"    -exec rm -v {} \;
+	find ${distdir}  -name "*dbus" -type d -prune -exec rm -fv {} \;
 	rm -rfv ${distdir}/.github  
 
 # Too many false positives: 
@@ -76,10 +77,9 @@ clang:
 		-enable-checker alpha.core.CastSize       \
 		-enable-checker alpha.core.BoolAssignment \
 		-enable-checker alpha.core.Conversion     \
-		-enable-checker alpha.core.SizeofPtr      \
 		make
 
-
+#failed: 	-enable-checker alpha.core.SizeofPtr      
 
 # 	$(foreach v, $(.VARIABLES), @echo "$v = $$v")
 show:

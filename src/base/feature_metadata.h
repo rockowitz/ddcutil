@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FEATURE_METADATA_H_
@@ -97,23 +97,21 @@ sl_value_table_lookup(DDCA_Feature_Value_Entry * value_entries, Byte value_id);
 
 // Feature Flags
 
-// char * interpret_feature_flags_t(DDCA_Version_Feature_Flags flags);
+const char *
+interpret_internal_feature_flags_symbolic_t(Internal_Feature_Flags flags);
 
 const char *
-interpret_ddca_feature_flags_symbolic_t(DDCA_Feature_Flags flags);
+interpret_internal_global_feature_flags_symbolic_t(Internal_Feature_Flags flags);
 
 const char *
-interpret_ddca_global_feature_flags_symbolic_t(DDCA_Feature_Flags flags);
+interpret_internal_version_feature_flags_symbolic_t(Internal_Feature_Flags flags);
 
-const char *
-interpret_ddca_version_feature_flags_symbolic_t(DDCA_Feature_Flags flags);
 
 
 // DDCA_Feature_Metadata
 
 void
 dbgrpt_ddca_feature_metadata(DDCA_Feature_Metadata * md, int depth);
-
 
 void
 dbgrpt_dyn_feature_metadata(Dyn_Feature_Metadata * md, int depth);
@@ -141,9 +139,8 @@ struct {
    char *                                  feature_name;
    char *                                  feature_desc;
    DDCA_Feature_Value_Entry *              sl_values;     /**< valid when DDCA_SIMPLE_NC set */
-   // DDCA_Feature_Flags                      feature_flags;
-   DDCA_Feature_Flags                      global_feature_flags;
-   DDCA_Feature_Flags                      version_feature_flags;
+   Internal_Feature_Flags                  global_feature_flags;
+   Internal_Feature_Flags                  version_feature_flags;
    Format_Normal_Feature_Detail_Function   nontable_formatter;
    Format_Normal_Feature_Detail_Function2  nontable_formatter_sl;
    Format_Normal_Feature_Detail_Function3  nontable_formatter_universal;   // the future

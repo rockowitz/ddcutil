@@ -5,7 +5,7 @@
  *  This file and ddc_display_ref_reports.c cross-reference each other.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -166,7 +166,7 @@ ddc_non_async_scan(GPtrArray * all_displays) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       Error_Info * err = ddc_initial_checks_by_dref(dref, false);
-      free(err);
+      BASE_ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug,TRACE_GROUP));
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -209,7 +209,7 @@ ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_remove
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
       if ((include_invalid_displays || cur->dispno > 0) &&
-          (!(cur->flags&DREF_REMOVED) || include_removed_drefs) )
+          (!(cur->disconnected) || include_removed_drefs) )
       {
          g_ptr_array_add(result, cur);
       }
@@ -559,7 +559,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          DBGTRC(debug, DDCA_TRC_NONE,"dref=%s, DREF_DDC_COMMUNICATON_WORKING not set", dref_repr_t(dref));
       // if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
       //    dref->dispno = DISPNO_INVALID;  // does this need to be different?
-      if (dref->flags & DREF_DDC_DISABLED)
+      if (dref->flags & DREF_MMK_IGNORED)
          dref->dispno = DISPNO_DDC_DISABLED;
       else if (dref->flags & DREF_DDC_BUSY)
          dref->dispno = DISPNO_BUSY;
@@ -714,7 +714,6 @@ ddc_is_known_display_ref(Display_Ref * dref) {
  *  @retval  DDCRC_OK
  *  @retval  DDCRC_ARG             dref is null or does not point to a Display_Ref
  *  @retval  DDCRC_DISCONNECTED    display has been disconnected
- *  @retval  DDCRC_DPMS_ASLEEP     possible if require_not_asleep == true
  */
 DDCA_Status
 ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation_options) {
@@ -731,8 +730,7 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
    else {
       if (IS_DBGTRC(debug, DDCA_TRC_NONE))
          dbgrpt_display_ref(dref, /*include_businfo*/ false, 1);
-      // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
-      if (dref->flags & DREF_REMOVED) {
+      if (dref->disconnected) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Already marked removed");
          ddcrc = DDCRC_DISCONNECTED;
       }

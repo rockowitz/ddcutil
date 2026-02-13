@@ -1,6 +1,6 @@
 /** @file ddc_display_selection.c */
 
-// Copyright (C) 2022-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -43,236 +43,132 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 // Display Selection
 //
 
-/** Display selection criteria */
-typedef struct {
-   int     dispno;
-   int     i2c_busno;
-   int     hiddev;
-   int     usb_busno;
-   int     usb_devno;
-   char *  mfg_id;
-   char *  model_name;
-   char *  serial_ascii;
-   Byte *  edidbytes;
-} Display_Criteria;
-
-
-/** Allocates a new #Display_Criteria and initializes it to contain no criteria.
- *
- * @return initialized #Display_Criteria
- */
-static Display_Criteria *
-new_display_criteria() {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-   Display_Criteria * criteria = calloc(1, sizeof(Display_Criteria));
-   criteria->dispno = -1;
-   criteria->i2c_busno  = -1;
-   criteria->hiddev = -1;
-   criteria->usb_busno = -1;
-   criteria->usb_devno = -1;
-   DBGMSF(debug, "Done.    Returning: %p", criteria);
-   return criteria;
-}
-
-
 /** Checks if a given #Display_Ref satisfies all the criteria specified in a
- *  #Display_Criteria struct.
+ *  #Display_Selector struct.
  *
- *  @param  drec     pointer to #Display_Ref to test
- *  @param  criteria pointer to criteria
+ *  @param  dref     pointer to #Display_Ref to test
+ *  @param  dsel     pointer to criteria
  *  @retval true     all specified criteria match
  *  @retval false    at least one specified criterion does not match
  *
  *  @remark
- *  In the degenerate case that no criteria are set in **criteria**, returns true.
+ *  In the degenerate case that no criteria are set in **dsel**, returns true.
  */
 static bool
-ddc_test_display_ref_criteria(Display_Ref * dref, Display_Criteria * criteria) {
-   TRACED_ASSERT(dref && criteria);
+ddc_test_display_ref_by_selector(Display_Ref * dref, Display_Selector * dsel) {
+   TRACED_ASSERT(dref && dsel);
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, dsel=%s", dref_repr_t(dref), dsel_repr_t(dsel));
+
    bool result = false;
 
-   if (criteria->dispno >= 0 && criteria->dispno != dref->dispno)
+   if (dsel->dispno >= 0 && dsel->dispno != dref->dispno)
       goto bye;
 
-   if (criteria->i2c_busno >= 0) {
-      if (dref->io_path.io_mode != DDCA_IO_I2C || dref->io_path.path.i2c_busno != criteria->i2c_busno)
+   if (dsel->busno >= 0) {
+      if (dref->io_path.io_mode != DDCA_IO_I2C || dref->io_path.path.i2c_busno != dsel->busno)
          goto bye;
    }
 
 #ifdef ENABLE_USB
-   if (criteria->hiddev >= 0) {
+   if (dsel->hiddev_devno >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
       char buf[40];
-      snprintf(buf, 40, "%s/hiddev%d", usb_hiddev_directory(), criteria->hiddev);
+      snprintf(buf, 40, "%s/hiddev%d", usb_hiddev_directory(), dsel->hiddev_devno);
       Usb_Monitor_Info * moninfo = dref->detail;
       TRACED_ASSERT(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
       if (!streq( moninfo->hiddev_device_name, buf))
          goto bye;
    }
 
-   if (criteria->usb_busno >= 0) {
+   if (dsel->usb_bus >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
       // Usb_Monitor_Info * moninfo = drec->detail2;
       // assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
       // if ( moninfo->hiddev_devinfo->busnum != criteria->usb_busno )
-      if ( dref->usb_bus != criteria->usb_busno )
+      if ( dref->usb_bus != dsel->usb_bus )
          goto bye;
    }
 
-   if (criteria->usb_devno >= 0) {
+   if (dsel->usb_device >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
       // Usb_Monitor_Info * moninfo = drec->detail2;
       // assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
       // if ( moninfo->hiddev_devinfo->devnum != criteria->usb_devno )
-      if ( dref->usb_device != criteria->usb_devno )
+      if ( dref->usb_device != dsel->usb_device )
          goto bye;
    }
 
-   if (criteria->hiddev >= 0) {
+   if (dsel->hiddev_devno >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
-      if ( dref->io_path.path.hiddev_devno != criteria->hiddev )
+      if ( dref->io_path.path.hiddev_devno != dsel->hiddev_devno )
          goto bye;
    }
 #endif
 
-   if (criteria->mfg_id && (strlen(criteria->mfg_id) > 0) &&
-         !streq(dref->pedid->mfg_id, criteria->mfg_id) )
+   if (dsel->mfg_id && (strlen(dsel->mfg_id) > 0) &&
+         !streq(dref->pedid->mfg_id, dsel->mfg_id) )
       goto bye;
 
-   if (criteria->model_name && (strlen(criteria->model_name) > 0) &&
-         !streq(dref->pedid->model_name, criteria->model_name) )
+   if (dsel->model_name && (strlen(dsel->model_name) > 0) &&
+         !streq(dref->pedid->model_name, dsel->model_name) )
       goto bye;
 
-   if (criteria->serial_ascii && (strlen(criteria->serial_ascii) > 0) &&
-         !streq(dref->pedid->serial_ascii, criteria->serial_ascii) )
+   if (dsel->serial_ascii && (strlen(dsel->serial_ascii) > 0) &&
+         !streq(dref->pedid->serial_ascii, dsel->serial_ascii) )
       goto bye;
 
-   if (criteria->edidbytes && memcmp(dref->pedid->bytes, criteria->edidbytes, 128) != 0)
-      goto bye;
-
+   if (dsel->edidbytes) {
+      assert(dsel->edidbytect > 0 && dsel->edidbytect <= 128);
+      int startpos = 128 - dsel->edidbytect;
+      if (memcmp(dref->pedid->bytes+startpos, dsel->edidbytes, dsel->edidbytect) != 0)
+         goto bye;
+   }
    result = true;
 
 bye:
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
 
 
-/** Finds the first display reference satisfying a set of display criteria.
+/** Finds the first display reference that matches a #Display_Selector.
  *  Phantom displays are ignored.
  *
- *  @param  criteria identifiers to check
+ *  @param  dsel  criteria to check
  *  @return display reference if found, NULL if not
  */
-static Display_Ref *
-ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
+Display_Ref *
+ddc_find_display_ref_by_selector(Display_Selector * dsel) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dsel=%p", dsel);
+
    Display_Ref * result = NULL;
+
    GPtrArray * all_displays = ddc_get_all_display_refs();
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * drec = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT(memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
-      if (ddc_test_display_ref_criteria(drec, criteria)) {
-         // Ignore the match if it's a phantom display
-         if (drec->dispno != DISPNO_PHANTOM) {
+      if (drec->dispno != DISPNO_PHANTOM) {   // Ignore phantom displays
+         if (ddc_test_display_ref_by_selector(drec, dsel)) {
             result = drec;
             break;
          }
       }
    }
+
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, dref_repr_t(result), "result=%p", result);
    return result;
-}
-
-
-/** Searches the master display list for a display matching the
- *  specified #Display_Identifier, returning its #Display_Ref.
- *  Phantom displays are ignored.
- *
- *  @param did display identifier to search for
- *  @return #Display_Ref for the display, NULL if not found or
- *          display doesn't support DDC
- *
- * @remark
- * The returned value is a pointer into an internal data structure
- * and should not be freed by the caller.
- */
-static Display_Ref *
-ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "did=%s", did_repr(did));
-   if (debug)
-      dbgrpt_display_identifier(did, 1);
-
-   Display_Ref * result = NULL;
-
-   Display_Criteria * criteria = new_display_criteria();
-
-   switch(did->id_type) {
-   case DISP_ID_BUSNO:
-      criteria->i2c_busno = did->busno;
-      break;
-   case DISP_ID_MONSER:
-      criteria->mfg_id = did->mfg_id;
-      criteria->model_name = did->model_name;
-      criteria->serial_ascii = did->serial_ascii;
-      break;
-   case DISP_ID_EDID:
-      criteria->edidbytes = did->edidbytes;
-      break;
-   case DISP_ID_DISPNO:
-      criteria->dispno = did->dispno;
-      break;
-   case DISP_ID_USB:
-      criteria->usb_busno = did->usb_bus;
-      criteria->usb_devno = did->usb_device;
-      break;
-   case DISP_ID_HIDDEV:
-      criteria->hiddev = did->hiddev_devno;
-   }
-
-   result = ddc_find_display_ref_by_criteria(criteria);
-
-   // Is this the best location in the call chain to make this check?
-   if (result && (result->dispno < 0)) {
-      DBGMSF(debug, "Found a display that doesn't support DDC.  Ignoring.");
-      result = NULL;
-   }
-
-   free(criteria);   // do not free pointers in criteria, they are owned by Display_Identifier
-
-   DBGTRC_RET_STRING(debug, DDCA_TRC_NONE, dref_repr_t(result), "");
-   return result;
-}
-
-
-/** Searches the detected displays for one matching the criteria in a
- *  #Display_Identifier. Phantom displays are ignored.
- *
- *  @param pdid  pointer to a #Display_Identifier
- *  @param callopts  standard call options
- *  @return pointer to #Display_Ref for the display, NULL if not found
- *
- *  \todo
- *  If the criteria directly specify an access path (e.g. I2C bus number) and
- *  CALLOPT_FORCE is specified, then create a temporary #Display_Ref,
- *  bypassing the list of detected monitors.
- */
-Display_Ref *
-get_display_ref_for_display_identifier(
-                Display_Identifier* pdid,
-                Call_Options        callopts)
-{
-   Display_Ref * dref = ddc_find_display_ref_by_display_identifier(pdid);
-
-   return dref;
 }
 
 
 void
 init_ddc_display_selection() {
-   RTTI_ADD_FUNC(ddc_find_display_ref_by_display_identifier);
+   RTTI_ADD_FUNC(ddc_find_display_ref_by_selector);
+   RTTI_ADD_FUNC(ddc_test_display_ref_by_selector);
 }
 

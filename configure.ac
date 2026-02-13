@@ -2,7 +2,7 @@
 # ddcutil autotools configure script 
 #
 
-# Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+# Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 dnl General notes:  
@@ -16,9 +16,9 @@ AC_PREREQ([2.69])
 
 m4_define([ddcutil_major_version], [2])
 m4_define([ddcutil_minor_version], [2])
-m4_define([ddcutil_micro_version], [1])
+m4_define([ddcutil_micro_version], [6])
 dnl ddcutil_version_suffix does not begin with hyphen, e.g. "dev", not "-dev"
-m4_define([ddcutil_version_suffix], [""])
+m4_define([ddcutil_version_suffix], ["DEV"])
 # m4_ifelse(ddcutil_version_suffix,[], m4_define([ddcutil_version], [a]),define([ddcutil_version],[b]))
 dnl mf_define( [ddcutil_version], m4_format([%s.%s.%s%s],[ddcutil_major_version],[ddcutil_minor_version],[ddcutil_micro_version],[ddcutil_version_suffix])
 m4_define([ddcutil_version], [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
@@ -33,6 +33,7 @@ dnl sets among several output vars including  PACKAGE_NAME, PACKAGE_VERSION,
 dnl PACKAGE_TARNAME (name of output package)
 dnl causes VERSION to be set in config.h
 AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com])
+AC_USE_SYSTEM_EXTENSIONS
 
 dnl define preprocessor symbols
 dnl was AC_DEFINE_UNQUOTED, but don't need extra handling?
@@ -121,9 +122,11 @@ required_packages=
 dnl Determines C compiler to use, sets output variable cc, ac_cv_prog_cc_c89
 dnl Called by other macros, but must be called explicitly at top level for proper initialization
 # AC_PROG_C99 for CENTOS 7 in OBS, EOL 6/30/2024
-m4_version_prereq(2.70, [AC_PROG_CC], [AC_PROG_CC_C99])
+m4_version_prereq(2.70, [AC_PROG_CC], [m4_warn([obsolete],
+[AC_PROG_CC_C99 is obsolete; use AC_PROG_CC
+])dnl
+AC_REQUIRE(AC_PROG_CC)])
 
-dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
 LT_INIT([disable-static])
 
@@ -174,9 +177,10 @@ AC_SUBST([LIBTOOL_DEPS])
 dnl 7/29/19 first use, LT_CURRENT set to 1
 dnl release 2.2.0, c:r:a = 7:0:2 -> libddcutil.so.5.2.0
 dnl release 2.2.1, c:r:a = 8:0:3 -> libddcutil.so.5.3.0
-LT_CURRENT=8
-LT_REVISION=0
-LT_AGE=3
+dnl release 2.2.2, c:r:a = 9:0:4 -> libddcutil.so.5.4.0
+LT_CURRENT=9
+LT_REVISION=2
+LT_AGE=4
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)

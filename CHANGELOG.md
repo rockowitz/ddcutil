@@ -1,3 +1,185 @@
+## [2.2.5] 2026-01-26 
+
+Release 2.2.5 replaces release 2.2.4 which failed to build on aarch64.
+
+#### Fixed
+- Compilation failure in function xvrpt_vstring() when building on aarch64. 
+  Issue $574.
+
+#### Changed
+
+- **ddca_start_watch_displays()**: issue warning if displays exist for which 
+  the EDID is readable using sysfs but not I2C.
+- API functions that write a feature value (**ddca_set_non_table_vcp_value()** etc.) 
+  return DDCRC_DISCONNECTED if called before libddcutil has been notified by UDEV 
+  that the display has been removed.
+- ddca_report_display_info(), ddca_report_display_info2(): do not include the
+  display number in the report as this is meaningless for shared library clients.
+
+## [2.2.4] 2026-01-21
+
+### General
+
+Display selection has been reworked to be more flexible while also simpler internally. 
+Previously, options ***--display***, ***--bus***, ***--edid***, etc. were regarded as 
+identifiers that uniquely picked a display.  Generally speaking, only one identifier
+could be given, with special handling for the combination of ***--mfg***, ***--model***,
+and ***-sn***.  
+
+With this change identifiers are now treated as selection criteria. More than one
+can be specified.  To be chosen, the display must satisfy all the criteria given.  
+As before if no selection options are specified, ***--display 1*** is assumed.
+
+#### Added
+
+- Option ***--edp-ambiguous***. Normally, if the DRM connector name contains the string 
+  "eDP", it reliably indicates that the connected display, typically a laptop display, 
+  does not implement DDC/CI, and no further checking is needed.  Owing to a bug in the 
+  amdgpu driver, there have been instances where "eDP" is in the DRM connector name for 
+  an external display that does support DDC/CI. There will be no fix for this bug, which
+  occurs only when the BIOS is operating in CSM mode, not EFI mode. If this option is 
+  given, the contents of the EDID are also checked when "eDP" is in the connector name
+  to confirm that display really is a laptop display. This test is imperfect, so 
+  ***--edp-ambiguous*** should only be used as a workaround for the amdgpu bug.
+- Option ***--ignore bus*** takes as its argument the /dev/i2c bus number for I2C bus 
+  that should be completely ignored. This option can be specified multiple times.  
+  It provides a workaround for obscure bugs.
+
+#### Changed
+
+- Option ***--edid***: If the value given starts with "...", the remainder of the value 
+  is some number of hex digits, which are compared against the final bytes of the EDID
+  for display selection.
+- For commands that require a monitor, if no monitors implementing DDC/CI exist,
+  the error message is "No displays implementing DDC/CI found" instead of "Display not 
+  found". Suggested in issue #540. 
+- Command **detect**:  Insert the word "correctly" into the phrase "Monitor correctly
+  uses unsupported feature flag" to make clear that this is not an error.
+- Command **capabilities**: Change message "Read cached capabilities string from ..."
+  to "Obtained cached capabilities string from ..." so as to be clear that the 
+  string was read from a file, not that it possibly will be.
+
+#### Fixed 
+
+- "eDP" in a DRM connector name once again always implies a laptop or other display 
+  that does not implement DDC/CI. This test was relaxed in release 2.2.1 (commit 
+  8580c3d...) as a workaround for issue #384 caused by a bug in the amdgpu driver. 
+  Unfortunately, the workaround caused some laptop displays to be treated as if 
+  they implemented DDC/CI, with resulting errors.  Addresses issue #559.
+  For handling the extremely rare case of "eDP" in the DRM connector name for an
+  external monitor, option ***--edp-ambiguous*** has been added.
+- Command **detect**: For laptop displays, do not output a monitor-model-id and UDF 
+  file name as these are meaningless.
+- Segfault in function xvrpt_vstring() caused by an extermely log capabilities string.
+  Addresses issue #568.
+- If ddc_write_read() fails, only call ddc_check_open_bus_alive() when executing in
+  libdcutil. The test is not meaningful when executing in command line ddcutil.
+  In the case where a display's EDID was obtained from sysfs but is not readable
+  using I2C, ddc_write_read_with_retry() repeatedly calls i2c_check_open_bus_alive(), 
+  which fails with multiple waits, markedly slowing command **detect**. As a result, 
+  GNOME extensions were seen to hang the user interface.  Addresses issue #559.
+- Build failure on aarch64
+
+### Shared Library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.4.1. 
+
+#### Fixed
+
+- Segfault in dw_start_watch_displays() when Wayland-X11 bridge is not running.
+  Change based on pull request #563. 
+- Race condition failure in ddca_open_display2() triggered by disconnecting and 
+  connecting display in KDE PowerDevil.  Make setting Display_Ref flag 
+  DREF_DISCONNECTED and Display_Ref variable detail=NULL an atomic operation. 
+  Fixes the problem identified in issue #556.
+- Option ***--ignore-hiddev*** was not being processed for libdcutil.
+
+
+## [2.2.2] 2025-11-13
+
+### General
+
+#### Added
+
+- Option ***--trcback***: report call stack that led to specified function
+  (initial implementation). Requires ***--enable-traced-function-stack***.
+- Option ***--trace-to_syslog***: Direct trace output to the system log, without 
+  disabling other destinations.
+
+#### Changed
+
+- Option ***--enable-traced-function-stack*** is now the default.
+- Additional messages reporting configuration file errors. In particular, 
+  section names and the names of keys within each section are validated.
+  Section names other than [global], [ddcutil], and [libddcutil] are flagged
+  as errors.
+- If possible, obtain list of PNP ids from /usr/share/hwdata/pnp.ids instead
+  of using hardcoded list.
+- Reword the parser explanation of options ***--verify*** and ***--noverify***
+  for clarity.
+
+#### Fixed
+
+- Command **setvcp --verify** and API function **ddca_set_non_table_vcp_value()**: 
+  were not performing verification,
+- Command **getvcp --verbose**: output was partially in a format intended for syslog
+- **ddca_display_ref_from_handle()**: was not converting internal to external display 
+  reference, causing a segfault. Issue #528.
+- Relax the check of the device class when determining if a device is a video 
+  controller.   Look only at the first byte in sysfs device attribute class.  
+  An AMD Ryzen AI 9 365 based system was seen to report 0x038000, not 0x030000.  
+  Addresses issue #530.
+- Build failed with an undefined reference error when configure option ***--disable-drm***
+  was specified. API function **ddca_redetect_displays()** now returns 
+  DDCRC_INVALID_OPERATION if ddcutil was built with ***--disable-drm***.  
+  (An alternative code path through **ddca_redetect_displays()** is possible for
+  the ***--disable-drm*** case, but is non-trivial and so not implemented for now.)
+  Also option ***--disable-drm*** forces ***--disable-watch-displays***. 
+  Addresses issue #506
+- man page ddcutil: correct typo in hyperlink. Patch #535
+- man page ddcutil: document that **loadvcp** uses the display identifier on the 
+  command line if one was specified, and ensures it identifies the same display as
+  the one identified by the data in the file being loaded.  Noted in issue #552.
+- Command **environment --verbose**: 
+  - Permission denied errors corrupted output of the find command used to scan for 
+    DisplayLink devices.
+  - Incorrectly formed path name for examining /sys/class/drm
+- Fix invalid hyperlink in README.md. Pull Request #558
+
+#### Building
+
+- Fix out-of-tree build reference to generated file /src/base/build_details.h. Pull request #544
+
+### Shared library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.4.0. 
+
+#### Added
+
+- Option ***--watch-mode udev***
+  Uses libudev to watch for display connection and disconnection. This is now 
+  the default watch mode when executing on wayland if ddcutil was built to use 
+  libudev, which is normally the case (configure option ***--enable-udev***). 
+  Xevent continues to be the default watch mode when executing on X11. A specific
+  watch mode can be forced using ***--watch-mode udev***, ***--watch-mode xevent***, 
+  or ***--watch-mode poll***.  Addresses issues in [KDE-Plasma Powerdevil merge request 542]
+  (https://invent.kde.org/plasma/powerdevil/-/merge_requests/542)
+- Define bit **DDCA_NOVERIFY** in **DDCA_Version_Feature_Flags**. 
+
+#### Fixed
+
+- **ddca_open_display2()**: Return DDCRC_INTERNAL_ERROR instead of terminating 
+  with assert() failure in certain ill-defined situations.  Addresses issue #556
+  reported by PowerDevil.
+- **ddca_redetect_displays()**: Set the **DREF_REMOVED** bit in all entries
+  in the table of published display references, i.e. references that have been 
+  reported to the client program, instead of emptying the table.
+
+
 ## [2.2.1] 2025-07-07
 
 ### General
@@ -70,6 +252,9 @@
 
 ### Changed
 
+- By default, watching for display connection and disconnection by default uses
+  watch-mode **XEVENT** if X11 is the display manager, watch-mode **UDEV**
+  otherwise.
 - Callback function handling made more bulletproof
   - Close any unlock displays left open by user callback function
   - Write syslog messages (with log level NOTICE) before and after executing
@@ -221,7 +406,6 @@
   If set, storage class specifier "static" is removed from many functions so
   that their names appear in backtrace reports from valgrind, asan, and glibc 
   function backtrace().
-
 
 ### Shared Library
 

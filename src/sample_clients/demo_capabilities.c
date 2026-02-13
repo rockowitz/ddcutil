@@ -1,6 +1,6 @@
 // demo_capabilities.c - Query capabilities string
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -37,6 +37,7 @@ DDCA_Display_Handle * open_first_display_by_dispno() {
 
    ddca_create_dispno_display_identifier(1, &did);     // always succeeds
    DDCA_Status rc = ddca_get_display_ref(did, &dref);
+   ddca_free_display_identifier(did);
    if (rc != 0) {
       DDC_ERRMSG("ddca_create_display_ref", rc);
    }
@@ -74,15 +75,12 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle
 
       char * feature_name = "";
       DDCA_Feature_Value_Entry * feature_value_table = NULL;
-      // DDCA_Feature_Metadata metadata = {{0}};
       DDCA_Feature_Metadata * metadata = NULL;
-      // printf("(%s) Before ddca_get_feature_metadata_by_dh(),  &metadata=%p", __func__, &metadata);
       DDCA_Status ddcrc = ddca_get_feature_metadata_by_dh(
                              cur_vcp->feature_code,
                              dh,
                              true,     // create_default_if_not_found,
                              &metadata);
-      // printf("(%s) ddca_get_feature_metadata_by_dh() returned: %s\n", __func__, ddca_rc_name(ddcrc));
       if (ddcrc == 0) {
          feature_value_table = metadata->sl_values;
          feature_name = metadata->feature_name;
@@ -112,7 +110,6 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle
                //     feature_value_table,
                //     cur_vcp->values[ndx],
                //     &value_desc);
-
             }
 
             printf("         0x%02x: %s\n", cur_vcp->values[ndx], value_desc);
@@ -140,7 +137,6 @@ void demo_get_capabilities() {
       ddca_free_error_detail(erec);
    }
 
-
    char * capabilities = NULL;
    printf("Calling ddca_get_capabilities_string...\n");
    rc =  ddca_get_capabilities_string(dh, &capabilities);
@@ -148,6 +144,8 @@ void demo_get_capabilities() {
       DDC_ERRMSG("ddca_get_capabilities_string", rc);
    else
       printf("Capabilities: %s\n", capabilities);
+   free(capabilities);
+
    printf("Second call to ddca_get_capabilities() should be fast since value cached...\n");
    rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
@@ -176,6 +174,9 @@ void demo_get_capabilities() {
          ddca_free_parsed_capabilities(pcaps);
       }
    }
+   free(capabilities);
+
+   ddca_close_display(dh);
 
 bye:
    return;

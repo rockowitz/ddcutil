@@ -19,6 +19,9 @@
 .dirstamp
 .libs
 
+# Hidden files
+.clang-format
+
 # Autotools
 aclocal.m4
 autom4te.cache

@@ -202,6 +202,7 @@ create_ddc_getvcp_request_packet(
       Byte          vcp_code,
       const char *  tag);
 
+#ifdef UNUSED
 Status_DDC
 create_ddc_getvcp_response_packet(
       Byte *        i2c_response_bytes,
@@ -209,6 +210,7 @@ create_ddc_getvcp_response_packet(
       Byte          expected_vcp_opcode,
       const char *  tag,
       DDC_Packet ** packet_ptr);
+#endif
 
 DDC_Packet *
 create_ddc_setvcp_request_packet(

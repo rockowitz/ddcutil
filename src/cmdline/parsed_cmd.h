@@ -1,7 +1,7 @@
 /** @file parsed_cmd.h
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARSED_CMD_H_
@@ -15,11 +15,6 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/parms.h"
-
-typedef enum {
-   MODE_DDCUTIL,
-   MODE_LIBDDCUTIL
-} Parser_Mode;
 
 typedef enum {
    CMDID_NONE          =   0x0000,
@@ -80,6 +75,7 @@ typedef enum {
 
    CMD_FLAG_ENABLE_UDF             = 0x100000,
    CMD_FLAG_ENABLE_USB             = 0x200000,
+   CMD_FLAG_EDP_ALWAYS_LAPTOP      = 0x400000,
 
    CMD_FLAG_TRY_GET_EDID_FROM_SYSFS
                                  = 0x10000000,
@@ -113,8 +109,8 @@ typedef enum {
                            = 0x10000000000000,
    CMD_FLAG_TRACE_TO_SYSLOG_ONLY
                            = 0x20000000000000,
+   CMD_FLAG_TRACE_TO_SYSLOG= 0x40000000000000,
    CMD_FLAG_STATS_TO_SYSLOG
-
                          = 0x0100000000000000,
    CMD_FLAG_INTERNAL_STATS
                          = 0x0200000000000000,
@@ -224,7 +220,7 @@ struct {
 
    // General
    char *                 raw_command;
-   Parser_Mode            parser_mode;
+   Execution_Mode         parser_mode;
    int                    argct;
    char *                 args[MAX_ARGS];
    uint64_t               flags;      // Parsed_Cmd_Flags
@@ -243,8 +239,8 @@ struct {
    gchar **               ddc_disabled;
 
    // Display Selection
-   Display_Identifier*    pdid;
-// Display_Selector*      display_selector;   // for future use
+   Display_Selector*      dsel;
+   Bit_Set_256            ignored_i2c_buses;;
    Bit_Set_32             ignored_hiddevs;
    uint8_t                ignored_usb_vid_pid_ct;
    uint32_t               ignored_usb_vid_pids[IGNORED_VID_PID_MAX];
@@ -271,6 +267,7 @@ struct {
    gchar **               traced_functions;
    gchar **               traced_calls;
    gchar **               traced_api_calls;
+   gchar **               backtraced_functions;
    char *                 trace_destination;
    DDCA_Syslog_Level      syslog_level;
 
@@ -311,7 +308,6 @@ typedef struct {
 } Preparsed_Cmd;
 #endif
 
-const char *  parser_mode_name(Parser_Mode mode);
 const char *  cmdid_name(Cmd_Id_Type id);
 const char *  setvcp_value_type_name(Setvcp_Value_Type value_type);
 Parsed_Cmd *  new_parsed_cmd();

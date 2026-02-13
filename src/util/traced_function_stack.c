@@ -17,6 +17,7 @@
 #include "common_printf_formats.h"
 #include "debug_util.h"
 #include "glib_util.h"
+#include "report_util.h"
 #include "string_util.h"
 
 #include "traced_function_stack.h"
@@ -54,6 +55,7 @@ bool set_debug_thread_tfs(bool newval) {
 void reset_current_traced_function_stack() {
    bool debug = false;
    debug = debug || debug_tfs;
+
    DBGF(debug, PRItid "Starting", TID());
 
    if (traced_function_stack) {
@@ -84,30 +86,40 @@ bool suspend_traced_function_stack(bool onoff) {
  *
  *  @param stack    traced function stack to report
  *  @param reverse  order of entries
+ *  @param show_tid prefix entries with thread id
+ *  @param depth    logical indentation depth
+ *
+ *  @remark thread is redundant in certain contexts
  */
-void debug_traced_function_stack(GQueue * stack, bool reverse) {
+void dbgrpt_traced_function_stack(GQueue * stack, bool reverse, bool show_tid, int depth) {
+   int d0 = depth;
+   int d1 = d0+1;
+
    if (stack) {
-      printf(PRItid" Traced function stack %p:\n", TID(), stack);
+      if (show_tid)
+         drpt_vstring(d0, PRItid" Traced function stack %p:", TID(), stack);
+      else
+         drpt_vstring(d0, "Traced function stack %p:", stack);
       int queue_len = g_queue_get_length(stack);
       if (queue_len > 0) {
          // printf("%"PRItid"traced function stack (addr=%p, len=%d:\n", TID(), stack, queue_len );
          if (reverse) {
             for (int ndx =  g_queue_get_length(stack)-1; ndx >=0 ; ndx--) {
-               printf("   %2d: %s\n", ndx, (char*) g_queue_peek_nth(stack, ndx));
+               drpt_vstring(d1, "%2d: %s", ndx, (char*) g_queue_peek_nth(stack, ndx));
             }
          }
          else {
             for (int ndx = 0; ndx < g_queue_get_length(stack); ndx++) {
-               printf("   %2d: %s\n", ndx, (char*) g_queue_peek_nth(stack, ndx));
+               drpt_vstring(d1, "%2d: %s", ndx, (char*) g_queue_peek_nth(stack, ndx));
             }
          }
       }
       else {
-         printf("    EMPTY\n");
+         drpt_label(d1, "EMPTY");
       }
    }
    else {
-      printf(PRItid"Curent thread has no traced function stack.", TID());
+      drpt_vstring(d0, PRItid"Current thread has no traced function stack.", TID());
    }
 }
 
@@ -119,7 +131,7 @@ void collect_traced_function_stack(GPtrArray* collector,
 {
    bool debug = false;
    if (debug)
-      debug_traced_function_stack(stack, false);
+      dbgrpt_traced_function_stack(stack, false, true, 0);
 
    if (stack && collector) {
       DBGF(debug, PRItid" reverse=%s, stack_adjust=%d, Traced function stack %p:",
@@ -178,19 +190,26 @@ void current_traced_function_stack_to_syslog(int syslog_priority, bool reverse) 
 
 
 /** Reports the contents of the specified traced function stack for the
- *  current thread.
+ *  current thread using report_util functions for writing debug information.
  *
  *  @param reverse  order of entries
+ *  @param show_tid prefix entries with thread id
+ *  @param depth    logical indentation depth
+ *
+ *  @remark thread is redundant in certain contexts
  */
-void debug_current_traced_function_stack(bool reverse) {
+void dbgrpt_current_traced_function_stack(bool reverse, bool show_tid, int depth) {
    bool debug = false;
    if (debug)
       list_traced_function_stacks();
    if (traced_function_stack) {
-      debug_traced_function_stack(traced_function_stack, reverse);
+      dbgrpt_traced_function_stack(traced_function_stack, reverse, show_tid, depth);
    }
    else {
-      printf(PRItid" no traced function stack\n", TID());
+      if (show_tid)
+         drpt_vstring(depth, PRItid" no traced function stack", TID());
+      else
+         drpt_vstring(depth, "no traced function stack");
    }
 }
 
@@ -226,6 +245,35 @@ GPtrArray * get_current_traced_function_stack_contents(bool most_recent_last) {
        }
    }
    return callstack;
+}
+
+
+GPtrArray * stash_current_traced_function_stack() {
+   bool debug = false;
+   if (debug) {
+      drpt_label(0, "Starting. Traced function stack to be stashed:");
+      dbgrpt_current_traced_function_stack(true, true, 0);
+   }
+   GPtrArray * result = get_current_traced_function_stack_contents(true);
+   g_ptr_array_set_free_func(result, free);
+   DBGF(debug, "Done.  Returning %p", result);
+   return result;
+}
+
+void restore_current_traced_function_stack(GPtrArray* stashed) {
+   bool debug = false;
+   DBGF(debug, "Starting. Restoring stashed stack %p", stashed);
+   reset_current_traced_function_stack();
+   if (stashed) {
+      for (int ndx = 0; ndx < stashed->len; ndx++) {
+         push_traced_function(g_ptr_array_index(stashed, ndx));
+      }
+      g_ptr_array_free(stashed, true);
+   }
+   if (debug) {
+      drpt_label(0, "Done.    Restored traced function stack:");
+      dbgrpt_current_traced_function_stack(true, true, 0);
+   }
 }
 
 
@@ -329,7 +377,7 @@ void push_traced_function(const char * funcname) {
    if (debug) {
       printf(PRItid" (%s) Done\n", TID(), __func__);
       // show_backtrace(0);
-      debug_current_traced_function_stack(false);
+      dbgrpt_current_traced_function_stack(false, true, 0);
    }
 }
 
@@ -430,7 +478,7 @@ void pop_traced_function(const char * funcname) {
                         TID(), funcname);
                }
 
-               debug_current_traced_function_stack(/*reverse=*/ false);
+               dbgrpt_current_traced_function_stack(/*reverse=*/ false, true, 0);
                // show_backtrace(1);
                backtrace_to_syslog(LOG_ERR, /* stack_adjust */ 1);
                current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
@@ -464,7 +512,7 @@ static void free_traced_function_stack(GQueue * stack) {
       printf(PRItid"(%s) Starting. stack=%p\n", TID(), __func__, traced_function_stack);
       if (stack) {
          printf(PRItid"(free_traced_function_stack) Final contents of traced_function_stack:\n", TID());
-         debug_traced_function_stack(stack, true);
+         dbgrpt_traced_function_stack(stack, true, true, 0);
       }
    }
 
@@ -544,7 +592,7 @@ void dbgrpt_all_traced_function_stacks() {
           if (debug)
              printf("Reporting traced function stack %p for thread %d\n",
                        entry->traced_function_stack, entry->thread_id);
-          debug_traced_function_stack(entry->traced_function_stack, false);
+          dbgrpt_traced_function_stack(entry->traced_function_stack, false);
        }
    }
    else {

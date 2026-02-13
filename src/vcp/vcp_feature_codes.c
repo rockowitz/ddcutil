@@ -3,7 +3,7 @@
  *  VCP Feature Code Table and related functions
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -753,7 +753,7 @@ get_nontable_feature_detail_function(
          get_version_sensitive_feature_flags(vfte, vcp_version);
    DBGMSF(debug, "version_specific_flags = 0x%04x = %s",
          version_specific_flags,
-         interpret_ddca_version_feature_flags_symbolic_t(version_specific_flags));
+         interpret_internal_version_feature_flags_symbolic_t(version_specific_flags));
    assert(version_specific_flags);
    assert(version_specific_flags & DDCA_NON_TABLE);
    Format_Normal_Feature_Detail_Function func = NULL;
@@ -4394,25 +4394,25 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
 //                   vcp_interpret_version_feature_flags(pfte->v20_flags, buf, bufsz));
    rpt_vstring(d1, "v20_flags:         0x%04x - %s",
                    pfte->v20_flags,
-                   interpret_ddca_version_feature_flags_symbolic_t(pfte->v20_flags));
+                   interpret_internal_version_feature_flags_symbolic_t(pfte->v20_flags));
 //   rpt_vstring(d1, "v21_flags:         0x%04x - %s",
 //                   pfte->v21_flags,
 //                   vcp_interpret_version_feature_flags(pfte->v21_flags, buf, bufsz));
    rpt_vstring(d1, "v21_flags:         0x%04x - %s",
                    pfte->v21_flags,
-                   interpret_ddca_version_feature_flags_symbolic_t(pfte->v21_flags));
+                   interpret_internal_version_feature_flags_symbolic_t(pfte->v21_flags));
 //   rpt_vstring(d1, "v30_flags:         0x%04x - %s",
 //                   pfte->v30_flags,
 //                   vcp_interpret_version_feature_flags(pfte->v30_flags, buf, bufsz));
    rpt_vstring(d1, "v30_flags:         0x%04x - %s",
                    pfte->v30_flags,
-                   interpret_ddca_version_feature_flags_symbolic_t(pfte->v30_flags));
+                   interpret_internal_version_feature_flags_symbolic_t(pfte->v30_flags));
 //   rpt_vstring(d1, "v22_flags:         0x%04x - %s",
 //                   pfte->v22_flags,
 //                   vcp_interpret_version_feature_flags(pfte->v22_flags, buf, bufsz));
    rpt_vstring(d1, "v22_flags:         0x%04x - %s",
                    pfte->v22_flags,
-                   interpret_ddca_version_feature_flags_symbolic_t(pfte->v22_flags));
+                   interpret_internal_version_feature_flags_symbolic_t(pfte->v22_flags));
    dbgrpt_sl_value_table(pfte->default_sl_values, "default_sl_values", d1);
    dbgrpt_sl_value_table(pfte->v21_sl_values, "v21_sl_values", d1);
    dbgrpt_sl_value_table(pfte->v30_sl_values, "v30_sl_values", d1);

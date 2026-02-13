@@ -24,10 +24,13 @@ char*      peek_traced_function();
 void       pop_traced_function(const char * funcname);
 
 void       collect_traced_function_stack(GPtrArray* collector, GQueue * stack, bool reverse, int stack_adjust);
-void       debug_current_traced_function_stack(bool reverse);
+void       dbgrpt_current_traced_function_stack(bool reverse, bool show_tid, int depth);
 int        current_traced_function_stack_size();
 GPtrArray* get_current_traced_function_stack_contents(bool most_recent_last);
 void       current_traced_function_stack_to_syslog(int syslog_priority, bool reverse);
+
+GPtrArray* stash_current_traced_function_stack();
+void       restore_current_traced_function_stack(GPtrArray* stashed);
 
 void       reset_current_traced_function_stack();
 void       free_current_traced_function_stack();

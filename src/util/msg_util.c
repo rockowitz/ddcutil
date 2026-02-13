@@ -28,6 +28,7 @@ bool dbgtrc_show_wall_time =  false;  ///< include wall time in debug/trace outp
 bool dbgtrc_show_thread_id =  false;  ///< include thread id in debug/trace output
 bool dbgtrc_show_process_id = false;  ///< include process id in debug/trace output
 bool dbgtrc_trace_to_syslog_only = false; ///< send trace output only to system log
+bool dbgtrc_trace_to_syslog = false;
 bool stdout_stderr_redirected = false;
 
 bool __thread msg_decoration_suspended = false;
@@ -60,12 +61,12 @@ char * get_msg_decoration(char * buf, uint bufsz, bool dest_syslog) {
       char funcname_prefix[80] = "";
 
       if (dbgtrc_show_time)
-         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(4));
+         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(6));
       if (dbgtrc_show_wall_time && !dest_syslog)
          g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
       if (dbgtrc_show_thread_id || dest_syslog)
          g_snprintf(thread_prefix, 15, PRItid, (intmax_t) tid());
-      if (dbgtrc_show_process_id)
+      if (dbgtrc_show_process_id && !dest_syslog)
          g_snprintf(thread_prefix, 15, PRItid, (intmax_t) pid());
       if (traced_function_stack_enabled) {
          char * s = peek_traced_function();

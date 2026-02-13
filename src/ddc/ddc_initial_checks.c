@@ -1,6 +1,6 @@
 /** @file ddc_initial_checks.c */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 /** \cond */
@@ -276,6 +276,14 @@ check_how_unsupported_reported(Display_Handle * dh) {
 }
 
 
+/** Checks that feature is supported
+ *
+ *  @param dh           pointer to #Display_Handle for open monitor device
+ *  @param newly_added  called by display watch when adding a display
+ *  @param feature_code VCP feature to check
+ *  @param p_shsl       where to return value of feature
+ *  @return #Error_Info struct if error, caller responsible for freeing
+ */
 STATIC Error_Info *
 check_supported_feature(Display_Handle *      dh,
                         bool                  newly_added,
@@ -343,21 +351,16 @@ check_supported_feature(Display_Handle *      dh,
                   *p_shsl = HI_LO_BYTES_TO_SHORT(parsed_response_loc->sh, parsed_response_loc->sl);
                }
 
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                     "busno=%d, sleep-multiplier=%5.2f. "
-                     "Retesting for supported feature 0x%02x returned %s",
-                     businfo->busno,
-                     pdd_get_adjusted_sleep_multiplier(pdd),
-                     feature_code,
-                     errinfo_summary(ddc_excp));
                dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-               SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_NOTICE,
-                     "busno=%d, sleep-multiplier=%5.2f."
-                     "Retesting for supported feature 0x%02x returned %s",
+               char * s = g_strdup_printf(
+                     "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
                      businfo->busno,
                      pdd_get_adjusted_sleep_multiplier(pdd),
                      feature_code,
-                     errinfo_summary(ddc_excp));
+                     dref->communication_error_summary);
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
+               SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_NOTICE, "%s", s);
+               free(s);
             }
          }
       }
@@ -483,7 +486,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          }
          else if (psc == DDCRC_DISCONNECTED)
          {
-            dref->flags = DREF_REMOVED;
+            mark_display_ref_removed(dref);
          }
          else if (psc == -EBUSY) {
              // communication failed, do not set DDCRC_COMMUNICATION_WORKING
@@ -530,8 +533,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
 /** Given a #Display_Ref, opens the monitor device and calls #ddc_initial_checks_by_dh()
  *  to perform initial monitor checks.
  *
- *  @param dref pointer to #Display_Ref for monitor
- *  @param newly_added
+ *  @param dref         pointer to #Display_Ref for monitor
+ *  @param newly_added  special handling when monitor added by display change detection
  *  @return **true** if DDC communication with the display succeeded, **false** otherwise.
  *
  *  @remark
@@ -552,7 +555,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
 
    bool disabled_mmk = is_ignored_mmk(*dref->mmid); // is this monitor model disabled?
    if (disabled_mmk) {
-      dref->flags |= DREF_DDC_DISABLED;
+      dref->flags |= DREF_MMK_IGNORED;
       dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       goto bye;
    }
@@ -595,7 +598,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
          }
          ddc_close_display_wo_return(dh);
       }
-      if (!(dref->flags & DREF_REMOVED))
+      if (!dref->disconnected)
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
 
       if (err && err->status_code == -EBUSY)

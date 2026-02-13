@@ -1,12 +1,12 @@
-/** @file dw_udev.h
+/** @file dw_udev2.h
  *  Watch for monitor addition and removal using UDEV
  */
 
-// Copyright (C) 2019-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DW_UDEV_H_
-#define DW_UDEV_H_
+#ifndef DW_UDEV2_H_
+#define DW_UDEV2_H_
 
 /** \cond */
 #include <glib-2.0/glib.h>
@@ -15,10 +15,11 @@
 #include "public/ddcutil_types.h"
 /** \endcond */
 
-extern bool use_sysfs_connector_id;
 extern bool report_udev_events;
 
-gpointer    dw_watch_displays_udev(gpointer data);
-void        init_dw_udev();
+void dw_udev_setup();
+void dw_udev_teardown();
+bool dw_udev_watch();
 
+void init_dw_udev2();
 #endif /* DW_UDEV_H_ */

@@ -58,25 +58,6 @@ void dw_add_display_ref(Display_Ref * dref) {
 }
 
 
-/** Marks a Display_Ref as removed, in a thread safe manner.
- *
- * @param dref pointer to Display_Ref to mark removed.
- */
-void dw_mark_display_ref_removed(Display_Ref* dref) {
-   bool debug = false;
-   debug = debug || debug_locks;
-   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
-   g_mutex_lock(&all_display_refs_mutex);
-   if (IS_DBGTRC(debug, debug)) {
-      show_backtrace(2);
-      backtrace_to_syslog(LOG_NOTICE, 0);
-   }
-   dref->flags |= DREF_REMOVED;
-   g_mutex_unlock(&all_display_refs_mutex);
-   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
-}
-
-
 /** If a display is present on a specified bus, adds a Display_Ref
  *  for that display.
  *
@@ -142,12 +123,9 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
       }
 
       if (err && err->status_code == DDCRC_DISCONNECTED) {
-         assert(dref->flags & DREF_REMOVED);
+         assert(dref->disconnected);
          DBGTRC_NOPREFIX(true, DDCA_TRC_CONN, "pathological case, dref=%s", dref_reprx_t(dref));
          // pathological case, monitor went away
-         dref->flags |= DREF_TRANSIENT;   // allow free_display_ref() to free
-         // free_display_ref(dref);
-         // dref = NULL;
       }
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
@@ -171,8 +149,8 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
 
 /** Given a #I2C_Bus_Info instance, checks if there is a currently active #Display_Ref
- *  for that bus (i.e. one with the DREF_REMOVED flag not set).
- *  If found, sets the DREF_REMOVED flag.
+ *  for that bus (i.e. one with the DREF_DISCONNECTED flag not set).
+ *  If found, sets the DREF_DISCONNECTED flag.
  *
  *  @param  businfo
  *  @return Display_Ref
@@ -190,9 +168,8 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
    if (dref) {
-      assert(!(dref->flags & DREF_REMOVED));
-      dw_mark_display_ref_removed(dref);
-      dref->detail = NULL;
+      assert(!dref->disconnected);
+      mark_display_ref_removed(dref);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updated flags: %s", interpret_dref_flags_t(dref->flags));
    }
    else {
@@ -235,7 +212,7 @@ dw_recheck_dref(Display_Ref * dref) {
 void init_dw_dref()  {
    RTTI_ADD_FUNC(dw_add_display_by_businfo);
    RTTI_ADD_FUNC(dw_add_display_ref);
-   RTTI_ADD_FUNC(dw_mark_display_ref_removed);
+   RTTI_ADD_FUNC(mark_display_ref_removed);
    RTTI_ADD_FUNC(dw_recheck_dref);
    RTTI_ADD_FUNC(dw_remove_display_by_businfo);
 }

@@ -35,6 +35,10 @@
 
 #include "ddc/ddc_vcp_version.h"
 
+
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
+
 //
 // Functions for VCP (MCCS) version
 //
@@ -108,7 +112,7 @@ set_vcp_version_xdf_by_dh(Display_Handle * dh)
         const char * e1 = "Error detecting VCP version using VCP feature xDF:";
         if (ddc_excp) {
            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s %s", e1, errinfo_summary(ddc_excp));
-           ERRINFO_FREE(ddc_excp);
+           ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
         }
         else {
            if (!parsed_response_loc->valid_response)
@@ -250,7 +254,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)) {
          DBGMSG( "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
          dbgrpt_display_ref(dref,  true,  2);
-         debug_current_traced_function_stack(/*reverse*/ true);
+         dbgrpt_current_traced_function_stack(/*reverse*/ true, true, 0);
          SYSLOG2(DDCA_SYSLOG_ERROR, "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
          current_traced_function_stack_to_syslog(LOG_ERR, /* reverse */ false);
          backtrace_to_syslog(LOG_ERR, 0);

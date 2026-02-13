@@ -1,6 +1,6 @@
 /** @file app_experimental.c */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -65,7 +65,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 #endif
    // REPORT_FLAG_OPTION(16, "Simple report /sys/class/drm");
    REPORT_FLAG_OPTION(16, "Tag output messages");
-   REPORT_FLAG_OPTION(17, "Do not use sysfs connector_id");
+   REPORT_FLAG_OPTION(17, "Unused");
    REPORT_FLAG_OPTION(18, "Always report UDEV events");
    REPORT_FLAG_OPTION(19, "Stabilize added buses with edid");
    REPORT_FLAG_OPTION(20, "DO NOT use x37 detection state hash");
@@ -75,7 +75,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(24, "Write detect to status if nvidia driver");
    REPORT_FLAG_OPTION(25, "Unused");
    REPORT_FLAG_OPTION(26, "Traced function stack errors are fatal");
-   REPORT_FLAG_OPTION(27, "Unused");
+   REPORT_FLAG_OPTION(27, "Disable dw_start() check that all EDIDs readable using I2C");
    REPORT_FLAG_OPTION(28, "Unused");
    REPORT_FLAG_OPTION(29, "Unused");
    REPORT_FLAG_OPTION(30, "Unused");

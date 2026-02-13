@@ -17,6 +17,7 @@
 #include "util/traced_function_stack.h"
 
 #include "base/core.h"
+#include "base/dw_base.h"
 #include "base/sleep.h"
 #include "base/rtti.h"
 
@@ -167,10 +168,20 @@ gpointer dw_execute_callback_func(gpointer data) {
    free(buf);
 
    record_active_callback_thread(g_thread_self());
-   cqe->func(cqe->event);
+
    // in case the callback function calls an API function that resets the traced function stack:
-   if (traced_function_stack_enabled && current_traced_function_stack_size() == 0)
-      push_traced_function(__func__);
+   GPtrArray* stashed = NULL;
+   if (traced_function_stack_enabled)
+      stashed = stash_current_traced_function_stack();
+
+   cqe->func(cqe->event);
+
+   // in case the callback function calls an API function that resets the traced function stack:
+   // if (traced_function_stack_enabled && current_traced_function_stack_size() == 0)
+   //    push_traced_function(__func__);
+   if (stashed)
+      restore_current_traced_function_stack(stashed);
+
    remove_active_callback_thread(g_thread_self());
 
    buf = g_strdup_printf("Callback function %p for event %s complete",
@@ -180,11 +191,11 @@ gpointer dw_execute_callback_func(gpointer data) {
    ddc_close_all_displays_for_current_thread(/*error_if_open=*/ true);   // in case client left some open
    unlock_all_displays_for_current_thread();      // should never be needed
 
+   DBGTRC_DONE(debug, TRACE_GROUP, "%s", buf);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    if (traced_function_stack_enabled)
       free_current_traced_function_stack();
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "%s", buf);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
    free(buf);
    return NULL;   // terminates thread
 }
@@ -210,7 +221,6 @@ DDCA_Status dw_register_display_status_callback(DDCA_Display_Status_Callback_Fun
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
    DDCA_Status result = DDCRC_INVALID_OPERATION;
-#ifdef ENABLE_UDEV
    // if (check_all_video_adapters_implement_drm()) {   // unnecessary, performed in caller
       // uint64_t t0 = cur_realtime_nanosec();
       generic_register_callback(&display_detection_callbacks, func);
@@ -218,7 +228,6 @@ DDCA_Status dw_register_display_status_callback(DDCA_Display_Status_Callback_Fun
       //      NANOS2MICROS(cur_realtime_nanosec()-t0) );
       result = DDCRC_OK;
    // }
-#endif
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
@@ -238,64 +247,12 @@ DDCA_Status dw_unregister_display_status_callback(DDCA_Display_Status_Callback_F
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
    DDCA_Status result = DDCRC_INVALID_OPERATION;
-#ifdef ENABLE_UDEV
    if (check_all_video_adapters_implement_drm()) {
        result = generic_unregister_callback(display_detection_callbacks, func);
    }
-#endif
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
-}
-
-
-const char * dw_display_event_class_name(DDCA_Display_Event_Class class) {
-   char * result = NULL;
-   switch(class) {
-   case DDCA_EVENT_CLASS_NONE:               result = "DDCA_EVENT_CLASS_NONE";               break;
-   case DDCA_EVENT_CLASS_DPMS:               result = "DDCA_EVENT_CLASS_DPMS";               break;
-   case DDCA_EVENT_CLASS_DISPLAY_CONNECTION: result = "DDCA_EVENT_CLASS_DISPLAY_CONNECTION"; break;
-   case DDCA_EVENT_CLASS_UNUSED1:            result = "DDCA_EVENT_CLASS_UNUSED1";            break;
-   }
-   return result;
-}
-
-
-const char * dw_display_event_type_name(DDCA_Display_Event_Type event_type) {
-   char * result = NULL;
-   switch(event_type) {
-   case DDCA_EVENT_DISPLAY_CONNECTED:    result = "DDCA_EVENT_DISPLAY_CONNECTED";    break;
-   case DDCA_EVENT_DISPLAY_DISCONNECTED: result = "DDCA_EVENT_DISPLAY_DISCONNECTED"; break;
-   case DDCA_EVENT_DPMS_AWAKE:           result = "DDCA_EVENT_DPMS_AWAKE";           break;
-   case DDCA_EVENT_DPMS_ASLEEP:          result = "DDCA_EVENT_DPMS_ASLEEP";          break;
-   case DDCA_EVENT_DDC_ENABLED:          result = "DDCA_EVENT_DDC_ENABLED";          break;
-   case DDCA_EVENT_UNUSED2:              result = "DDCA_EVENT_UNUSED2";              break;
-   }
-   return result;
-}
-
-
-char * display_status_event_repr(DDCA_Display_Status_Event evt) {
-   char * s = g_strdup_printf(
-      "DDCA_Display_Status_Event[%s:  %s, %s, dref: %s, io_path:/dev/i2c-%d, ddc working: %s]",
-      formatted_time_t(evt.timestamp_nanos),   // will this clobber a wrapping DBGTRC?
-      dw_display_event_type_name(evt.event_type),
-                                  evt.connector_name,
-                                  ddci_dref_repr_t(evt.dref),
-                                  evt.io_path.path.i2c_busno,
-                                  sbool(evt.flags&DDCA_DISPLAY_EVENT_DDC_WORKING));
-   return s;
-}
-
-
-char * display_status_event_repr_t(DDCA_Display_Status_Event evt) {
-   static GPrivate  display_status_repr_key = G_PRIVATE_INIT(g_free);
-   char * buf = get_thread_fixed_buffer(&display_status_repr_key, 200);
-
-   char * repr = display_status_event_repr(evt);
-   g_snprintf(buf, 200, "%s", repr);
-   free(repr);
-   return buf;
 }
 
 
@@ -433,8 +390,8 @@ void dw_emit_or_queue_display_status_event(
 {
    bool debug = false;
    if (dref) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, dispno=%d, DREF_REMOVED=%s, event_type=%d=%s, connector_name=%s",
-            dref, dref_reprx_t(dref), dref->dispno, SBOOL(dref->flags&DREF_REMOVED),
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, dispno=%d, disconnected=%s, event_type=%d=%s, connector_name=%s",
+            dref, dref_reprx_t(dref), dref->dispno, sbool(dref->disconnected),
             event_type, dw_display_event_type_name(event_type), connector_name);
 #ifdef NEW
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",

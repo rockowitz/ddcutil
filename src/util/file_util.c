@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -81,66 +81,64 @@ file_get_last_lines(
       bool         verbose)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. fn=%s, maxlines=%d\n", __func__, fn, maxlines );
+   DBGF(debug, "Starting. fn=%s, maxlines=%d\n", fn, maxlines );
 
    int rc = 0;
    FILE * fp = fopen(fn, "r");
    if (!fp) {
-      int errsv = errno;
       rc = -errno;
       if (verbose)
-         fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errsv));
+         fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errno));
    }
    else {
       Circular_String_Buffer* csb = csb_new(maxlines);
-      // if line == NULL && len == 0, then getline allocates buffer for line
+      // line == NULL => getline() allocates buffer, caller must free
       char * line = NULL;
       size_t len = 0;
       int    linectr = 0;
       errno = 0;
-      // line == NULL and len == 0 => getline() allocates buffer, caller must free
       while (getline(&line, &len, fp) >= 0) {
          linectr++;
          rtrim_in_place(line);     // strip trailing newline
          csb_add(csb, line, /*copy=*/ true);
-
          // printf("(%s) Retrieved line of length %zu: %s\n", __func__, read, line);
          free(line);
          line = NULL;  // reset for next getline() call
-         len  = 0;
       }
-      if (errno != 0)  {   // getline error?
-         rc = -errno;
+      int errsv = errno;
+      free(line);
+      if (errsv != 0)  {   // getline error?
+         rc = -errsv;
          if (verbose)
-            fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(-rc));
+            fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(errsv));
       }
-      rc = linectr;
-      if (debug)
-         printf("(%s) Read %d lines\n", __func__, linectr);
-      if (rc > maxlines)
-         rc = maxlines;
-
-      *line_array_loc = csb_to_g_ptr_array(csb);
-      csb_free(csb,false);
-//      if (debug) {
-//         GPtrArray * la = *line_array_loc;
-//         printf("(%s) (*line_array_loc)->len=%d\n", __func__, la->len);
-//         if (la->len > 0)
-//            printf("(%s) Line 0: %s\n", __func__, (char*)g_ptr_array_index(la, 0));
-//         if (la->len > 1)
-//            printf("(%s) Line 1: %s\n", __func__, (char*)g_ptr_array_index(la, 1));
-//         if (la->len > 2) {
-//            printf("(%s) Line %d: %s\n", __func__, la->len-2, (char*)g_ptr_array_index(la, la->len-2));
-//            printf("(%s) Line %d: %s\n", __func__, la->len-1, (char*)g_ptr_array_index(la, la->len-1));
-//         }
-//      }
+      else {
+         rc = linectr;
+         DBGF(debug, "Read %d lines", linectr);
+         if (rc > maxlines)
+            rc = maxlines;
+         *line_array_loc = csb_to_g_ptr_array(csb);
+         csb_free(csb,false);
+#ifdef OUT
+         if (debug) {
+            GPtrArray * la = *line_array_loc;
+            printf("(%s) (*line_array_loc)->len=%d\n", __func__, la->len);
+            if (la->len > 0)
+               printf("(%s) Line 0: %s\n", __func__, (char*)g_ptr_array_index(la, 0));
+            if (la->len > 1)
+               printf("(%s) Line 1: %s\n", __func__, (char*)g_ptr_array_index(la, 1));
+            if (la->len > 2) {
+               printf("(%s) Line %d: %s\n", __func__, la->len-2, (char*)g_ptr_array_index(la, la->len-2));
+               printf("(%s) Line %d: %s\n", __func__, la->len-1, (char*)g_ptr_array_index(la, la->len-1));
+            }
+         }
+#endif
+      }
 
       fclose(fp);
    }
 
-   if (debug)
-      printf("(%s) Done. returning: %d\n", __func__, rc);
+   DBGF(debug, "Done. returning: %d\n", rc);
    return rc;
 }
 
@@ -204,8 +202,7 @@ read_binary_file(
    assert(fn);
 
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. fn=%s,est_size=%d\n", __func__, fn, est_size);
+   DBGF(debug, "Starting. fn=%s,est_size=%d", fn, est_size);
 
    Byte  buf[1];
 
@@ -234,15 +231,13 @@ read_binary_file(
    fclose(fp);
 
 bye:
-   // printf("(%s) bye\n", __func__);
    if (debug) {
       if (gbarray)
-         printf("(%s) Done. Returning GByteArray at %p, gbarray->data=%p, gbarray->len=%d\n",
-                __func__, (void*)gbarray, (void*)gbarray->data, gbarray->len);
+         DBG("Done. Returning GByteArray at %p, gbarray->data=%p, gbarray->len=%d",
+                (void*)gbarray, (void*)gbarray->data, gbarray->len);
       else
-         printf("(%s) Returning NULL\n", __func__);
+         DBG("Returning NULL");
    }
-   // printf("(%s) byebye\n", __func__);
    return gbarray;
 }
 
@@ -256,7 +251,8 @@ bye:
  *  @param  verbose    white error message to stderr if unable to read
  *  @return pointer to newly allocated buffer, NULL if file not read
  */
-char * read_file_single_string(const char * filename, bool verbose) {
+char *
+read_file_single_string(const char * filename, bool verbose) {
    char * buffer = NULL;
    long length;
    FILE * fp = fopen (filename, "rb");
@@ -379,7 +375,7 @@ get_filenames_by_filter(
    }
 
    if (debug) {
-      printf("(%s) Found %d file names:\n", __func__, devnames->len);
+      DBG("Found %d file names:", devnames->len);
       for (int ndx = 0; ndx < devnames->len; ndx++)
          printf("   %s\n", (char *) g_ptr_array_index(devnames, ndx) );
    }
@@ -399,14 +395,12 @@ get_filenames_by_filter(
 int
 filename_for_fd(int fd, char** filename_loc) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. fd=%d, filname_loc=%p\n", __func__, fd, filename_loc);
+   DBGF(debug, "Starting. fd=%d, filname_loc=%p", fd, filename_loc);
    char * result = calloc(1, PATH_MAX+1);
    char workbuf[40];
    int rc = 0;
    snprintf(workbuf, 40, "/proc/self/fd/%d", fd);
-   if (debug)
-      printf("(%s) workbuf = |%s|\n", __func__, workbuf);
+   DBGF(debug, "workbuf = |%s|", workbuf);
 
    ssize_t ct = readlink(workbuf, result, PATH_MAX);
    if (debug) {
@@ -424,9 +418,8 @@ filename_for_fd(int fd, char** filename_loc) {
       result[ct] = '\0';
       *filename_loc = result;
    }
-   if (debug)
-      printf("(%s) fd=%d, ct=%zd, returning: %d, *filename_loc=%p -> |%s|\n",
-          __func__, fd, ct, rc, *filename_loc, *filename_loc);
+   DBGF(debug, "fd=%d, ct=%zd, returning: %d, *filename_loc=%p -> |%s|",
+          fd, ct, rc, *filename_loc, *filename_loc);
    return rc;
 }
 
@@ -442,26 +435,22 @@ filename_for_fd(int fd, char** filename_loc) {
 char *
 filename_for_fd_t(int fd) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. fd=%d\n", __func__, fd);
+   DBGF(debug, "Starting. fd=%d", fd);
+
    static GPrivate  key = G_PRIVATE_INIT(g_free);
    char * fn_buf = get_thread_fixed_buffer(&key, PATH_MAX);
-
    char * result = NULL;  // value to return
-
    char * filename;
    int rc = filename_for_fd(fd, &filename);
-   if (debug)
-      printf("(%s) filename_for_fd() returned rc=%d filename->|%s|\n", __func__, rc, filename);
+   DBGF(debug, "filename_for_fd() returned rc=%d filename->|%s|", rc, filename);
    if (rc == 0) {
       int ct = g_strlcpy(fn_buf, filename, PATH_MAX);
-      if (debug)
-         printf("(%s) ct=%d\n", __func__, ct);
+      DBGF(debug, "ct=%d", ct);
       free(filename);
       result = fn_buf;
    }
-   if (debug)
-      printf("(%s) Returning: |%s|\n", __func__, result);
+
+   DBGF(debug, "Returning: |%s|", result);
    return result;
 }
 
@@ -508,7 +497,8 @@ dir_foreach(
 }
 
 
-void dir_foreach_terminatable(
+void
+dir_foreach_terminatable(
       const char *          dirname,
       Filename_Filter_Func  fn_filter,
       Terminating_Dir_Foreach_Func      func,
@@ -601,8 +591,7 @@ dir_ordered_foreach_with_arg(
         int                   depth)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. dirname=%s, fn_filter_argument=|%s|\n", __func__, dirname, fn_filter_argument);
+   DBGF(debug, "Starting. dirname=%s, fn_filter_argument=|%s|", dirname, fn_filter_argument);
    GPtrArray * simple_filenames = g_ptr_array_new_with_free_func(g_free);
 
    struct dirent *dent;
@@ -613,12 +602,10 @@ dir_ordered_foreach_with_arg(
    }
    else {
       while ((dent = readdir(d)) != NULL) {
-         if (debug)
-            printf("(%s) %s\n", __func__, dent->d_name);
+         DBGF(debug, "%s", dent->d_name);
          if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
             if (!fn_filter || fn_filter(dent->d_name, fn_filter_argument)) {
-               if (debug)
-                  printf("(%s) Adding simple filename |%s|\n", __func__, dent->d_name);
+               DBGF(debug, "Adding simple filename |%s|", dent->d_name);
                g_ptr_array_add(simple_filenames, g_strdup(dent->d_name));
             }
          }
@@ -632,14 +619,13 @@ dir_ordered_foreach_with_arg(
 
       for (int ndx = 0; ndx < simple_filenames->len; ndx++) {
          char * fn = g_ptr_array_index(simple_filenames, ndx);
-         if (debug)
-            printf("(%s) Calling Dir_Foreach_Func, dirname=%s, fn=%s\n", __func__, dirname, fn);
+         DBGF(debug, "Calling Dir_Foreach_Func, dirname=%s, fn=%s", __func__, dirname, fn);
          func(dirname, fn, accumulator, depth);
       }
       g_ptr_array_free(simple_filenames, true);
    }
-   if (debug)
-      printf("(%s) Done.\n", __func__);
+
+   DBGF(debug, "Done.");
 }
 
 
@@ -721,7 +707,8 @@ dir_filtered_ordered_foreach(
  *  Returning the count of unfiltered lines is a bit odd, but the caller can
  *  get the filtered count from line_array->len
  */
-int read_file_with_filter(
+int
+read_file_with_filter(
       GPtrArray *  line_array,
       const char * fn,
       char **      filter_terms,
@@ -731,12 +718,12 @@ int read_file_with_filter(
 {
    bool debug = false;
    if (debug) {
-      printf("(%s) line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d\n",
-             __func__, (void*)line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
+      DBG("line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+             (void*)line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
       if (ntsa_length(filter_terms) > 0) {
-         printf("(%s) filter_terms:\n", __func__);
+         DBG("filter_terms:");
          for (char ** term_ptr = filter_terms; *term_ptr; term_ptr++)
-            printf("(%s)    |%s|\n", __func__, *term_ptr);
+            DBG("    |%s|", *term_ptr);
       }
    }
 
@@ -744,8 +731,7 @@ int read_file_with_filter(
    g_ptr_array_remove_range(line_array, 0, line_array->len);
 
    int rc = file_getlines(fn, line_array, /*verbose*/ false);
-   if (debug)
-      printf("(%s) file_getlines() returned %d\n", __func__, rc);
+   DBGF(debug, "file_getlines() returned %d", rc);
 
    if (rc > 0) {
       filter_and_limit_g_ptr_array(
@@ -756,12 +742,10 @@ int read_file_with_filter(
          free_strings);
    }
    else { // rc == 0
-      if (debug)
-         printf("(%s) Empty file\n", __func__);
+      DBGF(debug, "Empty file");
    }
 
-   if (debug)
-      printf("(%s) Done. Returning: %d\n", __func__, rc);
+   DBGF(debug, "Done. Returning: %d",rc);
    return rc;
 }
 
@@ -783,7 +767,8 @@ int read_file_with_filter(
  *
  *  1/2024: rare segfault seen
  */
-void filter_and_limit_g_ptr_array(
+void
+filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
       char **     filter_terms,
       bool        ignore_case,
@@ -827,12 +812,13 @@ void filter_and_limit_g_ptr_array(
 }
 
 
-   void filter_and_limit_g_ptr_array2(
-         GPtrArray * line_array,
-         char **     filter_terms,
-         bool        ignore_case,
-         int         limit)
-   {
+void
+filter_and_limit_g_ptr_array2(
+      GPtrArray * line_array,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit)
+{
    bool debug = false;
    if (debug) {
      DBG("line_array=%p, line_array->len=%d, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
@@ -871,7 +857,6 @@ void filter_and_limit_g_ptr_array(
 }
 
 
-
 /** Given a directory, if the directory does not already exist,
  *  creates the directory along with any required parent directories.
  *
@@ -883,35 +868,35 @@ void filter_and_limit_g_ptr_array(
  *  Based on answer by Jens Harms to
  *  https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
  */
-int rek_mkdir(
+int
+rek_mkdir(
       const char *path,
       FILE *      ferr)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting, path=%s\n", __func__, path);
+   DBGF(debug, "Starting, path=%s", path);
 
+   char * path0 = strdup(path);  // for building on glib 2.43
    int result = 0;
-   if (!directory_exists(path)) {
-      char *sep = strrchr(path, '/');
+   if (!directory_exists(path0)) {
+      char *sep = strrchr(path0, '/');
       if (sep) {
          *sep = 0;
-         result = rek_mkdir(path, ferr);  // create parent dir
+         result = rek_mkdir(path0, ferr);  // create parent dir
          *sep = '/';
       }
       if (result == 0) {
-         if (debug)
-            printf("(%s) Creating path %s\n", __func__, path);
-         if ( mkdir(path, 0777) < 0) {
+         DBGF(debug, "Creating path %s", path0);
+         if ( mkdir(path0, 0777) < 0) {
             result = -errno;
             if (ferr)
-               f0printf(ferr, "Unable to create '%s', %s\n", path, strerror(errno));
+               f0printf(ferr, "Unable to create '%s', %s\n", path0, strerror(errno));
          }
       }
    }
+   free(path0);
 
-   if (debug)
-      printf("(%s) Done. returning %d\n", __func__, result);
+   DBGF(debug, "Done. returning %d", result);
    return result;
 }
 
@@ -924,25 +909,25 @@ int rek_mkdir(
  *  \param  fp_loc address at which a pointer to the open file is returned
  *  \return 0 if successful, -errno if error
  */
-int fopen_mkdir(
+int
+fopen_mkdir(
       const char *path,
       const char *mode,
       FILE       *ferr,
       FILE      **fp_loc)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. path=%s, mode=%s, fp_loc=%p\n", __func__, path, mode, (void*)fp_loc);
+   DBGF(debug, "Starting. path=%s, mode=%s, fp_loc=%p", path, mode, (void*)fp_loc);
 
    int rc = 0;
    *fp_loc = NULL;
-   char *sep = strrchr(path, '/');
+   char *path0 = g_strdup(path);
+   char *sep = strrchr(path0, '/');
    if (sep) {
-      char *path0 = g_strdup(path);
-      path0[ sep - path ] = 0;
+      path0[ sep - path0 ] = 0;
       rc = rek_mkdir(path0, ferr);
-      free(path0);
    }
+   g_free(path0);
    if (!rc) {
       *fp_loc = fopen(path,mode);
       if (!*fp_loc) {
@@ -953,13 +938,13 @@ int fopen_mkdir(
    }
    assert( (rc == 0 && *fp_loc) || (rc != 0 && !*fp_loc ) );
 
-   if (debug)
-       printf("(%s) Done. returning %d\n", __func__, rc);
+   DBGF(debug, "Done. returning %d", rc);
    return rc;
 }
 
 
-long get_inode_by_fn(const char * fqfn) {
+long
+get_inode_by_fn(const char * fqfn) {
    long result = -1;
    if (fqfn) {
       struct stat stat_buf;
@@ -972,7 +957,8 @@ long get_inode_by_fn(const char * fqfn) {
 }
 
 
-long get_inode_by_fd(int fd) {
+long
+get_inode_by_fd(int fd) {
    long result = -1;
    struct stat stat_buf;
    int rc = fstat(fd, &stat_buf);
@@ -981,7 +967,6 @@ long get_inode_by_fd(int fd) {
    }
    return result;
 }
-
 
 
 #ifdef UNUSED
@@ -993,5 +978,3 @@ void set_fd_blocking(int fd) {
    assert(rc != -1);
 }
 #endif
-
-

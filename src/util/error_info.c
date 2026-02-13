@@ -19,6 +19,7 @@
 #include <glib-2.0/glib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 /** \endcond */
 
 #include "debug_util.h"
@@ -37,7 +38,7 @@
    if (memcmp(ptr->marker, ERROR_INFO_MARKER, 4) != 0) { \
       DBG("Invalid ptr->marker, ptr=%p", ptr); \
       show_backtrace(1); \
-      debug_current_traced_function_stack(false); \
+      dbgrpt_current_traced_function_stack(false, true, 1); \
    } \
    assert(memcmp(ptr->marker, ERROR_INFO_MARKER, 4) == 0);
 
@@ -153,15 +154,15 @@ errinfo_free(Error_Info * erec){
       VALID_ERROR_INFO_PTR(erec);
 
       if (debug) {
-         DBG("Freeing exception:");
+         DBG("Freeing exception %p:", erec);
          errinfo_report(erec, 2);
       }
 
-      if (erec->detail)
-         free(erec->detail);
+      free(erec->detail);
+      free(erec->func);
 
       if (erec->cause_ct > 0) {
-         DBGF(debug, "Freeing causes...");
+         DBGF(debug, "Freeing %d causes...", erec->cause_ct);
          for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
             errinfo_free(erec->causes[ndx]);
          }
@@ -176,9 +177,10 @@ errinfo_free(Error_Info * erec){
       }
 #endif
 
-      free(erec->func);
       erec->marker[3] = 'x';
+      DBGF(debug, "Freeing %p", erec);
       free(erec);
+
    }
 
    DBGF(debug, "Done.  Free'd: %p", (void*) erec);
@@ -199,6 +201,9 @@ errinfo_free_with_report(
       bool         report,
       const char * func)
 {
+   bool debug = false;
+   DBGF(debug, "Starting.  erec=%p, report=%s, func=%s", erec, SBOOL(report), func);
+
    if (erec) {
       if (report) {
          rpt_vstring(0, "(%s) Freeing exception:", func);
@@ -206,18 +211,10 @@ errinfo_free_with_report(
       }
       errinfo_free(erec);
    }
+
+   DBGF(debug, "Done.");
 }
 
-
-#ifdef ALT
-// signature satisfying GDestroyNotify()
-
-static void ddc_error_free2(void * erec) {
-   Error_Info* erec2 = (Error_Info *) erec;
-   VALID_ERROR_INFO_PTR(erec2);
-   errinfo_free(erec2);
-}
-#endif
 
 //
 // Instance modification
@@ -913,6 +910,25 @@ errinfo_report_collect(Error_Info * erec, GPtrArray* collector, int depth) {
 void
 errinfo_report(Error_Info * erec, int depth) {
       errinfo_report_collect(erec, NULL, depth);
+}
+
+
+/** Writes a full report of the contents of the specified #Error_Info
+ *  to the system log, using the specified syslog priority.
+ *
+ *  \param  syslog_priority  syslog priority to use for log entries
+ *  \param  erec             pointer to #Error_Info
+ *  \param  depth            logical indentation depth
+ */
+void
+errinfo_report_to_syslog(int syslog_priority, Error_Info * erec, int depth) {
+   GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
+   errinfo_report_collect(erec, collector, depth);
+   for (int ndx = 0; ndx < collector->len; ndx++) {
+      char * line = g_ptr_array_index(collector, ndx);
+      syslog(syslog_priority, "%s", line);
+   }
+   g_ptr_array_free(collector, true);
 }
 
 

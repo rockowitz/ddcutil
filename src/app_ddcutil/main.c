@@ -3,7 +3,7 @@
  *  ddcutil standalone application mainline
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -102,6 +102,7 @@
 #include "ddc/ddc_vcp.h"
 
 #ifdef WATCH_DISPLAYS
+#include "dw/dw_dref.h"
 #include "dw/dw_main.h"
 #include "dw/dw_services.h"
 #endif
@@ -395,7 +396,10 @@ int verify_i2c_access_for_single_bus(int busno) {
 
    int result = 0;
 
-   if (!i2c_device_exists(busno)) {
+   if (i2c_bus_is_excluded(busno)) {
+      fprintf(stderr, "Bus /dev/i2c-%d is being ignored.\n", busno);
+   }
+   else if (!i2c_device_exists(busno)) {
       fprintf(stderr, "Bus /dev/i2c-%d does not exist.\n", busno);
    }
    else if (sysfs_is_ignorable_i2c_device(busno)) {
@@ -513,23 +517,22 @@ displayid_requirement_name(Displayid_Requirement id) {
  *  \retval DDCRC_INVALID_DISPLAY
  */
 Status_Errno_DDC
-find_dref(
-      Parsed_Cmd * parsed_cmd,
+find_dref_by_dsel(
+      Display_Selector * dsel,
       Displayid_Requirement displayid_required,
       Display_Ref ** dref_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "did: %s, displayid_required: %s",
-                                    did_repr(parsed_cmd->pdid),
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dsel %p, displayid_required: %s",
+                                    dsel_repr_t(dsel),
                                     displayid_requirement_name(displayid_required));
    FILE * outf = fout();
    Status_Errno_DDC final_result = DDCRC_OK;
    Display_Ref * dref = NULL;
 
-   Display_Identifier * did_work = parsed_cmd->pdid;
-   if (did_work && did_work->id_type == DISP_ID_BUSNO) {
+   if (dsel_only_busno(dsel)) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Special handling for explicit --busno");
-      int busno = did_work->busno;
+      int busno = dsel->busno;
       // is this really a monitor?
       I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
       if (businfo) {
@@ -555,7 +558,6 @@ find_dref(
             if (err) {
                f0printf(outf, "DDC communication failed for monitor on bus /dev/i2c-%d\n", busno);
                free_display_ref(dref);
-               // i2c_free_bus_info(businfo);  // double free
                dref = NULL;
                ERRINFO_FREE_WITH_REPORT(err, debug);
                final_result = DDCRC_INVALID_DISPLAY;
@@ -571,7 +573,6 @@ find_dref(
          }  // has edid
          else {   // no EDID found
             f0printf(fout(), "No monitor detected on bus /dev/i2c-%d\n", busno);
-            // i2c_free_bus_info(businfo);    // double free
             final_result = DDCRC_INVALID_DISPLAY;
          }
       }    // businfo allocated
@@ -581,27 +582,26 @@ find_dref(
       }
    }       // DISP_ID_BUSNO
    else {
-      if (!did_work && displayid_required == DISPLAY_ID_OPTIONAL) {
+      if (dsel_is_empty(dsel) && displayid_required == DISPLAY_ID_OPTIONAL) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No monitor specified, none required for command");
          dref = NULL;
          final_result = DDCRC_OK;
       }
       else {
-         bool temporary_did_work = false;
-         if (!did_work) {
+         if (dsel_is_empty(dsel)) {
+            dsel->dispno = 1;
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No monitor specified, treat as  --display 1");
-            did_work = create_dispno_display_identifier(1);   // default monitor
-            temporary_did_work = true;
          }
          // assert(did_work);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Detecting displays...");
          ddc_ensure_displays_detected();
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
-         dref = get_display_ref_for_display_identifier(did_work, CALLOPT_NONE);
-         if (temporary_did_work)
-            free_display_identifier(did_work);
+         dref = ddc_find_display_ref_by_selector(dsel);
          if (!dref)
-            f0printf(ferr(), "Display not found\n");
+            f0printf(ferr(),
+            		(ddc_get_display_count(/*include_invalid_displays*/ false) > 0)
+					    ? "Display not found\n"
+					    : "No displays implementing DDC/CI found\n");
          final_result = (dref) ? DDCRC_OK : DDCRC_INVALID_DISPLAY;
       }
    }  // !DISP_ID_BUSNO
@@ -648,7 +648,8 @@ execute_cmd_with_optional_display_handle(
       {
          // loadvcp will search monitors to find the one matching the
          // identifiers in the record
-         ddc_ensure_displays_detected();
+         if (!dh)
+            ddc_ensure_displays_detected();
          Status_Errno_DDC ddcrc = app_loadvcp_by_file(parsed_cmd->args[0], dh);
          main_rc = (ddcrc == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
          break;
@@ -660,7 +661,9 @@ execute_cmd_with_optional_display_handle(
          if (app_check_dynamic_features(dh->dref)) {
             ensure_vcp_version_set(dh);
 
+            bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
             DDCA_Status ddcrc = app_capabilities(dh);
+            rpt_set_ornamentation_enabled(saved_prefix_report_output);
             main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
          }
          else
@@ -846,6 +849,7 @@ main(int argc, char *argv[]) {
    if (s && strlen(s) > 0)
       main_debug = true;
 
+   execution_mode = MODE_DDCUTIL;
    int main_rc = EXIT_FAILURE;
    bool start_time_reported = false;
 
@@ -1054,7 +1058,7 @@ main(int argc, char *argv[]) {
                          main_debug;
    DBGF(main_debug, "start_time_reported = %s", SBOOL(start_time_reported));
    DBGF(start_time_reported, "Starting %s execution, %s",
-               parser_mode_name(parsed_cmd->parser_mode),
+               execution_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting.  ddcutil version %s", get_full_ddcutil_version());
@@ -1068,6 +1072,11 @@ main(int argc, char *argv[]) {
          SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
       }
    }
+
+#ifdef HACK_FOR_PARSING_TEST_CAPABILITIES_STRING
+   Parsed_Capabilities * pcaps = parse_capabilities_string("dummy");
+   dyn_report_parsed_capabilities(pcaps, NULL, NULL, 0);
+#endif
 
 #ifdef UNUSED
 #ifdef USE_X11
@@ -1107,13 +1116,6 @@ main(int argc, char *argv[]) {
    }
 
    Call_Options callopts = CALLOPT_NONE;
-   i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
-
-#ifdef ENABLE_USB
-   usb_ignore_hiddevs(parsed_cmd->ignored_hiddevs);
-   Vid_Pid_Value * values = (parsed_cmd->ignored_usb_vid_pid_ct == 0) ? NULL : parsed_cmd->ignored_usb_vid_pids;
-   usb_ignore_vid_pid_values(parsed_cmd->ignored_usb_vid_pid_ct, values);
-#endif
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    // DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");
@@ -1153,6 +1155,9 @@ main(int argc, char *argv[]) {
          main_rc = EXIT_FAILURE;
       }
       else {
+         add_traced_function("dw_emit_display_status_record");
+         add_traced_function("dw_add_display_by_businfo");
+         add_traced_function("dw_remove_display_by_businfo");
          // Catch CTRL-C to terminate watch thread, then exit:
          signal(SIGINT, interrupt_handler);
          publish_all_display_refs = true;
@@ -1174,9 +1179,20 @@ main(int argc, char *argv[]) {
       rpt_set_ornamentation_enabled(saved_prefix_report_output);
    }
 #endif
+   
+   else if (parsed_cmd->cmd_id == CMDID_C2) {
+      if (parsed_cmd->argct != 1) {
+         f0printf(fout(), "Command C2 requires one argument, %d found\n", parsed_cmd->argct);
+         main_rc = EXIT_FAILURE;
+      }
+      else {
+         // f0printf(fout(), "args[0] = |%s|\n", parsed_cmd->args[0]);
+         app_test_capabilities_string(parsed_cmd->args[0]);
+         main_rc = EXIT_SUCCESS;
+      }
+   }
 
-   else if (parsed_cmd->cmd_id == CMDID_C2 ||
-            parsed_cmd->cmd_id == CMDID_C3 ||
+   else if (parsed_cmd->cmd_id == CMDID_C3 ||
 #ifndef WATCH_DISPLAYS
             parsed_cmd->cmd_id == CMDID_C1 ||
 #endif
@@ -1284,8 +1300,8 @@ main(int argc, char *argv[]) {
       Status_Errno_DDC  rc = 0;
       int useful_bus_ct = 0;
       Display_Ref * dref = NULL;
-      if (parsed_cmd->pdid && parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
-         useful_bus_ct = verify_i2c_access_for_single_bus(parsed_cmd->pdid->busno);
+      if (dsel_only_busno(parsed_cmd->dsel)) {
+         useful_bus_ct = verify_i2c_access_for_single_bus(parsed_cmd->dsel->busno);
       }
       else {
          useful_bus_ct = verify_i2c_access();
@@ -1294,10 +1310,9 @@ main(int argc, char *argv[]) {
          main_rc = EXIT_FAILURE;
       }
       else {
-         rc = find_dref(parsed_cmd,
-               (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
-               &dref);
-
+         rc = find_dref_by_dsel(parsed_cmd->dsel,
+                      (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
+                      &dref);
          if (rc != DDCRC_OK) {
             main_rc = EXIT_FAILURE;
          }
@@ -1334,9 +1349,7 @@ main(int argc, char *argv[]) {
    DBGTRC(main_debug, DDCA_TRC_TOP, "After command processing");
 
    if (parsed_cmd->stats_types != DDCA_STATS_NONE
-         && ( ddc_displays_already_detected() ||
-              (parsed_cmd->pdid && parsed_cmd->pdid->id_type == DISP_ID_BUSNO)
-            )
+         && ( ddc_displays_already_detected() || (dsel_only_busno(parsed_cmd->dsel)) )
 #ifdef ENABLE_ENVCMDS
          && parsed_cmd->cmd_id != CMDID_INTERROGATE
 #endif
@@ -1396,7 +1409,7 @@ bye:
 static void add_local_rtti_functions() {
    RTTI_ADD_FUNC(main);
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
-   RTTI_ADD_FUNC(find_dref);
+   RTTI_ADD_FUNC(find_dref_by_dsel);
    RTTI_ADD_FUNC(verify_i2c_access);
    RTTI_ADD_FUNC(verify_i2c_access_for_single_bus);
 #ifdef UNUSED

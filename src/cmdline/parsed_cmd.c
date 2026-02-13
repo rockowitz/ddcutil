@@ -1,7 +1,7 @@
 /** @file parsed_cmd.c
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -25,17 +25,6 @@
 //
 // Parsed_Cmd data structure
 //
-
-const char *  parser_mode_name(Parser_Mode mode) {
-   // use switch to force compilation error if a mode is added but not named
-   char * name = NULL;
-   switch(mode) {
-   case MODE_DDCUTIL:    name = "ddcutil";    break;
-   case MODE_LIBDDCUTIL: name = "libddcutil"; break;
-   }
-   return name;
-}
-
 
 // Must be kept in sync with Cmd_Id_Type
 Value_Name_Table cmd_id_table = {
@@ -160,14 +149,14 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
       int ndx = 0;
       for (; ndx < parsed_cmd->argct; ndx++)
          free(parsed_cmd->args[ndx]);
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
+      dsel_free(parsed_cmd->dsel);
       free(parsed_cmd->raw_command);
       free(parsed_cmd->failsim_control_fn);
       free(parsed_cmd->fref);
       free(parsed_cmd->trace_destination);
       ntsa_free(parsed_cmd->traced_files, true);
       ntsa_free(parsed_cmd->traced_functions, true);
+      ntsa_free(parsed_cmd->backtraced_functions, true);
       ntsa_free(parsed_cmd->traced_calls, true);
       ntsa_free(parsed_cmd->traced_api_calls, true);
       g_array_free(parsed_cmd->setvcp_values, true);
@@ -218,7 +207,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_nl();
       rpt_label(depth, "General");
       rpt_str("raw_command",       NULL, parsed_cmd->raw_command,                               d1);
-      rpt_str("parser mode",       NULL, parser_mode_name(parsed_cmd->parser_mode),             d1);
+      rpt_str("parser mode",       NULL, execution_mode_name(parsed_cmd->parser_mode),             d1);
       rpt_int_as_hex( "cmd_id",    NULL, parsed_cmd->cmd_id,                                    d1);
       rpt_int( "argct",       NULL,  parsed_cmd->argct, d1);
       int ndx = 0;
@@ -269,15 +258,21 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_int( "xevent_watch_loop_millisec",     NULL,  parsed_cmd->xevent_watch_loop_millisec, d1);
       rpt_int( "poll_watch_loop_millisec",       NULL,  parsed_cmd->poll_watch_loop_millisec,   d1);
       RPT_CMDFLAG("disable API",          CMD_FLAG_DISABLE_API,                                 d1);
+      RPT_CMDFLAG("eDP always laptop",    CMD_FLAG_EDP_ALWAYS_LAPTOP,                           d1);
 
       rpt_nl();
       rpt_label(depth, "Display Selection");
 #ifdef ENABLE_USB
       rpt_bool("enable usb",        NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_USB,              d1);
 #endif
-      rpt_structure_loc("pdid", parsed_cmd->pdid,                                               d1);
-      if (parsed_cmd->pdid)
-          dbgrpt_display_identifier(parsed_cmd->pdid,                                           d2);
+      rpt_structure_loc("dsel", parsed_cmd->dsel, d2);
+      if (parsed_cmd->dsel)
+         dbgrpt_display_selector(parsed_cmd->dsel, d2);
+
+      char * buf3 = bs256_to_string_decimal_t(parsed_cmd->ignored_i2c_buses, "", " ");
+      rpt_vstring(d1, "ignored_i2c_buses                                          : %s",
+            parsed_cmd->ignored_i2c_buses, buf3);
+
       char buf2[BIT_SET_32_MAX+1];
       bs32_to_bitstring(parsed_cmd->ignored_hiddevs, buf2, BIT_SET_32_MAX+1);
       rpt_vstring(d1, "ignored_hiddevs                                          : 0x%08x = |%s|",
@@ -360,6 +355,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_int_as_hex(
                "traced_groups",    NULL,  parsed_cmd->traced_groups,                            d1);
       dbgrpt_ntsa(d1, "traced_functions", parsed_cmd->traced_functions);
+      dbgrpt_ntsa(d1, "backtraced_functions", parsed_cmd->backtraced_functions);
       dbgrpt_ntsa(d1, "traced_files", parsed_cmd->traced_files);
       dbgrpt_ntsa(d1, "traced_api_calls", parsed_cmd->traced_api_calls);
       dbgrpt_ntsa(d1, "traced_calls", parsed_cmd->traced_calls);

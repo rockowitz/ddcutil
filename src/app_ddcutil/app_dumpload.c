@@ -252,7 +252,7 @@ app_loadvcp_by_file(const char * fn, Display_Handle * dh) {
       if (ddc_excp) {
          ddcrc = ddc_excp->status_code;
          f0printf(ferr(),  "%s\n", ddc_excp->detail);
-         errinfo_free(ddc_excp);
+         ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
       }
       free_dumpload_data(pdata);
    }

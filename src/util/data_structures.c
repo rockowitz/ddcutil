@@ -995,6 +995,7 @@ void test_value_array() {
 //
 
 const Bit_Set_256 EMPTY_BIT_SET_256 = {{0}};
+const int BIT_SET_256_MAX = 256;
 
 /** Sets a flag in a #Bit_Set_256.
  *

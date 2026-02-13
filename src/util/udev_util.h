@@ -42,4 +42,23 @@ void show_sysattr_list_entries(
       struct udev_device *       dev,
       struct udev_list_entry * head);
 
+
+typedef struct {
+   const char * prop_subsystem;
+   const char * prop_action;
+   const char * prop_connector;
+   const char * prop_devname;
+   const char * prop_hotplug;
+   const char * sysname;
+   const char * syspath;
+   const char * attr_name;
+} Udev_Event_Detail;
+
+Udev_Event_Detail* collect_udev_event_detail(struct udev_device * dev);
+void free_udev_event_detail(Udev_Event_Detail * detail);
+void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth);
+
+
+void dbgrpt_udev_event_detail2(Udev_Event_Detail * detail, int depth);
+
 #endif /* UDEV_UTIL_H_ */

@@ -1,6 +1,6 @@
 /** @file api_displays.c */
 
-// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -22,6 +22,7 @@
 #include "base/core.h"
 #include "base/dsa2.h"
 #include "base/displays.h"
+#include "base/dw_base.h"
 #include "base/monitor_model_key.h"
 #include "base/per_display_data.h"
 #include "base/rtti.h"
@@ -39,7 +40,6 @@
 #include "dw/dw_common.h"
 #include "dw/dw_main.h"
 #include "dw/dw_status_events.h"
-#include "dw/dw_udev.h"
 
 #include "libmain/api_base_internal.h"
 #include "libmain/api_error_info_internal.h"
@@ -83,7 +83,10 @@ DDCA_Status ddci_validate_ddca_display_ref(
  *
  *  @param  ddca_dref DDCA_Display_Ref
  *  @param  dh_loc    address at which to return the underlying Display_Handle.
- *  @return
+ *  @retval DDCRC_OK
+ *  @retval DDCRC_ARG
+ *  @retval DDCRC_DISCONNECTED
+ *
  */
 DDCA_Status ddci_validate_ddca_display_ref2(
       DDCA_Display_Ref        ddca_dref,
@@ -101,13 +104,22 @@ DDCA_Status ddci_validate_ddca_display_ref2(
    Display_Ref * dref = dref_from_published_ddca_dref(ddca_dref);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref_from_ddca_dref() returned %s", dref_reprx_t(dref));
    if (!dref) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Unrecognized external display ref %p", dref);
+      SYSLOG2(DDCA_SYSLOG_WARNING, "Unrecognized external display ref %p", dref);
+      result = DDCRC_ARG;
+   }
+   else if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Invalid marker");
+      SYSLOG2(DDCA_SYSLOG_WARNING, "Invalid marker for %s", dref_reprx_t(dref));
       result = DDCRC_ARG;
    }
    else {
       // should be redundant with ddc_validate_display_ref2(), but something not being caught
-      if (dref->flags & DREF_REMOVED) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED set!");
-         SYSLOG2(DDCA_SYSLOG_WARNING, "DREF_REMOVED set for %s", dref_reprx_t(dref));
+      if (dref->disconnected) {
+         char * msg = g_strdup_printf("disconnected set for %s!",dref_reprx_t(dref));
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "%s", msg);
+         SYSLOG2(DDCA_SYSLOG_WARNING, "%s",msg);
+         free(msg);
          result = DDCRC_DISCONNECTED;
       }
       else if ( !(dref->flags & DREF_DDC_COMMUNICATION_WORKING) &&
@@ -314,7 +326,10 @@ DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did)
 {
+   bool debug = false;
    free_thread_error_detail();
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "did=%p", did);
+
    DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
    if (pdid) {
@@ -323,6 +338,8 @@ ddca_free_display_identifier(
       else
          free_display_identifier(pdid);
    }
+
+   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, rc, "");
    return rc;
 }
 
@@ -350,7 +367,7 @@ ddci_get_display_ref(
       DDCA_Display_Ref*       dref_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "did=%s, dref_loc=%p", did_repr(did), dref_loc);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref_loc=%p", dref_loc);
 
    *dref_loc = NULL;
    DDCA_Status rc = 0;
@@ -361,8 +378,11 @@ ddci_get_display_ref(
       rc = DDCRC_ARG;
    }
    else {
-      Display_Ref* dref = get_display_ref_for_display_identifier(pdid, CALLOPT_NONE);
-      DBGMSF(debug, "get_display_ref_for_display_identifier() returned %p", dref);
+      Display_Selector * dsel = display_id_to_dsel(pdid);
+      Display_Ref* dref;
+      dref = ddc_find_display_ref_by_selector(dsel);
+      dsel_free(dsel);
+      DBGMSF(debug, "ddc_find_display_ref_by_selector() returned %s", dref_repr_t(dref));
       if (dref) {
          DDCA_Display_Ref ddca_dref = dref_to_ddca_dref(dref);
          add_published_dref_id_by_dref(dref);
@@ -418,7 +438,6 @@ ddca_create_display_ref(
 
 
 // GMutex ddca_redetect_active_mutex;
-static bool ddca_redetect_active = false;
 
 DDCA_Status
 ddca_redetect_displays() {
@@ -426,6 +445,8 @@ ddca_redetect_displays() {
    API_PROLOGX(debug, NORESPECT_QUIESCE, "");
 
    DDCA_Status ddcrc = 0;
+#ifdef WATCH_DISPLAYS
+   static bool ddca_redetect_active = false;
    bool perform_detect = true;
 
 //   g_mutex_lock(ddca_redetect_active_mutex);
@@ -436,24 +457,32 @@ ddca_redetect_displays() {
    }
    // g_mutex_unlock(ddca_redetect_active_mutex);
 
-#ifdef WATCH_DISPLAYS
    if (perform_detect) {
       if (active_callback_thread_ct() > 0) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_display() when callback threads are active");
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when callback threads are active");
          SYSLOG2(DDCA_SYSLOG_ERROR, "Behavior is indeterminate.");
          // ddcrc = DDCRC_INVALID_OPERATION;
          // perform_detect = false;
       }
    }
-#endif
 
    if (perform_detect) {
-	  ddca_redetect_active = true;
+      ddca_redetect_active = true;
       quiesce_api();
       dw_redetect_displays();
       unquiesce_api();
       ddca_redetect_active = false;
    }
+#else
+#ifdef FUTURE
+   ddc_discard_detected_displays();
+   ddc_ensure_displays_detected();
+   set_ddca_error_detail_from_open_errors();
+#endif
+
+   ddcrc = DDCRC_INVALID_OPERATION;
+   SYSLOG2(DDCA_SYSLOG_ERROR, "ddca_redetect_displays() unsupported - libddcutil not built with support for watching display connection changes");
+#endif
 
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
 }
@@ -725,7 +754,7 @@ ddca_display_ref_from_handle(
    DDCA_Display_Ref result = NULL;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (valid_display_handle(dh))
-      result = dh->dref;
+      result = dref_to_ddca_dref(dh->dref);
    return result;
 }
 
@@ -1262,8 +1291,9 @@ ddci_report_display_info(
       int d0 = depth;
       int d1 = depth+1;
       int d2 = depth+2;
-      if (dinfo->dispno > 0)
-         rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
+      if (dinfo->dispno > 0) {
+         // rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
+      }
       else if (dinfo->dispno == DISPNO_BUSY)
          rpt_vstring(d0, "Busy display - Cannot communicate DDC");
       else
@@ -1636,6 +1666,7 @@ bool ddca_is_dynamic_sleep_enabled()
 
 void init_api_displays() {
    RTTI_ADD_FUNC(ddca_close_display);
+   RTTI_ADD_FUNC(ddca_free_display_identifier);
    RTTI_ADD_FUNC(ddca_get_display_info_list2);
    RTTI_ADD_FUNC(ddca_get_display_info);
    RTTI_ADD_FUNC(ddca_get_display_info2);

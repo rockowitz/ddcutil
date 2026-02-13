@@ -3,7 +3,7 @@
  *  System configuration and tuning
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARMS_H_
@@ -28,7 +28,7 @@
 #define STATIC static
 #endif
 
-#define DEFAULT_ENABLE_TRACED_FUNCTION_STACK false
+#define DEFAULT_ENABLE_TRACED_FUNCTION_STACK true
 
 
 //
@@ -111,11 +111,7 @@
 #define DEFAULT_DDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_WARNING
 #define DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_NOTICE
 
-#ifdef USE_X11
 #define DEFAULT_WATCH_MODE Watch_Mode_Dynamic
-#else
-#define DEFAULT_WATCH_MODE Watch_Mode_Poll
-#endif
 
 //
 // Asynchronous Initialization
@@ -139,8 +135,8 @@
 
 // Retry interval and max tries when checking that a display handle
 // is still valid
-#define CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC 1000
-#define CHECK_OPEN_BUS_ALIVE_MAX_TRIES 3
+#define CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC 100
+#define CHECK_OPEN_BUS_ALIVE_MAX_TRIES 2
 
 // During bus detection, retry interval and max tries for X37 detection
 #define DETECT_X37_MAX_TRIES 3

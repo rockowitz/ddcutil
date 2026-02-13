@@ -259,6 +259,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    DDCA_Output_Level output_level = get_output_level();
    Monitor_Model_Key mmk = mmk_value_from_edid(dref->pedid);
    // DBGMSG("mmk = %s", mmk_repr(mmk) );
+   bool is_laptop = false;
 
    if (output_level >= DDCA_OL_NORMAL) {
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
@@ -274,8 +275,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             RPT_ATTR_TEXT(-1, &drm_enabled, "/sys/class/drm", drm_connector_name, "enabled");  //enabled, disabled
          }
 
-         I2C_Bus_Info * bus_info = dref->detail;
-         if (!(bus_info->flags & I2C_BUS_LVDS_OR_EDP) && bus_info->flags & I2C_BUS_ADDR_X37) {
+         I2C_Bus_Info * businfo = dref->detail;
+         if (!(businfo->flags & I2C_BUS_LVDS_OR_EDP) && businfo->flags & I2C_BUS_ADDR_X37) {
             rpt_vstring(d1, "DDC communication failed");
             if (output_level >= DDCA_OL_VERBOSE && dref->communication_error_summary) {
                rpt_vstring(d1, "Failure detail: getvcp of feature x10 returned %s",
@@ -310,10 +311,14 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
 #endif
 
-                if (businfo->flags & I2C_BUS_LVDS_OR_EDP)
+                if (businfo->flags & I2C_BUS_LVDS_OR_EDP) {
                    msg = "This is a laptop display.  Laptop displays do not support DDC/CI.";
-                else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP)
+                   is_laptop = true;
+                }
+                else if (businfo->flags & I2C_BUS_APPARENT_LAPTOP) {
                    msg = "This appears to be a laptop display.  Laptop displays do not support DDC/CI.";
+                   is_laptop = true;
+                }
                 else if (!(businfo->flags & I2C_BUS_ADDR_X37)) {
                    msg = "This monitor does not support DDC/CI. (I2C slave address x37 is unresponsive.)";
                    vmsg = "If the monitor's on screen display has a DDC/CI setting, check it is enabled.";
@@ -411,15 +416,15 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                if (dref->flags & DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED)
                   rpt_vstring(d1, "Unable to determine how monitor reports unsupported features");
                else {
-                  char * how = "unknown";
                   // DBGMSG("flags: %s", interpret_dref_flags_t(dref->flags));
+                  char * how = "How monitor indicates unsupported features unknown.";
                   if (dref->flags & DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED)
-                     how  = "invalid feature flag in DDC reply packet";
+                     how  = "Monitor correctly uses invalid feature flag in DDC reply packet to indicate unsupported feature.";
                   else if (dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED)
-                     how  = "DDC Null Message";
+                     how  = "Monitor uses DDC Null Message to indicate unsupported feature.";
                   else if (dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED)
-                     how = "all data bytes 0 in DDC reply packet";
-                  rpt_vstring(d1, "Monitor uses %s to indicate unsupported feature.", how);
+                     how = "Monitor uses all data bytes 0 in DDC reply packet to indicate unsupported feature.";
+                  rpt_label(d1, how);
                }
             }
 
@@ -454,7 +459,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                rpt_vstring(d1, msg);
          }
       }
-      if (output_level >= DDCA_OL_VERBOSE) {
+      if (output_level >= DDCA_OL_VERBOSE && !is_laptop) {
          char * smmk = mmk_model_id_string(mmk.mfg_id, mmk.model_name, mmk.product_code);
          rpt_vstring(d1, "Monitor Model Id:  %s", smmk);
          char * fqfn = dfr_find_feature_def_file(smmk);

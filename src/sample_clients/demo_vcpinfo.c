@@ -3,7 +3,7 @@
  * Query VCP feature information and capabilities string
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -129,10 +129,6 @@ void test_single_feature_info(
         DDCA_MCCS_Version_Spec  vspec,
         bool                    create_default_if_not_found)
 {
-   // printf("\n(%s) Getting metadata for feature 0x%02x, mccs version = %d.%d\n", __func__,
-   //        feature_code, vspec.major, vspec.minor);
-   // printf("Feature name: %s\n", ddca_feature_name_by_vspec(feature_code, vspec));
-
    DDCA_Feature_Metadata* metadata;
    DDCA_Status rc = ddca_get_feature_metadata_by_vspec(
                        feature_code,
@@ -154,13 +150,11 @@ void test_single_feature_info(
       }
       show_feature_metadata(metadata);
    }
-   // printf("%s) Done.\n", __func__);
+   ddca_free_feature_metadata(metadata);
 }
 
 
-
 void demo_feature_info() {
-// #ifdef NO
    DDCA_Vcp_Feature_Code feature_codes[] = {
          0x00,     // invalid code
          0x02,     // NC, complex
@@ -169,8 +163,6 @@ void demo_feature_info() {
       // 0x43,     // Continuous   (one Cont is enuf)
          0x60,     // Simple NC
          0xe0};    // mfg specific
-// #endif
-//   DDCA_Vcp_Feature_Code feature_codes[] = {0x43};
 
    // DDCA_MCCS_Version_Spec vspecs[] = {
    //     DDCA_VSPEC_V10, DDCA_VSPEC_V20,DDCA_VSPEC_V21,

@@ -3,7 +3,7 @@
  *  Parse the command line using the glib goption functions.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -43,6 +43,7 @@ static Cache_Types       discarded_caches_work = NO_CACHES;
 static bool              verbose_stats  = false;
 static bool              internal_stats = false;
 static Bit_Set_32        ignored_hiddev_work = 0;    // gcc claims not const??? EMPTY_BIT_SET_32;
+static Bit_Set_256       ignored_busnos_work = {{0}};;
 
 
 // Callback function for processing --terse, --verbose and synonyms
@@ -160,6 +161,32 @@ discard_cache_arg_func(
    if (!ok) {
       g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "invalid cache type: %s", value );
    }
+   return ok;
+}
+
+
+
+// Callback function for processing --ignore-busno
+
+static gboolean
+ignored_busno_arg_func(const    gchar* option_name,
+               const    gchar* value,
+               gpointer data,
+               GError** error)
+{
+   bool debug = false;
+   DBGMSF(debug,"option_name=|%s|, value|%s|, data=%p", option_name, value, data);
+
+   int ival;
+   bool ok =  str_to_int(value, &ival, 10);
+   // DBGMSG("ival=%d", ival);
+   if (!ok || ival < 0 || ival >= BIT_SET_256_MAX) {
+      g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "Invalid i2c bus number: %s", value);
+      ok = false;
+   }
+   else
+      ignored_busnos_work = bs256_insert(ignored_busnos_work, ival);
+   // DBGMSF(debug, "Returning %s", sbool(ok));
    return ok;
 }
 
@@ -305,7 +332,8 @@ static bool parse_display_identifier(
       char *        snwork)
 {
    bool parsing_ok = true;
-   int  explicit_display_spec_ct = 0;
+
+   parsed_cmd->dsel = dsel_new();
 
    if (usbwork) {
 #ifdef ENABLE_USB
@@ -321,13 +349,9 @@ static bool parse_display_identifier(
          parsing_ok = false;
       }
       else {
-         // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-         if (parsed_cmd->pdid) {
-            free_display_identifier(parsed_cmd->pdid);
-         }
-         parsed_cmd->pdid = create_usb_display_identifier(busnum, devicenum);
+         parsed_cmd->dsel->usb_bus = busnum;
+         parsed_cmd->dsel->usb_device = devicenum;
       }
-      explicit_display_spec_ct++;
 #else
       EMIT_PARSER_ERROR(errmsgs,
             "ddcutil not built with support for USB connected monitors.  --usb option invalid.");
@@ -336,20 +360,12 @@ static bool parse_display_identifier(
    }
 
    if (buswork >= 0) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_busno_display_identifier(buswork);
-      explicit_display_spec_ct++;
+      parsed_cmd->dsel->busno = buswork;
    }
 
    if (hidwork >= 0) {
 #ifdef ENABLE_USB
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_usb_hiddev_display_identifier(hidwork);
-      explicit_display_spec_ct++;
+      parsed_cmd->dsel->hiddev_devno = hidwork;
 #else
       EMIT_PARSER_ERROR(errmsgs,
             "ddcutil not built with support for USB connected monitors.  --hid option invalid.");
@@ -358,54 +374,48 @@ static bool parse_display_identifier(
    }
 
    if (dispwork >= 0) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_dispno_display_identifier(dispwork);
-      explicit_display_spec_ct++;
+      parsed_cmd->dsel->dispno = dispwork;
    }
 
    if (edidwork) {
-      if (strlen(edidwork) != 256) {
-         EMIT_PARSER_ERROR(errmsgs,  "EDID hex string not 256 characters");
-         parsing_ok = false;
+      int edid_charct = 256;
+      if (str_starts_with(edidwork, "...")) {
+         edidwork += 3;
+         edid_charct = strlen(edidwork);
+         if (edid_charct == 0 || edid_charct % 2 != 0) {
+            EMIT_PARSER_ERROR(errmsgs,  "EDID hex string with ... prefix must have even number of characters");
+            parsing_ok = false;
+         }
       }
       else {
+         if (strlen(edidwork) != 256) {
+            EMIT_PARSER_ERROR(errmsgs,  "EDID hex string not 256 characters");
+            parsing_ok = false;
+         }
+      }
+
+      if (parsing_ok) {
          Byte * pba = NULL;
          int bytect = hhs_to_byte_array(edidwork, &pba);
-         if (bytect < 0 || bytect != 128) {
+         if (bytect == 0 || bytect > 128) {
             EMIT_PARSER_ERROR(errmsgs,  "Invalid EDID hex string");
             parsing_ok = false;
          }
          else {
-            // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-            if (parsed_cmd->pdid)
-               free_display_identifier(parsed_cmd->pdid);
-            parsed_cmd->pdid = create_edid_display_identifier(pba);  // new way
+            parsed_cmd->dsel->edidbytes = malloc(128);
+            memcpy(parsed_cmd->dsel->edidbytes, pba, 128);
+            parsed_cmd->dsel->edidbytect = bytect;
          }
-         if (pba)
-            free(pba);
+         free(pba);
       }
-      explicit_display_spec_ct++;
    }
 
-   if (mfg_id_work || modelwork || snwork) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_mfg_model_sn_display_identifier(
-                          mfg_id_work,
-                          modelwork,
-                          snwork);
-      explicit_display_spec_ct++;
-   }
-
-   if (explicit_display_spec_ct > 1) {
-      EMIT_PARSER_ERROR(errmsgs, "Monitor specified in more than one way");
-      free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = NULL;
-      parsing_ok = false;
-   }
+   if (mfg_id_work)
+      parsed_cmd->dsel->mfg_id = strdup(mfg_id_work);
+   if (modelwork)
+      parsed_cmd->dsel->model_name = strdup(modelwork);
+   if (snwork)
+      parsed_cmd->dsel->serial_ascii = strdup(snwork);
 
    return parsing_ok;
 }
@@ -512,8 +522,8 @@ static bool parse_watch_mode(
       else if (is_abbrev(v2, "XEVENT", 3))
          parsed_cmd->watch_mode = Watch_Mode_Xevent;
 #endif
-   // else if (is_abbrev(v2, "UDEV", 3))
-   //    parsed_cmd->watch_mode = Watch_Mode_Udev;
+      else if (is_abbrev(v2, "UDEV", 3))
+         parsed_cmd->watch_mode = Watch_Mode_Udev;
       else if (is_abbrev(v2, "DYNAMIC", 3))
          parsed_cmd->watch_mode = Watch_Mode_Dynamic;
 
@@ -783,7 +793,7 @@ static void report_ddcutil_build_info() {
 Preparsed_Cmd * preparse_command(
       int         argc,
       char *      argv[],
-      Parser_Mode parser_mode,
+      Execution_Mode parser_mode,
       GPtrArray * errmsgs)
 {
    bool debug = false;
@@ -878,7 +888,7 @@ Parsed_Cmd *
 parse_command(
       int         argc,
       char *      argv[],
-      Parser_Mode parser_mode,
+      Execution_Mode parser_mode,
       GPtrArray * errmsgs)
 {
    bool debug = false;
@@ -900,8 +910,6 @@ parse_command(
 
    Parsed_Cmd * parsed_cmd = new_parsed_cmd();
    parsed_cmd->parser_mode = parser_mode;
-   // parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
-   // DBGMSG("After new_parsed_cmd(), parsed_cmd->output_level_name = %s", output_level_name(parsed_cmd->output_level));
 
    gchar * original_command = g_strjoinv(" ",argv);
    DBGF(debug, "original command: %s", original_command);
@@ -918,10 +926,10 @@ parse_command(
    gboolean wall_timestamp_trace_flag = false;
    gboolean thread_id_trace_flag = false;
    gboolean process_id_trace_flag = false;
-   const char * verify_expl   = (DEFAULT_SETVCP_VERIFY) ? "Verify value set by setvcp (default)"
-                                                        : "Verify value set by setvcp";
-   const char * noverify_expl = (DEFAULT_SETVCP_VERIFY) ? "Do not verify value by setvcp"
-                                                        : "Do not verify value set by setvcp (default)";
+   const char * verify_expl   = (DEFAULT_SETVCP_VERIFY) ? "Verify the value set by setvcp (default)"
+                                                        : "Verify the value set by setvcp";
+   const char * noverify_expl = (DEFAULT_SETVCP_VERIFY) ? "Do not verify the value by setvcp"
+                                                        : "Do not verify the value set by setvcp (default)";
    gboolean verify_set_flag    = false;
    gboolean noverify_set_flag  = false;
    gboolean async_flag     = false;
@@ -949,6 +957,7 @@ parse_command(
    gboolean debug_parse_flag   = false;
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
+   gboolean edp_always_laptop_flag = true;
    gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
    gboolean enable_tfs_flag    = DEFAULT_ENABLE_TRACED_FUNCTION_STACK;
    const char * enable_tfs_expl  = (DEFAULT_ENABLE_TRACED_FUNCTION_STACK) ? "Enable Traced Function Stack (default)" : "Enable Traced Function Stack";
@@ -1002,6 +1011,7 @@ parse_command(
    gint     dispwork        = -1;
    char *   maxtrywork      = NULL;
 // char *   trace_destination = NULL;
+   gboolean trace_to_syslog_flag      = false;
    gboolean trace_to_syslog_only_flag = false;
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
@@ -1032,9 +1042,9 @@ parse_command(
    }
    char watch_mode_expl[80];
 #ifdef USE_X11
-   g_snprintf(watch_mode_expl, 80, "DYNAMIC|XEVENT|POLL, default: %s", default_watch_mode_keyword);
+   g_snprintf(watch_mode_expl, 80, "DYNAMIC|XEVENT|UDEV|POLL, default: %s", default_watch_mode_keyword);
 #else
-   g_snprintf(watch_mode_expl, 80, "DYNAMIC|POLL, default: %s", default_watch_mode_keyword);
+   g_snprintf(watch_mode_expl, 80, "DYNAMIC|UDEV|POLL, default: %s", default_watch_mode_keyword);
 #endif
    gboolean enable_watch_displays = true;
 #ifdef USE_X11
@@ -1315,9 +1325,13 @@ parse_command(
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
       {"nousb",      '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
+      {"edp-ambiguous", '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
+                               G_OPTION_ARG_NONE, &edp_always_laptop_flag,  "DRM connector name eDP not always laptop display", NULL},
       {"ignore-usb-vid-pid", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored_vid_pid, "USB device to ignore","vid:pid" },
       {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
 #endif
+      {"ignore-bus",    '\0', 0, G_OPTION_ARG_CALLBACK, ignored_busno_arg_func,  "I2C bus to ignore", "bus number"},
+
       {"disable-ddc",   '\0', G_OPTION_FLAG_HIDDEN,
                                  G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
       {"ignore-mmid",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
@@ -1363,6 +1377,7 @@ parse_command(
       {"trcapi",     '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_api_calls,      "Trace API call", "function name"},
       {"trcfunc",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_functions,  "Trace functions","function name" },
       {"trcfrom",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,      "Trace call stack from function","function name" },
+	   {"trcback",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->backtraced_functions, "Report caller stack of function","function name" },
       {"trcfile",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
       {"enable-traced-function-stack", '\0', G_OPTION_FLAG_NONE,
                                            G_OPTION_ARG_NONE, &enable_tfs_flag,  enable_tfs_expl, NULL},
@@ -1384,6 +1399,9 @@ parse_command(
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
       {"trace-to-syslog-only",'\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &trace_to_syslog_only_flag,  "Direct trace output only to syslog", NULL},
+      {"trace-to-syslog",'\0', G_OPTION_FLAG_HIDDEN,
+                                                 G_OPTION_ARG_NONE,         &trace_to_syslog_flag,  "Direct trace output to syslog", NULL},
+
       {"libddcutil-trace-file",'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
       {"stats-to-syslog",'\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &stats_to_syslog_only_flag,  "Direct stats to syslog", NULL},
@@ -1675,6 +1693,10 @@ parse_command(
    else if (noverify_set_flag)
       verify_flag = false;
 
+   if (parsed_cmd->backtraced_functions && !enable_tfs_flag) {
+      EMIT_PARSER_ERROR(errmsgs, "Option --trcback forces --enable-traced-function-stack");
+      enable_tfs_flag = true;
+   }
 
 #define LIBDDCUTIL_ONLY_OPTION(_name,_val) \
    do \
@@ -1727,6 +1749,7 @@ parse_command(
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->ignored_hiddevs  = ignored_hiddev_work;
+   parsed_cmd->ignored_i2c_buses = ignored_busnos_work;
    SET_CMDFLAG(CMD_FLAG_VERBOSE_STATS,     verbose_stats);
    SET_CMDFLAG(CMD_FLAG_INTERNAL_STATS,    internal_stats);
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
@@ -1751,6 +1774,7 @@ parse_command(
 #ifdef ENABLE_USB
    SET_CMDFLAG(CMD_FLAG_ENABLE_USB,        enable_usb_flag);
 #endif
+   SET_CMDFLAG(CMD_FLAG_EDP_ALWAYS_LAPTOP, edp_always_laptop_flag);
 #ifdef OLD
    SET_CMDFLAG(CMD_FLAG_TIMEOUT_I2C_IO,    timeout_i2c_io_flag);
    SET_CMDFLAG(CMD_FLAG_REDUCE_SLEEPS,     reduce_sleeps_flag);
@@ -1770,7 +1794,8 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_MOCK,              mock_data_flag);
    SET_CMDFLAG(CMD_FLAG_PROFILE_API,       profile_api_flag);
    SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG_ONLY, trace_to_syslog_only_flag);
-   SET_CMDFLAG(CMD_FLAG_STATS_TO_SYSLOG, stats_to_syslog_only_flag);
+   SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG,   trace_to_syslog_flag);
+   SET_CMDFLAG(CMD_FLAG_STATS_TO_SYSLOG,   stats_to_syslog_only_flag);
    SET_CMDFLAG(CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, null_msg_for_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, enable_heuristic_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
@@ -1868,6 +1893,8 @@ parse_command(
    FREE(mfg_id_work);
    FREE(modelwork);
    FREE(snwork);
+
+   // dbgrpt_display_selector(parsed_cmd->dsel, 0);
 
    if (maxtrywork) {
       parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errmsgs);
@@ -2073,7 +2100,7 @@ parse_command(
       // if no command specified, include license in version information and terminate
       if (rest_ct == 0) {
          if (output_level > DDCA_OL_TERSE) {
-            puts("Copyright (C) 2015-2025 Sanford Rockowitz");
+            puts("Copyright (C) 2015-2026 Sanford Rockowitz");
             puts("License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>");
             puts("This is free software: you are free to change and redistribute it.");
             puts("There is NO WARRANTY, to the extent permitted by law.");
@@ -2117,6 +2144,8 @@ parse_command(
       if (debug)
          printf("cmd=|%s|\n", cmd);
       Cmd_Desc * cmdInfo = find_command(cmd);
+      if (debug)
+         printf("find_command() returned %p\n", cmdInfo);
       if (cmdInfo == NULL) {
          EMIT_PARSER_ERROR(errmsgs,  "Unrecognized ddcutil command: %s", cmd);
          parsing_ok = false;
@@ -2180,12 +2209,13 @@ parse_command(
          if (parsing_ok && parsed_cmd->cmd_id == CMDID_SETVCP)
             parsing_ok &= parse_setvcp_args(parsed_cmd,errmsgs);
 
-         if (parsing_ok && parsed_cmd->pdid) {
+         if (parsing_ok && !dsel_is_empty(parsed_cmd->dsel)) {
             if (!cmdInfo->supported_options & Option_Explicit_Display) {
                EMIT_PARSER_ERROR(errmsgs,  "%s does not support explicit display option\n", cmdInfo->cmd_name);
                parsing_ok = false;
             }
          }
+
 
 #ifdef OUT
          if (parsing_ok && !(parsed_cmd->cmd_id == CMDID_GETVCP || parsed_cmd->cmd_id == CMDID_SETVCP)) {

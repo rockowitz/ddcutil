@@ -64,7 +64,7 @@ void show_any_value(
     }
 
     if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
-       printf("Non-Table value: mh=0x%02x, ml=0x%02x, sh=0x%02x, ml=0x%02x\n",
+       printf("Non-Table value: mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x\n",
               valrec->val.c_nc.mh,
               valrec->val.c_nc.ml,
               valrec->val.c_nc.sh,
@@ -98,6 +98,9 @@ DDCA_Status perform_set_non_table_vcp_value(
     if (ddcrc == DDCRC_VERIFY) {
         printf("Value verification failed.  Current value is now:\n");
         show_any_value(dh, DDCA_NON_TABLE_VCP_VALUE, feature_code);
+        DDCA_Error_Detail * erec = ddca_get_error_detail();
+        if (erec) 
+           ddca_report_error_detail(erec, 3);
      }
      else if (ddcrc != 0) {
         DDC_ERRMSG("ddca_set_non_table_vcp_value", ddcrc);
@@ -176,6 +179,7 @@ test_continuous_value(
        ok = true;
 
 bye:
+   ddca_free_feature_metadata(info);
    // Uncomment to see statistics:
    // printf("\nStatistics for one execution of %s()", __func__);
    // ddca_show_stats(DDCA_STATS_ALL, 0);
@@ -280,6 +284,8 @@ test_simple_nc_value(
        ok = true;
 
 bye:
+    ddca_free_feature_metadata(info);
+
     // uncomment to show statistics:
     // printf("\nStatistics for one execution of %s()", __func__);
     // ddca_show_stats(DDCA_STATS_ALL, 0);
@@ -335,14 +341,6 @@ test_complex_nc_value(
               valrec.sl);
 
     char * formatted_value;
-#ifdef ALT
-    ddcrc = ddca_format_non_table_vcp_value(
-                feature_code,
-                info.vspec,
-                info.mmid,
-                &valrec,
-                &formatted_value);
-#endif
     ddcrc = ddca_format_non_table_vcp_value_by_dref(
                 feature_code,
                 ddca_display_ref_from_handle(dh),
@@ -359,6 +357,7 @@ test_complex_nc_value(
 
 
 bye:
+    ddca_free_feature_metadata(info);
     // uncomment to show statistics:
     // printf("\nStatistics for one execution of %s()", __func__);
     // ddca_show_stats(DDCA_STATS_ALL, 0);

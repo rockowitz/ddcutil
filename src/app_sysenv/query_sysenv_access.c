@@ -107,11 +107,11 @@ Byte_Value_Array identify_i2c_devices() {
    Byte_Value_Array bva4 = NULL;
 #endif
 
-   bva1 = get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ true);
+   bva1 = i2c_get_devices_by_existence_test(/*include_ignorable_devices=*/ true);
    if (redundant_i2c_device_identification_checks) {     // normally false, set true for testing
       bva2 = get_i2c_devices_by_ls();
 #ifdef ENABLE_UDEV
-      bva3 = get_i2c_device_numbers_using_udev(/* include_smbus= */ true);
+      bva3 = i2c_get_device_numbers_using_udev(/* include_smbus= */ true);
       bva4 = get_i2c_device_numbers_using_udev_w_sysattr_name_filter(NULL);
 #endif
 

@@ -113,6 +113,7 @@ dist-hook:
 	find ${distdir} -name adl_archived -type d -prune -exec rm -rfv {} \;
 	find ${distdir}  -name "*old"  -type d -prune -exec rm -rfv {} \;
 	find ${distdir}  -name "*new"  -type d -prune -exec rm -rfv {} \;
+	find ${distdir}  -name "*dbus"  -type d -prune -exec rm -rfv {} \;
 	
 #
 # C Pre-Processor Flags

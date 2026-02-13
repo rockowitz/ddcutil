@@ -1,6 +1,6 @@
 /** @file sysfs_base.c */
 
- // Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+ // Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -825,12 +825,13 @@ bool sysfs_connector_directories_exist() {
 }
 
 
-/**Checks /sys/class/drm for connectors.
+/** Checks /sys/class/drm for connectors for the names of all
+ *  DRM connectors, and and the names for those having an EDID.
  *
- * @return struct Sysfs_Connector_Names
+ *  @return struct Sysfs_Connector_Names
  *
- * @remark
- * Note the result is returned on the stack, not the heap
+ *  @remark
+ *  Note the result is returned on the stack, not the heap
  */
 Sysfs_Connector_Names get_sysfs_drm_connector_names() {
    bool debug = false;
@@ -1040,6 +1041,7 @@ void check_connector_reliability(
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
+
 static bool drm_reliability_checked = false;
 static bool other_drivers_seen = false;
 static bool nvidia_connectors_reliable = false;
@@ -1087,17 +1089,19 @@ bool enable_write_detect_to_status = false;
 bool is_sysfs_reliable_for_driver(const char * driver) {
    bool debug = false;
 
-   bool result = false;
    if (!drm_reliability_checked)
       check_sysfs_reliability();
 
+   bool result = false;
+   // force_sysfs_unreliable, force_sysfs_reliable exist to facilitate testing
    if (force_sysfs_unreliable)
       result = false;
    else if (force_sysfs_reliable)
       result = true;
+
    else {
       if (streq(driver, "nvidia"))
-         result = nvidia_connectors_reliable;
+         result = nvidia_connectors_reliable;   // set in check_sysfs_reliable()
       else
          result = known_reliable_driver(driver);
    }
@@ -1140,10 +1144,12 @@ bool is_sysfs_reliable() {
          SBOOL(nvidia_connectors_reliable));
 
    bool result = true;
+   // force_sysfs_unreliable, force_sysfs_reliable exist to facilitate testing
    if (force_sysfs_unreliable)
       result = false;
    else if (force_sysfs_reliable)
       result = true;
+
    else if (other_drivers_seen)
       result = false;
    else if (nvidia_connectors_exist)
@@ -1195,6 +1201,35 @@ get_i2c_device_sysfs_name(int busno)
  *
  *  Caller is responsible for freeing the returned value
  */
+char * sysfs_find_adapter(char * path) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
+   assert(path);
+   int depth = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 2 : -1;
+
+   char * devpath = NULL;
+   char * rp1 = strdup(path);
+   char * rp2 = NULL;
+
+   // strlen(rp1) > 1  should be unnecessary, but just in case:
+   while(!devpath && strlen(rp1) > 0 && !streq(rp1, "/")) {
+      if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
+          devpath = rp1;
+      }
+      else {
+         RPT_ATTR_REALPATH(depth, &rp2, rp1, "..");
+         free(rp1);
+         rp1 = rp2;
+         rp2 = NULL;
+      }
+   }
+   if (!devpath)
+      free(rp1);
+
+   DBGTRC_DONE(debug,TRACE_GROUP, "Returning: %s", devpath);
+   return devpath;
+}
+
 #ifdef OLD
 char * sysfs_find_adapter_old(char * path) {
    bool debug = false;
@@ -1240,36 +1275,6 @@ char * sysfs_find_adapter_old(char * path) {
 #endif
 
 
-char * sysfs_find_adapter(char * path) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
-   assert(path);
-   int depth = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 2 : -1;
-
-   char * devpath = NULL;
-   char * rp1 = strdup(path);
-   char * rp2 = NULL;
-
-   // strlen(rp1) > 1  shuld be unnecessary, but just in case:
-   while(!devpath && strlen(rp1) > 0 && !streq(rp1, "/")) {
-      if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
-          devpath = rp1;
-      }
-      else {
-         RPT_ATTR_REALPATH(depth, &rp2, rp1, "..");
-         free(rp1);
-         rp1 = rp2;
-         rp2 = NULL;
-      }
-   }
-   if (!devpath)
-      free(rp1);
-
-   DBGTRC_DONE(debug,TRACE_GROUP, "Returning: %s", devpath);
-   return devpath;
-}
-
-
 /** Gets the driver name of an I2C device,
  *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
  *
@@ -1284,7 +1289,6 @@ char *
 get_i2c_sysfs_driver_by_busno(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
-
    int depth = (debug) ? 2 : -1;
 
    char * driver_name = NULL;
@@ -1374,29 +1378,36 @@ get_i2c_sysfs_driver_by_fd(int fd) {
  *
  *  \param  busno   I2C bus number
  *  \return device class
- *          0 if not found (should never occur)
+ *          0 if not found (invalid bus number)
  */
 uint32_t
 get_i2c_device_sysfs_class(int busno) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
 
    uint32_t result = 0;
-   char workbuf[100];
-   snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device", busno);
-
-   char * s_class = read_sysfs_attr(workbuf, "class", /*verbose*/ false);
-   if (!s_class) {
-     snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/device/device", busno);
-     s_class = read_sysfs_attr(workbuf, "class", /*verbose*/ false);
-   }
-   if (s_class) {
-      // printf("(%s) Found %s/class\n", __func__, workbuf);
-      /* bool ok =*/  str_to_int(s_class, (int*) &result, 16);   // if fails, &result unchanged
-      free(s_class);
-   }
-   else{
-      // printf("(%s) class for bus %d not found\n", __func__, busno);
+   char device_path1[100];
+   char device_path2[100];
+   snprintf(device_path1, 100, "/sys/bus/i2c/devices/i2c-%d/device", busno);
+   snprintf(device_path2, 100, "/sys/bus/i2c/devices/i2c-%d/i2c-dev/i2c-%d/device", busno, busno);
+   
+   char * rpath = realpath(device_path1, NULL);
+   if (!rpath)
+      rpath = realpath(device_path2, NULL);
+   // DBGF(debug, "rpath=%s", rpath);
+   if (rpath) {
+      char * adapter_path = sysfs_find_adapter(rpath);
+      // DBGF(debug, "adapter_path=%s", adapter_path);
+      if (adapter_path)  {
+         char * s_class = read_sysfs_attr(adapter_path, "class", /*verbose*/ true);
+         if (s_class) {
+            // DBGF(debug, "Found %s/class", adapter_path);
+            str_to_int(s_class, (int*) &result, 16);   // if fails, &result unchanged
+            free(s_class);
+         }
+         free(adapter_path);
+      }
+      free(rpath);
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning 0x%08x", busno, result);
@@ -1406,6 +1417,9 @@ get_i2c_device_sysfs_class(int busno) {
 
 static bool
 ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "name=|%s|, driver=|%s|", name, driver);
+
    bool result = false;
    const char * ignorable_prefixes[] = {
          "SMBus",
@@ -1415,6 +1429,7 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
          "mac-io",       // Mac G5
          "u4",           // Mac G5
          "AMDGPU SMU",   // AMD Navi2 variants, e.g. RX 6000 series
+         "AMDGPU DM i2c OEM bus",
          NULL };
    if (name) {
       if (starts_with_any(name, ignorable_prefixes) >= 0)
@@ -1422,11 +1437,11 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
       else if (streq(driver, "nouveau")) {
          if ( !str_starts_with(name, "nvkm-") ) {
             result = true;
-            // printf("(%s) name=|%s|, driver=|%s| - Ignore\n", __func__, name, driver);
          }
       }
    }
-   // printf("(%s) name=|%s|, driver=|%s|, returning: %s\n", __func__, name, driver, sbool(result));
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "name=|%s|, driver=|%s|", name, driver);
    return result;
 }
 
@@ -1436,12 +1451,16 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
  *
  *  \param  busno  I2C bus number
  *  \return true if ignorable, false if not
+ *
+ *  \remark
+ *  returns true if invalid bus number
  */
 bool
 sysfs_is_ignorable_i2c_device(int busno) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
+
    bool ignorable = false;
-   DBGF(debug, "Starting.  busno=%d", busno);
 
    // It is possible for a display device to have an I2C bus
    // that should be ignored.  Recent AMD Navi board (e.g. RX 6000)
@@ -1453,14 +1472,18 @@ sysfs_is_ignorable_i2c_device(int busno) {
    char * driver = get_i2c_sysfs_driver_by_busno(busno);
    if (name) {
       ignorable = ignorable_i2c_device_sysfs_name(name, driver);
-      DBGF(debug, "   busno=%d, name=|%s|, ignorable_i2c_sysfs_name() returned %s", busno, name, sbool(ignorable));
+      // DBGF(debug, "   busno=%d, name=|%s|, ignorable_i2c_sysfs_name() returned %s",
+      //                 busno, name, sbool(ignorable));
    }
    free(name);    // safe if NULL
    free(driver);  // ditto
 
    if (!ignorable) {
       uint32_t class = get_i2c_device_sysfs_class(busno);
-      if (class) {
+      DBGF(debug, "get_i2c_device_sysfs_class(%d) returned 0x%08x ", busno, class);
+      if (class == 0)
+         ignorable = true;
+      else {
          DBGF(debug, "   class = 0x%08x", class);
          uint32_t cl2 = class & 0xffff0000;
          DBGF(debug, "   cl2 = 0x%08x", cl2);
@@ -1469,10 +1492,22 @@ sysfs_is_ignorable_i2c_device(int busno) {
       }
    }
 
-   DBGF(debug, "busno=%d, returning: %s", busno, sbool(ignorable));
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE,ignorable, "busno=%d", busno);
    return ignorable;
 }
 
+
+/** Given a DRM connector name, returns the I2C bus number
+ *
+ *  First tries to get the bus number from /sys. If unsuccessful,
+ *  scans all I2C_Bus_Info records.
+ *
+ *  @param  connector_name   DRM connector name
+ *  @return I2C bus number, -1 if not found
+ *
+ *  @remark
+ *  Does checking connector bus numbers first really gain anything?
+ */
 
 int search_all_businfo_records_by_connector_name(char *connector_name) {
    bool debug = false;
@@ -1501,6 +1536,7 @@ int search_all_businfo_records_by_connector_name(char *connector_name) {
          }
       }
    }
+
    DBGTRC_DONE(debug, TRACE_GROUP, "returning busno %d", busno);
    return busno;
 }
@@ -1508,21 +1544,23 @@ int search_all_businfo_records_by_connector_name(char *connector_name) {
 
 /** Module initialization */
 void init_i2c_sysfs_base() {
-   RTTI_ADD_FUNC(possibly_write_detect_to_status);
-   RTTI_ADD_FUNC(sysfs_find_adapter);
-   RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
-   RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
    RTTI_ADD_FUNC(check_connector_reliability);
-   RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);
    RTTI_ADD_FUNC(check_sysfs_reliability);
-   RTTI_ADD_FUNC(find_adapter_and_get_driver);
-   RTTI_ADD_FUNC(is_sysfs_reliable);
    RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
+   RTTI_ADD_FUNC(find_adapter_and_get_driver);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
+   RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
+   RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
+   RTTI_ADD_FUNC(ignorable_i2c_device_sysfs_name);
+   RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);
+   RTTI_ADD_FUNC(is_sysfs_reliable);
+   RTTI_ADD_FUNC(possibly_write_detect_to_status);
    RTTI_ADD_FUNC(search_all_businfo_records_by_connector_name);
    RTTI_ADD_FUNC(sysfs_connector_directories_exist);
+   RTTI_ADD_FUNC(sysfs_find_adapter);
+   RTTI_ADD_FUNC(sysfs_is_ignorable_i2c_device);
 #ifdef UNUSED
    RTTI_ADD_FUNC(get_sys_video_devices);
 #endif

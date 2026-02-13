@@ -4,6 +4,7 @@ AM_CPPFLAGS =         \
   $(LIBDRM_CFLAGS)    \
   $(GLIB_CFLAGS)      \
   -I$(top_srcdir)/src \
+  -I$(top_builddir)/src \
   -I$(top_srcdir)/src/public
 
 AM_CFLAGS = $(AM_CFLAGS_STD)
@@ -59,6 +60,7 @@ ddc_packets.c             \
 display_lock.c            \
 displays.c                \
 dsa2.c                    \
+dw_base.c                 \
 dynamic_features.c        \
 execution_stats.c         \
 feature_lists.c           \

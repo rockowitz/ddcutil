@@ -1,6 +1,6 @@
 /** @file displays.h  Display Specification  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAYS_H_
@@ -25,11 +25,6 @@
 #include "vcp_version.h"
 
 
-extern GPtrArray * all_display_refs;         // all detected displays, array of Display_Ref *
-extern GMutex      all_display_refs_mutex;
-extern bool        debug_locks;
-
-
 /** \file
 Display Specification
 
@@ -48,6 +43,12 @@ Otherwise, displays are searched to find the monitor.
 
 For I2C displays, the device must be opened.  Display_Handle then contains the open file handle.
 */
+
+// *** Globals ***
+
+extern GPtrArray * all_display_refs;         // all detected displays, array of Display_Ref *
+extern GMutex      all_display_refs_mutex;
+extern bool        debug_locks;
 
 // *** Initialization ***
 
@@ -109,8 +110,8 @@ char *              did_repr(Display_Identifier * pdid);
 void                dbgrpt_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
 
-//  #ifdef FUTURE
-// new way
+// Display_Selector will replace Display_Identifier
+// Maintain both in parallel for testing
 #define DISPLAY_SELECTOR_MARKER "DSEL"
 typedef struct {
    char            marker[4];         // always "DSEL"
@@ -121,21 +122,30 @@ typedef struct {
    char *          serial_ascii;
    int             usb_bus;
    int             usb_device;
+   int             hiddev_devno;
+   int             edidbytect;  // if < 128, match last edidbytect bytes only
    Byte *          edidbytes;   // always 128 bytes
 } Display_Selector;
 
-#ifdef FUTURE
+
 Display_Selector * dsel_new();
-void               dsel_free(              Display_Selector * dsel);
-Display_Selector * dsel_set_display_number(Display_Selector* dsel, int dispno);
-Display_Selector * dsel_set_i2c_busno(     Display_Selector* dsel, int busno);
-Display_Selector * dsel_set_usb_numbers(   Display_Selector* dsel, int bus, int device);
-Display_Selector * dsel_set_mfg_id(        Display_Selector* dsel, char*  mfg_id);
-Display_Selector * dsel_set_model_name(    Display_Selector* dsel, char* model_name);
-Display_Selector * dsel_set_sn(            Display_Selector* dsel, char * serial_ascii);
-Display_Selector * dsel_set_edid_bytes(    Display_Selector* dsel, Byte * edidbytes);
-Display_Selector * dsel_set_edid_hex(      Display_Selector* dsel, char * hexstring);
-bool               dsel_validate(          Display_Selector * dsel);
+void               dsel_free(              Display_Selector* dsel);
+bool               dsel_is_empty(          Display_Selector* dsel);
+bool               dsel_only_busno(        Display_Selector* dsel);
+char *             dsel_repr_t(            Display_Selector* dsel);
+void               dbgrpt_display_selector(Display_Selector* dsel, int depth);
+Display_Selector * display_id_to_dsel(     Display_Identifier * pdid);
+#ifdef NOT_NEEDED
+void               dsel_set_display_number(Display_Selector* dsel, int dispno);
+void               dsel_set_i2c_busno(     Display_Selector* dsel, int busno);
+void               dsel_set_hiddev_devno(  Display_Selector* dsel, int hiddev_devno);
+void               dsel_set_usb_numbers(   Display_Selector* dsel, int bus, int device);
+void               dsel_set_mfg_id(        Display_Selector* dsel, char*  mfg_id);
+void               dsel_set_model_name(    Display_Selector* dsel, char* model_name);
+void               dsel_set_sn(            Display_Selector* dsel, char * serial_ascii);
+void               dsel_set_edid_bytes(    Display_Selector* dsel, Byte * edidbytes);
+void               dsel_set_edid_hex(      Display_Selector* dsel, char * hexstring);
+bool               dsel_validate(          Display_Selector* dsel);
 #endif
 
 
@@ -161,8 +171,8 @@ typedef uint16_t Dref_Flags;
 #define DREF_TRANSIENT                                 0x0400
 #define DREF_OPEN                                      0x0800
 #define DREF_DDC_BUSY                                  0x1000
-#define DREF_REMOVED                                   0x2000
-#define DREF_DDC_DISABLED                              0x4000
+#define DREF_DISCONNECTED                              0x2000 // use Display_Ref.disconnected instead
+#define DREF_MMK_IGNORED                              0x4000
 #define DREF_DPMS_SUSPEND_STANDBY_OFF                  0x8000
 
 char * interpret_dref_flags_t(Dref_Flags flags);
@@ -189,6 +199,7 @@ typedef struct _display_ref {
    DDCA_MCCS_Version_Spec   vcp_version_xdf;
    DDCA_MCCS_Version_Spec   vcp_version_cmdline;
    Dref_Flags               flags;
+   bool                     disconnected;
    char *                   capabilities_string;   // added 4/2017, private copy
    Parsed_Edid *            pedid;                 // added 4/2017
    Monitor_Model_Key *      mmid;                  // will be set iff pedid
@@ -205,16 +216,17 @@ typedef struct _display_ref {
    char *                   communication_error_summary;
    uint64_t                 creation_timestamp;
    GMutex                   access_mutex;
+   GMutex                   disconnect_mutex;
 } Display_Ref;
 
-
 void             dbgrpt_published_dref_hash(const char * msg, int depth);
+void             published_dref_hash_to_syslog(int priority, const char * msg);
 void             init_published_dref_hash();
+void             mark_display_ref_removed(Display_Ref* dref);
 void             reset_published_dref_hash();
 void             add_published_dref_id_by_dref(Display_Ref * dref);
 Display_Ref *    dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref);
 DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref);
-
 
 #define DREF_BUSNO(_dref) ((_dref)->io_path.path.i2c_busno)
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \

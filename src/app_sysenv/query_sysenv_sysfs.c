@@ -757,7 +757,7 @@ void query_drm_using_sysfs() {
    int depth = 1;
    int d0 = depth;
    rpt_nl();
-   char * dname = SYS"/sys/class/drm";
+   char * dname = SYS"/class/drm";
 
    rpt_vstring(d0, "*** Examining %s ***", dname);
    dir_filtered_ordered_foreach(
@@ -901,8 +901,9 @@ void dump_sysfs_i2c(Env_Accumulator * accum) {
 
    rpt_label(0,"*** Examining displaylink related attributes ***");
    rpt_nl();
+   // 2>/dev/null because of permission denied errors
    GPtrArray * displaylink_devices = execute_shell_cmd_collect(
-         "find /sys -name \"evdi*\"");
+         "find /sys -name \"evdi*\" 2>/dev/null");
    if (displaylink_devices->len == 0) {
       rpt_vstring(1,"No displaylink devices found.");
    }

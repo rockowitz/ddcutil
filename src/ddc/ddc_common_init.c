@@ -2,7 +2,7 @@
  *  Initialization that must be performed very early by both ddcutil and libddcutil
  */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Contains initialization functions extracted from main.c so they can
@@ -68,7 +68,7 @@
 #include "dw/dw_common.h"
 #include "dw/dw_main.h"
 #include "dw/dw_poll.h"
-#include "dw/dw_udev.h"
+#include "dw/dw_udev2.h"
 #endif
 
 #include "ddc_common_init.h"
@@ -94,7 +94,6 @@ emit_init_tracing_error(
    va_start(args, format);
    char buffer[200];
    vsnprintf(buffer, 200, format, args);
-   va_end(args);
    va_end(args);
    g_ptr_array_add(errinfo_accumulator, errinfo_new(errcode, func, buffer));
 }
@@ -133,8 +132,17 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        dbgtrc_show_thread_id = true;                    // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_PROCESS_ID_TRACE)   // process id on debug and trace messages?
        dbgtrc_show_process_id = true;                   // extern in core.h
-   if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
+   if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY) {
        dbgtrc_trace_to_syslog_only = true;              // extern in core.h
+       xrpt_trc_to_syslog_only = true;
+   }
+   if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG ||
+       parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
+   {
+      xrpt_trc_to_syslog = true;
+       dbgtrc_trace_to_syslog = true;
+       syslog_level = DDCA_SYSLOG_DEBUG;               // extern in core.h // why doesn't this work?
+   }
 
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
    add_trace_groups(parsed_cmd->traced_groups);
@@ -149,6 +157,18 @@ init_tracing(Parsed_Cmd * parsed_cmd)
           if (!found) {
              emit_init_tracing_error(errinfo_accumulator, __func__, -EINVAL,
                                      "Traced function not found: %s", curfunc);
+          }
+       }
+    }
+
+   if (parsed_cmd->backtraced_functions) {
+       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->backtraced_functions); ndx++) {
+          DBGF(debug, "Adding backtraced function: %s", parsed_cmd->backtraced_functions[ndx]);
+          char * curfunc = parsed_cmd->backtraced_functions[ndx];
+          bool found = add_backtraced_function(curfunc);
+          if (!found) {
+             emit_init_tracing_error(errinfo_accumulator, __func__, -EINVAL,
+                                     "Back traced function not found: %s", curfunc);
           }
        }
     }
@@ -194,7 +214,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    g_ptr_array_free(errinfo_accumulator, true);
 
    traced_function_stack_enabled = parsed_cmd->flags & CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK;
-   DBGF(debug, "traced_function_stack_enabled=&s", SBOOL(traced_function_stack_enabled));
+   DBGF(debug, "traced_function_stack_enabled=%s", SBOOL(traced_function_stack_enabled));
    traced_function_stack_errors_fatal = parsed_cmd->flags & CMD_FLAG_TRACED_FUNCTION_STACK_ERRORS_FATAL;
    if (parsed_cmd->flags2 & CMD_FLAG2_F26)
       traced_function_stack_errors_fatal = true;
@@ -204,7 +224,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 }
 
 
-STATIC Error_Info * init_disabled_displays(Parsed_Cmd * parsed_cmd) {
+STATIC Error_Info * init_ignored_display_models(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    Error_Info * errinfo = NULL;
    GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func((GDestroyNotify) errinfo_free);
@@ -398,15 +418,8 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
 
 STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
-
-#ifdef WATCH_DISPLAYS
-   if (parsed_cmd->flags2 & CMD_FLAG2_F17)
-       use_sysfs_connector_id = false;
-#endif
-
    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
-
    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
 }
 
@@ -473,6 +486,9 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       else
          rpt_label(0, "--i5 value must be greater than 1");
    }
+   if (parsed_cmd->flags2 & CMD_FLAG2_F27)
+      disable_check_all_edids_readable_using_i2c = true;
+
 }
 
 
@@ -501,7 +517,9 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (final_result)
       goto bye;      // main_rc == EXIT_FAILURE
 
-   final_result = init_disabled_displays(parsed_cmd);
+   final_result = init_ignored_display_models(parsed_cmd);
+
+   edp_always_laptop = parsed_cmd->flags&CMD_FLAG_EDP_ALWAYS_LAPTOP;
 
    if (parsed_cmd->flags & CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE) {
       DBGMSF(debug, "setting simulate_null_msg_means_unspported = true");
@@ -604,6 +622,15 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    }
    // if (parsed_cmd->flags & CMD_FLAG2_F16)
    //    dbgrpt_sysfs_basic_connector_attributes(1);
+
+   i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
+
+   i2c_exclude_buses(parsed_cmd->ignored_i2c_buses);
+#ifdef ENABLE_USB
+   usb_ignore_hiddevs(parsed_cmd->ignored_hiddevs);
+   Vid_Pid_Value * values = (parsed_cmd->ignored_usb_vid_pid_ct == 0) ? NULL : parsed_cmd->ignored_usb_vid_pids;
+   usb_ignore_vid_pid_values(parsed_cmd->ignored_usb_vid_pid_ct, values);
+#endif
 
    init_performance_options(parsed_cmd);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);

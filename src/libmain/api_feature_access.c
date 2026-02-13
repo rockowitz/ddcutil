@@ -644,7 +644,7 @@ static DDCA_Status
 ddci_format_non_table_vcp_value(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
-      Monitor_Model_Key *    mmid,
+      Monitor_Model_Key *         mmid,
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc)
 {
@@ -656,6 +656,7 @@ ddci_format_non_table_vcp_value(
              formatted_value_loc);
    DDCA_Status ddcrc = API_PRECOND_RVALUE(formatted_value_loc);
    if (ddcrc != 0) {
+      DBGTRC(debug, DDCA_TRC_API, "API_PRECOND_RVALUE() returned %d", ddcrc);
       // DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc, "");
       goto bye;
    }
@@ -954,6 +955,7 @@ ddci_set_non_table_vcp_value_verify(
    DBGTRC_STARTING(debug, DDCA_TRC_API,
           "ddca_dh=%p, feature_code=0x%02x, hi_byte=0x%02x, lo_byte=0x%02x",
           ddca_dh, feature_code, hi_byte, lo_byte);
+   // __assert_fail("OOPS", __FILE__, __LINE__, __func__);
    DDCA_Status rc = 0;
    free_thread_error_detail();
    if ( ( verified_hi_byte_loc && !verified_lo_byte_loc) ||

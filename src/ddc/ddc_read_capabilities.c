@@ -1,6 +1,6 @@
 /** @file ddc_read_capabilities.c */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -136,7 +136,8 @@ ddc_get_capabilities_string(
                                     dh->dref->capabilities_string);
          if (dh->dref->capabilities_string && get_output_level() >= DDCA_OL_VERBOSE) {
             char * s = capabilities_cache_file_name();
-            rpt_vstring(0, "Read cached capabilities string from %s", s);
+            // DBGMSG("rpt_get_ornamentation_enabled() = %s", sbool(rpt_get_ornamentation_enabled()));
+            rpt_vstring(0, "Obtained cached capabilities string from %s", s);
             SYSLOG2(DDCA_SYSLOG_INFO, "Read cached capabilities string from %s", s);
             free(s);
          }

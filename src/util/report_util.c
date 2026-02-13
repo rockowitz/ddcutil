@@ -11,7 +11,7 @@
  * - destination stack
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -36,7 +36,7 @@
 bool redirect_reports_to_syslog = false;
 bool tag_output = false;
 
-static bool default_prefix_report_output = false;
+static bool default_ornament_report_output = false;
 
 /** Sets the initial report ornamentation status.
  *
@@ -45,7 +45,7 @@ static bool default_prefix_report_output = false;
  *  @param output_dest  default output destination
  */
 void rpt_set_default_ornamentation_enabled(bool onoff) {
-   default_prefix_report_output = onoff;
+   default_ornament_report_output = onoff;
 }
 
 
@@ -81,16 +81,16 @@ void rpt_set_default_output_dest(FILE* output_dest) {
 //* Thread specific state */
 typedef struct {
    uint8_t indent_spaces_stack[INDENT_SPACES_STACK_SIZE];
-   int indent_spaces_stack_pos;    // initial  -1;
+   int     indent_spaces_stack_pos;    // initial  -1;
 
-   FILE* output_dest_stack[OUTPUT_DEST_STACK_SIZE];
-   int   output_dest_stack_pos;   // initial  -1;
+   FILE*   output_dest_stack[OUTPUT_DEST_STACK_SIZE];
+   int     output_dest_stack_pos;   // initial  -1;
 
    // work around for fact that can't initialize the initial stack entry to stdout
-   FILE* alt_initial_output_dest;     // initial NULL;
-   bool  initial_output_dest_changed; // initial false;
+   FILE*   alt_initial_output_dest;     // initial NULL;
+   bool    initial_output_dest_changed; // initial false;
 
-   bool  prefix_report_output;        // initial false
+   bool  ornament_report_output;        // initial false
    // bool  temporary_reports_to_syslog; // initial false
 } Per_Thread_Settings;
 
@@ -110,7 +110,7 @@ static Per_Thread_Settings *  get_thread_settings() {
       settings = g_new0(Per_Thread_Settings, 1);
       settings->indent_spaces_stack_pos = -1;
       settings->output_dest_stack_pos   = -1;
-      settings->prefix_report_output = default_prefix_report_output;
+      settings->ornament_report_output = default_ornament_report_output;
 
       if (default_output_dest)
          settings->output_dest_stack[++settings->output_dest_stack_pos] = default_output_dest;
@@ -130,17 +130,17 @@ static Per_Thread_Settings *  get_thread_settings() {
 
 bool rpt_get_ornamentation_enabled()  {
    Per_Thread_Settings * settings = get_thread_settings();
-   return settings->prefix_report_output;
+   return settings->ornament_report_output;
 }
 
 
 bool rpt_set_ornamentation_enabled(bool enabled) {
+   // printf("(%s) enabled=%s\n", __func__, sbool(enabled));
    Per_Thread_Settings * settings = get_thread_settings();
-   bool old = settings->prefix_report_output;
-   settings->prefix_report_output = enabled;
+   bool old = settings->ornament_report_output;
+   settings->ornament_report_output = enabled;
    return old;
 }
-
 
 
 //
@@ -293,21 +293,45 @@ bool rpt_set_reports_to_syslog_override(bool onoff) {
 #endif
 
 
-
 // should not be needed, for diagnosing a problem
 void rpt_flush() {
    if (!redirect_reports_to_syslog)
       fflush(rpt_cur_output_dest());
 }
 
+#define XRPT_TRC  0x01
+#define XRPT_RPT  0x00
+
+bool xrpt_trc_to_syslog_only = false;
+bool xrpt_trc_to_syslog = false;
+
+
+/** Writes a newline to the current output destination
+ *  and/or the system log.
+ */
+void xrpt_nl(Byte opts) {
+   if (opts & XRPT_TRC) {
+      // it's a trace msg, send to trace destinations
+      if (!xrpt_trc_to_syslog_only) {
+         f0printf(rpt_cur_output_dest(), "\n");
+      }
+      else if (xrpt_trc_to_syslog) {
+         syslog(LOG_DEBUG, "\n");
+      }
+   }
+   else {
+      if (redirect_reports_to_syslog)
+         syslog(LOG_NOTICE, "\n");
+      else
+         f0printf(rpt_cur_output_dest(), "\n");
+   }
+}
+
 
 /** Writes a newline to the current output destination.
  */
 void rpt_nl() {
-   if (redirect_reports_to_syslog)
-      syslog(LOG_NOTICE, "\n");
-   else
-      f0printf(rpt_cur_output_dest(), "\n");
+   xrpt_nl(XRPT_RPT);
 }
 
 
@@ -318,32 +342,60 @@ void rpt_nl() {
  *
  * The output is indented per the specified indentation depth.
  *
+ * @param opts      control where output is sent
+ * @param depth     logical indentation depth.
  * @param title     string to write
  * @param collector if non-NULL, add string to this GPtrArray instead of
  *                  writing it to the current output destination
- * @param depth     logical indentation depth.
  *
  * @remark This is the core function through which all output is funneled.
  */
-void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
+void xrpt_label_collect(Byte opts, int depth, const char * title, GPtrArray * collector) {
    bool debug = false;
    if (debug)
       printf("(%s) Writing to %p\n", __func__, (void*)rpt_cur_output_dest());
 
    char prefix[100] = {0};
-   if (rpt_get_ornamentation_enabled())
-      get_msg_decoration(prefix, 100, redirect_reports_to_syslog);
-
    if (collector) {
       g_ptr_array_add(collector, g_strdup_printf("%*s%s", rpt_get_indent(depth), "", title));
    }
    else {
       if (depth >= 0) {
-         if (redirect_reports_to_syslog)
-            syslog(LOG_NOTICE, "%s%*s%s%s",
-                  prefix, rpt_get_indent(depth), "", title, (tag_output) ? " (I)" : "");
-         else
-            f0printf(rpt_cur_output_dest(), "%s%*s%s\n", prefix, rpt_get_indent(depth), "", title);
+         if (opts & XRPT_TRC) {
+            // printf("---> xrpt_trc_to_syslog=%s, xrpt_trc_to_syslog_only=%s\n",
+            //      sbool(xrpt_trc_to_syslog), sbool(xrpt_trc_to_syslog_only));
+            // it's a trace msg, send to trace destinations
+
+             if (!xrpt_trc_to_syslog_only) {
+                if (rpt_get_ornamentation_enabled())
+                   get_msg_decoration(prefix, 100, false);
+                f0printf(rpt_cur_output_dest(), "%s%s%*s%s\n",
+                      (tag_output) ? "??" : "",
+                      prefix, rpt_get_indent(depth), "", title);
+             }
+             if (xrpt_trc_to_syslog) {
+                if (rpt_get_ornamentation_enabled())
+                   get_msg_decoration(prefix, 100, true);
+                syslog(LOG_DEBUG,  "%s%s%*s%s",
+                      (tag_output) ? "--" : "",
+                      prefix, rpt_get_indent(depth), "", title);
+             }
+         }
+         else {
+            if (rpt_get_ornamentation_enabled())
+               get_msg_decoration(prefix, 100, redirect_reports_to_syslog);
+            if (redirect_reports_to_syslog) {
+               syslog(LOG_NOTICE, "%s%s%*s",
+                     (tag_output) ? "++" : "",
+                     prefix,
+                     rpt_get_indent(depth), title);
+            }
+            else {
+               f0printf(rpt_cur_output_dest(), "%s%s%*s%s\n",
+                     (tag_output) ? "!!" : "",
+                     prefix, rpt_get_indent(depth), "", title);
+            }
+         }
       }
    }
 }
@@ -357,9 +409,14 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
  *
  * @param title string to write
  * @param depth logical indentation depth.
+ *
+ * @remark
+ * Use of this function, though widespread, is deprecated in
+ * favor of rpt_label(), which puts the depth argument first
+ * for consistency with other rpt... functions.
  */
 void rpt_title(const char * title, int depth) {
-   rpt_title_collect(title, NULL, depth);
+   xrpt_label_collect(XRPT_RPT, depth, title, NULL);
 }
 
 
@@ -376,7 +433,7 @@ void rpt_title(const char * title, int depth) {
  * @param title     string to write
  */
 void rpt_label_collect(int depth, GPtrArray * collector, const char * text) {
-   rpt_title_collect(text, collector, depth);
+   xrpt_label_collect(XRPT_RPT, depth, text, collector);
 }
 
 
@@ -387,7 +444,7 @@ void rpt_label_collect(int depth, GPtrArray * collector, const char * text) {
  * The output is indented per the specified indentation depth.
  *
  * @param depth logical indentation depth.
- * @param title string to write
+ * @param text  string to write
  *
  * @remark
  * This function is logically equivalent to #rpt_title(), except that
@@ -397,40 +454,99 @@ void rpt_label_collect(int depth, GPtrArray * collector, const char * text) {
  * **depth** parameter makes the code harder to read.
  */
 void rpt_label(int depth, const char * text) {
-   rpt_title(text, depth);
+   //rpt_title(text, depth);
+   xrpt_label_collect(XRPT_RPT, depth, text, NULL);
+}
+
+
+/** Writes a constant string to the debug output destination(s).
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param depth logical indentation depth.
+ * @param text  string to write
+ */
+void drpt_label(int depth, const char * text) {
+   //rpt_title(text, depth);
+   xrpt_label_collect(XRPT_TRC, depth, text, NULL);
+}
+
+
+/** Writes a formatted string to the current output destination and/or
+ *  the debug locations.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param opts      control where output is sent
+ * @param depth     logical indentation depth.
+ * @param format    format string
+ * @param ap        substitution arguments
+ */
+void xvrpt_vstring(Byte opts, int depth, char* format, va_list ap) {
+   char * buf = g_strdup_vprintf(format, ap);
+   xrpt_label_collect(opts, depth, buf, NULL);
+   free(buf);
+}
+
+
+/** Writes a formatted string to the current output destination and/or
+ *  the debug locations.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param opts      control where output is sent
+ * @param depth     logical indentation depth.
+ * @param format    format string
+ * @param ...       substitution arguments
+ */
+void xrpt_vstring(Byte opts, int depth, char * format, ...) {
+   va_list(args);
+   va_start(args, format);
+   xvrpt_vstring(opts, depth, format, args);
+   va_end(args);
 }
 
 
 /** Writes a formatted string to the current output destination.
  *
- * A newline is appended to the string specified
+ * A newline is appended to the string specified.
  *
- * @param  depth    logical indentation depth
- * @param  format   format string (normal printf)
- * @param  ...      arguments
+ * The output is indented per the specified indentation depth.
  *
- * @remark Note that the depth parm is first on this function because of variable args
+ * @param depth     logical indentation depth.
+ * @param format    format string
+ * @param ...       substitution arguments
  */
 void rpt_vstring(int depth, char * format, ...) {
-   int buffer_size = 200;
-   char buffer[buffer_size];
-   char * buf = buffer;
    va_list(args);
    va_start(args, format);
-   int reqd_size = vsnprintf(buffer, buffer_size, format, args);
-   // if buffer wasn't sufficiently large, allocate a temporary buffer
-   if (reqd_size >= buffer_size) {
-      // printf("(%s) Allocating temp buffer, reqd_size=%d\n", __func__, reqd_size);
-      buf = malloc(reqd_size+1);
-      va_start(args, format);
-      vsnprintf(buf, reqd_size+1, format, args);
-   }
+   // printf("(rpt_vstring) format=|%s|, args=%p\n", format, args);
+   xvrpt_vstring(XRPT_RPT, depth, format, args);
    va_end(args);
+}
 
-   rpt_title(buf, depth);
 
-   if (buf != buffer)
-      free(buf);
+/** Writes a formatted string to debug string destinations.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param depth     logical indentation depth.
+ * @param format    format string
+ * @param ...       substitution arguments
+ */
+void drpt_vstring(int depth, char * format, ...) {
+   va_list(args);
+   va_start(args, format);
+   xvrpt_vstring(XRPT_TRC, depth, format, args);
+   va_end(args);
 }
 
 
@@ -443,13 +559,35 @@ void rpt_vstring(int depth, char * format, ...) {
  * @param  collector if non-NULL, add string to GPtrArray instead of
  *                   writing to current output destination
  * @param  format    format string (normal printf argument)
- * @param  ap        va_list array of arguments
+ * @param  ap        va_list of arguments
  *
  * @remark Note that the depth parm is first on this function because of variable args
  */
 void vrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_list ap) {
    char * s = g_strdup_vprintf(format, ap);
-   rpt_title_collect(s, collector, depth);
+   // rpt_title_collect(s, collector, depth);
+   rpt_label_collect(depth, collector, s);
+   free(s);
+}
+
+
+/** Writes a formatted string to the debug destinations, or
+ *  adds the string to a collector array.
+ *
+ * A newline is appended to the string specified
+ *
+ * @param  depth     logical indentation depth
+ * @param  collector if non-NULL, add string to GPtrArray instead of
+ *                   writing to current output destination
+ * @param  format    format string (normal printf argument)
+ * @param  ap        va_list array of arguments
+ *
+ * @remark Note that the depth parm is first on this function because of variable args
+ */
+void vdrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_list ap) {
+   char * s = g_strdup_vprintf(format, ap);
+   // drpt_title_collect(s, collector, depth);
+   xrpt_label_collect(XRPT_TRC, depth, s, collector);
    free(s);
 }
 
@@ -474,8 +612,28 @@ void rpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...) {
 }
 
 
+/** Writes a formatted string to the destinations for debug output.
+ *
+ * A newline is appended to the string specified
+ *
+ * @param  depth     logical indentation depth
+ * @param  collector if non-NULL, add string to GPtrArray instead of
+ *                   writing to current output destination
+ * @param  format    format string (normal printf argument)
+ * @param  ...       arguments
+ *
+ * @remark Note that the depth parm is first on this function because of variable args
+ */
+void drpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...) {
+   va_list(args);
+   va_start(args, format);
+   vdrpt_vstring_collect(depth, collector, format, args);
+   va_end(args);
+}
 
-/** Convenience function that writes multiple constant strings.
+
+/** Convenience function that writes multiple constant strings to the
+ *  current output destination.
  *
  *  @param depth    logical indentation depth
  *  @param ...      pointers to constant strings,
@@ -486,9 +644,45 @@ void rpt_multiline(int depth, ...) {
    va_start(args, depth);
    char * s = NULL;
    while( (s = va_arg(args, char *)) != NULL) {
-      rpt_title(s, depth);
+      // rpt_title(s, depth);
+      xrpt_label_collect(XRPT_RPT, depth, s, NULL);
    }
    va_end(args);
+}
+
+
+/** Convenience function that writes multiple constant strings to the
+ *  debug destination(s).
+ *
+ *  @param depth    logical indentation depth
+ *  @param ...      pointers to constant strings,
+ *                  last pointer is NULL to terminate list
+ */
+void drpt_multiline(int depth, ...) {
+   va_list args;
+   va_start(args, depth);
+   char * s = NULL;
+   while( (s = va_arg(args, char *)) != NULL) {
+      // rpt_title(s, depth);
+      xrpt_label_collect(XRPT_TRC, depth, s, NULL);
+   }
+   va_end(args);
+}
+
+
+/** Writes all strings in a GPtrArray to the current output destination
+ *  and/or debug messages destinations.
+ *
+ * @param  opts    determines destinations
+ * @param  depth   logical indentation depth
+ * @param  strings pointer to GPtrArray of strings
+ */
+void xrpt_g_ptr_array(Byte opts, int depth, GPtrArray * strings) {
+   for (int ndx = 0; ndx < strings->len; ndx++) {
+      char * s = g_ptr_array_index(strings, ndx);
+      // rpt_title(s, depth);
+      xrpt_label_collect(opts, depth, s, NULL);
+   }
 }
 
 
@@ -498,15 +692,25 @@ void rpt_multiline(int depth, ...) {
  * @param  strings pointer to GPtrArray of strings
  */
 void rpt_g_ptr_array(int depth, GPtrArray * strings) {
-   for (int ndx = 0; ndx < strings->len; ndx++) {
-      char * s = g_ptr_array_index(strings, ndx);
-      rpt_title(s, depth);
-   }
+      xrpt_g_ptr_array(XRPT_RPT, depth, strings);
 }
 
 
-/** Writes a hex dump with indentation.
- *  Output is written to the current report destination
+/** Writes all strings in a GPtrArray to the debug destinations
+ *
+ * @param  depth   logical indentation depth
+ * @param  strings pointer to GPtrArray of strings
+ */
+void drpt_g_ptr_array(int depth, GPtrArray * strings) {
+      xrpt_g_ptr_array(XRPT_RPT, depth, strings);
+}
+
+
+/** Writes a hex dump to the current output destination or the system log,
+ *  with indentation, but without ornamentation.
+ *
+ *  Global redirect_reports_to_syslog determines whether output goes
+ *  to the system log.
  *
  *  @param data  start of bytes to dump
  *  @param size  number of bytes to dump
@@ -549,9 +753,13 @@ void rpt_ntsa(Null_Terminated_String_Array ntsa, int depth) {
  *  @param ptr   pointer to struc
  *  @param depth logical indentation depth
  */
-void rpt_structure_loc(const char * name, const void * ptr, int depth) {
+void drpt_structure_loc(const char * name, const void * ptr, int depth) {
    // fprintf(rpt_cur_output_dest(), "%*s%s at: %p\n", rpt_indent(depth), "", name, ptr);
-   rpt_vstring(depth, "%s at: %p", name, ptr);
+   xrpt_vstring(XRPT_TRC, depth, "%s at: %p", name, ptr);
+}
+
+void rpt_structure_loc(const char * name, const void * ptr, int depth) {
+   xrpt_vstring(XRPT_RPT, depth, "%s at: %p", name, ptr);
 }
 
 
@@ -609,8 +817,8 @@ int rpt_file_contents(const char * fn, bool verbose, int depth) {
 }
 
 
-/* The remaining rpt_ functions various data types share a common formatting so that they can
- * be use together.  All channel their output through rpt_str().
+/* The remaining rpt_ functions for various data types share a common formatting
+ * for use together.  All channel their output through rpt_str().
  *
  * Depending on whether the info parm is null, output takes one of the following forms:
  *    name       (info) : value
@@ -706,7 +914,6 @@ void rpt_unsigned(char * name, char * info, int val, int depth) {
    snprintf(buf, 9, "%u", val);
    rpt_str(name, info, buf, depth);
 }
-
 
 
 /** Writes a string to the current output destination describing a 4 byte integer value,

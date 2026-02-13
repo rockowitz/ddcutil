@@ -243,6 +243,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
       }
    }
 
+   g_queue_free(to_check_again);
    free(rdd);
    DBGTRC_DONE(debug, TRACE_GROUP, "terminating recheck thread");
    free_current_traced_function_stack();

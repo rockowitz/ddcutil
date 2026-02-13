@@ -36,6 +36,7 @@
 #include "base/display_lock.h"
 #include "base/core.h"
 #include "base/dsa2.h"
+#include "base/dw_base.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
 #include "base/per_thread_data.h"
@@ -63,6 +64,7 @@
 #ifdef WATCH_DISPLAYS
 #include "dw/dw_main.h"
 #include "dw/dw_services.h"
+#include "dw/dw_status_events.h"
 #endif
 
 #include "libmain/api_error_info_internal.h"
@@ -373,7 +375,7 @@ get_parsed_libmain_config(const char * libopts_string,
                           Parsed_Cmd** parsed_cmd_loc)
 {
    bool debug = false;
-   DBGF(debug, "Starting. disable_config_file = %s, libopts_string = %sn",
+   DBGF(debug, "Starting. disable_config_file = %s, libopts_string = %s",
                sbool(disable_config_file), libopts_string);
 
    char * msg = g_strdup_printf("Options passed from client: %s",
@@ -770,6 +772,7 @@ ddci_init(const char *      libopts,
    if (infomsg_loc)
       *infomsg_loc = NULL;
 
+   execution_mode = MODE_LIBDDCUTIL;  // global in core.c
    Parsed_Cmd * parsed_cmd = NULL;
    Error_Info * master_error = NULL;
    DDCA_Status ddcrc = 0;
@@ -789,6 +792,7 @@ ddci_init(const char *      libopts,
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
       syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;
    enable_syslog = (syslog_level_arg == DDCA_SYSLOG_NEVER) ? false : true;  // global in core.c
+   DBGF(debug, "enable_syslog=%s", sbool(enable_syslog));
 
    if (enable_syslog) {
       if (!client_opened_syslog) {
@@ -797,14 +801,13 @@ ddci_init(const char *      libopts,
                                      // include caller's process id
                  LOG_USER);          // generic user program, syslogger can use to determine how to handle
       }
-
       // special handling for start and termination msgs
       // always output if syslog is opened
       syslog(LOG_NOTICE, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
                    get_full_ddcutil_version(), ddci_libddcutil_filename());
-
+      syslog(LOG_NOTICE, "                          library built %s at %s. stdout_stderr_redirected=%s",
+                         BUILD_DATE, BUILD_TIME, sbool(stdout_stderr_redirected));
       syslog_level = syslog_level_arg;  // global in trace_control.h
-
    }
 
    DBGF(debug, "syslog_level_arg = %s, syslog_level=%s, enable_syslog=%s",
@@ -823,7 +826,7 @@ ddci_init(const char *      libopts,
                         &parsed_cmd);
       ASSERT_IFF(master_error, !parsed_cmd);
 
-      if (infomsgs && infomsgs->len > 0) {
+      if (infomsgs->len > 0) {
          DBGF(debug, "emit infomsgs starting. enable_init_msgs=%s, stdout_stderr_redirected=%s, infomsgs->len=%d",
                sbool(enable_init_msgs), sbool(stdout_stderr_redirected), infomsgs->len);
          for (int ndx = 0; ndx < infomsgs->len; ndx++) {
@@ -837,9 +840,9 @@ ddci_init(const char *      libopts,
          if (infomsg_loc) {
             *infomsg_loc = g_ptr_array_to_ntsa(infomsgs, /*duplicate=*/true);
          }
-         g_ptr_array_free(infomsgs, true);
       }
    }
+   g_ptr_array_free(infomsgs, true);
    DBGF(debug, "parsing complete");
 
    if (!master_error) {
@@ -941,12 +944,12 @@ ddca_init2(const char *     libopts,
 DDCA_Status
 ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    bool debug = false;
-   API_PROLOGX(debug, RESPECT_QUIESCE, "enabled_classes=0x%02x", enabled_classes);
+   API_PROLOGX(debug, RESPECT_QUIESCE, "enabled_classes=0x%02x=%s",
+                      enabled_classes, dw_event_classes_repr_t(enabled_classes));
 
 #ifdef WATCH_DISPLAYS
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "all_video_adapters_implement_drm=%s",
          sbool(all_video_adapters_implement_drm));
-
 
 #ifdef OUT
    if (enabled_classes == DDCA_EVENT_CLASS_ALL)
@@ -1022,7 +1025,8 @@ ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
 #else
    DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
 #endif
-   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "*classes_loc=0x%02x", *classes_loc);
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "*classes_loc=0x%02x=%s",
+         *classes_loc, (*classes_loc) ? dw_event_classes_repr_t(*classes_loc):"NULL" );
 }
 
 DDCA_Status
@@ -1465,7 +1469,7 @@ ddca_is_force_slave_address_enabled(void) {
 
 void
 ddca_reset_stats(void) {
-   DBGMSG("Executing");
+   // DBGMSG("Executing");
    g_mutex_lock(&api_quiesced_mutex);
    g_mutex_lock(&active_calls_mutex);
 

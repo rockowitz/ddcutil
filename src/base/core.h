@@ -67,6 +67,14 @@ extern bool timestamp_in_syslog_debug_msgs;
 extern bool running_as_root;
 
 
+typedef enum {
+   MODE_DDCUTIL,
+   MODE_LIBDDCUTIL
+} Execution_Mode;
+
+extern Execution_Mode execution_mode;
+const char *  execution_mode_name(Execution_Mode mode);
+
 //
 // Standard function call arguments and return values
 //
@@ -114,6 +122,7 @@ typedef uint16_t Dbgtrc_Options;
 #define DBGTRC_OPTIONS_DONE      0x10
 
 bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
+bool is_backtracing(const char * funcname);
 
 //
 //  Error_Info reporting
@@ -535,7 +544,7 @@ do { \
       dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE, \
              __func__, __LINE__, __FILE__, \
              "Returning %s at %p", #_structname, _structptr); \
-      if (_structptr) { \
+      if (IS_DBGTRC((_flag), _trace_group) && _structptr) { \
          _dbgfunc(_structptr, 1); \
       } \
    } \

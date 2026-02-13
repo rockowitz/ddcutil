@@ -1,7 +1,7 @@
 /** @file libusb_util.h
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef LIBUSB_UTIL_H_
@@ -9,7 +9,6 @@
 
 #include <glib-2.0/glib.h>
 #include <libusb-1.0/libusb.h>
-// #include <stdint.h>
 
 #include "usb_util/libusb_reports.h"
 
@@ -37,7 +36,7 @@ struct possible_monitor_device {
    struct possible_monitor_device * next;
 } Possible_Monitor_Device;
 
-struct possible_monitor_device * get_possible_monitors();
+struct possible_monitor_device * get_possible_monitors(libusb_device **devs);
 
 void report_possible_monitors(struct possible_monitor_device * mondev_head, int depth);
 

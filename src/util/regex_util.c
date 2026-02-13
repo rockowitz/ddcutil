@@ -1,6 +1,6 @@
 /** @file regex_util.c */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -64,45 +64,36 @@ void dbgrpt_regex_hash_table() {
 
 void free_regex_hash_table() {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. regex_hash_table=%p\n", __func__, (void*)regex_hash_table);
+   DBGF(debug, "Starting. regex_hash_table=%p", (void*)regex_hash_table);
    if (regex_hash_table) {
       if (debug) {
-         printf("(%s) Hash table contents:\n", __func__);
-         dbgrpt_regex_hash_table(regex_hash_table);
+         DBG("Hash table contents:");
+         dbgrpt_regex_hash_table();
       }
       g_hash_table_destroy(regex_hash_table);
       regex_hash_table = NULL;
    }
-   if (debug)
-      printf("(%s) Done.\n", __func__);
+   DBGF(debug, "Done.");
 }
 
 
 static void save_compiled_regex(const char * pattern, regex_t * compiled_re) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. pattern = |%s|, compiled_re=%p\n",
-             __func__, pattern, (void*)compiled_re);
+   DBGF(debug, "Starting. pattern = |%s|, compiled_re=%p", pattern, (void*)compiled_re);
    GHashTable * regex_hash = get_regex_hash_table();
    g_hash_table_replace(regex_hash, g_strdup( pattern), compiled_re);
-   if (debug)
-      printf("(%s) Done.\n", __func__);
+   DBGF(debug, "Done.");
 }
 
 
 static regex_t * get_compiled_regex(const char * pattern) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. pattern = |%s|\n", __func__, pattern);
+   DBGF(debug, "Starting. pattern = |%s|", pattern);
    GHashTable * regex_hash = get_regex_hash_table();
    regex_t * result = g_hash_table_lookup(regex_hash, pattern);
-   if (debug)
-      printf("(%s) Returning %p. pattern = |%s|\n", __func__, (void*)result, pattern);
+   DBGF(debug, "Returning %p. pattern = |%s|", (void*)result, pattern);
    return result;
 }
-
-
 
 // #ifdef FUTURE
 // requires testing
@@ -113,8 +104,7 @@ bool eval_regex_with_matches(
       regmatch_t *  pm )
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. re=%p, value=|%s|\n", __func__, (void*)re, value);
+   DBGF(debug, "Starting. re=%p, value=|%s|", (void*)re, value);
    int rc = regexec(
           re,                   /* the compiled pattern */
           value,                /* the subject string */
@@ -123,17 +113,16 @@ bool eval_regex_with_matches(
           0
        );
    bool result = (rc  == 0) ? true : false;
-   if (debug)
-       printf("(%s) Returning %s. value=|%s|, regexec() returned %d\n",
-             __func__, sbool(result), value, rc);
+   DBGF(debug, "Returning %s. value=|%s|, regexec() returned %d",
+               sbool(result), value, rc);
    return result;
 }
 // #endif
 
+
 static bool eval_regex(regex_t * re, const char * value) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. re=%p, value=|%s|\n", __func__, (void*)re, value);
+   DBGF(debug, "Starting. re=%p, value=|%s|", (void*)re, value);
    int rc = regexec(
           re,                   /* the compiled pattern */
           value,                /* the subject string */
@@ -142,25 +131,22 @@ static bool eval_regex(regex_t * re, const char * value) {
           0
        );
    bool result = (rc  == 0) ? true : false;
-   if (debug)
-       printf("(%s) Returning %s. value=|%s|, regexec() returned %d\n",
-             __func__, sbool(result), value, rc);
+   DBGF(debug, "Returning %s. value=|%s|, regexec() returned %d",
+               sbool(result), value, rc);
    return result;
 }
 
 
 bool compile_and_eval_regex(const char * pattern, const char * value) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. pattern=|%s|, value=|%s|\n", __func__, pattern, value);
+   DBGF(debug, "Starting. pattern=|%s|, value=|%s|", pattern, value);
    g_mutex_lock(&regex_hash_table_mutex);
    regex_t * re = get_compiled_regex(pattern);
    // printf("(%s) forcing re = NULL\n", __func__);
    // re = NULL;
    if (!re) {
       re = calloc(1, sizeof(regex_t));
-      if (debug)
-         printf("(%s) Allocated regex %p, compiling...\n", __func__, (void*)re);
+      DBGF(debug, "Allocated regex %p, compiling...", (void*)re);
       int rc = regcomp(re, pattern, REG_EXTENDED);
       if (rc != 0) {
          printf("(%s) regcomp() returned %d\n", __func__, rc);
@@ -170,8 +156,7 @@ bool compile_and_eval_regex(const char * pattern, const char * value) {
    }
    g_mutex_unlock(&regex_hash_table_mutex);
    bool result = eval_regex(re, value);
-   if (debug)
-      printf("(%s) Done. Returning %s\n", __func__, sbool(result));
+   DBGF(debug, "Done. Returning %s", sbool(result));
    return result;
 }
 
@@ -183,16 +168,14 @@ bool compile_and_eval_regex_with_matches(
       regmatch_t * pm)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. pattern=|%s|, value=|%s|\n", __func__, pattern, value);
+   DBGF(debug, "Starting. pattern=|%s|, value=|%s|", pattern, value);
    g_mutex_lock(&regex_hash_table_mutex);
    regex_t * re = get_compiled_regex(pattern);
    // printf("(%s) forcing re = NULL\n", __func__);
    // re = NULL;
    if (!re) {
       re = calloc(1, sizeof(regex_t));
-      if (debug)
-         printf("(%s) Allocated regex %p, compiling...\n", __func__, (void*)re);
+      DBGF(debug, "Allocated regex %p, compiling...", (void*)re);
       int rc = regcomp(re, pattern, REG_EXTENDED);
       if (rc != 0) {
          printf("(%s) regcomp() returned %d\n", __func__, rc);
@@ -202,8 +185,6 @@ bool compile_and_eval_regex_with_matches(
    }
    g_mutex_unlock(&regex_hash_table_mutex);
    bool result = eval_regex_with_matches(re, value, max_matches, pm);
-   if (debug)
-      printf("(%s) Done. Returning %s\n", __func__, sbool(result));
+   DBGF(debug, "Done. Returning %s", sbool(result));
    return result;
 }
-

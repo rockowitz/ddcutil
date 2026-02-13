@@ -4,7 +4,7 @@
  * redirecting and capturing program output.
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -49,7 +49,7 @@ void capture_output_using_basic_functions() {
    int rc = fflush(f);
    if (rc < 0) {
       perror("fflush() failed");
-      return;
+      goto bye;
    }
 
    // size does not include trailing null appended by fmemopen()
@@ -57,16 +57,17 @@ void capture_output_using_basic_functions() {
    ddca_set_fout_to_default();
    // must copy data before closing buffer
    char * result = strdup(ptr);
-   rc = fclose(f);
-   if (rc < 0) {
-      perror("Error closing in core buffer");
-      free(result);
-      return;
-   }
-
    printf("Output:\n");
    printf("%s\n", result);
    free(result);
+
+bye:
+   if (f) {
+      rc = fclose(f);
+      if (rc < 0) {
+         perror("Error closing in core buffer");
+      }
+   }
 }
 
 

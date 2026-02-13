@@ -19,8 +19,8 @@
 #include "config.h"
 
 //* \cond */
-#include <glib-2.0/glib.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <limits.h>
 #include <rtti.h>
 #include <stdio.h>
@@ -65,10 +65,25 @@
 // Globals
 //
 
-bool timestamp_in_syslog_debug_msgs = false;
+bool timestamp_in_syslog_debug_msgs = true;
 bool tracing_initialized = false;
 bool library_disabled = false;
 bool running_as_root = false;
+
+Execution_Mode execution_mode = MODE_DDCUTIL;  // will always be explicitly set
+
+const char *  execution_mode_name(Execution_Mode mode) {
+   // use switch to force compilation error if a mode is added but not named
+   char * name = NULL;
+   switch(mode) {
+   case MODE_DDCUTIL:    name = "ddcutil";    break;
+   case MODE_LIBDDCUTIL: name = "libddcutil"; break;
+   }
+   return name;
+}
+
+
+
 
 
 //
@@ -420,6 +435,19 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
 }
 
 
+bool is_backtracing(const char * funcname) {
+   bool debug = false;  //str_starts_with(funcname, "ddca_");
+   DBGF(debug, "Starting. funcname=%s", funcname);
+
+   bool result = false;
+   result = is_backtraced_function(funcname);
+
+   DBGF(debug, "Done.     funcname=%s, returning %s\n", funcname, SBOOL(result));
+   return result;
+}
+
+
+
 #ifdef UNUSED
 
  #define INIT_CALLSTACK() \
@@ -427,7 +455,6 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
     trace_callstack = g_ptr_array_sized_new(100); \
     g_ptr_array_set_free_func(trace_callstack, g_free); \
  }
-
 
 
 static void report_callstack() {
@@ -553,7 +580,7 @@ static bool vdbgtrc(
          char thread_prefix[15]   = "";
          char process_prefix[15]  = "";
          if (dbgtrc_show_time      && !(options & DBGTRC_OPTIONS_SEVERE))
-            g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(4));
+            g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(6));
          if (dbgtrc_show_wall_time && !(options & DBGTRC_OPTIONS_SEVERE))
             g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
          if (dbgtrc_show_thread_id && !(options & DBGTRC_OPTIONS_SEVERE) ) {
@@ -606,7 +633,7 @@ static bool vdbgtrc(
 #endif
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
-         if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog_only) {
+         if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog) {
             char * syslog_msg = NULL;
             if (timestamp_in_syslog_debug_msgs) {
                syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
@@ -618,18 +645,19 @@ static bool vdbgtrc(
                            thread_prefix, funcname, retval_info, base_msg,
                            (tag_output) ? " (J)" : "");
             }
-            syslog(LOG_DEBUG, "%s", syslog_msg);
+            syslog(LOG_DEBUG, "%s%s", (tag_output) ? "&&" : "", syslog_msg);
             free(syslog_msg);
          }
          else if ( (options & DBGTRC_OPTIONS_SEVERE) && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
             char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
                                      thread_prefix, funcname, retval_info, base_msg,
                                      (tag_output) ? " (K)" : ""  );
-            syslog(LOG_ERR, "%s", syslog_msg);
+            syslog(LOG_ERR, "%s%s", (tag_output) ? "&&" : "", syslog_msg);
             free(syslog_msg);
          }
          else if (redirect_reports_to_syslog) {
-            syslog(LOG_NOTICE, "%s(%-30s) %s%s%s",
+            syslog(LOG_NOTICE, "%s%s(%-30s) %s%s%s",
+                  (tag_output) ? "&&" : "",
                   thread_prefix, funcname, retval_info, base_msg,
                   (tag_output) ? " (L)" : ""  );
          }
@@ -638,7 +666,9 @@ static bool vdbgtrc(
             FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
                               ? thread_settings->ferr
                               : thread_settings->fout;
-            f0printf(where, "%s%s\n", decorated_msg, (tag_output) ? " (M)" : ""  );
+            f0printf(where, "%s%s%s\n",
+                  (tag_output) ? "&&" : "",
+                  decorated_msg, (tag_output) ? " (M)" : ""  );
             // f0puts(decorated_msg, where);
             // f0putc('\n', where);
             fflush(where);
@@ -685,6 +715,41 @@ bool check_callstack(Dbgtrc_Options options, const char * funcname) {
 }
 
 
+void output_traced_function_stack() {
+   GPtrArray* contents = get_current_traced_function_stack_contents(true /* most_recent_last */);
+        for (int ndx = 0; ndx < contents->len; ndx++) {
+           if (ndx == 0) {
+              char * s = g_strdup_printf( "Backtrace of function %s:", (char*) g_ptr_array_index(contents,ndx));
+  #ifdef OLD
+              if (!dbgtrc_trace_to_syslog_only) {
+                 rpt_vstring(0, "%s", s);
+              }
+              if (dbgtrc_trace_to_syslog) {
+                 syslog(LOG_DEBUG, "%s", s);
+              }
+  #endif
+              drpt_vstring(0, "%s", s);
+              free(s);
+           }
+           else {
+              char * s = g_strdup_printf("     %s", (char*) g_ptr_array_index(contents,ndx));
+  #ifdef OLD
+              if (!dbgtrc_trace_to_syslog_only) {
+                 rpt_vstring(0, "%s", s);
+              }
+              if (dbgtrc_trace_to_syslog) {
+                 syslog(LOG_DEBUG, "%s", s);
+              }
+  #endif
+              drpt_vstring(0, "%s", s);
+              free(s);
+           }
+        }
+        g_ptr_array_free(contents, true);
+}
+
+
+
 /** Basic function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or DBGTRC macro to simplify calling.
  *
@@ -722,9 +787,15 @@ bool dbgtrc(
                TID(), trace_group, options, funcname, filename, lineno, get_thread_id(),
                trace_callstack_call_depth, (fout() == stdout) ? "==" : "!=");
 
-   bool msg_emitted = false;
    bool in_callstack = check_callstack(options, funcname);
-   if ( in_callstack || is_tracing(trace_group, filename, funcname) ) {
+   bool tracing_active = in_callstack || is_tracing(trace_group, filename, funcname);
+
+   if (traced_function_stack_enabled && is_backtracing(funcname) && (options&DBGTRC_OPTIONS_STARTING)) {
+      output_traced_function_stack();
+   }
+
+   bool msg_emitted = false;
+   if ( tracing_active ) {
       va_list(args);
       va_start(args, format);
       // DBGF(debug, "&args=%p, args=%p", &args, args);
@@ -1205,57 +1276,57 @@ base_errinfo_free_with_report(
       bool         report,
       const char * func)
 {
+   bool debug = false;
+   DBGF(debug, "erec=%p, report=%s, func=%s", erec, SBOOL(report), func);
+   DBGF(debug, "report_freed_exceptions=%s, dbgtrc_to_syslog_only=%s, redirect_reports_to_syslog=%s, dbgtrc_trace_to_syslog=%s",
+         sbool(report_freed_exceptions), sbool(dbgtrc_trace_to_syslog_only),
+         sbool(redirect_reports_to_syslog), sbool(dbgtrc_trace_to_syslog));
+
    if (erec) {
       if (report || report_freed_exceptions) {
-         if ( dbgtrc_trace_to_syslog_only || redirect_reports_to_syslog) {
+         bool emit_to_syslog =  dbgtrc_trace_to_syslog_only || redirect_reports_to_syslog || dbgtrc_trace_to_syslog;
+         bool emit_to_terminal = !dbgtrc_trace_to_syslog_only && !redirect_reports_to_syslog;
+         if ( emit_to_syslog) {
             GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
             rpt_vstring_collect(0, collector, "(%s) Freeing exception:", func);
+            errinfo_report_collect(erec, collector, 1);
             for (int ndx = 0; ndx < collector->len; ndx++) {
               syslog(LOG_NOTICE, "%s", (char*) g_ptr_array_index(collector, ndx));
             }
             g_ptr_array_free(collector, true);
          }
-         else {
-            rpt_vstring(0, "(%s) Freeing exception:", func);
-            errinfo_report(erec, 1);
+         if (emit_to_terminal) {
+            // rpt_vstring(0, "(%s) Freeing exception:", func);
+            errinfo_free_with_report(erec, report, func);
+            erec = NULL;
          }
       }
       errinfo_free(erec);
    }
+
+   DBGF(debug, "Done");
 }
 
 
+/** Determine if stdout and stderr are being redirected the system log,
+ *  e.g. if executing under KDE PowerDevil.
+ *
+ *  Sets global #stdout_stderr_redirected.
+ *
+ *  Used to avoid duplicate messages being written to the system log.
+ *
+ *  Note the assumption that if stdout is redirected then stderr is as well.
+ */
 void detect_stdout_stderr_redirection() {
    bool debug = false;
    DBGF(debug, "Starting");
-   // syslog(LOG_ERR,  "(%s)",msg);
-  //  msg_to_syslog_only = true;
+
+   // msg_to_syslog_only = true;
    // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = true");
    // msg_to_syslog_only = false;
    // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "msg_to_syslog_only = false");
 
-   char * s = realpath("/sbin/init", NULL);
-   char * initsys = NULL;
-   if (!s) {   // pathological
-      initsys = g_strdup_printf("UNKNOWN");
-   }
-   else {
-      initsys = g_path_get_basename(s);
-      free(s);
-   }
-   DBGF(debug, "Init system: %s", initsys);
-   free(initsys);
-
-   char * stdout_fn = NULL;
-   filename_for_fd(1, &stdout_fn);
-   DBGF(debug, "stdout file name: %s",  stdout_fn);
-   stdout_stderr_redirected = (str_contains(stdout_fn, "socket") >= 0);
-   free(stdout_fn);
-   DBGF(debug, "set stdout_stderr_redirected = %s", SBOOL(stdout_stderr_redirected));
-   // stdout_stderr_redirected = false;    // *** TEMP ****
-   // DBG("Forced stdout_stderr_redirected = false for testing");
-
-
+   if (debug) {
 #ifdef OLD
    char * initsys = execute_shell_cmd_one_line_result("ps -p 1 -o comm=");
    DBGF(debug, "Using init system: %s", initsys);
@@ -1263,17 +1334,37 @@ void detect_stdout_stderr_redirection() {
    free(initsys);
 #endif
 
-   // shows nothing
-   // show_backtrace(1);
+      char * s = realpath("/sbin/init", NULL);
+      char * initsys = NULL;
+      if (!s) {   // pathological
+         initsys = g_strdup_printf("UNKNOWN");
+      }
+      else {
+         initsys = g_path_get_basename(s);
+         free(s);
+      }
+      DBG("Init system: %s", initsys);
+      free(initsys);
 
-   // syslog(LOG_ERR, "stdout file name: %s",  filename_for_fd_t(1));
+      char * journalstream = getenv("JOURNAL_STREAM");  // do not free
+      DBG("$JOURNAL_STREAM = %s", journalstream);
+     //  MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$JOURNAL_STREAM = %s", journalstream);
+      // char * s = getenv("INVOCATION_ID");  // do not free
+      // DBG("$INVOCATION_ID = %s", s);
+      // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$INVOCATION_ID = %s", s);
+   }
 
-   char * journalstream = getenv("JOURNAL_STREAM");  // do not free
-   DBGF(debug, "$JOURNAL_STREAM = %s", journalstream);
-  //  MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$JOURNAL_STREAM = %s", journalstream);
-   // char * s = getenv("INVOCATION_ID");  // do not free
-   // DBG("$INVOCATION_ID = %s", s);
-   // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "$INVOCATION_ID = %s", s);
+   char * stdout_fn = NULL;
+   filename_for_fd(1, &stdout_fn);
+   DBGF(debug, "stdout file name: %s",  stdout_fn);
+   // syslog(LOG_ERR, "stdout file name: %s",  stdout_fn);
+   stdout_stderr_redirected = (str_contains(stdout_fn, "socket") >= 0);
+   free(stdout_fn);
+   DBGF(debug, "set stdout_stderr_redirected = %s", SBOOL(stdout_stderr_redirected));
+
+   // stdout_stderr_redirected = false;    // *** TEMP ****
+   // DBG("Forced stdout_stderr_redirected = false for testing");
+
    DBGF(debug, "Done");
 }
 

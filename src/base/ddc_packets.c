@@ -1095,6 +1095,7 @@ create_ddc_multi_part_read_response_packet(
 #endif
 
 
+#ifdef UNUSED
 // VCP Feature response
 
 // 4/2017: used only in ddc_vcp_tests.c:
@@ -1152,6 +1153,7 @@ create_ddc_getvcp_response_packet(
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "*packet_ptr=%p", *packet_ptr);
    return rc;
 }
+#endif
 
 
 //
@@ -1251,8 +1253,10 @@ void init_ddc_packets() {
    RTTI_ADD_FUNC(update_ddc_multi_part_read_request_packet_offset);
    RTTI_ADD_FUNC(create_ddc_base_request_packet);
    RTTI_ADD_FUNC(create_ddc_base_response_packet);
+#ifdef UNUSED
    RTTI_ADD_FUNC(create_ddc_getvcp_request_packet);
    RTTI_ADD_FUNC(create_ddc_getvcp_response_packet);
+#endif
 // RTTI_ADD_FUNC(create_ddc_multi_part_read_response_packet);  // unused
    RTTI_ADD_FUNC(create_ddc_response_packet);
    RTTI_ADD_FUNC(create_ddc_setvcp_request_packet);

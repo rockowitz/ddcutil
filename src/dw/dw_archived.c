@@ -58,7 +58,7 @@ bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
             DBGMSG("comparing %s", businfo->drm_connector_name);
             if (streq(businfo->drm_connector_name, drm_connector)) {
                DBGMSG("Found drm_connector %s", drm_connector);
-               dref->flags |= DREF_REMOVED;
+               dref->flags |= DREF_DISCONNECTED;
                i2c_reset_bus_info(businfo);
                DDCA_Display_Detection_Report report;
                report.operation = DDCA_DISPLAY_REMOVED;
@@ -99,7 +99,7 @@ bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
          if (old_dref) {
             SEVEREMSG("Active Display_Ref already exists for DRM connector %s", drm_connector_name);
             // how to handle?
-            old_dref->flags |= DREF_REMOVED;
+            old_dref->flags |= DREF_DISCONNECTED;
          }
          Display_Ref * dref = create_bus_display_ref(busno);
          dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent

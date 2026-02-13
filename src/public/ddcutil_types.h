@@ -7,7 +7,7 @@
  *  within the code that implements the API.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_TYPES_H_
@@ -386,7 +386,7 @@ typedef struct {
 
 /** @name Version Feature Flags
  *
- * #DDCA_Version_Feature_Flags is a byte of flags describing attributes of a
+ * #DDCA_Version_Feature_Flags is a set of flags describing attributes of a
  * VCP feature that can vary by MCCS version.
  *
  * @remark

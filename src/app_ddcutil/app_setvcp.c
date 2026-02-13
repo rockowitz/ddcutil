@@ -235,11 +235,14 @@ app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
              ddc_excp->causes[0]->status_code == DDCRC_RETRIES &&
              ddc_excp->causes[0]->cause_ct > 0)
          {
-             f0printf(ferr(), "   Try errors: DDCRC_RETRIES(%s)\n",
-                   errinfo_causes_string(ddc_excp->causes[0]));
+            char * s =  errinfo_causes_string(ddc_excp->causes[0]);
+             f0printf(ferr(), "   Try errors: DDCRC_RETRIES(%s)\n", s);
+             free(s);
          }
          else {
-            f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
+            char * s = errinfo_causes_string(ddc_excp);
+            f0printf(ferr(), "    Try errors: %s\n", s);
+            free(s);
          }
          ddcrc = ERRINFO_STATUS(ddc_excp);
          BASE_ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug,TRACE_GROUP));

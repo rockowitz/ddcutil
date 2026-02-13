@@ -1,15 +1,14 @@
 /** @file ddcutil_types_internal.h
  *
  *  Declarations removed from ddcutil_types.h
- *  because they no longer need to  public.
+ *  because they no longer need to be public.
  */
 
-// Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_TYPES_INTERNAL_H_
 #define DDCUTIL_TYPES_INTERNAL_H_
-
 
 
 /** Callback function to report VCP value change */

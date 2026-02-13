@@ -1,6 +1,6 @@
 /** @file dw_main.c */
 
-// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -8,6 +8,7 @@
 /** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>
+#include <libudev.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +20,7 @@
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
+#include "util/error_info.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
@@ -37,13 +39,14 @@
 #include "sysfs/sysfs_base.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_edid.h"
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
 
 #include "dw_status_events.h"
 #include "dw_common.h"
-#include "dw_udev.h"
+#include "dw_udev2.h"
 #include "dw_recheck.h"
 #include "dw_poll.h"
 #ifdef USE_X11
@@ -57,7 +60,8 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
-bool             enable_watch_displays = true;
+bool            enable_watch_displays = true;
+bool            disable_check_all_edids_readable_using_i2c = false;
 
 static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
@@ -67,44 +71,27 @@ static DDCA_Display_Event_Class active_watch_displays_classes = DDCA_EVENT_CLASS
 static Watch_Displays_Data * global_wdd;     // needed to pass to dw_stop_watch_displays()
 
 
-// ***
-// Iftesting out resolve_watch_mode() if X11 is not defined is a quick and dirty hack.
-// It relies on the fact that currently the only mode other than XEVENT is POLL
-// ***
+typedef enum {
+   unchecked,
+   failed,
+   succeeded,
+} Watch_Mode_X11_Initialization;
 
-#ifdef USE_X11
-/** Determines the actual watch mode to be used
- *
- *  @param  initial_mode  mode requested
- *  @param  xev_data_loc  address at which to set the address of a newly allocated
- *                        XEvent_Data struct, if the resolved mode is Watch_Mode_Xevent
- *  @return actual watch mode to be used
- */
-STATIC DDC_Watch_Mode
-resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
+Watch_Mode_X11_Initialization x11_init_state = unchecked;
+
+STATIC bool is_watch_mode_x11_available() {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s xev_data_loc=%p", watch_mode_name(initial_mode), xev_data_loc);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
-   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
+   bool result = false;
 #ifdef USE_X11
-   XEvent_Data * xevdata = NULL;
-   *xev_data_loc = NULL;
-#endif
-
-#ifndef ENABLE_UDEV
-   if (initial_mode == Watch_Mode_Udev)
-      initial_mode = Watch_Mode_Poll;
-#endif
-
-   if (initial_mode == Watch_Mode_Dynamic) {
-      resolved_watch_mode = Watch_Mode_Poll;    // always works, may be slow
-#ifdef USE_X11
+   if (!(x11_init_state == failed)) {
       char * xdg_session_type = getenv("XDG_SESSION_TYPE");
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE=|%s|", xdg_session_type);
       if (xdg_session_type &&         // can xdg_session_type ever not be set
-          (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
+           (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
       {
-         resolved_watch_mode = Watch_Mode_Xevent;
+         result = true;
       }
       else {
          // assert xdg_session_type == "tty"  ?
@@ -113,47 +100,127 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode,  XEvent_Data ** xev_data_loc) {
          // possibility of coming in on ssh with a x11 proxy running
          // see https://stackoverflow.com/questions/45536141/how-i-can-find-out-if-a-linux-system-uses-wayland-or-x11
          if (display) {
-            resolved_watch_mode = Watch_Mode_Xevent;
+            result = true;
          }
       }
-
-      //     dw_watch_mode = Watch_Mode_Udev;
-      // sysfs_fully_reliable = is_sysfs_reliable();
-      // if (!sysfs_fully_reliable)
-      //    dw_watch_mode = Watch_Mode_Poll;
+   }
 #endif
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+
+STATIC bool is_watch_mode_udev_available() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   bool result = false;
+   struct udev* udev = udev_new();
+   if (udev) {
+      result = true;
+      udev_unref(udev);
+   }
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+
+/** Determines the actual watch mode to be used
+ *
+ *  @param  initial_mode  mode requested
+ *  @return actual watch mode to be used
+ */
+STATIC DDC_Watch_Mode
+resolve_watch_mode(DDC_Watch_Mode initial_mode) {
+  bool debug = false;
+  DBGTRC_STARTING(debug, TRACE_GROUP, "initial_mode=%s", watch_mode_name(initial_mode));
+
+   if (initial_mode == Watch_Mode_Xevent && !is_watch_mode_x11_available())
+      initial_mode = Watch_Mode_Dynamic;
+   if (initial_mode == Watch_Mode_Udev && !is_watch_mode_udev_available())
+      initial_mode = Watch_Mode_Dynamic;
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After availability check, initial_mode = %s",
+                                         watch_mode_name(initial_mode));
+
+   char * xdg_session_type = getenv("XDG_SESSION_TYPE");
+   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;   // always works, may be slow
+   if (initial_mode == Watch_Mode_Dynamic) {
+      if (streq(xdg_session_type, "x11")) {
+         if ( is_watch_mode_x11_available())
+            resolved_watch_mode = Watch_Mode_Xevent;
+         else if ( is_watch_mode_udev_available() )
+            resolved_watch_mode = Watch_Mode_Udev;
+      }
+      else if (streq(xdg_session_type, "wayland")) {
+         if (is_watch_mode_udev_available() )     // pathological if false
+            resolved_watch_mode = Watch_Mode_Udev;
+      }
+      else {    // other session type, almost certainly "tty"
+         if (is_watch_mode_udev_available() )
+            resolved_watch_mode = Watch_Mode_Udev;
+      }
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "After resolving watch_mode dynamic, resolved_watch_mode = %s",
+            watch_mode_name(resolved_watch_mode));
    }
    else {
       resolved_watch_mode = initial_mode;
    }
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "initially resolved watch mode = %s", watch_mode_name(resolved_watch_mode));
 
-#ifdef NO
-    if (resolved_watch_mode  == Watch_Mode_Udev) {
-      if (!sysfs_fully_reliable)  // ???
-         resolved_watch_mode = Watch_Mode_Poll;
-   }
-#endif
-
-#ifdef USE_X11
-   if (resolved_watch_mode == Watch_Mode_Xevent) {
-      xevdata  = dw_init_xevent_screen_change_notification();
-      if (!xevdata) {
-         resolved_watch_mode = Watch_Mode_Poll;
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR API unavailable. Switching to Watch_Mode_Poll");
-      }
-   }
-   *xev_data_loc = xevdata;
-   ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, *xev_data_loc);
-   if (*xev_data_loc && IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      dw_dbgrpt_xevent_data(*xev_data_loc,  0);
-   }
-#endif
-   DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s. *xev_data_loc: %p",
-         watch_mode_name(resolved_watch_mode),  *xev_data_loc);
+   DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s",   watch_mode_name(resolved_watch_mode));
    return resolved_watch_mode;
 }
-#endif
+
+
+/** Checks that all EDIDS for Display_Refs of type I2C are actually
+ *  readable using I2C. There are some, e.g. for DisplayLink devices
+ *  for which the EDID can be read only from /sys.
+ *
+ * @return true/false
+ */
+bool all_edids_readable_using_i2c() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "");
+
+   bool result = true;
+   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
+      if (dref->io_path.io_mode != DDCA_IO_I2C) {
+         result = false;
+         break;
+      }
+      I2C_Bus_Info * businfo =  dref->detail;
+      if ( (businfo->flags&I2C_BUS_SYSFS_EDID) && !(businfo->flags&I2C_BUS_LAPTOP)) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                                "Attempting to read EDID on /dev/i2c-%d", businfo->busno);
+         int fd;
+         Error_Info * err = i2c_open_bus_basic_by_busno(businfo->busno, CALLOPT_NONE, &fd);
+         if (err) {
+            syslog(LOG_WARNING, "Error opening /dev/i2c-%d: %s",
+                                businfo->busno, errinfo_summary(err));
+            // errinfo_report_to_syslog(LOG_WARNING, err, 1);
+            ERRINFO_FREE_WITH_REPORT(err, true);
+            result = false;
+         }
+         else {
+            Buffer * edidbuf = buffer_new(256,  "");
+            Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf);
+            if (rc != 0) {
+               syslog(LOG_WARNING, "Error reading EDID from /dev/i2c-%d: %s",
+                                   businfo->busno, psc_desc(rc));
+               result = false;
+            }
+            buffer_free(edidbuf, "");
+         }
+         i2c_close_bus_basic(businfo->busno, fd, CALLOPT_ERR_MSG);
+      }
+   }
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_CONN,result, "");
+   return result;
+}
 
 
 /** Starts thread that watches for changes in display connection status.
@@ -171,9 +238,6 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
         watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "thread_id = %d, traced_function_stack=%p", TID(), traced_function_stack);
    Error_Info * err = NULL;
-#ifdef USE_X11
-   XEvent_Data * xev_data = NULL;
-#endif
 
    if (!all_video_adapters_implement_drm) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires DRM video drivers");
@@ -185,11 +249,33 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
+   if (disable_check_all_edids_readable_using_i2c) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to all_edids_readable_using_i2c()");
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Suppressing call to all_edids_readable_using_i2c()");
+   }
+   else {
+      if (!all_edids_readable_using_i2c()) {
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+               "EDID readable from /sys but not using I2C. Display change detection unreliable.");
+         // err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires EDIDs readable using I2C");
+         // goto bye;
+      }
+   }
+
+   DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(watch_displays_mode);
 #ifdef USE_X11
-   DDC_Watch_Mode resolved_watch_mode = resolve_watch_mode(watch_displays_mode, &xev_data);
-   ASSERT_IFF(resolved_watch_mode == Watch_Mode_Xevent, xev_data);
-#else
-   DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;
+   XEvent_Data * xevdata  = NULL;
+   if (resolved_watch_mode == Watch_Mode_Xevent) {
+      xevdata  = dw_init_xevent_screen_change_notification();
+      if (xevdata) {
+         x11_init_state = succeeded;
+      }
+      else {
+         x11_init_state = failed;
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR API unavailable. Switching to Watch_Mode_Dynamic");
+         resolved_watch_mode = resolve_watch_mode(Watch_Mode_Dynamic);
+      }
+   }
 #endif
 
    int calculated_watch_loop_millisec = dw_calc_watch_loop_millisec(resolved_watch_mode);
@@ -200,7 +286,6 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
          "                                         extra_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
          initial_stabilization_millisec, stabilization_poll_millisec);
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "use_sysfs_connector_id: %s", SBOOL(use_sysfs_connector_id));    // watch udev only
 
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
@@ -231,8 +316,8 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       wdd->watch_mode = resolved_watch_mode;
       wdd->watch_loop_millisec = calculated_watch_loop_millisec;
 #ifdef USE_X11
-      if (xev_data)
-         wdd->evdata = xev_data;
+      if (xevdata)
+         wdd->evdata = xevdata;
 #endif
       global_wdd = wdd;   // so that it's available to ddc_stop_watch_displays() 
 
@@ -247,10 +332,13 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
 #endif
 
+#ifdef OLD
       GThreadFunc watch_thread_func =
             (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
                  ? dw_watch_display_connections
                  : dw_watch_displays_udev;
+#endif
+      GThreadFunc watch_thread_func = dw_watch_display_connections;
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
       watch_thread = g_thread_new(
@@ -285,7 +373,6 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
 
    DDCA_Status ddcrc = DDCRC_OK;
 
-#ifdef ENABLE_UDEV
    if (enabled_classes_loc)
       *enabled_classes_loc = DDCA_EVENT_CLASS_NONE;
 
@@ -331,7 +418,6 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
    }
 
    g_mutex_unlock(&watch_thread_mutex);
-#endif
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return ddcrc;
@@ -418,22 +504,30 @@ dw_redetect_displays() {
 }
 
 
-
+/** Returns the current Display Watch parameter settings in a
+ *  buffer provided by the caller.
+ *
+ *  @param settings  #DDCA_DW_Settings struct to fill ine
+ */
 void dw_get_display_watch_settings(DDCA_DW_Settings * settings) {
    assert(settings);
    // settings->watch_mode = dw_watch_mode;
 
    // settings->udev_watch_interval_millisec   = udev_watch_loop_millisec;
-   settings->poll_watch_interval_millisec   = poll_watch_loop_millisec;
-   settings->xevent_watch_interval_millisec = xevent_watch_loop_millisec;
+   settings->poll_watch_interval_millisec    = poll_watch_loop_millisec;
+   settings->xevent_watch_interval_millisec  = xevent_watch_loop_millisec;
 
-   settings->initial_stabilization_millisec      = initial_stabilization_millisec;
-   settings->stabilization_poll_millisec         = stabilization_poll_millisec;
+   settings->initial_stabilization_millisec  = initial_stabilization_millisec;
+   settings->stabilization_poll_millisec     = stabilization_poll_millisec;
 
    settings->watch_retry_interval_millisec = retry_thread_sleep_factor_millisec;
 }
 
 
+/** Updates Display Watch tuning parameters
+ *
+ *  @param settings  #DDCA_DW_Settings struct containing the parameters
+ */
 DDCA_Status dw_set_display_watch_settings(DDCA_DW_Settings * settings) {
    assert(settings);
    // udev_watch_loop_millisec   =     settings->udev_watch_udev_interval_millisec;
@@ -450,13 +544,13 @@ DDCA_Status dw_set_display_watch_settings(DDCA_DW_Settings * settings) {
 
 
 void init_dw_main() {
+   RTTI_ADD_FUNC(dw_get_active_watch_classes);
+   RTTI_ADD_FUNC(dw_redetect_displays);
    RTTI_ADD_FUNC(dw_start_watch_displays);
    RTTI_ADD_FUNC(dw_stop_watch_displays);
-   RTTI_ADD_FUNC(dw_get_active_watch_classes);
-#ifdef USE_X11
+   RTTI_ADD_FUNC(is_watch_mode_udev_available);
+   RTTI_ADD_FUNC(is_watch_mode_x11_available);
    RTTI_ADD_FUNC(resolve_watch_mode);
-#endif
-   RTTI_ADD_FUNC(dw_redetect_displays);
+   RTTI_ADD_FUNC(all_edids_readable_using_i2c);
 }
-
 
