@@ -203,6 +203,9 @@ unlock_display_by_businfo(I2C_Bus_Info * businfo) {
 Error_Info *
 i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "filename=%s, callopts=0x%02x, fd_loc=%p",
+                                       filename, callopts, fd_loc);
+
    Error_Info * err = NULL;
    RECORD_IO_EVENT(
          -1,
@@ -215,6 +218,8 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) failed. errno=%s", filename, psc_desc(errsv));
       err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s", filename, psc_desc(errsv));
    }
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
    return err;
 }
 
@@ -2459,6 +2464,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_get_and_check_bus_info);
    RTTI_ADD_FUNC(i2c_non_async_scan);
    RTTI_ADD_FUNC(i2c_open_bus);
+   RTTI_ADD_FUNC(i2c_open_bus_basic);
    RTTI_ADD_FUNC(i2c_report_active_bus);
    RTTI_ADD_FUNC(i2c_threaded_initial_checks_by_businfo);
    RTTI_ADD_FUNC(is_adapter_class_display_controller);
