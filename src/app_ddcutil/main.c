@@ -1016,6 +1016,12 @@ main(int argc, char *argv[]) {
       parsed_cmd->flags &= ~(CMD_FLAG_DSA2 | CMD_FLAG_ENABLE_CACHED_CAPABILITIES | CMD_FLAG_ENABLE_CACHED_DISPLAYS);
    }
 
+   if (parsed_cmd->cmd_id == CMDID_LIST_RTTI) {
+         report_rtti_func_name_table(0, "Functions traceable by name:");
+         main_rc = EXIT_SUCCESS;
+         goto bye;
+   }
+
    Error_Info * errs = init_tracing(parsed_cmd);
    if (errs) {
       for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
@@ -1027,6 +1033,7 @@ main(int argc, char *argv[]) {
       ERRINFO_FREE(errs);
       goto bye;
    }
+
    if (preparse_verbose)
       parsed_cmd->output_level = DDCA_OL_VERBOSE;
 
@@ -1131,10 +1138,12 @@ main(int argc, char *argv[]) {
       main_rc = (vcpinfo_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
+#ifdef MOVED
    else if (parsed_cmd->cmd_id == CMDID_LIST_RTTI) {
       report_rtti_func_name_table(0, "Functions traceable by name:");
       main_rc = EXIT_SUCCESS;
    }
+#endif
 
    // else if (parsed_cmd->cmd_id == CMDID_DISCARD_CACHE) {
    //    i2c_discard_caches(parsed_cmd->discarded_cache_types);
