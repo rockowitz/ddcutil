@@ -1086,26 +1086,26 @@ ddca_get_display_info2(
 
 
 STATIC void
-set_ddca_error_detail_from_open_errors() {
+set_ddca_error_detail_from_open_errors(const char * api_func) {
    bool debug = false;
    GPtrArray * errs = ddc_get_bus_open_errors();
    // DDCA_Status master_rc = 0;
    if (errs && errs->len > 0) {
       Error_Info * master_error = ERRINFO_NEW(DDCRC_OTHER, "Error(s) opening ddc devices");
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error(s) opening ddc devices");
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Setting client error detail for %s, Error(s) opening ddc devices", api_func);
       for (int ndx = 0; ndx < errs->len; ndx++) {
          Bus_Open_Error * cur = g_ptr_array_index(errs, ndx);
          Error_Info * errinfo = NULL;
          if (cur->io_mode == DDCA_IO_I2C) {
             errinfo = ERRINFO_NEW(cur->error, "Error %s opening /dev/i2c-%d",
                                              psc_desc(cur->error), cur->devno);
-            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error %s opening /dev/i2c-%d",
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "   Error %s opening /dev/i2c-%d",
                                              psc_desc(cur->error), cur->devno);
          }
          else {
             errinfo = ERRINFO_NEW(cur->error, "Error %s opening /dev/usb/hiddev%d %s",
                                              psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
-            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error %s opening /dev/usb/hiddev%d %s",
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "   Error %s opening /dev/usb/hiddev%d %s",
                   psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
          }
          errinfo_add_cause(master_error, errinfo);
@@ -1163,7 +1163,7 @@ ddca_get_display_refs(
    *drefs_loc = result_list;
    assert(*drefs_loc);
 
-   set_ddca_error_detail_from_open_errors();
+   set_ddca_error_detail_from_open_errors(__func__);
    ddcrc = 0;
 
    API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, ddcrc, "*drefs_loc=%p, returned list has %d displays",
@@ -1218,7 +1218,7 @@ ddca_get_display_info_list2(
       dbgrpt_published_dref_hash(__func__, 1);
    }
 
-   set_ddca_error_detail_from_open_errors();
+   set_ddca_error_detail_from_open_errors(__func__);
    ddcrc = 0;
    *dlist_loc = result_list;
    assert(*dlist_loc);
