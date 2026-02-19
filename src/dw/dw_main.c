@@ -213,8 +213,8 @@ bool all_edids_readable_using_i2c() {
                result = false;
             }
             buffer_free(edidbuf, "");
+            i2c_close_bus_basic(businfo->busno, fd, CALLOPT_ERR_MSG);
          }
-         i2c_close_bus_basic(businfo->busno, fd, CALLOPT_ERR_MSG);
       }
    }
 
@@ -256,7 +256,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    else {
       if (!all_edids_readable_using_i2c()) {
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
-               "EDID readable from /sys but not using I2C. Display change detection unreliable.");
+               "EDID(s) readable from /sys but not using I2C. Display change detection unreliable.");
          // err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires EDIDs readable using I2C");
          // goto bye;
       }
