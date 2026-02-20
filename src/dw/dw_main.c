@@ -169,20 +169,94 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode) {
       resolved_watch_mode = initial_mode;
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s",   watch_mode_name(resolved_watch_mode));
+   DBGTRC_DONE(debug, TRACE_GROUP, "resolved_watch_mode: %s", watch_mode_name(resolved_watch_mode));
    return resolved_watch_mode;
 }
 
 
+/** Tests that a /dev/i2c bus can be opened for reading and writing.
+ *
+ *  @param  busno   i2c bus number
+ *  @return NULL if success, Error_Info struct if failure
+ */
+Error_Info * simple_rw_test(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
+
+   int fd;
+   Error_Info * err = i2c_open_bus_basic_by_busno(busno, CALLOPT_NONE, &fd);
+   if (!err) {
+      i2c_close_bus_basic(busno, fd, CALLOPT_NONE);
+   }
+   else {
+      // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error opening /dev/i2c-%d: %s", busno, errinfo_summary(err));
+   }
+
+   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_NONE, err, "busno=%d", busno);
+   return err;
+}
+
+
+/** Checks that all /dev/i2c buses that may possibly be used for DDC
+ *  communication can be read and written.
+ *
+ *  @return Error_Info struct if one or more buses are inaccessible,
+ *          NULL if no problem
+ */
+Error_Info * all_relevant_i2c_buses_rw() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   GPtrArray * err_accumulator = NULL;
+
+   BS256 attached_buses = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, /*only_connected*/ false);
+   Bit_Set_256_Iterator iter = bs256_iter_new(attached_buses);
+   int busno = -1;
+   while ( (busno = bs256_iter_next(iter)) >= 0) {
+      Error_Info * err = simple_rw_test(busno);
+      if (err) {
+         if (!err_accumulator)
+            err_accumulator = g_ptr_array_new_with_free_func((void*)errinfo_free);
+         g_ptr_array_add(err_accumulator,err);
+      }
+   }
+   bs256_iter_free(iter);
+
+#ifdef ALT
+   Byte_Value_Array bva =
+   i2c_get_device_numbers_using_udev(/*include_ignorable_devices*/ false);
+   for (int ndx=0; ndx<bva_length(bva); ndx++) {
+      int busno = bva_get(bva, ndx);
+      Error_Info * err = simple_rw_test(busno);
+      if (err) {
+         if (!err_accumulator)
+            err_accumulator = g_ptr_array_new_with_free_func((void*)errinfo_free);
+         g_ptr_array_add(err_accumulator,err);
+      }
+   }
+   bva_free(bva);
+#endif
+
+   Error_Info * final_result = NULL;
+   if (err_accumulator) {
+      final_result = errinfo_new_with_causes_gptr(DDCRC_INVALID_OPERATION, err_accumulator, __func__,
+            "Display change detection requires RW access to all I2C buses that might be used for DDC.");
+      g_ptr_array_free(err_accumulator, true);
+   }
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, final_result, "");
+   return final_result;
+}
+
+
 /** Checks that all EDIDS for Display_Refs of type I2C are actually
- *  readable using I2C. There are some, e.g. for DisplayLink devices
- *  for which the EDID can be read only from /sys.
+ *  readable using I2C. There are some cases, e.g. DisplayLink devices,
+ *  where the EDID can be read only from /sys.
  *
  * @return true/false
  */
 bool all_edids_readable_using_i2c() {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    bool result = true;
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
@@ -218,7 +292,7 @@ bool all_edids_readable_using_i2c() {
       }
    }
 
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_CONN,result, "");
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -246,6 +320,16 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
    if (!enable_watch_displays) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Watching for display changes disabled");
+      goto bye;
+   }
+
+   err = all_relevant_i2c_buses_rw();
+   if (err) {
+      syslog(LOG_ERR, "%s", err->detail);
+      for (int ndx = 0; ndx < err->cause_ct; ndx++) {
+         Error_Info * cause = err->causes[ndx];
+         syslog(LOG_ERR, "   %s", cause->detail);
+      }
       goto bye;
    }
 
@@ -544,6 +628,8 @@ DDCA_Status dw_set_display_watch_settings(DDCA_DW_Settings * settings) {
 
 
 void init_dw_main() {
+   RTTI_ADD_FUNC(all_edids_readable_using_i2c);
+   RTTI_ADD_FUNC(all_relevant_i2c_buses_rw);
    RTTI_ADD_FUNC(dw_get_active_watch_classes);
    RTTI_ADD_FUNC(dw_redetect_displays);
    RTTI_ADD_FUNC(dw_start_watch_displays);
@@ -551,6 +637,6 @@ void init_dw_main() {
    RTTI_ADD_FUNC(is_watch_mode_udev_available);
    RTTI_ADD_FUNC(is_watch_mode_x11_available);
    RTTI_ADD_FUNC(resolve_watch_mode);
-   RTTI_ADD_FUNC(all_edids_readable_using_i2c);
+   RTTI_ADD_FUNC(simple_rw_test);
 }
 
