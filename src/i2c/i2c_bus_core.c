@@ -429,6 +429,9 @@ i2c_open_bus(
  */
 Status_Errno
 i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, fd=%d, callopts=0x%02x", busno, fd, callopts);
+
    int rc;
    Status_Errno result = 0;
    RECORD_IO_EVENT(fd, IE_CLOSE, ( rc = close(fd) ) );
@@ -446,6 +449,8 @@ i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
             filename_for_fd_t(fd), linux_errno_desc(errsv));
       // assert(rc == 0);     // don't bother with recovery for now
    }
+
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
 
@@ -2454,6 +2459,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_check_edid_exists_by_dh);
    RTTI_ADD_FUNC(i2c_check_open_bus_alive);
    RTTI_ADD_FUNC(i2c_close_bus);
+   RTTI_ADD_FUNC(i2c_close_bus_basic);
    RTTI_ADD_FUNC(i2c_detect_attached_buses);
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_buses0);
