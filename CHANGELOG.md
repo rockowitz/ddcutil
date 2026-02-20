@@ -1,20 +1,50 @@
-## [2.2.5] 2026-01-26 
+## [2.2.6] 2025-02-20
 
-Release 2.2.5 replaces release 2.2.4 which failed to build on aarch64.
+Release 2.2.6 replaces release 2.2.5, which was reported to hang KDE Plasma
+at login.
+
+#### Changed 
+
+- Ignore laptop displays when processing display connection and disconneciton.
+- Add "AMDGPU DM i2c OEM bus" to list of names of I2C buses to be 
+  ignored. Theses buses are used to control display controller 
+  features like RGB lighting.  
+- Use up to date macros in Autotools configuration file configure.ac: 
+  AC_SYSTEM_EXTENSIONS, AC_PROG_CC conditionally replaces AC_PROG_C99.
+- Eliminate use in libddcutil of linux api function **access()** to check
+  if the user has RW access to a /dev/i2c device. Bug reports suggest this
+  function may not always respect UDEV token UACCESS.
 
 #### Fixed
-- Compilation failure in function xvrpt_vstring() when building on aarch64. 
-  Issue $574.
+
+- **ddca_start_watch_displays()**: Fail with status DDCRC_INVALID_OPERATION
+  if I2C buses exist that need to be checked for DDC connectivity but
+  for which the logged on user lacks R/W permission. Addresses issue #581
+  (KDE Plasma freeze due to excessive permission checks)
+- Changes for glib 2.43, which is stricter about preserving const-ness of 
+  function string arguments. 
+- Command **traceable-functions** failed if a non-traceable function was 
+  specified on the command line or in the ddcutil configuration file.
+
+## [2.2.5] 2026-01-26 
+
+Release 2.2.5 replaces release 2.2.4, which failed to build on aarch64.
 
 #### Changed
 
 - **ddca_start_watch_displays()**: issue warning if displays exist for which 
   the EDID is readable using sysfs but not I2C.
 - API functions that write a feature value (**ddca_set_non_table_vcp_value()** etc.) 
-  return DDCRC_DISCONNECTED if called before libddcutil has been notified by UDEV 
-  that the display has been removed.
-- ddca_report_display_info(), ddca_report_display_info2(): do not include the
+  return DDCRC_DISCONNECTED if called before libddcutil has been notified by 
+  UDEV that the display has been removed.
+- **ddca_report_display_info()**, **ddca_report_display_info2()**: do not include the
   display number in the report as this is meaningless for shared library clients.
+
+#### Fixed
+
+- Compilation failure in function xvrpt_vstring() when building on aarch64. 
+  Issue $574.
+
 
 ## [2.2.4] 2026-01-21
 
