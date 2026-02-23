@@ -568,7 +568,6 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (is_arm)
       primitive_sysfs = true;
 
-
    all_video_adapters_implement_drm = false;
    uint64_t t0;
    uint64_t t1;
