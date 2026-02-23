@@ -295,7 +295,7 @@ void unquiesce_api();
 
 
 /** For functions that return a DDCA_Status.  This variant reports the status code
- *  being returned, but leaves it to the caller to actually execute the return;
+ *  being returned, but leaves it to the caller to actually execute the return,
  */
 #define API_EPILOG_BEFORE_RETURN(_debug_flag, _respect_quiesced, _rc, _format, ...) \
    do { \
@@ -325,16 +325,6 @@ void unquiesce_api();
         pop_traced_function(__func__); \
    } while(0)
 
-#define API_EPILOG_NO_RETURN_BASIC(_debug_flag, _format, ...) \
-   do { \
-        dbgtrc( \
-          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \
-          __func__, __LINE__, __FILE__, _format, ##__VA_ARGS__); \
-        if (trace_api_call_depth > 0) \
-           trace_api_call_depth--; \
-        if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
-        pop_traced_function(__func__); \
-   } while(0)
 
 #ifdef UNUSED
 #define API_EPILOGX(_debug_flag, _trace_groups, _rc, _format, ...) \
