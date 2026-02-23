@@ -497,7 +497,7 @@ ddca_report_parsed_capabilities(
 
    ddci_report_parsed_capabilities_by_dref(p_caps, NULL, depth);
 
-   API_EPILOG_NO_RETURN_BASIC(debug, "");
+   API_EPILOG_NO_RETURN(debug, false, "");
 }
 
 
