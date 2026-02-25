@@ -1164,9 +1164,10 @@ main(int argc, char *argv[]) {
          main_rc = EXIT_FAILURE;
       }
       else {
-         add_traced_function("dw_emit_display_status_record");
-         add_traced_function("dw_add_display_by_businfo");
-         add_traced_function("dw_remove_display_by_businfo");
+         // DBGMSG("Explicitly adding traceable functions...");
+         // add_traced_function("dw_emit_display_status_record");
+         // add_traced_function("dw_add_display_by_businfo");
+         // add_traced_function("dw_remove_display_by_businfo");
          // Catch CTRL-C to terminate watch thread, then exit:
          signal(SIGINT, interrupt_handler);
          publish_all_display_refs = true;
