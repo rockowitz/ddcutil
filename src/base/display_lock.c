@@ -537,18 +537,44 @@ void unlock_all_distinct_displays() {
 void
 dbgrpt_display_locks(int depth) {
    rpt_vstring(depth, "display_descriptors@%p", lock_records);
+
    g_mutex_lock(&descriptors_mutex);
-   int d1 = depth+1;
-   rpt_label(depth,"index  lock-record-ptr  dpath                         display_mutex_thread");
-   for (int ndx=0; ndx < lock_records->len; ndx++) {
-      Display_Lock_Record * cur = g_ptr_array_index(lock_records, ndx);
-      rpt_vstring(d1, "%2d - %p  %-28s  thread ptr=%p, thread id=%jd",
-                       ndx, cur,
-                       dpath_repr_t(&cur->io_path),
-                       (void*) &cur->display_mutex_thread, cur->linux_thread_id );
+   if (lock_records) {    // should always be true but just in case
+      int d1 = depth+1;
+      rpt_label(depth,"index  lock-record-ptr  dpath                         display_mutex_thread");
+      for (int ndx=0; ndx < lock_records->len; ndx++) {
+         Display_Lock_Record * cur = g_ptr_array_index(lock_records, ndx);
+         rpt_vstring(d1, "%2d - %p  %-28s  thread ptr=%p, thread id=%jd",
+                          ndx, cur,
+                          dpath_repr_t(&cur->io_path),
+                          (void*) &cur->display_mutex_thread, cur->linux_thread_id );
+      }
    }
    g_mutex_unlock(&descriptors_mutex);
 }
+
+
+/** Deletes the display lock table and creates a new one
+ */
+void
+reset_display_locks_table() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "lock_records=%p", lock_records);
+
+   if (IS_DBGTRC(debug, TRACE_GROUP))
+      dbgrpt_display_locks(1);
+
+   g_mutex_lock(&descriptors_mutex);
+   if (lock_records) {
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "Deleting lock record table with %d display lock records", lock_records->len);
+      g_ptr_array_free(lock_records, true);
+   }
+   lock_records = g_ptr_array_new_with_free_func(g_free);
+   g_mutex_unlock(&descriptors_mutex);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
 
 
 int unlock_all_displays_for_current_thread() {
@@ -600,22 +626,20 @@ init_i2c_display_lock(void) {
    lock_records= g_ptr_array_new_with_free_func(g_free);
 
    RTTI_ADD_FUNC(get_display_lock_record_by_dpath);
+   RTTI_ADD_FUNC(lock_display_by_dpath);
    RTTI_ADD_FUNC(lock_display);
+   RTTI_ADD_FUNC(reset_display_locks_table);
+   RTTI_ADD_FUNC(unlock_all_displays_for_current_thread);
+   RTTI_ADD_FUNC(unlock_display_by_dpath);
+   RTTI_ADD_FUNC(unlock_display);
+   
 #ifdef UNUSED
    RTTI_ADD_FUNC(lock_display2);
    RTTI_ADD_FUNC(unlock_display2);
-#endif
-   RTTI_ADD_FUNC(lock_display_by_dpath);
-   RTTI_ADD_FUNC(unlock_display);
-   RTTI_ADD_FUNC(unlock_display_by_dpath);
-#ifdef UNUSED
    RTTI_ADD_FUNC(get_display_lock_record_by_dref);
    RTTI_ADD_FUNC(lock_display_by_dref);
    RTTI_ADD_FUNC(unlock_display_by_dref);
 #endif
-
-   RTTI_ADD_FUNC(unlock_all_displays_for_current_thread);
-
 }
 
 
