@@ -669,6 +669,7 @@ ddc_discard_detected_displays() {
          display_open_errors = NULL;
       }
    }
+   reset_display_locks_table();
    // free_sys_drm_connectors();
    i2c_discard_buses();
    DBGTRC_DONE(debug, TRACE_GROUP, "");
