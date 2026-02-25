@@ -1835,6 +1835,7 @@ bool is_ignored_mmk(Monitor_Model_Key mmk) {
 
 
 void init_displays() {
+   RTTI_ADD_FUNC(next_dref_id);
    RTTI_ADD_FUNC(copy_display_ref);
    RTTI_ADD_FUNC(create_base_display_handle);
    RTTI_ADD_FUNC(create_base_display_ref);
