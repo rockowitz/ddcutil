@@ -258,7 +258,7 @@ bool all_edids_readable_using_i2c() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
-   bool result = true;
+   bool result = false;
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
       if (dref->io_path.io_mode != DDCA_IO_I2C) {
