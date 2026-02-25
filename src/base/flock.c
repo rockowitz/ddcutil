@@ -1,6 +1,6 @@
 /** @file flock.c */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -139,7 +139,7 @@ static bool simple_ioctl_read_edid_by_fd(
       bool write_before_read,
       int  depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, filename=%s, read_size=%d, write_before_read=%s",
                  fd, filename_for_fd_t(fd), read_size, sbool(write_before_read));
    assert(read_size == 128 || read_size == 256);
