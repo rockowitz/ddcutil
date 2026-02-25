@@ -163,7 +163,7 @@ bool add_traced_function(const char * funcname) {
    bool result = false;
    bool missing = false;
    if (rtti_get_func_addr_by_name(funcname)) {  // if it's a traceable function
-      DBGF(debug, "%s is a tracable function", funcname);
+      DBGF(debug, "Function \"%s\" is registered as traceable", funcname);
       if (!traced_function_table)
          traced_function_table = g_ptr_array_new();
       // n. g_ptr_array_find_with_equal_func() requires glib 2.54
@@ -381,6 +381,15 @@ static char * get_traced_files_as_joined_string() {
  */
 bool is_traced_function(const char * funcname) {
    bool debug = false;
+   if (streq(funcname, "dw_add_display_by_businfo"))
+      debug = true;
+
+   if (debug) {
+      DBG("traced_function_name_table:");
+      for (int ndx = 0; ndx < traced_function_table->len; ndx++) {
+         DBG("   %s", g_ptr_array_index(traced_function_table, ndx));
+      }
+   }
 
    bool result = (traced_function_table &&
                   gaux_string_ptr_array_find(traced_function_table, funcname) >= 0);
