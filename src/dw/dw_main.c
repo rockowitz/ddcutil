@@ -258,37 +258,13 @@ bool all_edids_readable_using_i2c() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
-   bool result = false;
-   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
-      Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
-      if (dref->io_path.io_mode != DDCA_IO_I2C) {
-         result = false;
-         break;
-      }
-      I2C_Bus_Info * businfo =  dref->detail;
-      if ( (businfo->flags&I2C_BUS_SYSFS_EDID) && !(businfo->flags&I2C_BUS_LAPTOP)) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                                "Attempting to read EDID on /dev/i2c-%d", businfo->busno);
-         int fd;
-         Error_Info * err = i2c_open_bus_basic_by_busno(businfo->busno, CALLOPT_NONE, &fd);
-         if (err) {
-            syslog(LOG_WARNING, "Error opening /dev/i2c-%d: %s",
-                                businfo->busno, errinfo_summary(err));
-            // errinfo_report_to_syslog(LOG_WARNING, err, 1);
-            ERRINFO_FREE_WITH_REPORT(err, true);
-            result = false;
-         }
-         else {
-            Buffer * edidbuf = buffer_new(256,  "");
-            Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf);
-            if (rc != 0) {
-               syslog(LOG_WARNING, "Error reading EDID from /dev/i2c-%d: %s",
-                                   businfo->busno, psc_desc(rc));
-               result = false;
-            }
-            buffer_free(edidbuf, "");
-            i2c_close_bus_basic(businfo->busno, fd, CALLOPT_ERR_MSG);
-         }
+   bool result = true;
+   Error_Info * errs = all_relevant_i2c_buses_rw();
+   if (errs) {
+      result = false;
+      syslog(LOG_WARNING, "%s", errs->detail);
+      for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
+         syslog(LOG_WARNING, "   %s", errs->causes[ndx]->detail);
       }
    }
 
