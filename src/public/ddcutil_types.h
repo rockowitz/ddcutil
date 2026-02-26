@@ -228,7 +228,7 @@ typedef void * DDCA_Display_Ref;
  * calling #ddca_open_display2().
  *
  * For I2C and USB connected displays, an operating system open is performed by
- * # ddca_open_display2().  #DDCA_Display_Handle then contains the file handle
+ * #ddca_open_display2().  #DDCA_Display_Handle then contains the file handle
  * returned by the operating system.
  *
  * @ingroup api_display_spec
