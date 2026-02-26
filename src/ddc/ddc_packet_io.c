@@ -996,6 +996,8 @@ ddc_write_read_with_retry(
          if ((psc == -EIO || psc == -ENXIO) && execution_mode == MODE_LIBDDCUTIL) {
             Error_Info * err = i2c_check_open_bus_alive(dh);
             if (err) {
+               if (err->status_code == DDCRC_DISCONNECTED)
+                  dh->dref->disconnected = true;
                master_error = err;
                goto bye;
             }
