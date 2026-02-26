@@ -536,7 +536,11 @@ void unlock_all_distinct_displays() {
  */
 void
 dbgrpt_display_locks(int depth) {
-   rpt_vstring(depth, "display_descriptors@%p", lock_records);
+   bool saved_reports_to_syslog = redirect_reports_to_syslog;
+   syslog(LOG_DEBUG, "redirect_reports_to_syslog=%s", sbool(redirect_reports_to_syslog));
+   redirect_reports_to_syslog = true;
+
+   rpt_vstring(depth, "lock_records@%p", lock_records);
 
    g_mutex_lock(&descriptors_mutex);
    if (lock_records) {    // should always be true but just in case
@@ -551,6 +555,8 @@ dbgrpt_display_locks(int depth) {
       }
    }
    g_mutex_unlock(&descriptors_mutex);
+
+   redirect_reports_to_syslog = saved_reports_to_syslog;
 }
 
 
