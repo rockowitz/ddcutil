@@ -168,8 +168,10 @@ do { \
    if (!msg_to_syslog_only) { \
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, _format, ##__VA_ARGS__); \
       if (IS_DBGTRC(debug, DDCA_TRC_NONE)) { \
-         show_backtrace(0);          \
-         dbgrpt_current_traced_function_stack(false, true, 0); \
+         if (traced_function_stack_enabled) \
+            dbgrpt_current_traced_function_stack(false, true, 0); \
+         else \
+            show_backtrace(0);          \
       } \
    } \
    if (test_emit_syslog(_ddcutil_severity)) { \
@@ -178,8 +180,10 @@ do { \
          char * body = g_strdup_printf(_format, ##__VA_ARGS__); \
          syslog(syslog_priority, PRItid" %s%s", (intmax_t) tid(), body, (tag_output) ? " (R)" : "" ); \
          free(body); \
-         backtrace_to_syslog(syslog_priority, 2); \
-         current_traced_function_stack_to_syslog(syslog_priority, false); \
+         if (traced_function_stack_enabled) \
+            current_traced_function_stack_to_syslog(syslog_priority, true); \
+         else \
+            backtrace_to_syslog(syslog_priority, 2); \
       } \
    } \
 } while(0)
