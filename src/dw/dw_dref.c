@@ -118,7 +118,7 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
          if (err) {
             DBGMSG("ddc_initial_checks_by_dref() returned error:");
             if (err->cause_ct > 0) {
-               SYSLOG2(DDCA_SYSLOG_ERROR:, "ddc_initial_checks_by_dref() returned %s", errinfo_summary(err));
+               SYSLOG2(DDCA_SYSLOG_ERROR, "ddc_initial_checks_by_dref() returned %s", errinfo_summary(err));
             }
             else {
                SYSLOG2(DDCA_SYSLOG_ERROR, "ddc_initial_checks_by_dref() returned %s",psc_desc(err->status_code));
