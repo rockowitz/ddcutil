@@ -634,6 +634,7 @@ ddc_ensure_displays_detected() {
  *  - The list of errors in #display_open_errors is discarded
  *  - The list of detected I2C buses is discarded
  *  - The USB monitor list is discarded
+ *  - The display locks table is
  *  - The list of display references recognized by the API is discarded.
  */
 void
@@ -674,7 +675,6 @@ ddc_discard_detected_displays() {
    i2c_discard_buses();
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
-
 
 
 #ifdef UNUSED
