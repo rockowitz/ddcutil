@@ -295,11 +295,14 @@ ddc_open_display(
             dref_repr_t(dref));
       goto bye;
    }
-   if (!dref->detail) {
+
+   // make copy here because dref->detail can for some reason become NULL after this point
+   void * dref_detail = dref->detail;   // ignore possibility of USB detail
+   if (dref_detail) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s",
             dref_repr_t(dref));
       // show_backtrace(1);
-      backtrace_to_syslog(LOG_ERR, 1);
+      // backtrace_to_syslog(LOG_ERR, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
       // dref->flags |= DREF_DISCONNECTED;
       dref->disconnected = true;
@@ -357,7 +360,7 @@ ddc_open_display(
 
    case DDCA_IO_I2C:
       {
-         I2C_Bus_Info * businfo = dref->detail;
+         I2C_Bus_Info * businfo = dref_detail;
 
          // Issue #556, powerdevil bug report, says that businfo == NULL,
          // which is logically impossible at this point.
@@ -398,7 +401,6 @@ ddc_open_display(
             goto bye;
 #endif
          }
-
 
          if (!businfo->edid) {
             // How is this even possible?
