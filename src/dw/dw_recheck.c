@@ -103,7 +103,7 @@ typedef struct {
 #endif
 
 
-/** Function that executes in the recheck thread thread to check if a DDC
+/** Function that executes in the recheck thread thread to check if DDC
  *  communication has become enabled for newly added display refs for which
  *  DDC communication was not initially detected as working.
  *
@@ -169,6 +169,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
          break;
       }
 
+       // check if thread should terminate because watch thread terminated
       if (cur_time_nanos > rqe->initial_ts_nanos + MILLIS2NANOS(max_sleep_time_millis)) {
          emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
                "ddc did not become enabled for %s after %d milliseconds",
@@ -176,6 +177,9 @@ gpointer dw_recheck_displays_func(gpointer data) {
          dw_free_recheck_queue_entry(rqe);
          continue;
       }
+
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());
+      g_mutex_lock(&master_dw_mutex);
 
       Display_Ref * dref = rqe->dref;
       // DBGMSG("   rechecking %s", dref_repr_t(dref));
@@ -225,6 +229,9 @@ gpointer dw_recheck_displays_func(gpointer data) {
          }
          ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, DDCA_TRC_NONE) ||  is_report_ddc_errors_enabled() );
       }
+
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
+      g_mutex_unlock(&master_dw_mutex);
    }
 
    if (terminate_watch_thread) {

@@ -75,6 +75,7 @@ uint16_t  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 
 bool      terminate_watch_thread         = false;
 bool      terminate_using_x11_event      = false;
+GMutex    master_dw_mutex                = G_MUTEX_INIT;
 
 
 uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {

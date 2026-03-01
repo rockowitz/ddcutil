@@ -320,6 +320,9 @@ gpointer dw_watch_display_connections(gpointer data) {
       }
 #endif
 
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());
+      g_mutex_lock(&master_dw_mutex);
+
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "locking process_event_mutex");
       g_mutex_lock(&process_event_mutex);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Processing screen change event");
@@ -344,6 +347,9 @@ gpointer dw_watch_display_connections(gpointer data) {
       }
       g_mutex_unlock(&process_event_mutex);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "unlocked process_event_mutex");
+
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
+      g_mutex_unlock(&master_dw_mutex);
    } // while()
 
    if (wdd->watch_mode == Watch_Mode_Udev) {
