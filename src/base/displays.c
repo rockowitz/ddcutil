@@ -719,11 +719,13 @@ void mark_display_ref_removed(Display_Ref* dref) {
    bool debug = false;
    debug = debug || debug_locks;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+#ifdef USE_TRCBACK_INSTEAD
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       // show_backtrace(2);
       // backtrace_to_syslog(LOG_NOTICE, 0);
       current_traced_function_stack_to_syslog(LOG_DEBUG, /*reverse*/ true);
    }
+#endif
    g_mutex_lock(&dref->disconnect_mutex);
    dref->disconnected = true;
    dref->detail = NULL;
