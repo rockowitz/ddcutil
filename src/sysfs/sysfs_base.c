@@ -1230,6 +1230,7 @@ char * sysfs_find_adapter(char * path) {
    return devpath;
 }
 
+
 #ifdef OLD
 char * sysfs_find_adapter_old(char * path) {
    bool debug = false;
@@ -1386,31 +1387,39 @@ get_i2c_device_sysfs_class(int busno) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
 
    uint32_t result = 0;
-   char device_path1[100];
-   char device_path2[100];
-   snprintf(device_path1, 100, "/sys/bus/i2c/devices/i2c-%d/device", busno);
-   snprintf(device_path2, 100, "/sys/bus/i2c/devices/i2c-%d/i2c-dev/i2c-%d/device", busno, busno);
+   int pathno = 0;
+   char* device_path[3];
+   device_path[0] =  g_strdup_printf("/sys/bus/i2c/devices/i2c-%d", busno);
+   device_path[1] =  g_strdup_printf("/sys/bus/i2c/devices/i2c-%d/device", busno);
+   device_path[2] =  g_strdup_printf("/sys/bus/i2c/devices/i2c-%d/i2c-dev/i2c-%d/device", busno, busno);
    
-   char * rpath = realpath(device_path1, NULL);
-   if (!rpath)
-      rpath = realpath(device_path2, NULL);
-   // DBGF(debug, "rpath=%s", rpath);
-   if (rpath) {
-      char * adapter_path = sysfs_find_adapter(rpath);
-      // DBGF(debug, "adapter_path=%s", adapter_path);
-      if (adapter_path)  {
-         char * s_class = read_sysfs_attr(adapter_path, "class", /*verbose*/ true);
-         if (s_class) {
-            // DBGF(debug, "Found %s/class", adapter_path);
-            str_to_int(s_class, (int*) &result, 16);   // if fails, &result unchanged
-            free(s_class);
+   for (pathno = 0; pathno < 3; pathno++) {
+      char * rpath = realpath(device_path[pathno], NULL);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "device_path=%s, rpath=%s", device_path[pathno], rpath);
+      if (rpath) {
+         char * adapter_path = sysfs_find_adapter(rpath);
+         // DBGF(debug, "adapter_path=%s", adapter_path);
+         if (adapter_path)  {
+            char * s_class = read_sysfs_attr(adapter_path, "class", /*verbose*/ true);
+            if (s_class) {
+               // DBGF(debug, "Found %s/class", adapter_path);
+               str_to_int(s_class, (int*) &result, 16);   // if fails, &result unchanged
+               free(s_class);
+            }
+            free(adapter_path);
          }
-         free(adapter_path);
+         free(rpath);
       }
-      free(rpath);
+      if (result)    // so pathno  is valid
+         break;
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning 0x%08x", busno, result);
+
+   free(device_path[0]);
+   free(device_path[1]);
+   free(device_path[2]);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, device_path=%d, Returning 0x%08x", busno, pathno, result);
    return result;
 }
 
@@ -1460,37 +1469,38 @@ sysfs_is_ignorable_i2c_device(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
 
-   bool ignorable = false;
-
    // It is possible for a display device to have an I2C bus
    // that should be ignored.  Recent AMD Navi board (e.g. RX 6000)
    // have an I2C SMU bus that will hang the card if probed.
    // So first check for specific device names to ignore.
    // If not found, then base the result on the device's class.
 
+   bool ignorable = false;
    char * name = get_i2c_device_sysfs_name(busno);
    char * driver = get_i2c_sysfs_driver_by_busno(busno);
-   if (name) {
-      ignorable = ignorable_i2c_device_sysfs_name(name, driver);
-      // DBGF(debug, "   busno=%d, name=|%s|, ignorable_i2c_sysfs_name() returned %s",
-      //                 busno, name, sbool(ignorable));
+   if (!streq(name,"DPMST")) {      // streq() handles NULL
+      if (name) {
+         ignorable = ignorable_i2c_device_sysfs_name(name, driver);
+         // DBGF(debug, "   busno=%d, name=|%s|, ignorable_i2c_sysfs_name() returned %s",
+         //                 busno, name, sbool(ignorable));
+      }
+
+      if (!ignorable) {
+         uint32_t class = get_i2c_device_sysfs_class(busno);
+         DBGF(debug, "get_i2c_device_sysfs_class(%d) returned 0x%08x ", busno, class);
+         if (class == 0)
+            ignorable = true;
+         else {
+            DBGF(debug, "   class = 0x%08x", class);
+            uint32_t cl2 = class & 0xffff0000;
+            DBGF(debug, "   cl2 = 0x%08x", cl2);
+            ignorable = (cl2 != 0x030000 &&
+                         cl2 != 0x0a0000);    // docking station
+         }
+      }
    }
    free(name);    // safe if NULL
    free(driver);  // ditto
-
-   if (!ignorable) {
-      uint32_t class = get_i2c_device_sysfs_class(busno);
-      DBGF(debug, "get_i2c_device_sysfs_class(%d) returned 0x%08x ", busno, class);
-      if (class == 0)
-         ignorable = true;
-      else {
-         DBGF(debug, "   class = 0x%08x", class);
-         uint32_t cl2 = class & 0xffff0000;
-         DBGF(debug, "   cl2 = 0x%08x", cl2);
-         ignorable = (cl2 != 0x030000 &&
-                      cl2 != 0x0a0000);    // docking station
-      }
-   }
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE,ignorable, "busno=%d", busno);
    return ignorable;
