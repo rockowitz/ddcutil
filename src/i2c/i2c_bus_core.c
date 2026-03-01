@@ -217,6 +217,22 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
       int errsv = -errno;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) failed. errno=%s", filename, psc_desc(errsv));
       err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s", filename, psc_desc(errsv));
+      if (err->status_code == EACCES) {
+         // converge with show_lsof() in flock.c
+         rpt_lsof(filename, 2);
+
+         GPtrArray* conflicts = rpt_lsof_collect(filename);
+         if (conflicts->len  > 0) {
+            syslog(LOG_ERR, "file %s also open by:", filename);
+            for (int ndx = 0; ndx < conflicts->len; ndx++) {
+               syslog(LOG_ERR, "   %s", (char*)g_ptr_array_index(conflicts, ndx));
+            }
+         }
+         else
+            syslog(LOG_NOTICE, "No open conflicts found for %s", filename);
+         g_ptr_array_free(conflicts, true);
+      }
+
    }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
