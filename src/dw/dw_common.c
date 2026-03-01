@@ -75,7 +75,7 @@ uint16_t  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 
 bool      terminate_watch_thread         = false;
 bool      terminate_using_x11_event      = false;
-GMutex    master_dw_mutex                = G_MUTEX_INIT;
+GMutex    master_dw_mutex;
 
 
 uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
@@ -619,4 +619,6 @@ void init_dw_common() {
    RTTI_ADD_FUNC(record_active_callback_thread);
    RTTI_ADD_FUNC(remove_active_callback_thread);
    RTTI_ADD_FUNC(active_callback_thread_ct);
+
+   g_mutex_init(&master_dw_mutex);
 }
