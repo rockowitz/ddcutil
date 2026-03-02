@@ -276,8 +276,8 @@ ddc_open_display(
    assert(dref);
    // static int ctr = 0;
    // ctr++;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, callopts=%s, dh_loc=%p",
-                      dref_reprx_t(dref), interpret_call_options_t(callopts), dh_loc);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, callopts=%s, dref->detail=%p, dh_loc=%p",
+                      dref_reprx_t(dref), interpret_call_options_t(callopts),dref->detail, dh_loc);
    TRACED_ASSERT(dh_loc);
    // TRACED_ASSERT(1==5);    // for testing
 
@@ -289,25 +289,30 @@ ddc_open_display(
    // if (ctr % 8 == 0)
    //    dref->detail = NULL;
    if (dref->disconnected) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to open disconnected display reference %s",
+      char * s = g_strdup_printf("Attempting to open disconnected display reference %s",
             dref_repr_t(dref));
-      err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Attempting to open disconnected display reference %s",
-            dref_repr_t(dref));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+      err = ERRINFO_NEW(DDCRC_DISCONNECTED, "%s", s);
+      free(s);
       goto bye;
    }
 
    // make copy here because dref->detail can for some reason become NULL after this point
    void * dref_detail = dref->detail;   // ignore possibility of USB detail
-   if (dref_detail) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s",
+   if (!dref_detail) {
+      char * s = g_strdup_printf( "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s",
             dref_repr_t(dref));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
+      SYSLOG2(DDCA_SYSLOG_ERROR,"%s", s);
       // show_backtrace(1);
       // backtrace_to_syslog(LOG_ERR, 1);
+      dbgrpt_current_traced_function_stack(true, true, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
       // dref->flags |= DREF_DISCONNECTED;
       dref->disconnected = true;
-      err = ERRINFO_NEW(DDCRC_DISCONNECTED,
-            "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s", dref_repr_t(dref));
+      err = ERRINFO_NEW(DDCRC_DISCONNECTED, "%s", s);
+      free(s);
       goto bye;
    }
 
