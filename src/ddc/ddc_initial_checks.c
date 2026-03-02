@@ -546,7 +546,8 @@ Error_Info *
 ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
    assert(dref);
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, newly_added=%s", dref_reprx_t(dref), sbool(newly_added));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, dref->detail=%p, newly_added=%s",
+         dref_reprx_t(dref), dref->detail, sbool(newly_added));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial dref->flags: %s", interpret_dref_flags_t(dref->flags));
 
    bool result = false;
@@ -579,7 +580,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
       result = true;
    }
    else {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Performing initial ddc checks");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Performing initial ddc checks, dref->detail=%p", dref->detail);
       // if (!(dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)) {
       Display_Handle * dh = NULL;
 
