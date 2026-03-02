@@ -381,15 +381,6 @@ static char * get_traced_files_as_joined_string() {
  */
 bool is_traced_function(const char * funcname) {
    bool debug = false;
-   if (streq(funcname, "dw_add_display_by_businfo"))
-      debug = true;
-
-   if (debug) {
-      DBG("traced_function_name_table:");
-      for (int ndx = 0; ndx < traced_function_table->len; ndx++) {
-         DBG("   %s", g_ptr_array_index(traced_function_table, ndx));
-      }
-   }
 
    bool result = (traced_function_table &&
                   gaux_string_ptr_array_find(traced_function_table, funcname) >= 0);
