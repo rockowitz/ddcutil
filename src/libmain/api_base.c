@@ -947,6 +947,8 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    API_PROLOGX(debug, RESPECT_QUIESCE, "enabled_classes=0x%02x=%s",
                       enabled_classes, dw_event_classes_repr_t(enabled_classes));
 
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting ddca_start_watch_displays()");
+
 #ifdef WATCH_DISPLAYS
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "all_video_adapters_implement_drm=%s",
          sbool(all_video_adapters_implement_drm));
@@ -998,12 +1000,15 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
 #endif
 
+   SYSLOG2(DDCA_SYSLOG_NOTICE,  "Done     ddca_start_watch_displays returning %s - %s", psc_name(ddcrc), psc_desc(ddcrc));
+
    API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, ddcrc, "");
 }
 
 
 DDCA_Status
 ddca_stop_watch_displays(bool wait) {
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting ddca_stop_watch_displays()");
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "wait=%s", SBOOL(wait));
 #ifdef WATCH_DISPLAYS
@@ -1012,6 +1017,7 @@ ddca_stop_watch_displays(bool wait) {
 #else
    DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
 #endif
+   SYSLOG2(DDCA_SYSLOG_NOTICE,  "Done     ddca_stop_watch_displays returning %s - %s", psc_name(ddcrc), psc_desc(ddcrc));
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
 }
 
