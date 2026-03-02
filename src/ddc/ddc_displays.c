@@ -391,6 +391,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    for (busndx=0; busndx < busct; busndx++) {
       DBGMSF(debug, "busndx = %d", busndx);
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busndx=%d, businfo=%p", busndx, businfo);
       // if (IS_DBGTRC(debug, DDCA_TRC_NONE))
       //    i2c_dbgrpt_bus_info(businfo, 2);
       if ( businfo->edid ) {
@@ -415,6 +416,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             dref->mmid  = mmk_new(dref->pedid->mfg_id,
                                                 dref->pedid->model_name,
                                                 dref->pedid->product_code);
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting dref->detail = %p in newly created dref", businfo);
             dref->detail = businfo;
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
             dref->flags |= DREF_DDC_IS_MONITOR;
@@ -440,7 +442,9 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
           }
 #endif
 
-         // dbgrpt_display_ref(dref,5);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Created %s", dref_repr_t(dref));
+         if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+            dbgrpt_display_ref(dref, /*include_businfo=*/ false, 5);
          g_ptr_array_add(display_list, dref);
       }
       else if ( !(businfo->flags & I2C_BUS_ACCESSIBLE) ) {
