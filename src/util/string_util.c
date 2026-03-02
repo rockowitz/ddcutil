@@ -3,7 +3,7 @@
  *  String utility functions
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -1150,16 +1150,16 @@ bool hhs_to_byte_in_buf(const char * s, Byte * result)
    if (strlen(s) != 2)
       ok = false;
    else {
-   char * endptr = NULL;
-   errno = 0;
-   long longtemp = strtol(s, &endptr, 16 );
-   int errsv = errno;
-   // printf("(%s) After strtol, longtemp=%ld  \n", __func__, longtemp );
-   // printf("errno=%d, s=|%s|, s=0x%02x &s=%p, longtemp = %ld, endptr=%p, *endptr=0x%02x\n",
-   //        errsv, s, s, &s, longtemp, endptr,*endptr);
-   // if (*endptr != '\0' || errsv != 0) {
-   if (endptr != s+2 || errsv != 0) {
-      ok = false;
+      char * endptr = NULL;
+      errno = 0;
+      long longtemp = strtol(s, &endptr, 16 );
+      int errsv = errno;
+      // printf("(%s) After strtol, longtemp=%ld  \n", __func__, longtemp );
+      // printf("errno=%d, s=|%s|, &s=%p, longtemp = %ld, endptr=%p, *endptr=0x%02x\n",
+      //        errsv, s, &s, longtemp, endptr,*endptr);
+      // if (*endptr != '\0' || errsv != 0) {
+      if (endptr != s+2 || errsv != 0) {
+         ok = false;
    }
    else
       *result = (Byte) longtemp;
@@ -1187,16 +1187,22 @@ bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result)
 {
    // printf("(%s) s = |%s|\n", __func__, s);
    char * suc = strdup_uc(s);
-   char * suc0 = suc;
    if (str_starts_with(suc, "0X"))
          suc = suc + 2;
    else if (*suc == 'X')
          suc = suc + 1;
    else if (str_ends_with(suc, "H"))
          *(suc+strlen(suc)-1) = '\0';
-   bool ok = hhs_to_byte_in_buf(suc, result);
-   free(suc0);
-   // printf("(%s) returning %d, *result=0x%02x\n", __func__, ok, *result);
+   bool ok = false;
+   char buf[3];
+   if (strlen(suc) == 2)
+      strcpy(buf,suc);
+   else if (strlen(suc) == 1) {
+      strcpy(buf,"00");
+      buf[1] = suc[0];
+   }
+   ok = hhs_to_byte_in_buf(buf, result);
+   // printf("(%s) returning %s, *result=0x%02x\n", __func__, SBOOL(ok), *result);
    return ok;
 }
 
