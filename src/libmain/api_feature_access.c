@@ -1268,6 +1268,8 @@ void init_api_feature_access() {
    // DBGMSG("Executing");
    RTTI_ADD_FUNC(ddca_get_non_table_vcp_value);
    RTTI_ADD_FUNC(ddca_set_non_table_vcp_value);
+   RTTI_ADD_FUNC(ddca_set_non_table_vcp_value2);
+   RTTI_ADD_FUNC(ddci_set_non_table_vcp_value_verify);
    RTTI_ADD_FUNC(ddci_set_single_vcp_value);
 }
 
