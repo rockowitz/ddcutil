@@ -576,7 +576,8 @@ reset_display_locks_table() {
 
    g_mutex_lock(&descriptors_mutex);
    if (lock_records) {
-      DBGTRC_NOPREFIX(true, TRACE_GROUP, "Deleting lock record table with %d display lock records", lock_records->len);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "Deleting lock record table with %d display lock records", lock_records->len);
       g_ptr_array_free(lock_records, true);
    }
    lock_records = g_ptr_array_new_with_free_func(g_free);
