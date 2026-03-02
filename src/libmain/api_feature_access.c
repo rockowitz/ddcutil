@@ -866,7 +866,7 @@ ddci_set_continuous_vcp_value_verify(
       DDCA_Any_Vcp_Value * verified_single_value;
       rc = ddci_set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
       if (verified_single_value)
-      *verified_value_loc = VALREC_CUR_VAL(verified_single_value);
+         *verified_value_loc = VALREC_CUR_VAL(verified_single_value);
    }
    else {
       rc = ddci_set_single_vcp_value(ddca_dh, &valrec, NULL);
@@ -998,6 +998,23 @@ ddca_set_non_table_vcp_value(
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddci_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
+   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
+   return ddcrc;
+}
+
+DDCA_Status
+ddca_set_non_table_vcp_value2(
+      DDCA_Display_Handle    ddca_dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      Byte                   hi_byte,
+      Byte                   lo_byte)
+{
+   bool debug = false;
+   free_thread_error_detail();
+   API_PROLOGX(debug, RESPECT_QUIESCE, "feature_code=0x%02x", feature_code);
+   bool saved_verification_enabled = ddc_set_verify_setvcp(false);
+   DDCA_Status ddcrc = ddci_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
+   ddc_set_verify_setvcp(saved_verification_enabled);
    API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
    return ddcrc;
 }

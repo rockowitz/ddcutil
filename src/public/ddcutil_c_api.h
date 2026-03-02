@@ -1674,7 +1674,13 @@ ddca_format_any_vcp_value_by_dref(
 // Set VCP value
 //
 
-/** Sets a non-table VCP value by specifying it's high and low bytes individually.
+/** Sets a non-table VCP value by specifying its high and low bytes individually.
+ *  If verification is enabled for the current thread, it read the feature
+ *  after writing it to check that the operation was successful
+ *
+ *  @deprecated
+ *  Use #ddca_set_non_table_vcp_value2() and optionally
+ *  #ddca_get_non_table_vcp_value() if verification is needed..
  *
  *  @param[in]   ddca_dh             display handle
  *  @param[in]   feature_code        feature code
@@ -1684,6 +1690,23 @@ ddca_format_any_vcp_value_by_dref(
  */
 DDCA_Status
 ddca_set_non_table_vcp_value(
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code,
+      uint8_t                  hi_byte,
+      uint8_t                  lo_byte
+     );
+
+/** Sets a non-table VCP value by specifying its high and low bytes individually.
+ *  Unlike #ddca_set_not_table_vcp_value(), the function never performs verification.
+ *
+ *  @param[in]   ddca_dh             display handle
+ *  @param[in]   feature_code        feature code
+ *  @param[in]   hi_byte             high byte of new value
+ *  @param[in]   lo_byte             low byte of new value
+ *  @return      status code
+ */
+DDCA_Status
+ddca_set_non_table_vcp_value2(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
       uint8_t                  hi_byte,
