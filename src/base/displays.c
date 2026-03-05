@@ -1499,7 +1499,7 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
    dh->fd = fd;
    dh->dref = dref;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
-      dh->repr = g_strdup_printf("Display_Handle[i2c-%d: fd=%d]",
+      dh->repr = g_strdup_printf("Display_Handle[i2c-%d]: fd=%d]",
                           dh->dref->io_path.path.i2c_busno, dh->fd);
       dh->repr_p = g_strdup_printf("Display_Handle[i2c-%d: fd=%d @%p]",
                           dh->dref->io_path.path.i2c_busno, dh->fd, (void*)dh);
