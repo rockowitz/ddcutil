@@ -1155,7 +1155,6 @@ ddca_get_display_refs(
    dref_ct = filtered_displays->len;
    g_ptr_array_free(filtered_displays, true);
 
-
    if (IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
       DBGMSG("          *drefs_loc=%p", drefs_loc);
       DDCA_Display_Ref * cur_ddca_dref = result_list;
