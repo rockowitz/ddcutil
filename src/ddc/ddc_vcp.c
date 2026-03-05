@@ -236,7 +236,8 @@ ddc_get_nontable_vcp_value(
            expected_response_type,
            expected_subtype,
            Write_Read_Flags_None,
-           &response_packet_ptr
+           &response_packet_ptr,
+           -1
         );
    ASSERT_IFF(excp, !response_packet_ptr);
    if ( IS_DBGTRC(debug, TRACE_GROUP)) {

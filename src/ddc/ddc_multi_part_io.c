@@ -4,7 +4,7 @@
  * Capabilities.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -92,7 +92,8 @@ try_multi_part_read(
            expected_response_type,
            expected_subtype,
            write_read_flags,
-           &response_packet_ptr
+           &response_packet_ptr,
+           -1
           );
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",

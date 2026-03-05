@@ -3,7 +3,7 @@
  *  Functions for performing DDC packet IO,  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_PACKET_IO_H_
@@ -71,7 +71,8 @@ Error_Info * ddc_write_read_with_retry(
       Byte             expected_response_type,
       Byte             expected_subtype,
       DDC_Write_Read_Flags flags,
-      DDC_Packet **    response_packet_ptr_loc
+      DDC_Packet **    response_packet_ptr_loc,
+      int              explic_max_tries
      );
 
 void init_ddc_packet_io();

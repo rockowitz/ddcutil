@@ -841,6 +841,7 @@ ddc_write_read(
  *  \param expected_subtype    expected subtype to check for
  *  \param all_zero_response_ok treat a response of all 0s as valid
  *  \param response_packet_ptr_loc  where to write address of response packet received
+ *  \param explicit_max_tries       if > 0, overrides the otherwise determined maximum tries
  *
  *  \return pointer to #Error_Info struct if failure, NULL if success
  */
@@ -852,7 +853,8 @@ ddc_write_read_with_retry(
          Byte             expected_response_type,
          Byte             expected_subtype,
          DDC_Write_Read_Flags flags,
-         DDC_Packet **    response_packet_ptr_loc
+         DDC_Packet **    response_packet_ptr_loc,
+         int              explicit_max_tries
         )
 {
    bool debug = false;
@@ -875,7 +877,8 @@ ddc_write_read_with_retry(
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
-   int  max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
+   int  max_tries = (explicit_max_tries > 0) ? explicit_max_tries
+                                             : try_data_get_maxtries2(WRITE_READ_TRIES_OP);
    int  ddcrc_null_response_max = 3;
    Error_Info * master_error = NULL;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"ddcrc_null_response_max=%d, read_bytewise=%s",
