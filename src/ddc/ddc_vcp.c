@@ -3,7 +3,7 @@
  *  Basic functions to get and set single values and save current settings.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -186,6 +186,7 @@ mock_get_nontable_vcp_value(
  *  @param  dh                   handle for open display
  *  @param  feature_code         VCP feature code
  *  @param  parsed_response_loc  where to return parsed response
+ *  @param  explicit_max_tries   if > 0, overrides the normal max tries determination
  *  @return NULL if success, pointer to #Error_Info if failure
  *
  * It is the responsibility of the caller to free the parsed response.
@@ -193,10 +194,11 @@ mock_get_nontable_vcp_value(
  * The value pointed to by parsed_response_loc is non-null iff the returned value is null.
  */
 Error_Info *
-ddc_get_nontable_vcp_value(
+ddc_get_nontable_vcp_value_full(
        Display_Handle *               dh,
        DDCA_Vcp_Feature_Code          feature_code,
-       Parsed_Nontable_Vcp_Response** parsed_response_loc)
+       Parsed_Nontable_Vcp_Response** parsed_response_loc,
+       int                            explicit_max_tries)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr(dh), feature_code);
@@ -319,6 +321,16 @@ ddc_get_nontable_vcp_value(
    DBGTRC_RET_ERRINFO2(debug, TRACE_GROUP, excp, *parsed_response_loc, "");
    ASSERT_IFF(!excp, *parsed_response_loc);
    return excp;
+}
+
+
+Error_Info *
+ddc_get_nontable_vcp_value(
+       Display_Handle *               dh,
+       DDCA_Vcp_Feature_Code          feature_code,
+       Parsed_Nontable_Vcp_Response** parsed_response_loc)
+{
+   return ddc_get_nontable_vcp_value_full(dh, feature_code, parsed_response_loc, -1);
 }
 
 

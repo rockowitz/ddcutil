@@ -3,7 +3,7 @@
  *  Basic functions to get and set single values and save current settings.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_VCP_H_
@@ -58,6 +58,13 @@ ddc_get_table_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       Buffer**                  table_bytes_loc);
+
+Error_Info *
+ddc_get_nontable_vcp_value_full(
+      Display_Handle *          dh,
+      Byte                      feature_code,
+      Parsed_Nontable_Vcp_Response** parsed_response_loc,
+      int                       max_tries);
 
 Error_Info *
 ddc_get_nontable_vcp_value(
