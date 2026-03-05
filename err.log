@@ -1,0 +1,68 @@
+
+ journalctl -t org_kde_powerdevil                                
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: Starting libddcutil. library built Not set at Not set. stdout_stderr_redirected=true
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: Initializing libddcutil.  ddcutil version: 2.2.3, shared library: /usr/lib64/libddcutil.so.5.4.0
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: library built Not set at Not set. stdout_stderr_redirected=true
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Options passed from client:
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Applying combined libddcutil options:
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: Library initialization complete.
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: Watching for DPMS state changes unimplemented
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Watching for DPMS state changes unimplemented
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Watching for display connection changes, resolved watch mode = Watch_Mode_Udev, poll lo>
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: [  2651]                                        extra_stabilization_millisec: 0,  stabilizatio>
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] libddcutil recheck thread 0x5613d3c8e350 started
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] libddcutil watch thread 0x5613d3c8e2f0 started
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: [  2870] (dw_recheck_displays_func) Recheck interval: Sleeping for 200 milliseconds
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: org.kde.powerdevil.chargethresholdhelper.getthreshold failed "Charge thresholds are not supporte>
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: Handle button events action could not check for screen configuration
+Mar 03 14:32:25 tracey-solus-aura org_kde_powerdevil[2651]: org.kde.powerdevil.chargethresholdhelper.getthreshold failed "Charge thresholds
+are not supporte>
+Mar 03 14:32:26 tracey-solus-aura org_kde_powerdevil[2651]: Failed to register with host portal QDBusError("org.freedesktop.portal.Error.Failed", "Could not>
+Mar 03 14:32:26 tracey-solus-aura org_kde_powerdevil[2651]: Failed to register with host portal QDBusError("org.freedesktop.portal.Error.Failed", "Could not>
+Mar 03 14:33:21 tracey-solus-aura org_kde_powerdevil[4760]: Starting libddcutil. library built Not set at Not set. stdout_stderr_redirected=true
+Mar 03 14:33:21 tracey-solus-aura org_kde_powerdevil[4760]: Initializing libddcutil.  ddcutil version: 2.2.3, shared library /usr/lib64/libddcutil.so.5.4.0
+Mar 03 14:33:21 tracey-solus-aura org_kde_powerdevil[4760]: library built Not set at Not set. stdout_stderr_redirected=true
+Mar 03 14:33:21 tracey-solus-aura org_kde_powerdevil[4760]: [  4760] Options passed from client:
+Mar 03 14:33:21 tracey-solus-aura org_kde_powerdevil[4760]: [  4760] Applying combined libddcutil options:
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: Library initialization complete.
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: Watching for DPMS state changes unimplemented
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: [  4760] Watching for DPMS state changes unimplemented
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: [  4760] Watching for display connection changes, resolved watch mode = Watch_Mode_Udev, poll lo>
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: [  4760]                             extra_stabilization_millisec: 0,  stabilizatio>
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: [  4760] libddcutil recheck thread 0x55bc05044160 started
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: [  4760] libddcutil watch thread 0x55bc0503d660 started
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: [  4926] (dw_recheck_displays_func) Recheck interval: Sleeping for 200 milliseconds
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: org.kde.powerdevil.chargethresholdhelper.getthreshold failed "Charge thresholds are not supporte>
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: Handle button events action could not check for screen configuration
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: org.kde.powerdevil.chargethresholdhelper.getthreshold failed "Charge threshold are not supporte>
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: Failed to register with host portal QDBusError("org.freedesktop.portal.Error.Failed", "Could not>
+Mar 03 14:33:22 tracey-solus-aura org_kde_powerdevil[4760]: Failed to register with host portal QDBusError("org.freedesktop.portal.Error.Failed", "Could not>
+Mar 03 14:43:44 tracey-solus-aura org_kde_powerdevil[2651]: [  2871] Udev event detected
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  2871] Adding connected display with bus 15
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  2871] Emitting DDCA_Display_Status_Event[680.362:  DDCA_EVENT_DISPLAY_CONNECTED, card0-DP-1, >
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  2871] Starting 1 callback threads
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  2871] libddcutil callback thread 0x7f3ee0001fe0 started
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  2871] Started 1 event callback thread(s)
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  6767] Invoking callback function 0x7f3f11b51040 for event DDCA_Display_Status_Event[680.362: >
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  6767] Callback function 0x7f3f11b51040 for event DDCA_Display_Status_Event[680.362:  DDCA_EVE>
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Quiescing libddcutil API...
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Quiesce libddcutil API complete
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Display redetection starting.
+Mar 03 14:43:45 tracey-solus-aura org_kde_powerdevil[2651]: [  2870] recheck thread terminating because watch thread terminated
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Watch thread terminated.
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: Error detecting VCP version using VCP feature xDF: Error_Info[DDCRC_RETRIES in ddc_write_read_wi>
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Error detecting VCP version using VCP feature xDF: Error_Info[DDCRC_RETRIES in ddc_writ>
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Watching for display connection changes, resolved watch mode = Watch_Mode_Udev, poll lo>
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: [  2651]               extra_stabilization_millisec: 0,  stabilizatio>
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] libddcutil recheck thread 0x5613d3d9c790 started
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: [  6768](dw_recheck_displays_func) Recheck interval: Sleeping for 200 milliseconds
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] libddcutil watch thread 0x5613d3d9c280 started
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Display redetection finished.
+Mar 03 14:43:46 tracey-solus-aura org_kde_powerdevil[2651]: [  2651] Unquiescing libddcutil API...
+Mar 03 15:30:28 tracey-solus-aura org_kde_powerdevil[2651]: org.kde.powerdevil.chargethresholdhelper.getthreshold failed "Charge threshold are not supporte>
+Mar 03 15:48:00 tracey-solus-aura org_kde_powerdevil[2651]: org.kde.powerdevil.chargethresholdhelper.getthreshold failed "Charge thresholds are not supporte>
+Mar 03 15:49:36 tracey-solus-aura org_kde_powerdevil[2651]: org.kde.powerdevil.chargethresholdhelper.getthreshold failed "Charge thresholds are not supporte>
+Mar 03 15:49:49 tracey-solus-aura org_kde_powerdevil[2651]: org.kde.powerdevil.chargethresholdhelper.getthreshold failed "Charge thresholds are not supporte>
+Mar 03 19:59:33 tracey-solus-aura org_kde_powerdevil[2651]: Lid action was suppressed because an external monitor is present
+lines 1-63/63 
+(END)

@@ -88,8 +88,8 @@ ddca_get_non_table_vcp_value(
 {
    bool debug = false;
    free_thread_error_detail();
-   API_PROLOGX(debug, true, "ddca_dh=%p, feature_code=0x%02x, valrec=%p",
-                               ddca_dh, feature_code, valrec );
+   API_PROLOGX(debug, true, "ddca_dh=%p:%s, feature_code=0x%02x, valrec=%p",
+                               ddca_dh, dh_repr( (Display_Handle*)ddca_dh ), feature_code, valrec );
    DDCA_Status psc = API_PRECOND_RVALUE(valrec);
    if (psc != 0)
       goto bye;
