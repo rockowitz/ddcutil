@@ -1284,7 +1284,7 @@ base_errinfo_free_with_report(
 }
 
 
-/** Determine if stdout and stderr are being redirected the system log,
+/** Determine if stdout and stderr are being redirected to the system log,
  *  e.g. if executing under KDE PowerDevil.
  *
  *  Sets global #stdout_stderr_redirected.
