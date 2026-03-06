@@ -4,7 +4,7 @@
  *  C API base functions.
  */
 
-// Copyright (C) 2015-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
