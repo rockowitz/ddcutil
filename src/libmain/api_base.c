@@ -766,8 +766,13 @@ ddci_init(const char *      libopts,
    if (s && strlen(s) > 0)
       debug = true;
 
-   DBGF(debug, "Starting. library built %s at %s, library_initialized=%s",
-               BUILD_DATE, BUILD_TIME, sbool(library_initialized));
+   char * s1 = g_strdup_printf("Starting. library built %s at %s, library_initialized=%s, libopts=|%s|",
+         BUILD_DATE, BUILD_TIME, sbool(library_initialized), libopts);
+   if (debug)
+      DBG("%s", s1);
+   else
+      syslog(LOG_NOTICE, "%s", s1);
+   free(s);
 
    if (infomsg_loc)
       *infomsg_loc = NULL;
@@ -911,10 +916,15 @@ ddci_init(const char *      libopts,
 
 bye:
    if (master_error) {
+      SIMPLE_SYSLOG(LOG_ERR, "Returning %s", psc_name(master_error->status_code));
+      errinfo_report_to_syslog(LOG_ERR, master_error, 2);
       ddcrc = master_error->status_code;
       DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
       save_thread_error_detail(public_error_detail);
       errinfo_free(master_error);
+   }
+   else {
+      SIMPLE_SYSLOG(LOG_NOTICE, "Done.  Returning 0");
    }
    DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
    return ddcrc;
@@ -1104,6 +1114,11 @@ ddca_report_error_detail(DDCA_Error_Detail * ddca_erec, int depth) {
 
 // DDCA_Error_Detail * ddca_dup_error_detail(DDCA_Error_Detail * original) {
 //     return dup_error_detail(original);
+// }
+
+// void ddci_error_detail_to_syslog() {
+//    int depth = 2;
+//    report_error_detail(get_thread_error_detail(), depth);
 // }
 
 
