@@ -9,7 +9,7 @@
  *  error is retained for use by higher levels in the call stack.
  */
 
-// Copyright (C) 2017-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -718,7 +718,7 @@ errinfo_array_summary(
  */
 char *
 errinfo_causes_string(Error_Info * erec) {
-   // bool debug = false;
+   bool debug = false;
 
    GString * gs = g_string_new(NULL);
 
@@ -752,7 +752,7 @@ errinfo_causes_string(Error_Info * erec) {
    char * result = gs->str;
    g_string_free(gs, false);
 
-   // DBGMSF(debug, "Done.  Returning: |%s|", result);
+   DBGF(debug, "Done.  Returning: |%s|", result);
    return result;
 
 #ifdef OLD
