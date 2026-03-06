@@ -839,6 +839,16 @@ ddc_set_vcp_value(
          }
       }
       else {
+         char * s = (is_rereadable_feature(dh, vrec->opcode))
+               ?  g_strdup_printf("Feature 0x%02x, value 0x%02x does not support verification",
+                        vrec->opcode,
+                        vrec->val.c_nc.sl)
+               : g_strdup_printf( "Feature 0x%02x does not support verification", vrec->opcode);
+
+         f0printf(verbose_msg_dest, "%s\n", s);
+         SIMPLE_DECORATED_SYSLOGF(true, LOG_WARNING, "%s", s);
+
+#ifdef OLD
          if (!is_rereadable_feature(dh, vrec->opcode) )
             f0printf(verbose_msg_dest, ""
                   "Feature 0x%02x does not support verification\n", vrec->opcode);
@@ -847,6 +857,7 @@ ddc_set_vcp_value(
                   "Feature 0x%02x, value 0x%02x does not support verification\n",
                   vrec->opcode,
                   vrec->val.c_nc.sl);
+#endif
       }
    }
 
@@ -897,6 +908,7 @@ ddc_set_verified_vcp_value_with_retry(
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Non-loop call of ddc_set_vcp_value");
       erec = ddc_set_vcp_value(dh, vrec, newval_loc);
    }
+
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, erec, "");
    return erec;
