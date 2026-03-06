@@ -692,10 +692,11 @@ do { \
       } \
 } while(0)
 
-// should get_msg_decoration be uncondotopma?
+#ifdef CONDITIONAL
+// should get_msg_decoration be unconditional?
 #define SIMPLE_DECORATED_SYSLOGF(_debug, _syslog_priority, format, ...) \
 do { \
-   if (_debug)) { \
+   if (_debug) { \
       char * body = g_strdup_printf(format, ##__VA_ARGS__); \
       char prefix[100] = {0}; \
       if (rpt_get_ornamentation_enabled() ) { \
@@ -705,7 +706,18 @@ do { \
       free(body); \
    } \
 } while(0)
+#endif
 
+#define SIMPLE_DECORATED_SYSLOGF(_debug, _syslog_priority, format, ...) \
+do { \
+   if (_debug) { \
+      char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+      char prefix[100] = {0}; \
+      get_msg_decoration(prefix, 100, true); \
+      syslog(_syslog_priority, "%s%s%s", prefix, body, (tag_output) ? " (N)" : ""  ); \
+      free(body); \
+   } \
+} while(0)
 
 
 /** Writes a message to the current ferr() or fout() device and, depending on
