@@ -230,6 +230,7 @@ bool remove_open_display_for_current_thread(Display_Handle * dh) {
 }
 
 
+#ifdef UNUSED
 bool in_ddci_open_display() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
@@ -248,8 +249,7 @@ bool in_ddci_open_display() {
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, found, "");
    return found;
 }
-
-
+#endif
 
 
 /** Opens a DDC display.
