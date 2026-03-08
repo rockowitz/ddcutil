@@ -1,69 +1,13 @@
-
-
-
-
-##587 race condition 
-mutex to separate  threads
- prevent simultaneous changes by watch and recheck threads
-    
-    add master_dw_mutex
-    
-    conjecture: recheck thread is trying to operate on Display_Ref
-    that watch thread removed imeediately after adding because of udev
-    events
-    
-    Attempt to address  issue #587: Assert failure in ddc_packet.io.c
-    - caused by incconsistent data structure
-
-
-
- 
-: add reset_display_locks_table()
-    
-    also:
-    - dbgrpt_display_locks(): guard agains lock_records == NULL
-    - documentation and formatting
-
-dw_start_watch_displays(): check that all relevant i2c buses are RW
-    
-    i.e. all i2c buses that could be used for DDC communiction
-    
-    returns Error_Info(DDCRC_INVALID_OPERATION) if not, causing
-    ddca_start_watch_displays() to return DDCRC_INVALID_OPERATION
-    
-    addresses issue #581 KDE Plasma freeze due to excessive i2c permission checks
-#### Added
-
-  - Added API function **ddca_get_non_table_vcp2()**. Unlike **ddca_get_non_table_vcp_value()**,
-  which is now deprecated, the new function never performs verification. 
-
-#### Changed 
-
-  - More extensive syslog trace messages. Needed to aid in remote debugging, 
-  particularly for KDE PowerDevil.
-
-- Allow VCP feature numbers to be specified as a single hex digit, e.g. "getvcp 2". 
- - Commands **getvcp**, **setvcp**: 
- 
-
-
-#### Fixed
-
-- It was possible that the video adapter for a /dev/i2c devices was not located. 
-  causing MST connected displays to not be detected. Fixes issue #585, "Displays
-  with I2C bus name DPMST not detected". (Fix based on diagnosis by Diego Nunes.) 
-
-
-
-
-
-lost permissions
-
-
-## [2.2.6] 2025-02-20
+## [2.2.6] 2025-03-08
 
 Release 2.2.6 replaces release 2.2.5, which was reported to hang KDE Plasma
 at login.
+
+#### Added
+
+- Added API function **ddca_get_non_table_vcp_value2()**. Unlike 
+  **ddca_get_non_table_vcp_value()**, which is now deprecated, the new function
+  never performs verification. 
 
 #### Changed 
 
@@ -76,17 +20,36 @@ at login.
 - Eliminate use in libddcutil of linux api function **access()** to check
   if the user has RW access to a /dev/i2c device. Bug reports suggest this
   function may not always respect UDEV token UACCESS.
+- More extensive syslog trace messages. Needed to aid in remote debugging, 
+  particularly for KDE PowerDevil.
+- Functions in the call tree from **ddca_set_non_table_vcp_value()** consistenty
+  return Error_Info structs instead of status codes to improve diagnostic 
+  messages written to the system log andinformation returned by 
+  **ddca_get_error_detail()**. 
+- Allow VCP feature numbers to be specified as a single hex digit, e.g. "getvcp 2". 
 
 #### Fixed
 
-- **ddca_start_watch_displays()**: Fail with status DDCRC_INVALID_OPERATION
-  if I2C buses exist that need to be checked for DDC connectivity but
-  for which the logged on user lacks R/W permission. Addresses issue #581
-  (KDE Plasma freeze due to excessive permission checks)
+- Issue #581 "ddcutil 2.2.5 causes KDE Plasma freeze due to excessive 
+  permission checkes".  For some undetermined reason, despite the logged on user
+  having RW access to /dev/i2c-devices, attempting to open devices sometimes 
+  fails with Linux error EACCES. Function **ddca_start_watch_displays()** now
+  checks if the logged on user has has RW access, and returns DDCRC_INVALID_OPERATION
+  if case of failure.  This avoids repeated permission failure during display 
+  change detection. Callers should check for this failure and not call 
+  **ddca_start_watch_displays()** again.
 - Changes for glib 2.43, which is stricter about preserving const-ness of 
   function string arguments. 
 - Command **traceable-functions** failed if a non-traceable function was 
   specified on the command line or in the ddcutil configuration file.
+- Issue #585, "Displays with I2C bus name DPMST not detected". It was possible
+  that the video adapter for a /dev/i2c devices was not located, causing MST
+  connected displays to not be detected.(Fix based on diagnosis by Diego Nunes.) 
+- Issue #587, "Assert failure in ddc_packet_io.c", due to an inconsistent
+  data structure in ddc_open_display(). The inconsistency was apparently caused 
+  by a race condition in display change detection. Added mutex. Also addresses 
+  issue #586.
+- Clear the display locks table during ddca_redetect_displays().  
 
 ## [2.2.5] 2026-01-26 
 
