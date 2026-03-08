@@ -1,3 +1,65 @@
+
+
+
+
+##587 race condition 
+mutex to separate  threads
+ prevent simultaneous changes by watch and recheck threads
+    
+    add master_dw_mutex
+    
+    conjecture: recheck thread is trying to operate on Display_Ref
+    that watch thread removed imeediately after adding because of udev
+    events
+    
+    Attempt to address  issue #587: Assert failure in ddc_packet.io.c
+    - caused by incconsistent data structure
+
+
+
+ 
+: add reset_display_locks_table()
+    
+    also:
+    - dbgrpt_display_locks(): guard agains lock_records == NULL
+    - documentation and formatting
+
+dw_start_watch_displays(): check that all relevant i2c buses are RW
+    
+    i.e. all i2c buses that could be used for DDC communiction
+    
+    returns Error_Info(DDCRC_INVALID_OPERATION) if not, causing
+    ddca_start_watch_displays() to return DDCRC_INVALID_OPERATION
+    
+    addresses issue #581 KDE Plasma freeze due to excessive i2c permission checks
+#### Added
+
+  - Added API function **ddca_get_non_table_vcp2()**. Unlike **ddca_get_non_table_vcp_value()**,
+  which is now deprecated, the new function never performs verification. 
+
+#### Changed 
+
+  - More extensive syslog trace messages. Needed to aid in remote debugging, 
+  particularly for KDE PowerDevil.
+
+- Allow VCP feature numbers to be specified as a single hex digit, e.g. "getvcp 2". 
+ - Commands **getvcp**, **setvcp**: 
+ 
+
+
+#### Fixed
+
+- It was possible that the video adapter for a /dev/i2c devices was not located. 
+  causing MST connected displays to not be detected. Fixes issue #585, "Displays
+  with I2C bus name DPMST not detected". (Fix based on diagnosis by Diego Nunes.) 
+
+
+
+
+
+lost permissions
+
+
 ## [2.2.6] 2025-02-20
 
 Release 2.2.6 replaces release 2.2.5, which was reported to hang KDE Plasma
