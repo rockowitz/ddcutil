@@ -1186,6 +1186,7 @@ bool hhs_to_byte_in_buf(const char * s, Byte * result)
 bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result)
 {
    // printf("(%s) s = |%s|\n", __func__, s);
+   bool ok = false;
    char * suc = strdup_uc(s);
    if (str_starts_with(suc, "0X"))
          suc = suc + 2;
@@ -1193,15 +1194,16 @@ bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result)
          suc = suc + 1;
    else if (str_ends_with(suc, "H"))
          *(suc+strlen(suc)-1) = '\0';
-   bool ok = false;
-   char buf[3];
-   if (strlen(suc) == 2)
-      strcpy(buf,suc);
-   else if (strlen(suc) == 1) {
-      strcpy(buf,"00");
-      buf[1] = suc[0];
+   if (strlen(suc) == 1 || strlen(suc) == 2) {
+      char buf[3];
+      if (strlen(suc) == 2)
+         strcpy(buf,suc);
+      else if (strlen(suc) == 1) {
+         strcpy(buf,"00");
+         buf[1] = suc[0];
+      }
+      ok = hhs_to_byte_in_buf(buf, result);
    }
-   ok = hhs_to_byte_in_buf(buf, result);
    // printf("(%s) returning %s, *result=0x%02x\n", __func__, SBOOL(ok), *result);
    return ok;
 }
