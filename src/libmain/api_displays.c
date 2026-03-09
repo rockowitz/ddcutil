@@ -151,7 +151,7 @@ DDCA_Status ddci_validate_ddca_display_ref2(
  *
  *  @param  ddca_dh  DDCA_Display_Handle
  *  @param  dh_loc   address at which to return the underlying Display_Handle.
- *  @return
+ *  @return status code
  */
 DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc) {
    if (dh_loc)
@@ -166,6 +166,23 @@ DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Ha
    return result;
 }
 
+
+/** Validates an opaque #DDCA_Display_Handle, returning the corresponding
+ *  #Display_Handle if successful.
+ *
+ *  @param  ddca_dh  DDCA_Display_Handle
+ *  @param  dh_loc   address at which to return the underlying Display_Handle.
+ *  @return Error_Info struct if unsuccessful
+ */
+Error_Info * validate_ddca_display_handle_erec(
+      DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc)
+{
+   Error_Info * erec = NULL;
+   DDCA_Status ddcrc = validate_ddca_display_handle(ddca_dh, dh_loc);
+   if (ddcrc != 0)
+      erec = ERRINFO_NEW(ddcrc, "");
+   return erec;
+}
 
 
 // forward declarations

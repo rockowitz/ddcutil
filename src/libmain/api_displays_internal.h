@@ -3,7 +3,7 @@
  *  For use only by other api_... files.
  */
 
-// Copyright (C) 2015-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 #ifndef API_DISPLAYS_INTERNAL_H_
@@ -20,7 +20,8 @@ DDCA_Status      ddci_validate_ddca_display_ref2(
       Dref_Validation_Options validation_options,
       Display_Ref**           dref_loc);
 
-DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc);
+DDCA_Status  validate_ddca_display_handle(     DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc);
+Error_Info * validate_ddca_display_handle_erec(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc);
 
 #define WITH_VALIDATED_DR4(_ddca_dref, _ddcrc, _validation_options, _action) \
    do { \
@@ -51,6 +52,18 @@ DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Ha
          (action); \
       } \
    } while(0);
+
+#define WITH_VALIDATED_DH3_EREC(ddca_dh, _erec, action) \
+   do { \
+      assert(library_initialized); \
+      free_thread_error_detail(); \
+      Display_Handle * dh = NULL; \
+      _erec = validate_ddca_display_handle_erec(ddca_dh, &dh ); \
+      if (!_erec)  { \
+         (action); \
+      } \
+   } while(0);
+
 
 const char *
 ddci_dh_repr(DDCA_Display_Handle ddca_dh);
