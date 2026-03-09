@@ -216,8 +216,13 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    if (*fd_loc < 0) {
       int errsv = -errno;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) failed. errno=%s", filename, psc_desc(errsv));
-      err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s", filename, psc_desc(errsv));
+      err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s in file %s near line %d",
+            filename, psc_desc(errsv), __FILE__, __LINE__);
       if (err->status_code == EACCES) {
+         // syslog(LOG_ERR, "%s", err->detail);
+         // TMI:
+         // current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
+
          // converge with show_lsof() in flock.c
          rpt_lsof(filename, 2);
 
@@ -232,7 +237,6 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
             syslog(LOG_NOTICE, "No open conflicts found for %s", filename);
          g_ptr_array_free(conflicts, true);
       }
-
    }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
