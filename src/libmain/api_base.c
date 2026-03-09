@@ -772,7 +772,7 @@ ddci_init(const char *      libopts,
       DBG("%s", s1);
    else
       syslog(LOG_NOTICE, "%s", s1);
-   free(s);
+   free(s1);
 
    if (infomsg_loc)
       *infomsg_loc = NULL;
