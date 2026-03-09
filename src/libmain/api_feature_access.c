@@ -1052,7 +1052,7 @@ ddca_set_non_table_vcp_value2(
  */
 // untested
 static
-DDCA_Status
+Error_Info *
 ddci_set_table_vcp_value_verify(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
@@ -1061,7 +1061,6 @@ ddci_set_table_vcp_value_verify(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "feature_code=0x%02x", feature_code);
-    DDCA_Status rc = 0;
     Error_Info * ddc_excp = NULL;
 
     DDCA_Any_Vcp_Value valrec;
@@ -1085,13 +1084,15 @@ ddci_set_table_vcp_value_verify(
        ddc_excp = ddci_set_single_vcp_value(ddca_dh, &valrec, NULL);
     }
 
+#ifdef NOT_HERE
     if (ddc_excp) {
        rc = ddc_excp->status_code;
        ERRINFO_FREE_WITH_REPORT(ddc_excp, true);
     }
+#endif
 
-    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, rc, "");
-    return rc;
+    DBGTRC_RET_ERRINFO(debug, DDCA_TRC_API, ddc_excp, "");
+    return ddc_excp;
 }
 
 DDCA_Status
@@ -1103,8 +1104,9 @@ ddca_set_table_vcp_value(
    bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "feature_code=0x%02x", feature_code);
-   DDCA_Status ddcrc = ddci_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
-   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
+   Error_Info * erec = ddci_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
+   DDCA_Status ddcrc = ERRINFO_STATUS(erec);
+   API_EPILOG_EREC_BEFORE_RETURN(debug, RESPECT_QUIESCE, erec, "");
    return ddcrc;
 }
 
