@@ -942,7 +942,7 @@ ddca_set_simple_nc_vcp_value(
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
 static
-DDCA_Status
+Error_Info *
 ddci_set_non_table_vcp_value_verify(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
@@ -994,10 +994,9 @@ ddci_set_non_table_vcp_value_verify(
              : strdup("");
    char * rc_expl = (rc == DDCRC_RETRIES) ? errinfo_summary(erec) : "";
 
-   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, rc, "%s %s", rc_expl, verified_values);
+   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_API, erec, "%s %s", rc_expl, verified_values);
    free(verified_values);
-   errinfo_free(erec);
-   return rc;
+   return erec;
 }
 
 DDCA_Status
@@ -1010,8 +1009,9 @@ ddca_set_non_table_vcp_value(
    bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "feature_code=0x%02x", feature_code);
-   DDCA_Status ddcrc = ddci_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
-   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
+   Error_Info * erec = ddci_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
+   DDCA_Status ddcrc = ERRINFO_STATUS(erec);
+   API_EPILOG_EREC_BEFORE_RETURN(debug, RESPECT_QUIESCE, erec, "");
    return ddcrc;
 }
 
@@ -1026,9 +1026,10 @@ ddca_set_non_table_vcp_value2(
    free_thread_error_detail();
    API_PROLOGX(debug, RESPECT_QUIESCE, "feature_code=0x%02x", feature_code);
    bool saved_verification_enabled = ddc_set_verify_setvcp(false);
-   DDCA_Status ddcrc = ddci_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
+   Error_Info * erec = ddci_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
    ddc_set_verify_setvcp(saved_verification_enabled);
-   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, ddcrc, "");
+   DDCA_Status ddcrc = ERRINFO_STATUS(erec);
+   API_EPILOG_EREC_BEFORE_RETURN(debug, RESPECT_QUIESCE, erec, "");
    return ddcrc;
 }
 
