@@ -186,37 +186,38 @@ bye:
 
 
 static
-DDCA_Status
+Error_Info *
 ddci_get_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_Vcp_Value_Type    call_type,   // why is this needed?   look it up from dh and feature_code
-      DDCA_Any_Vcp_Value **  pvalrec)
+      DDCA_Any_Vcp_Value **  pvalrec_loc)
 {
 
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API,
           "ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
-          ddca_dh, feature_code, call_type, pvalrec);
+          ddca_dh, feature_code, call_type, pvalrec_loc);
+   assert(pvalrec_loc);
 
    Error_Info * ddc_excp = NULL;
-   DDCA_Status psc = 0;
-   WITH_VALIDATED_DH3(ddca_dh, psc,
-         {
-               *pvalrec = NULL;
-               ddc_excp = ddc_get_vcp_value(dh, feature_code, call_type, pvalrec);
-               psc = (ddc_excp) ? ddc_excp->status_code : 0;
-               save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
-               errinfo_free(ddc_excp);
-               DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "*pvalrec=%p", *pvalrec);
-         }
+   // DDCA_Status psc = 0;
+   WITH_VALIDATED_DH3_EREC(ddca_dh, ddc_excp,
+      {
+         *pvalrec_loc = NULL;
+         ddc_excp = ddc_get_vcp_value(dh, feature_code, call_type, pvalrec_loc);
+         // psc = (ddc_excp) ? ddc_excp->status_code : 0;
+         // save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+         // errinfo_free(ddc_excp);
+
+      }
    );
-   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
-   return psc;
+   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_API, ddc_excp, "*pvalrec_loc=%p", *pvalrec_loc);
+   return ddc_excp;
 }
 
 
-static DDCA_Status
+static Error_Info *
 get_value_type(
       DDCA_Display_Handle         ddca_dh,
       DDCA_Vcp_Feature_Code       feature_code,
@@ -225,7 +226,7 @@ get_value_type(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "ddca_dh=%p, feature_code=0x%02x", ddca_dh, feature_code);
 
-   DDCA_Status ddcrc = DDCRC_NOT_FOUND;
+   Error_Info * erec = NULL;
    DDCA_MCCS_Version_Spec vspec     = get_vcp_version_by_dh(ddca_dh);
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (pentry) {
@@ -233,15 +234,17 @@ get_value_type(
       // Version_Feature_Flags flags = feature_info->internal_feature_flags;
       // n. will default to NON_TABLE_VCP_VALUE if not a known code
       *p_value_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
-      ddcrc = 0;
+   }
+   else {
+      erec = ERRINFO_NEW(DDCRC_NOT_FOUND, "Unable to determine value type for feature x%02x", feature_code);
    }
 
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, erec, "");
+   return erec;
 }
 
 
-STATIC DDCA_Status
+STATIC Error_Info *
 ddci_get_any_vcp_value_using_explicit_type(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
@@ -256,14 +259,14 @@ ddci_get_any_vcp_value_using_explicit_type(
    *valrec_loc = NULL;
 
    DDCA_Any_Vcp_Value * valrec2 = NULL;
-   DDCA_Status rc = ddci_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
-   if (rc == 0) {
+   Error_Info * erec = ddci_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
+   if (!erec) {
       *valrec_loc = valrec2;
    }
 
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP,  rc, "*valrec_loc=%p", *valrec_loc);
-   ASSERT_IFF(rc == 0, *valrec_loc);
-   return rc;
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP,  erec, "*valrec_loc=%p", *valrec_loc);
+   ASSERT_IFF(!erec, *valrec_loc);
+   return erec;
 }
 
 
@@ -281,9 +284,11 @@ ddca_get_any_vcp_value_using_explicit_type(
           "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, valrec_loc=%p",
           ddca_dh, feature_code, call_type, valrec_loc);
    assert(valrec_loc);
+
    *valrec_loc = NULL;
-   DDCA_Status ddcrc = ddci_get_any_vcp_value_using_explicit_type(
+   Error_Info * erec = ddci_get_any_vcp_value_using_explicit_type(
          ddca_dh, feature_code, call_type, valrec_loc);
+   DDCA_Status ddcrc = ERRINFO_STATUS(erec);
 
    API_EPILOG_BEFORE_RETURN(debug, true, ddcrc, "*valrec_loc=%p", *valrec_loc);
    ASSERT_IFF(ddcrc == 0, *valrec_loc);
@@ -335,17 +340,19 @@ ddca_get_any_vcp_value_using_implicit_type(
    API_PROLOGX(debug, true, "feature_code = 0x%02x", feature_code);
    assert(valrec_loc);
 
-   DDCA_Vcp_Value_Type call_type;
-   DDCA_Status ddcrc = get_value_type(ddca_dh, feature_code, &call_type);
-   if (ddcrc == 0) {
-      ddcrc = ddci_get_any_vcp_value_using_explicit_type(
+   Error_Info * erec = NULL;
+   DDCA_Vcp_Value_Type call_type = DDCA_NON_TABLE_VCP_VALUE;  // junk initializer to avoid compiler warning
+   erec = get_value_type(ddca_dh, feature_code, &call_type);
+   if (!erec) {
+      erec = ddci_get_any_vcp_value_using_explicit_type(
                  ddca_dh,
                  feature_code,
                  call_type,
                  valrec_loc);
    }
-   ASSERT_IFF(ddcrc==0, *valrec_loc);
-   API_EPILOG_BEFORE_RETURN(debug, true, ddcrc, "");
+   ASSERT_IFF(!erec, *valrec_loc);
+   DDCA_Status ddcrc = ERRINFO_STATUS(erec);
+   API_EPILOG_EREC_BEFORE_RETURN(debug, true, erec, "");
    return ddcrc;
 }
 
@@ -817,10 +824,10 @@ ddci_set_single_vcp_value(
                                ddca_dh, valrec, verified_value_loc);
    Error_Info* ddc_excp = NULL;
    int psc;
-   free_thread_error_detail();
+   // free_thread_error_detail();
    WITH_VALIDATED_DH3(ddca_dh, psc, {
          ddc_excp = ddc_set_verified_vcp_value_with_retry(dh, valrec, verified_value_loc);
-         save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+         // save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
       } );
    DBGTRC_RET_ERRINFO(debug, DDCA_TRC_API, ddc_excp, "");
    return ddc_excp;
