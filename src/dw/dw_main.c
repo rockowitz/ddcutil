@@ -266,6 +266,7 @@ bool all_edids_readable_using_i2c() {
       for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
          syslog(LOG_WARNING, "   %s", errs->causes[ndx]->detail);
       }
+      errinfo_free(errs);
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
