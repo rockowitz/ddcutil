@@ -847,6 +847,7 @@ ddc_set_vcp_value(
 
          f0printf(verbose_msg_dest, "%s\n", s);
          SIMPLE_DECORATED_SYSLOGF(true, LOG_WARNING, "%s", s);
+         free(s);
 
 #ifdef OLD
          if (!is_rereadable_feature(dh, vrec->opcode) )
