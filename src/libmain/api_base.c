@@ -814,9 +814,11 @@ ddci_init(const char *      libopts,
                          BUILD_DATE, BUILD_TIME, sbool(stdout_stderr_redirected));
       syslog_level = syslog_level_arg;  // global in trace_control.h
 
-      // use tracing output for syslog for these functions:
-      add_traced_function("ddca_get_non_table_vcp_value");
-      add_traced_function("ddci_set_non_table_vcp_value_verify");
+      if (stdout_stderr_redirected) {
+         // use tracing output for syslog for these functions:
+         add_traced_function("ddca_get_non_table_vcp_value");
+         add_traced_function("ddci_set_non_table_vcp_value_verify");
+      }
    }
 
    DBGF(debug, "syslog_level_arg = %s, syslog_level=%s, enable_syslog=%s",
