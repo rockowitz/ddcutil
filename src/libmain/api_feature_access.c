@@ -290,7 +290,7 @@ ddca_get_any_vcp_value_using_explicit_type(
          ddca_dh, feature_code, call_type, valrec_loc);
    DDCA_Status ddcrc = ERRINFO_STATUS(erec);
 
-   API_EPILOG_BEFORE_RETURN(debug, true, ddcrc, "*valrec_loc=%p", *valrec_loc);
+   API_EPILOG_EREC_BEFORE_RETURN(debug, true, erec, "*valrec_loc=%p", *valrec_loc);
    ASSERT_IFF(ddcrc == 0, *valrec_loc);
    return ddcrc;
 }
