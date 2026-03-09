@@ -109,6 +109,26 @@ ddci_init(const char *      libopts,
        ddcrc; \
     } )
 
+#define API_PRECOND_RVALUE_EREC(expr) \
+   ( { Error_Info * erec = NULL; \
+       if (!(expr)) { \
+          SYSLOG2(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
+                          #expr, __FILE__,  __LINE__);   \
+          erec = ERRINFO_NEW(DDCRC_ARG, "Precondition failed: \"%s\" in file %s at line %d",  \
+                #expr, __FILE__,  __LINE__);   \
+          if (api_failure_mode & DDCI_PRECOND_STDERR) {  \
+             DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
+                          #expr, __func__, __LINE__, __FILE__); \
+             fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
+                             #expr, __func__, __LINE__, __FILE__); \
+          } \
+          if (!(api_failure_mode & DDCI_PRECOND_RETURN))  \
+             abort(); \
+       } \
+       erec; \
+    } )
+
+
 #ifdef UNUSED
 #define API_PRECOND_NORC(expr) \
    do { \
@@ -302,6 +322,27 @@ void unquiesce_api();
         dbgtrc_ret_ddcrc( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
+        if (trace_api_call_depth > 0) \
+           trace_api_call_depth--; \
+        if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
+        if (_respect_quiesced) decrement_active_api_calls(__func__); \
+        pop_traced_function(__func__); \
+   } while(0)
+
+
+/** Like API_EPILOG_BEFORE_RETURN() but takes an Error_Info * arg instead of status
+ *  code.  It extracts the status code from Error_Info and, _erec is non-null,
+ *  calls #save_thread_error_detail() and #errinfo_free().
+ */
+#define API_EPILOG_EREC_BEFORE_RETURN(_debug_flag, _respect_quiesced, _erec, _format, ...) \
+   do { \
+        dbgtrc_ret_ddcrc( \
+          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_DONE, \
+          __func__, __LINE__, __FILE__, ERRINFO_STATUS(_erec), _format, ##__VA_ARGS__); \
+        if (_erec) { \
+           save_thread_error_detail(error_info_to_ddca_detail(_erec)); \
+           errinfo_free(_erec); \
+        } \
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
         if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
