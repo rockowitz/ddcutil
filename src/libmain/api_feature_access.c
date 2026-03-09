@@ -144,23 +144,20 @@ ddca_get_table_vcp_value(
 {
    bool debug = false;
    free_thread_error_detail();
+   Error_Info * ddc_excp = NULL;
    API_PROLOGX(debug, true,
          "ddca_dh=%p, feature_code=0x%02x, table_value_loc=%p",
          ddca_dh, feature_code, table_value_loc);
-   DDCA_Status psc = API_PRECOND_RVALUE(table_value_loc);
-   if (psc != 0)
+   ddc_excp = API_PRECOND_RVALUE_EREC(table_value_loc);
+   if (ddc_excp)
       goto bye;
 
-   WITH_VALIDATED_DH3(ddca_dh, psc,
+   WITH_VALIDATED_DH3_EREC(ddca_dh, ddc_excp,
       {
          assert(table_value_loc);
-         Error_Info * ddc_excp = NULL;
          Buffer * p_table_bytes = NULL;
          ddc_excp =  ddc_get_table_vcp_value(dh, feature_code, &p_table_bytes);
-         psc = (ddc_excp) ? ddc_excp->status_code : 0;
-         save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
-         errinfo_free(ddc_excp);
-         if (psc == 0) {
+         if (!ddc_excp) {
             assert(p_table_bytes);  // avoid coverity warning
             int len = p_table_bytes->len;
             DDCA_Table_Vcp_Value * tv = calloc(1,sizeof(DDCA_Table_Vcp_Value));
@@ -172,14 +169,16 @@ ddca_get_table_vcp_value(
             *table_value_loc = tv;
             buffer_free(p_table_bytes, __func__);
          }
-         TRACED_ASSERT_IFF(psc==0, *table_value_loc);
+         TRACED_ASSERT_IFF(!ddc_excp, *table_value_loc);
          // DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
          //        "ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
          //        ddca_dh, dh_repr(ddca_dh), feature_code, *table_value_loc);
       }
    );
+
 bye:
-   API_EPILOG_BEFORE_RETURN(debug, true, psc,
+   DDCA_Status psc = ERRINFO_STATUS(ddc_excp);
+   API_EPILOG_EREC_BEFORE_RETURN(debug, true, ddc_excp,
          "ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
          ddca_dh, dh_repr(ddca_dh), feature_code, *table_value_loc);
    return psc;
@@ -967,7 +966,7 @@ ddci_set_non_table_vcp_value_verify(
         (!verified_hi_byte_loc &&  verified_lo_byte_loc)
       )
    {
-      rc = DDCRC_ARG;
+      erec = ERRINFO_NEW(DDCRC_ARG, "verified_hi_byte_loc and verified_lo_byte_loc inconsistent");
    }
    else {
       // unwrap into 2 cases to clarify logic and avoid compiler warning
@@ -988,13 +987,12 @@ ddci_set_non_table_vcp_value_verify(
       }
    }
 
-
    rc = ERRINFO_STATUS(erec);
    char * verified_values = (verified_hi_byte_loc)
              ? g_strdup_printf("*verified_hi_byte_loc=0x%02x, *verified_lo_byte_loc=0x%02x",
                             *verified_hi_byte_loc, *verified_lo_byte_loc)
              : strdup("");
-   char * rc_expl = (rc == DDCRC_RETRIES || DDCRC_VERIFY) ? errinfo_summary(erec) : "";
+   char * rc_expl = (rc == DDCRC_RETRIES) ? errinfo_summary(erec) : "";
 
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, rc, "%s %s", rc_expl, verified_values);
    free(verified_values);
