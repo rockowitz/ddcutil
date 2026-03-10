@@ -978,20 +978,21 @@ errinfo_summary(Error_Info * erec) {
    static GPrivate  esumm_key     = G_PRIVATE_INIT(g_free);
    static GPrivate  esumm_len_key = G_PRIVATE_INIT(g_free);
 
-   // rpt_vstring(1, "(%s) errinfo_name_func=%p, errinfo_desc_func=%p", __func__, errinfo_name_func, errinfo_desc_func);
+   // DBG("errinfo_name_func=%p, errinfo_desc_func=%p",errinfo_name_func, errinfo_desc_func);
 
-   char * desc = errinfo_name_func(erec->status_code);  // thread safe buffer owned by psc_desc(), do not free()
+   char * rc_name = errinfo_name_func(erec->status_code);  // thread safe buffer owned by psc_desc(), do not free()
+  // char * rc_desc = errinfo_desc_func(erec->status_code);
 
    gchar * buf1 = NULL;
    if (erec->cause_ct == 0) {
 #ifdef ALT
    if (erec->causes_alt || erec->causes_alt->len == 0) {
 #endif
-      buf1 = g_strdup_printf("Error_Info[%s in %s]", desc, erec->func);
+      buf1 = g_strdup_printf("Error_Info[%s in %s]", rc_name, erec->func);
    }
    else {
       char * causes = errinfo_causes_string(erec);
-      buf1 = g_strdup_printf("Error_Info[%s in %s, causes: %s]", desc, erec->func, causes);
+      buf1 = g_strdup_printf("Error_Info[%s in %s, causes: %s]", rc_name, erec->func, causes);
       free(causes);
    }
    int required_size = strlen(buf1) + 1;
