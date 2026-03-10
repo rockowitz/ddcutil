@@ -239,7 +239,6 @@ static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
  */
 Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
    bool debug = false && status_code;
-   // use printf() instead of DBGMSG to avoid circular includes
    DBGF(debug, "Starting.  rc = %d", status_code);
 
    Status_Code_Info * pinfo = NULL;
