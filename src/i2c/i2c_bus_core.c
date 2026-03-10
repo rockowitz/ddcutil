@@ -87,6 +87,8 @@ bool all_video_adapters_implement_drm = false;
 bool use_drm_connector_states = false;
 bool try_get_edid_from_sysfs_first = true;
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
+bool fail_i2c_all_relevant_i2c_buses_rw = false;
+bool fail_i2c_all_edids_readable_using_i2c = false;
 
 
 // quick and dirty for debugging
@@ -129,6 +131,129 @@ i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
    }
    return bva;
 }
+
+// from dw_main
+
+
+/** Tests that a /dev/i2c bus can be opened for reading and writing.
+ *
+ *  @param  busno   i2c bus number
+ *  @return NULL if success, Error_Info struct if failure
+ */
+static Error_Info *
+simple_rw_test(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
+
+   int fd;
+   Error_Info * err = i2c_open_bus_basic_by_busno(busno, CALLOPT_NONE, &fd);
+   if (!err) {
+      i2c_close_bus_basic(busno, fd, CALLOPT_NONE);
+   }
+   else {
+      // MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error opening /dev/i2c-%d: %s", busno, errinfo_summary(err));
+   }
+
+   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_NONE, err, "busno=%d", busno);
+   return err;
+}
+
+
+/** Checks that all /dev/i2c buses that may possibly be used for DDC
+ *  communication can be read and written.
+ *
+ *  @return Error_Info struct if one or more buses are inaccessible,
+ *          NULL if no problem
+ */
+Error_Info *
+i2c_all_relevant_i2c_buses_rw() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   GPtrArray * err_accumulator = NULL;
+
+   BS256 attached_buses = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, /*only_connected*/ false);
+   Bit_Set_256_Iterator iter = bs256_iter_new(attached_buses);
+   int busno = -1;
+   while ( (busno = bs256_iter_next(iter)) >= 0) {
+      Error_Info * err = simple_rw_test(busno);
+      if (err) {
+         if (!err_accumulator)
+            err_accumulator = g_ptr_array_new_with_free_func((void*)errinfo_free);
+         g_ptr_array_add(err_accumulator,err);
+      }
+   }
+   bs256_iter_free(iter);
+
+#ifdef ALT
+   Byte_Value_Array bva =
+   i2c_get_device_numbers_using_udev(/*include_ignorable_devices*/ false);
+   for (int ndx=0; ndx<bva_length(bva); ndx++) {
+      int busno = bva_get(bva, ndx);
+      Error_Info * err = simple_rw_test(busno);
+      if (err) {
+         if (!err_accumulator)
+            err_accumulator = g_ptr_array_new_with_free_func((void*)errinfo_free);
+         g_ptr_array_add(err_accumulator,err);
+      }
+   }
+   bva_free(bva);
+#endif
+
+   Error_Info * final_result = NULL;
+   if (err_accumulator) {
+      final_result = errinfo_new_with_causes_gptr(DDCRC_INVALID_OPERATION, err_accumulator, __func__,
+            "Display change detection requires RW access to all I2C buses that might be used for DDC.");
+      g_ptr_array_free(err_accumulator, true);
+   }
+   if (final_result) {
+      bool all_eaccess = true;
+      for (int ndx = 0; ndx < final_result->cause_ct; ndx++) {
+         if (final_result->causes[ndx]->status_code != -EACCES) {
+            all_eaccess = false;
+            break;
+         }
+      }
+      if (all_eaccess)
+         final_result->status_code = -EACCES;
+   }
+
+   if (fail_i2c_all_relevant_buses_rw)
+      final_result = ERRINFO_NEW(-EACCES, "Dummy failure");
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, final_result, "");
+   return final_result;
+}
+
+
+/** Checks that all EDIDS for Display_Refs of type I2C are actually
+ *  readable using I2C. There are some cases, e.g. DisplayLink devices,
+ *  where the EDID can be read only from /sys.
+ *
+ * @return true/false
+ */
+Error_Info *
+i2c_all_edids_readable_using_i2c() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   Error_Info * errs = i2c_all_relevant_i2c_buses_rw();
+   if (errs) {
+      syslog(LOG_WARNING, "%s", errs->detail);
+      for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
+         syslog(LOG_WARNING, "   %s", errs->causes[ndx]->detail);
+      }
+     //  errinfo_free(errs);
+   }
+
+   if (fail_i2c_all_edids_readable_using_i2c)
+       errs = ERRINFO_NEW(-EACCES, "Dummy failure");
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, errs, "");
+   return errs;
+}
+
+
+
+
 
 
 //
@@ -2496,6 +2621,10 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(is_adapter_class_display_controller);
    RTTI_ADD_FUNC(is_laptop_drm_connector_name);
    RTTI_ADD_FUNC(is_laptop_for_businfo);
+
+   RTTI_ADD_FUNC(simple_rw_test);
+   RTTI_ADD_FUNC(i2c_all_edids_readable_using_i2c);
+   RTTI_ADD_FUNC(i2c_all_relevant_i2c_buses_rw);
 }
 
 

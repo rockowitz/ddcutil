@@ -79,8 +79,8 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(28, "Unused");
    REPORT_FLAG_OPTION(29, "Unused");
    REPORT_FLAG_OPTION(30, "Unused");
-   REPORT_FLAG_OPTION(31, "Unused");
-   REPORT_FLAG_OPTION(32, "Unused");
+   REPORT_FLAG_OPTION(31, "fail_i2c_all_relevant_i2c_buses_rw");
+   REPORT_FLAG_OPTION(32, "fail_i2c_all_edids_readable_using_i2c");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_INITIAL_STABILIZATION_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");

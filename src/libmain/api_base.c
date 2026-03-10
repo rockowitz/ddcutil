@@ -761,7 +761,7 @@ ddci_init(const char *      libopts,
           DDCA_Init_Options opts,
           char***           infomsg_loc)
 {
-   bool debug = false;
+   bool debug = true;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
       debug = true;
@@ -896,17 +896,29 @@ ddci_init(const char *      libopts,
       }
       // errinfo_free(master_error);
       library_initialization_failed = true;
+      goto bye;
    }
-   else if (library_disabled) {
+
+   if (library_disabled) {
       DBGF(debug, "libddcutil disabled");
       master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil disabled");
       syslog(LOG_ERR, "libddcutil disabled");
       library_initialization_failed = true;
+      goto bye;
    }
-   else {
-      DBGF(debug, "performing display detection ...");
-      i2c_detect_buses();
-      ddc_ensure_displays_detected();
+
+   i2c_detect_buses();
+   master_error = i2c_all_relevant_i2c_buses_rw();
+   if (master_error) {
+      library_initialization_failed = true;
+      // syslog (LOG_ERR, "Not all relevant i2c buses rw");
+      // errinfo_report_to_syslog(LOG_ERR, master_err, 1);
+      goto bye;
+   }
+
+   DBGF(debug, "performing display detection ...");
+
+   ddc_ensure_displays_detected();
 #ifdef OUT
       if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS) {
          dw_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS);
@@ -914,13 +926,13 @@ ddci_init(const char *      libopts,
                "Started watch displays for DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS");
    }
 #endif
-      library_initialized = true;
-      library_initialization_failed = false;
-      syslog(LOG_NOTICE, "Library initialization complete.");
-      free_parsed_cmd(parsed_cmd);
-   }
+   library_initialized = true;
+   library_initialization_failed = false;
+   syslog(LOG_NOTICE, "Library initialization complete.");
 
 bye:
+   if (parsed_cmd)
+      free_parsed_cmd(parsed_cmd);
    if (master_error) {
       SIMPLE_SYSLOG(LOG_ERR, "Returning %s", psc_name(master_error->status_code));
       errinfo_report_to_syslog(LOG_ERR, master_error, 2);

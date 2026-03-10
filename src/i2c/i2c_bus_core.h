@@ -37,6 +37,8 @@ extern bool try_get_edid_from_sysfs_first;
 extern int  i2c_businfo_async_threshold;
 extern bool cross_instance_locks_enabled;
 extern bool edp_always_laptop;
+extern bool fail_i2c_all_relevant_i2c_buses_rw;
+extern bool fail_i2c_all_edids_readable_using_i2c;
 
 Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices);
 
@@ -79,6 +81,10 @@ Bit_Set_256      i2c_buses_w_edid_as_bitset();
 
 // Reports
 void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
+
+
+Error_Info *     i2c_all_relevant_i2c_buses_rw();
+Error_Info *     i2c_all_edids_readable_using_i2c();
 
 // Initialization
 void             subinit_i2c_bus_core();

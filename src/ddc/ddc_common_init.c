@@ -472,6 +472,11 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       enable_write_detect_to_status = true;
 #endif
 
+   if (parsed_cmd->flags2 & CMD_FLAG2_F31)
+      fail_i2c_all_relevant_buses_rw = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F32)
+      fail_i2c_all_edids_readable_using_i2c = true;
+
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
    if (parsed_cmd->flags2 & CMD_FLAG2_I3_SET)
