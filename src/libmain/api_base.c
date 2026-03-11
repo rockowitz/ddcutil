@@ -67,8 +67,8 @@
 #include "dw/dw_status_events.h"
 #endif
 
-#include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"
+#include "libmain/api_error_info_internal.h"
 #include "libmain/api_services_internal.h"
 
 //
@@ -761,7 +761,7 @@ ddci_init(const char *      libopts,
           DDCA_Init_Options opts,
           char***           infomsg_loc)
 {
-   bool debug = true;
+   bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
       debug = true;
@@ -864,7 +864,7 @@ ddci_init(const char *      libopts,
       master_error = init_tracing(parsed_cmd);
       if (master_error) {
          DBGF(debug, "init_tracing failed");
-         free_parsed_cmd(parsed_cmd);
+        //  free_parsed_cmd(parsed_cmd);
       }
       else
          DBGF(debug, "init_tracing succeeded");
@@ -908,12 +908,18 @@ ddci_init(const char *      libopts,
    }
 
    i2c_detect_buses();
-   master_error = i2c_all_relevant_i2c_buses_rw();
-   if (master_error) {
-      library_initialization_failed = true;
-      // syslog (LOG_ERR, "Not all relevant i2c buses rw");
-      // errinfo_report_to_syslog(LOG_ERR, master_err, 1);
-      goto bye;
+
+   if (disable_ddci_check_dev_i2c_devices_rw) {
+      syslog(LOG_DEBUG, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
+   }
+   else {
+      master_error = i2c_all_relevant_i2c_buses_rw();
+      if (master_error) {
+         library_initialization_failed = true;
+         // syslog (LOG_ERR, "Not all relevant i2c buses rw");
+         // errinfo_report_to_syslog(LOG_ERR, master_err, 1);
+         goto bye;
+      }
    }
 
    DBGF(debug, "performing display detection ...");
@@ -1557,6 +1563,7 @@ ddca_report_locks(
 
 void init_api_base() {
    // DBGMSG("Executing");
+   RTTI_ADD_FUNC(ddci_init);
    RTTI_ADD_FUNC(_ddca_terminate);
    RTTI_ADD_FUNC(ddca_start_watch_displays);
    RTTI_ADD_FUNC(ddca_stop_watch_displays);
