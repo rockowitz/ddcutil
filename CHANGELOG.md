@@ -1,4 +1,5 @@
-## [2.2.6] 2025-03-08
+
+## [2.2.6] 2025-03-11
 
 Release 2.2.6 replaces release 2.2.5, which was reported to hang KDE Plasma
 at login.
@@ -22,22 +23,25 @@ at login.
   function may not always respect UDEV token UACCESS.
 - More extensive syslog trace messages. Needed to aid in remote debugging, 
   particularly for KDE PowerDevil.
-- Functions in the call tree from **ddca_set_non_table_vcp_value()** consistenty
-  return Error_Info structs instead of status codes to improve diagnostic 
-  messages written to the system log andinformation returned by 
-  **ddca_get_error_detail()**. 
+- Functions in the call trees from **ddca_get_...vcp_value()** and 
+  **ddca_set_...vcp_value()** consistenty return Error_Info structs instead of
+  status codes to improve diagnostic messages written to the system log and 
+  information returned by **ddca_get_error_detail()**. 
 - Allow VCP feature numbers to be specified as a single hex digit, e.g. "getvcp 2". 
 
 #### Fixed
 
 - Issue #581 "ddcutil 2.2.5 causes KDE Plasma freeze due to excessive 
-  permission checkes".  For some undetermined reason, despite the logged on user
-  having RW access to /dev/i2c-devices, attempting to open devices sometimes 
-  fails with Linux error EACCES. Function **ddca_start_watch_displays()** now
-  checks if the logged on user has has RW access, and returns DDCRC_INVALID_OPERATION
-  if case of failure.  This avoids repeated permission failure during display 
-  change detection. Callers should check for this failure and not call 
-  **ddca_start_watch_displays()** again.
+  permission checks".  For some undetermined reason, despite the logged on user
+  having RW access to /dev/i2c-devices, attempting to open these devices sometimes 
+  fails with Linux error EACCES. Functions **ddca_init2()** and **ddca_init**()
+  now fail with status code EACCESS if the logged on user does not have RW 
+  permission for all /dev/i2c devices that might possibly be used for DDC 
+  communication.  As the cause of the permission loss is unclear, function 
+  **ddca_start_watch_displays()** similarly checks if the logged on user has 
+  RW access, and returns DDCRC_INVALID_OPERATION in case of failure.  Callers
+  should check for failure of these functions and not repeatedly call them to
+  avoid a flood of permission failures. 
 - Changes for glib 2.43, which is stricter about preserving const-ness of 
   function string arguments. 
 - Command **traceable-functions** failed if a non-traceable function was 
