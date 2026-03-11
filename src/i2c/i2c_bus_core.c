@@ -167,7 +167,7 @@ simple_rw_test(int busno) {
  */
 Error_Info *
 i2c_all_relevant_i2c_buses_rw() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    GPtrArray * err_accumulator = NULL;
 
@@ -202,9 +202,11 @@ i2c_all_relevant_i2c_buses_rw() {
    Error_Info * final_result = NULL;
    if (err_accumulator) {
       final_result = errinfo_new_with_causes_gptr(DDCRC_INVALID_OPERATION, err_accumulator, __func__,
-            "Display change detection requires RW access to all I2C buses that might be used for DDC.");
+            "libddcutil requires RW access to all /dev/i2c devices that might be used for DDC.");
       g_ptr_array_free(err_accumulator, true);
    }
+
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Before check all EACCESS, final_result=%s", errinfo_summary(final_result));
    if (final_result) {
       bool all_eaccess = true;
       for (int ndx = 0; ndx < final_result->cause_ct; ndx++) {
@@ -217,8 +219,10 @@ i2c_all_relevant_i2c_buses_rw() {
          final_result->status_code = -EACCES;
    }
 
-   if (fail_i2c_all_relevant_buses_rw)
+   if (fail_i2c_all_relevant_i2c_buses_rw) {
+      DBGMSG("Forcing dummy failure");
       final_result = ERRINFO_NEW(-EACCES, "Dummy failure");
+   }
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, final_result, "");
    return final_result;
 }
