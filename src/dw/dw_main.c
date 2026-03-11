@@ -188,6 +188,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
         "dw_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
         watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "thread_id = %d, traced_function_stack=%p", TID(), traced_function_stack);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "fail_i2c_all_edids_readable_using_i2c =  %s", sbool(fail_i2c_all_edids_readable_using_i2c));
    Error_Info * err = NULL;
 
    if (!all_video_adapters_implement_drm) {
@@ -213,16 +214,25 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 #endif
 
    if (disable_check_all_edids_readable_using_i2c) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to all_edids_readable_using_i2c()");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to i2c_all_edids_readable_using_i2c()");
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Suppressing call to all_edids_readable_using_i2c()");
    }
    else {
-      Error_Info * erec = i2c_all_edids_readable_using_i2c();
+      Error_Info * erec = NULL;
+      if (fail_i2c_all_edids_readable_using_i2c) {
+         DBGMSG("Forcing failure of i2c_all_edids_readable_using_i2c()");
+         syslog(LOG_DEBUG, "Forcing failure of i2c_all_edids_readable_using_i2c()");
+         erec = ERRINFO_NEW(-EACCES, "Dummuy failure");
+      }
+      else {
+         erec = i2c_all_edids_readable_using_i2c();
+      }
       if (erec) {
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
-               "EDID(s) readable from /sys but not using I2C. Display change detection unreliable.");
-         // err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires EDIDs readable using I2C");
-         // goto bye;
+               "EDID(s) readable from /sys but not using I2C. Display change detection disabled.");
+         err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires EDIDs readable using I2C");
+         errinfo_add_cause(err, erec);
+         goto bye;
       }
    }
 
