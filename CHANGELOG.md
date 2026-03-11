@@ -42,10 +42,6 @@ at login.
   RW access, and returns DDCRC_INVALID_OPERATION in case of failure.  Callers
   should check for failure of these functions and not repeatedly call them to
   avoid a flood of permission failures. 
-- Changes for glib 2.43, which is stricter about preserving const-ness of 
-  function string arguments. 
-- Command **traceable-functions** failed if a non-traceable function was 
-  specified on the command line or in the ddcutil configuration file.
 - Issue #585, "Displays with I2C bus name DPMST not detected". It was possible
   that the video adapter for a /dev/i2c devices was not located, causing MST
   connected displays to not be detected.(Fix based on diagnosis by Diego Nunes.) 
@@ -53,7 +49,12 @@ at login.
   data structure in ddc_open_display(). The inconsistency was apparently caused 
   by a race condition in display change detection. Added mutex. Also addresses 
   issue #586.
-- Clear the display locks table during ddca_redetect_displays().  
+- Clear the display locks table during ddca_redetect_displays().
+- Changes for glib 2.43, which is stricter about preserving const-ness of 
+  function string arguments.
+- Ignore case when processing options ***--mfg***, ***--model***, and ***--sn***.
+- Command **traceable-functions** failed if a non-traceable function was 
+  specified on the command line or in the ddcutil configuration file. 
 
 ## [2.2.5] 2026-01-26 
 
