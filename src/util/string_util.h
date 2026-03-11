@@ -2,7 +2,7 @@
  *  String utility functions header file
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef STRING_UTIL_H_
@@ -37,6 +37,7 @@ static inline const char * sbool(uint64_t val) {  return (val)  ? "true" : "fals
 //
 
 bool   streq(const char * s1, const char * s2);
+bool   streqcase(const char * s1, const char * s2);
 bool   is_abbrev(const char * value, const char * longname, size_t minchars);
 bool   str_starts_with(const char * value_to_test, const char * start_part);
 bool   str_ends_with(const char * value_to_test, const char * end_part);

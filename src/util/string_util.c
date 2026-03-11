@@ -66,6 +66,22 @@ bool streq(const char * s1, const char * s2) {
 }
 
 
+/** Compares 2 strings for equality, ignoring case, and handling nulls
+ *
+ *  @param s1  first string
+ *  @param s2  second string
+ *  @return true if the strings match, false if not
+ */
+bool streqcase(const char * s1, const char * s2) {
+   bool result = false;
+   if ( (s1 == NULL && s2 == NULL) ||
+        (s1 != NULL && s2 != NULL && (strcasecmp(s1, s2) == 0) )
+      )
+      result = true;
+   return result;
+}
+
+
 /** Tests if one string is a valid abbreviation of another.
  *
  * @param  value     is this string an abbreviation?
