@@ -111,15 +111,15 @@ ddc_test_display_ref_by_selector(Display_Ref * dref, Display_Selector * dsel) {
 #endif
 
    if (dsel->mfg_id && (strlen(dsel->mfg_id) > 0) &&
-         !streq(dref->pedid->mfg_id, dsel->mfg_id) )
+         !streqcase(dref->pedid->mfg_id, dsel->mfg_id) )
       goto bye;
 
    if (dsel->model_name && (strlen(dsel->model_name) > 0) &&
-         !streq(dref->pedid->model_name, dsel->model_name) )
+         !streqcase(dref->pedid->model_name, dsel->model_name) )
       goto bye;
 
    if (dsel->serial_ascii && (strlen(dsel->serial_ascii) > 0) &&
-         !streq(dref->pedid->serial_ascii, dsel->serial_ascii) )
+         !streqcase(dref->pedid->serial_ascii, dsel->serial_ascii) )
       goto bye;
 
    if (dsel->edidbytes) {
