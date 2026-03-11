@@ -2,7 +2,7 @@
   * Initialization that must be performed very early by both ddcutil and libddcutil
   */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_COMMON_INIT_H_
@@ -12,6 +12,8 @@
 
 #include "util/error_info.h"
 #include "cmdline/parsed_cmd.h"
+
+extern bool disable_ddci_check_dev_i2c_devices_rw;
 
 void         i2c_discard_caches(Cache_Types caches);
 Error_Info * init_tracing(Parsed_Cmd * parsed_cmd);

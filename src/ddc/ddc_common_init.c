@@ -74,6 +74,9 @@
 #include "ddc_common_init.h"
 
 
+// more naturally in ahi_base.c, but that would violate layering
+bool disable_ddci_check_dev_i2c_devices_rw = false;
+
 /** Assembles a #Error_Info struct and appends it to an array.
  *
  *  @param errinfo_accumulator  array of #Error_Info
@@ -472,8 +475,12 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       enable_write_detect_to_status = true;
 #endif
 
+   if (parsed_cmd->flags2 & CMD_FLAG2_F27)
+      disable_check_all_edids_readable_using_i2c = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F28)
+      disable_ddci_check_dev_i2c_devices_rw = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F31)
-      fail_i2c_all_relevant_buses_rw = true;
+      fail_i2c_all_relevant_i2c_buses_rw = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F32)
       fail_i2c_all_edids_readable_using_i2c = true;
 
@@ -491,9 +498,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       else
          rpt_label(0, "--i5 value must be greater than 1");
    }
-   if (parsed_cmd->flags2 & CMD_FLAG2_F27)
-      disable_check_all_edids_readable_using_i2c = true;
-
 }
 
 
