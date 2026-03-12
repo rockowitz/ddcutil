@@ -49,7 +49,7 @@ at login.
   data structure in ddc_open_display(). The inconsistency was apparently caused 
   by a race condition in display change detection. Added mutex. Also addresses 
   issue #586.
-- Clear the display locks table during ddca_redetect_displays().
+- Clear the display locks table during **ddca_redetect_displays()**.
 - Changes for glib 2.43, which is stricter about preserving const-ness of 
   function string arguments.
 - Ignore case when processing options ***--mfg***, ***--model***, and ***--sn***.
