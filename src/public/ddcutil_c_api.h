@@ -1704,6 +1704,7 @@ ddca_set_non_table_vcp_value(
  *  @param[in]   hi_byte             high byte of new value
  *  @param[in]   lo_byte             low byte of new value
  *  @return      status code
+ *  @since 2.2.6
  */
 DDCA_Status
 ddca_set_non_table_vcp_value2(
