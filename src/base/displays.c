@@ -1494,6 +1494,7 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "fd=%d, dref=%s", fd, dref_reprx_t(dref));
    if (debug)
       dbgrpt_display_ref(dref, false,  1);
+
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->fd = fd;
