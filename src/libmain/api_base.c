@@ -818,6 +818,8 @@ ddci_init(const char *      libopts,
          // use tracing output for syslog for these functions:
          add_traced_function("ddca_get_non_table_vcp_value");
          add_traced_function("ddci_set_non_table_vcp_value_verify");
+         add_traced_function("dw_start_watch_displays");
+         add_traced_function("dw_stop_watch_displays");
       }
    }
 
