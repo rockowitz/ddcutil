@@ -21,7 +21,7 @@ extern bool           disable_check_all_edids_readable_using_i2c;
 Error_Info * dw_start_watch_displays(DDCA_Display_Event_Class event_classes);
 DDCA_Status  dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes);
 DDCA_Status  dw_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc);
-void         dw_redetect_displays();
+Error_Info * dw_redetect_displays();
 bool         dw_is_watch_displays_executing();
 void         dw_get_display_watch_settings(DDCA_DW_Settings * settings_buffer);
 DDCA_Status  dw_set_display_watch_settings(DDCA_DW_Settings * settings_buffer);

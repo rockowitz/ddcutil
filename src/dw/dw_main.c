@@ -427,20 +427,30 @@ dw_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
 }
 
 
-/** Called to completely redetect displays */
-void
+/** Completely redetect displays
+ *
+ *  @return Error_Info struct  if error
+ *
+ *  @remark Error_Info comes from dw_start_watch_displays()
+ */
+Error_Info *
 dw_redetect_displays() {
    bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
 
+   Error_Info * err = NULL;
    DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
    DDCA_Status active_rc = dw_get_active_watch_classes(&enabled_classes);
+   DDCA_Status stop_watch_rc = DDCRC_OK;
    if (active_rc == DDCRC_OK) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling ddc_stop_watch_displays()");
-      DDCA_Status rc = dw_stop_watch_displays(/*wait*/ true, &enabled_classes);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Called ddc_stop_watch_displays()");
-      assert(rc == DDCRC_OK);
+      stop_watch_rc = dw_stop_watch_displays(/*wait*/ true, &enabled_classes);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ddc_stop_watch_displays() returned %s",
+                                            psc_name(stop_watch_rc));
+      if (stop_watch_rc != DDCRC_OK)
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "ddc_stop_watch_displays() returned %s",
+                                      psc_name(stop_watch_rc));
    }
    ddc_discard_detected_displays();
    if (dsa2_is_enabled())
@@ -467,14 +477,24 @@ dw_redetect_displays() {
    if (debug) {
       ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
    }
-   if (active_rc == DDCRC_OK) {
-      Error_Info * err = dw_start_watch_displays(enabled_classes);
-      assert(!err);    // should never fail since restarting with same enabled classes
+   if (active_rc == DDCRC_OK && stop_watch_rc==DDCRC_OK) {
+      err = dw_start_watch_displays(enabled_classes);
+      if (err)
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "dw_start_watch_diplays() returned %s",
+                                           errinfo_summary(err));
+   }
+   else {
+      if (active_rc != DDCRC_OK)
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "watch displays not started because no active watch classes");
+      if (stop_watch_rc != DDCRC_OK)
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+               "watch displays not started because not running at start of redetection");
    }
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
-   DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "all_displays=%p, all_displays->len = %d",
                                    all_display_refs, all_display_refs->len);
+   return err;
 }
 
 
