@@ -467,6 +467,7 @@ ddca_redetect_displays() {
    static bool ddca_redetect_active = false;
    bool perform_detect = true;
 
+   Error_Info * erec = NULL;
 //   g_mutex_lock(ddca_redetect_active_mutex);
    if (ddca_redetect_active) {
 	   SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when already active");
@@ -487,7 +488,8 @@ ddca_redetect_displays() {
    if (perform_detect) {
       ddca_redetect_active = true;
       quiesce_api();
-      dw_redetect_displays();
+      erec = dw_redetect_displays();
+      ddcrc = ERRINFO_STATUS(erec);
       unquiesce_api();
       ddca_redetect_active = false;
    }
@@ -502,6 +504,10 @@ ddca_redetect_displays() {
    SYSLOG2(DDCA_SYSLOG_ERROR, "ddca_redetect_displays() unsupported - libddcutil not built with support for watching display connection changes");
 #endif
 
+   if (erec) {
+      save_thread_error_detail(error_info_to_ddca_detail(erec));
+      errinfo_free(erec);
+   }
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
 }
 
