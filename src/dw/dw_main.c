@@ -545,6 +545,4 @@ void init_dw_main() {
    RTTI_ADD_FUNC(is_watch_mode_udev_available);
    RTTI_ADD_FUNC(is_watch_mode_x11_available);
    RTTI_ADD_FUNC(resolve_watch_mode);
-
 }
-

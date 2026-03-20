@@ -2271,6 +2271,7 @@ GPtrArray * i2c_detect_buses0() {
 }
 
 
+// Called by dw_hotplug_change_handler()
 I2C_Bus_Info * i2c_get_and_check_bus_info(int busno) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);

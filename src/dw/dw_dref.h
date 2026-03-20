@@ -19,7 +19,6 @@
 void         dw_add_display_ref(Display_Ref * dref);
 Display_Ref* dw_add_display_by_businfo(I2C_Bus_Info * businfo);
 Display_Ref* dw_remove_display_by_businfo(I2C_Bus_Info * businfo);
-Error_Info*  dw_recheck_dref(Display_Ref * dref);
 
 void         init_dw_dref();
 

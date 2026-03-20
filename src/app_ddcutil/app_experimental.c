@@ -78,7 +78,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(27, "Disable dw_start() check that all EDIDs readable using I2C");
    REPORT_FLAG_OPTION(28, "Disable ddci_init() check that all relevant i2c buses readable");
    REPORT_FLAG_OPTION(29, "Unused");
-   REPORT_FLAG_OPTION(30, "Unused");
+   REPORT_FLAG_OPTION(30, "Include laptop displays when watching for display changes");
    REPORT_FLAG_OPTION(31, "fail_i2c_all_relevant_i2c_buses_rw");
    REPORT_FLAG_OPTION(32, "fail_i2c_all_edids_readable_using_i2c");
 

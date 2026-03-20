@@ -1,10 +1,14 @@
-/** @file dw_recheck.c */
+/** @file dw_recheck.c
+ *
+ *  Process the queue of display references added in
+ *  the main loop for which DDC communication was not
+ *  immediately detected as enabled.
+ */
 
-// Copyright (C) 2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2025-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <glib-2.0/glib.h>
-
 
 #include "public/ddcutil_types.h"
 
@@ -17,11 +21,12 @@
 #include "base/sleep.h"
 
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_initial_checks.h"
 
 #include "dw_common.h"
 #include "dw_dref.h"
 #include "dw_status_events.h"
-#include "dw_poll.h"   // for process_event_mutex, todo: move
+#include "dw_poll.h"   //  or process_event_mutex, todo: move
 
 #include "dw_recheck.h"
 
@@ -40,8 +45,7 @@ static int simple_ipow(int base, int exponent) {
 #endif
 
 
-void
-emit_recheck_debug_msg(
+static void emit_recheck_debug_msg(
       bool debug,
       DDCA_Syslog_Level syslog_level,
       const char * format, ...)
@@ -64,20 +68,26 @@ typedef struct {
 } Recheck_Queue_Entry;
 
 
-void dw_free_recheck_queue_entry(Recheck_Queue_Entry * entry) {
+static void dw_free_recheck_queue_entry(Recheck_Queue_Entry * entry) {
    free(entry);
 }
+
 
 GAsyncQueue *  recheck_queue = NULL;
 GMutex *  recheck_queue_mutex = NULL;
 
 
-GAsyncQueue * init_recheck_queue() {
+static GAsyncQueue *
+init_recheck_queue() {
    recheck_queue = g_async_queue_new();
    return recheck_queue;
 }
 
 
+/** Adds a display reference to the recheck queue
+ *
+ *  @param dref display reference
+ */
 void dw_put_recheck_queue(Display_Ref* dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_reprx_t(dref));
@@ -101,6 +111,29 @@ typedef struct {
    GMutex *    deferred_event_queue_mutex;
 } Recheck_Displays_Data;
 #endif
+
+STATIC Error_Info *
+dw_recheck_dref(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
+   Error_Info * err = NULL;
+
+   DDCA_Status ddcrc = dref_lock(dref);
+   if (ddcrc != 0) {
+      err = ERRINFO_NEW(ddcrc, "dref_lock() failed for %s", dref_reprx_t(dref));
+      SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() failed for %s", dref_reprx_t(dref));
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Obtained lock on %s:", dref_reprx_t(dref));
+      dref->flags = 0;
+      err = ddc_initial_checks_by_dref(dref, false);
+      dref_unlock(dref);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Released lock on %s:", dref_reprx_t(dref));
+   }
+
+   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_NONE, err, "");
+   return err;
+}
 
 
 /** Function that executes in the recheck thread thread to check if DDC
@@ -261,6 +294,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
 
 
 void init_dw_recheck() {
+   RTTI_ADD_FUNC(dw_recheck_dref);
    RTTI_ADD_FUNC(dw_recheck_displays_func);
 }
 

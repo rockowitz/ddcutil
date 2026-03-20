@@ -3,7 +3,7 @@
  *  when display connection and disconnection are detected.
  */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 /** \cond */
@@ -99,31 +99,33 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
                        dref->pedid->model_name,
                        dref->pedid->product_code);
 
-      // drec->detail.bus_detail = businfo;
+      // dref->detail.bus_detail = businfo;
       dref->detail = businfo;
       dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
       dref->flags |= DREF_DDC_IS_MONITOR;
       dref->drm_connector = g_strdup(businfo->drm_connector_name);
       dref->drm_connector_id = businfo->drm_connector_id;
 
-      DDCA_Status rc = dref_lock(dref);
-      if (rc != 0) {
-         DBGMSG("dref_lock() returned %s",psc_desc(rc));
-         err = ERRINFO_NEW(rc, "dref_lock() failed");
-         SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() returned %s",psc_desc(rc));
-      }
-      else {
-         err = ddc_initial_checks_by_dref(dref, true);
-         dref_unlock(dref);
-         if (err) {
-            DBGMSG("ddc_initial_checks_by_dref() returned error:");
-            if (err->cause_ct > 0) {
-               SYSLOG2(DDCA_SYSLOG_ERROR, "ddc_initial_checks_by_dref() returned %s", errinfo_summary(err));
+      if (businfo->flags & I2C_BUS_ADDR_X37) {
+         DDCA_Status rc = dref_lock(dref);
+         if (rc != 0) {
+            DBGMSG("dref_lock() returned %s",psc_desc(rc));
+            err = ERRINFO_NEW(rc, "dref_lock() failed");
+            SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() returned %s",psc_desc(rc));
+         }
+         else {
+            err = ddc_initial_checks_by_dref(dref, true);
+            dref_unlock(dref);
+            if (err) {
+               DBGMSG("ddc_initial_checks_by_dref() returned error:");
+               if (err->cause_ct > 0) {
+                  SYSLOG2(DDCA_SYSLOG_ERROR, "ddc_initial_checks_by_dref() returned %s", errinfo_summary(err));
+               }
+               else {
+                  SYSLOG2(DDCA_SYSLOG_ERROR, "ddc_initial_checks_by_dref() returned %s",psc_desc(err->status_code));
+               }
+               errinfo_report(err, 2);
             }
-            else {
-               SYSLOG2(DDCA_SYSLOG_ERROR, "ddc_initial_checks_by_dref() returned %s",psc_desc(err->status_code));
-            }
-            errinfo_report(err, 2);
          }
       }
 
@@ -192,35 +194,9 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
-Error_Info *
-dw_recheck_dref(Display_Ref * dref) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
-   Error_Info * err = NULL;
-
-   DDCA_Status ddcrc = dref_lock(dref);
-   if (ddcrc != 0) {
-      err = ERRINFO_NEW(ddcrc, "dref_lock() failed for %s", dref_reprx_t(dref));
-      SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() failed for %s", dref_reprx_t(dref));
-   }
-   else {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Obtained lock on %s:", dref_reprx_t(dref));
-      dref->flags = 0;
-      err = ddc_initial_checks_by_dref(dref, false);
-      dref_unlock(dref);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Released lock on %s:", dref_reprx_t(dref));
-   }
-
-   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_NONE, err, "");
-   return err;
-}
-
-
-
 void init_dw_dref()  {
    RTTI_ADD_FUNC(dw_add_display_by_businfo);
    RTTI_ADD_FUNC(dw_add_display_ref);
    RTTI_ADD_FUNC(mark_display_ref_removed);
-   RTTI_ADD_FUNC(dw_recheck_dref);
    RTTI_ADD_FUNC(dw_remove_display_by_businfo);
 }

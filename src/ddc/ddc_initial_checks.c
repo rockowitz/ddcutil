@@ -433,9 +433,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
 
    bool saved_dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
 
-   if (debug)
-      show_backtrace(0);
-
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
       // assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
       assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
@@ -535,7 +532,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
  *
  *  @param dref         pointer to #Display_Ref for monitor
  *  @param newly_added  special handling when monitor added by display change detection
- *  @return **true** if DDC communication with the display succeeded, **false** otherwise.
+ *  @return  NULL if DDC communication with the display succeeded, Error_Info struct if failed
  *
  *  @remark
  *  If global flag **skip_ddc_checks** is set, checking is not performed.
@@ -561,11 +558,22 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
       goto bye;
    }
 
+   ASSERT_IFF(dref->disconnected, !dref->detail);
+   if (dref->disconnected) {
+      err = ERRINFO_NEW(DDCRC_DISCONNECTED, "");
+      goto bye;
+   }
+
    bool skip_ddc_checks0 = skip_ddc_checks;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       businfo = dref->detail;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "I2C_BUS_DDC_CHECKS_IGNORABLE is set: %s",
            SBOOL(businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE) );
+      if (!businfo->flags&I2C_BUS_ADDR_X37) {
+         dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+         // err = ERRINFO_NEW(DDCRC_ ???
+         goto bye;
+      }
       if (businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE)
          skip_ddc_checks0 = true;
    }
