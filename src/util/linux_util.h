@@ -2,7 +2,7 @@
  *  Miscellaneous Linux utilities
  */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef LINUX_UTIL_H_
@@ -26,7 +26,11 @@ intmax_t get_thread_id();
 intmax_t get_process_id();
 bool is_valid_thread_or_process(pid_t id);
 
-void rpt_lsof(const char * fqfn, int depth);
-GPtrArray* rpt_lsof_collect(const char * fqfn);
+void       rpt_lsof(                       const char * fqfn, int depth);
+GPtrArray* rpt_lsof_collect0(              const char * fqfn, GPtrArray * collector);
+GPtrArray* rpt_lsof_collect(               const char * fqfn);
+GPtrArray* diagnose_open_failure_collect(  const char * fqfn, const char * msg);
+void       diagnose_open_failure_to_syslog(const char * fqfn, const char * msg);
+
 
 #endif /* LINUX_UTIL_H_ */

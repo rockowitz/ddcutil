@@ -30,6 +30,7 @@
 #endif
 /** \endcond */
 
+#include "common_inlines.h"
 #include "debug_util.h"
 #include "file_util.h"
 #include "report_util.h"
@@ -372,8 +373,13 @@ bool is_valid_thread_or_process(pid_t id) {
 }
 
 
-
-
+/** Report processes that have a file open
+ *
+ *  The report is written ot the current output destination.
+ *
+ *  @param  fqfn  file name
+ *  @param  depth logical indentation depth
+ */
 void rpt_lsof(const char * fqfn, int depth) {
    // rpt_vstring(depth, "Programs with %s open:");
    char cmd[PATH_MAX+20];
@@ -382,12 +388,81 @@ void rpt_lsof(const char * fqfn, int depth) {
 }
 
 
+/** Collects information about processes that have a file open,
+ *  and returns it as an array of lines.
+ *
+ *  @param  fqfn  file name
+ *  @param  collector  if NULL, allocate new GPtrArray
+ *  @return GPtrArray of lines
+ */
+// converge with show_lsof() in flock.c
 // to do: tailor the output to what is useful
-GPtrArray* rpt_lsof_collect(const char * fqfn) {
+GPtrArray* rpt_lsof_collect0(const char * fqfn, GPtrArray * collector) {
+   if (!collector)
+      collector = g_ptr_array_new_with_free_func(g_free);
+
    char cmd[PATH_MAX+20];
    g_snprintf(cmd, PATH_MAX+20, "lsof %s", fqfn);
-   return execute_shell_cmd_collect(cmd);
+   GPtrArray* conflicts = execute_shell_cmd_collect0(cmd, NULL);
+   if (conflicts->len  > 0) {
+      g_ptr_array_add(collector,  g_strdup_printf("file %s also open by:", fqfn));
+      for (int ndx = 0; ndx < conflicts->len; ndx++) {
+         g_ptr_array_add(collector,
+               g_strdup_printf("   %s", (char*)g_ptr_array_index(conflicts, ndx)));
+      }
+   }
+   else
+      g_ptr_array_add(collector, g_strdup_printf("No open conflicts found for %s", fqfn));
+   g_ptr_array_free(conflicts, true);
+
+   return collector;
 }
 
 
+/** Collects information about processes that have a file open,
+ *  and returns it as a newly allocated array of lines.
+ *
+ *  @param  fqfn  file name
+ *  @return GPtrArray of lines
+ */
+GPtrArray* rpt_lsof_collect(const char * fqfn) {
+   return rpt_lsof_collect0(fqfn, NULL);
+}
+
+
+/** Collects information regarding an unexpected open() failure, and
+ *  returns it as an array of lines.
+ *
+ *  @param   fqfn  file name
+ *  @param   msg   if non-NULL, start with this message
+ *  @return  array of lines (caller must free)
+ */
+GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg) {
+   GPtrArray* collector = g_ptr_array_new_with_free_func(g_free);
+   if (msg)
+      g_ptr_array_add(collector, strdup(msg));
+   g_ptr_array_add(collector, g_strdup_printf("uid: %d, euid: %d, gid: %d, egid: %d",
+         (int) getuid(), (int) geteuid(), (int) getgid(), (int) getegid()));
+   char cmd[PATH_MAX+20];
+   g_snprintf(cmd, PATH_MAX+20, "getfacl %s", fqfn);
+   execute_shell_cmd_collect0(cmd, collector);
+   rpt_lsof_collect0(fqfn, collector);
+   return collector;
+}
+
+
+/** Writes a report regarding an unexpected open() failure to the system log
+ *
+ *  @param   fqfn  file name
+ *  @param   msg   if non-NULL, first line of the report
+ */
+void diagnose_open_failure_to_syslog(const char * fqfn, const char * msg) {
+   GPtrArray * lines = diagnose_open_failure_collect(fqfn, msg);
+   for (int ndx = 0; ndx < lines->len; ndx++) {
+      char * s = g_strdup_printf("[%jd][%jd] %s",
+                                 PID(), TID(), (char*) g_ptr_array_index(lines, ndx));
+      syslog(LOG_DEBUG, "%s", s);
+   }
+   g_ptr_array_free(lines, true);
+}
 
