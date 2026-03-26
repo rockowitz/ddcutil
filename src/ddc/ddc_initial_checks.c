@@ -607,7 +607,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
          }
          ddc_close_display_wo_return(dh);
       }
-      if (!dref->disconnected)
+      // if (!dref->disconnected)
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
 
       if (err && err->status_code == -EBUSY)
