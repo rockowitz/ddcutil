@@ -3,7 +3,7 @@
  * Functions to execute shell commands
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SUBPROCESS_UTIL_H_
@@ -16,6 +16,7 @@
 
 bool        execute_shell_cmd(                const char * shell_cmd);
 bool        execute_shell_cmd_rpt(            const char * shell_cmd, int depth);
+GPtrArray * execute_shell_cmd_collect0(       const char * shell_cmd, GPtrArray* collector);
 GPtrArray * execute_shell_cmd_collect(        const char * shell_cmd);
 int         execute_cmd_collect_with_filter(
                const char * shell_cmd,

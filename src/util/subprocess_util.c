@@ -3,7 +3,7 @@
  * Functions to execute shell commands
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -121,16 +121,16 @@ bool execute_shell_cmd(const char * shell_cmd) {
 /** Executes a shell command and returns the output as an array of strings.
  *
  *  @param shell_cmd      command to execute
+ *  @param collector      if non-null, use it instead of allocating new GPtrArray
  *
  *  @return :GPtrArray of response lines if command succeeded
  *           NULL                        if command failed, e.g. command not found
- *
- *  @remark
- *  **g_free** is set as the free function on the returned array
  */
-GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
+GPtrArray * execute_shell_cmd_collect0(const char * shell_cmd, GPtrArray* collector) {
    bool debug = false;
-   GPtrArray * result = g_ptr_array_new_with_free_func(g_free);
+   GPtrArray* result = collector;
+   if (!result)
+      result = g_ptr_array_new_with_free_func(g_free);
    if (debug)
       printf("(%s) Starting. shell_cmd = |%s|\n", __func__, shell_cmd);
    bool ok = true;
@@ -181,6 +181,22 @@ GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
     free(cmdbuf);
     return result;
  }
+
+
+/** Executes a shell command and returns the output as an array of strings.
+ *
+ *  @param shell_cmd      command to execute
+ *
+ *  @return :GPtrArray of response lines if command succeeded
+ *           NULL                        if command failed, e.g. command not found
+ *
+ *  @remark
+ *  **g_free** is set as the free function on the returned array
+ */
+GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
+   GPtrArray * lines = g_ptr_array_new_with_free_func(g_free);
+   return execute_shell_cmd_collect0(shell_cmd, lines);
+}
 
 
 /** Execute a shell command and return the contents in a newly allocated
