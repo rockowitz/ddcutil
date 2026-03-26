@@ -272,7 +272,7 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
 /** Returns only the description string for a #Public_Status_Code.
  *  Synthesizes a description if information for the status code cannot be found.
  *
- *  @param  psc  status code number
+ *  @param  psc  status code number (negative for error, positive for (rare) variant of success)
  *  @return string description of status code
  *
  *  @remark
