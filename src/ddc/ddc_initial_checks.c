@@ -569,7 +569,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
       businfo = dref->detail;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "I2C_BUS_DDC_CHECKS_IGNORABLE is set: %s",
            SBOOL(businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE) );
-      if (!businfo->flags&I2C_BUS_ADDR_X37) {
+      if (!(businfo->flags&I2C_BUS_ADDR_X37)) {
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
          // err = ERRINFO_NEW(DDCRC_ ???
          goto bye;
