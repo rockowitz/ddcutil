@@ -320,6 +320,8 @@ unlock_display_by_businfo(I2C_Bus_Info * businfo) {
 #endif
 
 
+// static bool first_open_error = false;
+
 /** Opens a I2C device specified by its file name, without further checks
  *  @param  filename   name of file to open
  *  @param  callopts   if bit CALLOPT_RDONLY set, open RO, otherwise open RW
@@ -334,7 +336,6 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "filename=%s, callopts=0x%02x, fd_loc=%p",
                                        filename, callopts, fd_loc);
-
    Error_Info * err = NULL;
    RECORD_IO_EVENT(
          -1,
@@ -342,30 +343,27 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
          ( *fd_loc = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
    // if successful returns file descriptor, if fail, returns -1 and errno is set
+   //  *fd_loc = -1;   // *** TEST ***
    if (*fd_loc < 0) {
-      int errsv = -errno;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) failed. errno=%s", filename, psc_desc(errsv));
-      err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s in file %s near line %d",
-            filename, psc_desc(errsv), __FILE__, __LINE__);
-      if (err->status_code == EACCES) {
-         // syslog(LOG_ERR, "%s", err->detail);
-         // TMI:
-         // current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
+      // if (first_open_error) {
+      //    first_open_error = false;
 
-         // converge with show_lsof() in flock.c
-         rpt_lsof(filename, 2);
+         int errsv = -errno;
+         // errsv = -EACCES;   // *** TEST ***
+         char * msg = g_strdup_printf("open(%s) failed. errno=%s", filename, psc_desc(errsv));
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
+         err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s in file %s near line %d",
+               filename, psc_desc(errsv), __FILE__, __LINE__);
 
-         GPtrArray* conflicts = rpt_lsof_collect(filename);
-         if (conflicts->len  > 0) {
-            syslog(LOG_ERR, "file %s also open by:", filename);
-            for (int ndx = 0; ndx < conflicts->len; ndx++) {
-               syslog(LOG_ERR, "   %s", (char*)g_ptr_array_index(conflicts, ndx));
-            }
-         }
-         else
-            syslog(LOG_NOTICE, "No open conflicts found for %s", filename);
-         g_ptr_array_free(conflicts, true);
-      }
+         if (err->status_code == -EACCES) {
+            syslog(LOG_ERR, "%s", err->detail);
+
+            // TMI:
+            current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
+            diagnose_open_failure_to_syslog(filename, msg);
+          }
+      // }
+         free(msg);
    }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
