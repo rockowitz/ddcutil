@@ -97,8 +97,18 @@ STATIC void process_screen_change_event(
    BS256 bs_old_attached_buses = *p_bs_attached_buses;
    BS256 bs_old_buses_w_edid   = *p_bs_buses_w_edid;
 
-   Bit_Set_256 bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
-   Bit_Set_256 bs_new_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_new_attached_buses);
+   BS256 bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
+#ifdef iGNORE_LAPTOPS
+   if (watch_laptops) {
+      bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
+   }
+   else {
+      // to check if laptop
+      // use i2c_new_bus_info(), i2c_check_bus_info() to check
+      // or  i2c_get_bus_info() if want it to be persistent
+   }
+#endif
+   BS256 bs_new_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_new_attached_buses);
 
    Bit_Set_256 bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
    Bit_Set_256 bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_new_buses_w_edid);
@@ -243,6 +253,7 @@ gpointer dw_watch_display_connections(gpointer data) {
    BS256 bs_sleepy_buses   = EMPTY_BIT_SET_256;
 #endif
 
+#ifdef LAPTOPS_IGNORABLE
    BS256 bs_old_attached_buses;
    BS256 bs_old_buses_w_edid;
 if (watch_laptops) {
@@ -253,6 +264,10 @@ else {
    bs_old_attached_buses = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, false);
    bs_old_buses_w_edid   = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, true);
 }
+#else
+   BS256 bs_old_attached_buses = buses_bitset_from_businfo_array(all_i2c_buses, false);
+   BS256 bs_old_buses_w_edid   = buses_bitset_from_businfo_array(all_i2c_buses, true);
+#endif
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial i2c buses with edids: %s",
           BS256_REPR(bs_old_buses_w_edid));
