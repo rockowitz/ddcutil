@@ -479,8 +479,10 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       disable_check_all_edids_readable_using_i2c = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F28)
       disable_ddci_check_dev_i2c_devices_rw = true;
+#ifdef LAPTOPS_IGNORABLE
    if (parsed_cmd->flags2 & CMD_FLAG2_F30)
       watch_laptops = true;
+#endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F31)
       fail_i2c_all_relevant_i2c_buses_rw = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F32)

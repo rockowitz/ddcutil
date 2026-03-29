@@ -37,10 +37,12 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 
 #ifdef UNUSED
    char buf0[80];
-   g_snprintf(buf0, 80, "Use non-default watch mode (default = %s)", ddc_watch_mode_name(ddc_watch_mode));
+   g_snprintf(buf0, 80, "Use non-default watch mode (default = %s)",
+                        ddc_watch_mode_name(ddc_watch_mode));
 #endif
    char buf5[80];
-   g_snprintf(buf5, 80, "Use non-default value for EDID read uses I2C layer (default=%s)", SBOOL(DEFAULT_EDID_READ_USES_I2C_LAYER));
+   g_snprintf(buf5, 80, "Use non-default value for EDID read uses I2C layer (default=%s)",
+                        SBOOL(DEFAULT_EDID_READ_USES_I2C_LAYER));
 
    rpt_label(depth, "Experimental Options:");
    REPORT_FLAG_OPTION(1,  "Suppress SE_POST_READ");
@@ -78,7 +80,11 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(27, "Disable dw_start() check that all EDIDs readable using I2C");
    REPORT_FLAG_OPTION(28, "Disable ddci_init() check that all relevant i2c buses readable");
    REPORT_FLAG_OPTION(29, "Unused");
+#ifdef LAPTOPS_IGNORABLE
    REPORT_FLAG_OPTION(30, "Include laptop displays when watching for display changes");
+#else
+   REPORT_FLAG_OPTION(30, "Unused");
+#endif
    REPORT_FLAG_OPTION(31, "fail_i2c_all_relevant_i2c_buses_rw");
    REPORT_FLAG_OPTION(32, "fail_i2c_all_edids_readable_using_i2c");
 
