@@ -26,7 +26,9 @@ extern uint16_t   xevent_watch_loop_millisec;
 extern bool       terminate_watch_thread;
 extern bool       terminate_using_x11_event;
 extern GMutex     master_dw_mutex;
+#ifdef LAPTOPS_IGNORABLE
 extern bool       watch_laptops;
+#endif
 
 uint32_t  dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);
 uint32_t  dw_split_sleep(int watch_loop_millisec);

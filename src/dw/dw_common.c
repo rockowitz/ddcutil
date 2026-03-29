@@ -76,7 +76,9 @@ uint16_t  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 bool      terminate_watch_thread         = false;
 bool      terminate_using_x11_event      = false;
 GMutex    master_dw_mutex;
+#ifdef LAPTOPS_IGNORABLE
 bool      watch_laptops                  = false;
+#endif
 
 
 uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
@@ -423,12 +425,14 @@ bool dw_hotplug_change_handler(
 
        // need to protect ?
       I2C_Bus_Info * businfo = i2c_get_and_check_bus_info(busno);
+#ifdef LAPTOPS_IGNORABLE
       if (!watch_laptops) {
          if (businfo->flags & I2C_BUS_LAPTOP) {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                                    "Bus %d is for laptop display, not adding display ref", busno);
          }
          else {
+#endif
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Adding display ref for bus: %d", busno);
             char buf[100];
             g_snprintf(buf, 100, "Adding connected display with bus %d", busno);
@@ -455,8 +459,10 @@ bool dw_hotplug_change_handler(
                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Newly detected display has disappeared!!!");
                event_emitted = false;
             }
+#ifdef LAPTOPS_IGNORABLE
          }
       }
+#endif
    }
    bs256_iter_free(iter);
 
