@@ -352,9 +352,14 @@ verify_i2c_access() {
                }
                else {
                   inaccessible_devices = bs256_insert(inaccessible_devices, busno);
-                  fprintf(stderr, "Device %s is not readable and writable.  Error = %s\n",
-                              fnbuf, linux_errno_desc(errsv) );
+                  char * msg = g_strdup_printf("Device %s is not readable and writable.  Error = %s\n",
+                        fnbuf, linux_errno_desc(errsv) );
+                  fprintf(stderr, "%s", msg);
+                  if (errsv == EACCES) {
+                     diagnose_open_failure_to_syslog(fnbuf, msg);
+                  }
                   include_open_failures_reported(busno);
+                  free(msg);
                }
             }
          }

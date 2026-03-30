@@ -356,11 +356,13 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
                filename, psc_desc(errsv), __FILE__, __LINE__);
 
          if (err->status_code == -EACCES) {
-            syslog(LOG_ERR, "%s", err->detail);
+            rpt_vstring(0, "%s", err->detail);
+            // diagnose_open_failure(filename, err->detail);
 
+            syslog(LOG_ERR, "%s", err->detail);
             // TMI:
             current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
-            diagnose_open_failure_to_syslog(filename, msg);
+            diagnose_open_failure_to_syslog(filename, err->detail);
           }
       // }
          free(msg);
