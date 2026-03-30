@@ -1,5 +1,30 @@
+## [2.2.7] 2025-04-xx
 
-## [2.2.6] 2025-03-11
+#### Added 
+
+- Calling **open()** on a /dev/i2c device for which the user otherwise has
+  RW permission sometimes (rarely) fails with Linux error EACCES. 
+  To aid in diagnosing this situation, libacl is used to report access control 
+  information about the device file.
+
+#### Changed
+
+- Re-enable reporting of laptop display connection/disconnection. 
+  Do not check DDC operation for this or any bus not supporting x37.
+
+- **ddca_redetect_displays()**: Recover from unexpected system state
+  that previously triggered assert() failures. Diagnostics are 
+  written to the system log. If display watch is not running on 
+  entry to the function, it is not restarted at the end.
+  Addresses KDE bug 517571: KDE Power Management Crash in 
+  DDCutilPrivateSingleton::redetect after letting laptop sleep. 
+
+#### Fixed
+
+- man page ddcutil: Replace example "getvcp supported" by "getvcp all". 
+  Group "supported" was replaced long ago by "all". Fixes issue #579.
+
+## [2.2.6] 2026-03-11
 
 Release 2.2.6 replaces release 2.2.5, which was reported to hang KDE Plasma
 at login.
