@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FILE_UTIL_H_
@@ -131,7 +131,6 @@ void dir_foreach_terminatable(
       Terminating_Dir_Foreach_Func      func,
       void *                accumulator,
       int                   depth);
-
 
 void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
