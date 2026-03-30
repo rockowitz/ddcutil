@@ -13,13 +13,20 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
+#include <grp.h>
 #include <inttypes.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <string.h>
 
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <unistd.h>
+
+//for acl
+#include <sys/acl.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef TARGET_BSD
 #include <pthread_np.h>
@@ -354,6 +361,101 @@ intmax_t get_process_id()
 }
 
 
+#ifdef UNUSED
+char * get_file_owner(const char * fqfn) {
+   struct stat st;
+   char * result = NULL;
+
+   if (stat(fqfn, &st) == -1) {
+      perror("stat");
+   }
+
+   struct passwd *pw = getpwuid(st.st_uid);
+   //    struct group  *gr = getgrgid(st.st_gid);
+
+   printf("Owner: %s\n", pw ? pw->pw_name : "unknown");
+   // printf("Group: %s\n", gr ? gr->gr_name : "unknown");
+
+   result = (pw) ? pw->pw_name : "unknown";
+   return result;
+}
+
+
+char * get_file_group(const char * fqfn) {
+   struct stat st;
+   char * result = NULL;
+
+   if (stat(fqfn, &st) == -1) {
+      perror("stat");
+   }
+
+   // struct passwd *pw = getpwuid(st.st_uid);
+   struct group  *gr = getgrgid(st.st_gid);
+
+   // printf("Owner: %s\n", pw ? pw->pw_name : "unknown");
+   printf("Group: %s\n", gr ? gr->gr_name : "unknown");
+
+   result = (gr) ? gr->gr_name : "unknown";
+   return result;
+}
+#endif
+
+
+/** Gets the owner and group ids for a file.
+ *
+ *  @param fqfn     name of file to check
+ *  @param uid_loc  where to return owner id
+ *  @param gid_loc  where to return group id
+ *  @return false if stat() failed, true otherwise
+ */
+bool get_file_owner_group_ids(const char * fqfn, int * uid_loc, int * gid_loc) {
+   *uid_loc = -1;
+   *gid_loc = -1;
+
+   struct stat st;
+   bool ok = true;
+
+   if (stat(fqfn, &st) == -1) {
+      perror("stat");
+      ok = false;
+   }
+   else {
+      *uid_loc = st.st_uid;
+      *gid_loc = st.st_gid;
+   }
+   return ok;
+}
+
+
+/** Returns the name for a user id
+ *
+ *  @param uid  user id
+ *  @return name of user, or "unknown" if unrecognized
+ *
+ *  The returned string should not be freed.?
+ */
+char * uid_name(int uid) {
+   struct passwd * pw = getpwuid(uid);
+   char*  uid_name = pw ? pw->pw_name : "unknown";
+   return uid_name;
+}
+
+
+/** Returns the name for a group id
+ *
+ *  @param gid  grup id
+ *  @return name of group, or "unknown" if unrecognized
+ *
+ *  The returned string should not be freed.?
+ */
+char * gid_name(int gid) {
+   struct group * gr = getgrgid(gid);
+   char*  uid_name = gr ? gr->gr_name : "unknown";
+   return uid_name;
+}
+
+
+
 /** Checks that a thread or process id is valid.
  *
  *  @param  id  thread or process id
@@ -430,6 +532,82 @@ GPtrArray* rpt_lsof_collect(const char * fqfn) {
 }
 
 
+/** Collects information about the file access control list (ACL) for a file,
+ *  using the libacl API, and returns it as an array of lines.
+ *
+ *  @param  fqfn  file name
+ *  @param  collector   if NULL, allocate new GPtrArray
+ *  @param  depth   logical indentation depth for formatting lines
+ *  @return GPtrArray of lines
+ */
+GPtrArray * rpt_facl_collect0(const char * fqfn, GPtrArray * collector, int depth) {
+   if (!collector)
+      collector = g_ptr_array_new_with_free_func(g_free);
+
+   acl_t acl = acl_get_file(fqfn, ACL_TYPE_ACCESS);
+   if (acl == NULL) {
+      char * s = g_strdup_printf("acl_get_file(\"%s\") failed. errno=%d", fqfn, errno);
+      g_ptr_array_add(collector, s);
+      goto bye;
+    }
+
+    char *text;
+    ssize_t len;
+    text = acl_to_text(acl, &len);
+    if (text == NULL) {
+        char * s = g_strdup_printf("acl_to_text(acl_to_text() failed. errno=%d", errno);
+        g_ptr_array_add(collector, s);
+        acl_free(acl);
+        goto bye;
+    }
+
+    Null_Terminated_String_Array ntsa = strsplit(text, "\n\r");
+    GPtrArray * lines = ntsa_to_g_ptr_array(ntsa);
+    // DBG("lines->len = %d", lines->len);
+    for (int ndx = 0; ndx < lines->len; ndx++) {
+       char * s = g_strdup_printf("%.*s%s", depth, " ", ntsa[ndx]);
+       // DBG("s: %s", s);
+       g_ptr_array_add(collector, s);
+    }
+    ntsa_free(ntsa,  true);
+
+    // free(text); // invalid free(), sample code  had acl_free_text()
+    acl_free(acl);
+
+bye:
+   return collector;
+}
+
+
+#ifdef UNUSED
+GPtrArray * rpt_facl_collect(const char * fqfn) {
+   return rpt_facl_collect0(fqfn, NULL, 0);
+}
+#endif
+
+#ifdef UNUSED
+void report_facl(const char * fqfn, int depth) {
+   GPtrArray * lines = rpt_facl_collect0(fqfn, NULL, depth);
+   for (int ndx = 0; ndx < lines->len; ndx++) {
+      char * s = g_ptr_array_index(lines, ndx);
+      rpt_vstring(depth, "%s", s);
+   }
+   g_ptr_array_free(lines, true);
+}
+#endif
+
+#ifdef UNUSED
+void report_facl_to_syslog(const char * fqfn, int log_level, int depth) {
+   GPtrArray * lines = rpt_facl_collect0(fqfn, NULL, depth);
+   for (int ndx = 0; ndx < lines->len; ndx++) {
+      char * s = g_ptr_array_index(lines, ndx);
+      syslog(log_level, "%s", s);
+   }
+   g_ptr_array_free(lines, true);
+}
+#endif
+
+
 /** Collects information regarding an unexpected open() failure, and
  *  returns it as an array of lines.
  *
@@ -437,18 +615,79 @@ GPtrArray* rpt_lsof_collect(const char * fqfn) {
  *  @param   msg   if non-NULL, start with this message
  *  @return  array of lines (caller must free)
  */
-GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg) {
-   GPtrArray* collector = g_ptr_array_new_with_free_func(g_free);
+GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg, GPtrArray * collector) {
+   bool debug = false;
+   DBGF(debug, "Starting.  fqfn=%s, msg=%s, collector=%p", fqfn, msg, collector);
+
+   if (!collector)
+      collector = g_ptr_array_new_with_free_func(g_free);
    if (msg)
       g_ptr_array_add(collector, strdup(msg));
-   g_ptr_array_add(collector, g_strdup_printf("uid: %d, euid: %d, gid: %d, egid: %d",
-         (int) getuid(), (int) geteuid(), (int) getgid(), (int) getegid()));
+
+   int uid  = (int) getuid();
+   int euid = (int) geteuid();
+   int gid  = (int) getgid();
+   int egid = (int) getegid();
+
+   int depth = 5;
+   g_ptr_array_add(collector,
+         g_strdup_printf("%*suid: %d=%s, euid: %d=%s, gid: %d=%s, egid: %d=%s",
+         depth, " ",
+         uid,  uid_name(uid),
+         euid, uid_name(euid),
+         gid,  gid_name(gid),
+         egid, gid_name(egid)));
+
+   int file_uid = -1;
+   int file_gid = -1;
+   bool ok = get_file_owner_group_ids(fqfn, &file_uid, &file_gid);
+   if (ok) {
+      g_ptr_array_add(collector,
+         g_strdup_printf("%*sfile owner: %d=%s, file group: %d=%s",
+         depth, " ",
+         file_uid, uid_name(file_uid),
+         file_gid, gid_name(file_gid)));
+   }
+   else {
+      g_ptr_array_add(collector,
+            g_strdup_printf("%*sUnable to determine file ownership", depth, " "));
+   }
+
+   g_ptr_array_add(collector, strdup("Using command facl: "));
    char cmd[PATH_MAX+20];
-   g_snprintf(cmd, PATH_MAX+20, "getfacl %s", fqfn);
+   g_snprintf(cmd, PATH_MAX+20, "getfacl %s  --all-effective" , fqfn);
    execute_shell_cmd_collect0(cmd, collector);
+
+   g_ptr_array_add(collector, strdup( "Using acl api:"));
+   rpt_facl_collect0(fqfn, collector, depth);
    rpt_lsof_collect0(fqfn, collector);
+
+   DBGF(debug, "Done.    returning %p", collector);
    return collector;
 }
+
+
+#ifdef UNUSED
+/** Writes a report regarding an unexpected open() failure to the terminal.
+ *
+ *  @param   fqfn  file name
+ *  @param   msg   if non-NULL, first line of the report
+ */
+void diagnose_open_failure(const char * fqfn, const char * msg) {
+   bool debug = false;
+   DBGF(debug, "Starting, fqfn=%s, msg=%s", fqfn, msg);
+   GPtrArray * lines = diagnose_open_failure_collect(fqfn, msg, NULL);
+   // rpt_facl_collect0(fqfn, lines, 1);
+   for (int ndx = 0; ndx < lines->len; ndx++) {
+      char * s = g_strdup_printf("%s",
+                                 (char*) g_ptr_array_index(lines, ndx));
+      rpt_vstring(0, "%s", s);
+      // syslog(LOG_DEBUG, "%s", s);
+   }
+   g_ptr_array_free(lines, true);
+   DBGF(debug, "Done.");
+}
+#endif
 
 
 /** Writes a report regarding an unexpected open() failure to the system log
@@ -457,12 +696,20 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg) {
  *  @param   msg   if non-NULL, first line of the report
  */
 void diagnose_open_failure_to_syslog(const char * fqfn, const char * msg) {
-   GPtrArray * lines = diagnose_open_failure_collect(fqfn, msg);
+   bool debug = false;
+   DBGF(debug, "Starting.  fqfn=%s, msg=%s", fqfn, msg);
+   int depth = 3;
+
+   GPtrArray * lines = diagnose_open_failure_collect(fqfn, msg, NULL);
+   //  rpt_facl_collect0(fqfn, lines, 1);
    for (int ndx = 0; ndx < lines->len; ndx++) {
-      char * s = g_strdup_printf("[%jd][%jd] %s",
-                                 PID(), TID(), (char*) g_ptr_array_index(lines, ndx));
+      char * s = g_strdup_printf("[%6jd] %*s%s",
+                                 TID(), depth, " ", (char*) g_ptr_array_index(lines, ndx));
+      // rpt_vstring(0, "%s", s);
       syslog(LOG_DEBUG, "%s", s);
    }
    g_ptr_array_free(lines, true);
+
+   DBGF(debug, "Done");
 }
 
