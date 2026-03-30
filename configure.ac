@@ -604,6 +604,9 @@ PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.40)
 required_packages="$required_packages glib-2.0 >= 2.40"
 PKG_CHECK_MODULES(JANSSON, jansson >= 2.0)
 required_packages="$required_packages jansson >= 2.0"
+PKG_CHECK_MODULES(ACL, libacl)
+required_packages="$required_packages libacl"
+
 
 AS_IF( [test "x$enable_udev" = "xyes" ],
   [   PKG_CHECK_MODULES(UDEV,   libudev, 

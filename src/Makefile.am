@@ -243,6 +243,7 @@ endif
 # endif 
 
 libcommon_la_LIBADD += \
+  ${ACL_LIBS}     \
   $(JANSSON_LIBS) \
   $(GLIB_LIBS)    \
   $(UDEV_LIBS)    \
