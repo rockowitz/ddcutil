@@ -505,17 +505,23 @@ GPtrArray* rpt_lsof_collect0(const char * fqfn, GPtrArray * collector) {
 
    char cmd[PATH_MAX+20];
    g_snprintf(cmd, PATH_MAX+20, "lsof %s", fqfn);
-   GPtrArray* conflicts = execute_shell_cmd_collect0(cmd, NULL);
-   if (conflicts->len  > 0) {
-      g_ptr_array_add(collector,  g_strdup_printf("file %s also open by:", fqfn));
-      for (int ndx = 0; ndx < conflicts->len; ndx++) {
-         g_ptr_array_add(collector,
-               g_strdup_printf("   %s", (char*)g_ptr_array_index(conflicts, ndx)));
-      }
+   char * emsg_loc = NULL;
+   GPtrArray* conflicts = execute_shell_cmd_collect1(cmd, NULL, &emsg_loc);
+   if (emsg_loc) {
+      g_ptr_array_add(collector, emsg_loc);
    }
-   else
-      g_ptr_array_add(collector, g_strdup_printf("No open conflicts found for %s", fqfn));
-   g_ptr_array_free(conflicts, true);
+   if (conflicts) {
+      if (conflicts->len  > 0) {
+         g_ptr_array_add(collector,  g_strdup_printf("file %s also open by:", fqfn));
+         for (int ndx = 0; ndx < conflicts->len; ndx++) {
+            g_ptr_array_add(collector,
+                  g_strdup_printf("   %s", (char*)g_ptr_array_index(conflicts, ndx)));
+         }
+      }
+      else
+         g_ptr_array_add(collector, g_strdup_printf("No open conflicts found for %s", fqfn));
+      g_ptr_array_free(conflicts, true);
+   }
 
    return collector;
 }
@@ -653,10 +659,15 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg, GP
             g_strdup_printf("%*sUnable to determine file ownership", depth, " "));
    }
 
-   g_ptr_array_add(collector, strdup("Using command facl: "));
+   g_ptr_array_add(collector, strdup("Using command getfacl: "));
    char cmd[PATH_MAX+20];
    g_snprintf(cmd, PATH_MAX+20, "getfacl %s  --all-effective" , fqfn);
-   execute_shell_cmd_collect0(cmd, collector);
+   char * errmsg = NULL;
+   execute_shell_cmd_collect1(cmd, collector, &errmsg);
+   if (errmsg) {
+      g_ptr_array_add(collector, errmsg);
+      fprintf(stderr, "%s   (A)\n", errmsg);
+   }
 
    g_ptr_array_add(collector, strdup( "Using acl api:"));
    rpt_facl_collect0(fqfn, collector, depth);
