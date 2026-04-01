@@ -1,33 +1,69 @@
 ## [2.2.7] 2025-04-xx
 
+### General
+
+#### Fixed
+
+- man page ddcutil: Replace example "getvcp supported" by "getvcp all". 
+  Group "supported" was replaced long ago by "all". Issue #579.
+- segfault in diagnose_open_failure_to_syslog(). Issue #596
+
+### Shared Library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.5.0.
+
 #### Added 
 
 - Calling **open()** on a /dev/i2c device for which the user otherwise has
   RW permission sometimes (rarely) fails with Linux error EACCES. 
   To aid in diagnosing this situation, libacl is used to report access control 
-  information about the device file.
+  information about the device file in the system log.
 
 #### Changed
 
 - Re-enable reporting of laptop display connection/disconnection. 
   Do not check DDC operation for this or any bus not supporting x37.
 
-- **ddca_redetect_displays()**: Recover from unexpected system state
-  that previously triggered assert() failures. Diagnostics are 
-  written to the system log. If display watch is not running on 
-  entry to the function, it is not restarted at the end.
-  Addresses KDE bug 517571: KDE Power Management Crash in 
-  DDCutilPrivateSingleton::redetect after letting laptop sleep. 
-
 #### Fixed
 
-- man page ddcutil: Replace example "getvcp supported" by "getvcp all". 
-  Group "supported" was replaced long ago by "all". Fixes issue #579.
+- **ddca_redetect_displays()**: Recover from unexpected system state that
+  previously triggered assert() failures. Diagnostics are written to the system
+  log. If display watch is not running on entry to the function, it is not 
+  restarted at the end. 
+  Addresses issue #595, (powerdevil crashes with assertion failure in libddcutil
+  after resume from sleep/hibernate) and KDE bug 517571 (KDE Power Management 
+  Crash in DDCutilPrivateSingleton::redetect after letting laptop sleep).
+
 
 ## [2.2.6] 2026-03-11
 
 Release 2.2.6 replaces release 2.2.5, which was reported to hang KDE Plasma
 at login.
+
+### General
+
+#### Changed
+
+- Use up to date macros in Autotools configuration file configure.ac: 
+  AC_SYSTEM_EXTENSIONS, AC_PROG_CC conditionally replaces AC_PROG_C99.
+- Allow VCP feature numbers to be specified as a single hex digit, 
+  e.g. "getvcp 2".
+
+#### Fixed
+
+- Ignore case when processing options ***--mfg***, ***--model***, and ***--sn***.
+- Changes for glib 2.43, which is stricter about preserving const-ness of 
+  function string arguments.
+- Command **traceable-functions** failed if a non-traceable function was 
+  specified on the command line or in the ddcutil configuration file. 
+
+### Shared Library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.5.0.
 
 #### Added
 
@@ -37,14 +73,11 @@ at login.
 
 #### Changed 
 
-- Ignore laptop displays when processing display connection and disconneciton.
-- Add "AMDGPU DM i2c OEM bus" to list of names of I2C buses to be 
-  ignored. Theses buses are used to control display controller 
-  features like RGB lighting.  
-- Use up to date macros in Autotools configuration file configure.ac: 
-  AC_SYSTEM_EXTENSIONS, AC_PROG_CC conditionally replaces AC_PROG_C99.
-- Eliminate use in libddcutil of linux api function **access()** to check
-  if the user has RW access to a /dev/i2c device. Bug reports suggest this
+- Ignore laptop displays when processing display connection and disconnection.
+- Add "AMDGPU DM i2c OEM bus" to list of names of I2C buses to be ignored. 
+  These buses are used to control display controller features like RGB lighting.  
+- Eliminate use in libddcutil of linux api function **access()** to check if 
+  the user has RW access to a /dev/i2c device. Bug reports suggest this 
   function may not always respect UDEV token UACCESS.
 - More extensive syslog trace messages. Needed to aid in remote debugging, 
   particularly for KDE PowerDevil.
@@ -52,14 +85,13 @@ at login.
   **ddca_set_...vcp_value()** consistenty return Error_Info structs instead of
   status codes to improve diagnostic messages written to the system log and 
   information returned by **ddca_get_error_detail()**. 
-- Allow VCP feature numbers to be specified as a single hex digit, e.g. "getvcp 2". 
-
+ 
 #### Fixed
 
 - Issue #581 "ddcutil 2.2.5 causes KDE Plasma freeze due to excessive 
   permission checks".  For some undetermined reason, despite the logged on user
   having RW access to /dev/i2c-devices, attempting to open these devices sometimes 
-  fails with Linux error EACCES. Functions **ddca_init2()** and **ddca_init**()
+  fails with Linux error EACCES. Functions **ddca_init2()** and **ddca_init()**
   now fail with status code EACCESS if the logged on user does not have RW 
   permission for all /dev/i2c devices that might possibly be used for DDC 
   communication.  As the cause of the permission loss is unclear, function 
@@ -75,15 +107,20 @@ at login.
   by a race condition in display change detection. Added mutex. Also addresses 
   issue #586.
 - Clear the display locks table during **ddca_redetect_displays()**.
-- Changes for glib 2.43, which is stricter about preserving const-ness of 
-  function string arguments.
-- Ignore case when processing options ***--mfg***, ***--model***, and ***--sn***.
-- Command **traceable-functions** failed if a non-traceable function was 
-  specified on the command line or in the ddcutil configuration file. 
+
 
 ## [2.2.5] 2026-01-26 
 
 Release 2.2.5 replaces release 2.2.4, which failed to build on aarch64.
+
+### General
+
+#### Fixed
+
+- Compilation failure in function xvrpt_vstring() when building on aarch64. 
+  Issue $574.
+
+### Shared Library
 
 #### Changed
 
@@ -94,12 +131,6 @@ Release 2.2.5 replaces release 2.2.4, which failed to build on aarch64.
   UDEV that the display has been removed.
 - **ddca_report_display_info()**, **ddca_report_display_info2()**: do not include the
   display number in the report as this is meaningless for shared library clients.
-
-#### Fixed
-
-- Compilation failure in function xvrpt_vstring() when building on aarch64. 
-  Issue $574.
-
 
 ## [2.2.4] 2026-01-21
 
