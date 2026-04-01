@@ -16,6 +16,7 @@
 
 bool        execute_shell_cmd(                const char * shell_cmd);
 bool        execute_shell_cmd_rpt(            const char * shell_cmd, int depth);
+GPtrArray * execute_shell_cmd_collect1(       const char * shell_cmd, GPtrArray* collector, char ** emsg_loc);
 GPtrArray * execute_shell_cmd_collect0(       const char * shell_cmd, GPtrArray* collector);
 GPtrArray * execute_shell_cmd_collect(        const char * shell_cmd);
 int         execute_cmd_collect_with_filter(

@@ -13,10 +13,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 /** \endcond */
 
 #include "config.h"
 
+#include "debug_util.h"
 #include "file_util.h"
 #include "glib_util.h"
 #include "report_util.h"
@@ -122,11 +124,15 @@ bool execute_shell_cmd(const char * shell_cmd) {
  *
  *  @param shell_cmd      command to execute
  *  @param collector      if non-null, use it instead of allocating new GPtrArray
+ *  @param emsg_loc       if non-null, return error msg here instead of writing
+ *                        it to stderr
  *
  *  @return :GPtrArray of response lines if command succeeded
  *           NULL                        if command failed, e.g. command not found
  */
-GPtrArray * execute_shell_cmd_collect0(const char * shell_cmd, GPtrArray* collector) {
+GPtrArray * execute_shell_cmd_collect1(
+               const char* shell_cmd, GPtrArray* collector, char** emsg_loc)
+{
    bool debug = false;
    GPtrArray* result = collector;
    if (!result)
@@ -143,7 +149,12 @@ GPtrArray * execute_shell_cmd_collect0(const char * shell_cmd, GPtrArray* collec
    // printf("(%s) open. errno=%d\n", __func__, errno);
     if (!fp) {
        // int errsv = errno;
-       fprintf(stderr, "Unable to execute command \"%s\": %s\n", shell_cmd, strerror(errno));
+       char * emsg = g_strdup_printf("Unable to execute command \"%s\": %s", shell_cmd, strerror(errno));
+       if (emsg_loc)
+          *emsg_loc = strdup(emsg);
+       else
+          fprintf(stderr, "%s", emsg);
+       free(emsg);
        ok = false;
     }
     else {
@@ -151,7 +162,6 @@ GPtrArray * execute_shell_cmd_collect0(const char * shell_cmd, GPtrArray* collec
        size_t len = 0;
        bool first_line = true;
        while ( getline(&a_line, &len, fp) >= 0) {
-
           if (strlen(a_line) > 0)
              a_line[strlen(a_line)-1] = '\0';
           if (debug)
@@ -160,6 +170,10 @@ GPtrArray * execute_shell_cmd_collect0(const char * shell_cmd, GPtrArray* collec
              if (str_ends_with(a_line, "not found")) {
                 // printf("(%s) found \"not found\"\n", __func__);
                 ok = false;
+                if (emsg_loc)
+                   *emsg_loc = strdup(a_line);
+                else
+                   fprintf(stderr, "%s\n", a_line);
                 break;
              }
              first_line = false;
@@ -172,15 +186,30 @@ GPtrArray * execute_shell_cmd_collect0(const char * shell_cmd, GPtrArray* collec
        free(a_line);
        int pclose_rc = pclose(fp);
        if (debug)
-          printf("(%s) plose() rc = %d\n", __func__, pclose_rc);
+          printf("(%s) pclose() rc = %d\n", __func__, pclose_rc);
     }
     if (!ok) {
-       g_ptr_array_free(result, true);
+       // g_ptr_array_free(result, true);
        result = NULL;
     }
     free(cmdbuf);
     return result;
  }
+
+
+/** Executes a shell command and returns the output as an array of strings.
+ *
+ *  @param shell_cmd      command to execute
+ *  @param collector      if non-null, use it instead of allocating new GPtrArray
+ *
+ *  @return :GPtrArray of response lines if command succeeded
+ *           NULL                        if command failed, e.g. command not found
+ */
+GPtrArray * execute_shell_cmd_collect0(const char * shell_cmd, GPtrArray* collector) {
+   bool debug = false;
+   DBGF(debug, "Starting. shell_cmd = |%s|, collector = %p", shell_cmd, collector);
+   return execute_shell_cmd_collect1(shell_cmd, collector, NULL);
+}
 
 
 /** Executes a shell command and returns the output as an array of strings.
