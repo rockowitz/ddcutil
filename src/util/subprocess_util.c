@@ -39,8 +39,7 @@
  */
 bool execute_shell_cmd_rpt(const char * shell_cmd, int depth) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. shell_cmd = |%s|\n", __func__, shell_cmd);
+   DBGF(debug, "Starting. shell_cmd = |%s|", shell_cmd);
    bool ok = true;
    FILE * fp;
    int bufsz = strlen(shell_cmd) + 50;
@@ -62,14 +61,14 @@ bool execute_shell_cmd_rpt(const char * shell_cmd, int depth) {
              int ch = a_line[strlen(a_line)-1];
              if (debug) {
                 if (ch != '\n')
-                   printf("(%s) Truncating character '%c' (0x%02x)\n", __func__, ch, ch);
+                   DBG("Truncating character '%c' (0x%02x)", ch, ch);
                 // else
                 //    printf("(%s) Truncating expected NL (0x%02x)\n", __func__, ch);
              }
              a_line[strlen(a_line)-1] = '\0';
           }
           else
-             printf("(%s) Zero length line\n", __func__);
+             DBG("Zero length line");
           if (first_line) {
              if (str_ends_with(a_line, "not found")) {
                 // printf("(%s) found \"not found\"\n", __func__);
@@ -100,8 +99,7 @@ bool execute_shell_cmd_rpt(const char * shell_cmd, int depth) {
        free(a_line);
        int pclose_rc = pclose(fp);
        int errsv = errno;
-       if (debug)
-          printf("(%s) pclose() rc=%d, error=%d - %s\n", __func__, pclose_rc, errsv, strerror(errsv));
+       DBGF(debug, "pclose() rc=%d, error=%d - %s", pclose_rc, errsv, strerror(errsv));
     }
     free(cmdbuf);
     return ok;
@@ -137,8 +135,7 @@ GPtrArray * execute_shell_cmd_collect1(
    GPtrArray* result = collector;
    if (!result)
       result = g_ptr_array_new_with_free_func(g_free);
-   if (debug)
-      printf("(%s) Starting. shell_cmd = |%s|\n", __func__, shell_cmd);
+   DBGF(debug, "Starting. shell_cmd = |%s|", shell_cmd);
    bool ok = true;
    FILE * fp;
    int bufsz = strlen(shell_cmd) + 50;
@@ -164,8 +161,7 @@ GPtrArray * execute_shell_cmd_collect1(
        while ( getline(&a_line, &len, fp) >= 0) {
           if (strlen(a_line) > 0)
              a_line[strlen(a_line)-1] = '\0';
-          if (debug)
-             printf("(%s) a_line = |%s|\n", __func__, a_line);
+          DBGF(debug, "a_line = |%s|\n", a_line);
           if (first_line) {
              if (str_ends_with(a_line, "not found")) {
                 // printf("(%s) found \"not found\"\n", __func__);
@@ -185,8 +181,7 @@ GPtrArray * execute_shell_cmd_collect1(
        }
        free(a_line);
        int pclose_rc = pclose(fp);
-       if (debug)
-          printf("(%s) pclose() rc = %d\n", __func__, pclose_rc);
+       DBGF(debug, "pclose() rc = %d", pclose_rc);
     }
     if (!ok) {
        // g_ptr_array_free(result, true);
@@ -227,6 +222,9 @@ GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
    return execute_shell_cmd_collect0(shell_cmd, lines);
 }
 
+// TODO factor out variant of execute_cmd_collect_with_filter()
+//      that returns error msg instead of writing to terminal,
+//      as in execute_commena_collect1()
 
 /** Execute a shell command and return the contents in a newly allocated
  *  #GPtrArray of lines. Optionally, keep only those lines containing at least
@@ -252,9 +250,8 @@ int execute_cmd_collect_with_filter(
       GPtrArray ** result_loc)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) cmd|%s|, ct(filter_terms)=%d, ignore_case=%s, limit=%d\n",
-            __func__, shell_cmd, ntsa_length(filter_terms), sbool(ignore_case), limit);
+   DBGF(debug, "cmd|%s|, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+           shell_cmd, ntsa_length(filter_terms), sbool(ignore_case), limit);
 
    int rc = 0;
    GPtrArray *line_array = execute_shell_cmd_collect(shell_cmd);
@@ -274,8 +271,7 @@ int execute_cmd_collect_with_filter(
    }
    *result_loc = line_array;
 
-   if (debug)
-      printf("(%s) Returning: %d\n", __func__, rc);
+   DBGF(debug, "Returning: %d", rc);
    return rc;
 }
 
