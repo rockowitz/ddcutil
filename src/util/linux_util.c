@@ -3,7 +3,7 @@
  *  Miscellaneous Linux utilities
  */
 
-// Copyright (C) 2020-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -84,9 +84,7 @@ bool is_readable_file(const char * filename)
 int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Staring. parm_name=%s, buffer=%p, bufsz=%d\n",
-             __func__, parm_name, buffer, bufsz);
+   DBGF(debug, "Staring. parm_name=%s, buffer=%p, bufsz=%d", parm_name, buffer, bufsz);
    buffer[0] = '\0';
 
    struct utsname utsbuf;
@@ -98,17 +96,14 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
 
    char search_str[40];
    snprintf(search_str, 40, "%s=", parm_name);
-   if (debug)
-      printf("(%s) search_str=|%s|, len=%ld\n", __func__, search_str, (unsigned long) strlen(search_str));
+   DBGF(debug, "search_str=|%s|, len=%ld", search_str, (unsigned long) strlen(search_str));
 
    GPtrArray * lines = g_ptr_array_new_full(15000, g_free);
    char * terms[2];
    terms[0] = search_str;
    terms[1] = NULL;
    int unfiltered_ct = read_file_with_filter(lines, config_fn, terms, false, 0, true);
-   if (debug)
-      printf("(%s) read_file_with_filter() returned %d, lines->len=%d\n",
-             __func__, unfiltered_ct, lines->len);
+   DBGF(debug, "read_file_with_filter() returned %d, lines->len=%d", unfiltered_ct, lines->len);
    if (unfiltered_ct < 0) {
       rc = unfiltered_ct;  // -errno
    }
@@ -119,9 +114,8 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
       assert(lines->len == 1);
       char * aline = g_ptr_array_index(lines, 0);
       char * value = aline + strlen(search_str);
-      if (debug)
-         printf("(%s) strlen(search_str)=%ld aline=%p->|%s|, value=%p->|%s|\n",
-                __func__, (unsigned long)strlen(search_str), aline, aline, value, value);
+      DBGF(debug, "strlen(search_str)=%ld aline=%p->|%s|, value=%p->|%s|",
+                   (unsigned long)strlen(search_str), aline, aline, value, value);
       assert(strlen(value) < bufsz);
       // snprintf(buffer, bufsz, "%s", value);
       strcpy(buffer, value);
@@ -129,14 +123,11 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
    }
    g_ptr_array_free(lines, true);
 
-   if (debug)
-      printf("(%s) rc=%d, strlen(buffer) = %ld, buffer=|%s|\n",
-             __func__, rc, (unsigned long) strlen(buffer), buffer);
+   DBGF(debug, "rc=%d, strlen(buffer) = %ld, buffer=|%s|",
+                rc, (unsigned long) strlen(buffer), buffer);
 
     ASSERT_IFF(rc==1, strlen(buffer) > 0);
-    if (debug)
-       printf("(%s) Done. parm=%s, returning %d, result=%s\n",
-              __func__,  parm_name, rc, buffer);
+    DBGF(debug, "Done. parm=%s, returning %d, result=%s", parm_name, rc, buffer);
     return rc;
 }
 
@@ -153,8 +144,7 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
  */
 bool find_module_ko(const char * module_name) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. module_name: %s\n", __func__, module_name);
+   DBGF(debug, "Starting. module_name: %s", module_name);
 
    struct utsname utsbuf;
    int rc = uname(&utsbuf);
@@ -169,15 +159,12 @@ bool find_module_ko(const char * module_name) {
    char cmd[200];
    g_snprintf(cmd, 200, "find /lib/modules/%s -name \"%s.ko*\" -o -name \"%s.ko*\"",
          utsbuf.release, module_name1, module_name2);
-   if (debug)
-      printf("(%s) cmd |%s|\n", __func__, cmd);
+   DBGF(debug, "cmd |%s|", cmd);
    GPtrArray * cmd_result = execute_shell_cmd_collect(cmd);
    if (cmd_result) {
-      if (debug)
-         printf("(%s) len=%d\n", __func__, cmd_result->len);
+      DBGF(debug, "len=%d", __func__, cmd_result->len);
       if (cmd_result->len > 0) {
-         if (debug)
-             printf("(%s) Found: %s\n", __func__, (char*) g_ptr_array_index(cmd_result,0));
+         DBGF(debug, "Found: %s", (char*) g_ptr_array_index(cmd_result,0));
          result = true;
       }
       g_ptr_array_free(cmd_result,true);
@@ -185,8 +172,7 @@ bool find_module_ko(const char * module_name) {
    free(module_name1);
    free(module_name2);
 
-   if (debug)
-      printf("(%s) Done.  Returning %s\n", __func__, sbool(result));
+   DBGF(debug, "Done.  Returning %s", sbool(result));
    return result;
 }
 
@@ -208,8 +194,7 @@ bool find_module_ko(const char * module_name) {
  */
 bool is_module_built_in(const char * module_name) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. module_name = |%s|\n", __func__, module_name);
+   DBGF(debug, "Starting. module_name = |%s|", module_name);
 
    // Look for name variants with either "-" or "_"
    char * module_name1 = g_strdup_printf("%s.ko", module_name);
@@ -233,12 +218,10 @@ bool is_module_built_in(const char * module_name) {
       // not everything is under kernel/drivers e.g. fbdev.ko is under kernel/arch/x86/video
       g_snprintf(cmd, 200, "grep  -e \"^kernel/.*/%s\" -e \"^kernel/.*/%s\"  %s ",
                  module_name1, module_name2, builtin_fn);  // allow for .ko.xz etc.
-      if (debug)
-         printf("(%s) cmd |%s|\n", __func__, cmd);
+      DBGF(debug, "cmd |%s|", cmd);
       GPtrArray * cmd_result = execute_shell_cmd_collect(cmd);
       if (cmd_result) {
-         if (debug)
-            printf("(%s) len=%d\n", __func__, cmd_result->len);
+         DBGF(debug, "len=%d", cmd_result->len);
          if (cmd_result->len > 0) {
             found = true;
          }
@@ -265,8 +248,7 @@ bool is_module_built_in(const char * module_name) {
    free(module_name1);
    free(module_name2);
 
-   if (debug)
-      printf("(%s) Done.    module_name=%s, Returning %s\n", __func__, module_name, sbool(found));
+   DBGF(debug, "Done.    module_name=%s, Returning %s", module_name, sbool(found));
    return found;
 }
 
@@ -287,9 +269,8 @@ int module_status_by_modules_builtin_or_existence(const char * module_name) {
          result = KERNEL_MODULE_LOADABLE_FILE;
       }
    }
-   if (debug)
-      printf("(%s) Executed. module_name=%s, returning %d = %s\n",
-             __func__, module_name, result, kernel_module_types[result]);
+   DBGF(debug, "Executed. module_name=%s, returning %d = %s",
+               module_name, result, kernel_module_types[result]);
    return result;
 }
 
@@ -339,15 +320,14 @@ char i2c_dev_status_by_boot_config_file() {
  */
 intmax_t get_thread_id() {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting.\n", __func__);
+   DBGF(debug, "Starting.");
+
 #ifdef TARGET_BSD
    int tid = pthread_getthreadid_np();
 #else
    pid_t tid = syscall(SYS_gettid);
 #endif
-   if (debug)
-      printf("(%s) Done.    Returning %jd\n", __func__, (intmax_t) tid);
+   DBGF(debug, "Done.    Returning %jd", (intmax_t) tid);
    return tid;
 }
 
