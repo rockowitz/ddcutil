@@ -18,7 +18,6 @@
 #include <pwd.h>
 #include <stdbool.h>
 #include <string.h>
-
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -39,6 +38,9 @@
 
 #include "common_inlines.h"
 #include "debug_util.h"
+#ifdef USE_DBUS
+#include "dbus_util.h"
+#endif
 #include "file_util.h"
 #include "report_util.h"
 #include "string_util.h"
@@ -628,7 +630,7 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg, GP
    if (!collector)
       collector = g_ptr_array_new_with_free_func(g_free);
    if (msg)
-      g_ptr_array_add(collector, strdup(msg));
+      g_ptr_array_add(collector, (char*) strdup(msg));
 
    int uid  = (int) getuid();
    int euid = (int) geteuid();
@@ -673,6 +675,20 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg, GP
    rpt_facl_collect0(fqfn, collector, depth);
    rpt_lsof_collect0(fqfn, collector);
 
+#ifdef USE_DBUS
+  uint64_t interval_millis = 5000;
+  uint64_t resumed_millisec = millisec_since_resumed_from_sleep();
+
+  char * s0 = g_strdup_printf("millisec_since_returned_from_sleep(): %"PRIu64, resumed_millisec);
+  DBGF(debug, "%s", s0);
+  g_ptr_array_add(collector, s0);
+  bool recently_returned =  (resumed_millisec < interval_millis);
+  char * s1 = g_strdup_printf("interval_millis: %"PRIu64", recently returned = %s",
+        interval_millis, SBOOL(recently_returned));
+  DBGF(debug, s1);
+  g_ptr_array_add(collector, s1);
+#endif
+
    DBGF(debug, "Done.    returning %p", collector);
    return collector;
 }
@@ -714,8 +730,10 @@ void diagnose_open_failure_to_syslog(const char * fqfn, const char * msg) {
    GPtrArray * lines = diagnose_open_failure_collect(fqfn, msg, NULL);
    //  rpt_facl_collect0(fqfn, lines, 1);
    for (int ndx = 0; ndx < lines->len; ndx++) {
+      char * cur_line = g_ptr_array_index(lines,ndx);
+      // DBG("cur_line |%s|", cur_line);
       char * s = g_strdup_printf("[%6jd] %*s%s",
-                                 TID(), depth, " ", (char*) g_ptr_array_index(lines, ndx));
+                                 TID(), depth, " ", cur_line);
       // rpt_vstring(0, "%s", s);
       syslog(LOG_DEBUG, "%s", s);
    }
