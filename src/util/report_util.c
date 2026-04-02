@@ -335,6 +335,26 @@ void rpt_nl() {
 }
 
 
+// temp location
+void g_ptr_array_to_syslog(
+      int        syslog_level,
+      GPtrArray* array,
+      bool       ornament,
+      char *     tag)
+{
+   assert(array);
+   char prefix[100] = "";
+   if (ornament)
+      get_msg_decoration(prefix, 100, true);
+   for (int ndx = 0; ndx < array->len; ndx++){
+       syslog(syslog_level,  "%s%s%s",
+                          (tag) ? tag : "",
+                          prefix,
+                          (char*) g_ptr_array_index(array, ndx));
+   }
+}
+
+
 /** Writes a constant string to the current output destination, or adds
  *  the string to a specified GPtrArray.
  *

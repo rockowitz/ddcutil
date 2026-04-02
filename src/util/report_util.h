@@ -32,6 +32,14 @@ extern "C" {
 extern __thread Byte rpt_prefix_options;
 #endif
 
+// temp location
+void g_ptr_array_to_syslog(
+      int        syslog_level,
+      GPtrArray* array,
+      bool       ornament,
+      char *     tag);
+
+
 // If set, report messages are written to the system log, not the terminal
 extern bool redirect_reports_to_syslog;
 // If set, report messages have a letter tag appended, as a debugging aid
