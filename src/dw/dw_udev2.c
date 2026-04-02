@@ -109,11 +109,14 @@ bool dw_udev_watch(int watch_loop_millisec) {
                DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
                SYSLOG2(DDCA_SYSLOG_NOTICE, "Udev event detected");
 
+               Udev_Event_Detail * detail = collect_udev_event_detail(dev);
                if (debug || report_udev_events) {
-                  Udev_Event_Detail * detail = collect_udev_event_detail(dev);
                   dbgrpt_udev_event_detail(detail,1);
-                  free_udev_event_detail(detail);
                }
+               GPtrArray* collector = udev_event_detail_to_collector(detail, NULL);  // allocates collector
+               g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
+               g_ptr_array_free(collector, true);
+               free_udev_event_detail(detail);
 
                udev_device_unref(dev);
                found = true;
