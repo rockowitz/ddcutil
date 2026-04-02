@@ -410,6 +410,22 @@ void free_udev_event_detail(Udev_Event_Detail * detail) {
 }
 
 
+GPtrArray* udev_event_detail_to_collector(Udev_Event_Detail * detail, GPtrArray* collector) {
+   if (!collector)
+      collector = g_ptr_array_new_with_free_func(g_free);
+   g_ptr_array_add(collector, strdup("Udev_Event_Detail"));
+   g_ptr_array_add(collector, g_strdup_printf("   prop_subsystem:  %s", detail->prop_subsystem));
+   g_ptr_array_add(collector, g_strdup_printf("   prop_action:     %s", detail->prop_action));
+   g_ptr_array_add(collector, g_strdup_printf("   prop_connector:  %s", detail->prop_connector));
+   g_ptr_array_add(collector, g_strdup_printf("   prop_devname:    %s", detail->prop_devname));
+   g_ptr_array_add(collector, g_strdup_printf("   prop_hotplug:    %s", detail->prop_hotplug));
+   g_ptr_array_add(collector, g_strdup_printf("   sysname:         %s", detail->sysname));
+   g_ptr_array_add(collector, g_strdup_printf("   syspath:         %s", detail->syspath));
+   g_ptr_array_add(collector, g_strdup_printf("   attr_name:       %s", detail->attr_name));
+   return collector;
+}
+
+
 void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth) {
    assert(detail);
    rpt_structure_loc("Udev_Event_Detail", detail, depth);

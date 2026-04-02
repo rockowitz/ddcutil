@@ -57,8 +57,6 @@ typedef struct {
 Udev_Event_Detail* collect_udev_event_detail(struct udev_device * dev);
 void free_udev_event_detail(Udev_Event_Detail * detail);
 void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth);
-
-
-void dbgrpt_udev_event_detail2(Udev_Event_Detail * detail, int depth);
+GPtrArray* udev_event_detail_to_collector(Udev_Event_Detail * detail, GPtrArray* collector);
 
 #endif /* UDEV_UTIL_H_ */
