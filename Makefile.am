@@ -92,6 +92,8 @@ show:
 	@echo "  JANSSON_CFLAGS          = $(JANSSON_CFLAGS)"
 	@echo "  ACL_CFLAGS              = $(ACL_CFLAGS)"
 	@echo "  ACL_LIBS                = $(ACL_LIBS)"
+	@echo "  DBUS_CFLAGS             = $(DBUS_CFLAGS)" 
+	@echo "  DBUS_LIBS               = $(DBUS_LIBS) "
 
 	@echo "  UDEV_CFLAGS             = $(UDEV_CFLAGS)"
 	@echo "  UDEV_LIBS               = $(UDEV_LIBS)"

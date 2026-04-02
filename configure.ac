@@ -284,6 +284,17 @@ AS_IF([test "x$enable_usb" = "xyes"],
         AC_MSG_NOTICE( [usb...              disabled] )
      )
 
+dnl *** configure option: --enable-dbus
+AC_ARG_ENABLE([dbus],
+              [ AS_HELP_STRING( [--enable-dbus=@<:@yes/no@:>@], [Use dbus@<:@default=yes@:>@] )],
+              [enable_dbus=${enableval}],
+              [enable_dbus=yes] )
+AS_IF([test "x$enable_dbus" = "xyes"],
+        AC_MSG_NOTICE( [dbus...              enabled (provisional) ]  )
+      ,
+        AC_MSG_NOTICE( [dbus...              disabled] )
+     )
+
 dnl *** configure option: --enable-drm
 AC_ARG_ENABLE([drm],
               [ AS_HELP_STRING( [--enable-drm=@<:@yes/no@:>@], [Use DRM@<:@default=yes@:>@] )],
@@ -646,6 +657,36 @@ AS_IF( [test 0$DBG -ne 0],
           AC_MSG_NOTICE( [LIBUSB_LIBS:      $LIBUSB_LIBS] )
        ]) 
 
+### libdbus
+
+
+AS_IF([test "x$enable_dbus" = "xyes"],
+         [ PKG_CHECK_MODULES(DBUS, dbus-1, 
+             [libdbus_found=yes], 
+             [libdbus_found=no
+              AC_MSG_WARN( [dbus-1 not found.])
+              enable_dbus=no
+             ]
+           ) 
+         ],
+         [ AC_MSG_NOTICE( [dbus disabled, not checking for libdbus] ) ]
+     )
+
+AM_CONDITIONAL([USE_DBUS_COND], [test "x$enable_dbus" = "xyes"] )
+AS_IF([test "x$enable_dbus" = "xyes"],
+        AC_DEFINE([USE_DBUS], [1], [Use dbus])
+        AC_MSG_NOTICE( [dbus...             enabled]  )
+      ,
+        AC_MSG_NOTICE( [dbus...             disabled] )
+     )
+
+AS_IF( [test 0$DBG -ne 0], 
+       [
+          AC_MSG_NOTICE( [DBUS_CFLAGS:    $DBUS_CFLAGS] )
+          AC_MSG_NOTICE( [DBUS_LIBS:      $DBUS_LIBS] )
+       ]) 
+
+
 ### libdrm 
 
 AS_IF([test "x$enable_drm" = "xyes"],
@@ -918,6 +959,7 @@ AC_MSG_RESULT([
 	enable_udev             ${enable_udev}
 	enable_usb:             ${enable_usb}
 	enable_drm:             ${enable_drm}
+	enable_dbus:            ${enable_dbus}
 	enable_watch_displays:  ${enable_watch_displays}
 	enable_x11:             ${enable_x11}   
 dnl	enable_trace:           ${enable_trace}

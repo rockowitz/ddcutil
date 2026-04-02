@@ -234,6 +234,12 @@ libcommon_la_LIBADD += \
   usb/libusb.la
 endif
 
+# if USE_DBUS_COND
+# libcommon_la_LIBADD += \
+#    dbus_util/libdbusmutil.la 
+# endif
+
+
 if USE_X11_COND
   libcommon_la_LIBADD += $(LIBX11_LIBS) $(XEXT_LIBS)  $(XRANDR_LIBS) 
 endif
@@ -269,8 +275,12 @@ libapp_la_LIBADD  += \
 test/libtestcases.la
 endif
 
+if USE_DBUS_COND
+libcommon_la_LIBADD += $(DBUS_LIBS)
+endif
+
 if USE_LIBDRM_COND
-  libcommon_la_LIBADD += $(LIBDRM_LIBS) 
+libcommon_la_LIBADD += $(LIBDRM_LIBS) 
 endif
 
 

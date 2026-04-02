@@ -1,7 +1,8 @@
 # src/util/Makefile.am
 
 AM_CPPFLAGS =        \
-   $(LIBDRM_CFLAGS)   \
+   $(DBUS_CFLAGS)     \
+   $(LIBDRM_CFLAGS)  \
    $(GLIB_CFLAGS) 
 
 AM_CFLAGS = $(AM_CFLAGS_STD)
@@ -82,6 +83,11 @@ libdrm_util.c \
 libdrm_aux_util.c
 endif
 
+if USE_DBUS_COND
+libutil_la_SOURCES += \
+dbus_util.c 
+endif
+
 if USE_X11_COND
 libutil_la_SOURCES += x11_util.c
 endif
@@ -91,7 +97,7 @@ endif
 # endif
 
 # Rename to "all-local" for development
-all-local-disabled:
+all-local:
 	@echo ""
 	@echo "(src/util/Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:       $(CLEANFILES)"
@@ -101,6 +107,7 @@ all-local-disabled:
 	@echo "   AM_CPPFLAGS:      $(AM_CPPFLAGS)"
 	@echo "   AUTOMAKE_OPTIONS: $(AUTOMAKE_OPTIONS)"
 	@echo "   MAKELEVEL:        $(MAKELEVEL)"
+	@echo "   DBUS_CFLAGS       $(DBUS_CFLAGS)"
 	@echo "   MAKEFLAGS:        $(MAKEFLAGS)"
 	@echo "   V:                $(V)"
 	@echo "   AM_CFLAGS_STD:    $(AM_CFLAGS_STD)"
