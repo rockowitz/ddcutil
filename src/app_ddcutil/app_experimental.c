@@ -67,7 +67,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 #endif
    // REPORT_FLAG_OPTION(16, "Simple report /sys/class/drm");
    REPORT_FLAG_OPTION(16, "Tag output messages");
-   REPORT_FLAG_OPTION(17, "Unused");
+   REPORT_FLAG_OPTION(17, "Force open failure");
    REPORT_FLAG_OPTION(18, "Always report UDEV events");
    REPORT_FLAG_OPTION(19, "Stabilize added buses with edid");
    REPORT_FLAG_OPTION(20, "DO NOT use x37 detection state hash");

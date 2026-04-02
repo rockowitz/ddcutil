@@ -89,6 +89,7 @@ bool try_get_edid_from_sysfs_first = true;
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool fail_i2c_all_relevant_i2c_buses_rw = false;
 bool fail_i2c_all_edids_readable_using_i2c = false;
+bool force_i2c_open_failure = false;
 
 
 // quick and dirty for debugging
@@ -334,8 +335,9 @@ unlock_display_by_businfo(I2C_Bus_Info * businfo) {
 Error_Info *
 i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "filename=%s, callopts=0x%02x, fd_loc=%p",
-                                       filename, callopts, fd_loc);
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "filename=%s, callopts=0x%02x, fd_loc=%p, force_i2c_open_failure=%s",
+         filename, callopts, fd_loc, sbool(force_i2c_open_failure));
    Error_Info * err = NULL;
    RECORD_IO_EVENT(
          -1,
@@ -343,29 +345,31 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
          ( *fd_loc = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
    // if successful returns file descriptor, if fail, returns -1 and errno is set
-   //  *fd_loc = -1;   // *** TEST ***
+   if (force_i2c_open_failure)   // for testing
+      *fd_loc = -1;
    if (*fd_loc < 0) {
       // if (first_open_error) {
       //    first_open_error = false;
 
-         int errsv = -errno;
-         // errsv = -EACCES;   // *** TEST ***
-         char * msg = g_strdup_printf("open(%s) failed. errno=%s", filename, psc_desc(errsv));
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
-         err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s in file %s near line %d",
+      int errsv = -errno;
+      if (force_i2c_open_failure)
+         errsv = -EACCES;
+      char * msg = g_strdup_printf("open(%s) failed. errno=%s", filename, psc_desc(errsv));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
+      free(msg);
+      err = ERRINFO_NEW(errsv,  "Open failed for %s, errno=%s in file %s near line %d",
                filename, psc_desc(errsv), __FILE__, __LINE__);
 
-         if (err->status_code == -EACCES) {
-            rpt_vstring(0, "%s", err->detail);
-            // diagnose_open_failure(filename, err->detail);
+      if (err->status_code == -EACCES) {
+         rpt_vstring(0, "%s", err->detail);
+         // diagnose_open_failure(filename, err->detail);
+         syslog(LOG_ERR, "%s", err->detail);
+         // TMI:
+         current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
+         diagnose_open_failure_to_syslog(filename, err->detail);
+      //  }
+      }
 
-            syslog(LOG_ERR, "%s", err->detail);
-            // TMI:
-            current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
-            diagnose_open_failure_to_syslog(filename, err->detail);
-          }
-      // }
-         free(msg);
    }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
