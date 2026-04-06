@@ -237,7 +237,7 @@ i2c_all_relevant_i2c_buses_rw() {
  */
 Error_Info *
 i2c_all_edids_readable_using_i2c() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    Error_Info * errs = i2c_all_relevant_i2c_buses_rw();
