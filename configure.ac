@@ -284,6 +284,18 @@ AS_IF([test "x$enable_usb" = "xyes"],
         AC_MSG_NOTICE( [usb...              disabled] )
      )
 
+dnl *** configure option: --enable-systemd
+AC_ARG_ENABLE([systemd],
+              [ AS_HELP_STRING( [--enable-systemd=@<:@yes/no@:>@], [Use systemd@<:@default=yes@:>@] )],
+              [enable_systemd=${enableval}],
+              [enable_systemd=yes] )
+AS_IF([test "x$enable_systemd" = "xyes"],
+        AC_MSG_NOTICE( [systemd...           enabled (provisional) ]  )
+      ,
+        AC_MSG_NOTICE( [systemd...           disabled] )
+     )
+
+
 dnl *** configure option: --enable-dbus
 AC_ARG_ENABLE([dbus],
               [ AS_HELP_STRING( [--enable-dbus=@<:@yes/no@:>@], [Use dbus@<:@default=yes@:>@] )],
@@ -657,6 +669,36 @@ AS_IF( [test 0$DBG -ne 0],
           AC_MSG_NOTICE( [LIBUSB_LIBS:      $LIBUSB_LIBS] )
        ]) 
 
+### libsystemd
+
+
+AS_IF([test "x$enable_systemd" = "xyes"],
+         [ PKG_CHECK_MODULES(SYSTEMD, libsystemd, 
+             [libsystemd_found=yes], 
+             [libsystemd_found=no
+              AC_MSG_WARN( [systemd not found.])
+              enable_systemd=no
+             ]
+           ) 
+         ],
+         [ AC_MSG_NOTICE( [systemd disabled, not checking for libsystemd] ) ]
+     )
+
+AM_CONDITIONAL([USE_SYSTEMD_COND], [test "x$enable_systemd" = "xyes"] )
+AS_IF([test "x$enable_systemd" = "xyes"],
+        AC_DEFINE([USE_SYSTEMD], [1], [Use systemd])
+        AC_MSG_NOTICE( [systemd...             enabled]  )
+      ,
+        AC_MSG_NOTICE( [systemd...             disabled] )
+     )
+
+AS_IF( [test 0$DBG -ne 0], 
+       [
+          AC_MSG_NOTICE( [systemd_CFLAGS:    $systemd_CFLAGS] )
+          AC_MSG_NOTICE( [systemd_LIBS:      $systemd_LIBS] )
+       ]) 
+
+
 ### libdbus
 
 
@@ -960,6 +1002,7 @@ AC_MSG_RESULT([
 	enable_usb:             ${enable_usb}
 	enable_drm:             ${enable_drm}
 	enable_dbus:            ${enable_dbus}
+	enable_systemd:         ${enable_systemd}
 	enable_watch_displays:  ${enable_watch_displays}
 	enable_x11:             ${enable_x11}   
 dnl	enable_trace:           ${enable_trace}

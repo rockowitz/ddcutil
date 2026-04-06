@@ -88,6 +88,12 @@ libutil_la_SOURCES += \
 dbus_util.c 
 endif
 
+# future
+# if USE_SYSTEMD_COND
+# libutil_la_SOURCES += \
+# systemd_dbus_util.c 
+# endif
+
 if USE_X11_COND
 libutil_la_SOURCES += x11_util.c
 endif
@@ -97,7 +103,7 @@ endif
 # endif
 
 # Rename to "all-local" for development
-all-local:
+all-local-dusabked:
 	@echo ""
 	@echo "(src/util/Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:       $(CLEANFILES)"

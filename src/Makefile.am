@@ -279,6 +279,10 @@ if USE_DBUS_COND
 libcommon_la_LIBADD += $(DBUS_LIBS)
 endif
 
+if USE_SYSTEMD_COND
+libcommon_la_LIBADD += $(SYSTEMD_LIBS)
+endif
+
 if USE_LIBDRM_COND
 libcommon_la_LIBADD += $(LIBDRM_LIBS) 
 endif
