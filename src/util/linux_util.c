@@ -259,6 +259,14 @@ char * kernel_module_types[] = {
       "KERNEL_MODULE_BUILTIN",            // 1
       "KERNEL_MODULE_LOADABLE_FILE"};     // 2
 
+/** Checks if a module is built into the kernel and, if not, checks if a
+ *  loadable kernel module file exists.
+ *
+ *  @param  module name
+ *  @retval KERNEL_MODULE_NOT_FOUND      not found
+ *  @retval KERNEL_MODULE_BUILTIN        kernel module is built in
+ *  @retval KERNEL_MODULE_LOADABLE_FILE  kernel module is a lotable file
+ */
 int module_status_by_modules_builtin_or_existence(const char * module_name) {
    bool debug = false;
    int result = KERNEL_MODULE_NOT_FOUND;
@@ -438,7 +446,6 @@ char * gid_name(int gid) {
 }
 
 
-
 /** Checks that a thread or process id is valid.
  *
  *  @param  id  thread or process id
@@ -521,8 +528,12 @@ GPtrArray* rpt_lsof_collect(const char * fqfn) {
 }
 
 
-/** Collects information about the file access control list (ACL) for a file,
+/** Collects information about the access control list (ACL) for a file,
  *  using the libacl API, and returns it as an array of lines.
+ *
+ *  The output is similar to, but not identical to, that of command **facl**.
+ *  In particular, the effective permissons, after mask application, are
+ *  not reported.
  *
  *  @param  fqfn  file name
  *  @param  collector   if NULL, allocate new GPtrArray
@@ -604,7 +615,10 @@ void report_facl_to_syslog(const char * fqfn, int log_level, int depth) {
  *  @param   msg   if non-NULL, start with this message
  *  @return  array of lines (caller must free)
  */
-GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg, GPtrArray * collector) {
+GPtrArray* diagnose_open_failure_collect(const char * fqfn,
+                                         const char * msg,
+                                         GPtrArray * collector)
+{
    bool debug = true;
    DBGF(debug, "Starting.  fqfn=%s, msg=%s, collector=%p", fqfn, msg, collector);
 
@@ -672,17 +686,17 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg, GP
   free(s1);
 #endif
 
-  uint64_t elapsed_ns = elapsed_since_resume_from_sleep_ns();
-  char * s2 = NULL;
-  if (elapsed_ns == 0)
-     s2 = strdup("No resume from sleep recorded");
-  else
-     s2 = g_strdup_printf(""
+   uint64_t elapsed_ns = elapsed_since_resume_from_sleep_ns();
+   char * s2 = NULL;
+   if (elapsed_ns == 0)
+      s2 = strdup("No resume from sleep recorded");
+   else
+      s2 = g_strdup_printf(""
            "Time since last resume from sleep: %s seconds = %"PRIu64" millisec (%"PRIu64 "nanosec)",
            formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
-  DBGF(debug, s2);
-  g_ptr_array_add(collector, s2);
-  free(s2);
+   DBGF(debug, s2);
+   g_ptr_array_add(collector, s2);
+   free(s2);
 #endif
 
    DBGF(debug, "Done.    returning collector = %p", collector);
