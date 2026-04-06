@@ -26,6 +26,7 @@
 
 #include "util/data_structures.h"
 #include "util/ddcutil_config_file.h"
+#include "util/dbus_util.h"
 #include "util/debug_util.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
@@ -1169,6 +1170,9 @@ main(int argc, char *argv[]) {
          main_rc = EXIT_FAILURE;
       }
       else {
+         ldbus_start_sleep_watch_thread();
+         // watch_for_sleep_using_sdbus();
+
          // DBGMSG("Explicitly adding traceable functions...");
          // add_traced_function("dw_emit_display_status_record");
          // add_traced_function("dw_add_display_by_businfo");

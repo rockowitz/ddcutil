@@ -20,6 +20,7 @@
 #include "public/ddcutil_c_api.h"
 
 #include "util/ddcutil_config_file.h"
+#include "util/dbus_util.h"
 #include "util/debug_util.h"
 #include "util/file_util.h"
 #include "util/msg_util.h"
@@ -870,6 +871,15 @@ ddci_init(const char *      libopts,
       }
       else
          DBGF(debug, "init_tracing succeeded");
+   }
+
+   if (!master_error) {
+      DBGF(true, "Calling ldbus_start_sleep_watch_thread...");
+      bool ok = ldbus_start_sleep_watch_thread();   // right location?
+      if (!ok) {
+         DBGF(true, "ldbus_start_sleep_watch_thread() failed");
+         // for now, don't set master_error
+      }
    }
 
    if (!master_error) {

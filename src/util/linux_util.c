@@ -45,6 +45,7 @@
 #include "report_util.h"
 #include "string_util.h"
 #include "subprocess_util.h"
+#include "timestamp.h"
 
 #include "linux_util.h"
 
@@ -604,7 +605,7 @@ void report_facl_to_syslog(const char * fqfn, int log_level, int depth) {
  *  @return  array of lines (caller must free)
  */
 GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg, GPtrArray * collector) {
-   bool debug = false;
+   bool debug = true;
    DBGF(debug, "Starting.  fqfn=%s, msg=%s, collector=%p", fqfn, msg, collector);
 
    if (!collector)
@@ -656,6 +657,7 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg, GP
    rpt_lsof_collect0(fqfn, collector);
 
 #ifdef USE_DBUS
+#ifdef WRONG
   uint64_t interval_millis = 5000;
   uint64_t resumed_millisec = millisec_since_resumed_from_sleep();
 
@@ -667,9 +669,23 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn, const char * msg, GP
         interval_millis, SBOOL(recently_returned));
   DBGF(debug, s1);
   g_ptr_array_add(collector, s1);
+  free(s1);
 #endif
 
-   DBGF(debug, "Done.    returning %p", collector);
+  uint64_t elapsed_ns = elapsed_since_resume_from_sleep_ns();
+  char * s2 = NULL;
+  if (elapsed_ns == 0)
+     s2 = strdup("No resume from sleep recorded");
+  else
+     s2 = g_strdup_printf(""
+           "Time since last resume from sleep: %s seconds = %"PRIu64" millisec (%"PRIu64 "nanosec)",
+           formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
+  DBGF(debug, s2);
+  g_ptr_array_add(collector, s2);
+  free(s2);
+#endif
+
+   DBGF(debug, "Done.    returning collector = %p", collector);
    return collector;
 }
 
