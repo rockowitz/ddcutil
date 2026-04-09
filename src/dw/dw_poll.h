@@ -7,6 +7,7 @@
 #define DW_POLL_H_
 
 #include <glib-2.0/glib.h>
+#include <stdbool.h>
 
 extern int  nonudev_poll_loop_millisec;
 extern int  retry_thread_sleep_factor_millisec;
