@@ -111,11 +111,10 @@ is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
  */
 bool drefs_edid_equal(Display_Ref * dref1, Display_Ref * dref2) {
    bool debug = false;
-   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      char * s = g_strdup( dref_repr_t(dref2));
-      DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref1=%s, dref2=%s", dref_repr_t(dref1), s);
-      free(s);
-   }
+   char * s = g_strdup( dref_repr_t(dref2));
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref1=%s, dref2=%s", dref_repr_t(dref1), s);
+   free(s);
+
    assert(dref1);
    assert(dref2);
    Parsed_Edid * pedid1 = dref1->pedid;
