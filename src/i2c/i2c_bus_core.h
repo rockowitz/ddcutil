@@ -75,7 +75,7 @@ int              i2c_detect_buses();            // creates internal array of Bus
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
 Byte_Value_Array i2c_detect_attached_buses();
 Bit_Set_256      i2c_detect_attached_buses_as_bitset();
-Bit_Set_256      i2c_filter_buses_w_edid_as_bitset(BS256 bs_all_buses) ;
+Bit_Set_256      i2c_filter_buses_w_edid_as_bitset(Bit_Set_256 bs_all_buses);
 Bit_Set_256      i2c_buses_w_edid_as_bitset();
 
 
