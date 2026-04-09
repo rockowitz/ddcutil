@@ -3,16 +3,19 @@
  * UDEV utility functions
  */
 
-// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Adapted from source code at http://www.signal11.us/oss/udev/
 
 /** \cond */
 #include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 /** \endcond */
 
 #include "debug_util.h"
@@ -34,12 +37,13 @@ void free_udev_device_summary(gpointer data) {
       Udev_Device_Summary * summary = (Udev_Device_Summary *) data;
       assert(memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
       summary->marker[3] = 'x';
-      // no need to free strings, they are consts
       free(summary->devpath);
       free(summary->sysattr_name);
       free(summary->sysname);
       free(summary->subsystem);
-   free(summary);
+      free(summary->devnode);
+      free(summary->mode_string);
+      free(summary);
    }
 }
 
@@ -61,18 +65,39 @@ void free_udev_device_summaries(GPtrArray* summaries) {
  * \remark
  * It is the responsibility of the caller to free the returned struct
  * using #free_udev_device_summary().
- * The strings pointed within #Udev_Device_Summary are consts
- * within the UDEV data structures and should not be freed.
+ *
+ * \remark
+ * mode_string stays NULL if stat() fails (e.g. device disappeared between
+ * enumeration and the call)
+ *
+ * \remark
+ *  Note that mode_string here comes from stat() at enumeration time rather
+ *  than a udev event, so it's subject to the race condition where the device
+ *  has been created but permissions have not yet been applied.
+ *  But for summarize_udev_subsystem_devices() (enumerating existing devices),
+ *  rather than reacting to new-device events, the device is already fully set
+ *  up so the race doesn't apply.
  */
 static
 Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
-  Udev_Device_Summary * summary = calloc(1,sizeof(struct udev_device_summary));
+  Udev_Device_Summary * summary = calloc(1,sizeof(Udev_Device_Summary));
   memcpy(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4);
   // n. all strings returned are const char *
   summary->devpath      = g_strdup(udev_device_get_devpath(dev));
   summary->sysname      = g_strdup(udev_device_get_sysname(dev));
   summary->sysattr_name = g_strdup(udev_device_get_sysattr_value(dev, "name"));
   summary->subsystem    = g_strdup(udev_device_get_subsystem(dev));
+  const char * node     = udev_device_get_devnode(dev);
+  summary->devnode      = g_strdup(node);
+  if (node) {
+     summary->is_readable  = (access(node, R_OK) == 0);
+     summary->is_writable  = (access(node, W_OK) == 0);
+     summary->is_ereadable = (faccessat(AT_FDCWD, node, R_OK, AT_EACCESS) == 0);
+     summary->is_ewritable = (faccessat(AT_FDCWD, node, W_OK, AT_EACCESS) == 0);
+     struct stat st;
+     if (stat(node, &st) == 0)
+        summary->mode_string = g_strdup_printf("%04o", st.st_mode & 07777);
+  }
   return summary;
 }
 
@@ -149,7 +174,7 @@ GPtrArray * find_devices_by_sysattr_name(char * name) {
 
    udev = udev_new();    // Create the udev object
    if (!udev) {
-      printf("(%s) Can't create udev\n", __func__);
+      fprintf(stderr, "(%s) Can't create udev\n", __func__);
       goto bye;
    }
 
@@ -196,7 +221,7 @@ GPtrArray * filter_device_summaries(
    if (!summaries || !keep_func)
       goto bye;
 
-   for (int ndx=0; ndx < summaries->len; ndx++) {
+   for (int ndx=summaries->len-1; ndx >=0; ndx--) {
       Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
       if (!keep_func(summary))
          g_ptr_array_remove_index(summaries, ndx);
@@ -387,6 +412,41 @@ void dbgrpt_udev_device(struct udev_device * dev, bool verbose, int depth) {
    }
 }
 
+
+//
+// Udev_Device_Summary
+//
+
+void dbgrpt_udev_device_summary(Udev_Device_Summary * summary, int depth) {
+   assert(summary);
+   rpt_structure_loc("Udev_Device_Summary", summary, depth);
+   int d1 = depth + 1;
+   rpt_vstring(d1, "sysname:      %s", summary->sysname);
+   rpt_vstring(d1, "devpath:      %s", summary->devpath);
+   rpt_vstring(d1, "subsystem:    %s", summary->subsystem);
+   rpt_vstring(d1, "sysattr_name: %s", summary->sysattr_name);
+   rpt_vstring(d1, "devnode:      %s", summary->devnode);
+   rpt_vstring(d1, "mode_string:  %s", summary->mode_string);
+   rpt_vstring(d1, "is_readable:  %s", sbool(summary->is_readable));
+   rpt_vstring(d1, "is_writable:  %s", sbool(summary->is_writable));
+   rpt_vstring(d1, "is_ereadable: %s", sbool(summary->is_ereadable));
+   rpt_vstring(d1, "is_ewritable: %s", sbool(summary->is_ewritable));
+}
+
+
+void dbgrpt_udev_device_summaries(GPtrArray * device_summaries, int depth) {
+   if (!device_summaries) {
+      rpt_vstring(depth, "Udev_Device_Summary array is NULL");
+   }
+   else {
+      rpt_vstring(depth, "Udev_Device_Summary array, %d entries:", device_summaries->len);
+      for (int ndx = 0; ndx < device_summaries->len; ndx++) {
+         dbgrpt_udev_device_summary(g_ptr_array_index(device_summaries, ndx), depth+1);
+      }
+   }
+}
+
+
 //
 // Udev_Event_Detail
 //
@@ -396,8 +456,11 @@ Udev_Event_Detail* collect_udev_event_detail(struct udev_device * dev) {
    cd->attr_name      = udev_device_get_sysattr_value(dev, "name");
    cd->prop_action    = udev_device_get_property_value(dev, "ACTION");     // always "changed"
    cd->prop_connector = udev_device_get_property_value(dev, "CONNECTOR");  // drm connector number
-   cd->prop_devname   = udev_device_get_property_value(dev, "DEVNAME");    // e.g. /dev/dri/card0
+   cd->prop_devname   = udev_device_get_property_value(dev, "DEVNAME");    // e.g. /dev/i2c-5
+   cd->prop_devmode   = udev_device_get_property_value(dev, "DEVMODE");    // permissions, e.g. 0660
    cd->prop_hotplug   = udev_device_get_property_value(dev, "HOTPLUG");    // always 1
+   cd->prop_major     = udev_device_get_property_value(dev, "MAJOR");      // major device number
+   cd->prop_minor     = udev_device_get_property_value(dev, "MINOR");      // minor device number
    cd->prop_subsystem = udev_device_get_property_value(dev, "SUBSYSTEM");
    cd->sysname        = udev_device_get_sysname(dev);                      // e.g. card0, i2c-27
    cd->syspath        = udev_device_get_syspath(  dev);
@@ -413,12 +476,15 @@ void free_udev_event_detail(Udev_Event_Detail * detail) {
 GPtrArray* udev_event_detail_to_collector(Udev_Event_Detail * detail, GPtrArray* collector) {
    if (!collector)
       collector = g_ptr_array_new_with_free_func(g_free);
-   g_ptr_array_add(collector, strdup("Udev_Event_Detail"));
+   g_ptr_array_add(collector, g_strdup("Udev_Event_Detail"));
    g_ptr_array_add(collector, g_strdup_printf("   prop_subsystem:  %s", detail->prop_subsystem));
    g_ptr_array_add(collector, g_strdup_printf("   prop_action:     %s", detail->prop_action));
    g_ptr_array_add(collector, g_strdup_printf("   prop_connector:  %s", detail->prop_connector));
    g_ptr_array_add(collector, g_strdup_printf("   prop_devname:    %s", detail->prop_devname));
+   g_ptr_array_add(collector, g_strdup_printf("   prop_devmode:    %s", detail->prop_devmode));
    g_ptr_array_add(collector, g_strdup_printf("   prop_hotplug:    %s", detail->prop_hotplug));
+   g_ptr_array_add(collector, g_strdup_printf("   prop_major:      %s", detail->prop_major));
+   g_ptr_array_add(collector, g_strdup_printf("   prop_minor:      %s", detail->prop_minor));
    g_ptr_array_add(collector, g_strdup_printf("   sysname:         %s", detail->sysname));
    g_ptr_array_add(collector, g_strdup_printf("   syspath:         %s", detail->syspath));
    g_ptr_array_add(collector, g_strdup_printf("   attr_name:       %s", detail->attr_name));
@@ -434,12 +500,32 @@ void dbgrpt_udev_event_detail(Udev_Event_Detail * detail, int depth) {
    rpt_vstring(d1, "prop_action:     %s", detail->prop_action);
    rpt_vstring(d1, "prop_connector:  %s", detail->prop_connector);
    rpt_vstring(d1, "prop_devname:    %s", detail->prop_devname);
+   rpt_vstring(d1, "prop_devmode:    %s", detail->prop_devmode);
    rpt_vstring(d1, "prop_hotplug:    %s", detail->prop_hotplug);
+   rpt_vstring(d1, "prop_major:      %s", detail->prop_major);
+   rpt_vstring(d1, "prop_minor:      %s", detail->prop_minor);
    rpt_vstring(d1, "sysname:         %s", detail->sysname);
    rpt_vstring(d1, "syspath:         %s", detail->syspath);
    rpt_vstring(d1, "attr_name:       %s", detail->attr_name);
 }
 
+
+void dbgrpt_udev_event_basic_detail(Udev_Event_Detail * detail, int depth) {
+   assert(detail);
+   rpt_structure_loc("Udev_Event_Detail", detail, depth);
+   int d1 = depth + 1;
+   rpt_vstring(d1, "prop_subsystem:  %s", detail->prop_subsystem);
+   rpt_vstring(d1, "prop_action:     %s", detail->prop_action);
+ //  rpt_vstring(d1, "prop_connector:  %s", detail->prop_connector);
+ //  rpt_vstring(d1, "prop_devname:    %s", detail->prop_devname);
+ //  rpt_vstring(d1, "prop_devmode:    %s", detail->prop_devmode);
+   rpt_vstring(d1, "prop_hotplug:    %s", detail->prop_hotplug);
+ //  rpt_vstring(d1, "prop_major:      %s", detail->prop_major);
+ //  rpt_vstring(d1, "prop_minor:      %s", detail->prop_minor);
+   rpt_vstring(d1, "sysname:         %s", detail->sysname);
+ //  rpt_vstring(d1, "syspath:         %s", detail->syspath);
+   rpt_vstring(d1, "attr_name:       %s", detail->attr_name);
+}
 
 
 #ifdef OLD
@@ -484,10 +570,7 @@ void dbgrpt_udev_device_by_function_call(struct udev_device * dev, int depth) {
    rpt_vstring(d0, "sysname:     %s", udev_device_get_sysname(dev));
    rpt_vstring(d0, "sysnum:      %s", udev_device_get_sysnum(   dev));
    rpt_vstring(d0, "syspath:     %s", udev_device_get_syspath(dev));
-   rpt_vstring(d0, "syspath:     %s", udev_device_get_syspath(  dev));
 }
-
-
 
 
 void dbgrpt_udev_list_entries(struct udev_list_entry * entries, char * title, int depth)
@@ -501,6 +584,7 @@ void dbgrpt_udev_list_entries(struct udev_list_entry * entries, char * title, in
        rpt_vstring(d1, "%s  -> %s", name, value);
    }
  }
+
 
 void dbgrpt_udev_device_properties(struct udev_device* dev, int depth) {
    struct udev_list_entry * entries = NULL;
@@ -521,7 +605,7 @@ void dbgrpt_udev_device_lists(struct udev_device* dev, int depth) {
    rpt_vstring(depth, "Properties:");
    dbgrpt_udev_device_properties(dev, depth+1);
    dbgrpt_udev_device_sysattrs(dev, depth+1);
-
+   
    struct udev_list_entry * entries = NULL;
 
 #ifdef NOT_USEFUL     // see udevadm -p
@@ -532,7 +616,6 @@ void dbgrpt_udev_device_lists(struct udev_device* dev, int depth) {
    show_udev_list_entries(entries, "tags");
 #endif
 
+   entries = udev_device_get_sysattr_list_entry(dev);
    show_sysattr_list_entries(dev,entries);
-
 }
-
