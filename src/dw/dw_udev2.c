@@ -51,8 +51,12 @@ void dw_udev_setup() {
    udev = udev_new();
    mon = udev_monitor_new_from_netlink(udev, "udev");
    // Alternative subsystem devtype values that did not detect changes:
-   // drm_dp_aux_dev, kernel, i2c-dev, i2c, hidraw
+   // drm_dp_aux_dev, kernel, i2c, hidraw
    udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);
+   udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c-dev", NULL);
+   // udev_monitor_filter_add_match_subsystem_devtype(mon, "i2c", NULL);  // redundant with i2c-dev
+   // udev_monitor_filter_add_match_subsystem_devtype(mon, "drm_dp_aux_dev", NULL);
+   // udev_monitor_filter_add_match_subsystem_devtype(mon, "wakeup", NULL);
    udev_monitor_enable_receiving(mon);
    monitor_fd = udev_monitor_get_fd(mon);
 
@@ -66,6 +70,23 @@ void dw_udev_teardown() {
    udev_unref(udev);
    DBGTRC_EXECUTED(debug, TRACE_GROUP, "");
 }
+
+
+bool exclude_event( Udev_Event_Detail * detail) {
+   bool exclude = false;
+
+#ifdef NO
+   // excludes drm change events
+   if (str_starts_with(detail->prop_devname, "/dev/dri"))
+      exclude = true;
+   if (streq(detail->prop_major, "226"))   // samee as above
+      exclude = true;
+#endif
+
+
+   return exclude;
+}
+
 
 
 /** Poll udev to watch for display connection/disconnection
@@ -110,16 +131,17 @@ bool dw_udev_watch(int watch_loop_millisec) {
                SYSLOG2(DDCA_SYSLOG_NOTICE, "Udev event detected");
 
                Udev_Event_Detail * detail = collect_udev_event_detail(dev);
-               if (debug || report_udev_events) {
-                  dbgrpt_udev_event_detail(detail,1);
+               if (!exclude_event(detail)) {
+                  found = true;
+                  if (debug || report_udev_events) {
+                     dbgrpt_udev_event_basic_detail(detail,1);
+                  }
+                  GPtrArray* collector = udev_event_detail_to_collector(detail, NULL);  // allocates collector
+                  g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
+                  g_ptr_array_free(collector, true);
                }
-               GPtrArray* collector = udev_event_detail_to_collector(detail, NULL);  // allocates collector
-               g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
-               g_ptr_array_free(collector, true);
                free_udev_event_detail(detail);
-
                udev_device_unref(dev);
-               found = true;
             }
             else {
                DBGTRC(true, DDCA_TRC_NONE, "udev_monitor_receive_device() failed");
