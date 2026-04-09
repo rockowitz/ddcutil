@@ -617,10 +617,10 @@ void remove_active_callback_thread(GThread* pthread){
 
 
 int  active_callback_thread_ct() {
-	int ct = 0;
-	if (active_callback_threads)
-		ct = g_hash_table_size(active_callback_threads);
-	return ct;
+   int ct = 0;
+   if (active_callback_threads)
+      ct = g_hash_table_size(active_callback_threads);
+   return ct;
 }
 
 

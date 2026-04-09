@@ -160,7 +160,7 @@ typedef struct {
 
 
 gpointer ldbus_watch_sleep_events_thread(gpointer data) {
-   bool debug = true;
+   bool debug = false;
 
    Dbus_Connection_Data * dcd = (Dbus_Connection_Data*) data;
    DBGF(debug,"Listening for PrepareForSleep...");
@@ -226,7 +226,7 @@ bool ldbus_start_sleep_watch_thread() {
    sleep_watch_thread = g_thread_new("sleep_watch_thread",   // optional thread name
                                  watch_thread_func,
                                  dcd);
-   DBGF(true, "Started sleep watch thread at %p", sleep_watch_thread);
+   DBGF(debug, "Started sleep watch thread at %p", sleep_watch_thread);
 
 bye:
    if (conn)
