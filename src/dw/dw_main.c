@@ -412,8 +412,10 @@ bool dw_is_watch_displays_executing() {
  */
 DDCA_Status
 dw_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
-    bool debug = false;
-    DBGTRC_STARTING(debug, TRACE_GROUP, "classes_loc = %p", classes_loc);
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "classes_loc = %p", classes_loc);
+   assert(classes_loc);
+
    DDCA_Status ddcrc = DDCRC_INVALID_OPERATION;
    *classes_loc = DDCA_EVENT_CLASS_NONE;
    g_mutex_lock(&watch_thread_mutex);
@@ -422,6 +424,7 @@ dw_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
       ddcrc = DDCRC_OK;
    }
    g_mutex_unlock(&watch_thread_mutex);
+
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "*classes_loc=0x%02x", *classes_loc);
    return ddcrc;
 }
