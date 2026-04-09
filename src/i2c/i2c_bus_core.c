@@ -23,6 +23,7 @@
 /** \endcond */
 
 #include "util/coredefs_base.h"
+#include "util/dbus_util.h"
 #include "util/debug_util.h"
 #include "util/data_structures.h"
 #include "util/edid.h"
@@ -207,7 +208,7 @@ i2c_all_relevant_i2c_buses_rw() {
       g_ptr_array_free(err_accumulator, true);
    }
 
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Before check all EACCESS, final_result=%s", errinfo_summary(final_result));
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Before check all EACCES, final_result=%s", errinfo_summary(final_result));
    if (final_result) {
       bool all_eaccess = true;
       for (int ndx = 0; ndx < final_result->cause_ct; ndx++) {
@@ -249,8 +250,10 @@ i2c_all_edids_readable_using_i2c() {
      //  errinfo_free(errs);
    }
 
-   if (fail_i2c_all_edids_readable_using_i2c)
-       errs = ERRINFO_NEW(-EACCES, "Dummy failure");
+   if (fail_i2c_all_edids_readable_using_i2c) {
+      errinfo_free(errs);
+      errs = ERRINFO_NEW(-EACCES, "Dummy failure");
+   }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, errs, "");
    return errs;
@@ -338,7 +341,9 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "filename=%s, callopts=0x%02x, fd_loc=%p, force_i2c_open_failure=%s",
          filename, callopts, fd_loc, sbool(force_i2c_open_failure));
+
    Error_Info * err = NULL;
+retry:
    RECORD_IO_EVENT(
          -1,
          IE_OPEN,
@@ -368,8 +373,19 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
          current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
          diagnose_open_failure_to_syslog(filename, err->detail);
       //  }
-      }
+         uint64_t elapsed_ms = NANOS2MILLIS(ldbus_elapsed_since_resume_from_sleep_ns());
+         char * msg = g_strdup_printf("Time since last return from sleep = %"PRIu64" ms", elapsed_ms);
+         DBGTRC(true, TRACE_GROUP, "open() EACCES failure, %s", msg);
+         syslog(LOG_WARNING, "open() EACCES failure, %s", msg);
 
+         if (elapsed_ms < 500) {
+           syslog(LOG_WARNING, "Sleeping for 100 ms and retrying...");
+            LOGGABLE_SLEEP(100, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg);
+            errinfo_free(err);
+            err = NULL;
+            goto retry;
+         }
+      }
    }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
@@ -1669,7 +1685,6 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo) {
    // int d = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 1 : -1;
    assert(businfo->busno >= 0);
    assert(businfo->busno != 255);
-   bool try_get_edid_from_sysfs_first = true;
 
    // int busno = businfo->busno;
    char sysfs_name[30];
@@ -2160,7 +2175,7 @@ Byte_Value_Array i2c_detect_attached_buses() {
    char * s = bva_as_string(bva,  false,  ", ");
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
    free(s);
-   return bva;;
+   return bva;
 }
 
 
