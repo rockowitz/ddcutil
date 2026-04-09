@@ -185,7 +185,7 @@ Error_Info *
 dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-        "dw_watch_mode = %s, watch_thread=%p, event_clases=0x%02x, all_video_adapters_implement_drm=%s",
+        "dw_watch_mode = %s, watch_thread=%p, event_classes=0x%02x, all_video_adapters_implement_drm=%s",
         watch_mode_name(watch_displays_mode), watch_thread, event_classes, SBOOL(all_video_adapters_implement_drm));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "thread_id = %d, traced_function_stack=%p", TID(), traced_function_stack);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "fail_i2c_all_edids_readable_using_i2c =  %s", sbool(fail_i2c_all_edids_readable_using_i2c));
@@ -222,7 +222,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       if (fail_i2c_all_edids_readable_using_i2c) {
          DBGMSG("Forcing failure of i2c_all_edids_readable_using_i2c()");
          syslog(LOG_DEBUG, "Forcing failure of i2c_all_edids_readable_using_i2c()");
-         erec = ERRINFO_NEW(-EACCES, "Dummuy failure");
+         erec = ERRINFO_NEW(-EACCES, "Dummy failure");
       }
       else {
          erec = i2c_all_edids_readable_using_i2c();
@@ -335,7 +335,7 @@ bye:
  *
  *  @param   wait                if true, does not return until the watch thread exits,
  *                               if false, returns immediately
- *  @param   enabled_clases_loc  location at which to return watch classes that were active
+ *  @param   enabled_classes_loc  location at which to return watch classes that were active
  *  @retval  DDCRC_OK
  *  @retval  DDCRC_INVALID_OPERATION  watch thread not executing
  */
@@ -470,7 +470,7 @@ dw_redetect_displays() {
       if (erec) {
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected error from dsa2_restore_persistent_stats(): %s",
                errinfo_summary(erec));
-         free(erec);
+         errinfo_free(erec);
       }
    }
    i2c_detect_buses();
@@ -483,12 +483,13 @@ dw_redetect_displays() {
    if (active_rc == DDCRC_OK && stop_watch_rc==DDCRC_OK) {
       err = dw_start_watch_displays(enabled_classes);
       if (err)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "dw_start_watch_diplays() returned %s",
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "dw_start_watch_displays() returned %s",
                                            errinfo_summary(err));
    }
    else {
       if (active_rc != DDCRC_OK)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "watch displays not started because no active watch classes");
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+               "watch displays not started because no prior watch classes detected");
       if (stop_watch_rc != DDCRC_OK)
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
                "watch displays not started because not running at start of redetection");
