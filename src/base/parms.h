@@ -187,4 +187,9 @@
 // #define MAX_ARGS (MAX_SETVCP_VALUES*2)   // causes CMDID_* undefined
 #define MAX_ARGS 100        // hack
 
+/** For waiting by QUIESCE operation */
+#define QUIESCE_POLL_MAX_MILLISEC      3000
+#define QUIESCE_POLL_INTERVAL_MILLISEC  100
+
+
 #endif /* PARMS_H_ */
