@@ -93,6 +93,12 @@ static GThread * sleep_watch_thread = NULL;
 _Atomic uint64_t last_prepare_for_sleep_ns = 0;
 _Atomic uint64_t last_resume_from_sleep_ns = 0;
 
+/** Returns the number of nanoseconds since the most
+ *  recent return from sleep message.
+ *
+ *  @return number of nanoseconds, UINT64_MAX if
+ *          no return from sleep has occurred.
+ */
 uint64_t ldbus_elapsed_since_resume_from_sleep_ns() {
    uint64_t elapsed_ns = UINT64_MAX;
    if (last_resume_from_sleep_ns > 0) {
