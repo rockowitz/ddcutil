@@ -62,7 +62,7 @@ bool is_readable_file(const char * filename)
    // just try to read from the file
    bool result = false;
    int fd = open(filename, O_RDONLY);
-   if (fd > 0) {
+   if (fd >= 0) {
       char buf;
       if (read(fd, &buf, 1) > 0)
          result = true;
@@ -85,7 +85,7 @@ bool is_readable_file(const char * filename)
 int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
 {
    bool debug = false;
-   DBGF(debug, "Staring. parm_name=%s, buffer=%p, bufsz=%d", parm_name, buffer, bufsz);
+   DBGF(debug, "Starting. parm_name=%s, buffer=%p, bufsz=%d", parm_name, buffer, bufsz);
    buffer[0] = '\0';
 
    struct utsname utsbuf;
@@ -163,7 +163,7 @@ bool find_module_ko(const char * module_name) {
    DBGF(debug, "cmd |%s|", cmd);
    GPtrArray * cmd_result = execute_shell_cmd_collect(cmd);
    if (cmd_result) {
-      DBGF(debug, "len=%d", __func__, cmd_result->len);
+      DBGF(debug, "len=%d", cmd_result->len);
       if (cmd_result->len > 0) {
          DBGF(debug, "Found: %s", (char*) g_ptr_array_index(cmd_result,0));
          result = true;
@@ -237,7 +237,7 @@ bool is_module_built_in(const char * module_name) {
     terms[2] = NULL;
     int unfiltered_ct = read_file_with_filter(lines, builtin_fn, terms, false, 0, false);
     if (unfiltered_ct < 0) {   //  = -errno
-       fprintf(stderr, "Error reading file %s: %s\n", builtin_fn, strerror(errno));
+       fprintf(stderr, "Error reading file %s: %s\n", builtin_fn, strerror(-unfiltered_ct));
        fprintf(stderr, "Assuming module %s is not built in to kernel\n", module_name);
     }
     else {
@@ -555,7 +555,7 @@ GPtrArray * rpt_facl_collect0(const char * fqfn, GPtrArray * collector, int dept
     ssize_t len;
     text = acl_to_text(acl, &len);
     if (text == NULL) {
-        char * s = g_strdup_printf("acl_to_text(acl_to_text() failed. errno=%d", errno);
+        char * s = g_strdup_printf("acl_to_text() failed. errno=%d", errno);
         g_ptr_array_add(collector, s);
         acl_free(acl);
         goto bye;
@@ -565,11 +565,12 @@ GPtrArray * rpt_facl_collect0(const char * fqfn, GPtrArray * collector, int dept
     GPtrArray * lines = ntsa_to_g_ptr_array(ntsa);
     // DBG("lines->len = %d", lines->len);
     for (int ndx = 0; ndx < lines->len; ndx++) {
-       char * s = g_strdup_printf("%.*s%s", depth, " ", ntsa[ndx]);
+       char * s = g_strdup_printf("%*s%s", depth, " ", ntsa[ndx]);
        // DBG("s: %s", s);
        g_ptr_array_add(collector, s);
     }
     ntsa_free(ntsa,  true);
+    g_ptr_array_free(lines, false);
 
     // free(text); // invalid free(), sample code  had acl_free_text()
     acl_free(acl);
@@ -619,7 +620,7 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
                                          const char * msg,
                                          GPtrArray * collector)
 {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting.  fqfn=%s, msg=%s, collector=%p", fqfn, msg, collector);
 
    if (!collector)
@@ -686,17 +687,16 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
   free(s1);
 #endif
 
-   uint64_t elapsed_ns = elapsed_since_resume_from_sleep_ns();
+   uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
    char * s2 = NULL;
-   if (elapsed_ns == 0)
+   if (elapsed_ns == UINT64_MAX)
       s2 = strdup("No resume from sleep recorded");
    else
       s2 = g_strdup_printf(""
            "Time since last resume from sleep: %s seconds = %"PRIu64" millisec (%"PRIu64 "nanosec)",
            formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
-   DBGF(debug, s2);
+   DBGF(debug, "%s", s2);
    g_ptr_array_add(collector, s2);
-   free(s2);
 #endif
 
    DBGF(debug, "Done.    returning collector = %p", collector);
@@ -746,6 +746,7 @@ void diagnose_open_failure_to_syslog(const char * fqfn, const char * msg) {
                                  TID(), depth, " ", cur_line);
       // rpt_vstring(0, "%s", s);
       syslog(LOG_DEBUG, "%s", s);
+      g_free(s);
    }
    g_ptr_array_free(lines, true);
 
