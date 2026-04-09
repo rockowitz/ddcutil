@@ -124,7 +124,7 @@ void dw_terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid) {
        DBGMSG("Process %d not found", cur_pid);
     }
     bool tid_found = is_valid_thread_or_process(cur_tid);
-    if (!pid_found || !tid_found) {
+    if (!tid_found) {
        DBGMSG("Thread %d not found", cur_tid);
     }
     if (!pid_found || !tid_found) {
@@ -269,7 +269,7 @@ void dw_emit_deferred_events(GArray * deferred_events) {
  *  If differences exist, either emit events directly or place them on
  *  the deferred events queue.
  *
- *  @param bs_active_bueses  bit set of all buses having edid
+ *  @param bs_active_buses   bit set of all buses having edid
  *  @param bs_sleepy_buses   bit set of buses currently asleep
  *  @param events_queue      if null, emit events directly
  *                           if non-null, put events on the queue
@@ -281,7 +281,7 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
       GArray*      events_queue) // array of DDCA_Display_Status_Event
 {
    bool debug = false;
-   // two lines so bs256_to_descimal_t() calls don't clobber private thread specific buffer
+   // two lines so bs256_to_decimal_t() calls don't clobber private thread specific buffer
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bs_active_buses: %s", BS256_REPR(bs_active_buses));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_sleepy_buses: %s", BS256_REPR(bs_sleepy_buses));
 
@@ -372,7 +372,7 @@ bool dw_hotplug_change_handler(
    }
    // debug_current_traced_function_stack(false);   // ** TEMP **/
 
-   bool event_emitted = true;
+   bool event_emitted = false;
 
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       //  i2c_dbgrpt_buses(false, false, 1);
@@ -487,7 +487,7 @@ bool dw_hotplug_change_handler(
 #ifdef OLD
 /** Repeatedly calls i2c_detect_buses0() until the value read equals the prior value.
  *
- *  @oaram prior                       initial array of I2C_Bus_Info for connected buses
+ *  @param prior                       initial array of I2C_Bus_Info for connected buses
  *  @param some_displays_disconnected  if true, add delay to avoid bogus disconnect/connect sequence
  *  @return stabilized array of Bus_Info for connected buses
  */
@@ -497,7 +497,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "prior =%p, some_displays_disconnected=%s",
          prior, SBOOL(some_displays_disconnected));
    Bit_Set_256 bs_prior =  buses_bitset_from_businfo_array(prior, /* only_connected */ true);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_prior:", BS256_REPR(bs_prior));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_prior: %s", BS256_REPR(bs_prior));
 
    // Special handling for case of apparently disconnected displays.
    // It has been observed that in some cases (Samsung U32H750) a disconnect is followed a
@@ -528,7 +528,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
       stablect++;
    }
    if (stablect > 1) {
-      DBGTRC(debug || true, TRACE_GROUP,   "Required %d extra calls to i2c_get_buses0()", stablect+1);
+      DBGTRC(debug, TRACE_GROUP, "Required %d extra calls to i2c_get_buses0()", stablect+1);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_get_buses0()", __func__, stablect-1);
    }
 
@@ -591,28 +591,28 @@ GHashTable * active_callback_threads;
 
 
 void record_active_callback_thread(GThread* pthread){
-	bool debug = false;
-	DBGTRC_STARTING(debug,TRACE_GROUP, "pthread=p", pthread);
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "pthread=%p", pthread);
 
-	g_mutex_lock(&active_callback_threads_mutex);
-	if (!active_callback_threads)
-		active_callback_threads = g_hash_table_new(g_direct_hash, g_direct_equal);
-    g_hash_table_add(active_callback_threads, pthread);
-    g_mutex_unlock(&active_callback_threads_mutex);
+   g_mutex_lock(&active_callback_threads_mutex);
+   if (!active_callback_threads)
+      active_callback_threads = g_hash_table_new(g_direct_hash, g_direct_equal);
+   g_hash_table_add(active_callback_threads, pthread);
+   g_mutex_unlock(&active_callback_threads_mutex);
 
-    DBGTRC_DONE(debug, TRACE_GROUP, "pthread=%p");
+   DBGTRC_DONE(debug, TRACE_GROUP, "pthread=%p", pthread);
 }
 
 
 void remove_active_callback_thread(GThread* pthread){
-	bool debug = false;
-	DBGTRC_STARTING(debug,TRACE_GROUP, "pthread=%p", pthread);
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "pthread=%p", pthread);
 
-	if (active_callback_threads) {
-		g_hash_table_remove(active_callback_threads, pthread);
-	}
+   if (active_callback_threads) {
+      g_hash_table_remove(active_callback_threads, pthread);
+   }
 
-    DBGTRC_DONE(debug, TRACE_GROUP, "pthread=%p");
+   DBGTRC_DONE(debug, TRACE_GROUP, "pthread=%p", pthread);
 }
 
 
