@@ -1,6 +1,6 @@
 /** @file dw_base.c */
 
-// Copyright (C) 2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2025-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -31,7 +31,7 @@ const char * dw_display_event_class_name(DDCA_Display_Event_Class class) {
 
 void dw_event_classes_repr(char * buf, int bufsz, DDCA_Display_Event_Class classes) {
    assert(buf && bufsz >= 100);
-   g_snprintf(buf,100, "%s%s%s",
+   g_snprintf(buf, bufsz, "%s%s%s",
          (classes&DDCA_EVENT_CLASS_DPMS)               ? "DDCA_EVENT_CLASS_DPMS," : "",
          (classes&DDCA_EVENT_CLASS_DISPLAY_CONNECTION) ? "DDCA_EVENT_CLASS_DISPLAY_CONNECTION," : "",
          (classes&DDCA_EVENT_CLASS_UNUSED1)            ? "DDCA_EVENT_CLASS_UNUSED1," : "");
@@ -44,8 +44,8 @@ void dw_event_classes_repr(char * buf, int bufsz, DDCA_Display_Event_Class class
 
 
 char * dw_event_classes_repr_t(DDCA_Display_Event_Class classes) {
-   static GPrivate  display_status_repr_key = G_PRIVATE_INIT(g_free);
-   char * buf = get_thread_fixed_buffer(&display_status_repr_key, 100);
+   static GPrivate  event_classes_repr_key = G_PRIVATE_INIT(g_free);
+   char * buf = get_thread_fixed_buffer(&event_classes_repr_key, 100);
    dw_event_classes_repr(buf, 100, classes);
    return buf;
 }
