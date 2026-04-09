@@ -79,7 +79,7 @@ bool exclude_event( Udev_Event_Detail * detail) {
    // excludes drm change events
    if (str_starts_with(detail->prop_devname, "/dev/dri"))
       exclude = true;
-   if (streq(detail->prop_major, "226"))   // samee as above
+   if (streq(detail->prop_major, "226"))   // same as above
       exclude = true;
 #endif
 
@@ -114,7 +114,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
       int j = ++pollctr%10;
       // DBGF(true, "pollctr=%d, j=%d", pollctr, j);
       if (j == 1)
-         DBGTRC_NOPREFIX((debug && (j == 1)), DDCA_TRC_NONE, "Calling poll()...(%d)", pollctr);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling poll()...(%d)", pollctr);
       int rc = poll(&fds, 1, poll_timeout_millisec);   // consider using ppol()
       if (rc == 0) {
          // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "poll() timed out");
@@ -124,7 +124,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
          SYSLOG2(DDCA_SYSLOG_ERROR,  "poll() failed, errno=%d", errno);
       }
       else {
-         if (fds.events&POLLIN) {
+         if (fds.revents&POLLIN) {
             struct udev_device *dev = udev_monitor_receive_device(mon);
             if (dev) {
                DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
@@ -149,7 +149,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
             }
          }
          else {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not for us. fds.events=0x%04x", fds.events);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not for us. fds.revents=0x%04x", fds.revents);
          }
       }
    }
