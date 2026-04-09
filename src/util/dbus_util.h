@@ -12,11 +12,12 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-extern uint64_t last_prepare_for_sleep_ns;
-extern uint64_t last_resume_from_sleep_ns;
-
 uint64_t ldbus_elapsed_since_resume_from_sleep_ns();
 bool     ldbus_start_sleep_watch_thread();
 void     ldbus_stop_sleep_watch_thread();
+
+typedef  void (*PREPARE_FOR_SLEEP_CALLBACK)(bool);
+void     ldbus_register_prepare_for_sleep_callback(PREPARE_FOR_SLEEP_CALLBACK callback);
+void     ldbus_unregister_prepare_for_sleep_callback(PREPARE_FOR_SLEEP_CALLBACK callback);
 
 #endif /* DBUS_UTIL_H_ */

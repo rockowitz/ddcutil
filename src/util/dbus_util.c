@@ -12,8 +12,7 @@
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
-#include <inttypes.h>
-// #include <signal.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,12 +22,36 @@
 #include <unistd.h>
 /** \endcond */
 
+#include "data_structures.h"
 #include "debug_util.h"
 #include "report_util.h"
 #include "string_util.h"
 #include "timestamp.h"
 
 #include "dbus_util.h"
+
+
+static GPtrArray * prepare_for_sleep_callbacks = NULL;
+
+
+void ldbus_register_prepare_for_sleep_callback(PREPARE_FOR_SLEEP_CALLBACK func) {
+   generic_register_callback(&prepare_for_sleep_callbacks, func);
+}
+
+
+void ldbus_unregister_prepare_for_sleep_callback(PREPARE_FOR_SLEEP_CALLBACK func) {
+   generic_unregister_callback(prepare_for_sleep_callbacks, func);
+}
+
+void invoke_prepare_for_sleep_callbacks(bool preparing) {
+   if (prepare_for_sleep_callbacks) {
+      for (int ndx = 0; ndx < prepare_for_sleep_callbacks->len; ndx++) {
+         PREPARE_FOR_SLEEP_CALLBACK func =
+               g_ptr_array_index(prepare_for_sleep_callbacks, ndx);
+         func(preparing);
+      }
+   }
+}
 
 
 // libsdbus
@@ -56,7 +79,7 @@ void dbgrpt_DBusMessage(DBusMessage* msg, int depth) {
    rpt_vstring(d0,"Message type: %d", dbus_message_get_type(msg));   // SIGNAL, METHOD_CALL, etc
    rpt_vstring(d1,"sender:    %s", dbus_message_get_sender(msg));    // org.freedesktop.login1
    rpt_vstring(d1,"interface: %s", dbus_message_get_interface(msg)); // org.freedesktop.login1.Manager
-   rpt_vstring(d1,"menber:    %s", dbus_message_get_member(msg));    // PrepareForSleep
+   rpt_vstring(d1,"member:    %s", dbus_message_get_member(msg));    // PrepareForSleep
    rpt_vstring(d1,"path:      %s", dbus_message_get_path(msg));      // /org/freedesktop/login1
 }
 
@@ -67,11 +90,11 @@ static volatile sig_atomic_t quit_sleep_watch_thread = 0;
 // }
 static GThread * sleep_watch_thread = NULL;
 
-uint64_t last_prepare_for_sleep_ns = 0;
-uint64_t last_resume_from_sleep_ns = 0;
+_Atomic uint64_t last_prepare_for_sleep_ns = 0;
+_Atomic uint64_t last_resume_from_sleep_ns = 0;
 
 uint64_t ldbus_elapsed_since_resume_from_sleep_ns() {
-   uint64_t elapsed_ns = UINT64_MAX;;
+   uint64_t elapsed_ns = UINT64_MAX;
    if (last_resume_from_sleep_ns > 0) {
       uint64_t cur_ns = cur_realtime_nanosec();
       elapsed_ns = cur_ns - last_resume_from_sleep_ns;
@@ -90,30 +113,31 @@ ldbus_handle_message(DBusConnection *conn, DBusMessage *msg, void *user_data)
    if (debug)
       dbgrpt_DBusMessage(msg, 1);
    if (dbus_message_is_signal(msg, "org.freedesktop.login1.Manager", "PrepareForSleep")) {
-        dbus_bool_t preparing;
-        if (dbus_message_get_args(
+       dbus_bool_t preparing;
+       if (dbus_message_get_args(
               msg,
               &err,
               DBUS_TYPE_BOOLEAN, &preparing,
               DBUS_TYPE_INVALID)) {
-            DBGF(debug, "PrepareForSleep: %s", preparing ? "true (prepare)" : "false (resume)");
-            uint64_t mono_ns = cur_realtime_nanosec();
-            if (preparing)
-               last_prepare_for_sleep_ns = mono_ns;
-            else
-               last_resume_from_sleep_ns = mono_ns;
-            char * s = g_strdup_printf(
+          DBGF(debug, "PrepareForSleep: %s", preparing ? "true (prepare)" : "false (resume)");
+          uint64_t mono_ns = cur_realtime_nanosec();
+          if (preparing)
+             last_prepare_for_sleep_ns = mono_ns;
+          else
+             last_resume_from_sleep_ns = mono_ns;
+          char * s = g_strdup_printf(
                   "Set %s = %"PRIu64" millisec", (preparing) ? "true (prepare)" : "false (resume)",
                   NANOS2MILLIS(mono_ns));
-            DBGF(debug, "%s", s);
-            syslog(LOG_INFO, "%s", s);  // violates layering, should really use callback funct
-            free(s);
-        }
-        else {
-          //  printf("dbus_message_get_args failed\n");
+          DBGF(debug, "%s", s);
+          syslog(LOG_INFO, "%s", s);  // violates layering, should really use callback funct
+          free(s);
+          invoke_prepare_for_sleep_callbacks(preparing);
+       }
+       else {
           DBUS_ERROR_EMIT(err);
-        }
-        fflush(stdout);
+          dbus_error_free(&err);
+       }
+       fflush(stdout);
     }
     else
        DBGF(debug,"Not for us");
@@ -141,7 +165,7 @@ gpointer ldbus_watch_sleep_events_thread(gpointer data) {
    }
 
    dbus_connection_remove_filter(dcd->conn, ldbus_handle_message, NULL);
-
+   dbus_connection_unref(dcd->conn);
    DBGF(debug,"Done listening");
    return data;
 }
@@ -160,7 +184,6 @@ bool ldbus_start_sleep_watch_thread() {
    DBusConnection *conn= dbus_bus_get(DBUS_BUS_SYSTEM, &err);
    if (dbus_error_is_set(&err)) {
       DBUS_ERROR_EMIT(err);
-      // fprintf(stderr, "Connection Error (%s)\n", err.message);
       dbus_error_free(&err);
       ok = false;
       goto bye;
@@ -182,6 +205,7 @@ bool ldbus_start_sleep_watch_thread() {
    dbus_bus_add_match(conn, rule3, &err);
    if (dbus_error_is_set(&err)) {
       DBUS_ERROR_EMIT(err);
+      dbus_error_free(&err);
       ok = false;
       goto bye;
    }
@@ -212,7 +236,8 @@ void ldbus_stop_sleep_watch_thread() {
 
    quit_sleep_watch_thread = true;
    if (sleep_watch_thread) {
-      g_thread_join(sleep_watch_thread);
+      Dbus_Connection_Data * dcd = g_thread_join(sleep_watch_thread);
+      free(dcd);
       sleep_watch_thread = NULL;
    }
 
