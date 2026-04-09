@@ -1,5 +1,4 @@
 /** @file api_base.c
-#include <conn/ddc_dw_main.h>
  *
  *  C API base functions.
  */
@@ -257,11 +256,13 @@ void decrement_active_api_calls(const char * funcname) {
 
 /** Quiesce the API.
  *
- *  When quiesced, API calls that can affect monitor state terminate immediately with status DDCRC_QUIESCED.
+ *  When quiesced, API calls that can affect monitor state terminate
+ *  immediately with status DDCRC_QUIESCED.
  *
- *  This function waits at most 3000 miliseconds for outstanding API calls to complete.
- *  If calls are still outstanding, an error messages is written to the system log,
- *  but this does not prevent queiescing,
+ *  This function waits at most QUEESCE_POLL_MAX_MILLISEC miliseconds
+ *  (defined in parms.h) for outstanding API calls to complete.
+ *  If calls are still outstanding, an error messages is written to the
+ *  system log, but this does not prevent queiescing,
  */
 void quiesce_api() {
    bool debug = false;
@@ -269,19 +270,19 @@ void quiesce_api() {
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Quiescing libddcutil API...");
    bool oops = false;
-   int slept_nanosec = 0;
+   int slept_microsec = 0;
 
    g_mutex_lock(&api_quiesced_mutex);
 
    g_mutex_lock(&active_calls_mutex);
    if (active_calls > 0) {
-      int poll_max_millisec = 3000;       // move to parms.h
-      int poll_interval_millisec = 100;   // move to parms.h
-      int poll_max_nanosec = poll_max_millisec * 1000;
-      int poll_interval_nanosec = poll_interval_millisec * 1000;
+      int poll_max_millisec      = QUIESCE_POLL_MAX_MILLISEC;
+      int poll_interval_millisec = QUIESCE_POLL_INTERVAL_MILLISEC;
+      int poll_max_microsec = poll_max_millisec * 1000;
+      int poll_interval_microsec = poll_interval_millisec * 1000;
       oops = true;
-      for (; slept_nanosec < poll_max_nanosec; slept_nanosec += poll_interval_nanosec) {
-         usleep(poll_interval_nanosec);
+      for (; slept_microsec < poll_max_microsec; slept_microsec += poll_interval_microsec) {
+         usleep(poll_interval_microsec);
          if (active_calls == 0) {
             oops = false;
             break;
@@ -294,13 +295,16 @@ void quiesce_api() {
    g_mutex_unlock(&api_quiesced_mutex);
 
    if (oops) {
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error queiscing libdducitl API. %d active API calls outstanding.", active_calls);
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
+            "Error quiescing libddcutil API. %d active API calls outstanding.", active_calls);
    }
    else {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Quiesce libddcutil API complete");
    }
 
-   DBGTRC_DONE(debug, DDCA_TRC_API, "Terminating with %d active API calls outstanding. Waited %d millisec", active_calls, slept_nanosec/1000);
+   DBGTRC_DONE(debug, DDCA_TRC_API,
+         "Terminating with %d active API calls outstanding. Waited %d millisec",
+         active_calls, slept_microsec/1000);
 }
 
 
@@ -503,7 +507,7 @@ void dummy_sigterm_handler() {
 }
 
 void atexit_func() {
-   printf("(%s) Executing. library_initalized = %s\n",
+   printf("(%s) Executing. library_initialized = %s\n",
          __func__, SBOOL(library_initialized));
 }
 #endif
@@ -696,7 +700,7 @@ set_master_errinfo_from_init_errors(
       }
       g_ptr_array_free(errs, false);
    }
-   DBGF(debug, "Done.  Returning %p");
+   DBGF(debug, "Done.  Returning %p", master_error);
    return master_error;
 }
 
@@ -1073,13 +1077,23 @@ DDCA_Status
 ddca_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "Starting classes_loc=%p", classes_loc);
+   DDCA_Status ddcrc = 0;
 #ifdef WATCH_DISPLAYS
-   DDCA_Status ddcrc = dw_get_active_watch_classes(classes_loc);
+   if (classes_loc)
+      ddcrc = dw_get_active_watch_classes(classes_loc);
+   else
+      ddcrc = DDCRC_ARG;
 #else
-   DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
+   ddcrc = DDCRC_UNIMPLEMENTED;
 #endif
-   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "*classes_loc=0x%02x=%s",
-         *classes_loc, (*classes_loc) ? dw_event_classes_repr_t(*classes_loc):"NULL" );
+   char * s = (classes_loc)
+                 ? g_strdup_printf("*classes_loc=0x%02x=%s",
+                     *classes_loc, (*classes_loc) ? dw_event_classes_repr_t(*classes_loc):"NULL" )
+                 : g_strdup("");
+
+   API_EPILOG_BEFORE_RETURN(debug, NORESPECT_QUIESCE, ddcrc, "%s", s);
+   free(s);
+   return ddcrc;
 }
 
 DDCA_Status
