@@ -130,7 +130,8 @@ STATIC void process_screen_change_event(
 
       bs_new_buses_w_edid = dw_stabilized_buses_bs(bs_new_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
 
-      BS256 bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
+      // bs_added_buses_w_edid was declared BS26, why shadowed?
+      bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
       bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_new_buses_w_edid);
       bs_added_attached_buses   = bs256_and_not(bs_new_attached_buses, bs_old_attached_buses);
       bs_removed_attached_buses = bs256_and_not(bs_old_attached_buses, bs_new_attached_buses);
@@ -201,13 +202,58 @@ STATIC void process_screen_change_event(
 #endif
 
    *p_bs_attached_buses  = bs_old_attached_buses;
-   *p_bs_buses_w_edid    = bs_old_buses_w_edid;;
+   *p_bs_buses_w_edid    = bs_old_buses_w_edid;
 
    DBGTRC_DONE(debug, DDCA_TRC_CONN, "*p_bs_old_attached_buses -> %s",
          bs256_to_string_decimal_t(*p_bs_attached_buses, "", ","));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_CONN, "*p_bs_buses_w_edid -> %s",
          bs256_to_string_decimal_t(*p_bs_buses_w_edid,   "", ","));
 }
+
+
+void invoke_process_screen_change_event(
+      BS256*     bs_old_attached_buses_loc,
+      BS256*     bs_old_buses_w_edid_loc,
+      GArray* deferred_events,
+      GPtrArray* displays_to_recheck)
+{
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());
+   g_mutex_lock(&master_dw_mutex);
+
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "locking process_event_mutex");
+   g_mutex_lock(&process_event_mutex);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Processing screen change event");
+   process_screen_change_event(bs_old_attached_buses_loc, bs_old_buses_w_edid_loc,
+                               deferred_events, displays_to_recheck);
+   if (displays_to_recheck->len > 0) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "handling displays_to_recheck");
+      int len = displays_to_recheck->len;
+      for (int ndx = len-1; ndx >= 0; ndx--) {
+         dw_put_recheck_queue(g_ptr_array_index(displays_to_recheck, ndx));
+         g_ptr_array_remove_index(displays_to_recheck, ndx);
+      }
+#ifdef OLD
+      Recheck_Displays_Data * rdd = calloc(1, sizeof(Recheck_Displays_Data));
+      rdd->displays_to_recheck = displays_to_recheck;
+      rdd->deferred_event_queue = deferred_events;
+      g_thread_new("display_recheck_thread",             // optional thread name
+                   ddc_recheck_displays_func,
+                   rdd);
+      displays_to_recheck = g_ptr_array_new();
+#endif
+   }
+   g_mutex_unlock(&process_event_mutex);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "unlocked process_event_mutex");
+
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
+   g_mutex_unlock(&master_dw_mutex);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+}
+
 
 
 /** Function that executes in the display watch thread.
@@ -296,7 +342,7 @@ else {
    }
 
    bool skip_next_sleep = false;
-   int slept = 0;   // will contain length of final sleep
+   int slept_millisec = 0;   // will contain length of final sleep
 
    while (!terminate_watch_thread) {
       if (deferred_events && deferred_events->len > 0) {
@@ -304,7 +350,7 @@ else {
       }
       else {     // skip polling loop sleep if deferred events were output
          if (!skip_next_sleep && wdd->watch_mode == Watch_Mode_Poll) {
-            slept = dw_split_sleep(wdd->watch_loop_millisec);
+            slept_millisec = dw_split_sleep(wdd->watch_loop_millisec);
          }
       }
       skip_next_sleep = false;
@@ -344,36 +390,10 @@ else {
       }
 #endif
 
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());
-      g_mutex_lock(&master_dw_mutex);
+      invoke_process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
+            deferred_events, displays_to_recheck);
 
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "locking process_event_mutex");
-      g_mutex_lock(&process_event_mutex);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Processing screen change event");
-      process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
-                                  deferred_events, displays_to_recheck);
-      if (displays_to_recheck->len > 0) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "handling displays_to_recheck");
-         int len = displays_to_recheck->len;
-         for (int ndx = len-1; ndx >= 0; ndx--) {
-            dw_put_recheck_queue(g_ptr_array_index(displays_to_recheck, ndx));
-            g_ptr_array_remove_index(displays_to_recheck, ndx);
-         }
- #ifdef OLD
-         Recheck_Displays_Data * rdd = calloc(1, sizeof(Recheck_Displays_Data));
-         rdd->displays_to_recheck = displays_to_recheck;
-         rdd->deferred_event_queue = deferred_events;
-         g_thread_new("display_recheck_thread",             // optional thread name
-                      ddc_recheck_displays_func,
-                      rdd);
-         displays_to_recheck = g_ptr_array_new();
-#endif
-      }
-      g_mutex_unlock(&process_event_mutex);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "unlocked process_event_mutex");
 
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
-      g_mutex_unlock(&master_dw_mutex);
    } // while()
 
    if (wdd->watch_mode == Watch_Mode_Udev) {
@@ -382,7 +402,7 @@ else {
 
    // n. slept == 0 if no sleep was performed
    DBGTRC_DONE(debug, TRACE_GROUP,
-         "Terminating thread.  Final polling sleep was %d millisec.", slept/1000);
+         "Terminating thread.  Final polling sleep was %d millisec.", slept_millisec);
    g_ptr_array_free(displays_to_recheck, true);
    dw_free_watch_displays_data(wdd);
    if (deferred_events)
@@ -399,6 +419,7 @@ else {
 
 
 void init_dw_poll() {
-      RTTI_ADD_FUNC(dw_watch_display_connections);
-      RTTI_ADD_FUNC(process_screen_change_event);
+   RTTI_ADD_FUNC(dw_watch_display_connections);
+   RTTI_ADD_FUNC(invoke_process_screen_change_event);
+   RTTI_ADD_FUNC(process_screen_change_event);
 }
