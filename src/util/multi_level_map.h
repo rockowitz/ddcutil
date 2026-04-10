@@ -1,11 +1,9 @@
-/** @file multi_level_map.h */
-
-// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
-// SPDX-License-Identifier: GPL-2.0-or-later
-
 /** @file multi_level_map.h
  * Multi_Level_Map data structure
  */
+
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef MULTI_LEVEL_TABLE_H_
 #define MULTI_LEVEL_TABLE_H_

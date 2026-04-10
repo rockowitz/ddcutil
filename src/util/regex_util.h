@@ -1,6 +1,8 @@
-// regex_util.h
+/** @file regex_util.h
+ * Regular expression utility functions
+ */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef REGEX_UTIL_H_

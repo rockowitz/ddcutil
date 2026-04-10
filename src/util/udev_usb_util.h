@@ -1,29 +1,10 @@
-/* udev_usb_util.h
- *
- * <copyright>
- * Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
- 
- /** \file
+/** @file udev_usb_util.h
+  *
   * USB specific udev utility functions
   */
+
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef UDEV_USB_UTIL_H_
 #define UDEV_USB_UTIL_H_
@@ -35,7 +16,6 @@
 /** \endcond */
 
 void probe_udev_subsystem(char * udev_class, bool show_usb_parent, int depth);
-
 
 #define UDEV_DETAILED_DEVICE_SUMMARY_MARKER "UDDS"
 /** Identifying information for UDEV device
@@ -87,7 +67,7 @@ void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth);
 Udev_Usb_Devinfo * get_udev_usb_devinfo(char * subsystem, char * simple_devname);
 
 // Move function to hiddev utility library?
-/** Excapsulates location of hiddev device files, in case it needs to be generalized */
+/** Encapsulates location of hiddev device files, in case it needs to be generalized */
 char * usb_hiddev_directory();
 
 
