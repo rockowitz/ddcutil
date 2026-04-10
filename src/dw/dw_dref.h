@@ -6,15 +6,15 @@
 // Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#ifndef DW_DREF_H_
+#define DW_DREF_H_
+
 #include <stdbool.h>
 
 #include "util/error_info.h"
 
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
-
-#ifndef DW_DREF_H_
-#define DW_DREF_H_
 
 void         dw_add_display_ref(Display_Ref * dref);
 Display_Ref* dw_add_display_by_businfo(I2C_Bus_Info * businfo);
