@@ -1,4 +1,4 @@
-/** @file common_init.h
+/** @file ddc_common_init.h
   * Initialization that must be performed very early by both ddcutil and libddcutil
   */
 
