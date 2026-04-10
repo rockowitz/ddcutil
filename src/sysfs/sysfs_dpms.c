@@ -2,7 +2,7 @@
  *  DPMS related functions
  */
 
-// Copyright (C) 2023-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -154,7 +154,7 @@ void dpms_check_x11_asleep() {
 /** Checks if a display, specified by its DRM connector name, is in a DPMS
  *  sleep mode. The check is performed using the connector's dpms attribute.
  *
- *  @param  drm_connector_name
+ *  @param  dref
  *  @retval true  if the dpms attribute value is other than "On"
  *  @retval false if the dpms attribute value is "On"
  */
@@ -186,7 +186,7 @@ bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
 /** Checks if a display, specified by its I2C bus number, is in a DPMS
  *  sleep mode.
  *
- *  @param  usinfo pointer to struct I2C_Bus_Info
+ *  @param  businfo pointer to struct I2C_Bus_Info
  *  @return true  if the display is in a sleep mode, false if not
  */
 bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
@@ -250,7 +250,7 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
 /** Checks if a display, specified by its Display Reference, is in a DPMS
  *  sleep mode.
  *
- *  @param  drm_connector_name
+ *  @param  dref
  *  @return true  if the display is in a sleep mode, false if not
  *
  *  !!! hack: always returns false if DRM not enabled
