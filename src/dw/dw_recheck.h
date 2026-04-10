@@ -1,7 +1,7 @@
 /** @file dw_recheck.h
  *
  *  Process the queue of display references added in
- *  the main loop for whcih DDC communication was
+ *  the main loop for which DDC communication was
  *  not immediately detected as  enabled.
  */
 
