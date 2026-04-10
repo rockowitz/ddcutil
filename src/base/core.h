@@ -10,7 +10,7 @@
  *  - abnormal termination
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_CORE_H_
@@ -310,7 +310,7 @@ bool dbgtrc_returning_string(
 #define CLOSE_W_ERRMSG(_fd) \
    do \
    { \
-      int close_rc = close(fd); \
+      int close_rc = close(_fd); \
       if (close_rc < 0) { \
          dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_SEVERE, __func__, __LINE__, __FILE__, \
                "Unexpected error on close(): fd=%d, filename=%s, errno=%s at line %d in file %s", \
