@@ -5,7 +5,7 @@
 
 // Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
- 
+
 /** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>
@@ -48,7 +48,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
  *  @param dref pointer to Display_Ref to add.
  */
 void dw_add_display_ref(Display_Ref * dref) {
-   bool debug = false ;
+   bool debug = false;
    debug = debug || debug_locks;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
    g_mutex_lock(&all_display_refs_mutex);
@@ -85,7 +85,7 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
    assert(businfo->flags & I2C_BUS_PROBED);
    // businfo->flags &= ~I2C_BUS_PROBED;
    // unnecessary, already done by i2c_get_and_check_bus_info() call in our only caller, ddc_i2c_hotplug_change_handler()
-   // i2c_check_bus2(businfo);  // if display on bus was previously removed, info in businfo, particuarly EDID, will be stale
+   // i2c_check_bus2(businfo);  // if display on bus was previously removed, info in businfo, particularly EDID, will be stale
    if (!businfo->edid) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No display detected on bus %d", businfo->busno);
    }
@@ -148,7 +148,7 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
 
    // ddc_dbgrpt_display_refs_summary(/* include_invalid_displays*/ true, /* report_businfo */ true, 2 );
-   DBGTRC_DONE(debug, DDCA_TRC_CONN, "Returning dref %s", dref_reprx_t(dref), dref);
+   DBGTRC_DONE(debug, DDCA_TRC_CONN, "Returning dref %s", dref_reprx_t(dref));
    if (IS_DBGTRC(debug, DDCA_TRC_NONE) && dref)
       dbgrpt_display_ref_summary(dref, /* include_businfo*/ false, 2);
    return dref;
