@@ -2,7 +2,7 @@
  * Utilities for interpreting libdrm data structures
  */
 
-// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -444,7 +444,7 @@ void report_drm_mode_get_connector(struct drm_mode_get_connector * p, int depth)
    rpt_vstring(d1, "%-20s, %u",             "count_modes", p->count_modes);
    rpt_vstring(d1, "%-20s, %u",             "count_props", p->count_props);
    rpt_vstring(d1, "%-20s, %u",             "count_encoders", p->count_encoders);
-   rpt_vstring(d1, "%-20s, %u",             "encouder_id", p->encoder_id);   // current encoder
+   rpt_vstring(d1, "%-20s, %u",             "encoder_id", p->encoder_id);   // current encoder
    rpt_vstring(d1, "%-20s, %d",             "connector_id", p->connector_id);
    rpt_vstring(d1, "%-20s, %d",             "connector_type", p->connector_type);
    rpt_vstring(d1, "%-20s, %d",             "connector_type_id", p->connector_type_id);
@@ -486,7 +486,7 @@ typedef struct _drmModeConnector {
  * Arguments:
  *   fd          file descriptor
  *   p           pointer to drmModeConnector struct
- *   depth       logical identation depth
+ *   depth       logical indentation depth
  */
 void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
    int d1 = depth+1;
@@ -681,7 +681,7 @@ void report_property_value(
 /** Reports a **drmModePropertyRes struct
  *
  * @param p     pointer to drmModePropertyRes
- * @param depth logical indentation deptn
+ * @param depth logical indentation depth
  */
 void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
    rpt_structure_loc("drmModePropertyRes", p, depth);
@@ -710,7 +710,7 @@ void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
 /** Emits a summary report for a **drmModePropertyRes struct
  *
  * @param p     pointer to drmModePropertyRes
- * @param depth logical indentation deptn
+ * @param depth logical indentation depth
  */
 void summarize_drm_modeProperty(drmModePropertyRes * p, int depth) {
    rpt_vstring(depth, "Property %2d:  %-20s flags: 0x%08x - %s",

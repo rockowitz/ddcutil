@@ -5,7 +5,7 @@
  *  glib_string_util.c/h exists to avoid circular dependencies within directory util.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -124,7 +124,7 @@ char * join_string_g_ptr_array_t(GPtrArray* strings, char * sepstr) {
  *
  *  @param strings  GPtrArray of strings
  *  @param sepstr   if non-null, separator to insert between joined strings
- *  @oaram sort     if true, sort strings before joining
+ *  @param sort     if true, sort strings before joining
  *  @return         joined string, "" if strings=NULL, do not free
  */
 char * join_string_g_ptr_array2_t(GPtrArray* strings, char * sepstr, bool sort) {

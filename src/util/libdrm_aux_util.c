@@ -3,7 +3,7 @@
  *  Functions that depend on the DRM API.
  */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -83,7 +83,7 @@
   *
   *  @param   adapter_path  fully qualified path of video adapter node in sysfs
   *  @retval  true   driver supports DRM
-  *  @@retval false  driver does not support DRM, or ddcutil not built with DRM support
+  *  @retval false  driver does not support DRM, or ddcutil not built with DRM support
   */
  bool adapter_supports_drm_using_drm_api(const char * adapter_path) {
     bool debug = false;
@@ -103,7 +103,7 @@
  /** Checks if all video adapters in an array of sysfs adapter paths
   *  support DRM
   *
-  *  @oaram  adapter_paths  array of paths to adapter nodes in sysfs
+  *  @param  adapter_paths  array of paths to adapter nodes in sysfs
   *  @return true if all adapters support DRM, false if not or the array is empty
   */
  bool all_video_adapters_support_drm_using_drm_api(GPtrArray * adapter_paths) {
