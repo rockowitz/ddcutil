@@ -1,6 +1,6 @@
 /** @file persistent_capabilities.c */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -342,8 +342,8 @@ char * get_persistent_capabilities(Monitor_Model_Key* mmk)
          }
          result = g_hash_table_lookup (capabilities_hash, mms);
          free(mms);
+         g_mutex_unlock(&persistent_capabilities_mutex);
       }
-      g_mutex_unlock(&persistent_capabilities_mutex);
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", result);
