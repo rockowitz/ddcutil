@@ -313,7 +313,7 @@ add_error(
       char detail[200];
       char xdetail[300];
       char * final_detail;
-      va_list(args);
+      va_list args;
       va_start(args, fmt);
       vsnprintf(detail, 200, fmt, args);
       if (filename) {

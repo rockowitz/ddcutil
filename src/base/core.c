@@ -13,7 +13,7 @@
  * - debug and trace messages
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -301,7 +301,7 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
    if (debug_or_trace || is_report_ddc_errors_enabled()) {
       result = true;
       char buffer[200];
-      va_list(args);
+      va_list args;
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
       if (debug_or_trace) {
@@ -332,7 +332,7 @@ bool logable_msg(DDCA_Syslog_Level log_level,
 {
    bool result = true;
    // char buffer[500];
-   va_list(args);
+   va_list args;
    va_start(args, format);
    char * buffer = g_strdup_vprintf(format, args);
    // vsnprintf(buffer, 500, format, args);
@@ -772,7 +772,7 @@ bool dbgtrc(
 
    bool msg_emitted = false;
    if ( tracing_active ) {
-      va_list(args);
+      va_list args;
       va_start(args, format);
       // DBGF(debug, "&args=%p, args=%p", &args, args);
       msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, "", format, args);
@@ -811,7 +811,7 @@ bool dbgtrc_ret_ddcrc(
       g_snprintf(pre_prefix, 60, "Done      Returning: %s. ", psc_name_code(rc));
       DBGF(debug, "pre_prefix=|%s|", pre_prefix);
 
-      va_list(args);
+      va_list args;
       va_start(args, format);
       // arm7l, aarch64: "on  error: cannot convert to a pointer type"
       // DBGF(debug, "&args=%p, args=%p\n", (void*)&args, (void*)args);
@@ -852,7 +852,7 @@ bool dbgtrc_ret_bool(
       if (debug)
          printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
 
-      va_list(args);
+      va_list args;
       va_start(args, format);
       // arm7l, aarch64: "on  error: cannot convert to a pointer type"
       // if (debug)
@@ -894,7 +894,7 @@ bool dbgtrc_returning_errinfo(
       if (debug)
          printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
 
-      va_list(args);
+      va_list args;
       va_start(args, format);
       // arm7l, aarch64: "on  error: cannot convert to a pointer type"
       // if (debug)
@@ -935,7 +935,7 @@ bool dbgtrc_returning_string(
       if (debug)
          printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
 
-      va_list(args);
+      va_list args;
       va_start(args, format);
       // arm7l, aarch64: "on  error: cannot convert to a pointer type"
       // if (debug)
@@ -977,7 +977,7 @@ void program_logic_error(
 {
    // assemble the error message
    char buffer[200];
-   va_list(args);
+   va_list args;
    va_start(args, format);
    vsnprintf(buffer, 200, format, args);
    va_end(args);
@@ -1008,7 +1008,7 @@ void core_errmsg_emitter(
       const char * msg, ...)
 {
    char buffer[200];
-   va_list(args);
+   va_list args;
    va_start(args, msg);
    vsnprintf(buffer, 100, msg, args);
    va_end(args);

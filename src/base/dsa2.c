@@ -1,7 +1,7 @@
 /** @file dsa2.c Dynamic sleep algorithm 2
  */
 
-// Copyright (C) 2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -1236,7 +1236,7 @@ dsa2_erase_persistent_stats() {
 
 static void
 stats_file_error(GPtrArray* errmsgs, char * format, ...) {
-   va_list(args);
+   va_list args;
    va_start(args, format);
    char buffer[200];
    vsnprintf(buffer, sizeof(buffer), format, args);
