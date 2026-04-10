@@ -103,7 +103,7 @@ bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
    }
 
    DBGMSF(debug, "v1=%d.%d <= v2=%d.%d returning: %s",
-                 v1.major, v2.minor,
+                 v1.major, v1.minor,
                  v2.major, v2.minor,
                  sbool(result));
    return result;
