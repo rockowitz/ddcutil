@@ -1,11 +1,11 @@
-/** @file ddc_try_stats.h
+/** @file ddc_try_data.h
  *
  *  Maintains statistics on DDC retries and also maxtries settings.
  *
  *  These statistics are global, not broken out by thread.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef TRY_STATS_H_
