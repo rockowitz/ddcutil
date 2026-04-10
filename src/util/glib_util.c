@@ -280,6 +280,7 @@ gaux_ptr_array_from_null_terminated_array(
    while (*p) {
       gpointer v = (dup_func) ? dup_func(*p) : *p;
       g_ptr_array_add(result, v);
+      p++;
    }
    return result;
 }
