@@ -1,6 +1,6 @@
 /** @file ddc_serialize.c */
 
-// Copyright (C) 2023-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -575,7 +575,7 @@ bool ddc_store_displays_cache() {
       char * json_text = ddc_serialize_displays_and_buses();
       char * fn = ddc_displays_cache_file_name();
       if (!fn) {
-         SEVEREMSG("Unable to determine cisplay cache file name");
+         SEVEREMSG("Unable to determine display cache file name");
          SYSLOG2(DDCA_SYSLOG_ERROR, "Unable to determine display cache file name");
       }
       else {
