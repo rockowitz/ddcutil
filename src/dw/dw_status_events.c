@@ -1,6 +1,6 @@
 /** @file dw_status_events.c */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -58,11 +58,10 @@ void assert_ddca_display_status_event_size_unchanged() {
 // Thread that performs callbacks
 //
 
+#ifdef USE_CALLBACK_QUEUE
 GAsyncQueue *  callback_queue = NULL;
 GMutex *  callback_queue_mutex = NULL;
 
-
-#ifdef USE_CALLBACK_QUEUE
 void dw_free_callback_queue_entry(Callback_Queue_Entry * entry) {
    // free_display_status_event(entry->event);  // ???
    free(entry);
@@ -237,7 +236,7 @@ DDCA_Status dw_register_display_status_callback(DDCA_Display_Status_Callback_Fun
 /** Unregisters a detection event callback function
  *
  *  @param  function of type DDCA_Display_Detection_Callback_func
- *  @retval DDCRC_OK normal returng_hash_table_add
+ *  @retval DDCRC_OK  normal return
  *  @retval DDCRC_NOT_FOUND function not in list of registered functions
  *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *                                  or not all video devices support DRM
@@ -248,7 +247,7 @@ DDCA_Status dw_unregister_display_status_callback(DDCA_Display_Status_Callback_F
 
    DDCA_Status result = DDCRC_INVALID_OPERATION;
    if (check_all_video_adapters_implement_drm()) {
-       result = generic_unregister_callback(display_detection_callbacks, func);
+      result = generic_unregister_callback(display_detection_callbacks, func);
    }
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
@@ -270,20 +269,16 @@ dw_create_display_status_event(
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref->flags = %s", interpret_dref_flags_t(dref->flags));
    DDCA_Display_Status_Event evt;
    memset(&evt, 0, sizeof(evt));
-   DBGMSF(debug, "sizeof(DDCA_Display_Status_Event) = %d, sizeof(evt) = %d",
-         sizeof(DDCA_Display_Status_Event), sizeof(evt));
    evt.timestamp_nanos = elapsed_time_nanosec();
    evt.dref = dref_to_ddca_dref(dref);  // 0 if dref == NULL
    evt.event_type = event_type;
    if (connector_name)
       g_snprintf(evt.connector_name, sizeof(evt.connector_name), "%s", connector_name);
-   else
-      memset(evt.connector_name,0,sizeof(evt.connector_name));
    evt.io_path = (dref) ? dref->io_path : io_path;
-   if (event_type == DDCA_DISPLAY_EVENT_DDC_WORKING)
+   if (event_type == DDCA_EVENT_DDC_ENABLED)
       ASSERT_WITH_BACKTRACE(dref->flags&DREF_DDC_COMMUNICATION_WORKING);
    if ((event_type == DDCA_EVENT_DISPLAY_CONNECTED && (dref->flags&DREF_DDC_COMMUNICATION_WORKING))
-      || event_type == DDCA_DISPLAY_EVENT_DDC_WORKING)
+      || event_type == DDCA_EVENT_DDC_ENABLED)
          evt.flags |= DDCA_DISPLAY_EVENT_DDC_WORKING;
    // evt.unused[0] = 0;
    // evt.unused[1] = 0;
@@ -305,9 +300,10 @@ void dw_emit_display_status_record(
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Emitting %s",  display_status_event_repr_t(evt));
 
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "evet->dref -> ", dref_reprx_t(evt->dref));
-   Display_Ref * dref0 = dref_from_published_ddca_dref(evt.dref);
-   // DBGMSG("dref0=%p", dref0);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "event->dref -> %s", dref_reprx_t(dref0));
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      Display_Ref * dref0 = dref_from_published_ddca_dref(evt.dref);
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "event->dref -> %s", dref_reprx_t(dref0));
+   }
 
    // debug_current_traced_function_stack(false);
    // show_backtrace(0);
@@ -360,6 +356,7 @@ void dw_emit_display_status_record(
          // traced_function_stack_suspended = false;
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "libddcutil callback thread %p started", callback_thread);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
+         g_thread_unref(callback_thread);
       }
    }
 
