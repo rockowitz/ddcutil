@@ -593,9 +593,9 @@ const char * func_addr_to_name(gpointer addr) {
  *
  *  Satisfies type GHFunc
  *
- *  @oaram  key   function name (char*)
+ *  @param  key   function name (char*)
  *  @param  value pointer to Per_Thread_Function_Stats struct for the function on a thread
- *  @data   pointer to summary hash table of function names -> Per_Thread_Function_Stats struct
+ *  @param  data  pointer to summary hash table of function names -> Per_Thread_Function_Stats struct
  */
 void add_one_func_to_summary(gpointer key, gpointer cur_func_stats, gpointer data) {
    bool debug = false;
@@ -651,9 +651,9 @@ Function_Stats_Hash * summarize_per_thread_stats() {
  *
  *  Satisfies typedef GHFunc
  *
- *  @oaram  key   function name (char*)
+ *  @param  key   function name (char*)
  *  @param  value pointer to Per_Thread_Function_Stats struct for the function
- *  @data   depth logical indentation depth
+ *  @param  depth logical indentation depth
  */
 static void ptd_report_one_func0(Per_Thread_Function_Stats * pts, void * arg) {
    // bool debug = false;

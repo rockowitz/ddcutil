@@ -341,7 +341,7 @@ DDCA_Sleep_Multiplier get_global_sleep_multiplier_factor() {
 
 /** Initializes a newly allocated #Per_Display_Data struct
  *
- *  @oaram pdd  pointer to instance to initialize
+ *  @parampdd  pointer to instance to initialize
  */
 void pdd_init_pdd(Per_Display_Data * pdd) {
    bool debug = false;
@@ -690,7 +690,7 @@ void pdd_list_displays(int depth) {
 
 /** Function called for option "--vstats errors"
  *
- *  @oaram  depth  logical indentation depth
+ *  @param depth  logical indentation depth
  */
 void pdd_report_all_per_display_error_counts(int depth) {
    bool debug = false;
@@ -703,7 +703,7 @@ void pdd_report_all_per_display_error_counts(int depth) {
 
 /** Function called for option "--vstats calls"
  *
- *  @oaram  depth  logical indentation depth
+ *  @param depth  logical indentation depth
  */
 void pdd_report_all_per_display_call_stats(int depth) {
    bool debug = false;
@@ -718,7 +718,7 @@ void pdd_report_all_per_display_call_stats(int depth) {
  *
  *  @param  pdd    Per_Display_Data
  *  @param  include_dsa_internal report internal dsa stats, if available
- *  @oaram  depth  logical indentation depth
+ *  @param depth  logical indentation depth
  */
 void pdd_report_elapsed(Per_Display_Data * pdd, bool include_dsa_internal, int depth) {
    // DBGMSG("include_dsa_internal=%s", sbool(include_dsa_internal));
@@ -772,7 +772,7 @@ void pdd_report_elapsed(Per_Display_Data * pdd, bool include_dsa_internal, int d
  *
  *  @param  pdd    Per_Display_Data
  *  @param  include_dsa_internal report internal dsa stats, if available
- *  @oaram  depth  logical indentation depth
+ *  @param depth  logical indentation depth
  */
 void pdd_report_all_per_display_elapsed_stats(bool include_dsa_internal, int depth) {
    rpt_label(depth, "Per display elapsed time");
