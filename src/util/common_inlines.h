@@ -1,6 +1,6 @@
 /** @file common_inlines.h */
 
-// Copyright (C) 2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2025-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef COMMON_INLINES_H_
@@ -27,7 +27,7 @@ static inline pid_t tid() {
 static inline pid_t pid() {
    static __thread pid_t process_id;
    if (!process_id)
-      process_id = syscall(SYS_gettid);
+      process_id = syscall(SYS_getpid);
    return process_id;
 }
 
