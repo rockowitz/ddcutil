@@ -87,7 +87,6 @@ libbase_la_SOURCES +=    \
 drm_connector_state.c     
 endif
 
-nodist_libbase_la_SOURCES = adl_errors.h
 
 # Rename all-local-disabled to "all-local" for development 
 all-local-disabled:
