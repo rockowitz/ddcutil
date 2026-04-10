@@ -116,9 +116,9 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
 static void emit_error_msg(GPtrArray * errmsgs, char * format, ...)
 {
    char buffer[200];
-   va_list(args);
+   va_list args;
    va_start(args, format);
-   vsnprintf(buffer, 100, format, args);
+   vsnprintf(buffer, 200, format, args);
    va_end(args);
 
    if (errmsgs)
