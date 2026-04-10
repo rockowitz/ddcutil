@@ -5,7 +5,7 @@
  * but were extracted for clarity.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -35,7 +35,7 @@ void dbgrpt_capabilities_feature_record(
    int d1 = depth+1;
    rpt_structure_loc("Capabilities_Feature_Record", vfr, depth);
    rpt_vstring(d1, "marker:       %.4s", vfr->marker);
-   rpt_vstring(d1, "feature_ide:  0x%02x", vfr->feature_id);
+   rpt_vstring(d1, "feature_id:   0x%02x", vfr->feature_id);
    if (vfr->values) {
       char * s =  bva_as_string(vfr->values, true, " ");
       rpt_vstring(d1, "values:       %s", s);

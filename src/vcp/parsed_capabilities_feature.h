@@ -1,8 +1,8 @@
-/** \file parsed_capabilitied_feature.h
+/** \file parsed_capabilities_feature.h
  * Parses the description of a VCP feature extracted from a capabilities string.
  */
 
-// Copyright (C) 2015-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARSED_CAPABILITIES_FEATURE_H

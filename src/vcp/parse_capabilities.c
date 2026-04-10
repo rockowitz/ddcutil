@@ -171,7 +171,7 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
 /* Point to the first non-space character in a string.
  *
  * @param  s   pointer to string
- * \parsm  len length of string
+ * \param  len length of string
  * @return pointer to first non-space character of string,
  *         end of string if not found
  */
