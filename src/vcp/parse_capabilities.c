@@ -669,7 +669,7 @@ Parsed_Capabilities * parse_capabilities(
    assert(buf_start);
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "buf_len=%d, buf_start=%p->|%.*s|",
-                                       buf_start, buf_len, buf_len, buf_start);
+                                       buf_len, buf_start, buf_len, buf_start);
    if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
       rpt_hex_dump((Byte*)buf_start, buf_len, 1);
    }
@@ -872,7 +872,7 @@ bool parsed_capabilities_supports_table_commands(Parsed_Capabilities * pcaps) {
        bva_contains(pcaps->commands, 0xe4)         // Table Read Reply
       )
    {
-         result = false;
+         result = true;
    }
    return result;
 }
