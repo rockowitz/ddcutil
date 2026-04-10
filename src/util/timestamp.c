@@ -143,7 +143,7 @@ uint64_t elapsed_time_nanosec() {
 
 static uint64_t ipow(const uint64_t base, guint n)
 {
-   int p = base;
+   uint64_t p = base;
    if (n == 0)
       return 1;
    for (int i = 1; i < n; ++i)
