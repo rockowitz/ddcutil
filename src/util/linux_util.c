@@ -265,7 +265,7 @@ char * kernel_module_types[] = {
  *  @param  module name
  *  @retval KERNEL_MODULE_NOT_FOUND      not found
  *  @retval KERNEL_MODULE_BUILTIN        kernel module is built in
- *  @retval KERNEL_MODULE_LOADABLE_FILE  kernel module is a lotable file
+ *  @retval KERNEL_MODULE_LOADABLE_FILE  kernel module is a loadable file
  */
 int module_status_by_modules_builtin_or_existence(const char * module_name) {
    bool debug = false;
@@ -434,7 +434,7 @@ char * uid_name(int uid) {
 
 /** Returns the name for a group id
  *
- *  @param gid  grup id
+ *  @param gid  group id
  *  @return name of group, or "unknown" if unrecognized
  *
  *  The returned string should not be freed.?
@@ -467,7 +467,7 @@ bool is_valid_thread_or_process(pid_t id) {
 
 /** Report processes that have a file open
  *
- *  The report is written ot the current output destination.
+ *  The report is written to the current output destination.
  *
  *  @param  fqfn  file name
  *  @param  depth logical indentation depth

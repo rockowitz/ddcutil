@@ -2117,6 +2117,7 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
 // Attached buses
 //
 
+#ifdef ENABLE_UDEV
 /** Gets the numbers of I2C devices
  *
  *  \param  include_ignorable_devices  if true, do not exclude SMBus and other ignorable devices
@@ -2150,6 +2151,7 @@ i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
 
    return bva;
 }
+#endif
 
 
 /** Returns the bus numbers for /dev/i2c buses that could possibly be
