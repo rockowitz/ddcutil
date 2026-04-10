@@ -3,7 +3,7 @@
  *  Utility functions for glib.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -297,6 +297,12 @@ gboolean gaux_streq(gconstpointer a, gconstpointer b) {
 
 /** Implements g_ptr_array_find_with_equal_func(), which requires glib 2.54.
  *
+ *  @param  haystack   array to search
+ *  @param  needle     value to search for
+ *  @param  equal_func equality function
+ *  @param  index_loc  if non-null, return the index of the found value here,
+ *                     or G_MAXUINT if not found
+ *  @return true if value found, false if not
  */
 gboolean
 gaux_ptr_array_find_with_equal_func(
@@ -307,7 +313,7 @@ gaux_ptr_array_find_with_equal_func(
 {
    bool result = false;
    if (index_loc)
-      *index_loc = -1;
+      *index_loc = G_MAXUINT;
    if (haystack && (haystack->len > 0) && needle) {
       for (guint ndx = 0; ndx < haystack->len; ndx++) {
          if (equal_func)
