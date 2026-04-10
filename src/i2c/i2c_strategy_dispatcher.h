@@ -1,9 +1,9 @@
 /** \file i2c_strategy_dispatcher.h
  *
  *  Vestigial code for testing alternative mechanisms to read from and write to
- *  the IC2 bus.
+ *  the I2C bus.
  */
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_STRATEGY_DISPATCHER_H_
