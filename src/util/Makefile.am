@@ -3,7 +3,7 @@
 AM_CPPFLAGS =        \
    $(DBUS_CFLAGS)     \
    $(LIBDRM_CFLAGS)  \
-   $(GLIB_CFLAGS) 
+   $(GLIB_CFLAGS)
 
 AM_CFLAGS = $(AM_CFLAGS_STD)
 
@@ -70,7 +70,7 @@ if ENABLE_UDEV_COND
 libutil_la_SOURCES +=      \
 udev_i2c_util.c            \
 udev_usb_util.c            \
-udev_util.c               
+udev_util.c
 endif
 
 if ENABLE_FAILSIM_COND
@@ -91,8 +91,12 @@ endif
 # future
 # if USE_SYSTEMD_COND
 # libutil_la_SOURCES += \
-# systemd_dbus_util.c 
+# systemd_dbus_util.c
 # endif
+
+if USE_SYSTEMD_COND
+libutil_la_SOURCES += systemd_util.c
+endif
 
 if USE_X11_COND
 libutil_la_SOURCES += x11_util.c
@@ -103,7 +107,7 @@ endif
 # endif
 
 # Rename to "all-local" for development
-all-local-dusabked:
+all-local-disabled:
 	@echo ""
 	@echo "(src/util/Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:       $(CLEANFILES)"
