@@ -86,7 +86,7 @@ bool simple_dbgmsg(
 
    bool msg_emitted = false;
    if ( debug_flag ) {
-      va_list(args);
+      va_list args;
       va_start(args, format);
       char * buffer = g_strdup_vprintf(format, args);
       va_end(args);
