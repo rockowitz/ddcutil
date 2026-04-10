@@ -658,7 +658,7 @@ bye:
  *
  *  @remark
  *  A pointer to a #Parsed_Capabilities struct is always returned.
- *  If an error occured during parsing, the #caps_validity field
+ *  If an error occurred during parsing, the #caps_validity field
  *  will be set to CAPABILITIES_INVALID or CAPABILITIES_USABLE,
  *  and error messages will be accumulated in the #messages field.
  */
