@@ -217,7 +217,7 @@ void invoke_process_screen_change_event(
       GArray* deferred_events,
       GPtrArray* displays_to_recheck)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());
