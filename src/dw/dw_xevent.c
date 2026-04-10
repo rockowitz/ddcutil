@@ -76,7 +76,7 @@ XEvent_Data * dw_init_xevent_screen_change_notification() {
          have_rr = false;
    }
    if (!have_rr) {
-      DBGTRC(true, DDCA_TRC_NONE, "XRR Extension unavailable");
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "XRR Extension unavailable");
       goto bye;
    }
 
@@ -136,7 +136,7 @@ bool dw_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
          if (debug)
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                   "windows change event  serial %ld, synthetic %s, window %ju,",
-                  e->serial, sbool(e->send_event), (intmax_t)e->window);
+                  e->serial, sbool(e->send_event), (uintmax_t)e->window);
          bool more = true;
          while (more) {
             more = XCheckTypedEvent(evdata->dpy, evdata->screen_change_eventno, &event);
@@ -233,7 +233,7 @@ Bool dw_is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "detected screen change");
    }
    else {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Ignoring evnt->xclient.type == %d", evt->xclient.type);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Ignoring evt->xclient.type == %d", evt->xclient.type);
    }
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
@@ -243,7 +243,7 @@ Bool dw_is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
 
 /** Blocks until either a XRRScreenChangeEvent or ClientMessageEvent is returned
  *
- * #param   evdata pointer to XEvent_Data
+ * @param   evdata pointer to XEvent_Data
  * @return  true  received ScreenChangeNotify event
  *          false received termination event
  */
