@@ -4,7 +4,7 @@
  *  model name, and product code, as listed in the EDID.
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -180,7 +180,7 @@ mmk_new_from_value(Monitor_Model_Key mmk) {
 Monitor_Model_Key *
 mmk_new_from_string(const char * s) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "s=|s|", s);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "s=|%s|", s);
 
    Monitor_Model_Key * result = NULL;
    Monitor_Model_Key mmk = mmk_value_from_string(s);
