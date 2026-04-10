@@ -2,7 +2,7 @@
  *
  *  Status Code Management
  */
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef STATUS_CODE_MGT_H_
@@ -49,7 +49,7 @@ typedef int Public_Status_Code;    ///< union(Status_Errno, Status_DDC, Modulate
 
 /** Pointer to function that finds the #Status_Code_Info for a status code
  * @param rc status code
- * @return ponter to #Status_Code_Info for the code, NULL if not found
+ * @return pointer to #Status_Code_Info for the code, NULL if not found
  * */
 typedef
 Status_Code_Info * (*Retcode_Description_Finder)(int rc);

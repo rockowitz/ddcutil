@@ -1,9 +1,9 @@
-/* \file feature_sets.h
+/** \file feature_set_ref.h
  *
  * Feature set identifiers
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FEATURE_SET_REF_H_

@@ -1,4 +1,4 @@
-/* @file display_lock.h
+/** @file display_lock.h
  */
 
 // Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>

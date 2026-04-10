@@ -1,4 +1,4 @@
-/* @file feature_metadata.h
+/** @file feature_metadata.h
  *
  * Functions for external and internal representation of
  * display-specific feature metadata.

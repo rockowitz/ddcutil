@@ -2,7 +2,7 @@
  *
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_BUS_BASE_H_
@@ -140,7 +140,7 @@ typedef enum {
 extern bool use_x37_detection_table;
 
 const char *         x37_detection_state_name(X37_Detection_State state);
-void                 i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State deteted);
+void                 i2c_record_x37_detected(int busno, Byte * edidbytes, X37_Detection_State detected);
 X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes);
 
 void             i2c_exclude_buses(Bit_Set_256 excluded_busnos_flags);
