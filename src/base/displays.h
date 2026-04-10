@@ -25,25 +25,6 @@
 #include "vcp_version.h"
 
 
-/** \file
-Display Specification
-
-Monitors are specified in different ways in different contexts:
-
-1) Display_Identifier represents an identifier specified on the command line.
-
-2) Display_Ref is a logical display identifier.   It can be an I2C identifier
-or a USB identifier.
-
-For Display_Identifiers containing a busno (for I2C) or hiddev device number (USB),
-the translation from Display_Identier to Display_Ref is direct.
-Otherwise, displays are searched to find the monitor.
-
-3) Display_Handle is passed as an argument to "open" displays.
-
-For I2C displays, the device must be opened.  Display_Handle then contains the open file handle.
-*/
-
 // *** Globals ***
 
 extern GPtrArray * all_display_refs;         // all detected displays, array of Display_Ref *
