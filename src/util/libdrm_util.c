@@ -26,10 +26,7 @@
 #include "debug_util.h"
 #include "file_util.h"
 
-
 #include "libdrm_util.h"
-
-
 
 
 #ifndef DRM_MODE_CONNECTOR_USB
@@ -81,7 +78,6 @@
  }
 
 
-
  // For getting the DRM connector type from the DRM connector name
 
     Value_Name_Title connector_type_lookup_table[] = {
@@ -120,8 +116,6 @@
           -1);      // default_id
     return val;
  }
-
-
 
 
 // /usr/include/libdrm and /usr/include/drm may both contain copies
@@ -244,7 +238,6 @@ char * interpret_property_flags(uint32_t flags) {
 }
 
 
-
 Value_Name_Title drmModeConnection_table[] = {
    VNT(DRM_MODE_CONNECTED,         "connected"    ), //   1
    VNT(DRM_MODE_DISCONNECTED,      "disconnected" ), //   2
@@ -283,13 +276,12 @@ Value_Name_Title drm_encoder_type_table[] = {
 
 
 /** Returns a description string for an encoder type
- * @param encoder_type encolder type
+ * @param encoder_type encoder type
  * @return descriptive string
  */
 char * encoder_type_title(uint32_t encoder_type) {
     return vnt_title(drm_encoder_type_table, encoder_type);
 }
-
 
 
 //
@@ -387,8 +379,6 @@ void summarize_drmModeModeInfo(drmModeModeInfo * p, int depth) {
     // rpt_vstring(d1, "flags:  0x%08x - %s", p->flags, "");
     // rpt_vstring(d1, "type:   %d = %s", p->type, "");
 }
-
-
 
 
 #ifdef FOR_DRM_H
@@ -720,5 +710,3 @@ void summarize_drm_modeProperty(drmModePropertyRes * p, int depth) {
                       interpret_property_flags(p->flags)
               );
 }
-
-
