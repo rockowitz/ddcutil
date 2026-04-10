@@ -330,7 +330,7 @@ unlock_display_by_businfo(I2C_Bus_Info * businfo) {
  *  @param  filename   name of file to open
  *  @param  callopts   if bit CALLOPT_RDONLY set, open RO, otherwise open RW
  *  @param  fd_loc     address which to return file descriptor, -1 if failure
- *  @return Error_Info struct if error, NULl if success
+ *  @return Error_Info struct if error, NULL if success
  *
  *  @remark
  *  Common error codes: -ENOENT, -EACCES
@@ -394,10 +394,10 @@ retry:
 
 
 /** Opens a /dev/i2c device specified by its bus number, without further checks
- *  @param  busno      I2c bus number
+ *  @param  busno      I2C bus number
  *  @param  callopts   if bit CALLOPT_RDONLY set, open RO, otherwise open RW
  *  @param  fd_loc     address which to return file descriptor, -1 if failure
- *  @return Error_Info struct if error, NULl if success
+ *  @return Error_Info struct if error, NULL if success
  */
 Error_Info *
 i2c_open_bus_basic_by_busno(int busno,  Byte callopts, int* fd_loc) {
@@ -591,7 +591,7 @@ i2c_open_bus(
 /** Close an open /dev/i2c device
  *  @param  busno  /dev/i2c bus number
  *  @param  fd     file descriptor for open device
- *  @param  callopts  if bit CALOPT_ERR_MSG set, write error message to terminal
+ *  @param  callopts  if bit CALLOPT_ERR_MSG set, write error message to terminal
  *  @return 0 if success, -errno if error
  *
  *  If an error occurs, a message is written to the system log
@@ -2056,7 +2056,7 @@ i2c_threaded_initial_checks_by_businfo(gpointer data) {
 
 /** Spawns threads to perform initial checks and waits for them all to complete.
  *
- *  @param all_displays #GPtrArray of pointers to #I2c_Bus_Info
+ *  @param i2c_buses   #GPtrArray of pointers to #I2C_Bus_Info
  */
 STATIC void
 i2c_async_scan(GPtrArray * i2c_buses) {
@@ -2368,7 +2368,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
  *  of each bus in an array of #I2C_Bus_Info, possibly restricted to those buses
  *  for which a monitor is connected, i.e. for which an EDID is detected.
  *
- *  @param  buses   array of I2C_Bus_Info
+ *  @param  businfo_array   array of I2C_Bus_Info
  *  @param  only_connected if true, only include buses having EDID
  *  @return bit set
  */
