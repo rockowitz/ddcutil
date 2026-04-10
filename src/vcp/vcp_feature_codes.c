@@ -118,7 +118,7 @@ vcp_interpret_global_feature_flags(
 
    char * synmsg3 = "";            // should not occur for a VCP feature table entry
      if (flags & DDCA_PERSISTENT_METADATA)
-        synmsg = "Persistent ";
+        synmsg3 = "Persistent ";
 
 
    char * dynmsg = "";
@@ -628,7 +628,7 @@ extract_version_feature_info_from_feature_table_entry(
          ? get_version_sensitive_feature_flags(vfte, vspec)
          : get_version_specific_feature_flags(vfte, vspec);
 
-   dfm->feature_desc = (dfm->feature_desc) ? g_strdup(vfte->desc) : NULL;
+   dfm->feature_desc = (vfte->desc) ? g_strdup(vfte->desc) : NULL;
 
    char * feature_name = (version_sensitive)
            ? get_version_sensitive_feature_name(vfte, vspec)
