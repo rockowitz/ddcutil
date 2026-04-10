@@ -640,7 +640,7 @@ find_adapter_and_get_driver(char * path, int depth) {
 
 /** Returns the name of the video driver for an I2C bus.
  *
- * @param  busno   I2 bus number
+ * @param  busno   I2C bus number
  * @return driver name, NULL if can't determine
  *
  * Caller is responsible for freeing the returned string.
