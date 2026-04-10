@@ -152,7 +152,7 @@ void free_capabilities_feature_record(
       if (pfeat->values)
          bva_free(pfeat->values);
 
-#ifdef BBF
+#ifdef CFR_BBF
       if (pfeat->bbflags)
          bbf_free(pfeat->bbflags);
 #endif
