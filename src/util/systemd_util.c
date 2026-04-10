@@ -2,7 +2,7 @@
  *  Functions for reading the systemd journal.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -84,7 +84,7 @@ char * d_strcasestr(const char * haystack, const char * needle) {
  *  list of terms.  A limit to the number of lines returned can be specified.
  *
  *  @param filter_terms  list of filter terms
- *  @param ignore case   if true, case is ignored when testing filter terms
+ *  @param ignore_case   if true, case is ignored when testing filter terms
  *  @param limit         ignored
  */
 GPtrArray * get_current_boot_messages(char ** filter_terms, bool ignore_case, int limit) {
