@@ -185,9 +185,8 @@ char * formatted_elapsed_time_t(guint precision) {
  *  The string is built in a thread specific private buffer.  The returned
  *  string is valid until the next call of this function in the same thread.
  *
- *  @param  start   start time, in nanoseconds
- *  @param  end     end time, in nanoseconds
- *  @return formatted time difference
+ *  @param  nanos   time in nanoseconds
+ *  @return formatted time
  */
 char *   formatted_time_t(uint64_t nanos) {
    static GPrivate  formatted_time_key = G_PRIVATE_INIT(g_free);
