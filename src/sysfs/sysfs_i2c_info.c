@@ -1,6 +1,6 @@
 /** @file sysfs_i2c_info.c */
 
-// Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -181,7 +181,7 @@ Sysfs_I2C_Info * get_basic_i2c_driver_info(int busno) {
  *
  *  @param  busno  i2c bus number
  *  @param  depth  logical indentation depth, if < 0 do not emit report
- *  @result newly allocated #Sys_I2c_Info struct
+ *  @return newly allocated #Sys_I2c_Info struct
  */
 Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
    bool debug = false;
