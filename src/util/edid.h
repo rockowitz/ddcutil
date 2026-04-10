@@ -4,7 +4,7 @@
  * the bytes of the EDID are obtained.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef EDID_H_
@@ -66,7 +66,7 @@ struct {
    uint16_t     gy;                      ///< green y coordinate
    uint16_t     bx;                      ///< blue  x coordinate
    uint16_t     by;                      ///< blue  y coordinate
-   Byte         video_input_definition;  /// EDID byte 20 (x14)
+   Byte         video_input_definition;  ///< EDID byte 20 (x14)
    Byte         supported_features;      ///< EDID byte 24 (x18) supported features bitmap
    uint8_t      extension_flag;          ///< number of optional extension blocks
    char         edid_source[EDID_SOURCE_FIELD_SIZE];  ///< describes source of EDID
