@@ -1,7 +1,7 @@
 /** @file per_thread_data.c
  */
 
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -296,7 +296,7 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
  *  #Per_Thread_Data instances.
  *
  *  @param  func  function to apply
- *  \parm   arg   an arbitrary argument passed as a pointer
+ *  \param  arg   an arbitrary argument passed as a pointer
  *
  *  This is a multi-instance operation.
  */

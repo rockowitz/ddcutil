@@ -1,6 +1,6 @@
 /** \f core_per_thread_settings.c */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -295,7 +295,7 @@ char * output_level_name(DDCA_Output_Level val) {
          result = "Verbose";
          break;
       case DDCA_OL_VV:
-         result = "Very Vebose";
+         result = "Very Verbose";
       // default unnecessary, case exhausts enum
    }
    return result;

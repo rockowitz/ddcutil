@@ -3,7 +3,7 @@
  *  VCP (aka MCCS) version specification
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -110,7 +110,7 @@ bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
 }
 
 
-/** CHecks if one #DDCA_MCCS_Version_Spec is greater than another.
+/** Checks if one #DDCA_MCCS_Version_Spec is greater than another.
  *
  * See \see vcp_version_le for discussion of version comparison
  *

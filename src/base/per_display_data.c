@@ -1,7 +1,7 @@
 /** @file per_display_data.c
  */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -530,7 +530,7 @@ void dbgrpt_per_display_data(Per_Display_Data * pdd, int depth) {
  *  #Per_Display_Data instances.
  *
  *  @param  func  function to apply
- *  \parm   arg   an arbitrary argument passed as a pointer
+ *  \param  arg   an arbitrary argument passed as a pointer
  *
  *  This is a multi-instance operation.
  */

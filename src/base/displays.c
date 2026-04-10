@@ -138,7 +138,7 @@ Display_Identifier* create_dispno_display_identifier(int dispno) {
 
 /** Creates a #Display_Identifier using an I2C bus number
  *
- * \param  busno O2C bus number
+ * \param  busno I2C bus number
  * \return pointer to newly allocated #Display_Identifier
  *
  * \remark
@@ -569,7 +569,7 @@ char * io_mode_name(DDCA_IO_Mode val) {
 /** A simple function allowing for the assignment of a value to a
  *  #DDCA_IO_Path instance in a single line of code.
  *
- *  @parm   busno    I2C bus number
+ *  @param  busno    I2C bus number
  *  @return DDCA_IO_Path value
  */
 DDCA_IO_Path i2c_io_path(int busno) {
@@ -583,7 +583,7 @@ DDCA_IO_Path i2c_io_path(int busno) {
 /** A simple function allowing for the assignment of a value to a
  *  #DDCA_IO_Path instance in a single line of code.
  *
- *  @parm   hiddev  USB device number
+ *  @param  hiddev  USB device number
  *  @return DDCA_IO_Path value
  */
 DDCA_IO_Path usb_io_path(int hiddev_devno) {
