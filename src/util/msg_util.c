@@ -4,7 +4,7 @@
  *  and maintains a stack of the names of traced functions.
  */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -67,7 +67,7 @@ char * get_msg_decoration(char * buf, uint bufsz, bool dest_syslog) {
       if (dbgtrc_show_thread_id || dest_syslog)
          g_snprintf(thread_prefix, 15, PRItid, (intmax_t) tid());
       if (dbgtrc_show_process_id && !dest_syslog)
-         g_snprintf(thread_prefix, 15, PRItid, (intmax_t) pid());
+         g_snprintf(process_prefix, 15, PRItid, (intmax_t) pid());
       if (traced_function_stack_enabled) {
          char * s = peek_traced_function();
          if (s)
