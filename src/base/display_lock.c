@@ -3,7 +3,7 @@
  *  opened simultaneously from multiple threads.
  */
 
-// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /*
@@ -51,7 +51,7 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
-#ifdef ALT_LCOK_REC
+#ifdef ALT_LOCK_REC
 #include "usb/usb_displays.h"   // forward ref, need to split out usb_displays_base.h
 #endif
 
