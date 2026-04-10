@@ -458,7 +458,7 @@ bool is_valid_thread_or_process(pid_t id) {
    snprintf(procfn, 20, "/proc/%d", id);
    int rc = stat(procfn, &buf);
    bool result = (rc == 0);
-   DBGF(debug, "File: %s, returning %s\n", procfn, sbool(result));
+   DBGF(debug, "File: %s, returning %s", procfn, sbool(result));
    if (!result)
       DBG("!!! Returning: %s", sbool(result));
    return result;
