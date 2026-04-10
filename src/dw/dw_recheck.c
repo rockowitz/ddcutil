@@ -50,14 +50,14 @@ static void emit_recheck_debug_msg(
       DDCA_Syslog_Level syslog_level,
       const char * format, ...)
 {
-   va_list(args);
+   va_list args;
    va_start(args, format);
    char buffer[200];
    vsnprintf(buffer, 200, format, args);
    va_end(args);
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", buffer);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buffer);
+   SYSLOG2(syslog_level, "%s", buffer);
 }
 
 
@@ -74,7 +74,7 @@ static void dw_free_recheck_queue_entry(Recheck_Queue_Entry * entry) {
 
 
 GAsyncQueue *  recheck_queue = NULL;
-GMutex *  recheck_queue_mutex = NULL;
+// GMutex *  recheck_queue_mutex = NULL;
 
 
 static GAsyncQueue *
@@ -136,7 +136,7 @@ dw_recheck_dref(Display_Ref * dref) {
 }
 
 
-/** Function that executes in the recheck thread thread to check if DDC
+/** Function that executes in the recheck thread to check if DDC
  *  communication has become enabled for newly added display refs for which
  *  DDC communication was not initially detected as working.
  *
@@ -202,7 +202,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
          break;
       }
 
-       // check if thread should terminate because watch thread terminated
+      // check if max recheck time has elapsed
       if (cur_time_nanos > rqe->initial_ts_nanos + MILLIS2NANOS(max_sleep_time_millis)) {
          emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
                "ddc did not become enabled for %s after %d milliseconds",
@@ -297,5 +297,3 @@ void init_dw_recheck() {
    RTTI_ADD_FUNC(dw_recheck_dref);
    RTTI_ADD_FUNC(dw_recheck_displays_func);
 }
-
-
