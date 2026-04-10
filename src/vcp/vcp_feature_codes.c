@@ -806,7 +806,7 @@ get_table_feature_detail_function(
  *  @param  vcp_version VCP version of monitor
  *  @param  code_info   non-table feature value
  *  @param  buffer      address of buffer in which to return formatted value
- *  @param  bufsz       buffer string
+ *  @param  bufsz       buffer size
  *
  *  @return true if successful, false if not
  */
