@@ -3,7 +3,7 @@
  *  Query /sys file system for information on I2C devices
  */
 
-// Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -60,7 +60,7 @@ bool all_drm_connectors_have_connector_id = false;
 
 /** Frees a Sys_Drm_Connector instance
  *
- *  @param pointer to instance to free
+ *  @param display  pointer to instance to free
  */
 void free_sys_drm_connector(void * display) {
    bool debug = false;
@@ -143,7 +143,7 @@ void report_one_sys_drm_connector(Sys_Drm_Connector * cur, bool detailed_edid, i
  *  /sys/class/drm.  It reads the directory itself instead of using the
  *  #sys_drm_connectors array.
  *
- *  @oaram  connector_name   e.g. card2-DP-3
+ *  @param  connector_name   e.g. card2-DP-3
  *  @param  depth            logical indentation depth, output connector report if >= 0
  *  @return Sys_Drm_Connector object for the connector
  */
@@ -439,7 +439,7 @@ int sys_drm_get_busno_by_connector_name(const char * connector_name) {
 
 /** Searches for a Sys_Drm_Connector instance by I2C bus number.
  *
- *  @param  I2C bus number
+ *  @param  busno  I2C bus number
  *  @return pointer to instance, NULL if not found
  */
 Sys_Drm_Connector *
@@ -478,7 +478,7 @@ char * find_drm_connector_name_by_busno(int busno) {
 
 /** Searches for a Sys_Drm_Connector instance by EDID.
  *
- *  @param  pointer to 128 byte EDID value
+ *  @param  raw_edid  pointer to 128 byte EDID value
  *  @return pointer to instance, NULL if not found
  */
 Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
