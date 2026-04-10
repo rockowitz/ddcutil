@@ -3,7 +3,7 @@
  * ddc layer initialization and configuration, statistics management
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -92,9 +92,10 @@ void ddc_reset_stats_main() {
 /** Master function for reporting statistics.
  *
  * \param stats                 bitflags indicating which statistics to report
- * \param show_per_display      include per display execution stats
- * \param include_dsa_internal  include internal dsa info in per display elapsed stats
- * \param depth logical         indentation depth
+ * \param show_per_display_stats   include per display execution stats
+ * \param include_dsa_internal     include internal dsa info in per display elapsed stats
+ * \param stats_to_syslog_only     if true, emit stats only to syslog
+ * \param depth                    logical indentation depth
  */
 void ddc_report_stats_main(DDCA_Stats_Type  stats,
                            bool             show_per_display_stats,

@@ -1,9 +1,9 @@
-/** @file ddc_try_stats.c
+/** @file ddc_try_data.c
  *
  *  Maintains statistics on DDC retries, along with maxtries settings.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -145,7 +145,7 @@ static Try_Data2 try_data[RETRY_OP_COUNT];
 /* Initializes a Try_Data data structure
  *
  * @param  retry_type  Retry_Operation type
- * #param  maxtries    maximum number of tries
+ * @param  maxtries    maximum number of tries
  */
 void try_data_init_retry_type(Retry_Operation retry_type, Retry_Op_Value maxtries) {
    bool debug = false;

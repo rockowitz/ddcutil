@@ -1,4 +1,4 @@
-/** @file dumpload.c
+/** @file ddc_dumpload.c
  *
  *  Load/store VCP settings from/to file.
  */
