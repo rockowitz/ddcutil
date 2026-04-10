@@ -3,7 +3,7 @@
  * Basic functions for writing to and reading from the I2C bus using
  * alternative mechanisms.
  */
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -80,7 +80,7 @@ i2c_set_addr0(int fd, uint16_t op, int addr) {
       errno=EBUSY;
    }
    else {
-      RECORD_IO_EVENT(-1, IE_OTHER, ( ioctl_rc = ioctl(fd, op, addr) ) );
+      RECORD_IO_EVENT(fd, IE_OTHER, ( ioctl_rc = ioctl(fd, op, addr) ) );
    }
 
    if (ioctl_rc < 0) {
