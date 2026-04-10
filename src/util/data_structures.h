@@ -2,7 +2,7 @@
  *  General purpose data structures
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DATA_STRUCTURES_H
@@ -143,7 +143,7 @@ int32_t vnt_find_id(
            int32_t default_id);
 
 #define INTERPRET_VNT_FLAGS_BY_NAME false
-#define INTERPRET VNT_FLAGS_BY_TITLE true
+#define INTERPRET_VNT_FLAGS_BY_TITLE true
 char * vnt_interpret_flags(
       uint32_t                flags_val,
       Value_Name_Title_Table  bitname_table,
