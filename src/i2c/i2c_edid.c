@@ -3,7 +3,7 @@
  *  various quirks.
  */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -264,11 +264,6 @@ i2c_get_edid_bytes_directly_using_fileio(
 #ifdef TEST_EDID_SMBUS
             }
 #endif
-            RECORD_IO_EVENT(
-                fd,
-                IE_FILEIO_READ,
-                ( rc = read(fd, &rawedid->bytes[ndx], 1) )
-               );
             if (rc < 0) {
                rc = -errno;
                break;
