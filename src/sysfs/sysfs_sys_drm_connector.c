@@ -337,7 +337,7 @@ Bit_Set_256 buses_having_edid_from_sys_drm_connectors(bool rescan) {
       if (conn->edid_bytes)
          result = bs256_insert(result, conn->i2c_busno);
    }
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning; %s", bs256_to_string_decimal_t(result, "", ","));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %s", bs256_to_string_decimal_t(result, "", ","));
    return result;
 }
 
