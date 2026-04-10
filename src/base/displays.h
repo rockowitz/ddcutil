@@ -231,7 +231,7 @@ DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref);
 #define DREF_BUSNO(_dref) ((_dref)->io_path.path.i2c_busno)
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \
    assert(_dref && \
-          memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) && \
+          memcmp(_dref->marker, DISPLAY_REF_MARKER, 4) == 0) && \
           _dref->io_path.io_mode == _mode)
 
 Display_Ref * create_base_display_ref(DDCA_IO_Path io_path);
