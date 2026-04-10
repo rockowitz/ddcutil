@@ -6,7 +6,7 @@ AM_CPPFLAGS =        \
 AM_CFLAGS = $(AM_CFLAGS_STD)
 
 if WARNINGS_ARE_ERRORS_COND
-AM_CFLAGS += "-Werror"
+AM_CFLAGS += -Werror
 endif
 
 # vcp_feature_codes.c requires extensive changes if -Wpedantic
@@ -35,4 +35,4 @@ parse_capabilities.c          \
 parsed_capabilities_feature.c \
 persistent_capabilities.c     \
 vcp_feature_codes.c           \
-vcp_feature_values.c    
+vcp_feature_values.c
