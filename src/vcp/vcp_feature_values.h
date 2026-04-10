@@ -1,6 +1,6 @@
 // vcp_feature_values.h
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_FEATURE_VALUES_H_
@@ -120,7 +120,7 @@ void  dbgrpt_single_vcp_value( DDCA_Any_Vcp_Value * valrec, int depth);
 // void report_any_vcp_value(DDCA_Any_Vcp_Value * valrec, int depth);
 
 
-extern const int summzrize_single_vcp_value_buffer_size;
+extern const int summarize_single_vcp_value_buffer_size;
 char * summarize_single_vcp_value_r(DDCA_Any_Vcp_Value * valrec, char * buffer, int bufsz);
 char * summarize_single_vcp_value(DDCA_Any_Vcp_Value * valrec);
 
