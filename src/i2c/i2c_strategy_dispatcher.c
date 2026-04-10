@@ -1,9 +1,9 @@
 /** \file i2c_strategy_dispatcher.c
  *
- *  Allows for alternative mechanisms to read and write to the IC2 bus.
+ *  Allows for alternative mechanisms to read and write to the I2C bus.
  */
  
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -124,7 +124,7 @@ i2c_get_io_strategy_id() {
 }
 
 
-/** Checks a status code to see if it indicates the nvida/i2c-dev driver bug.
+/** Checks a status code to see if it indicates the nvidia/i2c-dev driver bug.
  *
  *  It is if the following 3 tests are met:
  *  - the status code is -EINVAL
@@ -153,7 +153,7 @@ is_nvidia_einval_bug(
       if (streq(driver_name, "nvidia")) {
          nvidia_einval_bug_encountered = true;
          i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
-         char * msg = "nvida/i2c-dev bug encountered. Forcing future io to I2C_IO_STRATEGY_FILEIO. Retrying";
+         char * msg = "nvidia/i2c-dev bug encountered. Forcing future io to I2C_IO_STRATEGY_FILEIO. Retrying";
          DBGTRC(debug, TRACE_GROUP, msg);
          SYSLOG2(DDCA_SYSLOG_WARNING, "%s", msg);
          result = true;
