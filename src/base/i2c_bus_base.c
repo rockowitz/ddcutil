@@ -344,7 +344,7 @@ I2C_Bus_Info * i2c_add_bus(int busno) {
  *  @param new_info location at which to return a flag
  *                  indicating whether the struct returned
  *                  is to a newly allocated instance
- *  @return pointer to struct for the spscified bus
+ *  @return pointer to struct for the specified bus
  *                  NULL if no existing struct found and the
  *                  bus does not exist
  */

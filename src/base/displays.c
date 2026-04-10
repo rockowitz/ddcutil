@@ -814,7 +814,7 @@ Display_Ref * dref_id_to_ptr(guint dref_id) {
  *  to the client.
  *
  *   @param ddca_dref public opaque display ref
- *   @result pointer to internal Display_Ref, NULL if not found
+ *   @return pointer to internal Display_Ref, NULL if not found
  */
 Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
    bool debug = false;

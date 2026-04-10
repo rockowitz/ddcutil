@@ -3,7 +3,7 @@
  *  Record execution statistics, mainly the count and elapsed time of system calls.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -532,7 +532,7 @@ max_sleep_event_name_size() {
 /** Returns the name of a sleep event type
  *
  *  @param event_type sleep event type, e.g. SE_WRITE_TO_READ
- *  @result
+ *  @return name string
  * */
 const char * sleep_event_name(Sleep_Event_Type event_type) {
    // ensure sleep_event_names stays in sync with Sync_Event_Type

@@ -5,7 +5,7 @@
  * tracing and and maintain sleep statistics.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -45,7 +45,7 @@ void init_sleep_stats() {
 
 /** Returns the current sleep statistics
  *
- * \return a copy of struct Sleep_Stats, containing thee current value
+ * \return a copy of struct Sleep_Stats, containing the current value
  *         of the accumulated sleep stats
  *
  * \remark

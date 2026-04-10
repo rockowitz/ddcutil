@@ -145,7 +145,7 @@ bool vcp_version_lt(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2){
  *  Encapsulates the use of a magic number.
  *
  *  @param vspec  version spec to test
- *  @result true/false
+ *  @return true/false
  */
 bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec) {
    return (vspec.major == 0xff && vspec.minor == 0xff);

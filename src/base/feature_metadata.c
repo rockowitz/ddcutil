@@ -521,7 +521,7 @@ void dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_
  *  metadata, to a #Display_Feature_Metadata.
  *
  *  @param  dyn_meta  instance to convert
- *  @result newly created #Display_Feature_Metadata
+ *  @return newly created #Display_Feature_Metadata
  *
  *  @remark
  *  It is the responsibility of the caller to free the returned instance
@@ -596,7 +596,7 @@ dbgrpt_ddca_feature_metadata(
 /** Converts a #Display_Feature_Metadata to a DDCA_Feature_Metadata
  *
  *  @param ddca_meta  instance to convert
- *  @result newly created #DDCA_Feature_Metadata
+ *  @return newly created #DDCA_Feature_Metadata
  *
  *  @remark
  *  It is the responsibility of the caller to free the returned instance
