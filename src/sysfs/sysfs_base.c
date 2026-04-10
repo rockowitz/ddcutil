@@ -720,7 +720,7 @@ void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo) {
          possibly_write_detect_to_status(businfo->driver, businfo->drm_connector_name);
       else {
          char * driver = get_driver_for_busno(businfo->busno);
-         possibly_write_detect_to_status(businfo->driver, businfo->drm_connector_name);
+         possibly_write_detect_to_status(driver, businfo->drm_connector_name);
          free(driver);
       }
    }
