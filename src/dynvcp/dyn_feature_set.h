@@ -63,8 +63,6 @@ create_dyn_feature_set_from_feature_set_ref(
    DDCA_MCCS_Version_Spec    vcp_version,
    Feature_Set_Flags         flags);
 
-
-
 #ifdef UNUSED
 Dyn_Feature_Set *
 dyn_create_single_feature_set_by_hexid2(
