@@ -4,7 +4,7 @@
  * incorporate user-defined per-monitor feature information.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -296,7 +296,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec(
  *
  * @param  feature_code   feature code
  * @param  dref           display reference
- * @oaram  check_udf      if true, first check for a user supplied feature definition
+ * @param  check_udf      if true, first check for a user supplied feature definition
  * @param  with_default   create default value if not found
  * @return Display_Feature_Metadata for the feature, caller must free,
  *         NULL if feature not found either in the user supplied feature definitions
@@ -339,7 +339,7 @@ dyn_get_feature_metadata_by_dref(
  *
  * @param  feature_code   feature code
  * @param  dh             display handle
- * @oaram  check_udf      if true, first check for a user supplied feature definition
+ * @param  check_udf      if true, first check for a user supplied feature definition
  * @param  with_default   create default value if not found
  * @return Display_Feature_Metadata for the feature, caller must free,
  *         NULL if feature not found either in the user supplied feature definitions
@@ -510,8 +510,7 @@ dyn_get_feature_name(
             result = dfr_metadata->feature_name;
       }
       if (!result) {
-         DDCA_MCCS_Version_Spec //  vspec = dref->vcp_version;   // TODO use function call in case not set
-         vspec = get_vcp_version_by_dref(dref);
+         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
          result = get_feature_name_by_id_and_vcp_version(feature_code, vspec);
       }
    }
