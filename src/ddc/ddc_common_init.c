@@ -56,9 +56,9 @@
 #include "i2c/i2c_strategy_dispatcher.h"
 
 #include "ddc_displays.h"
-#include "ddc/ddc_initial_checks.h"
+#include "ddc_initial_checks.h"
 #include "ddc_multi_part_io.h"
-#include "ddc/ddc_phantom_displays.h"
+#include "ddc_phantom_displays.h"
 #include "ddc_serialize.h"
 #include "ddc_services.h"
 #include "ddc_try_data.h"
