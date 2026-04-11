@@ -499,7 +499,6 @@ loadvcp_by_dumpload_data(
          goto bye;
       }
 
-      // return code == 0 iff dh set
       ddc_excp = ddc_open_display(dref, CALLOPT_NONE, &dh);
       ASSERT_IFF(dh, !ddc_excp);    // avoid bogus coverity error
       if (ddc_excp) {
@@ -512,8 +511,15 @@ loadvcp_by_dumpload_data(
    ddc_excp = ddc_set_multiple(dh, pdata->vcp_values);
 
    // close the display only if this function opened it
-   if (!dh_argument)
-      ddc_excp = ddc_close_display(dh);
+   if (!dh_argument) {
+      ddc_excp1 = ddc_close_display(dh);
+      if (ddc_excp1) {
+         if (ddc_excp)
+            ERRINFO_FREE_WITH_REPORT(ddc_excp1, true);
+         else
+            ddc_excp = ddc_excp1;
+      }
+   }
 
 bye:
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
