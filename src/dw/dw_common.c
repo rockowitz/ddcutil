@@ -408,9 +408,12 @@ bool dw_hotplug_change_handler(
             // i2c_reset_bus_info(businfo);  // already done in ddc_remove_display_by_businfo2()
          }
          else {
-            // is this possible?
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Device /dev/i2c-%d no longer exists.", busno);
-            MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Removing /dev/i2c-%d which no longer exists.", busno);
+            // is this possible? yes, remove MST bus
+            char * s = g_strdup_printf("Removing /dev/i2c-%d which no longer exists.", busno);
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
+            // MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Removing /dev/i2c-%d which no longer exists.", busno);
+            SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+            free(s);
             i2c_remove_bus_by_busno(busno);
          }
       }
