@@ -8,8 +8,8 @@
 // Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef TRY_STATS_H_
-#define TRY_STATS_H_
+#ifndef DDC_TRY_DATA_H_
+#define DDC_TRY_DATA_H_
 
 #include <stdbool.h>
 
@@ -31,4 +31,4 @@ void     try_data_record_tries2(Display_Handle * dh, Retry_Operation retry_type,
 void     ddc_report_max_tries(int depth);
 void     ddc_report_ddc_stats(int depth);
 
-#endif /* TRY_STATS_H_ */
+#endif /* DDC_TRY_DATA_H_ */
