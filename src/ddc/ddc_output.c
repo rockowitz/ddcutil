@@ -294,7 +294,7 @@ get_raw_value_for_feature_metadata(
    }
 
    *pvalrec = valrec;
-   ASSERT_IFF(!ddc_excp, *pvalrec);;
+   ASSERT_IFF(!ddc_excp, *pvalrec);
    DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, ddc_excp, pvalrec, dbgrpt_single_vcp_value);
    return ddc_excp;
 }
