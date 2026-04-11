@@ -371,7 +371,7 @@ multi_part_write_with_retry(
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
    Error_Info * ddc_excp = NULL;
 
-   Error_Info *         try_errors[MAX_MAX_TRIES];
+   Error_Info * try_errors[MAX_MAX_TRIES];
 
    int tryctr = 0;
    bool can_retry = true;
@@ -387,13 +387,13 @@ multi_part_write_with_retry(
               value_to_set);
       try_errors[tryctr] = ddc_excp;
       rc = (ddc_excp) ? ddc_excp->status_code : 0;
-      assert( (ddc_excp && rc<0) || (!ddc_excp && rc==0) );
+      ASSERT_IFF(ddc_excp, rc < 0);
 
       // TODO: What rc values set can_retry = false?
 
       tryctr++;
    }
-   assert( (ddc_excp && rc < 0) || (!ddc_excp && rc==0) );
+   ASSERT_IFF(ddc_excp, rc < 0);
 
    if (rc < 0) {
       if (can_retry)
