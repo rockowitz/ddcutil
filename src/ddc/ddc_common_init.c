@@ -93,7 +93,7 @@ emit_init_tracing_error(
       const char * format, ...)
 {
    assert(errinfo_accumulator);
-   va_list(args);
+   va_list args;
    va_start(args, format);
    char buffer[200];
    vsnprintf(buffer, 200, format, args);
