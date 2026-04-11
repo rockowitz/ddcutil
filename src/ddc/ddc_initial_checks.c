@@ -142,7 +142,7 @@ retry:
             " returning mh=0x%02x ml=0x%02x sh=0x%02x sl=0x%02x",
             businfo->busno, feature_code,
             parsed_response_loc->mh, parsed_response_loc->ml,
-            parsed_response_loc->sh, parsed_response_loc->ml);
+            parsed_response_loc->sh, parsed_response_loc->sl);
       }
    }
    else if ( ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES ) {
