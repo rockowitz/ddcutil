@@ -1,7 +1,7 @@
 /** @file dyn_feature_set.c
  */
 
-// Copyright (C) 2018-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <string.h>
@@ -25,15 +25,17 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
 
 
-void free_dyn_feature_set(Dyn_Feature_Set * fset) {
-   if (fset) {
-      assert( memcmp(fset->marker, DYN_FEATURE_SET_MARKER, 4) == 0);
-      if (fset->members_dfm) {
-         g_ptr_array_set_free_func(fset->members_dfm, (GDestroyNotify) dfm_free);
-         g_ptr_array_free(fset->members_dfm, true);
-      }
-      free(fset);
+void dyn_free_feature_set(
+      Dyn_Feature_Set * feature_set)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. feature_set=%s", dyn_feature_set_repr_t(feature_set));
+   if (feature_set->members_dfm) {
+      g_ptr_array_set_free_func(feature_set->members_dfm, (GDestroyNotify) dfm_free);
+      g_ptr_array_free(feature_set->members_dfm,true);
    }
+   free(feature_set);
+   DBGMSF(debug, "Done");
 }
 
 
@@ -878,20 +880,6 @@ dyn_create_feature_set_from_feature_set_ref2(
    return result;
 }
 #endif
-
-
-void dyn_free_feature_set(
-      Dyn_Feature_Set * feature_set)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting. feature_set=%s", dyn_feature_set_repr_t(feature_set));
-   if (feature_set->members_dfm) {
-      g_ptr_array_set_free_func(feature_set->members_dfm, (GDestroyNotify) dfm_free);
-      g_ptr_array_free(feature_set->members_dfm,true);
-   }
-   free(feature_set);
-   DBGMSF(debug, "Done");
-}
 
 
 void init_dyn_feature_set() {

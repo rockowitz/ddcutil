@@ -3,7 +3,7 @@
  *  Implement VCPINFO and (deprecated) LISTVCP commands
  */
 
-// Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -424,7 +424,7 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
       }
       rpt_set_ornamentation_enabled(saved_prefix_report_output);
       // free_vcp_feature_set(fset);
-      free_dyn_feature_set(fset);
+      dyn_free_feature_set(fset);
    }
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_VCP|DDCA_TRC_TOP, vcpinfo_ok, "");
