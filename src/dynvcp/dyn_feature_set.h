@@ -4,7 +4,7 @@
  *  user supplied feature information in feature metadata.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DYN_FEATURE_SET_H_
@@ -93,10 +93,12 @@ dyn_create_feature_set_from_feature_set_ref2(
 
 typedef bool (*Dyn_Feature_Set_Filter_Func)(Display_Feature_Metadata * p_metadata);
 
+#ifdef UNIMPLEMENTED
 void
 filter_feature_set(
       Dyn_Feature_Set*   feature_set,
       Dyn_Feature_Set_Filter_Func func);
+#endif 
 
 void dyn_free_feature_set(
       Dyn_Feature_Set *  feature_set);
