@@ -160,7 +160,7 @@ create_dumpload_data_from_g_ptr_array(
 #endif
          }
          else {
-            rest = head + strlen(s0);;
+            rest = head + strlen(s0);
             while (*rest == ' ') rest++;
             char * last = rest + strlen(rest) - 1;
             // we already parsed a second token, so don't need to worry that last becomes < head
@@ -523,7 +523,7 @@ loadvcp_by_dumpload_data(
 
 bye:
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
-   return ddc_excp;;
+   return ddc_excp;
 }
 
 
