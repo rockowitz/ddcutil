@@ -3,7 +3,7 @@
  * Report parsed capabilities, taking into account dynamic feature definitions.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -27,7 +27,6 @@
 #include "vcp/vcp_feature_codes.h"
 
 #include "vcp/parse_capabilities.h"
-#include "vcp/parsed_capabilities_feature.h"
 
 #include "dynvcp/dyn_feature_codes.h"
 #include "dynvcp/dyn_feature_files.h"
