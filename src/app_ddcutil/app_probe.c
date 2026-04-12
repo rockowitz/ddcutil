@@ -230,7 +230,7 @@ void app_probe_display_by_dref(Display_Ref * dref) {
    Display_Handle * dh = NULL;
    Error_Info * err = ddc_open_display(dref, CALLOPT_NONE, &dh);
    if (err) {
-      f0printf(fout, "Error opening display %s: %s\m", dref_short_name_t(dref), psc_desc(err->status_code) );
+      f0printf(fout, "Error opening display %s: %s\n", dref_short_name_t(dref), psc_desc(err->status_code) );
       errinfo_free(err);
       err = NULL;
    }
