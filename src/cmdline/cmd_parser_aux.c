@@ -428,8 +428,9 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
          valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE | DDCA_OL_VV;
    }
    if (!(parsed_cmd->output_level & valid_output_levels)) {
+      Cmd_Desc * cmd = get_command(parsed_cmd->cmd_id);
       printf("Output level invalid for command %s: %s\n",
-             get_command(parsed_cmd->cmd_id)->cmd_name,
+             cmd ? cmd->cmd_name : "unknown",
              output_level_name(parsed_cmd->output_level) );
       ok = false;
    }
