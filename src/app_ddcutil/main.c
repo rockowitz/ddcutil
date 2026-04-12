@@ -721,7 +721,7 @@ execute_cmd_with_optional_display_handle(
          if (ddc_excp)  {
             f0printf(fout(), "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
             if (ddc_excp->status_code == DDCRC_RETRIES)
-               f0printf(fout(), "    Try errors: %s", errinfo_causes_string(ddc_excp) );
+               f0printf(fout(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp) );
             errinfo_report(ddc_excp, 0);   // ** ALTERNATIVE **/
             errinfo_free(ddc_excp);
             // ERRINFO_FREE_WITH_REPORT(ddc_excp, report_exceptions);
