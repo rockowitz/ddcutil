@@ -3,7 +3,7 @@
  *  Functions and strings that are independent of the parser package used.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -126,7 +126,8 @@ Cmd_Desc * get_command(int cmdid) {
    }
    if (debug) {
       DBGMSG("cmdid=0x%04x, returning %p", cmdid, result);
-      show_cmd_desc(result);
+      if (result)
+         show_cmd_desc(result);
    }
    return result;
 }
