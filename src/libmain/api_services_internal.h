@@ -1,6 +1,7 @@
-// api_services_intenral.h
+/** @file api_services_internal.h
+ */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_SERVICES_INTERNAL_H_
