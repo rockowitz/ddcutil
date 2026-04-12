@@ -107,7 +107,7 @@ ddca_get_non_table_vcp_value(
 
        if (!ddc_excp) {
           valrec->mh = code_info->mh;
-          valrec->ml = code_info->ml;;
+          valrec->ml = code_info->ml;
           valrec->sh = code_info->sh;
           valrec->sl = code_info->sl;
           // DBGMSG("valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
