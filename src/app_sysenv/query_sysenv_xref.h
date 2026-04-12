@@ -1,10 +1,10 @@
-/** @file query_sysenv.xref.h
+/** @file query_sysenv_xref.h
  *
  *  Table cross-referencing the multiple ways that a display is referenced
  *  in various Linux subsystems.
  */
 
-// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
