@@ -272,7 +272,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
       char * buf3 = bs256_to_string_decimal_t(parsed_cmd->ignored_i2c_buses, "", " ");
       rpt_vstring(d1, "ignored_i2c_buses                                          : %s",
-            parsed_cmd->ignored_i2c_buses, buf3);
+            buf3);
 
       char buf2[BIT_SET_32_MAX+1];
       bs32_to_bitstring(parsed_cmd->ignored_hiddevs, buf2, BIT_SET_32_MAX+1);
