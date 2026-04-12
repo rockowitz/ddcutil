@@ -644,7 +644,7 @@ static bool parse_trace_classes(gchar** trace_classes, Parsed_Cmd* parsed_cmd, G
                traceClasses |= tg;
             }
             else {
-               EMIT_PARSER_ERROR(errmsgs,  "Invalid trace group: %s\n", token);
+               EMIT_PARSER_ERROR(errmsgs,  "Invalid trace group: %s", token);
                parsing_ok = false;
             }
         }
