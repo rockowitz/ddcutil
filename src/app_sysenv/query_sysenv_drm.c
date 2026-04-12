@@ -1,4 +1,4 @@
-/** @file query_drm_sysenv.c
+/** @file query_sysenv_drm.c
  *
  *  drm reporting for the environment command
  */
