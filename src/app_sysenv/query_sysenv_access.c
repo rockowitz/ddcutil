@@ -3,9 +3,11 @@
  *  Checks on the the existence of and access to /dev/i2c devices
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+
+#include "config.h"
 
 /** \cond */
 #include <assert.h>
@@ -18,8 +20,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include "config.h"
 
 #include "util/file_util.h"
 #include "util/report_util.h"
@@ -138,15 +138,21 @@ Byte_Value_Array identify_i2c_devices() {
 /** Reports the username and id of the logged on user. Saves the id and a
  *  copy of the name in the #Env_Accumulator structure passed.
  *
- *  \param  accumuator collects user name and userid
+ *  \param  accumulator collects user name and userid
  */
 static void
 get_username(Env_Accumulator * accum) {
    uid_t uid = getuid();
    struct passwd *  pwd = getpwuid(uid);
-   rpt_vstring(0,"Current user: %s (%u)", pwd->pw_name, uid);
+   if (pwd) {
+      rpt_vstring(0,"Current user: %s (%u)", pwd->pw_name, uid);
+      accum->cur_uname = g_strdup(pwd->pw_name);
+   }
+   else {
+      rpt_vstring(0,"Current user: unknown (%u)", uid);
+      accum->cur_uname = NULL;
+   }
    rpt_nl();
-   accum->cur_uname = g_strdup(pwd->pw_name);
    accum->cur_uid = uid;
 }
 
