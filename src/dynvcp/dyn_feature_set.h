@@ -37,8 +37,6 @@ typedef struct {
 } Dyn_Feature_Set;
 
 
-void free_dyn_feature_set(Dyn_Feature_Set * fset);
-
 void report_dyn_feature_set(Dyn_Feature_Set * fset, int depth);
 
 void
