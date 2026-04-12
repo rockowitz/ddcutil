@@ -3,7 +3,7 @@
  *  drm reporting for the environment command
  */
 
-// Copyright (C) 2017-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -102,7 +102,7 @@ char * basename0(char * fn) {
             }
             p--;
          }
-         result = (p == fn) ? p : p+1;;
+         result = (p == fn) ? p : p+1;
       }
    }
    return result;
