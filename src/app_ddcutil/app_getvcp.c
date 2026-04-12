@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
-#include "app_ddcutil/app_getvcp.h"
 
 /** \cond */
 #include <assert.h>
@@ -36,6 +35,8 @@
 
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_vcp_version.h"
+
+#include "app_ddcutil/app_getvcp.h"
 
 
 // Default trace class for this file
