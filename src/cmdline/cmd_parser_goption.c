@@ -6,10 +6,9 @@
 // Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <config.h>
+#include "config.h"
 
 #include <assert.h>
-#include <config.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -244,7 +243,7 @@ ignored_hiddev_arg_func(const    gchar* option_name,
 static void emit_parser_error(GPtrArray* errmsgs, const char * func, const char * msg, ...) {
    bool debug = false;
    DBGF(debug, "errmsgs=%p, func=%s, msg=%s", errmsgs, func, msg);
-   va_list(args);
+   va_list args;
    va_start(args, msg);
    char * buffer = g_strdup_vprintf(msg, args);
    va_end(args);
@@ -286,7 +285,7 @@ static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArr
           char * token = strtrim_r(pieces[ndx], trimmed_piece, 10);
           if (strlen(token) > 0 && !streq(token,".")) {
              int ival;
-             int ct = sscanf(token, "%ud", &ival);
+             int ct = sscanf(token, "%u", &ival);
              if (ct != 1) {
                 EMIT_PARSER_ERROR(errmsgs,  "Invalid --maxtries value: %s", token);
                 parsing_ok = false;
@@ -1997,7 +1996,7 @@ parse_command(
      if (!ok)
         EMIT_PARSER_ERROR(errmsgs, "Invalid floating point number: %s", fl1_work);
      else
-         parsed_cmd->flags = parsed_cmd->flags2 | CMD_FLAG2_FL1_SET;
+         parsed_cmd->flags2 = parsed_cmd->flags2 | CMD_FLAG2_FL1_SET;
       parsing_ok &= ok;
       FREE(fl1_work);
    }
@@ -2007,7 +2006,7 @@ parse_command(
      if (!ok)
         EMIT_PARSER_ERROR(errmsgs, "Invalid floating point number: %s", fl2_work);
      else
-         parsed_cmd->flags = parsed_cmd->flags2 | CMD_FLAG2_FL2_SET;
+         parsed_cmd->flags2 = parsed_cmd->flags2 | CMD_FLAG2_FL2_SET;
       parsing_ok &= ok;
       FREE(fl2_work);
    }
@@ -2210,7 +2209,7 @@ parse_command(
             parsing_ok &= parse_setvcp_args(parsed_cmd,errmsgs);
 
          if (parsing_ok && !dsel_is_empty(parsed_cmd->dsel)) {
-            if (!cmdInfo->supported_options & Option_Explicit_Display) {
+            if (!(cmdInfo->supported_options & Option_Explicit_Display)) {
                EMIT_PARSER_ERROR(errmsgs,  "%s does not support explicit display option\n", cmdInfo->cmd_name);
                parsing_ok = false;
             }
