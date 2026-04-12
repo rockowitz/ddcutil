@@ -4,7 +4,7 @@
  *  that performs minimal filtering of attributes.
  */
 
-// Copyright (C) 2022-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  /** \cond */
@@ -47,7 +47,7 @@
  *  \param fq_i2c_dir_name
  *  \param busno
  *
- *  \TODO
+ *  \todo
  *  Extract busno from fq_i2c_dir_name
  */
 void rpt_0037_subdir(int depth, char * fq_i2c_dir_name, int busno) {
