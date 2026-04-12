@@ -1,4 +1,4 @@
-/** \file
+/** \file ddc_errno.h
  * Error codes internal to **ddcutil**.
  */
 
