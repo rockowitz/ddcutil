@@ -317,7 +317,7 @@ dyn_get_feature_metadata_by_dref(
 
    DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_UNKNOWN;
    if (dref)
-         get_vcp_version_by_dref(dref);
+      vspec = get_vcp_version_by_dref(dref);
 
    Display_Feature_Metadata * result =
          dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
