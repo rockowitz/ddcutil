@@ -91,10 +91,10 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_INITIAL_STABILIZATION_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
    rpt_vstring(depth+1, "Utility option --i3:          flock_poll_millisec (default = %d)", DEFAULT_FLOCK_POLL_MILLISEC);
-   rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);
+   rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d)", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i5:          Max retries for setvcp verification failure");
    rpt_vstring(depth+1, "Utility option --i6:          Unused");
-   rpt_vstring(depth+1, "Utility option --i7           Stabilization poll millisec (default=%d)", DEFAULT_STABILIZATION_POLL_MILLISEC);
+   rpt_vstring(depth+1, "Utility option --i7:          Stabilization poll millisec (default=%d)", DEFAULT_STABILIZATION_POLL_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i8:          Display watch udev loop millisec (default = %d)", DEFAULT_UDEV_WATCH_LOOP_MILLISEC);
 
 // rpt_vstring(depth+1, "Utility option --i9:          Display watch non-udev polling loop millisec (default=%d)", DEFAULT_POLL_WATCH_LOOP_MILLISEC);
