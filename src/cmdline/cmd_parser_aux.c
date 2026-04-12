@@ -523,7 +523,7 @@ char * monitor_selection_option_help =
        "  --bus <i2c bus number>, /dev/"I2C" bus number\n"
 #ifdef ENABLE_USB
        "  --usb <usb bus number>.<usb device number>, for monitors communicating via USB\n"
-       "  --hiddev <hiddev device number>, for monitors communicationg via USB\n"
+       "  --hiddev <hiddev device number>, for monitors communicating via USB\n"
 #endif
        "  --edid <hex string>, where <hex string> is a 256 hex character representation of the\n"
        "          128 byte first block of the EDID\n"
