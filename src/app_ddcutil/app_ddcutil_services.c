@@ -2,7 +2,7 @@
  *  Initialize files in directory app_ddcutil
  */
 
-// Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -18,7 +18,6 @@
 #include "app_setvcp.h"
 #include "app_vcpinfo.h"
 #include "app_watch.h"
-#include "app_vcpinfo.h"
 
 void init_app_ddcutil_services() {
    init_app_capabilities();
