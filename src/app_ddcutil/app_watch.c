@@ -2,7 +2,7 @@
  *  Implement the WATCH command
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -179,7 +179,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
       else if (x02_value != 0x02){
          DBGMSF(debug, "x02 value = 0x%02x", x02_value);
          result = errinfo_new(DDCRC_DETERMINED_UNSUPPORTED, __func__,
-               "Feature x02 (New Control Value) reports unexpected value 0x%02", x02_value);
+               "Feature x02 (New Control Value) reports unexpected value 0x%02x", x02_value);
       }
 
       else {
