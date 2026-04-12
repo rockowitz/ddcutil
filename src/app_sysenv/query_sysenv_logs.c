@@ -3,11 +3,11 @@
  *  Query configuration files, logs, and output of logging commands.
  */
 
-// Copyright (C) 2017-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
-/** cond */
+/** @cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -29,7 +29,7 @@
 #include "base/core.h"
 #include "base/dsa2.h"
 #include "base/status_code_mgt.h"
-/** endcond */
+/** @endcond */
 
 #include "ddc/ddc_serialize.h"
 #include "vcp/persistent_capabilities.h"
