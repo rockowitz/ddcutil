@@ -144,7 +144,7 @@ Parsed_Cmd *  new_parsed_cmd() {
 void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    DBGMSF(debug, "Starting.  parsed_cmd=%p", parsed_cmd);
-      if (parsed_cmd) {
+   if (parsed_cmd) {
       assert ( memcmp(parsed_cmd->marker,PARSED_CMD_MARKER,4) == 0);
       int ndx = 0;
       for (; ndx < parsed_cmd->argct; ndx++)
@@ -159,6 +159,7 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
       ntsa_free(parsed_cmd->backtraced_functions, true);
       ntsa_free(parsed_cmd->traced_calls, true);
       ntsa_free(parsed_cmd->traced_api_calls, true);
+      ntsa_free(parsed_cmd->ddc_disabled,true);
       g_array_free(parsed_cmd->setvcp_values, true);
       free(parsed_cmd->s1);
       free(parsed_cmd->s2);
