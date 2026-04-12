@@ -2,8 +2,8 @@
  *  Implement the GETVCP command
  */
 
- //Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
- // SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef APP_GETVCP_H_
 #define APP_GETVCP_H_

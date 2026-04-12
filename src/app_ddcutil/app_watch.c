@@ -323,7 +323,7 @@ app_read_changes_forever(Display_Handle * dh, bool force_no_fifo) {
 
 void init_app_watch() {
    RTTI_ADD_FUNC(app_read_changes);
-#ifdef USB
+#ifdef ENABLE_USB
    RTTI_ADD_FUNC(app_read_changes_usb);
 #endif
 }
