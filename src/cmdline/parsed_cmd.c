@@ -81,7 +81,7 @@ Value_Name_Table cmd_flag_table = {
 const char * setvcp_value_type_name(Setvcp_Value_Type value_type)
 {
    char * names[] = {"VALUE_TYPE_ABSOLUTE",
-                     "VALUE_TYPE_RELAIIVE_PLUS",
+                     "VALUE_TYPE_RELATIVE_PLUS",
                      "VALUE_TYPE_RELATIVE_MINUS"};
    return names[value_type];
 }
@@ -450,6 +450,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_IVAL(7,d1);
       RPT_IVAL(8,d1);
       RPT_IVAL(9,d1);
+      RPT_IVAL(10,d1);
       RPT_IVAL(11,d1);
       RPT_IVAL(12,d1);
       RPT_IVAL(13,d1);
@@ -467,7 +468,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       if (parsed_cmd->flags2 & CMD_FLAG2_FL1_SET)
          rpt_vstring(d1, "fl1                                                      : %.2f", parsed_cmd->fl1);
       rpt_bool("fl2 set",           NULL, parsed_cmd->flags2 & CMD_FLAG2_FL2_SET,      d1);
-      if (parsed_cmd->flags & CMD_FLAG2_FL2_SET)
+      if (parsed_cmd->flags2 & CMD_FLAG2_FL2_SET)
          rpt_vstring(d1, "fl2                                                      : %.2f", parsed_cmd->fl2);
       rpt_bool("f1",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F1,           d1);
       rpt_bool("f2",                NULL, parsed_cmd->flags2 & CMD_FLAG2_F2,           d1);
