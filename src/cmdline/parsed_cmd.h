@@ -240,7 +240,7 @@ struct {
 
    // Display Selection
    Display_Selector*      dsel;
-   Bit_Set_256            ignored_i2c_buses;;
+   Bit_Set_256            ignored_i2c_buses;
    Bit_Set_32             ignored_hiddevs;
    uint8_t                ignored_usb_vid_pid_ct;
    uint32_t               ignored_usb_vid_pids[IGNORED_VID_PID_MAX];
