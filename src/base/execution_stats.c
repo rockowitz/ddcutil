@@ -656,7 +656,7 @@ void report_elapsed_summary(int depth) {
    uint64_t elapsed_nanos = end_nanos - program_start_timestamp;
 
    Non_Sleep_Call_Totals non_sleep_totals =  get_non_sleep_call_totals ();
-   Sleep_Stats sleep_totals =  get_sleep_stats();;
+   Sleep_Stats sleep_totals =  get_sleep_stats();
 
    rpt_vstring(depth,
                "Total non sleep system call time: %10"PRIu64" milliseconds",

@@ -296,7 +296,7 @@ DDCA_Status get_connector_state_array(int fd, int cardno, GPtrArray* collector) 
             rpt_vstring(d1, "%-20s %d",       "connector_type_id:", conn->connector_type_id);
             rpt_vstring(d1, "%-20s %d - %s",  "connection:",        conn->connection, connector_status_name(conn->connection));
          }
-         connector_state->connector_type = conn->connector_type;;
+         connector_state->connector_type = conn->connector_type;
          connector_state->connector_type_id = conn->connector_type_id;
          connector_state->connection = conn->connection;
          drmModeConnector * p = conn;

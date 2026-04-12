@@ -317,7 +317,7 @@ char * did_repr(Display_Identifier * pdid) {
                break;
          case DISP_ID_USB:
                pdid->repr = g_strdup_printf(
-                        "Display Id[type=%s, usb bus:device=%d.%d]", did_type_name, pdid->usb_bus, pdid->usb_device);;
+                        "Display Id[type=%s, usb bus:device=%d.%d]", did_type_name, pdid->usb_bus, pdid->usb_device);
                break;
          case DISP_ID_HIDDEV:
                pdid->repr = g_strdup_printf(
@@ -1152,7 +1152,7 @@ bool dref_set_alive(Display_Ref * dref, bool alive) {
 
 bool dref_get_alive(Display_Ref * dref) {
    assert(dref);
-   return dref->flags & DREF_ALIVE;;
+   return dref->flags & DREF_ALIVE;
 }
 #endif
 

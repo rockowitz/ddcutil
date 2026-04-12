@@ -56,7 +56,7 @@ Sleep_Stats get_sleep_stats() {
    G_LOCK(sleep_stats);
    stats_copy = sleep_stats;
    G_UNLOCK(sleep_stats);
-   return stats_copy;;
+   return stats_copy;
 }
 
 
