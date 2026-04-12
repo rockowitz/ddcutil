@@ -3,7 +3,7 @@
  *  Query environment using /proc file system
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -18,7 +18,7 @@
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
-/** \endcore */
+/** \endcond */
 
 #include "query_sysenv_base.h"
 
@@ -100,33 +100,37 @@ bool query_proc_driver_nvidia() {
       char * dn_gpus = "/proc/driver/nvidia/gpus/";
       if (directory_exists(dn_gpus)) {
          DIR * dp = opendir(dn_gpus);
-         struct dirent * ep;
-
-         while ( (ep = readdir(dp)) ) {
-            if ( !streq(ep->d_name,".") && !streq(ep->d_name, "..") ) {
-               rpt_vstring(1, "PCI bus id: %s", ep->d_name);
-               char dirbuf[400];
-               strcpy(dirbuf, dn_gpus);
-               strcat(dirbuf, ep->d_name);
-               // printf("Reading directory: %s\n", dirbuf);
-               // DIR * dp2 = opendir(dirbuf);
-               // if (dp2) {
-               //    struct dirent * ep2;
-               //    printf("GPU: %s\n", ep->d_name);
-               //    while ( (ep2 = readdir(dp2)) ) {
-               //       if ( !streq(ep2->d_name,".") && !streq(ep2->d_name, "..") ) {
-               //          puts(ep2->d_name);
-               //       }
-               //    }
-               //    closedir(dp2);
-               // }
-               if ( directory_exists(dirbuf)) {
-                  sysenv_show_one_file(dirbuf, "information", debug, 1);
-                  sysenv_show_one_file(dirbuf, "registry",    debug, 1);
+         if (dp) {
+            struct dirent * ep;
+            while ( (ep = readdir(dp)) ) {
+               if ( !streq(ep->d_name,".") && !streq(ep->d_name, "..") ) {
+                  rpt_vstring(1, "PCI bus id: %s", ep->d_name);
+                  char dirbuf[400];
+                  strcpy(dirbuf, dn_gpus);
+                  strcat(dirbuf, ep->d_name);
+                  // printf("Reading directory: %s\n", dirbuf);
+                  // DIR * dp2 = opendir(dirbuf);
+                  // if (dp2) {
+                  //    struct dirent * ep2;
+                  //    printf("GPU: %s\n", ep->d_name);
+                  //    while ( (ep2 = readdir(dp2)) ) {
+                  //       if ( !streq(ep2->d_name,".") && !streq(ep2->d_name, "..") ) {
+                  //          puts(ep2->d_name);
+                  //       }
+                  //    }
+                  //    closedir(dp2);
+                  // }
+                  if ( directory_exists(dirbuf)) {
+                     sysenv_show_one_file(dirbuf, "information", debug, 1);
+                     sysenv_show_one_file(dirbuf, "registry",    debug, 1);
+                  }
                }
             }
+            closedir(dp);
          }
-         closedir(dp);
+         else {
+            rpt_vstring(1, "Unable to open %s: %s", dn_gpus, strerror(errno));
+         }
       }
    }
    else {
