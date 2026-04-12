@@ -1,6 +1,6 @@
-// query_sysenv_sys_bus_pci_devices.h
+/** @file query_sysenv_simplified_sys_bus_pci_devices.h */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef QUERY_SYSENV_SIMPLIFIED_SYS_BUS_PCI_DEVICES_H_
