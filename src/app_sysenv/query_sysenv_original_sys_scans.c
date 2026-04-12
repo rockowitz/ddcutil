@@ -4,7 +4,7 @@
  *  and the second starting at /sys/bus/i2c/devices
  */
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  
@@ -41,7 +41,11 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
 
    char * dir_devices_i2cN = g_strdup_printf("/sys/bus/i2c/devices/i2c-%d", busno);
    char * real_device_dir = realpath(dir_devices_i2cN, pb1);
-   rpt_vstring(depth, "Examining (5) %s -> %s", dir_devices_i2cN, real_device_dir);
+   if (!real_device_dir) {
+      rpt_vstring(depth, "realpath(%s) failed, errno=%d", dir_devices_i2cN, errno);
+      goto bye;
+   }
+   rpt_vstring(depth, "Examining (5) %s -> %s", dir_devices_i2cN, real_device_dir ? real_device_dir : "NULL");
    RPT_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device");
    RPT_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "name");
    char * device_class = NULL;
@@ -118,6 +122,8 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
           free(drm_dp_aux_subdir);
        }
     }
+
+bye:
    free(dir_devices_i2cN);
 }
 
@@ -144,7 +150,7 @@ void each_drm_device(const char * dirname, const char * fn, void * accumulator, 
 
    char * drm_cardX_dir = g_strdup_printf("/sys/class/drm/%s", fn);
    char * real_cardX_dir = realpath(drm_cardX_dir, NULL);
-   rpt_vstring(depth, "Examining (6) %s -> %s", drm_cardX_dir, real_cardX_dir);
+   rpt_vstring(depth, "Examining (6) %s -> %s", drm_cardX_dir, real_cardX_dir ? real_cardX_dir : "NULL");
 
    // e.g. /sys/class/drm/card0-DP-1
    RPT_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "ddc");
