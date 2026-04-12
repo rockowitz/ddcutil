@@ -22,7 +22,6 @@
 #include <sys/stat.h>
 #include <syslog.h>
 #include <unistd.h>
-#include <unistd.h>
 
 #include "util/data_structures.h"
 #include "util/ddcutil_config_file.h"
