@@ -1,9 +1,9 @@
-/** \f query_sysenv_modules.h
+/** @file query_sysenv_modules.h
  *
  *  Module checks
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
