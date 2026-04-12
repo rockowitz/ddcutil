@@ -1,4 +1,4 @@
-/** \f core_per_thread_settings.c */
+/** \file core_per_thread_settings.c */
 
 // Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later

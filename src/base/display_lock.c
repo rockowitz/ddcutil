@@ -1,4 +1,4 @@
-/** \f display_lock.c
+/** \file display_lock.c
  *  Provides locking for displays to ensure that a given display is not
  *  opened simultaneously from multiple threads.
  */

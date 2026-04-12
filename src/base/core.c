@@ -18,7 +18,7 @@
 
 #include "config.h"
 
-//* \cond */
+/** \cond */
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <limits.h>

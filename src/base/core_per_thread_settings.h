@@ -1,4 +1,4 @@
-/** \f core_per_thread_settings.h
+/** \file core_per_thread_settings.h
  *
  * Maintains certain output settings on a per-thread basis.
  * These are:
