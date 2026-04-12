@@ -42,7 +42,7 @@ static Cache_Types       discarded_caches_work = NO_CACHES;
 static bool              verbose_stats  = false;
 static bool              internal_stats = false;
 static Bit_Set_32        ignored_hiddev_work = 0;    // gcc claims not const??? EMPTY_BIT_SET_32;
-static Bit_Set_256       ignored_busnos_work = {{0}};;
+static Bit_Set_256       ignored_busnos_work = {{0}};
 
 
 // Callback function for processing --terse, --verbose and synonyms
@@ -1038,6 +1038,7 @@ parse_command(
    case Watch_Mode_Xevent:   default_watch_mode_keyword = "XEVENT";  break;
    case Watch_Mode_Poll:     default_watch_mode_keyword = "POLL";    break;
    case Watch_Mode_Udev:     default_watch_mode_keyword = "UDEV";    break;
+   default:                  default_watch_mode_keyword = "UNKNOWN"; break;
    }
    char watch_mode_expl[80];
 #ifdef USE_X11
@@ -1849,11 +1850,11 @@ parse_command(
       SET_CMDFLAG(CMD_FLAG_DISCARD_CACHES, true);
    }
    if (discard_cached_capabilities_flag) {
-      parsed_cmd->discarded_cache_types |= CAPABILITIES_CACHE;;
+      parsed_cmd->discarded_cache_types |= CAPABILITIES_CACHE;
       SET_CMDFLAG(CMD_FLAG_DISCARD_CACHES, true);
    }
    if (discard_dsa_cache_flag) {
-      parsed_cmd->discarded_cache_types |= DSA2_CACHE;;
+      parsed_cmd->discarded_cache_types |= DSA2_CACHE;
       SET_CMDFLAG(CMD_FLAG_DISCARD_CACHES, true);
    }
 
@@ -1955,7 +1956,7 @@ parse_command(
       if (ok)
          parsed_cmd->flags2 = parsed_cmd->flags2 | CMD_FLAG2_I3_SET;
       parsing_ok &= ok;
-      FREE(i2_work);
+      FREE(i3_work);
    }
 #endif
 
