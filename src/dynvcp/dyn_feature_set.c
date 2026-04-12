@@ -193,26 +193,6 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
 }
 #endif
 
-
-static Dyn_Feature_Set *
-dyn_create_feature_set0(
-      VCP_Feature_Subset   subset_id,
-      DDCA_Display_Ref     display_ref,
-      GPtrArray *          members_dfm)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%d, number of members=%d",
-                              subset_id, (members_dfm) ? members_dfm->len : -1);
-
-   Dyn_Feature_Set * fset = calloc(1,sizeof(Dyn_Feature_Set));
-   memcpy(fset->marker, DYN_FEATURE_SET_MARKER, 4);
-   fset->subset = subset_id;
-   fset->members_dfm = members_dfm;
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", fset);
-   return fset;
-}
-
 static Dyn_Feature_Set *
 dyn_create_feature_set1(
       VCP_Feature_Subset   subset_id,
@@ -230,7 +210,6 @@ dyn_create_feature_set1(
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", fset);
    return fset;
 }
-
 
 
 /**
@@ -542,7 +521,6 @@ dyn_create_feature_set(
              found = g_hash_table_iter_next(&iter, &hash_key, &hash_value);
           }
        }   // if (dref->dfr)
-       // result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
        result = dyn_create_feature_set1(subset_id, members_dfm);
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "VCP_SUBSET_UDF complete");
     }      // VCP_SUBSET_DYNAMIC
@@ -595,8 +573,6 @@ dyn_create_feature_set(
              }
 #endif
        }  // for
-
-       // result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
        result = dyn_create_feature_set1(subset_id, members_dfm);
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "VCP_SUBSET_SCAN or VCP_SUBSET_MFG complete");
     } // VCP_SUBSET_SCAN
@@ -630,7 +606,6 @@ dyn_create_feature_set(
           }
 
        }
-       // result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
        result = dyn_create_feature_set1(subset_id, members_dfm);
     }
 
@@ -883,7 +858,6 @@ dyn_create_feature_set_from_feature_set_ref2(
 
 
 void init_dyn_feature_set() {
-   RTTI_ADD_FUNC(dyn_create_feature_set0);
    RTTI_ADD_FUNC(dyn_create_feature_set);
    RTTI_ADD_FUNC(create_vcp_feature_set);
    RTTI_ADD_FUNC(create_dyn_feature_set_from_feature_set_ref);
