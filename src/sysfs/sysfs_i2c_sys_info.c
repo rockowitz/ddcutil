@@ -130,7 +130,7 @@ read_drm_card_connector_node_common(
    if (ddc_path_fn) {
       info->ddc_path = ddc_path_fn;
       info->linked_ddc_filename = g_path_get_basename(ddc_path_fn);
-      info->connector = g_path_get_basename(connector_path);  // == coonector
+      info->connector = g_path_get_basename(connector_path);  // == connector
       RPT_ATTR_TEXT(d0, &info->ddc_name,         ddc_path_fn, "name");
       RPT_ATTR_TEXT(d0, &info->ddc_i2c_dev_name, ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "name");
       RPT_ATTR_TEXT(d0, &info->ddc_i2c_dev_dev,  ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "dev");
