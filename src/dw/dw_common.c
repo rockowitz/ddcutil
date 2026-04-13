@@ -299,7 +299,7 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
    int busno = bs256_iter_next(iter);
    while (busno >= 0) {
       I2C_Bus_Info * businfo = i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
-      if (!businfo->drm_connector_name) {
+      if (!businfo || !businfo->drm_connector_name) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Unable to find connector for bus /dev/i2c-%d", busno);
          SEVEREMSG("Unable to find connector for bus /dev/i2c-%d", busno);
       }
@@ -393,6 +393,8 @@ bool dw_hotplug_change_handler(
          break;
 
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
+      if (!businfo)
+         continue;
       if (businfo->flags & I2C_BUS_LAPTOP) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Ignoring removal of laptop on bus %d", busno);
       }
@@ -448,7 +450,7 @@ bool dw_hotplug_change_handler(
             if (dref && !(dref->flags& DREF_TRANSIENT)) {
                add_published_dref_id_by_dref(dref);
                if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)
-                     && businfo->flags&I2C_BUS_ADDR_X37
+                     && (businfo->flags & I2C_BUS_ADDR_X37)
                      && drefs_to_recheck)
                {
                   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
