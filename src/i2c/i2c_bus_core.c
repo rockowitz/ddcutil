@@ -850,7 +850,7 @@ i2c_detect_x37(int fd, char * driver) {
    int loopctr;
    for (loopctr = 0; loopctr < max_tries; loopctr++) {  // retries seem to give no benefit
       // regard either a successful write() or a read() as indication slave address is valid
-      Byte    writebuf = {0x00};
+      Byte    writebuf = 0x00;
       rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                    "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
@@ -924,12 +924,12 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
       }
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
       if (businfo->drm_connector_name) {
-         i2c_edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
+         edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
          // edid_exists = i2c_check_bus_responsive_using_drm(businfo->drm_connector_name);  // fails for Nvidia
       }
       else {
          // read edid
-         i2c_edid_exists = i2c_check_edid_exists_by_dh(dh);
+         edid_exists = i2c_check_edid_exists_by_dh(dh);
       }
 #else
       edid_exists = i2c_check_edid_exists_by_dh(dh);
