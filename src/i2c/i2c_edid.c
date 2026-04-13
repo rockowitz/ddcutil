@@ -26,10 +26,9 @@
 #include "public/ddcutil_types.h"
 
 #include "util/coredefs.h"
+#include "util/edid.h"
 #include "util/file_util.h"
 #include "util/i2c_util.h"
-#include "util/report_util.h"
-#include "util/edid.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/utilrpt.h"
