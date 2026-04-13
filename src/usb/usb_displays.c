@@ -1,7 +1,7 @@
 /** @file usb_displays.c
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -277,7 +277,7 @@ collect_vcp_reports(int fd) {
                 vcprec->finfo = fptr;
                 struct hiddev_usage_ref * uptr = malloc(sizeof(struct hiddev_usage_ref));
                 memcpy(uptr, &uref, sizeof(struct hiddev_usage_ref));
-                vcprec->uref = uptr;;
+                vcprec->uref = uptr;
 
                 g_ptr_array_add(vcp_reports, vcprec);
 
@@ -841,6 +841,7 @@ usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
 Parsed_Edid *
 usb_get_parsed_edid_by_dref(Display_Ref * dref) {
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
+   assert(moninfo->edid);    // for Claude Code
    return moninfo->edid;
 }
 
@@ -848,6 +849,7 @@ usb_get_parsed_edid_by_dref(Display_Ref * dref) {
 Parsed_Edid *
 usb_get_parsed_edid_by_dh(Display_Handle * dh) {
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dh(dh);
+   assert(moninfo->edid);   // for Claude Code
    return moninfo->edid;
 }
 
