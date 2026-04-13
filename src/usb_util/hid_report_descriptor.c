@@ -839,7 +839,7 @@ Parsed_Hid_Descriptor * parse_hid_report_desc_from_item_list(Hid_Report_Descript
               cur_globals->physical_minimum = maybe_signed_data(item->data, item->bsize_bytect);
               break;
          case 0x44:
-              cur_globals->physical_maximum = maybe_signed_data(item->data, item->bsize_bytect);;
+              cur_globals->physical_maximum = maybe_signed_data(item->data, item->bsize_bytect);
               break;
          case 0x54:     // Unit Exponent
               cur_globals->unit_exponent = item->data;                     // Global
