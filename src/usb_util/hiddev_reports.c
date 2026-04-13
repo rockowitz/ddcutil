@@ -118,7 +118,7 @@ void dbgrpt_hiddev_devinfo(struct hiddev_devinfo * dinfo, bool lookup_names, int
    // dinfo->product and dinfo->vendor are __s16, before conversion to hex string, they're
    // promoted to int, in which case the sign bit is extended,
    rpt_vstring(d1,"%-20s: 0x%04x  %s", "product", dinfo->product & 0xffff, names.device_name);
-   rpt_vstring(d1,"%-20s: %2x.%02x",   "version", dinfo->version>>8, dinfo->version & 0x0f);  // BCD
+   rpt_vstring(d1,"%-20s: %02x.%02x",  "version", dinfo->version>>8, dinfo->version & 0x0f);  // BCD
    rpt_vstring(d1,"%-20s: %u",         "num_applications", dinfo->num_applications);
 }
 
