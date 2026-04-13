@@ -6,13 +6,13 @@
 // Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 /** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <string.h>
-
-#include "config.h"
 
 #include "util/backtrace.h"
 #include "util/data_structures.h"

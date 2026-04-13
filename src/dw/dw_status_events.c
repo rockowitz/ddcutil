@@ -3,14 +3,14 @@
 // Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #include <assert.h>
 #include <glib-2.0/glib.h>
 
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_c_api.h"
 #include "public/ddcutil_status_codes.h"
-
-#include "config.h"
 
 #include "util/debug_util.h"
 #include "util/timestamp.h"
