@@ -1530,7 +1530,6 @@ ddca_free_any_vcp_value(
  *  @param[in]  ddca_dh       display handle
  *  @param[in]  feature_code  VCP feature code
  *  @param[out] valrec        pointer to response buffer provided by the caller,
- *                           which will be filled in
  *  @return status code
  *
  *  @remark
