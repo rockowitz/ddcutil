@@ -129,10 +129,8 @@ bye:
                                          valrec->mh, valrec->ml, valrec->sh, valrec->sl)
                        : g_strdup("");
    char * ddcrc_expl = (psc == DDCRC_RETRIES) ? errinfo_summary(ddc_excp) : "";
-   API_EPILOG_BEFORE_RETURN(debug, true, psc, "%s %s", ddcrc_expl, retvals);
+   API_EPILOG_EREC_BEFORE_RETURN(debug, true, ddc_excp, "%s %s", ddcrc_expl, retvals);
    free(retvals);
-   ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, DDCA_TRC_API));
-
    return psc;
 }
 

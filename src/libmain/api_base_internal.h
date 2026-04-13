@@ -331,7 +331,7 @@ void unquiesce_api();
 
 
 /** Like API_EPILOG_BEFORE_RETURN() but takes an Error_Info * arg instead of status
- *  code.  It extracts the status code from Error_Info and, _erec is non-null,
+ *  code.  It extracts the status code from Error_Info and, if _erec is non-null,
  *  calls #save_thread_error_detail() and #errinfo_free().
  */
 #define API_EPILOG_EREC_BEFORE_RETURN(_debug_flag, _respect_quiesced, _erec, _format, ...) \
