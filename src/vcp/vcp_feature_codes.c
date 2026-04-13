@@ -16,7 +16,7 @@
 #include "util/debug_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-/** \cond */
+/** \endcond */
 
 #include "base/ddc_errno.h"
 #include "base/feature_metadata.h"
@@ -256,7 +256,7 @@ bool is_feature_supported_in_version(
    bool result = false;
    DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pvft_entry, vcp_version);
    result = (vflags && !(vflags&DDCA_DEPRECATED));
-   DBGMSF(debug, "Feature = 0x%02x, vcp versinon=%d.%d, returning %s",
+   DBGMSF(debug, "Feature = 0x%02x, vcp version=%d.%d, returning %s",
                  pvft_entry->code, vcp_version.major, vcp_version.minor, sbool(result) );
    return result;
 }
