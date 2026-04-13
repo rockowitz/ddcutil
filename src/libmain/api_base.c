@@ -908,7 +908,7 @@ ddci_init(const char *      libopts,
       }
 
       if (enable_init_msgs) {
-         DBGF(debug, "Calling report_parse_errors()", __func__);
+         DBGF(debug, "Calling report_parse_errors()");
          report_parse_errors(master_error);
       }
       // errinfo_free(master_error);
