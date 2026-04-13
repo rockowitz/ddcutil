@@ -29,4 +29,4 @@ void probe_hidraw(bool show_monitors_only, int depth);
 
 bool hidraw_is_monitor_device(char * devname);
 
-#endif /* _HIDRAW_UTIL_H_ */
+#endif /* HIDRAW_UTIL_H_ */

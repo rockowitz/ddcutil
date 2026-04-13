@@ -26,4 +26,4 @@ char * hiddev_interpret_report_id(__u32 report_id);
 
 char * hiddev_interpret_usage_code(int usage_code );
 
-#endif /* UTIL_HIDDEV_REPORTS_H_ */
+#endif /* HIDDEV_REPORTS_H_ */
