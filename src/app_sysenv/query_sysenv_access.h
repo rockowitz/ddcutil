@@ -1,4 +1,4 @@
-/* @file query_sysenv_access.h
+/** @file query_sysenv_access.h
  *
  *  Checks on the the existence of and access to /dev/i2c devices
  */
