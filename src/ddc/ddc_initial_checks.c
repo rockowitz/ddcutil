@@ -644,7 +644,7 @@ bye:
 
 static void explore_monitor_one_feature(Display_Handle * dh, Byte feature_code) {
    Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
-   rpt_vstring(1, "Getting value of feature 0x%02x", feature_code);;
+   rpt_vstring(1, "Getting value of feature 0x%02x", feature_code);
    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
    ASSERT_IFF(!ddc_excp, parsed_response_loc);
    if (ddc_excp) {
