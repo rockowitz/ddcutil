@@ -456,6 +456,7 @@ bool is_monitor_by_tokenized_hid_report_descriptor(Hid_Report_Descriptor_Item * 
          }
          break;
       }
+      cur_item = cur_item->next;
    }
    return is_monitor;
 }
