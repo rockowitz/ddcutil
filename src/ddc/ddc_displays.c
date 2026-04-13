@@ -424,7 +424,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 
 #ifdef USE_X11
          bool asleep = dpms_state&DPMS_STATE_X11_ASLEEP;
-         if (!asleep & !(dpms_state&DPMS_STATE_X11_CHECKED)) {
+         if (!asleep && !(dpms_state&DPMS_STATE_X11_CHECKED)) {
              if (dpms_check_drm_asleep_by_dref(dref)) {
                 dpms_state |= DPMS_SOME_DRM_ASLEEP;
              }
@@ -483,7 +483,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 
 #ifdef OUT
          bool asleep = dpms_state&DPMS_STATE_X11_ASLEEP;
-         if (!asleep & !(dpms_state&DPMS_STATE_X11_CHECKED)) {
+         if (!asleep && !(dpms_state&DPMS_STATE_X11_CHECKED)) {
              if (dpms_check_drm_asleep_by_dref(dref)) {
                 dpms_state |= DPMS_SOME_DRM_ASLEEP;
                 asleep = true;
@@ -498,7 +498,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 #endif
 #ifdef USE_X11
          bool asleep = dpms_state&DPMS_STATE_X11_ASLEEP;
-         if (!asleep & !(dpms_state&DPMS_STATE_X11_CHECKED)) {
+         if (!asleep && !(dpms_state&DPMS_STATE_X11_CHECKED)) {
              if (dpms_check_drm_asleep_by_dref(dref)) {
                 dpms_state |= DPMS_SOME_DRM_ASLEEP;
              }
