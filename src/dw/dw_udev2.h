@@ -22,4 +22,4 @@ void dw_udev_teardown();
 bool dw_udev_watch(int watch_loop_millisec);
 
 void init_dw_udev2();
-#endif /* DW_UDEV_H_ */
+#endif /* DW_UDEV2_H_ */
