@@ -8,7 +8,7 @@
  * Still used by USB layer as a fallback to find the EDID by model etc.
  * if the EDID can't be gotten from USB services.
  */
-// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -16,8 +16,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <util/report_util.h>
-#include <util/string_util.h>
+#include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "i2c_bus_selector.h"
 
