@@ -1,6 +1,6 @@
 /** @file dw_xevent.c */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <stdbool.h>
@@ -71,8 +71,7 @@ XEvent_Data * dw_init_xevent_screen_change_notification() {
       int min = 0;
       XRRQueryVersion(evdata->dpy, &maj, &min);
       int version = (maj << 8) | min;
-      if (version < 0x0102)     // is this the right version check// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
-         // SPDX-License-Identifier: GPL-2.0-or-later?
+      if (version < 0x0102)     // is this the right version check
          have_rr = false;
    }
    if (!have_rr) {
