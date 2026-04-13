@@ -1,9 +1,9 @@
-/* \file usb_vcp.c
+/** \file usb_vcp.c
  *
- * Get and set VCP feature codes for USB connected monitors.
+ *  Get and set VCP feature codes for USB connected monitors.
  */
 
-// Copyright (C) 2016-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -167,7 +167,7 @@ set_control_value(int fd,
    bool debug = false;
    DBGMSF(debug,
          "Starting. fd=%d, report_type=%d, report_id=%d, field_ndx=%d, usage_ndx=%d, value=%d",
-         fd, report_type, report_type, field_ndx, usage_ndx, value);
+         fd, report_type, report_id, field_ndx, usage_ndx, value);
    Status_Errno result = 0;
 
    struct hiddev_report_info rinfo = {
@@ -327,7 +327,7 @@ usb_get_usage_value_by_vcprec(
    DBGMSF(debug, "physical_maximum: %d", maxval2);
    *maxval = vcprec->finfo->logical_maximum;
    if (vcprec->finfo->logical_minimum < 0) {
-      DBGMSG("Unexpected: logical_minmum (%d) is < 0", vcprec->finfo->logical_minimum);
+      DBGMSG("Unexpected: logical_minimum (%d) is < 0", vcprec->finfo->logical_minimum);
    }
 
    struct hiddev_usage_ref * uref = vcprec->uref;
@@ -471,7 +471,6 @@ usb_get_nontable_vcp_value(
          // is usage 1 for writing?
 
          for (int ndx=0; ndx<vcp_recs->len; ndx++) {
-         int ndx = 0;
             Usb_Monitor_Vcp_Rec * vcprec = g_ptr_array_index(vcp_recs,ndx);
             assert( memcmp(vcprec->marker, USB_MONITOR_VCP_REC_MARKER,4) == 0 );
 
