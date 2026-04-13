@@ -28,7 +28,7 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #include "usb/usb_vcp.h"
 #endif
@@ -171,7 +171,7 @@ get_raw_value_for_feature_metadata(
    DDCA_Output_Level output_level = get_output_level();
    DDCA_Any_Vcp_Value * valrec = NULL;
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
      Public_Status_Code
      psc = usb_get_vcp_value(
               dh,
@@ -329,7 +329,7 @@ get_raw_value_for_feature_metadata_dfm(
    DDCA_Output_Level output_level = get_output_level();
    DDCA_Any_Vcp_Value * valrec = NULL;
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
      psc = usb_get_vcp_value(
               dh,
               feature_code,
