@@ -4,7 +4,7 @@
  * hiddev ioctl() calls.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -250,7 +250,7 @@ hiddev_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions)
 Status_Errno
 hiddev_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions)
 {
-   int rc = ioctl(fd, HIDIOCGUCODE, rinfo);
+   int rc = ioctl(fd, HIDIOCGREPORT, rinfo);
    if (rc != 0) {
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
