@@ -91,7 +91,6 @@ ddca_get_non_table_vcp_value(
    API_PROLOGX(debug, true, "ddca_dh=%p:%s, feature_code=0x%02x, valrec=%p",
                                ddca_dh, dh_repr( (Display_Handle*)ddca_dh ), feature_code, valrec );
    DDCA_Status psc = API_PRECOND_RVALUE(valrec);
-   char * retvals = NULL;
    Error_Info * ddc_excp = NULL;
    if (psc != 0)
       goto bye;
@@ -125,8 +124,10 @@ ddca_get_non_table_vcp_value(
     } );
 
 bye:
-   retvals = g_strdup_printf(" valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
-             valrec->mh, valrec->ml, valrec->sh, valrec->sl);
+   char * retvals = (psc==0)
+                       ? g_strdup_printf(" valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
+                                         valrec->mh, valrec->ml, valrec->sh, valrec->sl)
+                       : g_strdup("");
    char * ddcrc_expl = (psc == DDCRC_RETRIES) ? errinfo_summary(ddc_excp) : "";
    API_EPILOG_BEFORE_RETURN(debug, true, psc, "%s %s", ddcrc_expl, retvals);
    free(retvals);
