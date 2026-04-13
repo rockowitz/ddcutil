@@ -801,7 +801,7 @@ usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
    rpt_vstring(depth, "USB bus:device:      %d:%d", dref->usb_bus, dref->usb_device);
 
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
-   if (!moninfo) {
+   if (!moninfo) {    // should be impossible, bu  just in case
       rpt_vstring(depth+1, "Not found");
    }
    else {
@@ -845,7 +845,7 @@ usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
 Parsed_Edid *
 usb_get_parsed_edid_by_dref(Display_Ref * dref) {
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
-   bool result = NULL;
+   Parsed_Edid * result = NULL;
    if (moninfo) {
       assert(moninfo->edid);    // for Claude Code
       result = moninfo->edid;
