@@ -801,7 +801,7 @@ usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
    rpt_vstring(depth, "USB bus:device:      %d:%d", dref->usb_bus, dref->usb_device);
 
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
-   if (!moninfo) {    // should be impossible, bu  just in case
+   if (!moninfo) {    // should be impossible, but just in case
       rpt_vstring(depth+1, "Not found");
    }
    else {
