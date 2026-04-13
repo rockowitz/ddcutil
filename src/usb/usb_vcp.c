@@ -192,7 +192,7 @@ set_control_value(int fd,
    }
    if (ioctl(fd, HIDIOCSREPORT, &rinfo) < 0) {
       result = -errno;
-      REPORT_IOCTL_ERROR("HIDIOCGUSAGE", errno);
+      REPORT_IOCTL_ERROR("HIDIOCSREPORT", errno);
       goto bye;
    }
    result = 0;
