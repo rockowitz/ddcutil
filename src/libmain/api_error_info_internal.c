@@ -54,7 +54,7 @@ DDCA_Error_Detail * new_ddca_error_detail(DDCA_Status ddcrc, const char * format
    DDCA_Error_Detail * errdet = calloc(1, sizeof(DDCA_Error_Detail));
    memcpy(errdet->marker, DDCA_ERROR_DETAIL_MARKER, 4);
    errdet->status_code = ddcrc;
-   va_list(args);
+   va_list args;
    va_start(args, format);
    // if (debug)
    //    printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
