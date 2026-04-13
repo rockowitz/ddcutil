@@ -298,13 +298,13 @@ void report_hid_collection(Parsed_Hid_Collection * col, int depth) {
          rpt_title("Dummy root collection", d1);
    }
    else {
-      rpt_vstring(d1, "%-20s:  x%02x  %s", "Collection type",
+      rpt_vstring(d1, "%-20s:  0x%02x  %s", "Collection type",
                       col->collection_type, collection_type_name(col->collection_type));
-      rpt_vstring(d1, "%-20s:  x%02x  %s", "Usage page",
+      rpt_vstring(d1, "%-20s:  0x%02x  %s", "Usage page",
                       col->usage_page, devid_usage_code_page_name(col->usage_page));
 
       // deprecated:
-      // rpt_vstring(d1, "%-20s:  x%02x  %s", "Usage id",
+      // rpt_vstring(d1, "%-20s:  0x%02x  %s", "Usage id",
       //                 col->usage_id, devid_usage_code_id_name(col->usage_page, col->usage_id));
 
       rpt_vstring(d1, "%-20s:  0x%08x  %s", "Extended Usage",
@@ -794,7 +794,7 @@ Parsed_Hid_Descriptor * parse_hid_report_desc_from_item_list(Hid_Report_Descript
 
 #define UNHANDLED(F) \
    if (cur_locals->F) \
-      printf("%s) Tag 0x%02x, Unimplemented: %s\n", __func__, item->btag, #F);
+      printf("(%s) Tag 0x%02x, Unimplemented: %s\n", __func__, item->btag, #F);
 
             UNHANDLED(designator_indexes)
             UNHANDLED(designator_minimum)
