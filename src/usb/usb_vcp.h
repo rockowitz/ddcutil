@@ -1,9 +1,9 @@
-/* \file usb_vcp.h
+/** \file usb_vcp.h
  *
  * Get and set VCP feature codes for USB connected monitors.
  */
 
-// Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef USB_VCP_H_
@@ -19,7 +19,6 @@
 #include "base/ddc_packets.h"
 
 #include "vcp/vcp_feature_values.h"
-
 
 Public_Status_Code
 usb_get_usage_value_by_report_type_and_ucode(
