@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
-#include <config.h>
+#include "config.h"
 
 /** \cond */
 #include <assert.h>

@@ -6,6 +6,8 @@
 // Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 /** \cond */
 #include <assert.h>
 #include <errno.h>
@@ -14,8 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <config.h>
 
 #include "util/error_info.h"
 #include "util/report_util.h"

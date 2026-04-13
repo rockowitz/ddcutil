@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
-#include <config.h>
+#include "config.h"
 
 // #define _GNU_SOURCE 1       // for function group_member
 

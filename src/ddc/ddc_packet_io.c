@@ -10,9 +10,9 @@
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
 // packet functions are for I2C and ADL only.  Consider splitting.
 
-/** \cond */
-#include <config.h>
+#include "config.h"
 
+/** \cond */
 #include <assert.h>
 #include <base/display_lock.h>
 #include <errno.h>
