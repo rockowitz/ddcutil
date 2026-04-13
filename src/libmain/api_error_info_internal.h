@@ -1,6 +1,6 @@
-// api_error_info_internal.h
+/** @file api_error_info_internal.h */
 
-// Copyright (C) 2021-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_ERROR_INFO_INTERNAL_H_
