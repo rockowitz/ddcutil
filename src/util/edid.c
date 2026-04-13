@@ -24,7 +24,6 @@
 #include "pnp_ids.h"
 #include "report_util.h"
 #include "string_util.h"
-#include "debug_util.h"
 
 #include "edid.h"
 
