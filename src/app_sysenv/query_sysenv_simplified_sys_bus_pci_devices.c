@@ -1,4 +1,4 @@
-/** \file query_sysenv_sys_bus_pci_devices.c
+/** \file query_sysenv_simplified_sys_bus_pci_devices.c
  *
  *  This file contains a variant of the scan of /sys/bus/pci/devices that
  *  that focuses on attributes determined to be of significance.
