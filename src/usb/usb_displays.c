@@ -567,7 +567,7 @@ get_usb_monitor_list() {
          if (rc < 0) {
             int errsv = errno;
             // call should never fail.  always write an error message
-            REPORT_IOCTL_ERROR("HIDIOCINITGREPORT", errsv);
+            REPORT_IOCTL_ERROR("HIDIOCINITREPORT", errsv);
             goto close;
          }
 
@@ -801,33 +801,37 @@ usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
    rpt_vstring(depth, "USB bus:device:      %d:%d", dref->usb_bus, dref->usb_device);
 
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
-
-   if (output_level == DDCA_OL_TERSE) {
-      rpt_vstring(depth, "Monitor:             %s:%s:%s",
-                         moninfo->edid->mfg_id,
-                         moninfo->edid->model_name,
-                         moninfo->edid->serial_ascii);
+   if (!moninfo) {
+      rpt_vstring(depth+1, "Not found");
    }
    else {
-      assert(output_level >= DDCA_OL_NORMAL);
-      Pci_Usb_Id_Names usb_names = devid_get_usb_names(moninfo->hiddev_devinfo->vendor,
-                                                       moninfo->hiddev_devinfo->product,
-                                                       0, 2);
-      char vname[80] = {'\0'};
-      char dname[80] = {'\0'};
-      if (usb_names.vendor_name)
-         snprintf(vname, 80, "(%s)", usb_names.vendor_name);
-      if (usb_names.device_name)
-         snprintf(dname, 80, "(%s)", usb_names.device_name);
+      if (output_level == DDCA_OL_TERSE) {
+         rpt_vstring(depth, "Monitor:             %s:%s:%s",
+                            moninfo->edid->mfg_id,
+                            moninfo->edid->model_name,
+                            moninfo->edid->serial_ascii);
+      }
+      else {
+         assert(output_level >= DDCA_OL_NORMAL);
+         Pci_Usb_Id_Names usb_names = devid_get_usb_names(moninfo->hiddev_devinfo->vendor,
+                                                          moninfo->hiddev_devinfo->product,
+                                                          0, 2);
+         char vname[80] = {'\0'};
+         char dname[80] = {'\0'};
+         if (usb_names.vendor_name)
+            snprintf(vname, 80, "(%s)", usb_names.vendor_name);
+         if (usb_names.device_name)
+            snprintf(dname, 80, "(%s)", usb_names.device_name);
 
-      rpt_vstring(depth, "Device name:         %s",    dref->usb_hiddev_name);
-      rpt_vstring(depth, "Vendor id:           %04x  %s",
-                         moninfo->hiddev_devinfo->vendor  & 0xffff, vname);
-      rpt_vstring(depth, "Product id:          %04x  %s",
-                         moninfo->hiddev_devinfo->product & 0xffff, dname);
+         rpt_vstring(depth, "Device name:         %s",    dref->usb_hiddev_name);
+         rpt_vstring(depth, "Vendor id:           %04x  %s",
+                            moninfo->hiddev_devinfo->vendor  & 0xffff, vname);
+         rpt_vstring(depth, "Product id:          %04x  %s",
+                            moninfo->hiddev_devinfo->product & 0xffff, dname);
 
-      bool dump_edid = (output_level >= DDCA_OL_VERBOSE);
-      report_parsed_edid(moninfo->edid, dump_edid /* verbose */, depth);
+         bool dump_edid = (output_level >= DDCA_OL_VERBOSE);
+         report_parsed_edid(moninfo->edid, dump_edid /* verbose */, depth);
+      }
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -841,14 +845,21 @@ usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
 Parsed_Edid *
 usb_get_parsed_edid_by_dref(Display_Ref * dref) {
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
-   assert(moninfo->edid);    // for Claude Code
-   return moninfo->edid;
+   bool result = NULL;
+   if (moninfo) {
+      assert(moninfo->edid);    // for Claude Code
+      result = moninfo->edid;
+   }
+   return result;
 }
 
 
 Parsed_Edid *
 usb_get_parsed_edid_by_dh(Display_Handle * dh) {
+   assert(dh);
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dh(dh);
+   // valid dh => Usb_Monitor_Info exists => moninfo != NULL
+   assert(moninfo);
    assert(moninfo->edid);   // for Claude Code
    return moninfo->edid;
 }
@@ -856,8 +867,9 @@ usb_get_parsed_edid_by_dh(Display_Handle * dh) {
 
 char *
 usb_get_capabilities_string_by_dh(Display_Handle * dh) {
+   assert(dh);   // validate input argument
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dh(dh);
-   assert(dh);
+   assert(moninfo);  // couldn't be opened without moninfo
    return usb_synthesize_capabilities_string(moninfo);
 }
 
