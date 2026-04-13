@@ -273,7 +273,7 @@ get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
 Parsed_Edid *
 get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busnum=%d, devnum=%d, vendor=-x%08x, product=0x%08x",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busnum=%d, devnum=%d, vendor=0x%08x, product=0x%08x",
                           dev_info->busnum, dev_info->devnum, dev_info->vendor, dev_info->product);
 
    Parsed_Edid * parsed_edid = NULL;
@@ -355,7 +355,7 @@ get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
 Parsed_Edid *
 get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info)  {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busnum=%d, devnum=%d, vendor=-x%08x, product=0x%08x",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busnum=%d, devnum=%d, vendor=0x%08x, product=0x%08x",
                            dev_info->busnum, dev_info->devnum, dev_info->vendor, dev_info->product);
    if (debug || IS_TRACING())
       dbgrpt_hiddev_devinfo(dev_info, true, 1);
