@@ -5,8 +5,8 @@
 // Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef MULTI_LEVEL_TABLE_H_
-#define MULTI_LEVEL_TABLE_H_
+#ifndef MULTI_LEVEL_MAP_H_
+#define MULTI_LEVEL_MAP_H_
 
 /** \cond */
 #include <glib-2.0/glib.h>
@@ -63,4 +63,4 @@ Multi_Level_Names mlm_get_names(Multi_Level_Map * mlm, int argct, ...);
 
 Multi_Level_Names mlm_get_names2(Multi_Level_Map * mlm, int levelct, guint* ids);
 
-#endif /* MULTI_LEVEL_TABLE_H_ */
+#endif /* MULTI_LEVEL_MAP_H_ */
