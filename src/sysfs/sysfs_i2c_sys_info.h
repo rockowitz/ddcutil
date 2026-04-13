@@ -3,8 +3,8 @@
 // Copyright (C) 2025-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef SYSFS_SYS_INFO_H_
-#define SYSFS_SYS_INFO_H_
+#ifndef SYSFS_I2C_SYS_INFO_H_
+#define SYSFS_I2C_SYS_INFO_H_
 
 #include "util/data_structures.h"
 
@@ -51,4 +51,4 @@ void           dbgrpt_sys_bus_i2c(int depth);
 
 void           init_i2c_sysfs_i2c_sys_info();
 
-#endif /* SYSFS_SYS_INFO_H_ */
+#endif /* SYSFS_I2C_SYS_INFO_H_ */
