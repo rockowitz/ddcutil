@@ -66,7 +66,7 @@ bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
 
 
    struct vid_pid exceptions[] = {
-            {0x0424, 0x3328},    // Std Micrososystems USB HID I2C - HP LP2480
+            {0x0424, 0x3328},    // Std Microsystems USB HID I2C - HP LP2480
             {0x056d, 0x0002},    // Eizo,      HID Monitor Controls
             {0x0451, 0xca01},    // Texas Instruments USB to I2C Solution  - what is this
 
@@ -99,7 +99,7 @@ bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
 
             // additional values from usb.ids
             {0x0419, 0x8002},    // Samsung,   Syncmaster HID Monitor Control
-            {0x0452, 0x0021},    // Misubishi, HID Monitor Controls
+            {0x0452, 0x0021},    // Mitsubishi, HID Monitor Controls
             {0x04a6, 0x0181},    // Nokia,     HID Monitor Controls
             {0x04ca, 0x1766},    // Lite-on,   HID Monitor Controls
       };
