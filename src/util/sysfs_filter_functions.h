@@ -1,4 +1,4 @@
-/** \f sysfs_filter_functions.h
+/** \file sysfs_filter_functions.h
   */
 
 //// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>

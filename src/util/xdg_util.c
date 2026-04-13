@@ -447,7 +447,7 @@ char * find_xdg_cache_file(
       const char * simple_fn)
 {
    bool debug = false;
-   char * result = NULL;;
+   char * result = NULL;
    char * path = xdg_cache_home_dir();
    assert(path);   // will be null if $HOME not set, how to handle?
    result = find_xdg_path_file(
@@ -475,7 +475,7 @@ char * find_xdg_state_file(
       const char * simple_fn)
 {
    bool debug = false;
-   char * result = NULL;;
+   char * result = NULL;
    char * path = xdg_state_home_dir();
    assert(path);   // will be null if $HOME not set, how to handle?
    result = find_xdg_path_file(

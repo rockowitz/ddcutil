@@ -1,4 +1,4 @@
-/** \f error_info.c
+/** \file error_info.c
  *
  *  Struct for reporting errors.
  *

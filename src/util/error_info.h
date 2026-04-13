@@ -1,4 +1,4 @@
-/** \f error_info.h
+/** \file error_info.h
  *
  *  Struct for reporting errors that collects causes
  *
