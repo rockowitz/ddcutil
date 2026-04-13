@@ -16,7 +16,7 @@
 #include "usb_util/usb_hid_common.h"
 
 
-/* Return's the name of a collection type in a HID report descriptor.
+/* Returns the name of a collection type in a HID report descriptor.
  *
  * Per USB HID Specification v1.11, Section 6.2.2.6
  */
