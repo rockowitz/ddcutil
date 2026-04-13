@@ -248,7 +248,7 @@ ddca_get_feature_list_by_dref(
          {
                DDCA_MCCS_Version_Spec vspec = // dref->vcp_version;
                                              get_vcp_version_by_dref(dref);
-               DBGMSF(debug, "vspec=%%", format_vspec_verbose(vspec) );
+               DBGMSF(debug, "vspec=%s", format_vspec_verbose(vspec) );
                // redundant:
                // assert( !vcp_version_eq( vspec, DDCA_VSPEC_UNQUERIED) );
                // Whether a feature is a table feature can vary by version, so can't
