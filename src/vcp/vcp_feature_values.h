@@ -143,4 +143,4 @@ vcp_value_set_get(Vcp_Value_Set vset, int ndx);
 
 void dbgrpt_vcp_value_set(Vcp_Value_Set vset, int depth);
 
-#endif /* SRC_VCP_VCP_FEATURE_VALUES_H_ */
+#endif /* VCP_FEATURE_VALUES_H_ */
