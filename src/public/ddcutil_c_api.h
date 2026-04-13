@@ -7,7 +7,7 @@
  *  Typedefs, other constants, etc. begin with "DDCA_".
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_C_API_H_
@@ -904,7 +904,7 @@ ddca_close_display(
       DDCA_Display_Handle   ddca_dh);
 
 /** Returns a string representation of a display handle.
- *  The string is valid until until the handle is closed.
+ *  The string is valid until the handle is closed.
  *
  * @param[in] ddca_dh  display handle
  * @return string  representation of display handle, NULL if
@@ -1141,7 +1141,7 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh);
  *  @remark
  *  Only takes into account VCP version.  Useful for reporting display agnostic
  *  feature information.  For display sensitive feature information, i.e. taking
- *  into account the specific monitor model, use #ddca_get_feature_metdata_by_dref()
+ *  into account the specific monitor model, use #ddca_get_feature_metadata_by_dref()
  *  or #ddca_get_feature_metadata_by_dh().
  *
  * @since 0.9.3
@@ -1605,7 +1605,7 @@ ddca_get_any_vcp_value_using_explicit_type(
  *  @return status code
  *
  *  @remark
- *  It an error to call this function for a manufacturer-specific feature or
+ *  It is an error to call this function for a manufacturer-specific feature or
  *  an unrecognized feature.
  *  @remark
  *  If the returned status code is other than **DDCRC_OK**, a detailed
@@ -1795,7 +1795,7 @@ ddca_set_profile_related_values(
 //  Report display status changes
 //
 
-/** Registers a function to be called called when a change in display status is
+/** Registers a function to be called when a change in display status is
  *  detected. It is not an error if the function is already registered.
  *
  *  @param[in] func   function of type #DDCA_Display_Detection_Callback_Func()
@@ -1852,9 +1852,9 @@ const char *
 
 /** Start the threads watching for display status changes.
  *
- *  @param  enabled_clases  event classes to watch
+ *  @param  enabled_classes  event classes to watch
  *  @retval DDCRC_OK
- *  #retval DDCRC_ARG     no event classes or invalid event classes specified
+ *  @retval DDCRC_ARG     no event classes or invalid event classes specified
  *  @retval DDCRC_INVALID_OPERATION watch thread already running
  *  @retval DDCRC_INVALID_OPERATION not all video drivers support DRM
  *  @retval DDCRC_UNIMPLEMENTED watching for DPMS changes unimplemented
