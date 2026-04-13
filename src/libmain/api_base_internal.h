@@ -529,7 +529,7 @@ ddca_add_traced_api_call(
    // Deprecated, has no effect
    __attribute__ ((deprecated ("has no effect")))
    bool
-   ddca_enable_sleep_suppression(bool newval); ;
+   ddca_enable_sleep_suppression(bool newval);
 
    __attribute__ ((deprecated ("always returns false")))
    bool
