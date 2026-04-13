@@ -20,7 +20,7 @@ extern "C"
 
 /** @cond */
 #include <stdbool.h>
-#include <stdint.h>                // for uint8_t, unit16_t
+#include <stdint.h>                // for uint8_t, uint16_t
 /** @endcond */
 
 
@@ -245,7 +245,7 @@ typedef void * DDCA_Display_Handle;
 /** MCCS Version in binary form */
 typedef struct {
    uint8_t    major;           /**< major version number */
-   uint8_t    minor;           /*** minor version number */
+   uint8_t    minor;           /**< minor version number */
 } DDCA_MCCS_Version_Spec;
 
 extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V10;        ///< MCCS version 1.0
@@ -308,7 +308,7 @@ typedef struct {
    DDCA_IO_Mode io_mode;        ///< physical access mode
    union {
       int        i2c_busno;     ///< I2C bus number
-      int        hiddev_devno;  ///* USB hiddev device  number
+      int        hiddev_devno;  ///< USB hiddev device number
    } path;
 } DDCA_IO_Path;
 
