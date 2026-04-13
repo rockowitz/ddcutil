@@ -5,8 +5,8 @@
 // Copyright (C) 2015-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef PARSED_CAPABILITIES_FEATURE_H
-#define PARSED_CAPABILITIES_FEATURE_H
+#ifndef PARSED_CAPABILITIES_FEATURE_H_
+#define PARSED_CAPABILITIES_FEATURE_H_
 
 #include <glib-2.0/glib.h>
 
@@ -46,4 +46,4 @@ void free_capabilities_feature_record(
 void dbgrpt_capabilities_feature_record(
       Capabilities_Feature_Record * vfr, int depth);
 
-#endif /* PARSED_CAPABILITIES_FEATURE_H */
+#endif /* PARSED_CAPABILITIES_FEATURE_H_ */
