@@ -100,7 +100,7 @@ void dbgrpt_hiddev_devinfo(struct hiddev_devinfo * dinfo, bool lookup_names, int
 
    Pci_Usb_Id_Names names = {"","",""};
    if (lookup_names) {
-      devid_get_usb_names(
+      names = devid_get_usb_names(
                 dinfo->vendor,
                 dinfo->product,
                 0,
