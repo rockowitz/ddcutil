@@ -178,7 +178,7 @@ dnl 7/29/19 first use, LT_CURRENT set to 1
 dnl release 2.2.0, c:r:a = 7:0:2 -> libddcutil.so.5.2.0
 dnl release 2.2.1, c:r:a = 8:0:3 -> libddcutil.so.5.3.0
 dnl release 2.2.2, c:r:a = 9:0:4 -> libddcutil.so.5.4.0
-dnl release 2.2.5, c:r:a = 9:2:4 -> libddcito;.so.5.4.2
+dnl release 2.2.5, c:r:a = 9:2:4 -> libddcutil.so.5.4.2
 dnl release 2.2.6, c:r:a =10:0:5 -> libddcutil so.5.5.0
 LT_CURRENT=10
 LT_REVISION=0
@@ -213,7 +213,7 @@ dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
 AS_IF([test "x$enable_lib" = "xyes"],
       AC_MSG_NOTICE( [lib...              enabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 1)
-	  AC_DEFINE( [BUILD_SHARED_LIB], [1], [If defined, buid shared library.])
+	  AC_DEFINE( [BUILD_SHARED_LIB], [1], [If defined, build shared library.])
      ,
       AC_MSG_NOTICE( [lib...              disabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 0)
@@ -221,7 +221,7 @@ AS_IF([test "x$enable_lib" = "xyes"],
      
 dnl *** configure option: --install-lib-only
 AC_ARG_ENABLE([install-lib-only],
-              [ AS_HELP_STRING([--enable-install-lib-only=@<:@yes/no@:>@], [Install only shared shared librarys@<:@default=no@:>@] )],
+              [ AS_HELP_STRING([--enable-install-lib-only=@<:@yes/no@:>@], [Install only shared library@<:@default=no@:>@] )],
               [enable_install_lib_only=${enableval}],
               [enable_install_lib_only=no] )
 AM_CONDITIONAL([INSTALL_LIB_ONLY_COND], [test "x$enable_install_lib_only" = "xyes"] )
@@ -815,9 +815,9 @@ AS_IF([test "x$enable_x11" = "xyes"],
 AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" = "xyes"] )
 AS_IF([test "x$enable_x11" = "xyes"],
         AC_DEFINE([USE_X11], [1], [Use X11])
-        AC_MSG_NOTICE( [x11...             enabled1]  )
+        AC_MSG_NOTICE( [x11...             enabled]  )
       ,
-        AC_MSG_NOTICE( [x11...             disabled1] )
+        AC_MSG_NOTICE( [x11...             disabled] )
      )
 
 
