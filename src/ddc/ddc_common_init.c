@@ -424,6 +424,10 @@ STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
+   if (parsed_cmd->flags & CMD_FLAG_DISABLE_EARLY_PERMISSION_CHECKS) {
+      disable_check_all_edids_readable_using_i2c = true;
+      disable_ddci_check_dev_i2c_devices_rw = true;
+   }
 }
 
 

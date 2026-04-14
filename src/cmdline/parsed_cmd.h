@@ -72,7 +72,6 @@ typedef enum {
    CMD_FLAG_RO_ONLY                = 0x020000,
    CMD_FLAG_WO_ONLY                = 0x040000,
    CMD_FLAG_ASYNC_I2C_CHECK        = 0x080000,
-
    CMD_FLAG_ENABLE_UDF             = 0x100000,
    CMD_FLAG_ENABLE_USB             = 0x200000,
    CMD_FLAG_EDP_ALWAYS_LAPTOP      = 0x400000,
@@ -87,7 +86,6 @@ typedef enum {
    CMD_FLAG_SHOW_SETTINGS      = 0x0400000000,
    CMD_FLAG_ENABLE_CACHED_CAPABILITIES
                                = 0x0800000000,
-
 // CMD_FLAG_CLEAR_PERSISTENT_CACHE
 //                             = 0x1000000000,
    CMD_FLAG_WALLTIME_TRACE     = 0x2000000000,
@@ -98,7 +96,6 @@ typedef enum {
    CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER
                              = 0x100000000000,
    CMD_FLAG_DSA2             = 0x200000000000,
-
    CMD_FLAG_QUICK            = 0x400000000000,
 
 
@@ -110,13 +107,15 @@ typedef enum {
    CMD_FLAG_TRACE_TO_SYSLOG_ONLY
                            = 0x20000000000000,
    CMD_FLAG_TRACE_TO_SYSLOG= 0x40000000000000,
+
    CMD_FLAG_STATS_TO_SYSLOG
                          = 0x0100000000000000,
    CMD_FLAG_INTERNAL_STATS
                          = 0x0200000000000000,
    CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR
                         =  0x0400000000000000,
-
+   CMD_FLAG_DISABLE_EARLY_PERMISSION_CHECKS
+                        =  0x0800000000000000,
    CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK
                          = 0x1000000000000000,
    CMD_FLAG_TRACED_FUNCTION_STACK_ERRORS_FATAL
