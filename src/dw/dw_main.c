@@ -505,7 +505,7 @@ dw_redetect_displays() {
 /** Returns the current Display Watch parameter settings in a
  *  buffer provided by the caller.
  *
- *  @param settings  #DDCA_DW_Settings struct to fill ine
+ *  @param settings  #DDCA_DW_Settings struct to fill in
  */
 void dw_get_display_watch_settings(DDCA_DW_Settings * settings) {
    assert(settings);
