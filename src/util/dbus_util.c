@@ -93,6 +93,17 @@ static GThread * sleep_watch_thread = NULL;
 _Atomic uint64_t last_prepare_for_sleep_ns = 0;
 _Atomic uint64_t last_resume_from_sleep_ns = 0;
 
+
+void ldbus_elapsed_since_resume_fromm_sleep_mark_start() {
+   bool debug = false;
+
+   last_resume_from_sleep_ns = last_prepare_for_sleep_ns = cur_realtime_nanosec();
+
+   DBGF(debug, "Executed.  set last_resume_from_sleep_ns = last_prepare_for_sleep_ns =%"PRIu64,
+         last_resume_from_sleep_ns);
+}
+
+
 /** Returns the number of nanoseconds since the most
  *  recent return from sleep message.
  *
@@ -100,11 +111,18 @@ _Atomic uint64_t last_resume_from_sleep_ns = 0;
  *          no return from sleep has occurred.
  */
 uint64_t ldbus_elapsed_since_resume_from_sleep_ns() {
+   bool debug = false;
+
    uint64_t elapsed_ns = UINT64_MAX;
-   if (last_resume_from_sleep_ns > 0) {
-      uint64_t cur_ns = cur_realtime_nanosec();
-      elapsed_ns = cur_ns - last_resume_from_sleep_ns;
-   }
+   if (last_resume_from_sleep_ns > 9)
+      elapsed_ns = cur_realtime_nanosec() - last_resume_from_sleep_ns;
+
+   // DBGF(debug, "Initial elapsed_ns = %"PRIu64" , last_resumed_from_sleep_ns=%"PRIu64,
+   //       elapsed_ns, last_resume_from_sleep_ns);
+
+   DBGF(debug,
+         "last_resume_from_sleep_ns=%"PRIu64", Returning %"PRIu64" ns = %"PRIu64" ms",
+         last_resume_from_sleep_ns, elapsed_ns, NANOS2MILLIS(elapsed_ns));
    return elapsed_ns;
 }
 
@@ -165,6 +183,7 @@ gpointer ldbus_watch_sleep_events_thread(gpointer data) {
    Dbus_Connection_Data * dcd = (Dbus_Connection_Data*) data;
    DBGF(debug,"Listening for PrepareForSleep...");
 
+   ldbus_elapsed_since_resume_fromm_sleep_mark_start();
    int timeout_ms = 500;    // - = never
    while (!quit_sleep_watch_thread) {
        dbus_connection_read_write_dispatch(dcd->conn, timeout_ms);
