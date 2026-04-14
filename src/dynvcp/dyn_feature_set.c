@@ -499,7 +499,7 @@ dyn_create_feature_set(
           bool found = g_hash_table_iter_next(&iter, &hash_key, &hash_value);
           while (found) {
              Dyn_Feature_Metadata * feature_metadata = hash_value;
-             assert( memcmp(feature_metadata, DDCA_FEATURE_METADATA_MARKER, 4) == 0 );
+             assert( memcmp(feature_metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0 );
 
              // Test Feature_Set_Flags other than FSF_SHOW_UNSUPPORTED,
              // which does not apply in this context
@@ -764,8 +764,8 @@ dyn_create_single_feature_set_by_hexid2(
    result->members_dfm = g_ptr_array_new();
    Display_Feature_Metadata *  dfm = NULL;
    if (dref->dfr) {
-      DDCA_Featurfree_dfm_funce_Metadata * feature_metadata  =
-         get_dynamic_feature_metadata(dref->dfr, feature_code);
+      Dyn_Feature_Metadata * feature_metadata  =
+         dyn_get_dynamic_feature_metadata(dref->dfr, feature_code);
       if (feature_metadata) {
          dfm = dyn_create_dynamic_feature_from_dfr_metadata(feature_metadata);
       }
