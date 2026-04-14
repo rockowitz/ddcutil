@@ -98,7 +98,7 @@ STATIC void process_screen_change_event(
    BS256 bs_old_buses_w_edid   = *p_bs_buses_w_edid;
 
    BS256 bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
-#ifdef iGNORE_LAPTOPS
+#ifdef IGNORE_LAPTOPS
    if (watch_laptops) {
       bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
    }
