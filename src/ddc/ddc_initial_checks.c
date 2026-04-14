@@ -3,6 +3,8 @@
 // Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
+#include "config.h"
+
 /** \cond */
 #include <assert.h>
 #include <errno.h>
@@ -12,8 +14,6 @@
 #ifdef USE_X11
 #include <X11/extensions/dpmsconst.h>
 #endif
-
-#include "config.h"
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
