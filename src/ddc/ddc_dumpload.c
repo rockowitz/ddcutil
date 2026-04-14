@@ -514,10 +514,12 @@ loadvcp_by_dumpload_data(
    if (!dh_argument) {
       ddc_excp1 = ddc_close_display(dh);
       if (ddc_excp1) {
-         if (ddc_excp)
+         if (ddc_excp) {
             ERRINFO_FREE_WITH_REPORT(ddc_excp1, true);
-         else
+         }
+         else {
             ddc_excp = ddc_excp1;
+         }
       }
    }
 
