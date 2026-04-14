@@ -350,15 +350,18 @@ retry:
          ( *fd_loc = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
    // if successful returns file descriptor, if fail, returns -1 and errno is set
-   if (force_i2c_open_failure)   // for testing
+   if (*fd_loc >= 0 && force_i2c_open_failure)  { // for testing
+      close(*fd_loc);
       *fd_loc = -1;
+      errno = EACCES;
+   }
    if (*fd_loc < 0) {
       // if (first_open_error) {
       //    first_open_error = false;
 
       int errsv = -errno;
-      if (force_i2c_open_failure)
-         errsv = -EACCES;
+      // if (force_i2c_open_failure)
+      //    errsv = -EACCES;
       char * msg = g_strdup_printf("open(%s) failed. errno=%s", filename, psc_desc(errsv));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
       free(msg);
@@ -373,18 +376,24 @@ retry:
          current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
          diagnose_open_failure_to_syslog(filename, err->detail);
       //  }
-         uint64_t elapsed_ms = NANOS2MILLIS(ldbus_elapsed_since_resume_from_sleep_ns());
-         char * msg = g_strdup_printf("Time since last return from sleep = %"PRIu64" ms", elapsed_ms);
-         DBGTRC(true, TRACE_GROUP, "open() EACCES failure, %s", msg);
+         uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
+         uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
+         char * msg = g_strdup_printf(
+               "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
+               elapsed_ns, elapsed_ms);
+         DBGTRC(debug, TRACE_GROUP, "open() EACCES failure, %s", msg);
          syslog(LOG_WARNING, "open() EACCES failure, %s", msg);
 
          if (elapsed_ms < 500) {
-           syslog(LOG_WARNING, "Sleeping for 100 ms and retrying...");
+            syslog(LOG_WARNING, "Sleeping for 100 ms and retrying...");
+            DBGTRC(debug, DDCA_TRC_NONE, "Sleeping for 100 ms and retrying...");
             LOGGABLE_SLEEP(100, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg);
+            free(msg);
             errinfo_free(err);
             err = NULL;
             goto retry;
          }
+         free(msg);
       }
    }
 
