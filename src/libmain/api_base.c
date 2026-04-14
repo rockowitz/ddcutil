@@ -826,6 +826,8 @@ ddci_init(const char *      libopts,
          add_traced_function("ddci_set_non_table_vcp_value_verify");
          add_traced_function("dw_start_watch_displays");
          add_traced_function("dw_stop_watch_displays");
+         add_traced_function("dw_hotplug_change_handler");
+         add_traced_function("dw_emit_display_status_record");
       }
    }
 
@@ -924,7 +926,7 @@ ddci_init(const char *      libopts,
       goto bye;
    }
 
-   i2c_detect_buses();
+   // i2c_detect_buses();
 
    if (disable_ddci_check_dev_i2c_devices_rw) {
       syslog(LOG_DEBUG, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
@@ -941,7 +943,7 @@ ddci_init(const char *      libopts,
 
    DBGF(debug, "performing display detection ...");
 
-   ddc_ensure_displays_detected();
+   ddc_ensure_displays_detected();  // calls i2c_detect_buses() if necessary
 #ifdef OUT
       if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS) {
          dw_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS);
