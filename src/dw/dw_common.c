@@ -394,7 +394,7 @@ bool dw_hotplug_change_handler(
 
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
       if (!businfo) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Failed to find I2C_BUS_INFO for /dev/i2c-%s", busno);
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Failed to find I2C_BUS_INFO for /dev/i2c-%d", busno);
          continue;
       }
 #ifdef LAPTOPS_IGNORABLE
