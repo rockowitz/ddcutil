@@ -22,7 +22,7 @@ endif
 
 MOSTLYCLEANFILES =   
 CLEANFILES =
-DISTCLEANFILES = publc/ddcutil_macros.h
+DISTCLEANFILES = public/ddcutil_macros.h
 
 # todo: factor out swig 
 # todo: fails if swig/.libs doesn't exist
@@ -412,7 +412,7 @@ all-local-disabled:
 	@echo "   AM_CFLAGS:        $(AM_CFLAGS)"
 	@echo "   CPPFLAGS:         $(CPPFLAGS)"
 	@echo "   AM_CPPFLAGS:      $(AM_CPPFLAGS)"
-	@echo "   ddcutil_FLAGS:    $(ddcutil_CFLAGS)"
+	@echo "   ddcutil_CFLAGS:   $(ddcutil_CFLAGS)"
 	@echo "   AUTOMAKE_OPTIONS: $(AUTOMAKE_OPTIONS)"
 	@echo "   MAKELEVEL:        $(MAKELEVEL)"
 	@echo "   MAKEFLAGS:        $(MAKEFLAGS)"
