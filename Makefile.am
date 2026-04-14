@@ -102,7 +102,7 @@ show:
 	@echo "  LIBUSB_CFLAGS           = $(LIBUSB_CFLAGS)"
 	@echo "  LIBUSB_LIBS             = $(LIBUSB_LIBS)"
 	@echo ""
-	@echo "Addtional:"
+	@echo "Additional:"
 	@echo "  prefix                  = $(prefix)"
 	@echo "  exec_prefix             = $(exec_prefix)"
 	@echo "  libdir                  = $(libdir)"
