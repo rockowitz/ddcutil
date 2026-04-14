@@ -393,12 +393,16 @@ bool dw_hotplug_change_handler(
          break;
 
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
-      if (!businfo)
+      if (!businfo) {
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Failed to find I2C_BUS_INFO for /dev/i2c-%s", busno);
          continue;
+      }
+#ifdef LAPTOPS_IGNORABLE
       if (businfo->flags & I2C_BUS_LAPTOP) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Ignoring removal of laptop on bus %d", busno);
       }
       else {
+#endif
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removing bus %d", busno);
          Display_Ref* dref = dw_remove_display_by_businfo(businfo);
          if (dref) {
@@ -418,7 +422,9 @@ bool dw_hotplug_change_handler(
             free(s);
             i2c_remove_bus_by_busno(busno);
          }
+#ifdef LAPTOPS_IGNORABLE
       }
+#endif
    }
    bs256_iter_free(iter);
 
