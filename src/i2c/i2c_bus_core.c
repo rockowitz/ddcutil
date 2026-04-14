@@ -172,6 +172,7 @@ i2c_all_relevant_i2c_buses_rw() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    GPtrArray * err_accumulator = NULL;
+   Error_Info * final_result = NULL;
 
    BS256 attached_buses = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, /*only_connected*/ false);
    Bit_Set_256_Iterator iter = bs256_iter_new(attached_buses);
@@ -201,7 +202,7 @@ i2c_all_relevant_i2c_buses_rw() {
    bva_free(bva);
 #endif
 
-   Error_Info * final_result = NULL;
+
    if (err_accumulator) {
       final_result = errinfo_new_with_causes_gptr(DDCRC_INVALID_OPERATION, err_accumulator, __func__,
             "libddcutil requires RW access to all /dev/i2c devices that might be used for DDC.");
@@ -225,6 +226,7 @@ i2c_all_relevant_i2c_buses_rw() {
       DBGMSG("Forcing dummy failure");
       final_result = ERRINFO_NEW(-EACCES, "Dummy failure");
    }
+
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, final_result, "");
    return final_result;
 }
