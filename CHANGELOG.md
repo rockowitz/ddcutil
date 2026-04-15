@@ -1,4 +1,114 @@
-## [2.2.7] 2025-04-xx
+### General
+
+
+#### Changed
+
+
+diagnose_open_bus_failure() 
+write details to sysllog
+
+
+
+#### Fixed
+- hiddev_get_report(): incorrect ioctl call
+
+- error parsing --maxtries argument
+
+invalid call to set_addr() ioctl
+
+ get_edid_bytes_directly_using_fileio(): double call to read() when reading bytewise
+
+   handle failure of lsof, getfacl commands
+    
+    addresses segfault in issue 596
+
+M       src/util/linux_util.c
+
+when comparing display refs (function drefs_edid_eq()) traced function stack not pushed at start 
+
+    
+    would cause every other byte to be stored!
+    cause of elusive edid read errors for single byte tests?
+
+    get_msg_decoration(): thread prefix was set to process id, process prefix was ""
+
+    function pid() was returning thread id, not process id
+
+
+  Merge pull request #597 from sfllaw/patch-1
+    
+    Change the sample rules file normally installed in /usr/share/ddcutil/data/60-ddcutil.rules to conform to the file normally installed in /usr/lib/udev/rules.d/60-ddcutil-i2c.rules.
+    
+    Loosen the video display adapter test, check only if the first byte of the adapter class is x03.
+
+ Loosen the video display adapter test, check only if the first byte of the adapter class is x03.
+    
+    A AMD Ryzen AI 9 365 based system returns 0x038000 as the adapter class.
+    
+    This patch to the 60-ddcutil-i2c.rules example file is meant to reflect the
+    change to the installed version, made in aa29e87.
+    
+    Partially addresses issue #530
+
+M       data/etc/udev/rules.d/60-ddcutil-i2c.rules
+
+
+#### Code cleanup
+
+- Courtesy of Claude Code, large number of typos  and other errors in messages fixed
+
+
+typos in messages, mostly trace messages
+
+
+config.h consitently the first include
+
+consistenly set AM_CFLAGS in Makefile.am's 
+
+
+### Shared Library
+
+#### Added
+
+add option --disable-early-permission-checks
+
+
+#### Changed
+
+added thread that watches for PrepareForSleep messages
+allow for calculating time since last resumed from sleep
+
+
+watch for PrepareForSleep changes
+dw_hotplug_change_handler(): more messages re unexpected case /dev/i2c device no longer exists
+
+write details of udev event to syslog
+
+watch-mode udev
+watch for i2c-dev as well as drm messages
+
+#### Fixed
+
+dw_create_display_status_event(): test for DDCA_EVENT_DDC_DISABLED
+    - incorrectly used flag DDCA_DISPLAY_EVENT_DDC_WORKING
+
+### Building
+
+
+add config options --enable-dbus, --enable-systemd
+
+
+move quiescing parm constants to parms.h
+
+
+====
+  re CachyOs
+
+laptops no longer treated as special
+
+
+
+## [2.2.7] 2025-04-01?
 
 ### General
 
