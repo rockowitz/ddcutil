@@ -224,6 +224,7 @@ i2c_all_relevant_i2c_buses_rw() {
 
    if (fail_i2c_all_relevant_i2c_buses_rw) {
       DBGMSG("Forcing dummy failure");
+      ERRINFO_FREE(final_result);
       final_result = ERRINFO_NEW(-EACCES, "Dummy failure");
    }
 
