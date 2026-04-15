@@ -1,117 +1,5 @@
-### General
 
-
-#### Changed
-
-
-diagnose_open_bus_failure() 
-write details to sysllog
-
-
-
-#### Fixed
-
-
-
-- hiddev_get_report(): incorrect ioctl call
-
-- fix cause of possibly reading every other EDID byte when 
-  reading the EDID bytewise
-
-invalid call to set_addr() ioctl
-
- get_edid_bytes_directly_using_fileio(): double call to read() when reading bytewise
-
-
-
-
-M       src/util/linux_util.c
-
-when comparing display refs (function drefs_edid_eq()) traced function stack not pushed at start 
-
-    
-    would cause every other byte to be stored!
-    cause of elusive edid read errors for single byte tests?
-
-
-
-    function pid() was returning thread id, not process id
-
-
-  Merge pull request #597 from sfllaw/patch-1
-    
-    Change the sample rules file normally installed in /usr/share/ddcutil/data/60-ddcutil.rules to conform to the file normally installed in /usr/lib/udev/rules.d/60-ddcutil-i2c.rules.
-    
-    Loosen the video display adapter test, check only if the first byte of the adapter class is x03.
-
- Loosen the video display adapter test, check only if the first byte of the adapter class is x03.
-    
-    A AMD Ryzen AI 9 365 based system returns 0x038000 as the adapter class.
-    
-    This patch to the 60-ddcutil-i2c.rules example file is meant to reflect the
-    change to the installed version, made in aa29e87.
-    
-    Partially addresses issue #530
-
-M       data/etc/udev/rules.d/60-ddcutil-i2c.rules
-
-
-#### Code cleanup
-
-- Courtesy of Claude Code, large number of typos  and other errors in messages fixed
-
-
-typos in messages, mostly trace messages
-
-
-config.h consitently the first include
-
-consistenly set AM_CFLAGS in Makefile.am's 
-
-
-### Shared Library
-
-#### Added
-
-add option --disable-early-permission-checks
-
-
-#### Changed
-
-added thread that watches for PrepareForSleep messages
-allow for calculating time since last resumed from sleep
-
-
-watch for PrepareForSleep changes
-dw_hotplug_change_handler(): more messages re unexpected case /dev/i2c device no longer exists
-
-write details of udev event to syslog
-
-watch-mode udev
-watch for i2c-dev as well as drm messages
-
-#### Fixed
-
-dw_create_display_status_event(): test for DDCA_EVENT_DDC_DISABLED
-    - incorrectly used flag DDCA_DISPLAY_EVENT_DDC_WORKING
-
-### Building
-
-
-add config options --enable-dbus, --enable-systemd
-
-
-move quiescing parm constants to parms.h
-
-
-====
-  re CachyOs
-
-laptops no longer treated as special
-
-
-
-## [2.2.7] 2025-04-01?
+## [2.2.7] 2025-04-15
 
 ### General
 
@@ -121,12 +9,30 @@ laptops no longer treated as special
   Group "supported" was replaced long ago by "all". Issue #579.
 - segfault in diagnose_open_failure_to_syslog(). Issue #596
 - Error parsing option ***--maxtries***.
-- Attempting to run command line programs lsof, getfacl (which can occur 
-  whan analyzing unexpected behaviour or as part command **environment**) 
+- Attempting to run command line programs lsof, getfacl (which can occur whan 
+  analyzing unexpected behaviour or as part command **environment**) 
   caused a segfault when those programs are not found on the user's system.
   Addresses segfault reported in issue #590.
-- In syslog messages, if the thread id is reported it the value might 
-  actually be the process id.
+- In syslog messages, the reported thread id might actually be the process id. 
+- Change the sample rules file in data/etc/udev/rules.d/60-ddcutil-i2c.rules, 
+  which is normally installed in /usr/share/ddcutil/data/60-ddcutil.rules, to
+  conform to the file normally installed in 
+  /usr/lib/udev/rules.d/60-ddcutil-i2c.rules. Both files now Loosen the video
+  display adapter test to look at only the first byte of the adapter class, 
+  which must be x03. Pull request #597.
+- Fix incorrect ioctl call in **hiddev_get_report()**, used for monitors using
+  USB rather that I2C for communication with their Virtual Control Panels.
+- When reading the EDID bytewise using **get_edid_bytes_directly_using_fileio()**
+  (currently done only for test purposes), only every other byte was saved.
+- Incorrect call to i2c-dev set address ioctl.
+- General source cleanup using Claude Code
+  - Fix a large number of typos and other errors in messages, mostly trace and 
+    syslog messages.
+  - Update Doxygen documentaion.
+  - Consistenly make **#include "config.h"** the first include.
+  - Consistenly set AM_CFLAGS = $(AM_CLAGS_STD) in the Makefile.am in each of
+    the subdirectories of src
+    
 
 ### Shared Library
 
@@ -140,21 +46,43 @@ file is libddcutil.so.5.5.0.
   RW permission sometimes (rarely) fails with Linux error EACCES. 
   To aid in diagnosing this situation, libacl is used to report access control 
   information about the device file in the system log.
+- Added a thread that watches for dbus PrepareForSleep messages, in order to 
+  calculate the time since the most recent return from sleep.  If opening a 
+  /dev/i2c device fails with errno EACCES shortly after returning from sleep, 
+  the open is retried.
+- Extensive diagnostics are written to the system log if opening a /dev/i2c
+  device fails with errno EACCES.   
 
 #### Changed
 
 - Re-enable reporting of laptop display connection/disconnection. 
-  Do not check DDC operation for this or any bus not supporting x37.
+  Do not check DDC operation for the laptop /dev/i2c bus or for any
+  bus not supporting x37.
+- When watching for display connection/disconnection using watch-mode UDEV: 
+  - watch for UDEV notifications for subsystem i2c-dev as well as drm.
+  - write udev event detail to the system log
+- **dw_hotplug_change_handler()**: write additonal messages to the system log
+  when a /dev/i2c device unexpectedly no longer exists
+
 
 #### Fixed
 
-- **ddca_redetect_displays()**: Recover from unexpected system state that
+- **ddca_redetect_displays()**: Recover from an unexpected system state that
   previously triggered assert() failures. Diagnostics are written to the system
   log. If display watch is not running on entry to the function, it is not 
   restarted at the end. 
   Addresses issue #595, (powerdevil crashes with assertion failure in libddcutil
   after resume from sleep/hibernate) and KDE bug 517571 (KDE Power Management 
   Crash in DDCutilPrivateSingleton::redetect after letting laptop sleep).
+- In **dw_create_display_status_event()**, the test for event type
+  DDCA_EVENT_DDC_DISABLED incorrectly used flag DDCA_DISPLAY_EVENT_DDC_WORKING.
+
+### Building
+
+- Add autoconf **config** option ***--enable-dbus***/***--disable-dbus***. 
+  The default is enabled.  Needed to watch for sleep events.
+- File src/base/parms.h: Define QUIESCE operation constants: 
+  QUIESCE_POLL_MAX_MILLISEC, QUIESCE_POLL_INTERVAL_MILLISEC
 
 
 ## [2.2.6] 2026-03-11
