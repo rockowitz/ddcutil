@@ -579,6 +579,33 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
 }
 
 
+/** Retrieves bus information by DRM connector id
+ *
+ *  @param   drm_connector_id
+ *
+ *  @return  pointer to I2C_Bus_Info struct for the bus,\n
+ *           NULL if not found
+ */
+I2C_Bus_Info * i2c_find_businfo_by_drm_connector_id(int drm_connector_id) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. drm_connector_id=%d", drm_connector_id);
+
+   I2C_Bus_Info * result = NULL;
+   if (all_i2c_buses) {
+      for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
+         I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
+         if (businfo->drm_connector_id == drm_connector_id) {
+            result = businfo;
+            break;
+         }
+      }
+   }
+
+   DBGMSF(debug, "Done.     Returning: %p", result);
+   return result;
+}
+
+
 /** Retrieves bus information by its index in the i2c_buses array
  *
  *  @param   busndx
@@ -903,6 +930,7 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_exclude_buses);
    RTTI_ADD_FUNC(i2c_bus_is_excluded);
    RTTI_ADD_FUNC(i2c_bus_is_not_excluded);
+   RTTI_ADD_FUNC(i2c_find_businfo_by_drm_connector_id);
 }
 
 

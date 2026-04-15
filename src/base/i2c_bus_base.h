@@ -122,6 +122,7 @@ void             i2c_remove_bus_by_busno(int busno);
 
 I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
 I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
+I2C_Bus_Info *   i2c_find_businfo_by_drm_connector_id(int drm_connector_id);
 int              i2c_dbgrpt_buses(bool report_all, bool include_sysfs_info, int depth);  // Reports all detected i2c buses
 void             i2c_dbgrpt_buses_summary(int depth);
 
