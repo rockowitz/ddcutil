@@ -6,14 +6,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
-#include <systemd/sd-journal.h>
+#include <linux/uuid.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
-#include <linux/uuid.h>
+#include <systemd/sd-journal.h>
 
+#include "debug_util.h"
 #include "file_util.h"
 #include "string_util.h"
 
@@ -51,6 +51,7 @@ char * get_current_boot_id() {
    return boot_id_nohyphens;
 }
 
+
 #ifdef BAD_IMPL
 /** Finds the first occurrence of the substring #needle in #haystack.
  *  The terminating null bytes )'\0') are not compared. the comparison
@@ -83,15 +84,16 @@ char * d_strcasestr(const char * haystack, const char * needle) {
  *  Optionally, lines are filtered to include only those containing one of a
  *  list of terms.  A limit to the number of lines returned can be specified.
  *
- *  @param filter_terms  list of filter terms
- *  @param ignore_case   if true, case is ignored when testing filter terms
- *  @param limit         ignored
+ *  @param  filter_terms  list of filter terms
+ *  @param  ignore_case   if true, case is ignored when testing filter terms
+ *  @param  limit         ignored
+ *  @return array of messages, NULL if unable to open journal
  */
 GPtrArray * get_current_boot_messages(char ** filter_terms, bool ignore_case, int limit) {
    bool debug = false;
    if (debug) {
       if (filter_terms) {
-         printf("(%s) filter_terms:\n", __func__);
+         DBG("filter_terms:");
          ntsa_show(filter_terms);
       }
    }
@@ -106,6 +108,7 @@ GPtrArray * get_current_boot_messages(char ** filter_terms, bool ignore_case, in
 
    char b0[50];
    snprintf(b0, 50, "_BOOT_ID=%s", cur_boot_id);
+   free(cur_boot_id);
    sd_journal_add_match(j,b0, 0);
 
    GPtrArray * lines = g_ptr_array_new_full(1000, free);
