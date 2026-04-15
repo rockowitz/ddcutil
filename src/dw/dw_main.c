@@ -201,18 +201,6 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-#ifdef OLD
-   err = all_relevant_i2c_buses_rw();
-   if (err) {
-      syslog(LOG_ERR, "%s", err->detail);
-      for (int ndx = 0; ndx < err->cause_ct; ndx++) {
-         Error_Info * cause = err->causes[ndx];
-         syslog(LOG_ERR, "   %s", cause->detail);
-      }
-      goto bye;
-   }
-#endif
-
    if (!enable_check_all_edids_readable_using_i2c) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to i2c_all_edids_readable_using_i2c()");
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Suppressing call to all_edids_readable_using_i2c()");
@@ -298,12 +286,6 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
 #endif
 
-#ifdef OLD
-      GThreadFunc watch_thread_func =
-            (resolved_watch_mode == Watch_Mode_Poll || resolved_watch_mode == Watch_Mode_Xevent)
-                 ? dw_watch_display_connections
-                 : dw_watch_displays_udev;
-#endif
       GThreadFunc watch_thread_func = dw_watch_display_connections;
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
