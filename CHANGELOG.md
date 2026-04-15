@@ -10,17 +10,20 @@ write details to sysllog
 
 
 #### Fixed
+
+
+
 - hiddev_get_report(): incorrect ioctl call
 
-- error parsing --maxtries argument
+- fix cause of possibly reading every other EDID byte when 
+  reading the EDID bytewise
 
 invalid call to set_addr() ioctl
 
  get_edid_bytes_directly_using_fileio(): double call to read() when reading bytewise
 
-   handle failure of lsof, getfacl commands
-    
-    addresses segfault in issue 596
+
+
 
 M       src/util/linux_util.c
 
@@ -30,7 +33,7 @@ when comparing display refs (function drefs_edid_eq()) traced function stack not
     would cause every other byte to be stored!
     cause of elusive edid read errors for single byte tests?
 
-    get_msg_decoration(): thread prefix was set to process id, process prefix was ""
+
 
     function pid() was returning thread id, not process id
 
@@ -117,6 +120,13 @@ laptops no longer treated as special
 - man page ddcutil: Replace example "getvcp supported" by "getvcp all". 
   Group "supported" was replaced long ago by "all". Issue #579.
 - segfault in diagnose_open_failure_to_syslog(). Issue #596
+- Error parsing option ***--maxtries***.
+- Attempting to run command line programs lsof, getfacl (which can occur 
+  whan analyzing unexpected behaviour or as part command **environment**) 
+  caused a segfault when those programs are not found on the user's system.
+  Addresses segfault reported in issue #590.
+- In syslog messages, if the thread id is reported it the value might 
+  actually be the process id.
 
 ### Shared Library
 

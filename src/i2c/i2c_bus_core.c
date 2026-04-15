@@ -88,9 +88,9 @@ bool all_video_adapters_implement_drm = false;
 bool use_drm_connector_states = false;
 bool try_get_edid_from_sysfs_first = true;
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
-bool fail_i2c_all_relevant_i2c_buses_rw = false;
-bool fail_i2c_all_edids_readable_using_i2c = false;
-bool force_i2c_open_failure = false;
+bool force_failure_i2c_all_relevant_i2c_buses_rw = false;
+bool force_failure_i2c_all_edids_readable_using_i2c = false;
+bool force_failure_i2c_open = false;
 
 
 // quick and dirty for debugging
@@ -222,7 +222,7 @@ i2c_all_relevant_i2c_buses_rw() {
          final_result->status_code = -EACCES;
    }
 
-   if (fail_i2c_all_relevant_i2c_buses_rw) {
+   if (force_failure_i2c_all_relevant_i2c_buses_rw) {
       DBGMSG("Forcing dummy failure");
       ERRINFO_FREE(final_result);
       final_result = ERRINFO_NEW(-EACCES, "Dummy failure");
@@ -244,18 +244,18 @@ i2c_all_edids_readable_using_i2c() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
-   Error_Info * errs = i2c_all_relevant_i2c_buses_rw();
-   if (errs) {
-      syslog(LOG_WARNING, "%s", errs->detail);
-      for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
-         syslog(LOG_WARNING, "   %s", errs->causes[ndx]->detail);
-      }
-     //  errinfo_free(errs);
-   }
-
-   if (fail_i2c_all_edids_readable_using_i2c) {
-      errinfo_free(errs);
+   Error_Info * errs = NULL;
+   if (force_failure_i2c_all_edids_readable_using_i2c) {
       errs = ERRINFO_NEW(-EACCES, "Dummy failure");
+   }
+   else {
+      errs = i2c_all_relevant_i2c_buses_rw();
+      if (errs) {
+         syslog(LOG_WARNING, "%s", errs->detail);
+         for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
+            syslog(LOG_WARNING, "   %s", errs->causes[ndx]->detail);
+         }
+      }
    }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, errs, "");
@@ -343,7 +343,7 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "filename=%s, callopts=0x%02x, fd_loc=%p, force_i2c_open_failure=%s",
-         filename, callopts, fd_loc, sbool(force_i2c_open_failure));
+         filename, callopts, fd_loc, sbool(force_failure_i2c_open));
 
    Error_Info * err = NULL;
 retry:
@@ -353,7 +353,7 @@ retry:
          ( *fd_loc = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
    // if successful returns file descriptor, if fail, returns -1 and errno is set
-   if (*fd_loc >= 0 && force_i2c_open_failure)  { // for testing
+   if (*fd_loc >= 0 && force_failure_i2c_open)  { // for testing
       close(*fd_loc);
       *fd_loc = -1;
       errno = EACCES;

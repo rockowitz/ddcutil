@@ -37,9 +37,9 @@ extern bool try_get_edid_from_sysfs_first;
 extern int  i2c_businfo_async_threshold;
 extern bool cross_instance_locks_enabled;
 extern bool edp_always_laptop;
-extern bool fail_i2c_all_relevant_i2c_buses_rw;
-extern bool fail_i2c_all_edids_readable_using_i2c;
-extern bool force_i2c_open_failure;
+extern bool force_failure_i2c_all_relevant_i2c_buses_rw;
+extern bool force_failure_i2c_all_edids_readable_using_i2c;
+extern bool force_failure_i2c_open;
 
 Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices);
 

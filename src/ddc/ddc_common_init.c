@@ -464,7 +464,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       tag_output = true;
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F17)
-      force_i2c_open_failure = true;
+      force_failure_i2c_open = true;
 
 #ifdef TEST_EDID_SMBUS
    if (parsed_cmd->flags & CMD_FLAG_F13)
@@ -496,9 +496,9 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       watch_laptops = true;
 #endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F31)
-      fail_i2c_all_relevant_i2c_buses_rw = true;
+      force_failure_i2c_all_relevant_i2c_buses_rw = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F32)
-      fail_i2c_all_edids_readable_using_i2c = true;
+      force_failure_i2c_all_edids_readable_using_i2c = true;
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
