@@ -61,7 +61,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
 bool            enable_watch_displays = true;
-bool            disable_check_all_edids_readable_using_i2c = false;
+bool            enable_check_all_edids_readable_using_i2c = false;
 
 static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
@@ -213,7 +213,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    }
 #endif
 
-   if (disable_check_all_edids_readable_using_i2c) {
+   if (!enable_check_all_edids_readable_using_i2c) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to i2c_all_edids_readable_using_i2c()");
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Suppressing call to all_edids_readable_using_i2c()");
    }

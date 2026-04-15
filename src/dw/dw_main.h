@@ -16,7 +16,7 @@
 
 extern DDC_Watch_Mode watch_displays_mode;
 extern bool           enable_watch_displays;
-extern bool           disable_check_all_edids_readable_using_i2c;
+extern bool           enable_check_all_edids_readable_using_i2c;
 
 Error_Info * dw_start_watch_displays(DDCA_Display_Event_Class event_classes);
 DDCA_Status  dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes);

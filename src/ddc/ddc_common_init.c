@@ -75,7 +75,7 @@
 
 
 // more naturally in ahi_base.c, but that would violate layering
-bool disable_ddci_check_dev_i2c_devices_rw = false;
+bool enable_ddci_check_dev_i2c_devices_rw = false;
 
 /** Assembles a #Error_Info struct and appends it to an array.
  *
@@ -424,9 +424,13 @@ STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
-   if (parsed_cmd->flags & CMD_FLAG_DISABLE_EARLY_PERMISSION_CHECKS) {
-      disable_check_all_edids_readable_using_i2c = true;
-      disable_ddci_check_dev_i2c_devices_rw = true;
+   if (parsed_cmd->flags & CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS) {
+      enable_check_all_edids_readable_using_i2c = true;
+      enable_ddci_check_dev_i2c_devices_rw = true;
+   }
+   else {
+      enable_check_all_edids_readable_using_i2c = false;
+      enable_ddci_check_dev_i2c_devices_rw = false;
    }
 }
 
@@ -484,9 +488,9 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 #endif
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F27)
-      disable_check_all_edids_readable_using_i2c = true;
+      enable_check_all_edids_readable_using_i2c = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F28)
-      disable_ddci_check_dev_i2c_devices_rw = true;
+      enable_ddci_check_dev_i2c_devices_rw = false;
 #ifdef LAPTOPS_IGNORABLE
    if (parsed_cmd->flags2 & CMD_FLAG2_F30)
       watch_laptops = true;

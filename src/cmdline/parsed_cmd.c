@@ -260,7 +260,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_int( "poll_watch_loop_millisec",       NULL,  parsed_cmd->poll_watch_loop_millisec,   d1);
       RPT_CMDFLAG("disable API",          CMD_FLAG_DISABLE_API,                                 d1);
       RPT_CMDFLAG("eDP always laptop",    CMD_FLAG_EDP_ALWAYS_LAPTOP,                           d1);
-      RPT_CMDFLAG("disable early permission checks", CMD_FLAG_DISABLE_EARLY_PERMISSION_CHECKS,  d1);
+      RPT_CMDFLAG("enable early permission checks", CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS,  d1);
 
       rpt_nl();
       rpt_label(depth, "Display Selection");

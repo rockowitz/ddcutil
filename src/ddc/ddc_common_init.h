@@ -13,7 +13,7 @@
 #include "util/error_info.h"
 #include "cmdline/parsed_cmd.h"
 
-extern bool disable_ddci_check_dev_i2c_devices_rw;
+extern bool enable_ddci_check_dev_i2c_devices_rw;
 
 void         i2c_discard_caches(Cache_Types caches);
 Error_Info * init_tracing(Parsed_Cmd * parsed_cmd);
