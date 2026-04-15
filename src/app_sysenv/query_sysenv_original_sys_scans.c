@@ -45,7 +45,7 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
       rpt_vstring(depth, "realpath(%s) failed, errno=%d", dir_devices_i2cN, errno);
       goto bye;
    }
-   rpt_vstring(depth, "Examining (5) %s -> %s", dir_devices_i2cN, real_device_dir ? real_device_dir : "NULL");
+   rpt_vstring(depth, "Examining (5) %s -> %s", dir_devices_i2cN, real_device_dir);
    RPT_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device");
    RPT_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "name");
    char * device_class = NULL;
