@@ -135,6 +135,22 @@ bool dw_udev_watch(int watch_loop_millisec) {
                   found = true;
                   if (debug || report_udev_events) {
                      dbgrpt_udev_event_basic_detail(detail,1);
+                     if (detail->prop_connector) {
+                        I2C_Bus_Info * businfo = NULL;
+                        int ival = 0;
+                        bool valid_int = str_to_int(detail->prop_connector, &ival, 10);
+                        if (valid_int) {
+                           businfo = i2c_find_businfo_by_drm_connector_id(ival);
+                           if (businfo) {
+                              rpt_vstring(1, "prop_connector = %d -> /dev/i2c-%d",
+                                    ival, businfo->busno);
+                           }
+                        }
+                        if (!businfo) {
+                           rpt_vstring(1,"Could not find I2C_Bus_Info for connector: %s",
+                                 detail->prop_connector);
+                        }
+                     }
                   }
                   GPtrArray* collector = udev_event_detail_to_collector(detail, NULL);  // allocates collector
                   g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
