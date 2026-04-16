@@ -1015,7 +1015,9 @@ parse_command(
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
    gboolean disable_api_flag = false;
+#ifdef FUTURE
    gboolean enable_early_permission_checks_flag = false;
+#endif
    gboolean discard_cached_capabilities_flag = false;
    gboolean discard_dsa_cache_flag = false;
 
@@ -1319,10 +1321,12 @@ parse_command(
 #endif
       {"disable-api", '\0', G_OPTION_FLAG_HIDDEN,
                                            G_OPTION_ARG_NONE, &disable_api_flag, "Completely disable API", NULL },
+#ifdef FUTURE
       {"enable-early-permission-checks",  '\0', G_OPTION_FLAG_HIDDEN,
                                            G_OPTION_ARG_NONE, &enable_early_permission_checks_flag, "Enable early permission checks", NULL },
       {"disable-early-permission-checks", '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
-                                           G_OPTION_ARG_NONE, &enable_early_permission_checks_flag, "Disable early permission checks", NULL },
+                              G_OPTION_ARG_NONE, &enable_early_permission_checks_flag, "Disable early permission checks", NULL },
+#endif
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
@@ -1791,7 +1795,9 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_WATCH_DISPLAY_EVENTS,    enable_watch_displays);
 #endif
    SET_CMDFLAG(CMD_FLAG_DISABLE_API,       disable_api_flag);
+#ifdef FUTURE
    SET_CMDFLAG(CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS, enable_early_permission_checks_flag);
+#endif
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_FILEIO,     i2c_io_fileio_flag);

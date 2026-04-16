@@ -61,7 +61,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
 bool            enable_watch_displays = true;
-bool            enable_check_all_edids_readable_using_i2c = false;
+bool            enable_dw_start_check_dev_u2c_devices_rw = true;
 
 static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
@@ -200,9 +200,9 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   if (!enable_check_all_edids_readable_using_i2c) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to i2c_all_edids_readable_using_i2c()");
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Suppressing call to all_edids_readable_using_i2c()");
+   if (!enable_dw_start_check_dev_u2c_devices_rw) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
    }
    else {
       Error_Info * erec = i2c_all_relevant_i2c_buses_rw();

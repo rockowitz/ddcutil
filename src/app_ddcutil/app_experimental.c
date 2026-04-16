@@ -77,8 +77,8 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(24, "Write detect to status if nvidia driver");
    REPORT_FLAG_OPTION(25, "Unused");
    REPORT_FLAG_OPTION(26, "Traced function stack errors are fatal");
-   REPORT_FLAG_OPTION(27, "Disable dw_start() check that all EDIDs readable using I2C");
-   REPORT_FLAG_OPTION(28, "Disable ddci_init() check that all relevant i2c buses readable");
+   REPORT_FLAG_OPTION(27, "Disable dw_start() check that all relevant I2C buses rw");
+   REPORT_FLAG_OPTION(28, "Disable ddci_init() check that all relevant i2c buses rw");
    REPORT_FLAG_OPTION(29, "Unused");
 #ifdef LAPTOPS_IGNORABLE
    REPORT_FLAG_OPTION(30, "Include laptop displays when watching for display changes");
