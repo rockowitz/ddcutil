@@ -926,7 +926,7 @@ ddci_init(const char *      libopts,
       goto bye;
    }
 
-   // i2c_detect_buses();
+    // i2c_detect_buses();  // needed by i2c_all_relevant_i2c_buses_rw()
 
    if (!enable_ddci_init_check_dev_i2c_devices_rw) {
       syslog(LOG_DEBUG, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
