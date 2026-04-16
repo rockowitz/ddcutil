@@ -170,7 +170,7 @@ simple_rw_test(int busno) {
 Error_Info *
 i2c_all_relevant_i2c_buses_rw() {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_i2c_buses=%p", all_i2c_buses);
    GPtrArray * err_accumulator = NULL;
    Error_Info * final_result = NULL;
 
@@ -180,6 +180,7 @@ i2c_all_relevant_i2c_buses_rw() {
       goto bye;
    }
 
+#ifdef WRONG  //buses_bitset_from_businfo_array() has already read the buses
    BS256 attached_buses = buses_bitset_from_businfo_array(all_i2c_buses, /*only_connected*/ false);
    Bit_Set_256_Iterator iter = bs256_iter_new(attached_buses);
    int busno = -1;
@@ -192,8 +193,8 @@ i2c_all_relevant_i2c_buses_rw() {
       }
    }
    bs256_iter_free(iter);
+#endif
 
-#ifdef ALT
    Byte_Value_Array bva =
    i2c_get_device_numbers_using_udev(/*include_ignorable_devices*/ false);
    for (int ndx=0; ndx<bva_length(bva); ndx++) {
@@ -206,7 +207,6 @@ i2c_all_relevant_i2c_buses_rw() {
       }
    }
    bva_free(bva);
-#endif
 
 
    if (err_accumulator) {
