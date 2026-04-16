@@ -44,8 +44,8 @@ extern bool force_failure_i2c_open;
 Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices);
 
 // Bus open and close
-void             add_open_failures_reported(Bit_Set_256 failures);
-void             include_open_failures_reported(int busno);
+void             i2c_add_open_failures_reported(Bit_Set_256 failures);
+void             i2c_include_open_failures_reported(int busno);
 Error_Info *     i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc);
 Error_Info *     i2c_open_bus_basic_by_busno(int busno,  Byte callopts, int* fd_loc);
 Error_Info *     i2c_open_bus(int busno, Byte callopts, int * fd_loc);
@@ -65,11 +65,11 @@ Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 // Bus inventory - detect and probe buses
 
 Byte_Value_Array                // one byte for each I2C bus number
-i2c_get_device_numbers_using_udev(bool include_ignorable_devices);
+                 i2c_get_device_numbers_using_udev(bool include_ignorable_devices);
 
 
-Bit_Set_256      buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
-Bit_Set_256      nonlaptop_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
+Bit_Set_256      i2c_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
+Bit_Set_256      i2c_nonlaptop_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 GPtrArray *      i2c_detect_buses0();
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);

@@ -358,7 +358,7 @@ verify_i2c_access() {
                   if (errsv == EACCES) {
                      diagnose_open_failure_to_syslog(fnbuf, msg);
                   }
-                  include_open_failures_reported(busno);
+                  i2c_include_open_failures_reported(busno);
                   free(msg);
                }
             }
@@ -430,7 +430,7 @@ int verify_i2c_access_for_single_bus(int busno) {
              else {
                 fprintf(stderr, "Device %s is not readable and writable.  Error = %s\n",
                                fnbuf, linux_errno_desc(errsv) );
-                include_open_failures_reported(busno);
+                i2c_include_open_failures_reported(busno);
              }
           }
           else

@@ -303,16 +303,16 @@ gpointer dw_watch_display_connections(gpointer data) {
    BS256 bs_old_attached_buses;
    BS256 bs_old_buses_w_edid;
 if (watch_laptops) {
-   bs_old_attached_buses = buses_bitset_from_businfo_array(all_i2c_buses, false);
-   bs_old_buses_w_edid   = buses_bitset_from_businfo_array(all_i2c_buses, true);
+   bs_old_attached_buses = i2c_buses_bitset_from_businfo_array(all_i2c_buses, false);
+   bs_old_buses_w_edid   = i2c_buses_bitset_from_businfo_array(all_i2c_buses, true);
 }
 else {
    bs_old_attached_buses = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, false);
    bs_old_buses_w_edid   = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, true);
 }
 #else
-   BS256 bs_old_attached_buses = buses_bitset_from_businfo_array(all_i2c_buses, false);
-   BS256 bs_old_buses_w_edid   = buses_bitset_from_businfo_array(all_i2c_buses, true);
+   BS256 bs_old_attached_buses = i2c_buses_bitset_from_businfo_array(all_i2c_buses, false);
+   BS256 bs_old_buses_w_edid   = i2c_buses_bitset_from_businfo_array(all_i2c_buses, true);
 #endif
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial i2c buses with edids: %s",

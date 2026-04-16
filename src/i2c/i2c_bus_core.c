@@ -181,7 +181,7 @@ i2c_all_relevant_i2c_buses_rw() {
    }
 
 #ifdef WRONG  //buses_bitset_from_businfo_array() has already read the buses
-   BS256 attached_buses = buses_bitset_from_businfo_array(all_i2c_buses, /*only_connected*/ false);
+   BS256 attached_buses = i2c_buses_bitset_from_businfo_array(all_i2c_buses, /*only_connected*/ false);
    Bit_Set_256_Iterator iter = bs256_iter_new(attached_buses);
    int busno = -1;
    while ( (busno = bs256_iter_next(iter)) >= 0) {
@@ -280,7 +280,7 @@ static Bit_Set_256 open_failures_reported;
  *  @param failures   set of bus numbers
  */
 void
-add_open_failures_reported(Bit_Set_256 failures) {
+i2c_add_open_failures_reported(Bit_Set_256 failures) {
    g_mutex_lock(&open_failures_mutex);
    open_failures_reported = bs256_or(open_failures_reported, failures);
    g_mutex_unlock(&open_failures_mutex);
@@ -292,7 +292,7 @@ add_open_failures_reported(Bit_Set_256 failures) {
  *  @param  busno     /dev/i2c-N bus number
  */
 void
-include_open_failures_reported(int busno) {
+i2c_include_open_failures_reported(int busno) {
    g_mutex_lock(&open_failures_mutex);
    open_failures_reported = bs256_insert(open_failures_reported, busno);
    g_mutex_unlock(&open_failures_mutex);
@@ -2412,7 +2412,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
  *  @param  only_connected if true, only include buses having EDID
  *  @return bit set
  */
-Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only_connected) {
+Bit_Set_256 i2c_buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only_connected) {
    bool debug = false;
    assert(businfo_array);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo_array=%p, len=%d, only_connected=%s",
@@ -2433,7 +2433,7 @@ Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only
 }
 
 
-Bit_Set_256 nonlaptop_buses_bitset_from_businfo_array(
+Bit_Set_256 i2c_nonlaptop_buses_bitset_from_businfo_array(
                 GPtrArray * businfo_array,
                 bool        only_connected)
 {
@@ -2661,8 +2661,8 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 
 
 static void init_i2c_bus_core_func_name_table() {
-   RTTI_ADD_FUNC(buses_bitset_from_businfo_array);
-   RTTI_ADD_FUNC(nonlaptop_buses_bitset_from_businfo_array);
+   RTTI_ADD_FUNC(i2c_buses_bitset_from_businfo_array);
+   RTTI_ADD_FUNC(i2c_nonlaptop_buses_bitset_from_businfo_array);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
    RTTI_ADD_FUNC(check_x37_for_businfo);
    RTTI_ADD_FUNC(get_connector_edid);
