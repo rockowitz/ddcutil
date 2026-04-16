@@ -628,6 +628,12 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    if (msg)
       g_ptr_array_add(collector, (char*) strdup(msg));
 
+
+   char * s3 = g_strdup_printf("Elapsed time since start of program execution: %s seconds",
+        formatted_elapsed_time_t(6));
+   DBGF(debug, "%s", s3);
+   g_ptr_array_add(collector, s3);
+
    int uid  = (int) getuid();
    int euid = (int) geteuid();
    int gid  = (int) getgid();
@@ -696,7 +702,8 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
            "Time since last resume from sleep: %s seconds = %"PRIu64" millisec (%"PRIu64 "nanosec)",
            formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
    DBGF(debug, "%s", s2);
-   g_ptr_array_add(collector, s2);
+   g_ptr_array_add(collector, strdup(s2));
+   free(s2);
 #endif
 
    DBGF(debug, "Done.    returning collector = %p", collector);
