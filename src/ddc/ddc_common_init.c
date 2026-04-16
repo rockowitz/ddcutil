@@ -426,11 +426,11 @@ STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
 #ifdef FUTURE
    if (parsed_cmd->flags & CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS) {
-      enable_dw_start_check_dev_u2c_devices_rw = true;
+      enable_dw_start_check_dev_i2c_devices_rw = true;
       enable_ddci_init_check_dev_i2c_devices_rw = true;
    }
    else {
-      enable_dw_start_check_dev_u2c_devices_rw = false;
+      enable_dw_start_check_dev_i2c_devices_rw = false;
       enable_ddci_init_check_dev_i2c_devices_rw = false;
    }
 #endif
@@ -490,7 +490,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 #endif
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F27)
-      enable_dw_start_check_dev_u2c_devices_rw = false;
+      enable_dw_start_check_dev_i2c_devices_rw = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F28)
       enable_ddci_init_check_dev_i2c_devices_rw = false;
 #ifdef LAPTOPS_IGNORABLE
@@ -514,6 +514,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       else
          rpt_label(0, "--i5 value must be greater than 1");
    }
+   if (parsed_cmd->flags2 & CMD_FLAG2_I9_SET)
+        dw_start_watch_delay_ms  = parsed_cmd->i2;
 }
 
 

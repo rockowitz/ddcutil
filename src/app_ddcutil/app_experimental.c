@@ -102,7 +102,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 // rpt_vstring(depth+1, "Utility option --i9:          Display watch non-udev polling loop millisec (default=%d)", DEFAULT_POLL_WATCH_LOOP_MILLISEC);
 // rpt_vstring(depth+1, "Utility option --i10:         Display watch xevent polling loop millisec (default=%d)", DEFAULT_XEVENT_WATCH_LOOP_MILLISEC);
 
-   rpt_vstring(depth+1, "Utility option --i9:          Unused");
+   rpt_vstring(depth+1, "Utility option --i9:          Delay_ddc_start_watch_display() millisec (default = 0");
    rpt_vstring(depth+1, "Utility option --i10:         Unused");
    rpt_vstring(depth+1, "Utility option --i11:         Unused");
    rpt_vstring(depth+1, "Utility option --i12:         Unused");
