@@ -161,7 +161,7 @@ simple_rw_test(int busno) {
 }
 
 
-/** Checks that all /dev/i2c buses that may possibly be used for DDC
+/** Checks that all /dev/i2c buses that might possibly be used for DDC
  *  communication can be read and written.
  *
  *  @return Error_Info struct if one or more buses are inaccessible,
@@ -174,7 +174,13 @@ i2c_all_relevant_i2c_buses_rw() {
    GPtrArray * err_accumulator = NULL;
    Error_Info * final_result = NULL;
 
-   BS256 attached_buses = nonlaptop_buses_bitset_from_businfo_array(all_i2c_buses, /*only_connected*/ false);
+   if (force_failure_i2c_all_relevant_i2c_buses_rw) {
+      DBGMSG("Forcing dummy failure");
+      final_result = ERRINFO_NEW(-EACCES, "Dummy failure");
+      goto bye;
+   }
+
+   BS256 attached_buses = buses_bitset_from_businfo_array(all_i2c_buses, /*only_connected*/ false);
    Bit_Set_256_Iterator iter = bs256_iter_new(attached_buses);
    int busno = -1;
    while ( (busno = bs256_iter_next(iter)) >= 0) {
@@ -222,22 +228,18 @@ i2c_all_relevant_i2c_buses_rw() {
          final_result->status_code = -EACCES;
    }
 
-   if (force_failure_i2c_all_relevant_i2c_buses_rw) {
-      DBGMSG("Forcing dummy failure");
-      ERRINFO_FREE(final_result);
-      final_result = ERRINFO_NEW(-EACCES, "Dummy failure");
-   }
-
+bye:
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, final_result, "");
    return final_result;
 }
 
 
+#ifdef UNUSED
 /** Checks that all EDIDS for Display_Refs of type I2C are actually
  *  readable using I2C. There are some cases, e.g. DisplayLink devices,
  *  where the EDID can be read only from /sys.
  *
- * @return true/false
+ * @return NULL if all readable, struct Error_Info if not
  */
 Error_Info *
 i2c_all_edids_readable_using_i2c() {
@@ -261,10 +263,7 @@ i2c_all_edids_readable_using_i2c() {
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, errs, "");
    return errs;
 }
-
-
-
-
+#endif
 
 
 //
@@ -2693,7 +2692,9 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(is_laptop_for_businfo);
 
    RTTI_ADD_FUNC(simple_rw_test);
+#ifdef UNUSED
    RTTI_ADD_FUNC(i2c_all_edids_readable_using_i2c);
+#endif
    RTTI_ADD_FUNC(i2c_all_relevant_i2c_buses_rw);
 }
 

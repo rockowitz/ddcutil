@@ -84,7 +84,9 @@ void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
 
 
 Error_Info *     i2c_all_relevant_i2c_buses_rw();
+#ifdef UNUSED
 Error_Info *     i2c_all_edids_readable_using_i2c();
+#endif
 
 // Initialization
 void             subinit_i2c_bus_core();

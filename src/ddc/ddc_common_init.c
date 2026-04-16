@@ -497,8 +497,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 #endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F31)
       force_failure_i2c_all_relevant_i2c_buses_rw = true;
-   if (parsed_cmd->flags2 & CMD_FLAG2_F32)
-      force_failure_i2c_all_edids_readable_using_i2c = true;
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
