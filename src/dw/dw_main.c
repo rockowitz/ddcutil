@@ -201,8 +201,10 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   SYSLOG2(DDCA_SYSLOG_DEBUG, "Time since library initialized: %s seconds",
+   DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "Time since library initialized: %s seconds",
          formatted_elapsed_time_t(6));
+   DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "Extra delay starting %s: %d millisec",
+                                   __func__, dw_start_watch_delay_ms);
    if (dw_start_watch_delay_ms > 0) {
       SLEEP_MILLIS_WITH_SYSLOG2(DDCA_SYSLOG_DEBUG, dw_start_watch_delay_ms,
                                 "Extra delay at function start");
@@ -300,7 +302,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
       GThreadFunc watch_thread_func = dw_watch_display_connections;
 
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
                        watch_thread_func,
