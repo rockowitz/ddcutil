@@ -61,7 +61,8 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
 bool            enable_watch_displays = true;
-bool            enable_dw_start_check_dev_u2c_devices_rw = true;
+bool            enable_dw_start_check_dev_i2c_devices_rw = true;
+int             dw_start_watch_delay_ms = 0;
 
 static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
@@ -200,7 +201,14 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   if (!enable_dw_start_check_dev_u2c_devices_rw) {
+   SYSLOG2(DDCA_SYSLOG_DEBUG, "Time since library initialized: %s seconds",
+         formatted_elapsed_time_t(6));
+   if (dw_start_watch_delay_ms > 0) {
+      SLEEP_MILLIS_WITH_SYSLOG2(DDCA_SYSLOG_DEBUG, dw_start_watch_delay_ms,
+                                "Extra delay at function start");
+   }
+
+   if (!enable_dw_start_check_dev_i2c_devices_rw) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
    }
