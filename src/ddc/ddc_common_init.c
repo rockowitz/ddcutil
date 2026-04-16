@@ -515,7 +515,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
          rpt_label(0, "--i5 value must be greater than 1");
    }
    if (parsed_cmd->flags2 & CMD_FLAG2_I9_SET)
-        dw_start_watch_delay_ms  = parsed_cmd->i2;
+        dw_start_watch_delay_ms  = parsed_cmd->i9;
 }
 
 
