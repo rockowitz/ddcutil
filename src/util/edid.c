@@ -10,7 +10,7 @@
  *  to **ddcutil** are interpreted.
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -402,7 +402,7 @@ char * base_asciify_t(char * s) {
    static GPrivate  x_len_key = G_PRIVATE_INIT(g_free);
 
    char * buftemp = base_asciify(s);
-   char * buf = get_thread_dynamic_buffer(&x_key, &x_len_key, strlen(s)+1);
+   char * buf = get_thread_dynamic_buffer(&x_key, &x_len_key, strlen(buftemp)+1);
    strcpy(buf, buftemp);
    free(buftemp);
    return buf;
