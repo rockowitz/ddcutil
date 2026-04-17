@@ -104,6 +104,7 @@ Cmd_Desc * find_command(char * cmd) {
       Cmd_Desc desc = cmdinfo[ndx];
       if (is_abbrev(cmd, desc.cmd_name, desc.minchars)) {
          result = &cmdinfo[ndx];
+         break;
       }
    }
    return result;
@@ -122,6 +123,7 @@ Cmd_Desc * get_command(int cmdid) {
       Cmd_Desc desc = cmdinfo[ndx];
       if (cmdid == desc.cmd_id)  {
          result = &cmdinfo[ndx];
+         break;
       }
    }
    if (debug) {
