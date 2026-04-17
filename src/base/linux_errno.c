@@ -24,11 +24,6 @@
 
 // To consider:  use libexplain.
 
-// Forward declarations
-// static Status_Code_Info * get_negative_errno_info(int errnum);
-Status_Code_Info * find_errno_description(int errnum);
-void show_errno_desc_table();
-
 /**  Initialize linux_errno.c
  */
 // n. called from main before command line parsed, trace control not yet established
@@ -313,8 +308,7 @@ static const int errno_desc_ct = sizeof(errno_desc)/sizeof(Status_Code_Info);
 
 #define WORKBUF_SIZE 300
 static char workbuf[WORKBUF_SIZE];
-static char dummy_errno_description[WORKBUF_SIZE];
-static Status_Code_Info dummy_errno_desc;
+
 
 /** Debugging function that displays the errno description table.
  */
@@ -324,43 +318,6 @@ void show_errno_desc_table() {
       Status_Code_Info cur = errno_desc[ndx];
       printf("(%3d, %-20s, %s\n", cur.code, cur.name, cur.description);
    }
-}
-
-
-/** Simple call to get a description string for a Linux errno value.
- *
- *  For use in specifically reporting an unmodulated Linux error number.
- *
- *  \param  error_number  system errno value (positive)
- *  \return  string describing the error.
- *
- * The string returned is valid until the next call to this function.
- *
- * The errno value must be passed as a positive number.
- */
-char * linux_errno_desc(int error_number) {
-   bool debug = false;
-   if (debug)
-      printf("(%s) error_number = %d\n", __func__, error_number);
-   assert(error_number >= 0);
-   Status_Code_Info * pdesc = find_errno_description(error_number);
-   if (pdesc) {
-      snprintf(workbuf, WORKBUF_SIZE, "%s(%d): %s",
-               pdesc->name, error_number, pdesc->description);
-   }
-   else {
-      snprintf(workbuf, WORKBUF_SIZE, "%d: %s",
-               error_number, strerror(error_number));
-   }
-   if (debug)
-      printf("(%s) error_number=%d, returning: |%s|\n", __func__, error_number, workbuf);
-   return workbuf;
-}
-
-
-char * linux_errno_name(int error_number) {
-   Status_Code_Info * pdesc = find_errno_description(error_number);
-   return pdesc ? pdesc->name : NULL;
 }
 
 
@@ -398,6 +355,10 @@ Status_Code_Info * find_errno_description(int errnum) {
 }
 
 
+#ifdef UNUSED
+static char dummy_errno_description[WORKBUF_SIZE];
+static Status_Code_Info dummy_errno_desc;
+
 // n. returned value is valid only until next call
 Status_Code_Info * create_dynamic_errno_info(int errnum) {
    Status_Code_Info * result = &dummy_errno_desc;
@@ -414,8 +375,57 @@ Status_Code_Info * create_dynamic_errno_info(int errnum) {
 
    return result;
 }
+#endif
 
 
+/** Simple call to get a description string for a Linux errno value.
+ *
+ *  For use in specifically reporting an unmodulated Linux error number.
+ *
+ *  \param  error_number  system errno value (positive)
+ *  \return  string describing the error.
+ *
+ * The string returned is valid until the next call to this function.
+ *
+ * The errno value must be passed as a positive number.
+ */
+char * linux_errno_desc(int error_number) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) error_number = %d\n", __func__, error_number);
+   assert(error_number >= 0);
+   Status_Code_Info * pdesc = find_errno_description(error_number);
+   if (pdesc) {
+      snprintf(workbuf, WORKBUF_SIZE, "%s(%d): %s",
+               pdesc->name, error_number, pdesc->description);
+   }
+   else {
+      snprintf(workbuf, WORKBUF_SIZE, "%d: %s",
+               error_number, strerror(error_number));
+   }
+   if (debug)
+      printf("(%s) error_number=%d, returning: |%s|\n", __func__, error_number, workbuf);
+   return workbuf;
+}
+
+
+/** Gets the name for a Linux error number.
+ *
+ *  @param  error_number  errno value to look up
+ *  @return string representation of value, NULL if unrecognized
+ */
+char * linux_errno_name(int error_number) {
+   Status_Code_Info * pdesc = find_errno_description(error_number);
+   return pdesc ? pdesc->name : NULL;
+}
+
+
+/** Gets the Status_Code_Info struct for a linux error number
+ *
+ *  @param   error_number  errno value to look up
+ *  @return  pointer to Status_Code_Info struct, NULL if not found
+ *
+ */
 Status_Code_Info * get_errno_info(int errnum) {
    Status_Code_Info * result = find_errno_description(errnum);
    return result;
