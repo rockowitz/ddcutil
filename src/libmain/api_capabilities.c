@@ -3,7 +3,7 @@
  *  Capabilities related functions of the API
  */
 
-// Copyright (C) 2015-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -578,6 +578,8 @@ ddca_feature_list_from_capabilities(
       DDCA_Capabilities * parsed_caps)
 {
    DDCA_Feature_List result = {{0}};
+   if (!parsed_caps)
+      return result;
    for (int ndx = 0; ndx < parsed_caps->vcp_code_ct; ndx++) {
       DDCA_Cap_Vcp curVcp = parsed_caps->vcp_codes[ndx];
       feature_list_add(&result, curVcp.feature_code);
