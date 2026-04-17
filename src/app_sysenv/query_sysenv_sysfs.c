@@ -204,7 +204,7 @@ void report_modalias(char * cur_dir_name, int depth) {
 /** Reports one directory whose name is of the form /sys/bus/pci/devices/nnnn:nn:nn.n/driver
  *
  *  Processes only files whose name is of the form i2c-n,
- *  reporting the i2c-n dname and the the contained name attribute.
+ *  reporting the i2c-n dname and the contained name attribute.
  *
  *  This function is passed from #each_video_pci_device()  to #dir_foreach() ,
  *  which in turn invokes this function.

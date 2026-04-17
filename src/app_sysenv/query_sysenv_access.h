@@ -1,6 +1,6 @@
 /** @file query_sysenv_access.h
  *
- *  Checks on the the existence of and access to /dev/i2c devices
+ *  Checks on the existence of and access to /dev/i2c devices
  */
 
 // Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>

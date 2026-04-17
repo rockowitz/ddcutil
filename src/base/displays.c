@@ -1653,7 +1653,7 @@ int hiddev_name_to_number(const char * hiddev_name) {
  *  \param   hiddev_number device number
  *  \return  device name
  *
- *  \remark It the the responsibility of the caller to free the returned string.
+ *  \remark It is the responsibility of the caller to free the returned string.
  */
 char * hiddev_number_to_name(int hiddev_number) {
    assert(hiddev_number >= 0);
