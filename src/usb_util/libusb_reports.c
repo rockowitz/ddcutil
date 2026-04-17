@@ -5,7 +5,7 @@
  * libusb is not currently used by ddcutil.  This code is retained for reference.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
 // Portions adapted from lsusb.c (command lsusb) by Thomas Sailer and David Brownell
@@ -874,19 +874,30 @@ void report_libusb_device_descriptor(
 }
 
 
+
+/** Represents a path as a colon separated string of numbers.
+ *
+ *   @param   path   path to represent
+ *   @param   partct number of ports in the path
+ *   @param   buf    buffer in which to return the result
+ *   @param   bufsz  buffer size
+ *   @feturn  string representation
+ */
 char * format_port_number_path(unsigned char path[], int portct, char * buf, int bufsz) {
    *buf = 0;
    int ndx;
 
    for (ndx=0; ndx < portct; ndx++) {
-      char *end = buf + strlen(buf);
-      // printf("end=%p\n", end);
+      int used = strlen(buf);
+      int remaining = bufsz - used;
+      if (remaining <= 0)
+         break;
       if (ndx == 0)
-         sprintf(end, "%u", path[ndx]);
+         g_snprintf(buf + used, remaining, "%u", path[ndx]);
       else
-         sprintf(end, ".%u", path[ndx]);
-    }
-    return buf;
+         g_snprintf(buf + used, remaining, ".%u", path[ndx]);
+   }
+   return buf;
 }
 
 
