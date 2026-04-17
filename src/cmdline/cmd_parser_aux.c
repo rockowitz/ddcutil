@@ -384,13 +384,15 @@ Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_
       // ok = parse_feature_ids(vals, vals_ct, cmd_id, fsref);
       assert(cmd_id == CMDID_GETVCP || cmd_id == CMDID_VCPINFO);
       fsref->subset = VCP_SUBSET_NONE;
+      ok = true;
       for (int ndx = 0; ndx < vals_ct; ndx++) {
          Byte feature_hexid = 0;   // temp
-         ok = any_one_byte_hex_string_to_byte_in_buf(vals[ndx], &feature_hexid);
-         DBGMSF(debug, "vals[ndx]=%s, ok=%s, feature_hexid=0x%02x", vals[ndx], sbool(ok), feature_hexid);
-         if (ok) {
+         bool cur_ok = any_one_byte_hex_string_to_byte_in_buf(vals[ndx], &feature_hexid);
+         DBGMSF(debug, "vals[ndx]=%s, ok=%s, feature_hexid=0x%02x", vals[ndx], sbool(cur_ok), feature_hexid);
+         if (cur_ok)
             fsref->features = bs256_insert(fsref->features, feature_hexid);
-         }
+         else
+            ok = false;
       }
       if (ok)
          fsref->subset = VCP_SUBSET_MULTI_FEATURES;
