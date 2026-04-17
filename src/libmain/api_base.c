@@ -1431,7 +1431,7 @@ ddca_get_sleep_multiplier()
       result = pdd->user_sleep_multiplier;
    }
 #ifdef TSD
-   double result = tsd_get_sleep_multiplier_factor();
+   result = tsd_get_sleep_multiplier_factor();
 #endif
    DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
    return result;
