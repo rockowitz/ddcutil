@@ -3,7 +3,7 @@
  * Linux errno descriptions
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -360,7 +360,7 @@ char * linux_errno_desc(int error_number) {
 
 char * linux_errno_name(int error_number) {
    Status_Code_Info * pdesc = find_errno_description(error_number);
-   return pdesc->name;
+   return pdesc ? pdesc->name : NULL;
 }
 
 
