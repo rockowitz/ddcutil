@@ -20,7 +20,6 @@ bool       is_module_built_in(const char * module_name);
 #define KERNEL_MODULE_LOADABLE_FILE 2     // module is a loadable file
 
 int        module_status_by_modules_builtin_or_existence(const char * module_name);
-bool       is_module_loadable(const char * module_name);
 
 intmax_t   get_thread_id();
 intmax_t   get_process_id();
