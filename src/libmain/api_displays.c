@@ -430,7 +430,7 @@ ddca_get_display_ref(
   DDCA_Status rc = ddci_get_display_ref(did, dref_loc);
 
   API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc,
-                       "*dref_loc=%p", psc_name_code(rc), *dref_loc);
+                       "*dref_loc=%p", *dref_loc);
   return rc;
 }
 
@@ -450,7 +450,7 @@ ddca_create_display_ref(
    DDCA_Status rc = ddci_get_display_ref(did, dref_loc);
 
    API_EPILOG_BEFORE_RETURN(debug, RESPECT_QUIESCE, rc,
-                        "*dref_loc=%p", psc_name_code(rc), *dref_loc);
+                        "*dref_loc=%p", *dref_loc);
    return rc;
 }
 
