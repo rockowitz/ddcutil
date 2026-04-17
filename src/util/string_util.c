@@ -980,7 +980,7 @@ int indirect_strcmp(const void * a, const void * b) {
  * @retval false  normal append
  *
  * @remark
- * Consider allowing the truncation maker, currently "..." to be
+ * Consider allowing the truncation marker, currently "..." to be
  * specified as a parameter.
  */
 bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval)
