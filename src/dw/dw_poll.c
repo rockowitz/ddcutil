@@ -408,13 +408,11 @@ else {
    if (deferred_events)
       g_array_free(deferred_events, true);
 #ifdef WATCH_DPMS
-   if (watch_dpms)
-      g_ptr_array_free(sleepy_connectors, true);
+   // bs_sleepy_buses is a local bitset and doesn't need freeing
 #endif
    free_current_traced_function_stack();
    g_thread_exit(0);
-   assert(false);    // avoid clang warning re wdd use after free
-   return NULL;    // satisfy compiler check that value returned
+   return NULL;
 }
 
 

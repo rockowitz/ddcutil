@@ -252,7 +252,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
-         "                                         extra_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
+         "                                         initial_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
          initial_stabilization_millisec, stabilization_poll_millisec);
 
    g_mutex_lock(&watch_thread_mutex);
@@ -341,12 +341,16 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
    g_mutex_lock(&watch_thread_mutex);
 
    if (watch_thread) {
+      // Capture values from global_wdd before potential UAF if the thread finishes
+      DDC_Watch_Mode mode = global_wdd->watch_mode;
+      XEvent_Data * evdata = global_wdd->evdata;
+
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "resolved_watch_mode = %s",
-                                            watch_mode_name(global_wdd->watch_mode));
+                                            watch_mode_name(mode));
 #ifdef USE_X11
-      if (global_wdd->watch_mode == Watch_Mode_Xevent) {
+      if (mode == Watch_Mode_Xevent) {
          if (terminate_using_x11_event) {   // for testing, does not currently work
-            dw_send_x11_termination_message(global_wdd->evdata);
+            dw_send_x11_termination_message(evdata);
             SLEEP_MILLIS_WITH_SYSLOG(2*1000, "After ddc_send_x11_termination_message()");
          }
          else {
@@ -371,6 +375,8 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
          g_thread_unref(recheck_thread);
       }
       watch_thread = NULL;
+      recheck_thread = NULL;
+      global_wdd = NULL;
       if (enabled_classes_loc)
          *enabled_classes_loc = active_watch_displays_classes;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
@@ -390,6 +396,8 @@ bool dw_is_watch_displays_executing() {
    return watch_thread;
 }
 
+static GMutex redetect_mutex;
+static bool   redetect_in_progress = false;
 
 /** If the watch thread is currently executing, returns the
  *  currently active display event classes as a bit flag.
@@ -429,6 +437,22 @@ dw_redetect_displays() {
    bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
+
+   g_mutex_lock(&redetect_mutex);
+   if (redetect_in_progress) {
+      SYSLOG2(DDCA_SYSLOG_WARNING, "Display redetection already in progress. Ignoring concurrent call.");
+      g_mutex_unlock(&redetect_mutex);
+      return NULL;
+   }
+   redetect_in_progress = true;
+   g_mutex_unlock(&redetect_mutex);
+
+   // Wait for any active callback threads to finish, as they may be using display refs
+   // that we are about to discard.
+   while (active_callback_thread_ct() > 0) {
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Waiting for %d callback threads to complete...", active_callback_thread_ct());
+      SLEEP_MILLIS_WITH_STATS(100);
+   }
 
    Error_Info * err = NULL;
    DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
@@ -484,6 +508,11 @@ dw_redetect_displays() {
    }
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
+
+   g_mutex_lock(&redetect_mutex);
+   redetect_in_progress = false;
+   g_mutex_unlock(&redetect_mutex);
+
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "all_displays=%p, all_displays->len = %d",
                                    all_display_refs, all_display_refs->len);
    return err;
