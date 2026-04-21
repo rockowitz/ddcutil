@@ -154,7 +154,6 @@ retry:
       else {
          if (!dynamic_sleep_was_active) {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                  "busno=%d, sleep-multiplier=%d, Testing for unsupported feature 0x%02x returned %s",
                   "busno=%d, sleep-multiplier=%5.2f, Testing for unsupported feature 0x%02x returned %s",
                   businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
                   feature_code, errinfo_summary(ddc_excp));
@@ -331,7 +330,6 @@ check_supported_feature(Display_Handle *      dh,
       free(msg);
 
       dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-      if (ddc_excp->status_code != DDCRC_DISCONNECTED) {
       // If the display was just added, it might be slow to respond even if it appears to be
       // disconnected. Give it a chance to stabilize.
       if (ddc_excp->status_code != DDCRC_DISCONNECTED || newly_added) {
@@ -341,24 +339,18 @@ check_supported_feature(Display_Handle *      dh,
                                          initial_multiplier < 1.0f))
          {
             if (newly_added) {
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Additional 1 second sleep for newly added display (A)");
-               SLEEP_MILLIS_WITH_SYSLOG(1000, "Additional 1 second sleep for newly added display (C)");
                char * s_reason = "Additional 1 second sleep for newly added display (C)";
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s_reason);
                SLEEP_MILLIS_WITH_SYSLOG(1000, s_reason);
             }
             // turn off optimization in case it's on
-            if (dynamic_sleep_active ) {
             if (dynamic_sleep_active || newly_added) {
                FREE(dref->communication_error_summary);
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
-               pdd_set_dynamic_sleep_active(dref->pdd, false);
                if (dynamic_sleep_active) {
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
                   pdd_set_dynamic_sleep_active(dref->pdd, false);
                }
                ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
-               ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
                ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
                if (!ddc_excp) {
                   *p_shsl = HI_LO_BYTES_TO_SHORT(parsed_response_loc->sh, parsed_response_loc->sl);
@@ -776,4 +768,3 @@ void init_ddc_initial_checks() {
    RTTI_ADD_FUNC(read_unsupported_feature);
    RTTI_ADD_FUNC(check_supported_feature);
 }
-
