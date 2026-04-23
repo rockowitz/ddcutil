@@ -552,7 +552,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
 Bit_Set_256
 dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "prior =%s, some_displays_disconnected=%s, extra_stabilization_millisec=%d",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "prior =%s, some_displays_disconnected=%s, initial_stabilization_millisec=%d",
          BS256_REPR(bs_prior), SBOOL(some_displays_disconnected), initial_stabilization_millisec);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_prior:", BS256_REPR(bs_prior));
 
