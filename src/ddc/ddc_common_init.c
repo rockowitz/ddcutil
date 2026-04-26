@@ -532,6 +532,10 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    DBGTRC_STARTING(debug, DDCA_TRC_DDC, "parsed_cmd = %p", parsed_cmd);
    Error_Info * final_result = NULL;
 
+   install_segv_handler();
+   // DBGMSF(true, "forcing a segfault to test handler...");
+   // *(volatile int *)0 = 1;
+
    redirect_reports_to_syslog = parsed_cmd->flags2 & CMD_FLAG2_F8;
 
    uid_t ruid, euid, suid;
