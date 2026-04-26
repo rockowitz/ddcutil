@@ -11,11 +11,13 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
+#include <execinfo.h>      // for segv handler
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
 #include <grp.h>
 #include <inttypes.h>
 #include <pwd.h>
+#include <signal.h>        // for segv handler
 #include <stdbool.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -46,6 +48,7 @@
 #include "string_util.h"
 #include "subprocess_util.h"
 #include "timestamp.h"
+#include "traced_function_stack.h"
 
 #include "linux_util.h"
 
@@ -760,3 +763,48 @@ void diagnose_open_failure_to_syslog(const char * fqfn, const char * msg) {
    DBGF(debug, "Done");
 }
 
+
+// SEGFAULT handler
+
+static struct sigaction old_segv;
+
+/** Handler for segmentation faults.  Logs the fault and dumps the traced function
+ *  stack syslog, then invokes the previous handler.
+ *
+ *  @param sig      signal number (should be SIGSEGV)
+ *  @param info     pointer to siginfo_t structure with details about the signal
+ *  @param ucontext pointer to ucontext_t structure with context at time of signal
+ */
+static void segv_handler(int sig, siginfo_t *info, void *ucontext) {
+#ifdef BACKTRACE
+   // Show backtrace
+    void *frames[32];
+    int n = backtrace(frames, 32);
+    backtrace_symbols_fd(frames, n, STDERR_FILENO);
+#endif
+
+    syslog(LOG_ERR, "Segmentation fault (signal %d)", sig);
+    current_traced_function_stack_to_syslog(LOG_ERR, TFS_MOST_RECENT_LAST);
+
+    sigaction(SIGSEGV, &old_segv, NULL);
+
+    if (old_segv.sa_flags & SA_SIGINFO) {
+        old_segv.sa_sigaction(sig, info, ucontext);
+    } else if (old_segv.sa_handler == SIG_DFL) {
+        raise(SIGSEGV);
+    } else if (old_segv.sa_handler != SIG_IGN) {
+        old_segv.sa_handler(sig);
+    }
+}
+
+
+void install_segv_handler(void) {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof sa);
+    sa.sa_sigaction = segv_handler;
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+
+    sigaction(SIGSEGV, NULL, &old_segv);
+    sigaction(SIGSEGV, &sa, NULL);
+}

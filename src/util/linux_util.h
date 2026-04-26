@@ -35,4 +35,5 @@ GPtrArray* rpt_lsof_collect(               const char * fqfn);
 GPtrArray* diagnose_open_failure_collect(  const char * fqfn, const char * msg, GPtrArray* collector);
 void       diagnose_open_failure_to_syslog(const char * fqfn, const char * msg);
 
+void       install_segv_handler(void);
 #endif /* LINUX_UTIL_H_ */
