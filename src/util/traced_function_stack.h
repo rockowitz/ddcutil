@@ -1,6 +1,6 @@
 /** @file traced_function_stack.h */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef TRACED_FUNCTION_STACK_H_
@@ -23,10 +23,14 @@ void       push_traced_function(const char * funcname);
 char*      peek_traced_function();
 void       pop_traced_function(const char * funcname);
 
+GPtrArray* get_current_traced_function_stack_contents(bool most_recent_last);
+
+// Symbolic value for the **revers** arguments
+#define TFS_MOST_RECENT_FIRST  false
+#define TFS_MOST_RECENT_LAST   true
 void       collect_traced_function_stack(GPtrArray* collector, GQueue * stack, bool reverse, int stack_adjust);
 void       dbgrpt_current_traced_function_stack(bool reverse, bool show_tid, int depth);
 int        current_traced_function_stack_size();
-GPtrArray* get_current_traced_function_stack_contents(bool most_recent_last);
 void       current_traced_function_stack_to_syslog(int syslog_priority, bool reverse);
 
 GPtrArray* stash_current_traced_function_stack();
