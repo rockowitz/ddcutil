@@ -1589,8 +1589,10 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
       char * msg = g_strdup_printf(
             "Failed to find connector name for /dev/i2c-%d, %s at line %d in file %s. ",
             businfo->busno,  __func__, __LINE__, __FILE__);
-      if (sysfs_connector_directories_exist())
-         LOGABLE_MSG(DDCA_SYSLOG_ERROR,"%s", msg);
+      if (sysfs_connector_directories_exist()) {
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+         // LOGABLE_MSG(DDCA_SYSLOG_ERROR,"%s", msg);
+      }
       else {
          SYSLOG2(DDCA_SYSLOG_INFO, "%s", msg);
          SYSLOG2(DDCA_SYSLOG_INFO, "drm connector directories do not exist");
