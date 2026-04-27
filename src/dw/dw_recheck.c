@@ -194,8 +194,11 @@ gpointer dw_recheck_displays_func(gpointer data) {
          uint64_t pop_interval_micros = MILLIS2MICROS(pop_interval_millis);
          rqe = g_async_queue_timeout_pop(recheck_queue, pop_interval_micros);
          if (terminate_watch_thread) {
-            continue;
-         }
+            if (rqe) {
+               dw_free_recheck_queue_entry(rqe);
+               rqe = NULL;
+            }
+        }
       }
       if (terminate_watch_thread) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "terminating recheck thread execution");
@@ -280,11 +283,12 @@ gpointer dw_recheck_displays_func(gpointer data) {
          emit_recheck_debug_msg(debug, DDCA_SYSLOG_ERROR,
                "Flushing request queue entry for %s ",
                   dref_reprx_t(rqe->dref));
+         dw_free_recheck_queue_entry(rqe);
       }
    }
 
    g_queue_free(to_check_again);
-   free(rdd);
+   dw_free_recheck_displays_data(rdd);   // actually just a free()
    DBGTRC_DONE(debug, TRACE_GROUP, "terminating recheck thread");
    free_current_traced_function_stack();
    // recheck_thread_active = false;
