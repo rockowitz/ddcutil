@@ -27,6 +27,7 @@
 #include "util/common_inlines.h"
 #include "util/coredefs.h"
 #include "util/data_structures.h"
+#include "util/dbus_util.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/glib_util.h"
@@ -389,6 +390,24 @@ else {
          }
       }
 #endif
+
+      uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
+      uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
+      char * msg = g_strdup_printf(
+                      "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
+                      elapsed_ns, elapsed_ms);
+      DBGTRC(debug, TRACE_GROUP, "%s", msg);
+      syslog(LOG_WARNING, "%s", msg);
+      free(msg);
+
+      if (elapsed_ms < 1000) {
+         uint64_t remaining_sleep_ms = 1000 - elapsed_ms;
+         char * msg2 = g_strdup_printf("Sleeping for %"PRIu64, remaining_sleep_ms);
+         syslog(LOG_WARNING, "%s", msg2);
+         DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
+         LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
+         free(msg2);
+      }
 
       invoke_process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
             deferred_events, displays_to_recheck);
