@@ -252,7 +252,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
          "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
    MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
-         "                                         extra_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
+         "                                         initial_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
          initial_stabilization_millisec, stabilization_poll_millisec);
 
    g_mutex_lock(&watch_thread_mutex);
