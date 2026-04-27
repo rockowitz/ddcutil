@@ -153,15 +153,13 @@ retry:
       }
       else {
          if (!dynamic_sleep_was_active) {
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                  "busno=%d, sleep-multiplier=%d, Testing for unsupported feature 0x%02x returned %s",
-                  "busno=%d, sleep-multiplier=%5.2f, Testing for unsupported feature 0x%02x returned %s",
+            char * msg = g_strdup_printf( "busno=%d, sleep-multiplier=%5.2f,"
+                  " Testing for unsupported feature 0x%02x returned %s",
                   businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
                   feature_code, errinfo_summary(ddc_excp));
-            SYSLOG2(DDCA_SYSLOG_ERROR,
-                  "busno=%d, sleep-multiplier=%5.2f, Testing for unsupported feature 0x%02x returned %s",
-                  businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
-                  feature_code, errinfo_summary(ddc_excp));
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", msg);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msg);
+            free(msg);
          }
          if (pdd_is_dynamic_sleep_active(pdd) ) {
             dynamic_sleep_was_active = true;
@@ -170,15 +168,13 @@ retry:
             SYSLOG2(DDCA_SYSLOG_ERROR, "Turning off dynamic sleep and retrying");
             pdd_set_dynamic_sleep_active(pdd, false);
             ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                  "busno=%d, sleep-multiplier=%5.2f, Retesting for unsupported feature 0x%02x returned %s",
+            char * msg = g_strdup_printf( "busno=%d, sleep-multiplier=%5.2f,"
+                  " Retesting for unsupported feature 0x%02x returned %s",
                   businfo->busno,   pdd_get_adjusted_sleep_multiplier(pdd),
                   feature_code, errinfo_summary(ddc_excp));
-            SYSLOG2(DDCA_SYSLOG_ERROR,
-                  "busno=%d, sleep-multiplier =%5.2f, Retesting for unsupported feature 0x%02x returned %s",
-                  businfo->busno,
-                  pdd_get_adjusted_sleep_multiplier(pdd),
-                  feature_code, errinfo_summary(ddc_excp));
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", msg);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msg);
+            free(msg);
             goto retry;
          }
       }
@@ -331,9 +327,7 @@ check_supported_feature(Display_Handle *      dh,
       free(msg);
 
       dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-      if (ddc_excp->status_code != DDCRC_DISCONNECTED) {
-      // If the display was just added, it might be slow to respond even if it appears to be
-      // disconnected. Give it a chance to stabilize.
+
       if (ddc_excp->status_code != DDCRC_DISCONNECTED || newly_added) {
          bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
          if (newly_added || (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES &&
@@ -341,24 +335,22 @@ check_supported_feature(Display_Handle *      dh,
                                          initial_multiplier < 1.0f))
          {
             if (newly_added) {
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Additional 1 second sleep for newly added display (A)");
-               SLEEP_MILLIS_WITH_SYSLOG(1000, "Additional 1 second sleep for newly added display (C)");
-               char * s_reason = "Additional 1 second sleep for newly added display (C)";
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s_reason);
-               SLEEP_MILLIS_WITH_SYSLOG(1000, s_reason);
+               // If the display was just added, it might be slow to respond even if it appears
+               // to be disconnected. Give it a chance to stabilize.
+               char * msg = g_strdup("Additional 1 second sleep for newly added display");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s (A)", msg);
+               SLEEP_MILLIS_WITH_SYSLOG(1000, "%s (C)", msg);
+               free(msg);
             }
             // turn off optimization in case it's on
             if (dynamic_sleep_active ) {
-            if (dynamic_sleep_active || newly_added) {
-               FREE(dref->communication_error_summary);
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
                pdd_set_dynamic_sleep_active(dref->pdd, false);
-               if (dynamic_sleep_active) {
-                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
-                  pdd_set_dynamic_sleep_active(dref->pdd, false);
-               }
+            }
+
+            if (dynamic_sleep_active || newly_added) {
+               FREE(dref->communication_error_summary);
                ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, TRACE_GROUP));
-               ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
                ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
                if (!ddc_excp) {
                   *p_shsl = HI_LO_BYTES_TO_SHORT(parsed_response_loc->sh, parsed_response_loc->sl);
@@ -366,7 +358,8 @@ check_supported_feature(Display_Handle *      dh,
 
                dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
                char * s = g_strdup_printf(
-                     "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
+                     "busno=%d, sleep-multiplier=%5.2f."
+                     " Retesting for supported feature 0x%02x returned %s",
                      businfo->busno,
                      pdd_get_adjusted_sleep_multiplier(pdd),
                      feature_code,
