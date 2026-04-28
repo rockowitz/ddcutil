@@ -579,16 +579,20 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
       goto bye;
    }
 
-   ASSERT_IFF(dref->disconnected, !dref->detail);
-   if (dref->disconnected) {
+   g_mutex_lock(&dref->disconnect_mutex);
+   bool is_disconnected  = dref->disconnected;
+   void * detail_snapshot = dref->detail;
+   g_mutex_unlock(&dref->disconnect_mutex);
+
+   ASSERT_IFF(is_disconnected, !detail_snapshot);
+   if (is_disconnected) {
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "");
       goto bye;
    }
 
-
    bool skip_ddc_checks0 = skip_ddc_checks;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
-      businfo = dref->detail;
+      businfo = (I2C_Bus_Info *) detail_snapshot;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "I2C_BUS_DDC_CHECKS_IGNORABLE is set: %s",
            SBOOL(businfo->flags & I2C_BUS_DDC_CHECKS_IGNORABLE) );
       if (!(businfo->flags&I2C_BUS_ADDR_X37)) {
