@@ -67,7 +67,8 @@ int             dw_start_watch_delay_ms = 0;
 static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
 // static GThread * callback_thread;
-static GMutex    watch_thread_mutex;
+static GMutex         watch_thread_mutex;
+static _Atomic(bool)  watch_thread_active = false;
 static DDCA_Display_Event_Class active_watch_displays_classes = DDCA_EVENT_CLASS_NONE;
 static Watch_Displays_Data * global_wdd;     // needed to pass to dw_stop_watch_displays()
 
@@ -307,6 +308,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
                        "watch_displays",             // optional thread name
                        watch_thread_func,
                        wdd);
+      watch_thread_active = true;
       active_watch_displays_classes = event_classes;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started watch_thread = %p", watch_thread);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil watch thread %p started", watch_thread);
@@ -371,6 +373,7 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
          g_thread_unref(recheck_thread);
       }
       watch_thread = NULL;
+      watch_thread_active = false;
       if (enabled_classes_loc)
          *enabled_classes_loc = active_watch_displays_classes;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
@@ -387,7 +390,7 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
 
 
 bool dw_is_watch_displays_executing() {
-   return watch_thread;
+   return watch_thread_active;
 }
 
 
