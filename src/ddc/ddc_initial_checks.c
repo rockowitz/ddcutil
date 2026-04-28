@@ -585,6 +585,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
       goto bye;
    }
 
+
    bool skip_ddc_checks0 = skip_ddc_checks;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       businfo = dref->detail;
@@ -600,6 +601,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
    }
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "skip_ddc_checks0 = %s", SBOOL(skip_ddc_checks0));
    if (skip_ddc_checks0) {
+      assert(execution_mode == MODE_DDCUTIL);
       dref->flags |= (DREF_DDC_COMMUNICATION_CHECKED |
                       DREF_DDC_COMMUNICATION_WORKING |
                       DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED);
