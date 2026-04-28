@@ -422,7 +422,7 @@ else {
    // n. slept == 0 if no sleep was performed
    DBGTRC_DONE(debug, TRACE_GROUP,
          "Terminating thread.  Final polling sleep was %d millisec.", slept_millisec);
-   g_ptr_array_free(displays_to_recheck, true);
+   g_ptr_array_free(displays_to_recheck, false);
    dw_free_watch_displays_data(wdd);
    if (deferred_events)
       g_array_free(deferred_events, true);
