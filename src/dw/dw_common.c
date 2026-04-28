@@ -73,8 +73,8 @@ uint16_t  udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
 uint16_t  poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 uint16_t  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
 
-bool      terminate_watch_thread         = false;
-bool      terminate_using_x11_event      = false;
+_Atomic(bool)      terminate_watch_thread         = false;
+_Atomic(bool)      terminate_using_x11_event      = false;
 GMutex    master_dw_mutex;
 #ifdef LAPTOPS_IGNORABLE
 bool      watch_laptops                  = false;
