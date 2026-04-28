@@ -557,6 +557,21 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
    Error_Info * err = NULL;
    I2C_Bus_Info * businfo = NULL;
 
+   // Clear the flags that are set by this function and its callees, in case it is being called
+   // on a reconnected display or on a recheck.
+
+#define DREF_FLAGS_SET_BY_INITIAL_CHECKS ( \
+                             DREF_DDC_COMMUNICATION_CHECKED | \
+                             DREF_DDC_COMMUNICATION_WORKING | \
+                             DREF_UNSUPPORTED_CHECKED | \
+                             DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED | \
+                             DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED | \
+                             DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED | \
+                             DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED | \
+                             DREF_DDC_BUSY)
+
+   dref->flags &= ~(DREF_FLAGS_SET_BY_INITIAL_CHECKS);
+
    bool disabled_mmk = is_ignored_mmk(*dref->mmid); // is this monitor model disabled?
    if (disabled_mmk) {
       dref->flags |= DREF_MMK_IGNORED;

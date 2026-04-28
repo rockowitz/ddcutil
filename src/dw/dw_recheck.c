@@ -125,7 +125,6 @@ dw_recheck_dref(Display_Ref * dref) {
    }
    else {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Obtained lock on %s:", dref_reprx_t(dref));
-      dref->flags = 0;
       err = ddc_initial_checks_by_dref(dref, false);
       dref_unlock(dref);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Released lock on %s:", dref_reprx_t(dref));
