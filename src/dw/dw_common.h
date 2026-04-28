@@ -18,16 +18,16 @@
 #include "dw_xevent.h"
 #endif
 
-extern uint16_t   initial_stabilization_millisec;
-extern uint16_t   stabilization_poll_millisec;
-extern uint16_t   udev_watch_loop_millisec;
-extern uint16_t   poll_watch_loop_millisec;
-extern uint16_t   xevent_watch_loop_millisec;
-extern _Atomic(bool)       terminate_watch_thread;
-extern _Atomic(bool)       terminate_using_x11_event;
-extern GMutex     master_dw_mutex;
+extern _Atomic(uint16_t)  initial_stabilization_millisec;
+extern _Atomic(uint16_t)  stabilization_poll_millisec;
+extern _Atomic(uint16_t)  udev_watch_loop_millisec;
+extern _Atomic(uint16_t)  poll_watch_loop_millisec;
+extern _Atomic(uint16_t)  xevent_watch_loop_millisec;
+extern _Atomic(bool)      terminate_watch_thread;
+extern _Atomic(bool)      terminate_using_x11_event;
+extern GMutex             master_dw_mutex;
 #ifdef LAPTOPS_IGNORABLE
-extern bool       watch_laptops;
+extern bool               watch_laptops;
 #endif
 
 uint32_t  dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);

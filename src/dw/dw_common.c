@@ -67,11 +67,14 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
-uint16_t  initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
-uint16_t  stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
-uint16_t  udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
-uint16_t  poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
-uint16_t  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+// Timing globals are atomic to handle concurrent reads in watch
+// thread and writes by ddca_set_display_settings()
+_Atomic(uint16_t)  initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
+_Atomic(uint16_t)  stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
+_Atomic(uint16_t)  udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
+_Atomic(uint16_t)  poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
+_Atomic(uint16_t)  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+
 _Atomic(bool)  terminate_watch_thread    = false;
 _Atomic(bool)  terminate_using_x11_event = false;
 GMutex    master_dw_mutex;
