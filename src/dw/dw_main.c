@@ -68,6 +68,9 @@ static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
 // static GThread * callback_thread;
 static GMutex         watch_thread_mutex;
+// Flag watch_thread_active is written only under watch_thread_mutex (so mutations are serialized),
+// but dw_is_watch_displays_executing() reads it atomically without the lock, so can never hang
+// even when dw_stop_watch_displays(wait=true) is blocked inside g_thread_join() with the mutex held.
 static _Atomic(bool)  watch_thread_active = false;
 static DDCA_Display_Event_Class active_watch_displays_classes = DDCA_EVENT_CLASS_NONE;
 static Watch_Displays_Data * global_wdd;     // needed to pass to dw_stop_watch_displays()
