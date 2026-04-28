@@ -254,7 +254,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       break;
    }
 
-   TRACED_ASSERT(dref->flags & (DREF_DDC_COMMUNICATION_CHECKED|DREF_DPMS_SUSPEND_STANDBY_OFF));
+   TRACED_ASSERT(dref->flags & (DREF_DDC_COMMUNICATION_CHECKED));
 
    DDCA_Output_Level output_level = get_output_level();
    Monitor_Model_Key mmk = mmk_value_from_edid(dref->pedid);
@@ -365,9 +365,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             rpt_vstring(d1, msg);
             if (vmsg && output_level >= DDCA_OL_VERBOSE)
                rpt_vstring(d1, vmsg);
-            if (dref->dispno > 0 && (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)) {
-               report_drm_dpms_status(d1, businfo->drm_connector_name);
-            }
+            // if (dref->dispno > 0 && (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)) {
+            //    report_drm_dpms_status(d1, businfo->drm_connector_name);
+            // }
          }
          free(drm_dpms);
          free(drm_status);
@@ -378,10 +378,10 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       else {    // communication working
          // if (dref->dispno == DISPNO_PHANTOM)
          //    rpt_vstring(d1, "Associated non-phantom display: %s", dref_repr_t(dref->actual_display));
-         if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
-            report_drm_dpms_status(1, businfo->drm_connector_name);
-            rpt_label(1, "DDC communication appears to work, but output is likely invalid.");
-         }
+         // if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
+         //    report_drm_dpms_status(1, businfo->drm_connector_name);
+         //    rpt_label(1, "DDC communication appears to work, but output is likely invalid.");
+         // }
          bool comm_error_occurred = false;
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
          // DBGMSG("vspec = %d.%d", vspec.major, vspec.minor);

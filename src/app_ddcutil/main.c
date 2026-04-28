@@ -571,10 +571,10 @@ find_dref_by_dsel(
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Synthetic Display_Ref");
                final_result = DDCRC_OK;
             }
-            if (dref && (dref->flags&DREF_DPMS_SUSPEND_STANDBY_OFF)) {
-               // should go nowhere, but just in case:
-               f0printf(outf, "Monitor on bus /dev/i2c-%d is in a DPMS sleep mode. Expect DDC errors.", busno);
-            }
+            // if (dref && (dref->flags&DREF_DPMS_SUSPEND_STANDBY_OFF)) {
+            //    // should go nowhere, but just in case:
+            //    f0printf(outf, "Monitor on bus /dev/i2c-%d is in a DPMS sleep mode. Expect DDC errors.", busno);
+            // }
          }  // has edid
          else {   // no EDID found
             f0printf(fout(), "No monitor detected on bus /dev/i2c-%d\n", busno);
