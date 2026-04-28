@@ -205,6 +205,7 @@ gpointer dw_execute_callback_func(gpointer data) {
 //
 
 GPtrArray* display_detection_callbacks = NULL;
+static GMutex callbacks_mutex;
 
 /** Registers a display status change event callback
  *
@@ -222,7 +223,9 @@ DDCA_Status dw_register_display_status_callback(DDCA_Display_Status_Callback_Fun
    DDCA_Status result = DDCRC_INVALID_OPERATION;
    // if (check_all_video_adapters_implement_drm()) {   // unnecessary, performed in caller
       // uint64_t t0 = cur_realtime_nanosec();
+      g_mutex_lock(&callbacks_mutex);
       generic_register_callback(&display_detection_callbacks, func);
+      g_mutex_unlock(&callbacks_mutex);
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "generic_register_callback() took %"PRIu64" micoseconds",
       //      NANOS2MICROS(cur_realtime_nanosec()-t0) );
       result = DDCRC_OK;
@@ -247,7 +250,9 @@ DDCA_Status dw_unregister_display_status_callback(DDCA_Display_Status_Callback_F
 
    DDCA_Status result = DDCRC_INVALID_OPERATION;
    if (check_all_video_adapters_implement_drm()) {
+      g_mutex_lock(&callbacks_mutex);
       result = generic_unregister_callback(display_detection_callbacks, func);
+      g_mutex_unlock(&callbacks_mutex);
    }
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
@@ -339,15 +344,22 @@ void dw_emit_display_status_record(
    }
 #endif
 
+// Take snapsnot of display_detection_calbacks
+   g_mutex_lock(&callbacks_mutex);
    int callback_ct = (display_detection_callbacks) ? display_detection_callbacks->len : 0;
+   DDCA_Display_Status_Callback_Func funcs[callback_ct];
+   for (int ndx = 0; ndx < callback_ct; ndx++)
+      funcs[ndx] = g_ptr_array_index(display_detection_callbacks, ndx);
+   g_mutex_unlock(&callbacks_mutex);
+
    if (callback_ct > 0) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Starting %d callback threads", display_detection_callbacks->len);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting %d callback threads", display_detection_callbacks->len);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Starting %d callback threads", callback_ct);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting %d callback threads", callback_ct);
       for (int ndx = 0; ndx < callback_ct; ndx++)  {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
          Callback_Queue_Entry * cqe = calloc(1, sizeof (Callback_Queue_Entry));
          cqe->event = evt;
-         cqe->func =  g_ptr_array_index(display_detection_callbacks, ndx);
+         cqe->func = funcs[ndx];
          // traced_function_stack_suspended = true;
          GThread * callback_thread = g_thread_new(
                                        "single_callback_worker",  // optional thread name
