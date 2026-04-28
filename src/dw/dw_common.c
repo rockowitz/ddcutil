@@ -72,9 +72,8 @@ uint16_t  stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
 uint16_t  udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
 uint16_t  poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 uint16_t  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
-
-_Atomic(bool)      terminate_watch_thread         = false;
-_Atomic(bool)      terminate_using_x11_event      = false;
+_Atomic(bool)  terminate_watch_thread    = false;
+_Atomic(bool)  terminate_using_x11_event = false;
 GMutex    master_dw_mutex;
 #ifdef LAPTOPS_IGNORABLE
 bool      watch_laptops                  = false;
@@ -619,9 +618,10 @@ void remove_active_callback_thread(GThread* pthread){
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "pthread=%p", pthread);
 
-   if (active_callback_threads) {
+   g_mutex_lock(&active_callback_threads_mutex);
+   if (active_callback_threads)
       g_hash_table_remove(active_callback_threads, pthread);
-   }
+   g_mutex_unlock(&active_callback_threads_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "pthread=%p", pthread);
 }
@@ -629,8 +629,10 @@ void remove_active_callback_thread(GThread* pthread){
 
 int  active_callback_thread_ct() {
    int ct = 0;
+   g_mutex_lock(&active_callback_threads_mutex);
    if (active_callback_threads)
       ct = g_hash_table_size(active_callback_threads);
+   g_mutex_unlock(&active_callback_threads_mutex);
    return ct;
 }
 
