@@ -154,8 +154,13 @@ bool               dsel_validate(          Display_Selector* dsel);
 extern bool ddc_never_uses_null_response_for_unsupported;
 // extern bool ddc_always_uses_null_response_for_unsupported;
 
+// Why is Dref_Flags uint32_t instead of uint16_t?
+// On many RISC architectures (ARM32, MIPS, RISC-V), 16-bit atomics are not
+// natively lock-free — hardware only guarantees lock-free CAS/fetch-or for
+// 32-bit and larger.  Avoids need to make Dref_Flags atomic.
+
 // Must be kept in sync with dref_flags_table
-typedef uint16_t Dref_Flags;
+typedef uint32_t Dref_Flags;
 #define DREF_DDC_COMMUNICATION_CHECKED                 0x0001
 #define DREF_DDC_COMMUNICATION_WORKING                 0x0002
 #define DREF_DDC_IS_MONITOR_CHECKED                    0x0004
@@ -199,7 +204,7 @@ typedef struct _display_ref {
    char *                   usb_hiddev_name;
    DDCA_MCCS_Version_Spec   vcp_version_xdf;
    DDCA_MCCS_Version_Spec   vcp_version_cmdline;
-   Dref_Flags               flags;
+   _Atomic(Dref_Flags)      flags;
    bool                     disconnected;
    char *                   capabilities_string;   // added 4/2017, private copy
    Parsed_Edid *            pedid;                 // added 4/2017
