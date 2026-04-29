@@ -116,7 +116,10 @@ DDCA_Status ddci_validate_ddca_display_ref2(
    }
    else {
       // should be redundant with ddc_validate_display_ref2(), but something not being caught
-      if (dref->disconnected) {
+      g_mutex_lock(&dref->disconnect_mutex);
+      bool is_disconnected = dref->disconnected;
+      g_mutex_unlock(&dref->disconnect_mutex);
+      if (is_disconnected) {
          char * msg = g_strdup_printf("disconnected set for %s!",dref_reprx_t(dref));
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "%s", msg);
          SYSLOG2(DDCA_SYSLOG_WARNING, "%s",msg);
