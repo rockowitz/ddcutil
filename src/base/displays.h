@@ -228,7 +228,7 @@ typedef struct _display_ref {
 void             dbgrpt_published_dref_hash(const char * msg, int depth);
 void             published_dref_hash_to_syslog(int priority, const char * msg);
 void             init_published_dref_hash();
-void             mark_display_ref_removed(Display_Ref* dref);
+void             mark_display_ref_disconnected(Display_Ref* dref);
 void             reset_published_dref_hash();
 void             add_published_dref_id_by_dref(Display_Ref * dref);
 Display_Ref *    dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref);

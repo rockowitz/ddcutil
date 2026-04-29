@@ -489,7 +489,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
          }
          else if (psc == DDCRC_DISCONNECTED)
          {
-            mark_display_ref_removed(dref);
+            mark_display_ref_disconnected(dref);
          }
          else if (psc == -EBUSY) {
              // communication failed, do not set DDCRC_COMMUNICATION_WORKING

@@ -307,7 +307,7 @@ ddc_open_display(
       SYSLOG2(DDCA_SYSLOG_ERROR,"%s", s);
       dbgrpt_current_traced_function_stack(true, true, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
-      mark_display_ref_removed(dref);
+      mark_display_ref_disconnected(dref);
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "%s", s);
       free(s);
       goto bye;

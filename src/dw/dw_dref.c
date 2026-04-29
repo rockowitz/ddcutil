@@ -179,7 +179,7 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "(%s) Dref %s already marked disconnected", __func__, dref_reprx_t(dref));
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Dref %s already marked disconnected", dref_reprx_t(dref));
       }
-      mark_display_ref_removed(dref);
+      mark_display_ref_disconnected(dref);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updated flags: %s", interpret_dref_flags_t(dref->flags));
    }
    else {
@@ -197,6 +197,6 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
 void init_dw_dref()  {
    RTTI_ADD_FUNC(dw_add_display_by_businfo);
    RTTI_ADD_FUNC(dw_add_display_ref);
-   RTTI_ADD_FUNC(mark_display_ref_removed);
+   RTTI_ADD_FUNC(mark_display_ref_disconnected);
    RTTI_ADD_FUNC(dw_remove_display_by_businfo);
 }

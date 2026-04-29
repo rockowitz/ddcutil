@@ -715,7 +715,7 @@ void init_published_dref_hash() {
  *
  * @param dref pointer to Display_Ref to mark removed.
  */
-void mark_display_ref_removed(Display_Ref* dref) {
+void mark_display_ref_disconnected(Display_Ref* dref) {
    bool debug = false;
    debug = debug || debug_locks;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
@@ -744,7 +744,7 @@ void reset_published_dref_hash() {
    while (g_hash_table_iter_next (&iter, &key, &value)) {
       // uint dref_id = GPOINTER_TO_UINT(key);
       Display_Ref * dref = (Display_Ref *) value;
-      mark_display_ref_removed(dref);
+      mark_display_ref_disconnected(dref);
       // drpt_vstring(depth+1, "(reset_published_dref_hash) dref_id %d -> %s", dref_id, dref_reprx_t(dref));
    }
 
@@ -1425,7 +1425,7 @@ Display_Ref * get_dref_by_busno_or_connector(
          {
             if (cur_dref->creation_timestamp < highest_non_removed_creation_timestamp) {
                SEVEREMSG("Marking dref %s removed", dref_reprx_t(cur_dref));
-               mark_display_ref_removed(cur_dref);
+               mark_display_ref_disconnected(cur_dref);
             }
          }
       }
@@ -1858,7 +1858,7 @@ void init_displays() {
    RTTI_ADD_FUNC(display_id_to_dsel);
    RTTI_ADD_FUNC(dsel_free);
 
-   RTTI_ADD_FUNC(mark_display_ref_removed);
+   RTTI_ADD_FUNC(mark_display_ref_disconnected);
    RTTI_ADD_FUNC(reset_published_dref_hash);
    RTTI_ADD_FUNC(add_published_dref_id_by_dref);
    RTTI_ADD_FUNC(delete_published_dref_id);
