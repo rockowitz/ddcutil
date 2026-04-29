@@ -583,6 +583,77 @@ bye:
 }
 
 
+
+
+/** Checks for group i2c and whether the current user is a
+ *  member of the group.
+ */
+
+static void check_group_i2c_collect(GPtrArray* collector) {
+   // bool debug = false;
+
+   g_ptr_array_add(collector, strdup("Checking for group i2c..."));
+
+   int uid  = (int) getuid();
+   int euid = (int) geteuid();
+   // int gid  = (int) getgid();
+   // int egid = (int) getegid();
+   char * cur_uname = uid_name(uid);
+   char * cur_euname = uid_name(euid);
+
+   // char * s3 = g_strdup_printf("uid=%d=%s, euid=%d=%s", uid, cur_uname, euid, cur_euname);
+   // g_ptr_array_add(collector, s3);
+   bool cur_user_in_group_i2c = false;
+   bool cur_euser_in_group_i2c = false;
+   struct group * pgi2c = getgrnam("i2c");
+   if (pgi2c) {
+      g_ptr_array_add(collector, strdup( "Group i2c exists"));
+      int ndx=0;
+      char * curname;
+      while ( (curname = pgi2c->gr_mem[ndx]) ) {
+         rtrim_in_place(curname);
+         // DBGMSG("member_names[%d] = |%s|", ndx, curname);
+         if (streq(curname, cur_uname)) {
+            cur_user_in_group_i2c = true;
+         }
+         if (euid != uid && streq(curname, cur_euname)) {
+            cur_euser_in_group_i2c = true;
+         }
+         ndx++;
+      }
+      bool in_group_i2c = false;
+      if (cur_user_in_group_i2c) {
+         in_group_i2c = true;
+         char * s = g_strdup_printf("Current user %s is a member of group i2c", cur_uname);
+         g_ptr_array_add(collector, s);
+      }
+      else if (uid != euid && cur_euser_in_group_i2c) {
+         in_group_i2c = true;
+         char * s = g_strdup_printf("Current euser %s is a member of group i2c", cur_euname);
+         g_ptr_array_add(collector, s);
+      }
+      if (!in_group_i2c) {
+         if (streq(cur_uname, "root")) {
+            g_ptr_array_add(collector, strdup("Current user is root, membership in group i2c not needed"));
+         }
+         else {
+            char * s = g_strdup_printf("WARNING: Current user %s is NOT a member of group i2c", cur_uname);
+            g_ptr_array_add(collector, s);
+            if (uid != euid) {
+               char * s1 = g_strdup_printf("WARNING: Current euser %s is NOT a member of group i2c", cur_euname);
+               g_ptr_array_add(collector, s1);
+            }
+         }
+      }
+   }
+   else {
+      g_ptr_array_add(collector, strdup("Group i2c does not exist"));
+   }
+
+}
+
+
+
 #ifdef UNUSED
 GPtrArray * rpt_facl_collect(const char * fqfn) {
    return rpt_facl_collect0(fqfn, NULL, 0);
@@ -631,18 +702,27 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    if (msg)
       g_ptr_array_add(collector, (char*) strdup(msg));
 
+   G_PTR_ARRAY_ADD_STRING(collector,
+         "Elapsed time since start of program execution: %s seconds",
+         formatted_elapsed_time_t(6));
 
-   char * s3 = g_strdup_printf("Elapsed time since start of program execution: %s seconds",
-        formatted_elapsed_time_t(6));
-   DBGF(debug, "%s", s3);
-   g_ptr_array_add(collector, s3);
+   uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
+   if (elapsed_ns == UINT64_MAX)
+      g_ptr_array_add(collector, strdup("No resume from sleep recorded"));
+   else
+      G_PTR_ARRAY_ADD_STRING(collector,
+         "Time since last resume from sleep: %s seconds = %"PRIu64" millisec (%"PRIu64 "nanosec)",
+         formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
+
+   bool recent =  recently_resumed_from_sleep();
+   G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep() returned %s", sbool(recent));
 
    int uid  = (int) getuid();
    int euid = (int) geteuid();
    int gid  = (int) getgid();
    int egid = (int) getegid();
 
-   int depth = 5;
+   int depth = 0;
    g_ptr_array_add(collector,
          g_strdup_printf("%*suid: %d=%s, euid: %d=%s, gid: %d=%s, egid: %d=%s",
          depth, " ",
@@ -651,19 +731,22 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
          gid,  gid_name(gid),
          egid, gid_name(egid)));
 
+   check_group_i2c_collect(collector);
+
+   G_PTR_ARRAY_ADD_STRING(collector, "Permissions for %s:", fqfn);
    int file_uid = -1;
    int file_gid = -1;
    bool ok = get_file_owner_group_ids(fqfn, &file_uid, &file_gid);
    if (ok) {
-      g_ptr_array_add(collector,
-         g_strdup_printf("%*sfile owner: %d=%s, file group: %d=%s",
+      G_PTR_ARRAY_ADD_STRING(collector,
+         "%*sfile owner: %d=%s, file group: %d=%s",
          depth, " ",
          file_uid, uid_name(file_uid),
-         file_gid, gid_name(file_gid)));
+         file_gid, gid_name(file_gid));
    }
    else {
-      g_ptr_array_add(collector,
-            g_strdup_printf("%*sUnable to determine file ownership", depth, " "));
+      G_PTR_ARRAY_ADD_STRING(collector,
+            "%*sUnable to determine file ownership", depth, " ");
    }
 
    g_ptr_array_add(collector, strdup("Using command getfacl: "));
@@ -696,20 +779,9 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
   free(s1);
 #endif
 
-   uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
-   char * s2 = NULL;
-   if (elapsed_ns == UINT64_MAX)
-      s2 = strdup("No resume from sleep recorded");
-   else
-      s2 = g_strdup_printf(""
-           "Time since last resume from sleep: %s seconds = %"PRIu64" millisec (%"PRIu64 "nanosec)",
-           formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
-   DBGF(debug, "%s", s2);
-   g_ptr_array_add(collector, strdup(s2));
-   free(s2);
 #endif
 
-   DBGF(debug, "Done.    returning collector = %p", collector);
+  DBGF(debug, "Done.    returning collector = %p", collector);
    return collector;
 }
 
@@ -807,4 +879,57 @@ void install_segv_handler(void) {
 
     sigaction(SIGSEGV, NULL, &old_segv);
     sigaction(SIGSEGV, &sa, NULL);
+}
+
+
+// Fallback resume detection via CLOCK_BOOTTIME vs CLOCK_MONOTONIC.
+// BOOTTIME advances during sleep; MONOTONIC does not.
+// Their difference = cumulative time spent asleep since boot.
+// An increase in the cumulative time asleep since boot vs the
+// previous value indicates a resume occurred.
+
+// UINT64_MAX means not yet initialized (lazy init on first call).
+static _Atomic uint64_t baseline_accumulated_sleep_ns = UINT64_MAX;
+
+
+uint64_t get_accumulated_sleep_ns() {
+   struct timespec bt;
+   struct timespec mt;
+   clock_gettime(CLOCK_BOOTTIME,  &bt);  // advances during sleep
+   clock_gettime(CLOCK_MONOTONIC, &mt);  // does not advance during sleep
+   uint64_t boottime_ns = (uint64_t)bt.tv_sec * UINT64_C(1000000000) + bt.tv_nsec;
+   uint64_t mono_ns     = (uint64_t)mt.tv_sec * UINT64_C(1000000000) + mt.tv_nsec;
+   uint64_t accumulated_sleep_ns = boottime_ns - mono_ns;
+   return accumulated_sleep_ns;
+}
+
+
+void init_baseline_accumulated_sleep_ns() {
+   baseline_accumulated_sleep_ns = get_accumulated_sleep_ns();
+}
+
+
+bool recently_resumed_from_sleep() {
+   bool debug = false;
+   bool resumed = false;
+
+   uint64_t current_accumulated_sleep_ns  = get_accumulated_sleep_ns();
+
+   if (baseline_accumulated_sleep_ns == UINT64_MAX) {
+      // First call  and init_accumulated_sleep_ns_baseline() wasn't called
+      baseline_accumulated_sleep_ns = current_accumulated_sleep_ns;
+   }
+   else {
+      uint64_t sleep_increase_ns = current_accumulated_sleep_ns - baseline_accumulated_sleep_ns;
+      if (sleep_increase_ns > UINT64_C(1000000000)) {
+         // Accumulated sleep grew by > 1 s since baseline => we resumed.
+         resumed = true;
+         baseline_accumulated_sleep_ns = current_accumulated_sleep_ns;
+         syslog(LOG_INFO, "Resume from sleep detected via BOOTTIME/MONOTONIC fallback");
+      }
+   }
+
+   DBGF(debug, "baseline_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64", returning %s",
+          baseline_accumulated_sleep_ns, current_accumulated_sleep_ns, sbool(resumed));
+   return resumed;
 }
