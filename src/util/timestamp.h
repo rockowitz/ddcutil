@@ -3,7 +3,7 @@
  *  Timestamp management
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef TIMESTAMP_H_
@@ -31,6 +31,9 @@ char *   formatted_epoch_time_t(time_t epoch_seconds);
 #define NANOS2MILLIS( _nanosec ) (((_nanosec)+500000)/1000000)
 #define MILLIS2NANOS( _millisec) (_millisec*(uint64_t)1000000)
 #define MILLIS2MICROS(_millisec) (_millisec*(uint64_t)1000)
+
+uint64_t cur_monotonic_time_nanosec();  // time since boot, excluding sleep time
+uint64_t cur_boot_time_nanosec();       // time since boot, including sleep time
 
 #ifdef __cplusplus
 }

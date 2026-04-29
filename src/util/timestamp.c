@@ -3,7 +3,7 @@
  *  Timestamp management
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -16,6 +16,7 @@
 #include <time.h>
 /** \endcond */
 
+#include "debug_util.h"
 #include "glib_util.h"
 #include "string_util.h"
 
@@ -36,6 +37,13 @@ static uint64_t * timestamp_history = NULL;
 /** Returns the current value of the realtime clock in nanoseconds.
  *
  * @return timestamp, in nanoseconds
+ *
+ * This is the wall time, as opposed to the monotonic clock. Typically reports the number of
+ * nanoseconds since the Unix epoch, but this is not guaranteed.
+ * The value is not guaranteed to be monotonic, and may jump forward or backward.
+ * However, it is guaranteed to be non-negative.
+ * It is used for timestamps that are reported to the user, and for which it is
+ * desirable to have a human-readable value.
  *
  * @remark
  * If debugging timestamp generation, the timestamp is remembered.
@@ -92,6 +100,63 @@ uint64_t cur_realtime_nanosec() {
    //        __func__, tvNow.tv_sec, tvNow.tv_nsec, result);
    return result;
 }
+
+
+/** Returns the current value of the monotonic clock in nanoseconds.
+ *
+ * @return number of nanoseconds since an arbitrary point in the past (system boot on linux)
+ *
+ * Does not advance during system sleep. That is, it DOES NOT include any time that the system is suspended.
+ *
+ * This is the monotonic clock, which is not affected by changes to the system time. It is
+ * typically used for measuring elapsed time. It is not related to any particular epoch, and
+ * is not human-readable. It is guaranteed to be monotonic, but may jump forward (e.g. if
+ * the system goes to sleep and then resumes). It is guaranteed to be non-negative.
+ */
+uint64_t cur_monotonic_time_nanosec() {
+   bool debug = false;
+   // on Pi, __time_t resolves to long int
+   struct timespec tvNow;
+   clock_gettime(CLOCK_MONOTONIC, &tvNow);
+
+   uint64_t result = tvNow.tv_sec * (uint64_t)(1000*1000*1000);
+   // printf("(%s) result=%"PRIu64"\n", __func__, result);
+
+   // must do addition separately on 32 bit, ow. get bad value
+   result += tvNow.tv_nsec;
+   // printf("(%s) result=%"PRIu64"\n", __func__, result);
+
+   DBGF(debug, "tv_sec=%ld, tv_nsec=%10ld, Returning: %"PRIu64"\n",
+               tvNow.tv_sec, tvNow.tv_nsec, result);
+   return result;
+}
+
+
+/** Returns the current value of the boottime clock in nanoseconds.
+ *
+ * @return timestamp, in nanoseconds
+ *
+ * This is the monotonic clock that advances during system sleep.
+ * That is, it DOES include any time that the system is suspended.
+ */
+uint64_t cur_boot_time_nanosec() {
+   bool debug = false;
+   // on Pi, __time_t resolves to long int
+   struct timespec tvNow;
+   clock_gettime(CLOCK_BOOTTIME, &tvNow);
+
+   uint64_t result = tvNow.tv_sec * (uint64_t)(1000*1000*1000);
+   // printf("(%s) result=%"PRIu64"\n", __func__, result);
+
+   // must do addition separately on 32 bit, ow. get bad value
+   result += tvNow.tv_nsec;
+   // printf("(%s) result=%"PRIu64"\n", __func__, result);
+
+   DBGF(debug, "tv_sec=%ld, tv_nsec=%10ld, Returning: %"PRIu64"\n",
+               tvNow.tv_sec, tvNow.tv_nsec, result);
+   return result;
+}
+
 
 
 /** Reports history of generated timestamps
