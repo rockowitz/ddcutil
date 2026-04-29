@@ -305,12 +305,9 @@ ddc_open_display(
             dref_repr_t(dref));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
       SYSLOG2(DDCA_SYSLOG_ERROR,"%s", s);
-      // show_backtrace(1);
-      // backtrace_to_syslog(LOG_ERR, 1);
       dbgrpt_current_traced_function_stack(true, true, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
-      // dref->flags |= DREF_DISCONNECTED;
-      dref->disconnected = true;
+      mark_display_ref_removed(dref);
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "%s", s);
       free(s);
       goto bye;
@@ -1006,8 +1003,9 @@ ddc_write_read_with_retry(
          if ((psc == -EIO || psc == -ENXIO) && execution_mode == MODE_LIBDDCUTIL) {
             Error_Info * err = i2c_check_open_bus_alive(dh);
             if (err) {
-               if (err->status_code == DDCRC_DISCONNECTED)
-                  dh->dref->disconnected = true;
+               if (err->status_code == DDCRC_DISCONNECTED) {
+                  mark_dref_removed(&dh->dref);
+               }
                master_error = err;
                goto bye;
             }
