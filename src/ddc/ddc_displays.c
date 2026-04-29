@@ -205,6 +205,7 @@ ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_remove
          sbool(include_invalid_displays), sbool(include_removed_drefs));
    TRACED_ASSERT(all_display_refs);
 
+   g_mutex_lock(&all_display_refs_mutex);
    GPtrArray * result = g_ptr_array_sized_new(all_display_refs->len);
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
@@ -214,6 +215,7 @@ ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_remove
          g_ptr_array_add(result, cur);
       }
    }
+   g_mutex_unlock(&all_display_refs_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning array of size %d", result->len);
    if (debug || IS_TRACING()) {
