@@ -455,8 +455,6 @@ ddca_create_display_ref(
 }
 
 
-// GMutex ddca_redetect_active_mutex;
-
 DDCA_Status
 ddca_redetect_displays() {
    bool debug = false;
@@ -464,17 +462,21 @@ ddca_redetect_displays() {
 
    DDCA_Status ddcrc = 0;
 #ifdef WATCH_DISPLAYS
+   static GMutex ddca_redetect_active_mutex;
    static bool ddca_redetect_active = false;
-   bool perform_detect = true;
+   bool perform_detect = false;
 
    Error_Info * erec = NULL;
-//   g_mutex_lock(ddca_redetect_active_mutex);
+   g_mutex_lock(&ddca_redetect_active_mutex);
    if (ddca_redetect_active) {
-	   SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when already active");
-	   perform_detect = false;
-	   ddcrc = DDCRC_INVALID_OPERATION;
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when already active");
+      ddcrc = DDCRC_INVALID_OPERATION;
    }
-   // g_mutex_unlock(ddca_redetect_active_mutex);
+   else {
+      ddca_redetect_active = true;
+      perform_detect = true;
+   }
+   g_mutex_unlock(&ddca_redetect_active_mutex);
 
    if (perform_detect) {
       if (active_callback_thread_ct() > 0) {
@@ -483,10 +485,6 @@ ddca_redetect_displays() {
          // ddcrc = DDCRC_INVALID_OPERATION;
          // perform_detect = false;
       }
-   }
-
-   if (perform_detect) {
-      ddca_redetect_active = true;
       quiesce_api();
       erec = dw_redetect_displays();
       ddcrc = ERRINFO_STATUS(erec);
