@@ -94,10 +94,13 @@ gaux_ptr_array_find_with_equal_func(
       GEqualFunc     equal_func,
       guint *        index_loc);
 
+#define G_PTR_ARRAY_ADD_STRING(_collector, _format, ...) \
+do { \
+      g_ptr_array_add(_collector, g_strdup_printf(_format, ##__VA_ARGS__)); \
+} while(0)
+
 #ifdef __cplusplus
 }
 #endif
-
-
 
 #endif /* GLIB_UTIL_H_ */
