@@ -1004,7 +1004,7 @@ ddc_write_read_with_retry(
             Error_Info * err = i2c_check_open_bus_alive(dh);
             if (err) {
                if (err->status_code == DDCRC_DISCONNECTED) {
-                  mark_dref_removed(&dh->dref);
+                  mark_display_ref_disconnected(dh->dref);
                }
                master_error = err;
                goto bye;
