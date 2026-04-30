@@ -888,8 +888,13 @@ void install_segv_handler(void) {
 // An increase in the cumulative time asleep since boot vs the
 // previous value indicates a resume occurred.
 
-// UINT64_MAX means not yet initialized (lazy init on first call).
-static _Atomic uint64_t baseline_accumulated_sleep_ns = UINT64_MAX;
+// Global baseline set at startup by init_baseline_accumulated_sleep_ns().
+// UINT64_MAX means not yet initialized.
+static uint64_t global_initial_accumulated_sleep_ns = UINT64_MAX;
+
+// Per-thread baseline, initialized from the global on each thread's first call.
+// UINT64_MAX means this thread has not yet initialized its baseline.
+static _Thread_local uint64_t baseline_accumulated_sleep_ns = UINT64_MAX;
 
 
 uint64_t get_accumulated_sleep_ns() {
@@ -905,7 +910,7 @@ uint64_t get_accumulated_sleep_ns() {
 
 
 void init_baseline_accumulated_sleep_ns() {
-   baseline_accumulated_sleep_ns = get_accumulated_sleep_ns();
+   global_initial_accumulated_sleep_ns = get_accumulated_sleep_ns();
 }
 
 
@@ -916,8 +921,12 @@ bool recently_resumed_from_sleep() {
    uint64_t current_accumulated_sleep_ns  = get_accumulated_sleep_ns();
 
    if (baseline_accumulated_sleep_ns == UINT64_MAX) {
-      // First call  and init_accumulated_sleep_ns_baseline() wasn't called
-      baseline_accumulated_sleep_ns = current_accumulated_sleep_ns;
+      // First call on this thread: seed from the global baseline if available,
+      // otherwise fall back to current value (no resume detectable this call).
+      baseline_accumulated_sleep_ns =
+            (global_initial_accumulated_sleep_ns != UINT64_MAX)
+            ? global_initial_accumulated_sleep_ns
+            : current_accumulated_sleep_ns;
    }
    else {
       uint64_t sleep_increase_ns = current_accumulated_sleep_ns - baseline_accumulated_sleep_ns;
