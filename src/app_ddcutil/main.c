@@ -870,6 +870,7 @@ main(int argc, char *argv[]) {
    char * program_start_time_s = asctime(localtime(&program_start_time));
    if (program_start_time_s[strlen(program_start_time_s)-1] == 0x0a)
         program_start_time_s[strlen(program_start_time_s)-1] = 0;
+   init_baseline_accumulated_sleep_ns();  // increase this value indicates a sleep has occurred
 
    add_local_rtti_functions();      // add entries for this file
    init_base_services();            // so tracing related modules are initialized
@@ -1169,7 +1170,9 @@ main(int argc, char *argv[]) {
          main_rc = EXIT_FAILURE;
       }
       else {
+#ifdef USE_DBUS
          ldbus_start_sleep_watch_thread();
+#endif
          // watch_for_sleep_using_sdbus();
 
          // DBGMSG("Explicitly adding traceable functions...");
