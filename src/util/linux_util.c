@@ -59,8 +59,7 @@
   * \param filename
   * \return true if file can be read from false if not
   */
-bool is_readable_file(const char * filename)
-{
+bool is_readable_file(const char * filename) {
    // avoid all the rules re permissions, file type, links, ls etc
    // just try to read from the file
    bool result = false;
@@ -146,7 +145,7 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
  *  @retval true  file exists
  *  @retval false file does not exist
  */
-bool find_module_ko(const char * module_name) {
+static bool find_module_ko(const char * module_name) {
    bool debug = false;
    DBGF(debug, "Starting. module_name: %s", module_name);
 
@@ -289,7 +288,7 @@ int module_status_by_modules_builtin_or_existence(const char * module_name) {
 
 /** Examines file /boot/config-<kernel version> to determine whether module
  *  i2c-dev exists and if so whether it is built into the kernel or is a
- *  loadable module.
+ *  loadable module. It does so by checking the value of CONFFIG_I2C_CHARDEV.
  *
  *  @retval y   built into kernel
  *  @retval m   built as loadable module
@@ -535,15 +534,15 @@ GPtrArray* rpt_lsof_collect(const char * fqfn) {
  *  using the libacl API, and returns it as an array of lines.
  *
  *  The output is similar to, but not identical to, that of command **facl**.
- *  In particular, the effective permissons, after mask application, are
+ *  In particular, the effective permissions, after mask application, are
  *  not reported.
  *
- *  @param  fqfn  file name
- *  @param  collector   if NULL, allocate new GPtrArray
- *  @param  depth   logical indentation depth for formatting lines
+ *  @param  fqfn       file name
+ *  @param  collector  if NULL, allocate new GPtrArray
+ *  @param  depth      logical indentation depth for formatting lines
  *  @return GPtrArray of lines
  */
-GPtrArray * rpt_facl_collect0(const char * fqfn, GPtrArray * collector, int depth) {
+static GPtrArray * rpt_facl_collect0(const char * fqfn, GPtrArray * collector, int depth) {
    if (!collector)
       collector = g_ptr_array_new_with_free_func(g_free);
 
@@ -583,12 +582,11 @@ bye:
 }
 
 
-
-
-/** Checks for group i2c and whether the current user is a
+/** Reports whether group i2c exists and whether the current user is a
  *  member of the group.
+ *
+ *  @param collector
  */
-
 static void check_group_i2c_collect(GPtrArray* collector) {
    // bool debug = false;
 
@@ -649,9 +647,7 @@ static void check_group_i2c_collect(GPtrArray* collector) {
    else {
       g_ptr_array_add(collector, strdup("Group i2c does not exist"));
    }
-
 }
-
 
 
 #ifdef UNUSED
@@ -778,10 +774,9 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
   g_ptr_array_add(collector, s1);
   free(s1);
 #endif
-
 #endif
 
-  DBGF(debug, "Done.    returning collector = %p", collector);
+   DBGF(debug, "Done.    returning collector = %p", collector);
    return collector;
 }
 
@@ -836,7 +831,9 @@ void diagnose_open_failure_to_syslog(const char * fqfn, const char * msg) {
 }
 
 
+//
 // SEGFAULT handler
+//
 
 static struct sigaction old_segv;
 
@@ -870,6 +867,9 @@ static void segv_handler(int sig, siginfo_t *info, void *ucontext) {
 }
 
 
+/** Installs a SIGSEGV handler that logs the fault and traced function stack
+ *  to syslog before re-raising the signal to invoke the previous handler.
+ */
 void install_segv_handler(void) {
     struct sigaction sa;
     memset(&sa, 0, sizeof sa);
@@ -882,22 +882,35 @@ void install_segv_handler(void) {
 }
 
 
-// Fallback resume detection via CLOCK_BOOTTIME vs CLOCK_MONOTONIC.
+//
+// Detect resume from sleep
+//
+// Detects if resume from sleep has occurred by detecting changes in the
+// accumulated sleep time, by using CLOCK_BOOTTIME and CLOCK_MONOTONIC.
 // BOOTTIME advances during sleep; MONOTONIC does not.
-// Their difference = cumulative time spent asleep since boot.
-// An increase in the cumulative time asleep since boot vs the
-// previous value indicates a resume occurred.
+// Their difference = cumulative time spent asleep since the algorithm was
+// An increase in the cumulative time asleep since vs the previous value
+// indicates a resume occurred.
+//
+// This is a cruder mechanism than watching for dbus PrepareForSleep
+// signals, but does not require dbus.
 
-// Global baseline set at startup by init_baseline_accumulated_sleep_ns().
-// UINT64_MAX means not yet initialized.
+/** Global baseline set at startup by #init_baseline_accumulated_sleep_ns().
+/*  UINT64_MAX means not yet initialized.
+ */
 static uint64_t global_initial_accumulated_sleep_ns = UINT64_MAX;
 
-// Per-thread baseline, initialized from the global on each thread's first call.
-// UINT64_MAX means this thread has not yet initialized its baseline.
+/** Per-thread baseline, initialized from the global on each thread's first call.
+ * UINT64_MAX means this thread has not yet initialized its baseline.
+ */
 static _Thread_local uint64_t baseline_accumulated_sleep_ns = UINT64_MAX;
 
 
-uint64_t get_accumulated_sleep_ns() {
+/** Gets the current accumulated sleep time. 
+ * 
+ *  @param accumulated sleep time in nanaosec
+ */
+static uint64_t get_accumulated_sleep_ns() {
    struct timespec bt;
    struct timespec mt;
    clock_gettime(CLOCK_BOOTTIME,  &bt);  // advances during sleep
@@ -909,11 +922,29 @@ uint64_t get_accumulated_sleep_ns() {
 }
 
 
+/** Records the current accumulated sleep time as the global baseline.
+ *
+ *  Must be called once at program startup before any threads are created.
+ *  Each thread's per-thread baseline is seeded from this value on its first
+ *  call to recently_resumed_from_sleep(), so all threads can detect resumes
+ *  that occur after this baseline was recorded.
+ */
 void init_baseline_accumulated_sleep_ns() {
    global_initial_accumulated_sleep_ns = get_accumulated_sleep_ns();
 }
 
 
+/** Detects whether the system has resumed from sleep since the prior
+ *  call to this function.
+ *
+ *  Uses the difference between CLOCK_BOOTTIME (advances during sleep) and
+ *  CLOCK_MONOTONIC (does not advance during sleep) to measure cumulative
+ *  sleep time.  Returns true once per resume event per thread: on the first
+ *  call after a resume is detected the baseline is updated, so subsequent
+ *  calls return false until the next resume.
+ *
+ *  @return true if a resume from sleep was detected, false otherwise
+ */
 bool recently_resumed_from_sleep() {
    bool debug = false;
    bool resumed = false;
@@ -938,7 +969,8 @@ bool recently_resumed_from_sleep() {
       }
    }
 
-   DBGF(debug, "baseline_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64", returning %s",
-          baseline_accumulated_sleep_ns, current_accumulated_sleep_ns, sbool(resumed));
+   DBGF(debug, "baseline_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64
+               ", returning %s",
+               baseline_accumulated_sleep_ns, current_accumulated_sleep_ns, sbool(resumed));
    return resumed;
 }

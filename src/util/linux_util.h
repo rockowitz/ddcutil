@@ -12,6 +12,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+bool       is_readable_file(const char * filename);
 int        get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz);
 bool       is_module_built_in(const char * module_name);
 
@@ -20,6 +21,7 @@ bool       is_module_built_in(const char * module_name);
 #define KERNEL_MODULE_LOADABLE_FILE 2     // module is a loadable file
 
 int        module_status_by_modules_builtin_or_existence(const char * module_name);
+char       i2c_dev_status_by_boot_config_file();
 
 intmax_t   get_thread_id();
 intmax_t   get_process_id();
