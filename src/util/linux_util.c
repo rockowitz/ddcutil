@@ -542,7 +542,11 @@ GPtrArray* rpt_lsof_collect(const char * fqfn) {
  *  @param  depth      logical indentation depth for formatting lines
  *  @return GPtrArray of lines
  */
-static GPtrArray * rpt_facl_collect0(const char * fqfn, GPtrArray * collector, int depth) {
+static GPtrArray * rpt_facl_collect0(
+      const char * fqfn,
+      GPtrArray *  collector,
+      int          depth)
+{
    if (!collector)
       collector = g_ptr_array_new_with_free_func(g_free);
 
@@ -847,23 +851,23 @@ static struct sigaction old_segv;
 static void segv_handler(int sig, siginfo_t *info, void *ucontext) {
 #ifdef BACKTRACE
    // Show backtrace
-    void *frames[32];
-    int n = backtrace(frames, 32);
-    backtrace_symbols_fd(frames, n, STDERR_FILENO);
+   void *frames[32];
+   int n = backtrace(frames, 32);
+   backtrace_symbols_fd(frames, n, STDERR_FILENO);
 #endif
 
-    syslog(LOG_ERR, "Segmentation fault (signal %d)", sig);
-    current_traced_function_stack_to_syslog(LOG_ERR, TFS_MOST_RECENT_LAST);
+   syslog(LOG_ERR, "Segmentation fault (signal %d)", sig);
+   current_traced_function_stack_to_syslog(LOG_ERR, TFS_MOST_RECENT_LAST);
 
-    sigaction(SIGSEGV, &old_segv, NULL);
+   sigaction(SIGSEGV, &old_segv, NULL);
 
-    if (old_segv.sa_flags & SA_SIGINFO) {
-        old_segv.sa_sigaction(sig, info, ucontext);
-    } else if (old_segv.sa_handler == SIG_DFL) {
-        raise(SIGSEGV);
-    } else if (old_segv.sa_handler != SIG_IGN) {
-        old_segv.sa_handler(sig);
-    }
+   if (old_segv.sa_flags & SA_SIGINFO) {
+       old_segv.sa_sigaction(sig, info, ucontext);
+   } else if (old_segv.sa_handler == SIG_DFL) {
+       raise(SIGSEGV);
+   } else if (old_segv.sa_handler != SIG_IGN) {
+       old_segv.sa_handler(sig);
+   }
 }
 
 
@@ -871,14 +875,13 @@ static void segv_handler(int sig, siginfo_t *info, void *ucontext) {
  *  to syslog before re-raising the signal to invoke the previous handler.
  */
 void install_segv_handler(void) {
-    struct sigaction sa;
-    memset(&sa, 0, sizeof sa);
-    sa.sa_sigaction = segv_handler;
-    sa.sa_flags = SA_SIGINFO;
-    sigemptyset(&sa.sa_mask);
-
-    sigaction(SIGSEGV, NULL, &old_segv);
-    sigaction(SIGSEGV, &sa, NULL);
+   struct sigaction sa;
+   memset(&sa, 0, sizeof sa);
+   sa.sa_sigaction = segv_handler;
+   sa.sa_flags = SA_SIGINFO;
+   sigemptyset(&sa.sa_mask);
+   sigaction(SIGSEGV, NULL, &old_segv);
+   sigaction(SIGSEGV, &sa, NULL);
 }
 
 
@@ -896,7 +899,7 @@ void install_segv_handler(void) {
 // signals, but does not require dbus.
 
 /** Global baseline set at startup by #init_baseline_accumulated_sleep_ns().
-/*  UINT64_MAX means not yet initialized.
+ *  UINT64_MAX means not yet initialized.
  */
 static uint64_t global_initial_accumulated_sleep_ns = UINT64_MAX;
 
