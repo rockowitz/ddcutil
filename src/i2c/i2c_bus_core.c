@@ -390,8 +390,9 @@ retry:
          bool should_retry1 = false;
          bool should_retry2 = false;
          bool should_retry3 = false;
-         static uint64_t max_elapsed_ms = 500;
+
 #ifdef USE_DBUS
+         static uint64_t max_elapsed_ms = 1000;
          uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
          uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
          char * resume_msg = g_strdup_printf(
