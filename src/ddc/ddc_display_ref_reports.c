@@ -4,7 +4,7 @@
  *  ddc_display_ref_reports.c and ddc_displays.c cross-reference each other.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -163,7 +163,9 @@ get_controller_mfg_string_t(Display_Handle * dh) {
 }
 
 
-static void report_drm_dpms_status(int depth, const char * connector_name) {
+#ifdef UNUSED
+// used with DREF_DRM_DPMS_STANDBY_OFF
+void report_drm_dpms_status(int depth, const char * connector_name) {
    char * drm_dpms = NULL;
    possibly_write_detect_to_status_by_connector_name(connector_name);
    RPT_ATTR_TEXT(-1, &drm_dpms, "/sys/class/drm", connector_name, "dpms");
@@ -186,6 +188,7 @@ static void report_drm_dpms_status(int depth, const char * connector_name) {
       free(drm_status);
    }
 }
+#endif
 
 
 /** Shows information about a display, specified by a #Display_Ref
