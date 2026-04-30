@@ -92,6 +92,12 @@ bool force_failure_i2c_all_relevant_i2c_buses_rw = false;
 bool force_failure_i2c_all_edids_readable_using_i2c = false;
 bool force_failure_i2c_open = false;
 
+// Timestamp of the first EACCES open failure in the current cycle.
+// Used to share the post-resume sleep across all devices: the first
+// failing device sleeps once; subsequent devices in the same window
+// retry immediately without adding another sleep.
+static _Atomic uint64_t first_eacces_open_ns = 0;
+
 
 // quick and dirty for debugging
 static char *
@@ -345,6 +351,8 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
          filename, callopts, fd_loc, sbool(force_failure_i2c_open));
 
    Error_Info * err = NULL;
+   int eacces_retry_ct = 0;
+   bool recently_resumed = recently_resumed_from_sleep();
 retry:
    RECORD_IO_EVENT(
          -1,
@@ -371,34 +379,78 @@ retry:
                filename, psc_desc(errsv), __FILE__, __LINE__);
 
       if (err->status_code == -EACCES) {
-         rpt_vstring(0, "%s", err->detail);
-         // diagnose_open_failure(filename, err->detail);
          syslog(LOG_ERR, "%s", err->detail);
-         // TMI:
-         current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
-         diagnose_open_failure_to_syslog(filename, err->detail);
-      //  }
+         if (eacces_retry_ct == 0) {
+            current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
+            diagnose_open_failure_to_syslog(filename, err->detail);
+            syslog(LOG_WARNING, "open() EACCES failure, recently resumed from sleep: %s",
+                                sbool(recently_resumed));
+         }
+         uint64_t now_ns   = cur_realtime_nanosec();
+         bool should_retry1 = false;
+         bool should_retry2 = false;
+         bool should_retry3 = false;
+         static uint64_t max_elapsed_ms = 500;
+#ifdef USE_DBUS
          uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
          uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
-         char * msg = g_strdup_printf(
+         char * resume_msg = g_strdup_printf(
                "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
                elapsed_ns, elapsed_ms);
-         DBGTRC(debug, TRACE_GROUP, "open() EACCES failure, %s", msg);
-         syslog(LOG_WARNING, "open() EACCES failure, %s", msg);
+         DBGTRC(debug, TRACE_GROUP, "open() EACCES failure, %s", resume_msg);
+         syslog(LOG_WARNING, "open() EACCES failure, %s", resume_msg);
+         free(resume_msg);
+         if (elapsed_ms <= max_elapsed_ms)
+            should_retry1 = true;
+#endif
+         if (recently_resumed)
+            syslog(LOG_WARNING, "EACCES failure, recently resumed from sleep");
+         static int max_retries = 4;
+         if (eacces_retry_ct == 0)
+            should_retry3 = true;
+         if (recently_resumed && eacces_retry_ct < max_retries)
+            should_retry2 = true;
 
-         if (elapsed_ms < 500) {
-            syslog(LOG_WARNING, "Sleeping for 100 ms and retrying...");
-            DBGTRC(debug, DDCA_TRC_NONE, "Sleeping for 100 ms and retrying...");
-            LOGGABLE_SLEEP(100, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg);
-            free(msg);
+         bool should_retry = should_retry1 || should_retry2 || should_retry3;
+
+         if (eacces_retry_ct >= max_retries && !should_retry1) {
+            syslog(LOG_ERR, "Reached max retries = %d and no remaining time", max_retries);
+            should_retry = false;
+         }
+
+         if (should_retry) {
+            // Shared-sleep: first device in a 600ms cycle sleeps 100ms;
+            // subsequent devices within the same window retry immediately.
+            bool do_sleep = false;
+            uint64_t first = first_eacces_open_ns;
+            uint64_t cycle_age_ms = (first > 0) ? NANOS2MILLIS(now_ns - first) : UINT64_MAX;
+            if (cycle_age_ms > 600) {
+               first_eacces_open_ns = now_ns;
+               do_sleep = true;
+            }
+            eacces_retry_ct++;
             errinfo_free(err);
             err = NULL;
+            if (do_sleep) {
+               char * smsg = g_strdup_printf(
+                     "Sleeping for 100 ms and retrying (attempt %d)...", eacces_retry_ct);
+               syslog(LOG_WARNING, "%s", smsg);
+               DBGTRC(debug, DDCA_TRC_NONE, "%s", smsg);
+               LOGGABLE_SLEEP(100, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", smsg);
+               free(smsg);
+            } else {
+               syslog(LOG_WARNING,
+                     "Retrying immediately (cycle sleep already done, attempt %d)...", eacces_retry_ct);
+            }
             goto retry;
          }
-         free(msg);
       }
    }
 
+   if ( ERRINFO_STATUS(err) == -EACCES)
+      syslog(LOG_ERR, "open() failed with %d EACCES errors", eacces_retry_ct);
+   if (!err && eacces_retry_ct > 0)
+      syslog(LOG_WARNING, "open() succeeded with %d retries", eacces_retry_ct);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
    return err;
 }
