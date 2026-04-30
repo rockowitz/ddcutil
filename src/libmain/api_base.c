@@ -22,6 +22,7 @@
 #include "util/dbus_util.h"
 #include "util/debug_util.h"
 #include "util/file_util.h"
+#include "util/linux_util.h"
 #include "util/msg_util.h"
 #include "util/regex_util.h"
 #include "util/report_util.h"
@@ -540,6 +541,8 @@ _libddcutil_constructor(void) {
    init_dw_services();      // initializes dw
 #endif
    init_api_services();     // other files in directory libmain
+
+   init_baseline_accumulated_sleep_ns();  // increase this value indicates a sleep has occurred
 
 #ifdef TESTING_CLEANUP
    // int atexit_rc = atexit(done);   // TESTING CLEANUP
