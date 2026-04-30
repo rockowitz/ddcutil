@@ -706,6 +706,7 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
          "Elapsed time since start of program execution: %s seconds",
          formatted_elapsed_time_t(6));
 
+#ifdef USE_DBUS
    uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
    if (elapsed_ns == UINT64_MAX)
       g_ptr_array_add(collector, strdup("No resume from sleep recorded"));
@@ -713,6 +714,7 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
       G_PTR_ARRAY_ADD_STRING(collector,
          "Time since last resume from sleep: %s seconds = %"PRIu64" millisec (%"PRIu64 "nanosec)",
          formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
+#endif
 
    bool recent =  recently_resumed_from_sleep();
    G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep() returned %s", sbool(recent));
