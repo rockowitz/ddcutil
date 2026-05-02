@@ -649,7 +649,7 @@ static char * format_facl_tag(acl_entry_t entry, acl_tag_t tag) {
 }
 
 
-GPtrArray * rpt_facl_collect1(
+static GPtrArray * rpt_facl_collect1(
       const char * fqfn,
       GPtrArray *  collector,
       int          depth)
