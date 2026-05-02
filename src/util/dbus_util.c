@@ -24,6 +24,7 @@
 
 #include "data_structures.h"
 #include "debug_util.h"
+#include "msg_util.h"
 #include "report_util.h"
 #include "string_util.h"
 #include "timestamp.h"
@@ -137,7 +138,9 @@ int ldbus_pause_if_recent_return_from_sleep(int minimum_ms) {
                     "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
                     elapsed_ns, elapsed_ms);
       DBG("%s", msg);
-      syslog(LOG_WARNING, "%s", msg);
+      char prefix[200];
+      get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
+      syslog(LOG_WARNING, "%s%s", prefix, msg);
       free(msg);
    }
 
@@ -178,12 +181,18 @@ ldbus_handle_message(DBusConnection *conn, DBusMessage *msg, void *user_data)
              last_prepare_for_sleep_ns = mono_ns;
           else
              last_resume_from_sleep_ns = mono_ns;
+          char prefix[200];
+          get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
+          char * s1 = g_strdup_printf(
+                "%s%sReceived dbus signal PrepareForSleep(%s)",
+                prefix, __func__, (preparing) ? "true=prepare" : "false=resume" );
           char * s = g_strdup_printf(
                   "Set %s = %"PRIu64" millisec", (preparing) ? "true (prepare)" : "false (resume)",
                   NANOS2MILLIS(mono_ns));
           DBGF(debug, "%s", s);
-          syslog(LOG_INFO, "%s", s);  // violates layering, should really use callback funct
+          syslog(LOG_INFO, "%s", s1);  // violates layering, should really use callback funct
           free(s);
+          free(s1);
           invoke_prepare_for_sleep_callbacks(preparing);
        }
        else {

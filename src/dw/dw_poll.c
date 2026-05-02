@@ -33,6 +33,7 @@
 #include "util/glib_util.h"
 #include "util/libdrm_aux_util.h"
 #include "util/linux_util.h"
+#include "util/msg_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_filter_functions.h"
@@ -399,26 +400,28 @@ else {
                       "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
                       elapsed_ns, elapsed_ms);
       DBGTRC(debug, TRACE_GROUP, "%s", msg);
-      syslog(LOG_WARNING, "%s", msg);
+      char prefix[200];
+      get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
+      syslog(LOG_WARNING, "%s%s", prefix, msg);
       free(msg);
 
       if (elapsed_ms < 1000) {
          uint64_t remaining_sleep_ms = 1000 - elapsed_ms;
          char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_sleep_ms);
-         syslog(LOG_WARNING, "%s", msg2);
+         syslog(LOG_WARNING, "%s%s", prefix, msg2);
          DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
          LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
          free(msg2);
       }
 #endif
       if (recently_resumed_from_sleep()) {
-         syslog(LOG_WARNING, "Recently resumed from sleep detected");
+         syslog(LOG_WARNING, "%sRecently resumed from sleep detected", prefix);
          if (paused) {
-            syslog(LOG_WARNING, "Already paused based on dbus notification. No additional pause.");
+            syslog(LOG_WARNING, "%sAlready paused based on dbus notification. No additional pause.", prefix);
          }
          else {
             int delay_ms = 1000;
-            syslog(LOG_WARNING, "Pausing for %d millisec", delay_ms);
+            syslog(LOG_WARNING, "%sPausing for %d millisec", prefix, delay_ms);
             dw_split_sleep(delay_ms);
          }
       }

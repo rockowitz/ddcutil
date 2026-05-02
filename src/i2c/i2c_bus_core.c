@@ -33,6 +33,7 @@
 #include "util/glib_string_util.h"
 #include "util/i2c_util.h"
 #include "util/linux_util.h"
+#include "util/msg_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -408,11 +409,13 @@ retry:
          static uint64_t max_elapsed_ms = 1000;
          uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
          uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
+         char prefix[200];
+         get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
          char * resume_msg = g_strdup_printf(
                "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
                elapsed_ns, elapsed_ms);
          DBGTRC(debug, TRACE_GROUP, "open() EACCES failure, %s", resume_msg);
-         syslog(LOG_WARNING, "open() EACCES failure, %s", resume_msg);
+         syslog(LOG_WARNING, "%sopen() EACCES failure, %s", prefix, resume_msg);
          free(resume_msg);
          if (elapsed_ms <= max_elapsed_ms)
             should_retry1 = true;

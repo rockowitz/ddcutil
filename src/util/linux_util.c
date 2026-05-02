@@ -44,6 +44,7 @@
 #include "dbus_util.h"
 #endif
 #include "file_util.h"
+#include "msg_util.h"
 #include "report_util.h"
 #include "string_util.h"
 #include "subprocess_util.h"
@@ -1096,7 +1097,10 @@ bool recently_resumed_from_sleep() {
          // Accumulated sleep grew by > 1 s since baseline => we resumed.
          resumed = true;
          baseline_accumulated_sleep_ns = current_accumulated_sleep_ns;
-         syslog(LOG_INFO, "Resume from sleep detected via BOOTTIME/MONOTONIC fallback");
+
+         char prefix[200];
+         get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
+         syslog(LOG_INFO, "%sResume from sleep detected via BOOTTIME/MONOTONIC fallback", prefix);
       }
    }
 
