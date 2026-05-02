@@ -415,7 +415,7 @@ else {
       }
 #endif
       if (recently_resumed_from_sleep()) {
-         syslog(LOG_WARNING, "%(%s)Recently resumed from sleep detected", prefix, __func__);
+         syslog(LOG_WARNING, "%s(%s)Recently resumed from sleep detected", prefix, __func__);
          if (paused) {
             syslog(LOG_WARNING,
                   "%s(%s)Already paused based on dbus notification. No additional pause.",
