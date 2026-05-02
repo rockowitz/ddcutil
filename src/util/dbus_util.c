@@ -90,24 +90,6 @@ static GThread * sleep_watch_thread = NULL;
 _Atomic uint64_t last_prepare_for_sleep_ns = 0;
 _Atomic uint64_t last_resume_from_sleep_ns = 0;
 
-#ifdef NON_DBUS
-// Fallback resume detection via CLOCK_BOOTTIME vs CLOCK_MONOTONIC.
-// BOOTTIME advances during sleep; MONOTONIC does not.
-// Their difference = cumulative time spent asleep since boot.
-// An increase since the last saved baseline indicates a resume occurred.
-// UINT64_MAX means not yet initialized (lazy init on first call).
-static _Atomic uint64_t accumulated_sleep_ns_baseline = UINT64_MAX;
-
-static uint64_t get_accumulated_sleep_ns(void) {
-   struct timespec bt, mt;
-   clock_gettime(CLOCK_BOOTTIME,  &bt);
-   clock_gettime(CLOCK_MONOTONIC, &mt);
-   uint64_t boottime_ns = (uint64_t)bt.tv_sec * UINT64_C(1000000000) + bt.tv_nsec;
-   uint64_t mono_ns     = (uint64_t)mt.tv_sec * UINT64_C(1000000000) + mt.tv_nsec;
-   return boottime_ns - mono_ns;
-}
-#endif
-
 
 void ldbus_elapsed_since_resume_fromm_sleep_mark_start() {
    bool debug = false;
@@ -126,25 +108,6 @@ void ldbus_elapsed_since_resume_fromm_sleep_mark_start() {
  */
 uint64_t ldbus_elapsed_since_resume_from_sleep_ns() {
    bool debug = false;
-
-#ifdef NON_DBUS
-   // Fallback: if D-Bus has not recorded a resume, check the clock delta.
-   // Lazy-initialize the baseline on the first call.
-   if (last_resume_from_sleep_ns <= 9) {
-      uint64_t current  = get_accumulated_sleep_ns();
-      uint64_t baseline = accumulated_sleep_ns_baseline;
-
-      if (baseline == UINT64_MAX) {
-         // First call — record current cumulative sleep as baseline.
-         accumulated_sleep_ns_baseline = current;
-      } else if (current > baseline + UINT64_C(1000000000)) {
-         // Accumulated sleep grew by > 1 s since baseline — we resumed.
-         last_resume_from_sleep_ns    = cur_realtime_nanosec();
-         accumulated_sleep_ns_baseline = current;
-         syslog(LOG_INFO, "Resume from sleep detected via BOOTTIME/MONOTONIC fallback");
-      }
-   }
-#endif
 
    uint64_t elapsed_ns = cur_boot_time_nanosec() - last_resume_from_sleep_ns;
 
