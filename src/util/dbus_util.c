@@ -133,14 +133,15 @@ int ldbus_pause_if_recent_return_from_sleep(int minimum_ms) {
    uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
    uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
 
+   char prefix[200];
+   get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
+
    if (debug) {
       char * msg = g_strdup_printf(
                     "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
                     elapsed_ns, elapsed_ms);
       DBG("%s", msg);
-      char prefix[200];
-      get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
-      syslog(LOG_WARNING, "%s%s", prefix, msg);
+      syslog(LOG_WARNING, "%s(%s)%s", prefix, __func__, msg);
       free(msg);
    }
 
@@ -148,7 +149,7 @@ int ldbus_pause_if_recent_return_from_sleep(int minimum_ms) {
    if (elapsed_ms < minimum_ms) {
       remaining_ms = minimum_ms - elapsed_ms;
       char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_ms);
-      syslog(LOG_NOTICE, "%s", msg2);
+      syslog(LOG_NOTICE, "%s(%s)%s", prefix, __func__, msg2);
       DBGF(debug,"%s", msg2);
       usleep(MILLIS2MICROS(remaining_ms));
       free(msg2);

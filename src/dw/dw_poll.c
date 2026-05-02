@@ -408,20 +408,22 @@ else {
       if (elapsed_ms < 1000) {
          uint64_t remaining_sleep_ms = 1000 - elapsed_ms;
          char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_sleep_ms);
-         syslog(LOG_WARNING, "%s%s", prefix, msg2);
+         syslog(LOG_WARNING, "%s(%s)%s", prefix, __func__, msg2);
          DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
          LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
          free(msg2);
       }
 #endif
       if (recently_resumed_from_sleep()) {
-         syslog(LOG_WARNING, "%sRecently resumed from sleep detected", prefix);
+         syslog(LOG_WARNING, "%(%s)Recently resumed from sleep detected", prefix, __func__);
          if (paused) {
-            syslog(LOG_WARNING, "%sAlready paused based on dbus notification. No additional pause.", prefix);
+            syslog(LOG_WARNING,
+                  "%s(%s)Already paused based on dbus notification. No additional pause.",
+                  prefix, __func__);
          }
          else {
             int delay_ms = 1000;
-            syslog(LOG_WARNING, "%sPausing for %d millisec", prefix, delay_ms);
+            syslog(LOG_WARNING, "%s(%s)Pausing for %d millisec", prefix, __func__, delay_ms);
             dw_split_sleep(delay_ms);
          }
       }
