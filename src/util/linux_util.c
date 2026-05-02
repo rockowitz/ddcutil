@@ -9,6 +9,7 @@
 #include "config.h"
 
 /** \cond */
+#include <acl/libacl.h>  // acl_get_perm() (Linux extension)
 #include <assert.h>
 #include <errno.h>
 #include <execinfo.h>      // for segv handler
@@ -19,15 +20,12 @@
 #include <pwd.h>
 #include <signal.h>        // for segv handler
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <unistd.h>
-
-//for acl
-#include <sys/acl.h>     // POSIX ACL API
-#include <stdio.h>
-#include <stdlib.h>
 
 #ifdef TARGET_BSD
 #include <pthread_np.h>
@@ -588,9 +586,6 @@ bye:
 
 
 
-#ifdef UNIMPLEMENTABLE
-// function acl_get_perm() does not exist, no alternative found
-
 #ifdef OUT
 #define NAME_BUF_SZ 1024
 
@@ -623,38 +618,38 @@ static char * format_facl_tag(acl_entry_t entry, acl_tag_t tag) {
    /* Format the tag as a label */
    switch (tag) {
    case ACL_USER_OBJ:
-      result = g_strdup_printf("   user:: %s", uid_name(getuid()));
+      result = g_strdup_printf("   user:: ");
       break;
    case ACL_USER:
       uid_t *uidp = (uid_t *)acl_get_qualifier(entry);
       result = (uidp != NULL)
-                ? g_strdup_printf("  user: %s: ", uid_name(*uidp))
+                ? g_strdup_printf("   user: %s: ", uid_name(*uidp))
                 : strdup("  user:<NULL>: ");
       break;
    case ACL_GROUP_OBJ:
-      result = g_strdup_printf("   groupr:: %s", gid_name(getgid()));
+      result = g_strdup_printf("   group:: ");
       break;
-   case ACL_GROUP: {
+   case ACL_GROUP:
        gid_t *gidp = (gid_t *)acl_get_qualifier(entry);
        result = (gidp != NULL)
                  ? g_strdup_printf("  group: %s: ", gid_name(*gidp))
                  : strdup("  group:<NULL>: ");
        break;
    case ACL_MASK:
-      result = strdup("  mask:: ");
+      result = strdup("   mask:: ");
        break;
    case ACL_OTHER:
-       result = strdup("  other:: ");
+       result = strdup("   other:: ");
        break;
    default:
-       result = g_strdup_printf("  <unknown_tag:%d>: ", (int)tag);
+       result = g_strdup_printf("   <unknown_tag:%d>: ", (int)tag);
        break;
    }
    return result;
 }
 
 
- GPtrArray* * rpt_facl_collect1(
+GPtrArray * rpt_facl_collect1(
       const char * fqfn,
       GPtrArray *  collector,
       int          depth)
@@ -675,7 +670,7 @@ static char * format_facl_tag(acl_entry_t entry, acl_tag_t tag) {
 
     int entry_id = ACL_FIRST_ENTRY;
     while (true) {
-        if (acl_get_entry(acl, entry_id, &entry) = 1) {
+        if (acl_get_entry(acl, entry_id, &entry) != 1) {
             break;   /* no more entries */
         }
 
@@ -710,7 +705,6 @@ static char * format_facl_tag(acl_entry_t entry, acl_tag_t tag) {
 bye:
    return collector;
 }
-#endif
 
 
 /** Reports whether group i2c exists and whether the current user is a
@@ -890,6 +884,8 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
 
    g_ptr_array_add(collector, strdup( "Using acl api:"));
    rpt_facl_collect0(fqfn, collector, depth);
+   g_ptr_array_add(collector, strdup( "Using low level acl api:"));
+   rpt_facl_collect1(fqfn, collector, depth);
    rpt_lsof_collect0(fqfn, collector);
 
 #ifdef USE_DBUS
