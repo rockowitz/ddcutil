@@ -352,14 +352,27 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
 
    Error_Info * err = NULL;
    int eacces_retry_ct = 0;
+
    bool recently_resumed = recently_resumed_from_sleep();
+
+#ifdef USE_DBUS
+   int window_ms = 1000;   // TODO: default in parms.h, settable by command option
+   int paused_ms = ldbus_pause_if_recent_return_from_sleep(window_ms);
+   if (paused_ms > 0) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "ldbus_pause_if_recent_return_from_sleep() paused for %d millisec", paused_ms);
+      SYSLOG2(DDCA_SYSLOG_NOTICE,
+            "pause for %d millisec at start of i2c_open_bus_basic()", paused_ms);
+   }
+#endif
+
 retry:
    RECORD_IO_EVENT(
          -1,
          IE_OPEN,
          ( *fd_loc = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
-   // if successful returns file descriptor, if fail, returns -1 and errno is set
+   // if successful, returns file descriptor; if fail, returns -1 and errno is set
    if (*fd_loc >= 0 && force_failure_i2c_open)  { // for testing
       close(*fd_loc);
       *fd_loc = -1;
