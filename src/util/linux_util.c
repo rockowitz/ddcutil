@@ -25,7 +25,7 @@
 #include <unistd.h>
 
 //for acl
-#include <sys/acl.h>
+#include <sys/acl.h>     // POSIX ACL API
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -584,6 +584,132 @@ static GPtrArray * rpt_facl_collect0(
 bye:
    return collector;
 }
+
+
+
+#ifdef UNIMPLEMENTABLE
+// function acl_get_perm() does not exist, no alternative found
+
+#ifdef OUT
+#define NAME_BUF_SZ 1024
+
+void format_user_name(uid_t uid, char * buf, int bufsz) {
+    struct passwd pwd, *result;
+    char namebuf[NAME_BUF_SZ];
+    if (getpwuid_r(uid, &pwd, buf, bufsz, &result) == 0 && result != NULL) {
+       g_snprintf(buf, bufsz, "%s", pwd.pw_name);
+    } else {
+        g_snprintf("%u", (unsigned int)uid);  /* fall back to numeric UID */
+    }
+}
+
+void format_group_name(gid_t gid, char * buf, int bufsz) {
+    struct group grp, *result;
+
+    if (getgrgid_r(gid, &grp, buf, NAME_BUF_SZ, &result) == 0 && result != NULL) {
+        g_snprint(buf, bufsz, "%s", grp.gr_name);
+    } else {
+        g_snprintf(buf, bufsz, "%u", (unsigned int)gid);  /* fall back to numeric GID */
+    }
+}
+#endif
+
+
+
+static char * format_facl_tag(acl_entry_t entry, acl_tag_t tag) {
+   char * result = NULL;
+
+   /* Format the tag as a label */
+   switch (tag) {
+   case ACL_USER_OBJ:
+      result = g_strdup_printf("   user:: %s", uid_name(getuid()));
+      break;
+   case ACL_USER:
+      uid_t *uidp = (uid_t *)acl_get_qualifier(entry);
+      result = (uidp != NULL)
+                ? g_strdup_printf("  user: %s: ", uid_name(*uidp))
+                : strdup("  user:<NULL>: ");
+      break;
+   case ACL_GROUP_OBJ:
+      result = g_strdup_printf("   groupr:: %s", gid_name(getgid()));
+      break;
+   case ACL_GROUP: {
+       gid_t *gidp = (gid_t *)acl_get_qualifier(entry);
+       result = (gidp != NULL)
+                 ? g_strdup_printf("  group: %s: ", gid_name(*gidp))
+                 : strdup("  group:<NULL>: ");
+       break;
+   case ACL_MASK:
+      result = strdup("  mask:: ");
+       break;
+   case ACL_OTHER:
+       result = strdup("  other:: ");
+       break;
+   default:
+       result = g_strdup_printf("  <unknown_tag:%d>: ", (int)tag);
+       break;
+   }
+   return result;
+}
+
+
+ GPtrArray* * rpt_facl_collect1(
+      const char * fqfn,
+      GPtrArray *  collector,
+      int          depth)
+{
+   if (!collector)
+      collector = g_ptr_array_new_with_free_func(g_free);
+
+   acl_entry_t entry;
+   acl_tag_t tag;
+   
+   acl_t acl = acl_get_file(fqfn, ACL_TYPE_ACCESS);
+   if (acl == NULL) {
+      G_PTR_ARRAY_ADD_STRING(collector, "acl_get_file(\"%s\") failed. errno=%d", fqfn, errno);
+      goto bye;
+    }
+
+    G_PTR_ARRAY_ADD_STRING(collector, "ACL entries for %s:", fqfn);
+
+    int entry_id = ACL_FIRST_ENTRY;
+    while (true) {
+        if (acl_get_entry(acl, entry_id, &entry) = 1) {
+            break;   /* no more entries */
+        }
+
+        if (acl_get_tag_type(entry, &tag) == -1) {
+            G_PTR_ARRAY_ADD_STRING(collector, "acl_get_tag_type() failed");
+            break;
+        }
+
+        char * formatted_tag = format_facl_tag(entry, tag);
+
+        /* Print permissions */
+        char * perms = NULL;
+        acl_permset_t permset;
+        if (acl_get_permset(entry, &permset) != -1) {
+            perms = g_strdup_printf("%c%c%c",
+                   acl_get_perm(permset, ACL_READ) ? 'r' : '-',
+                   acl_get_perm(permset, ACL_WRITE) ? 'w' : '-',
+                   acl_get_perm(permset, ACL_EXECUTE) ? 'x' : '-');
+        }
+        else
+           perms = strdup("");
+
+        G_PTR_ARRAY_ADD_STRING(collector, "%s%s", formatted_tag, perms);
+        free(formatted_tag);
+        free(perms);
+
+        entry_id = ACL_NEXT_ENTRY;
+    }
+
+    acl_free(acl);  /* still free the ACL object */
+
+bye:
+   return collector;
+}
+#endif
 
 
 /** Reports whether group i2c exists and whether the current user is a
