@@ -185,7 +185,7 @@ ldbus_handle_message(DBusConnection *conn, DBusMessage *msg, void *user_data)
           char prefix[200];
           get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
           char * s1 = g_strdup_printf(
-                "%s%sReceived dbus signal PrepareForSleep(%s)",
+                "%s(%s)Received dbus signal PrepareForSleep(%s)",
                 prefix, __func__, (preparing) ? "true=prepare" : "false=resume" );
           char * s = g_strdup_printf(
                   "Set %s = %"PRIu64" millisec", (preparing) ? "true (prepare)" : "false (resume)",
