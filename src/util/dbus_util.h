@@ -13,6 +13,7 @@
 #include <stdbool.h>
 
 uint64_t ldbus_elapsed_since_resume_from_sleep_ns();
+int      ldbus_pause_if_recent_return_from_sleep(int minimum_ms);
 bool     ldbus_start_sleep_watch_thread();
 void     ldbus_stop_sleep_watch_thread();
 

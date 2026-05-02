@@ -148,10 +148,48 @@ uint64_t ldbus_elapsed_since_resume_from_sleep_ns() {
 
    uint64_t elapsed_ns = cur_boot_time_nanosec() - last_resume_from_sleep_ns;
 
+   //  elapsed_ns = MILLIS2NANOS(400);   // *** TEST ***
    DBGF(debug,
          "last_resume_from_sleep_ns=%"PRIu64", Returning %"PRIu64" ns = %"PRIu64" ms",
          last_resume_from_sleep_ns, elapsed_ns, NANOS2MILLIS(elapsed_ns));
    return elapsed_ns;
+}
+
+
+/** If the elapsed time since the most recent return from sleep occurred
+ *  is less than the specified value, sleep for the time remaining until
+ *  the specified time value has elapsed.
+ *
+ *  @param  minimum_ms
+ *  @return number of milliseconds slept
+ */
+int ldbus_pause_if_recent_return_from_sleep(int minimum_ms) {
+   bool debug = false;
+
+   uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
+   uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
+
+   if (debug) {
+      char * msg = g_strdup_printf(
+                    "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
+                    elapsed_ns, elapsed_ms);
+      DBG("%s", msg);
+      syslog(LOG_WARNING, "%s", msg);
+      free(msg);
+   }
+
+   uint64_t remaining_ms = 0;
+   if (elapsed_ms < minimum_ms) {
+      remaining_ms = minimum_ms - elapsed_ms;
+      char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_ms);
+      syslog(LOG_NOTICE, "%s", msg2);
+      DBGF(debug,"%s", msg2);
+      usleep(MILLIS2MICROS(remaining_ms));
+      free(msg2);
+   }
+
+   DBGF(debug, "Done.   Returning: %"PRIu64" millisec", remaining_ms);
+   return remaining_ms;
 }
 
 
