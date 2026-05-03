@@ -825,12 +825,13 @@ ddci_init(const char *      libopts,
 
       if (stdout_stderr_redirected) {
          // use tracing output for syslog for these functions:
-         add_traced_function("ddca_get_non_table_vcp_value");
-         add_traced_function("ddci_set_non_table_vcp_value_verify");
+         // add_traced_function("ddca_get_non_table_vcp_value");
+         // add_traced_function("ddci_set_non_table_vcp_value_verify");
          add_traced_function("dw_start_watch_displays");
          add_traced_function("dw_stop_watch_displays");
          add_traced_function("dw_hotplug_change_handler");
          add_traced_function("dw_emit_display_status_record");
+         add_traced_function("i2c_open_bus_basic");
       }
    }
 
