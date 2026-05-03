@@ -404,7 +404,7 @@ else {
       BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg);
       free(msg);
 
-      if (elapsed_ms < 1000) {
+      if (elapsed_ms < pause_after_resume_ms) {
          uint64_t remaining_sleep_ms = 1000 - elapsed_ms;
          char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_sleep_ms);
          BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg2);
