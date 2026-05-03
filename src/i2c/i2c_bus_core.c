@@ -22,6 +22,7 @@
 #include <unistd.h>
 /** \endcond */
 
+#include "util/acl_util.h"
 #include "util/coredefs_base.h"
 #include "util/dbus_util.h"
 #include "util/debug_util.h"
@@ -92,13 +93,15 @@ int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool force_failure_i2c_all_relevant_i2c_buses_rw = false;
 bool force_failure_i2c_all_edids_readable_using_i2c = false;
 bool force_failure_i2c_open = false;
+int  pause_after_resume_ms = 1000;  // TODO: default in parms.h, settable as option
 
+#ifdef OUT
 // Timestamp of the first EACCES open failure in the current cycle.
 // Used to share the post-resume sleep across all devices: the first
 // failing device sleeps once; subsequent devices in the same window
 // retry immediately without adding another sleep.
 static _Atomic uint64_t first_eacces_open_ns = 0;
-
+#endif
 
 // quick and dirty for debugging
 static char *
@@ -333,6 +336,33 @@ unlock_display_by_businfo(I2C_Bus_Info * businfo) {
 #endif
 
 
+bool cur_user_has_group_i2c_perms(const char * filename) {
+   bool has_group_perms = false;
+   if (!group_i2c_exists()) {
+      BASIC_STD_SYSLOG(LOG_WARNING, "Group i2c does not exist");
+   }
+   else {
+      if (!is_file_group_i2c(filename)) {
+         SIMPLE_STD_SYSLOG(LOG_WARNING, "Device %s not in group i2c", filename);
+      }
+      else {
+         if (!cur_user_in_group_i2c()) {
+            BASIC_STD_SYSLOG(LOG_WARNING, "Current user not in group i2c");
+         }
+         else {
+            if (!is_file_group_acl_rw(filename)) {
+               SIMPLE_STD_SYSLOG(LOG_WARNING, "Group permissons on %s not RW",filename);
+            }
+            else {
+               has_group_perms = true;
+            }
+         }
+      }
+   }
+   return has_group_perms;
+}
+
+
 // static bool first_open_error = false;
 
 /** Opens a I2C device specified by its file name, without further checks
@@ -353,12 +383,16 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
 
    Error_Info * err = NULL;
    int eacces_retry_ct = 0;
+   bool likely_transient = false;
+   int total_eacces_retry_ms = 0;
+   int max_eacces_retry_ms = 3000;
+   int eacces_retry_interval_ms = 200;
+   int max_eacces_retry_ct = 4;
 
-   bool recently_resumed = recently_resumed_from_sleep_by_clocktime();
-
+   bool recently_resumed_by_clocktime = recently_resumed_from_sleep_by_clocktime();
+   int paused_ms = 0;
 #ifdef USE_DBUS
-   int window_ms = 1000;   // TODO: default in parms.h, settable by command option
-   int paused_ms = ldbus_pause_if_recent_return_from_sleep(window_ms);
+   paused_ms = ldbus_pause_if_recent_return_from_sleep(pause_after_resume_ms);
    if (paused_ms > 0) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "ldbus_pause_if_recent_return_from_sleep() paused for %d millisec", paused_ms);
@@ -366,6 +400,11 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
             "pause for %d millisec at start of i2c_open_bus_basic()", paused_ms);
    }
 #endif
+   if (paused_ms == 0 && recently_resumed_by_clocktime) {
+      SLEEP_MILLIS_WITH_SYSLOG(pause_after_resume_ms, "Pausing for recent resume by clocktime");
+   }
+   bool recently_resumed = paused_ms > 0 || recently_resumed_by_clocktime;
+
 
 retry:
    RECORD_IO_EVENT(
@@ -374,11 +413,13 @@ retry:
          ( *fd_loc = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
    // if successful, returns file descriptor; if fail, returns -1 and errno is set
+
    if (*fd_loc >= 0 && force_failure_i2c_open)  { // for testing
       close(*fd_loc);
       *fd_loc = -1;
       errno = EACCES;
    }
+
    if (*fd_loc < 0) {
       // if (first_open_error) {
       //    first_open_error = false;
@@ -399,23 +440,57 @@ retry:
             diagnose_open_failure_to_syslog(filename, err->detail);
             syslog(LOG_WARNING, "open() EACCES failure, recently resumed from sleep: %s",
                                 sbool(recently_resumed));
-         }
+#ifdef OUT
          uint64_t now_ns   = cur_realtime_nanosec();
          bool should_retry1 = false;
          bool should_retry2 = false;
          bool should_retry3 = false;
+#endif
+         
 
+            likely_transient = is_cur_user_acl_rw(filename);
+            if (!likely_transient) {
+               BASIC_STD_SYSLOG(LOG_WARNING, "User ACL is not RW");
+               bool has_group_perms = cur_user_has_group_i2c_perms(filename);
+               SIMPLE_STD_SYSLOG(LOG_NOTICE, "Current user has group i2c perms on %s", filename);
+               if (has_group_perms)
+                  likely_transient = true;
+            }
+            if (likely_transient || recently_resumed)  {
+               max_eacces_retry_ms = 3000;
+               eacces_retry_interval_ms = 500;
+               max_eacces_retry_ct = 999;
+            }
+            else {
+               max_eacces_retry_ct = 3;
+               max_eacces_retry_ms = 10000;
+               eacces_retry_interval_ms = 100;
+            }
+         }
+
+         if (eacces_retry_ct       < max_eacces_retry_ct ||
+            total_eacces_retry_ms < max_eacces_retry_ms )
+         {
+            errinfo_free(err);
+            err = NULL;
+            total_eacces_retry_ms += eacces_retry_interval_ms;
+            eacces_retry_ct++;
+            SLEEP_MILLIS_WITH_SYSLOG(eacces_retry_interval_ms, "EACCES retry_ct=%d", eacces_retry_ct);
+            goto retry;
+         }
+      }
+
+
+#ifdef OUT
 #ifdef USE_DBUS
          static uint64_t max_elapsed_ms = 1000;
          uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
          uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
-         char prefix[200];
-         get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
          char * resume_msg = g_strdup_printf(
                "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
                elapsed_ns, elapsed_ms);
          DBGTRC(debug, TRACE_GROUP, "open() EACCES failure, %s", resume_msg);
-         syslog(LOG_WARNING, "%sopen() EACCES failure, %s", prefix, resume_msg);
+         SIMPLE_STD_FUNC_SYSLOG(LOG_WARNING, "open() EACCES failure, %s", resume_msg);
          free(resume_msg);
          if (elapsed_ms <= max_elapsed_ms)
             should_retry1 = true;
@@ -429,6 +504,7 @@ retry:
             should_retry2 = true;
 
          bool should_retry = should_retry1 || should_retry2 || should_retry3;
+
 
          if (eacces_retry_ct >= max_retries && !should_retry1) {
             syslog(LOG_ERR, "Reached max retries = %d and no remaining time", max_retries);
@@ -462,6 +538,7 @@ retry:
             goto retry;
          }
       }
+#endif   // OUT
    }
 
    if ( ERRINFO_STATUS(err) == -EACCES)
