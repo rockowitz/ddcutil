@@ -22,6 +22,7 @@
 #include <unistd.h>
 
 #include "util/file_util.h"
+#include "util/linux_basic_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
