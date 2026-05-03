@@ -25,6 +25,7 @@ do { \
 } while(0)
 #endif
 
+#ifdef UNUSED
 #define SIMPLE_SYSLOGF(_debug, _syslog_priority, format, ...) \
 do { \
       if (_debug) { \
@@ -33,7 +34,7 @@ do { \
          free(body); \
       } \
 } while(0)
-
+#endif
 
 #ifdef COMPARE_VS_CORE
 #define DECORATED_SYSLOG(_log_level, _msg) \
@@ -61,9 +62,6 @@ do { \
       get_msg_decoration(prefix, 100, true); \
       syslog(_syslog_priority, "%s(%s) %s%s", prefix, __func__, _msg, (tag_output) ? " (N)" : ""  ); \
 } while(0)
-
-
-
 
 
 #define SIMPLE_STD_SYSLOG(_syslog_priority, format, ...) \
