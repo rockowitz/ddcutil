@@ -3,50 +3,34 @@
 
 
 
-i2c_open_basic(): check at start if < 1000 ms since resume from sleep, 
-if so sleep
-
-
-Enhanced recovery from open failures
-dbus within 1000ms window, estimate of recent sleep
-
-additional pause in watch loop if resume from sleep
-
-    dw_watch_display_connections(): delay up to 1 sec after resume from sleep
-
-
-   in EACCES recovery code, continue retries based on test
-    
-    for recently resumed by dbus, retry until max time exceeded
-    for BOOTTIME vs MONOTONIC time test, max number of tries
-    for other EACCESS failure, retry once
-    
-    i.e.
-      - D-Bus (should_retry1): time-bounded — retries while
-        elapsed_ms <= 500, no count cap
-      - BOOTTIME (should_retry2): count-bounded — retries
-        while recently_resumed && eacces_retry_ct < max_retries
-      - Unconditional (should_retry3): one-shot — only fires on
-        the first EACCES attempt
-      - Final cap: stops all retries when
-        eacces_retry_ct >= max_retries && !should_retry1
-            (i.e., only D-Bus can drive retries beyond max_re
-
-
-set group and mode in udev rule
-
-
-additional open failure diagnostics
 
 
 
 
 #### Added 
 
-- Implemented a basic segfault handler.  It writes the traced function of the
-  current thread to the system log, then invokes the prior handler.
 
 
+
+
+#### Fixed
+
+
+- Use atomic variables to fix time of use to time of check (TOCTOU) race 
+  conditions identified by Claude Code.
+
+
+
+
+
+## [2.2.7] 2025-05-01
+
+### General
+
+#### Added
+
+- Implemented a basic segfault handler.  It writes the traced function stack
+  of the current thread to the system log, then invokes the prior handler.
 
 #### Changed
 
@@ -56,25 +40,6 @@ additional open failure diagnostics
   mode 0660 as well as using token uaccess to assign /dev/i2c permissions. 
   Users encountering the transient EACCES errors may need to use group permissions
   to use the old group permissions method. 
-
-
-#### Fixed
-
-- Avoid a possible buffer overflow when printing an EDID field such as 
-  serial number that contains invalid ASCII characters
-- Write error message during **getvcp --brief*** regarding sysfs drm connector 
-  not found to stderr, not stdout.  Issue #598.
-- Use atomic variables to fix time of use to time of check (TOCTOU) race 
-  conditions identified by Claude Code.
-
-- 
-
-
-
-
-## [2.2.7] 2025-04-15
-
-### General
 
 #### Fixed
 
@@ -105,13 +70,35 @@ additional open failure diagnostics
   - Consistenly make **#include "config.h"** the first include.
   - Consistenly set AM_CFLAGS = $(AM_CLAGS_STD) in the Makefile.am in each of
     the subdirectories of src
-    
+- Avoid a possible buffer overflow when printing an EDID field such as 
+  serial number that contains invalid ASCII characters
+- Write error message during **getvcp --brief*** regarding sysfs drm connector 
+  not found to stderr, not stdout.  Issue #598.   
 
 ### Shared Library
 
 The shared library **libddcutil** is backwardly compatible with the one in 
 ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
-file is libddcutil.so.5.5.0.
+file is libddcutil.so.5.5.1.
+
+
+
+
+#### EACCES Errors
+
+Calling **open()** on a /dev/i2c device for which the user has
+RW permission sometimes (rarely) fails with Linux error EACCES.
+This elusive problem has been most frequently seen on Framework 
+computers and Arch based distributions.
+
+The problem occurs after a resume from sleep.
+
+Reverting to using group i2c instead of udev token uaccess appears to resolve the problem, but this is not certain.
+Group ownership is a permanent attribute of the device node inode, set at creation and never cleared. It survives suspend/resume intact. udev rules (TAG+="uaccess" or MODE=) — uaccess works by having systemd-logind set a POSIX ACL on the device node for the current seat user. After resume, the kernel driver re-registers the device, which can trigger a new add uevent. Logind needs to process that event and re-apply the ACL.
+
+To address this problem, pauses are insert at several points, including opening a /dev/i2c device, if the call occurs immediately after a resume from sleep.  If the ACL API reports that the /dev/i2c device does have the proper permissions, libddcutil pauses and retries opening the device. 
+
+
 
 #### Added 
 

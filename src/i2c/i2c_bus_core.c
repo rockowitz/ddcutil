@@ -93,7 +93,10 @@ int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool force_failure_i2c_all_relevant_i2c_buses_rw = false;
 bool force_failure_i2c_all_edids_readable_using_i2c = false;
 bool force_failure_i2c_open = false;
-int  pause_after_resume_ms = 1000;  // TODO: default in parms.h, settable as option
+int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;  // TODO: default in parms.h, settable as option
+int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;
+int  max_eacces_retry_ct = DEFAULT_MAX_EACCES_RETRY_CT;
+
 
 #ifdef OUT
 // Timestamp of the first EACCES open failure in the current cycle.
@@ -385,9 +388,9 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    int eacces_retry_ct = 0;
    bool likely_transient = false;
    int total_eacces_retry_ms = 0;
-   int max_eacces_retry_ms = 3000;
+   int limit_eacces_retry_ms = 3000;
    int eacces_retry_interval_ms = 200;
-   int max_eacces_retry_ct = 4;
+   int limit_eacces_retry_ct = 4;
 
    bool recently_resumed_by_clocktime = recently_resumed_from_sleep_by_clocktime();
    int paused_ms = 0;
@@ -457,19 +460,19 @@ retry:
                   likely_transient = true;
             }
             if (likely_transient || recently_resumed)  {
-               max_eacces_retry_ms = 3000;
-               eacces_retry_interval_ms = 500;
-               max_eacces_retry_ct = 999;
+               limit_eacces_retry_ms = max_eacces_retry_ms;
+               limit_eacces_retry_ct = 999;      //i.e. limit is max_eacces_retry_ms
+               eacces_retry_interval_ms = max_eacces_retry_ms/5;
             }
             else {
-               max_eacces_retry_ct = 3;
-               max_eacces_retry_ms = 10000;
+               limit_eacces_retry_ct = max_eacces_retry_ct;
+               limit_eacces_retry_ms = 10000;    // i.e. limit is limit_eacces_retry_ct
                eacces_retry_interval_ms = 100;
             }
          }
 
-         if (eacces_retry_ct       < max_eacces_retry_ct ||
-            total_eacces_retry_ms < max_eacces_retry_ms )
+         if (eacces_retry_ct      < limit_eacces_retry_ct &&
+            total_eacces_retry_ms < limit_eacces_retry_ms )
          {
             errinfo_free(err);
             err = NULL;
@@ -479,7 +482,6 @@ retry:
             goto retry;
          }
       }
-
 
 #ifdef OUT
 #ifdef USE_DBUS
@@ -542,13 +544,14 @@ retry:
    }
 
    if ( ERRINFO_STATUS(err) == -EACCES)
-      syslog(LOG_ERR, "open() failed with %d EACCES errors", eacces_retry_ct);
+      SIMPLE_STD_SYSLOG(LOG_ERR, "open() failed with %d EACCES errors, total retry ms = %d",
+            eacces_retry_ct, total_eacces_retry_ms);
    if (!err && eacces_retry_ct > 0)
-      syslog(LOG_WARNING, "open() succeeded with %d retries", eacces_retry_ct);
+      SIMPLE_STD_SYSLOG(LOG_NOTICE, "open() succeeded with %d retries after %d millisec",
+            eacces_retry_ct, total_eacces_retry_ms);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
    return err;
 }
-
 
 /** Opens a /dev/i2c device specified by its bus number, without further checks
  *  @param  busno      I2C bus number

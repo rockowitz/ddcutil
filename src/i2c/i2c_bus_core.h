@@ -41,6 +41,8 @@ extern bool force_failure_i2c_all_relevant_i2c_buses_rw;
 extern bool force_failure_i2c_all_edids_readable_using_i2c;
 extern bool force_failure_i2c_open;
 extern int  pause_after_resume_ms;
+extern int  max_eacces_retry_ms;
+extern int  max_eacces_retry_ct;
 
 Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices);
 

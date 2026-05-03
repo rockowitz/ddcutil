@@ -517,7 +517,11 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_I9_SET)
         dw_start_watch_delay_ms  = parsed_cmd->i9;
    if (parsed_cmd->flags2 & CMD_FLAG2_I10_SET)
-        pause_after_resume_ms  = parsed_cmd->i10;
+      pause_after_resume_ms  = parsed_cmd->i10;
+   if (parsed_cmd->flags2 & CMD_FLAG2_I11_SET)
+      max_eacces_retry_ms  = parsed_cmd->i10;
+   if (parsed_cmd->flags2 & CMD_FLAG2_I12_SET)
+      max_eacces_retry_ct  = parsed_cmd->i10;
 }
 
 
