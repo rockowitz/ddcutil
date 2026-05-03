@@ -23,6 +23,7 @@ distclean-local:
 noinst_LTLIBRARIES = libutil.la
 
 libutil_la_SOURCES = \
+acl_util.c                 \
 data_structures.c          \
 ddcutil_config_file.c      \
 debug_util.c               \
@@ -35,6 +36,7 @@ file_util_base.c           \
 glib_util.c                \
 glib_string_util.c         \
 i2c_util.c                 \
+linux_basic_util.c         \
 linux_util.c               \
 msg_util.c                 \
 multi_level_map.c          \

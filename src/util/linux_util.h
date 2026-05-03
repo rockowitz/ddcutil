@@ -8,9 +8,12 @@
 #ifndef LINUX_UTIL_H_
 #define LINUX_UTIL_H_
 
+// #include <acl/libacl.h>
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
 #include <stdbool.h>
+
+#include "linux_basic_util.h"
 
 bool       is_readable_file(const char * filename);
 int        get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz);
@@ -23,14 +26,6 @@ bool       is_module_built_in(const char * module_name);
 int        module_status_by_modules_builtin_or_existence(const char * module_name);
 char       i2c_dev_status_by_boot_config_file();
 
-intmax_t   get_thread_id();
-intmax_t   get_process_id();
-bool       is_valid_thread_or_process(pid_t id);
-
-bool       get_file_owner_group_ids(const char * fqfn, int * uid_loc, int * gid_loc);
-char *     uid_name(int uid);
-char *     gid_name(int gid);
-
 void       rpt_lsof(                       const char * fqfn, int depth);
 GPtrArray* rpt_lsof_collect0(              const char * fqfn, GPtrArray * collector);
 GPtrArray* rpt_lsof_collect(               const char * fqfn);
@@ -41,4 +36,5 @@ void       install_segv_handler(void);
 
 void       init_baseline_accumulated_sleep_ns();
 bool       recently_resumed_from_sleep_by_clocktime();
+void       reset_recently_resumed_by_clocktime_cache();
 #endif /* LINUX_UTIL_H_ */

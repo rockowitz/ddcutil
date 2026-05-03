@@ -37,11 +37,13 @@
 /** \endcond */
 
 #include "common_inlines.h"
+#include "acl_util.h"
 #include "debug_util.h"
 #ifdef USE_DBUS
 #include "dbus_util.h"
 #endif
 #include "file_util.h"
+#include "linux_basic_util.h"
 #include "msg_util.h"
 #include "report_util.h"
 #include "string_util.h"
@@ -325,146 +327,6 @@ char i2c_dev_status_by_boot_config_file() {
 }
 
 
-/** Gets the id number of the current thread
- *
- *  \return  thread number
- */
-intmax_t get_thread_id() {
-   bool debug = false;
-   DBGF(debug, "Starting.");
-
-#ifdef TARGET_BSD
-   int tid = pthread_getthreadid_np();
-#else
-   pid_t tid = syscall(SYS_gettid);
-#endif
-   DBGF(debug, "Done.    Returning %jd", (intmax_t) tid);
-   return tid;
-}
-
-
-/** Gets the id number of the current process
- *
- *  \return  process number
- */
-intmax_t get_process_id()
-{
-   pid_t pid = syscall(SYS_getpid);
-   return pid;
-}
-
-
-#ifdef UNUSED
-char * get_file_owner(const char * fqfn) {
-   struct stat st;
-   char * result = NULL;
-
-   if (stat(fqfn, &st) == -1) {
-      perror("stat");
-   }
-
-   struct passwd *pw = getpwuid(st.st_uid);
-   //    struct group  *gr = getgrgid(st.st_gid);
-
-   printf("Owner: %s\n", pw ? pw->pw_name : "unknown");
-   // printf("Group: %s\n", gr ? gr->gr_name : "unknown");
-
-   result = (pw) ? pw->pw_name : "unknown";
-   return result;
-}
-
-
-char * get_file_group(const char * fqfn) {
-   struct stat st;
-   char * result = NULL;
-
-   if (stat(fqfn, &st) == -1) {
-      perror("stat");
-   }
-
-   // struct passwd *pw = getpwuid(st.st_uid);
-   struct group  *gr = getgrgid(st.st_gid);
-
-   // printf("Owner: %s\n", pw ? pw->pw_name : "unknown");
-   printf("Group: %s\n", gr ? gr->gr_name : "unknown");
-
-   result = (gr) ? gr->gr_name : "unknown";
-   return result;
-}
-#endif
-
-
-/** Gets the owner and group ids for a file.
- *
- *  @param fqfn     name of file to check
- *  @param uid_loc  where to return owner id
- *  @param gid_loc  where to return group id
- *  @return false if stat() failed, true otherwise
- */
-bool get_file_owner_group_ids(const char * fqfn, int * uid_loc, int * gid_loc) {
-   *uid_loc = -1;
-   *gid_loc = -1;
-
-   struct stat st;
-   bool ok = true;
-
-   if (stat(fqfn, &st) == -1) {
-      perror("stat");
-      ok = false;
-   }
-   else {
-      *uid_loc = st.st_uid;
-      *gid_loc = st.st_gid;
-   }
-   return ok;
-}
-
-
-/** Returns the name for a user id
- *
- *  @param uid  user id
- *  @return name of user, or "unknown" if unrecognized
- *
- *  The returned string should not be freed.?
- */
-char * uid_name(int uid) {
-   struct passwd * pw = getpwuid(uid);
-   char*  uid_name = pw ? pw->pw_name : "unknown";
-   return uid_name;
-}
-
-
-/** Returns the name for a group id
- *
- *  @param gid  group id
- *  @return name of group, or "unknown" if unrecognized
- *
- *  The returned string should not be freed.?
- */
-char * gid_name(int gid) {
-   struct group * gr = getgrgid(gid);
-   char*  uid_name = gr ? gr->gr_name : "unknown";
-   return uid_name;
-}
-
-
-/** Checks that a thread or process id is valid.
- *
- *  @param  id  thread or process id
- *  @return true if valid, false if not
- */
-bool is_valid_thread_or_process(pid_t id) {
-   bool debug = false;
-   struct stat buf;
-   char procfn[20];
-   snprintf(procfn, 20, "/proc/%d", id);
-   int rc = stat(procfn, &buf);
-   bool result = (rc == 0);
-   DBGF(debug, "File: %s, returning %s", procfn, sbool(result));
-   if (!result)
-      DBG("!!! Returning: %s", sbool(result));
-   return result;
-}
 
 
 /** Report processes that have a file open
@@ -530,280 +392,6 @@ GPtrArray* rpt_lsof_collect(const char * fqfn) {
 }
 
 
-/** Collects information about the access control list (ACL) for a file,
- *  using the libacl API, and returns it as an array of lines.
- *
- *  The output is similar to, but not identical to, that of command **facl**.
- *  In particular, the effective permissions, after mask application, are
- *  not reported.
- *
- *  @param  fqfn       file name
- *  @param  collector  if NULL, allocate new GPtrArray
- *  @param  depth      logical indentation depth for formatting lines
- *  @return GPtrArray of lines
- */
-static GPtrArray * rpt_facl_collect0(
-      const char * fqfn,
-      GPtrArray *  collector,
-      int          depth)
-{
-   if (!collector)
-      collector = g_ptr_array_new_with_free_func(g_free);
-
-   acl_t acl = acl_get_file(fqfn, ACL_TYPE_ACCESS);
-   if (acl == NULL) {
-      char * s = g_strdup_printf("acl_get_file(\"%s\") failed. errno=%d", fqfn, errno);
-      g_ptr_array_add(collector, s);
-      goto bye;
-    }
-
-    char *text;
-    ssize_t len;
-    text = acl_to_text(acl, &len);
-    if (text == NULL) {
-        char * s = g_strdup_printf("acl_to_text() failed. errno=%d", errno);
-        g_ptr_array_add(collector, s);
-        acl_free(acl);
-        goto bye;
-    }
-
-    Null_Terminated_String_Array ntsa = strsplit(text, "\n\r");
-    GPtrArray * lines = ntsa_to_g_ptr_array(ntsa);
-    // DBG("lines->len = %d", lines->len);
-    for (int ndx = 0; ndx < lines->len; ndx++) {
-       char * s = g_strdup_printf("%*s%s", depth, " ", ntsa[ndx]);
-       // DBG("s: %s", s);
-       g_ptr_array_add(collector, s);
-    }
-    ntsa_free(ntsa,  true);
-    g_ptr_array_free(lines, false);
-
-    // free(text); // invalid free(), sample code  had acl_free_text()
-    acl_free(acl);
-
-bye:
-   return collector;
-}
-
-
-
-#ifdef OUT
-#define NAME_BUF_SZ 1024
-
-void format_user_name(uid_t uid, char * buf, int bufsz) {
-    struct passwd pwd, *result;
-    char namebuf[NAME_BUF_SZ];
-    if (getpwuid_r(uid, &pwd, buf, bufsz, &result) == 0 && result != NULL) {
-       g_snprintf(buf, bufsz, "%s", pwd.pw_name);
-    } else {
-        g_snprintf("%u", (unsigned int)uid);  /* fall back to numeric UID */
-    }
-}
-
-void format_group_name(gid_t gid, char * buf, int bufsz) {
-    struct group grp, *result;
-
-    if (getgrgid_r(gid, &grp, buf, NAME_BUF_SZ, &result) == 0 && result != NULL) {
-        g_snprint(buf, bufsz, "%s", grp.gr_name);
-    } else {
-        g_snprintf(buf, bufsz, "%u", (unsigned int)gid);  /* fall back to numeric GID */
-    }
-}
-#endif
-
-
-
-static char * format_facl_tag(acl_entry_t entry, acl_tag_t tag) {
-   char * result = NULL;
-
-   /* Format the tag as a label */
-   switch (tag) {
-   case ACL_USER_OBJ:
-      result = g_strdup_printf("   user:: ");
-      break;
-   case ACL_USER:
-      uid_t *uidp = (uid_t *)acl_get_qualifier(entry);
-      result = (uidp != NULL)
-                ? g_strdup_printf("   user: %s: ", uid_name(*uidp))
-                : strdup("  user:<NULL>: ");
-      break;
-   case ACL_GROUP_OBJ:
-      result = g_strdup_printf("   group:: ");
-      break;
-   case ACL_GROUP:
-       gid_t *gidp = (gid_t *)acl_get_qualifier(entry);
-       result = (gidp != NULL)
-                 ? g_strdup_printf("  group: %s: ", gid_name(*gidp))
-                 : strdup("  group:<NULL>: ");
-       break;
-   case ACL_MASK:
-      result = strdup("   mask:: ");
-       break;
-   case ACL_OTHER:
-       result = strdup("   other:: ");
-       break;
-   default:
-       result = g_strdup_printf("   <unknown_tag:%d>: ", (int)tag);
-       break;
-   }
-   return result;
-}
-
-
-static GPtrArray * rpt_facl_collect1(
-      const char * fqfn,
-      GPtrArray *  collector,
-      int          depth)
-{
-   if (!collector)
-      collector = g_ptr_array_new_with_free_func(g_free);
-
-   acl_entry_t entry;
-   acl_tag_t tag;
-   
-   acl_t acl = acl_get_file(fqfn, ACL_TYPE_ACCESS);
-   if (acl == NULL) {
-      G_PTR_ARRAY_ADD_STRING(collector, "acl_get_file(\"%s\") failed. errno=%d", fqfn, errno);
-      goto bye;
-    }
-
-    G_PTR_ARRAY_ADD_STRING(collector, "ACL entries for %s:", fqfn);
-
-    int entry_id = ACL_FIRST_ENTRY;
-    while (true) {
-        if (acl_get_entry(acl, entry_id, &entry) != 1) {
-            break;   /* no more entries */
-        }
-
-        if (acl_get_tag_type(entry, &tag) == -1) {
-            G_PTR_ARRAY_ADD_STRING(collector, "acl_get_tag_type() failed");
-            break;
-        }
-
-        char * formatted_tag = format_facl_tag(entry, tag);
-
-        /* Print permissions */
-        char * perms = NULL;
-        acl_permset_t permset;
-        if (acl_get_permset(entry, &permset) != -1) {
-            perms = g_strdup_printf("%c%c%c",
-                   acl_get_perm(permset, ACL_READ) ? 'r' : '-',
-                   acl_get_perm(permset, ACL_WRITE) ? 'w' : '-',
-                   acl_get_perm(permset, ACL_EXECUTE) ? 'x' : '-');
-        }
-        else
-           perms = strdup("");
-
-        G_PTR_ARRAY_ADD_STRING(collector, "%s%s", formatted_tag, perms);
-        free(formatted_tag);
-        free(perms);
-
-        entry_id = ACL_NEXT_ENTRY;
-    }
-
-    acl_free(acl);  /* still free the ACL object */
-
-bye:
-   return collector;
-}
-
-
-/** Reports whether group i2c exists and whether the current user is a
- *  member of the group.
- *
- *  @param collector
- */
-static void check_group_i2c_collect(GPtrArray* collector) {
-   // bool debug = false;
-
-   g_ptr_array_add(collector, strdup("Checking for group i2c..."));
-
-   int uid  = (int) getuid();
-   int euid = (int) geteuid();
-   // int gid  = (int) getgid();
-   // int egid = (int) getegid();
-   char * cur_uname = uid_name(uid);
-   char * cur_euname = uid_name(euid);
-
-   // char * s3 = g_strdup_printf("uid=%d=%s, euid=%d=%s", uid, cur_uname, euid, cur_euname);
-   // g_ptr_array_add(collector, s3);
-   bool cur_user_in_group_i2c = false;
-   bool cur_euser_in_group_i2c = false;
-   struct group * pgi2c = getgrnam("i2c");
-   if (pgi2c) {
-      g_ptr_array_add(collector, strdup( "Group i2c exists"));
-      int ndx=0;
-      char * curname;
-      while ( (curname = pgi2c->gr_mem[ndx]) ) {
-         rtrim_in_place(curname);
-         // DBGMSG("member_names[%d] = |%s|", ndx, curname);
-         if (streq(curname, cur_uname)) {
-            cur_user_in_group_i2c = true;
-         }
-         if (euid != uid && streq(curname, cur_euname)) {
-            cur_euser_in_group_i2c = true;
-         }
-         ndx++;
-      }
-      bool in_group_i2c = false;
-      if (cur_user_in_group_i2c) {
-         in_group_i2c = true;
-         char * s = g_strdup_printf("Current user %s is a member of group i2c", cur_uname);
-         g_ptr_array_add(collector, s);
-      }
-      else if (uid != euid && cur_euser_in_group_i2c) {
-         in_group_i2c = true;
-         char * s = g_strdup_printf("Current euser %s is a member of group i2c", cur_euname);
-         g_ptr_array_add(collector, s);
-      }
-      if (!in_group_i2c) {
-         if (streq(cur_uname, "root")) {
-            g_ptr_array_add(collector, strdup("Current user is root, membership in group i2c not needed"));
-         }
-         else {
-            char * s = g_strdup_printf("WARNING: Current user %s is NOT a member of group i2c", cur_uname);
-            g_ptr_array_add(collector, s);
-            if (uid != euid) {
-               char * s1 = g_strdup_printf("WARNING: Current euser %s is NOT a member of group i2c", cur_euname);
-               g_ptr_array_add(collector, s1);
-            }
-         }
-      }
-   }
-   else {
-      g_ptr_array_add(collector, strdup("Group i2c does not exist"));
-   }
-}
-
-
-#ifdef UNUSED
-GPtrArray * rpt_facl_collect(const char * fqfn) {
-   return rpt_facl_collect0(fqfn, NULL, 0);
-}
-#endif
-
-#ifdef UNUSED
-void report_facl(const char * fqfn, int depth) {
-   GPtrArray * lines = rpt_facl_collect0(fqfn, NULL, depth);
-   for (int ndx = 0; ndx < lines->len; ndx++) {
-      char * s = g_ptr_array_index(lines, ndx);
-      rpt_vstring(depth, "%s", s);
-   }
-   g_ptr_array_free(lines, true);
-}
-#endif
-
-#ifdef UNUSED
-void report_facl_to_syslog(const char * fqfn, int log_level, int depth) {
-   GPtrArray * lines = rpt_facl_collect0(fqfn, NULL, depth);
-   for (int ndx = 0; ndx < lines->len; ndx++) {
-      char * s = g_ptr_array_index(lines, ndx);
-      syslog(log_level, "%s", s);
-   }
-   g_ptr_array_free(lines, true);
-}
-#endif
-
 
 /** Collects information regarding an unexpected open() failure, and
  *  returns it as an array of lines.
@@ -858,8 +446,8 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    check_group_i2c_collect(collector);
 
    G_PTR_ARRAY_ADD_STRING(collector, "Permissions for %s:", fqfn);
-   int file_uid = -1;
-   int file_gid = -1;
+   uid_t file_uid = -1;
+   gid_t file_gid = -1;
    bool ok = get_file_owner_group_ids(fqfn, &file_uid, &file_gid);
    if (ok) {
       G_PTR_ARRAY_ADD_STRING(collector,
@@ -899,6 +487,9 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    g_ptr_array_add(collector, strdup( "Using low level acl api:"));
    rpt_facl_collect1(fqfn, collector, depth);
    rpt_lsof_collect0(fqfn, collector);
+
+  G_PTR_ARRAY_ADD_STRING(collector, "acl for user %d: %s", uid, get_user_acl(fqfn,  uid));
+
 
 #ifdef USE_DBUS
 #ifdef WRONG
@@ -1073,6 +664,11 @@ static uint64_t get_accumulated_sleep_ns() {
 void init_baseline_accumulated_sleep_ns() {
    global_initial_accumulated_sleep_ns = get_accumulated_sleep_ns();
 }
+
+void reset_recently_resumed_by_clocktime_cache() {
+   most_recent_reset_ms = 0;
+}
+
 
 
 /** Detects whether the system has resumed from sleep since the prior
