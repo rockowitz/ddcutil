@@ -112,7 +112,7 @@ char * gid_name(int gid) {
 
 
 bool group_i2c_exists() {
-   bool debug = true;
+   bool debug  = false;
    bool result = false;
 
    struct group * pgi2c = getgrnam("i2c");
@@ -131,7 +131,7 @@ bool group_i2c_exists() {
  *  @return true if current user is in group i2c
  */
 bool check_group_i2c_collect(GPtrArray* collector) {
-   bool debug = true;
+   bool debug = false;
    bool result = false;
    bool grp_i2c_exists = false;
    bool cur_user_in_group_i2c = false;
@@ -195,7 +195,7 @@ bool check_group_i2c_collect(GPtrArray* collector) {
 
 
 bool cur_user_in_group_i2c() {
-   bool debug = true;
+   bool debug  = false;
    GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
    bool result = check_group_i2c_collect(collector);
    if (debug) {

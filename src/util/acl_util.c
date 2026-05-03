@@ -224,7 +224,7 @@ bye:
 }
 
 char * get_user_acl(const char * fqfn, uid_t uid) {
-   bool debug = true;
+   bool debug  = false;
 
    acl_entry_t entry;
    acl_tag_t tag;
@@ -275,7 +275,7 @@ bye:
 
 
 bool is_acl_rw(const char * fqfn, acl_tag_t tag, uid_t id) {
-   bool debug = true;
+   bool debug  = false;
 
    acl_entry_t entry;
    acl_tag_t   entry_tag;
