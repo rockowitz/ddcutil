@@ -1,4 +1,77 @@
 
+
+
+
+
+i2c_open_basic(): check at start if < 1000 ms since resume from sleep, 
+if so sleep
+
+
+Enhanced recovery from open failures
+dbus within 1000ms window, estimate of recent sleep
+
+additional pause in watch loop if resume from sleep
+
+    dw_watch_display_connections(): delay up to 1 sec after resume from sleep
+
+
+   in EACCES recovery code, continue retries based on test
+    
+    for recently resumed by dbus, retry until max time exceeded
+    for BOOTTIME vs MONOTONIC time test, max number of tries
+    for other EACCESS failure, retry once
+    
+    i.e.
+      - D-Bus (should_retry1): time-bounded — retries while
+        elapsed_ms <= 500, no count cap
+      - BOOTTIME (should_retry2): count-bounded — retries
+        while recently_resumed && eacces_retry_ct < max_retries
+      - Unconditional (should_retry3): one-shot — only fires on
+        the first EACCES attempt
+      - Final cap: stops all retries when
+        eacces_retry_ct >= max_retries && !should_retry1
+            (i.e., only D-Bus can drive retries beyond max_re
+
+
+set group and mode in udev rule
+
+
+additional open failure diagnostics
+
+
+
+
+#### Added 
+
+- Implemented a basic segfault handler.  It writes the traced function of the
+  current thread to the system log, then invokes the prior handler.
+
+
+
+#### Changed
+
+- Option ***--skip-ddc-checks***: valid only for command line **ddcutil**, not shared 
+  library **libddcutil**.
+- The installed udev rules file, 60-ddcutil-i2c.rules now sets group i2c and 
+  mode 0660 as well as using token uaccess to assign /dev/i2c permissions. 
+  Users encountering the transient EACCES errors may need to use group permissions
+  to use the old group permissions method. 
+
+
+#### Fixed
+
+- Avoid a possible buffer overflow when printing an EDID field such as 
+  serial number that contains invalid ASCII characters
+- Write error message during **getvcp --brief*** regarding sysfs drm connector 
+  not found to stderr, not stdout.  Issue #598.
+- Use atomic variables to fix time of use to time of check (TOCTOU) race 
+  conditions identified by Claude Code.
+
+- 
+
+
+
+
 ## [2.2.7] 2025-04-15
 
 ### General

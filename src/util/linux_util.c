@@ -873,6 +873,17 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
             "%*sUnable to determine file ownership", depth, " ");
    }
 
+   int rc = access(fqfn, R_OK|W_OK);
+   if (rc < 0)
+      G_PTR_ARRAY_ADD_STRING(collector, "access(%s) failed, errno=%d", fqfn, errno);
+   else
+      G_PTR_ARRAY_ADD_STRING(collector, "access(%s) succeeded", fqfn);
+   rc = faccessat(0,fqfn, R_OK|W_OK, AT_EACCESS);
+   if (rc < 0)
+      G_PTR_ARRAY_ADD_STRING(collector, "faccessat(0,%s,R_OK|W_OK, AT_EADCESS) failed, errno=%d", fqfn, errno);
+   else
+      G_PTR_ARRAY_ADD_STRING(collector, "faccessat(%s) succeeded", fqfn);
+
    g_ptr_array_add(collector, strdup("Using command getfacl: "));
    char cmd[PATH_MAX+20];
    g_snprintf(cmd, PATH_MAX+20, "getfacl %s  --all-effective" , fqfn);
