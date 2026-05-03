@@ -40,5 +40,5 @@ void       diagnose_open_failure_to_syslog(const char * fqfn, const char * msg);
 void       install_segv_handler(void);
 
 void       init_baseline_accumulated_sleep_ns();
-bool       recently_resumed_from_sleep();
+bool       recently_resumed_from_sleep_by_clocktime();
 #endif /* LINUX_UTIL_H_ */

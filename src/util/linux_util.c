@@ -46,6 +46,7 @@
 #include "report_util.h"
 #include "string_util.h"
 #include "subprocess_util.h"
+#include "syslog_util.h"
 #include "timestamp.h"
 #include "traced_function_stack.h"
 
@@ -837,7 +838,7 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
          formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
 #endif
 
-   bool recent =  recently_resumed_from_sleep();
+   bool recent =  recently_resumed_from_sleep_by_clocktime();
    G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep() returned %s", sbool(recent));
 
    int uid  = (int) getuid();
@@ -981,7 +982,7 @@ static void segv_handler(int sig, siginfo_t *info, void *ucontext) {
    backtrace_symbols_fd(frames, n, STDERR_FILENO);
 #endif
 
-   syslog(LOG_ERR, "Segmentation fault (signal %d)", sig);
+   SIMPLE_STD_SYSLOG(LOG_ERR, "Segmentation fault (signal %d)", sig);
    current_traced_function_stack_to_syslog(LOG_ERR, TFS_MOST_RECENT_LAST);
 
    sigaction(SIGSEGV, &old_segv, NULL);
@@ -1073,7 +1074,7 @@ void init_baseline_accumulated_sleep_ns() {
  *
  *  @return true if a resume from sleep was detected, false otherwise
  */
-bool recently_resumed_from_sleep() {
+bool recently_resumed_from_sleep_by_clocktime() {
    bool debug = false;
    bool resumed = false;
 
@@ -1093,10 +1094,7 @@ bool recently_resumed_from_sleep() {
          // Accumulated sleep grew by > 1 s since baseline => we resumed.
          resumed = true;
          baseline_accumulated_sleep_ns = current_accumulated_sleep_ns;
-
-         char prefix[200];
-         get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
-         syslog(LOG_INFO, "%sResume from sleep detected via BOOTTIME/MONOTONIC fallback", prefix);
+         SIMPLE_STD_SYSLOG(LOG_INFO, "Resume from sleep detected by BOOTTIME/MONOTONIC");
       }
    }
 

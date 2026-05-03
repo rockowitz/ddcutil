@@ -354,7 +354,7 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    Error_Info * err = NULL;
    int eacces_retry_ct = 0;
 
-   bool recently_resumed = recently_resumed_from_sleep();
+   bool recently_resumed = recently_resumed_from_sleep_by_clocktime();
 
 #ifdef USE_DBUS
    int window_ms = 1000;   // TODO: default in parms.h, settable by command option

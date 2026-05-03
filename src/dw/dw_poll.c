@@ -28,6 +28,7 @@
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/dbus_util.h"
+#include "util/debug_util.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/glib_util.h"
@@ -400,30 +401,27 @@ else {
                       "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
                       elapsed_ns, elapsed_ms);
       DBGTRC(debug, TRACE_GROUP, "%s", msg);
-      char prefix[200];
-      get_msg_decoration(prefix, 200, /*dest_syslog*/ true);
-      syslog(LOG_WARNING, "%s%s", prefix, msg);
+      BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg);
       free(msg);
 
       if (elapsed_ms < 1000) {
          uint64_t remaining_sleep_ms = 1000 - elapsed_ms;
          char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_sleep_ms);
-         syslog(LOG_WARNING, "%s(%s)%s", prefix, __func__, msg2);
+         BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg2);
          DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
          LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
          free(msg2);
       }
 #endif
-      if (recently_resumed_from_sleep()) {
-         syslog(LOG_WARNING, "%s(%s)Recently resumed from sleep detected", prefix, __func__);
+      if (recently_resumed_from_sleep_by_clocktime()) {
+         BASIC_STD_FUNC_SYSLOG(LOG_WARNING, "Recently resumed from sleep detected");
          if (paused) {
-            syslog(LOG_WARNING,
-                  "%s(%s)Already paused based on dbus notification. No additional pause.",
-                  prefix, __func__);
+            BASIC_STD_FUNC_SYSLOG(LOG_WARNING,
+                  "Already paused based on dbus notification. No additional pause.");
          }
          else {
             int delay_ms = 1000;
-            syslog(LOG_WARNING, "%s(%s)Pausing for %d millisec", prefix, __func__, delay_ms);
+            SIMPLE_STD_FUNC_SYSLOG(LOG_WARNING, "Pausing for %d millisec", delay_ms);
             dw_split_sleep(delay_ms);
          }
       }

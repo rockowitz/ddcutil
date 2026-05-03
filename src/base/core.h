@@ -40,6 +40,7 @@
 #include "util/msg_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/syslog_util.h"
 #include "util/traced_function_stack.h"
 
 #include "base/parms.h"      // ensure available to any file that includes core.h
@@ -622,6 +623,9 @@ void core_errmsg_emitter(
 //
 // Use of system log
 //
+// These macros mediate writes to the system log by DDCA_Syslog_Level.
+// For macros that write directly to the system log, see util/syslog_util.h
+//
 
 extern bool msg_to_syslog_only;
 
@@ -673,51 +677,6 @@ do { \
    } \
 } while(0)
 
-
-#define SIMPLE_SYSLOG(_syslog_priority, format, ...) \
-do { \
-         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-         syslog(_syslog_priority, PRItid" (%s) %s", (intmax_t) tid(), __func__, body); \
-         free(body); \
-} while(0)
-
-
-
-#define SIMPLE_SYSLOGF(_debug, _syslog_priority, format, ...) \
-do { \
-      if (_debug) { \
-         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-         syslog(_syslog_priority, PRItid" (%s) %s", (intmax_t) tid(), __func__, body); \
-         free(body); \
-      } \
-} while(0)
-
-#ifdef CONDITIONAL
-// should get_msg_decoration be unconditional?
-#define SIMPLE_DECORATED_SYSLOGF(_debug, _syslog_priority, format, ...) \
-do { \
-   if (_debug) { \
-      char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-      char prefix[100] = {0}; \
-      if (rpt_get_ornamentation_enabled() ) { \
-         get_msg_decoration(prefix, 100, true); \
-      } \
-      syslog(_syslog_priority, "%s%s%s", prefix, body, (tag_output) ? " (N)" : ""  ); \
-      free(body); \
-   } \
-} while(0)
-#endif
-
-#define SIMPLE_DECORATED_SYSLOGF(_debug, _syslog_priority, format, ...) \
-do { \
-   if (_debug) { \
-      char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-      char prefix[100] = {0}; \
-      get_msg_decoration(prefix, 100, true); \
-      syslog(_syslog_priority, "%s%s%s", prefix, body, (tag_output) ? " (N)" : ""  ); \
-      free(body); \
-   } \
-} while(0)
 
 
 /** Writes a message to the current ferr() or fout() device and, depending on

@@ -1151,7 +1151,7 @@ STATIC void
 bus_open_errors_to_syslog(const char * api_func) {
    GPtrArray * errs = ddc_get_bus_open_errors();
    if (errs && errs->len > 0) {
-      SIMPLE_SYSLOG(LOG_ERR, "Error(s) opening ddc devices");
+      SIMPLE_STD_SYSLOG(LOG_ERR, "Error(s) opening ddc devices");
       for (int ndx = 0; ndx < errs->len; ndx++) {
          Bus_Open_Error * cur = g_ptr_array_index(errs, ndx);
          if (cur->io_mode == DDCA_IO_I2C) {
@@ -1213,11 +1213,11 @@ ddca_get_display_refs(
    assert(*drefs_loc);
 
    if (!IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
-      SIMPLE_SYSLOG(LOG_INFO, "Returned DDCA_Display_Ref list: ");
+      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Returned DDCA_Display_Ref list: ");
       cur_ddca_dref = result_list;
       while (*cur_ddca_dref) {
          Display_Ref * dref = dref_from_published_ddca_dref(*cur_ddca_dref);
-         SIMPLE_SYSLOG(LOG_INFO, "   DDCA_Display_Ref %s", dref_reprx_t(dref));
+         SIMPLE_STD_SYSLOG(LOG_INFO, "   DDCA_Display_Ref %s", dref_reprx_t(dref));
          cur_ddca_dref++;
       }
       bus_open_errors_to_syslog(__func__);
