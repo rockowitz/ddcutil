@@ -1044,6 +1044,7 @@ static uint64_t global_initial_accumulated_sleep_ns = UINT64_MAX;
  * UINT64_MAX means this thread has not yet initialized its baseline.
  */
 static _Thread_local uint64_t baseline_accumulated_sleep_ns = UINT64_MAX;
+static _Thread_local uint64_t most_recent_reset_ms = 0;
 
 
 /** Gets the current accumulated sleep time. 
@@ -1089,28 +1090,36 @@ bool recently_resumed_from_sleep_by_clocktime() {
    bool debug = false;
    bool resumed = false;
 
-   uint64_t current_accumulated_sleep_ns  = get_accumulated_sleep_ns();
-
-   if (baseline_accumulated_sleep_ns == UINT64_MAX) {
-      // First call on this thread: seed from the global baseline if available,
-      // otherwise fall back to current value (no resume detectable this call).
-      baseline_accumulated_sleep_ns =
-            (global_initial_accumulated_sleep_ns != UINT64_MAX)
-            ? global_initial_accumulated_sleep_ns
-            : current_accumulated_sleep_ns;
+   uint64_t cur_boottime_ms = NANOS2MILLIS( cur_boot_time_nanosec());
+   if (cur_boottime_ms - most_recent_reset_ms < 5000) {
+      resumed = true;
+      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Called within 5 sec of reset");
    }
    else {
-      uint64_t sleep_increase_ns = current_accumulated_sleep_ns - baseline_accumulated_sleep_ns;
-      if (sleep_increase_ns > UINT64_C(1000000000)) {
-         // Accumulated sleep grew by > 1 s since baseline => we resumed.
-         resumed = true;
-         baseline_accumulated_sleep_ns = current_accumulated_sleep_ns;
-         SIMPLE_STD_SYSLOG(LOG_INFO, "Resume from sleep detected by BOOTTIME/MONOTONIC");
-      }
-   }
+      uint64_t current_accumulated_sleep_ns  = get_accumulated_sleep_ns();
 
-   DBGF(debug, "baseline_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64
-               ", returning %s",
-               baseline_accumulated_sleep_ns, current_accumulated_sleep_ns, sbool(resumed));
+      if (baseline_accumulated_sleep_ns == UINT64_MAX) {
+         // First call on this thread: seed from the global baseline if available,
+         // otherwise fall back to current value (no resume detectable this call).
+         baseline_accumulated_sleep_ns =
+               (global_initial_accumulated_sleep_ns != UINT64_MAX)
+               ? global_initial_accumulated_sleep_ns
+               : current_accumulated_sleep_ns;
+      }
+      else {
+         uint64_t sleep_increase_ns = current_accumulated_sleep_ns - baseline_accumulated_sleep_ns;
+         if (sleep_increase_ns > UINT64_C(1000000000)) {
+            // Accumulated sleep grew by > 1 s since baseline => we resumed.
+            resumed = true;
+            baseline_accumulated_sleep_ns = current_accumulated_sleep_ns;
+            SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Resume from sleep detected by BOOTTIME/MONOTONIC");
+            most_recent_reset_ms = cur_boottime_ms;
+         }
+      }
+
+      DBGF(debug, "baseline_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64
+                  ", returning %s",
+                  baseline_accumulated_sleep_ns, current_accumulated_sleep_ns, sbool(resumed));
+   }
    return resumed;
 }
