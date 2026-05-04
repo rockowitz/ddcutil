@@ -117,8 +117,6 @@ void loggable_sleep(
    }
 
    if (syslog_level > DDCA_SYSLOG_NEVER) {
-      char prefix[100];
-      get_msg_decoration(prefix, 100, /*dest_syslog*/ true);
       // Alternatively, use syslog() instead of SYSLOG2() to ensure that msg is
       // written to system log no matter what ddcutil log level cutoff is in effect
 #ifdef OLD
