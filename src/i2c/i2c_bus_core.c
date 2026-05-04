@@ -401,7 +401,7 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    if (paused_ms > 0) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "ldbus_pause_if_recent_return_from_sleep() paused for %d millisec", paused_ms);
-      SYSLOG2(DDCA_SYSLOG_NOTICE,
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
             "pause for %d millisec at start of i2c_open_bus_basic()", paused_ms);
    }
 #endif
@@ -783,7 +783,7 @@ i2c_close_bus_basic(int busno, int fd, Call_Options callopts) {
          f0printf(ferr(), "Close failed for %s, errno=%s\n",
                           filename_for_fd_t(fd), linux_errno_desc(errsv));
       result = -errsv;
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Close failed for %s, errno=%s\n",
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Close failed for %s, errno=%s\n",
             filename_for_fd_t(fd), linux_errno_desc(errsv));
       // assert(rc == 0);     // don't bother with recovery for now
    }
@@ -848,7 +848,7 @@ i2c_close_bus(int busno, int fd, Call_Options callopts) {
       char * s = g_strdup_printf("Unexpected error %s from unlock_display_by_dpath(%s)",
             psc_name(erec->status_code), dpath_repr_t(&dpath));
       DBGTRC_NOPREFIX(true, TRACE_GROUP, "%s", s);
-      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", s);
       free(s);
       errinfo_free(erec);
    }
@@ -1109,7 +1109,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    }
 
    if (!edid_exists) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "/dev/i2c-%d, Checking EDID failed after %d tries (B)",
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "/dev/i2c-%d, Checking EDID failed after %d tries (B)",
             businfo->busno, tryctr);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "/dev/i2c-%d: Checking EDID failed (A)", businfo->busno);
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Unable to read EDID for /dev/i2c-%d", businfo->busno);
@@ -1117,7 +1117,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    }
    else {
       if (tryctr > 1) {
-         SYSLOG2(DDCA_SYSLOG_WARNING,
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
                "/dev/i2c-%d: Checking EDID succeeded after %d tries (G)",
                businfo->busno, tryctr);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
@@ -1593,7 +1593,7 @@ Byte * get_connector_edid(const char * connector_name) {
         if (!pedid) {
            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Invalid EDID read from /sys/class/drm/%s/edid",
                  businfo->drm_connector_name);
-           SYSLOG2(DDCA_SYSLOG_ERROR, "Invalid EDID read from /sys/class/drm/%s/edid",
+           DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Invalid EDID read from /sys/class/drm/%s/edid",
                  businfo->drm_connector_name);
         }
         else {
@@ -1748,8 +1748,8 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
          // LOGABLE_MSG(DDCA_SYSLOG_ERROR,"%s", msg);
       }
       else {
-         SYSLOG2(DDCA_SYSLOG_INFO, "%s", msg);
-         SYSLOG2(DDCA_SYSLOG_INFO, "drm connector directories do not exist");
+         DECORATED_SYSLOG(DDCA_SYSLOG_INFO, "%s", msg);
+         DECORATED_SYSLOG(DDCA_SYSLOG_INFO, "drm connector directories do not exist");
       }
       free(msg);
    }
