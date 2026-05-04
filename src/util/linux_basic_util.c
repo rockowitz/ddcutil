@@ -15,7 +15,6 @@
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #ifdef TARGET_BSD
@@ -23,7 +22,6 @@
 #else
 #include <sys/syscall.h>
 #include <sys/types.h>
-#include <syslog.h>
 #endif
 #include <unistd.h>
 /** \endcond */
