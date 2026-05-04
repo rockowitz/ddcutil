@@ -34,8 +34,6 @@
 
 #include "acl_util.h"
 
-
-
 /** Collects information about the access control list (ACL) for a file,
  *  using the libacl API, and returns it as an array of lines.
  *
