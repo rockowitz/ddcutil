@@ -5,12 +5,13 @@
  *  glib_string_util.c/h exist to avoid circular dependencies.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
 /** \cond */
 #include <glib-2.0/glib.h>
+#include <stdbool.h>
 /** \endcond */
 
 #ifndef GLIB_STRING_UTIL_H_

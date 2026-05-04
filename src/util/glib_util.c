@@ -14,8 +14,9 @@
 #include <string.h>
 /** \endcond */
 
-#include "glib_util.h"
 #include "string_util.h"
+
+#include "glib_util.h"
 
 #ifdef ALTERNATIVE
 
