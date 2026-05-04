@@ -195,15 +195,12 @@ void show_timestamp_history() {
  *  @return nanoseconds since start of program execution
  */
 uint64_t elapsed_time_nanosec() {
-#ifdef REALTIME_CLOCK
    static uint64_t initial_timestamp_nanos = 0;
    // printf("(%s) initial_timestamp_nanos=%"PRIu64"\n", __func__, initial_timestamp_nanos);
    uint64_t cur_nanos = cur_realtime_nanosec();
    if (initial_timestamp_nanos == 0)
       initial_timestamp_nanos = cur_nanos;
    uint64_t result = cur_nanos - initial_timestamp_nanos;
-#endif
-   uint64_t result = cur_boot_time_nanosec();
    // printf("(%s) Returning: %"PRIu64"\n", __func__, result);
    return result;
 }
