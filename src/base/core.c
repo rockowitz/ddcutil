@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <limits.h>
-#include <rtti.h>
+#include "base/rtti.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

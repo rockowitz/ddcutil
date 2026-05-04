@@ -32,7 +32,6 @@
  */
 
 #include <assert.h>
-#include <base/display_lock.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
 

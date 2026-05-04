@@ -4,13 +4,13 @@
 // Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #include <assert.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-#include "config.h"
 
 #include "util/coredefs.h"
 #include "util/debug_util.h"

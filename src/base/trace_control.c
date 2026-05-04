@@ -3,15 +3,15 @@
  *  Manage whether tracing is performed.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
+
+#include "config.h"
 
 #include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
-
-#include "config.h"
 
 #include "public/ddcutil_types.h"
 
