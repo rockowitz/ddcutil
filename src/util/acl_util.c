@@ -9,17 +9,12 @@
 #include "config.h"
 
 /** \cond */
-#include <acl/libacl.h>  // acl_get_perm() (Linux extension)
+#include <acl/libacl.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
-#include <grp.h>
-#include <inttypes.h>
-#include <pwd.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #ifdef TARGET_BSD
 #include <pthread_np.h>
 #else
@@ -33,7 +28,6 @@
 #include "common_inlines.h"
 #include "debug_util.h"
 #include "linux_basic_util.h"
-#include "msg_util.h"
 #include "report_util.h"
 #include "string_util.h"
 #include "syslog_util.h"
