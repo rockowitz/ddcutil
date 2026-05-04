@@ -10,7 +10,6 @@
 extern "C" {
 #endif
 
-#include <glib-2.0/glib.h>
 #include <stdbool.h>
 
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
