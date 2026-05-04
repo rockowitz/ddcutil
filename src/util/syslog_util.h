@@ -1,6 +1,6 @@
 /** @file syslog_util.h */
 
-// Copyright (C) 026 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SYSLOG_UTIL_H_
@@ -12,6 +12,7 @@ extern "C" {
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <syslog.h>
 
 #include "msg_util.h"

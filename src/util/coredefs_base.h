@@ -2,15 +2,18 @@
  *  Portion of coredefs.h shared with ddcui
  */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef COREDEFS_BASE_H_
 #define COREDEFS_BASE_H_
 
-#include "config.h"          // for TARGET_BSD, TARGET_LINUX
+#include "config.h"        // for TARGET_BSD, TARGET_LINUX
 
-#include <errno.h>           // to check if EBUSY defined
+#include <assert.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifndef EBUSY
 #define EBUSY 16             // not defined in at least EPEL 8, RHEL 8 (9/11/2023)
