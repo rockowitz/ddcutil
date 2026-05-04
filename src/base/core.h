@@ -655,9 +655,7 @@ do { \
       if (syslog_priority >= 0) { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
          char prefix[100] = {0}; \
-         if (rpt_get_ornamentation_enabled() ) { \
             get_msg_decoration(prefix, 100, true); \
-         } \
          syslog(syslog_priority, "%s%s%s", prefix, body, (tag_output) ? " (N)" : ""  ); \
          free(body); \
       } \
