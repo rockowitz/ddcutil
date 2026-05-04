@@ -10,7 +10,6 @@
 
 #include <acl/libacl.h>
 #include <glib-2.0/glib.h>
-#include <inttypes.h>
 #include <stdbool.h>
 #include <sys/types.h>
 
