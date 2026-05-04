@@ -1,6 +1,6 @@
 /** @file drm_connector_state.h */
 
-// Copyright (C) 2020-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DRM_CONNECTOR_STATE_H_
@@ -11,8 +11,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <xf86drmMode.h>
-
-#include <ddcutil_types.h>
 
 #include "util/drm_card_connector_util.h"
 #include "util/edid.h"

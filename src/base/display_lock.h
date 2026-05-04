@@ -7,14 +7,15 @@
 #ifndef DISPLAY_LOCK_H_
 #define DISPLAY_LOCK_H_
 
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "ddcutil_types.h"
 
 #include "util/error_info.h"
-#include "base/core.h"
 
+#include "base/core.h"
 
 typedef enum {
    DDISP_NONE  = 0x00,     ///< No flags set
@@ -29,7 +30,6 @@ typedef struct {
    GThread *    display_mutex_thread;     // thread owning mutex
    intmax_t     linux_thread_id;
 } Display_Lock_Record;
-
 
 Display_Lock_Record * create_display_lock_record(DDCA_IO_Path io_path);
 void                  terminate_i2c_display_lock();
