@@ -3,7 +3,7 @@
   * Functions for reading /sys file system
   */
 
-// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -19,6 +19,7 @@
 /** \endcond */
 
 #include "coredefs_base.h"
+#include "backtrace.h"
 #include "debug_util.h"
 #include "file_util.h"
 #include "report_util.h"

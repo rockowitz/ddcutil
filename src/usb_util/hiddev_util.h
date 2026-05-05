@@ -13,6 +13,7 @@
 // so callers will have definition of strerror() used in REPORT_IOCTL_ERROR macro:
 #include <string.h>
 
+#include "util/backtrace.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/edid.h"

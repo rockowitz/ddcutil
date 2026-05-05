@@ -20,6 +20,7 @@
 #include <syslog.h>
 /** \endcond */
 
+#include "backtrace.h"
 #include "debug_util.h"
 #include "pnp_ids.h"
 #include "report_util.h"

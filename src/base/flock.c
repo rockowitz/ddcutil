@@ -11,6 +11,7 @@
 
 #include "public/ddcutil_types.h"
 
+#include "util/backtrace.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/edid.h"

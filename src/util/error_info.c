@@ -22,6 +22,7 @@
 #include <syslog.h>
 /** \endcond */
 
+#include "backtrace.h"
 #include "debug_util.h"
 #include "glib_util.h"
 #include "msg_util.h"

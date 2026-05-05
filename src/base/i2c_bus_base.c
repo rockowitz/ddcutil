@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "util/backtrace.h"
 #include "util/coredefs.h"
 #include "util/debug_util.h"
 #include "util/edid.h"

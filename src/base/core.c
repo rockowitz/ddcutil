@@ -38,6 +38,7 @@
 #include <unistd.h>
 /** \endcond */
 
+#include "util/backtrace.h"
 #include "util/common_printf_formats.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"

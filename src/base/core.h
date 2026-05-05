@@ -32,6 +32,7 @@
 
 #include "public/ddcutil_types.h"
 
+#include "util/backtrace.h"
 #include "util/common_inlines.h"
 #include "util/common_printf_formats.h"
 #include "util/coredefs.h"

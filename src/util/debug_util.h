@@ -13,20 +13,7 @@
 extern "C" {
 #endif
 
-#include <assert.h>
 #include <stdbool.h>
-
-#include "backtrace.h"     // so existing code doesn't need to include
-
-#define ASSERT_WITH_BACKTRACE(_condition) \
-do { \
-   if ( !(_condition) ) {  \
-      show_backtrace(0);   \
-      assert(_condition);  \
-   }                       \
-} while(0)
-
-void show_backtrace(int stack_adjust);
 
 void set_simple_dbgmsg_min_funcname_size(int new_size);
 

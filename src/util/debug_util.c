@@ -31,31 +31,12 @@
 
 /** \endcond */
 
-#include "backtrace.h"
 #include "common_printf_formats.h"
 #include "common_inlines.h"
 #include "report_util.h"
 #include "string_util.h"
 
 #include "debug_util.h"
-
-
-void show_backtrace(int stack_adjust) {
-   int depth = 0;
-   GPtrArray * callstack = get_backtrace(stack_adjust+2); // +2 for get_backtrace(), backtrace()
-   if (!callstack) {
-      perror("backtrace() unavailable");
-   }
-   else {
-      rpt_label(depth, "Current call stack (using backtrace()):");
-      for (int ndx = 0; ndx < callstack->len; ndx++) {
-         rpt_vstring(depth, "   %s", (char *) g_ptr_array_index(callstack, ndx));
-      }
-      g_ptr_array_set_free_func(callstack, g_free);
-      g_ptr_array_free(callstack, true);
-   }
-}
-
 
 static int min_funcname_size = 30;
 

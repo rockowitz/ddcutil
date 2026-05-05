@@ -1,6 +1,6 @@
 /** @file backtrace.c */
 
-// Copyright (C) 2016-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -28,6 +28,7 @@
 #endif
 /** \endcond */
 
+#include "report_util.h"
 #include "string_util.h"
 
 #include "backtrace.h"
@@ -216,4 +217,22 @@ void backtrace_to_syslog(int syslog_priority, int stack_adjust) {
       g_ptr_array_free(callstack, true);
    }
 }
+
+
+void show_backtrace(int stack_adjust) {
+   int depth = 0;
+   GPtrArray * callstack = get_backtrace(stack_adjust+2); // +2 for get_backtrace(), backtrace()
+   if (!callstack) {
+      perror("backtrace() unavailable");
+   }
+   else {
+      rpt_label(depth, "Current call stack (using backtrace()):");
+      for (int ndx = 0; ndx < callstack->len; ndx++) {
+         rpt_vstring(depth, "   %s", (char *) g_ptr_array_index(callstack, ndx));
+      }
+      g_ptr_array_set_free_func(callstack, g_free);
+      g_ptr_array_free(callstack, true);
+   }
+}
+
 

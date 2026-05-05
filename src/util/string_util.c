@@ -20,7 +20,7 @@
 /** \endcond */
 
 #include "glib_util.h"
-#include "debug_util.h"  // temp
+// #include "debug_util.h"  // temp
 
 #include "string_util.h"
 
@@ -1566,12 +1566,15 @@ char * hexstring_t(
 void hex_dump_indented_collect(GPtrArray * collector, const Byte* data, int size, int indents)
 {
    bool debug = false;
-   DBGF(debug, "Starting. indents=%d", indents);
+   if (debug)
+      printf("(%s) Starting. indents=%d", __func__, indents);
    assert(collector);
+#ifdef OUT   // creates circular dependency with backtrace_util.c
    if (debug) {
       show_backtrace(0);
       backtrace_to_syslog(LOG_NOTICE, 0);
    }
+#endif
 
    int i; // index in data...
    int j; // index in line...
@@ -1619,7 +1622,8 @@ void hex_dump_indented_collect(GPtrArray * collector, const Byte* data, int size
       char * line = g_strdup_printf("%s%s", indentation, buffer);
       g_ptr_array_add(collector, line);
    }
-   DBGF(debug, "Done");
+   if (debug)
+      printf("(%s) Dpme.", __func__);
 }
 
 
