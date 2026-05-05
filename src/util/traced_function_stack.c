@@ -19,6 +19,7 @@
 #include "glib_util.h"
 #include "report_util.h"
 #include "string_util.h"
+#include "syslog_util.h"
 
 #include "traced_function_stack.h"
 
@@ -157,7 +158,7 @@ void collect_traced_function_stack(GPtrArray* collector,
 
 void traced_function_stack_to_syslog(GQueue* callstack, int syslog_priority, bool reverse) {
    if (!callstack) {
-      syslog(LOG_PERROR|LOG_ERR, "traced_function_stack unavailable");
+      SIMPLE_STD_SYSLOG(LOG_PERROR|LOG_ERR, "traced_function_stack unavailable");
    }
    else {
       GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
@@ -165,10 +166,10 @@ void traced_function_stack_to_syslog(GQueue* callstack, int syslog_priority, boo
       // syslog(syslog_priority, "Traced function stack %p:", callstack);
 
       if (collector->len == 0)
-         syslog(syslog_priority, "   EMPTY");
+         SIMPLE_STD_SYSLOG(syslog_priority, "   EMPTY");
       else {
          for (int ndx = 0; ndx < collector->len; ndx++) {
-            syslog(syslog_priority, "   %s", (char *) g_ptr_array_index(collector, ndx));
+            SIMPLE_STD_SYSLOG(syslog_priority, "   %s", (char *) g_ptr_array_index(collector, ndx));
          }
       }
       g_ptr_array_free(collector, true);
@@ -181,9 +182,9 @@ void current_traced_function_stack_to_syslog(int syslog_priority, bool reverse) 
    if (debug)
       list_traced_function_stacks();
    if (!traced_function_stack)
-      syslog(LOG_PERROR|LOG_ERR, "No traced function stack for current thread");
+      SIMPLE_STD_SYSLOG(LOG_PERROR|LOG_ERR, "No traced function stack for current thread");
    else {
-      syslog(syslog_priority, "Traced function stack %p for current thread "PRItid, traced_function_stack, TID());
+      SIMPLE_STD_SYSLOG(syslog_priority, "Traced function stack %p for current thread "PRItid, traced_function_stack, TID());
       traced_function_stack_to_syslog(traced_function_stack, syslog_priority, reverse);
    }
 }
