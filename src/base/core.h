@@ -751,9 +751,10 @@ do { \
    if (test_emit_syslog(_ddcutil_severity)) { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
-         char * body = g_strdup_printf(_format, ##__VA_ARGS__); \
-         syslog(syslog_priority, PRItid" %s%s", (intmax_t) tid(), body, (tag_output) ? " (R)" : "" ); \
-         free(body); \
+         char * msg = g_strdup_printf(_format, ##__VA_ARGS__); \
+         /* syslog(syslog_priority, PRItid" %s%s", (intmax_t) tid(), body, (tag_output) ? " (R)" : "" ); */  \
+         SIMPLE_STD_SYSLOG(syslog_priority, "%s%s", msg, (tag_output) ? " (R)" : "" ); \
+         free(msg); \
          if (traced_function_stack_enabled) \
             current_traced_function_stack_to_syslog(syslog_priority, true); \
          else \
