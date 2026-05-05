@@ -161,33 +161,6 @@ get_display_lock_record_by_dref(Display_Ref * dref) {
 #endif
 
 
-
-#define EMIT_BACKTRACE(_ddcutil_severity, _format, ...) \
-do { \
-   if (!msg_to_syslog_only) { \
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, _format, ##__VA_ARGS__); \
-      if (IS_DBGTRC(debug, DDCA_TRC_NONE)) { \
-         if (traced_function_stack_enabled) \
-            dbgrpt_current_traced_function_stack(false, true, 0); \
-         else \
-            show_backtrace(0);          \
-      } \
-   } \
-   if (test_emit_syslog(_ddcutil_severity)) { \
-      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
-      if (syslog_priority >= 0) { \
-         char * body = g_strdup_printf(_format, ##__VA_ARGS__); \
-         syslog(syslog_priority, PRItid" %s%s", (intmax_t) tid(), body, (tag_output) ? " (R)" : "" ); \
-         free(body); \
-         if (traced_function_stack_enabled) \
-            current_traced_function_stack_to_syslog(syslog_priority, true); \
-         else \
-            backtrace_to_syslog(syslog_priority, 2); \
-      } \
-   } \
-} while(0)
-
-
 /** Locks a distinct display.
  *
  *  \param  dlr              Display_Lock_Record distinct display identifier
