@@ -635,6 +635,7 @@ static bool vdbgtrc(
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
          if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog) {
+#ifdef OLD
             char * syslog_msg = NULL;
             if (timestamp_in_syslog_debug_msgs) {
                syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
@@ -648,13 +649,21 @@ static bool vdbgtrc(
             }
             syslog(LOG_DEBUG, "%s%s", (tag_output) ? "&&" : "", syslog_msg);
             free(syslog_msg);
+#else
+            SIMPLE_STD_SYSLOG(LOG_DEBUG, "(%-30s) %s%s", funcname, retval_info, base_msg);
+#endif
+
          }
          else if ( (options & DBGTRC_OPTIONS_SEVERE) && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
+#ifdef OLD
             char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
                                      thread_prefix, funcname, retval_info, base_msg,
                                      (tag_output) ? " (K)" : ""  );
             syslog(LOG_ERR, "%s%s", (tag_output) ? "&&" : "", syslog_msg);
             free(syslog_msg);
+#else
+            SIMPLE_STD_SYSLOG(LOG_ERR, "(%-30s) %s%s", funcname, retval_info, base_msg);
+#endif
          }
          else if (redirect_reports_to_syslog) {
             syslog(LOG_NOTICE, "%s%s(%-30s) %s%s%s",
