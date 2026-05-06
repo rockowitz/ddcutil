@@ -20,6 +20,7 @@
 #include "util/error_info.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/syslog_util.h"
 #include "util/utilrpt.h"
 /** \endcond */
 
@@ -846,7 +847,7 @@ ddc_set_vcp_value(
                : g_strdup_printf( "Feature 0x%02x does not support verification", vrec->opcode);
 
          f0printf(verbose_msg_dest, "%s\n", s);
-         SIMPLE_DECORATED_SYSLOGF(true, LOG_WARNING, "%s", s);
+         SIMPLE_STD_SYSLOGF(true, LOG_WARNING, "%s", s);
          free(s);
 
 #ifdef OLD

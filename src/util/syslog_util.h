@@ -75,18 +75,7 @@ do { \
 } while(0)
 
 
-#define SIMPLE_STD_FUNC_SYSLOG(_syslog_priority, _format, ...) \
-do { \
-      char * body = g_strdup_printf(_format, ##__VA_ARGS__); \
-      char prefix[100] = {0}; \
-      get_msg_decoration(prefix, 100, true); \
-      syslog(_syslog_priority, "%s(%s) %s%s", prefix, __func__, body, (tag_output) ? " (N)" : ""  ); \
-      free(body); \
-} while(0)
-
-
-
-#define SIMPLE_DECORATED_SYSLOGF(_debug, _syslog_priority, format, ...) \
+#define SIMPLE_STD_SYSLOGF(_debug, _syslog_priority, format, ...) \
 do { \
    if (_debug) { \
       char * body = g_strdup_printf(format, ##__VA_ARGS__); \
@@ -95,6 +84,16 @@ do { \
       syslog(_syslog_priority, "%s%s%s", prefix, body, (tag_output) ? " (N)" : ""  ); \
       free(body); \
    } \
+} while(0)
+
+
+#define SIMPLE_STD_FUNC_SYSLOG(_syslog_priority, _format, ...) \
+do { \
+      char * body = g_strdup_printf(_format, ##__VA_ARGS__); \
+      char prefix[100] = {0}; \
+      get_msg_decoration(prefix, 100, true); \
+      syslog(_syslog_priority, "%s(%s) %s%s", prefix, __func__, body, (tag_output) ? " (N)" : ""  ); \
+      free(body); \
 } while(0)
 
 
