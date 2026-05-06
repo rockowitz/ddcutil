@@ -60,18 +60,24 @@ char * get_msg_decoration(char * buf, uint bufsz, bool dest_syslog) {
       char process_prefix[15]  = "";
       char funcname_prefix[80] = "";
 
-      if (dbgtrc_show_time)
+      if (dest_syslog) {
          g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(6));
-      if (dbgtrc_show_wall_time && !dest_syslog)
-         g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
-      if (dbgtrc_show_thread_id || dest_syslog)
          g_snprintf(thread_prefix, 15, PRItid, (intmax_t) tid());
-      if (dbgtrc_show_process_id && !dest_syslog)
-         g_snprintf(process_prefix, 15, PRItid, (intmax_t) pid());
-      if (traced_function_stack_enabled) {
-         char * s = peek_traced_function();
-         if (s)
-            g_snprintf(funcname_prefix, 80, "(%-30s)", s);
+      }
+      else {
+         if (dbgtrc_show_time)
+            g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(6));
+         if (dbgtrc_show_wall_time)
+            g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
+         if (dbgtrc_show_thread_id)
+            g_snprintf(thread_prefix, 15, PRItid, (intmax_t) tid());
+         if (dbgtrc_show_process_id)
+            g_snprintf(process_prefix, 15, PRItid, (intmax_t) pid());
+         if (traced_function_stack_enabled) {
+            char * s = peek_traced_function();
+            if (s)
+               g_snprintf(funcname_prefix, 80, "(%-30s)", s);
+         }
       }
 
       g_snprintf(buf, bufsz, "%s%s%s%s%s",
