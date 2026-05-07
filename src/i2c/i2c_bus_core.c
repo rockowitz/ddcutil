@@ -391,27 +391,29 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    int limit_eacces_retry_ms = 3000;
    int eacces_retry_interval_ms = 200;
    int limit_eacces_retry_ct = 4;
+   bool recently_resumed = false;
 
 #ifdef BY_CLOCKTIME
-   bool recently_resumed_by_clocktime = recently_resumed_from_sleep_by_clocktime();
+
 #endif
    int paused_ms = 0;
 #ifdef USE_DBUS
    paused_ms = ldbus_pause_if_recent_return_from_sleep(pause_after_resume_ms);
    if (paused_ms > 0) {
+      recently_resumed = true;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "ldbus_pause_if_recent_return_from_sleep() paused for %d millisec", paused_ms);
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
-            "pause for %d millisec at start of i2c_open_bus_basic()", paused_ms);
+            "paused for %d millisec at start of i2c_open_bus_basic()", paused_ms);
    }
 #endif
 #ifdef BY_CLOCKTIME
-   if (paused_ms == 0 && recently_resumed_by_clocktime) {
-      SLEEP_MILLIS_WITH_SYSLOG(pause_after_resume_ms, "Pausing for recent resume by clocktime");
+   if (!recently_resumed) {
+      recently_resumed = recently_resumed_from_sleep_by_clocktime();
+      if (recently_resumed) {
+         SLEEP_MILLIS_WITH_SYSLOG(pause_after_resume_ms, "Pausing for recent resume by clocktime");
+      }
    }
-   bool recently_resumed = paused_ms > 0 || recently_resumed_by_clocktime;
-#else
-   bool recently_resumed = paused_ms > 0;
 #endif
 
 retry:
