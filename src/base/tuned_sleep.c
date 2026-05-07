@@ -195,7 +195,7 @@ adjust_sleep_time(
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "dh=%s, Replacing adjusted sleep multiplier %3.2f with 1.00 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS",
                dh_repr(dh), dsa_multiplier);
-         SYSLOG2(DDCA_SYSLOG_VERBOSE,
+         DECORATED_SYSLOG(DDCA_SYSLOG_VERBOSE,
                "dh=%s, Replacing adjusted sleep multiplier %3.2f with 1.00 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS",
                dh_repr(dh), dsa_multiplier);
          dsa_multiplier = 1.0;
@@ -204,7 +204,7 @@ adjust_sleep_time(
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "dh=%s, Keeping adjusted sleep multiplier %3.2f for SE_POST_WRITE or SE_POST_SAVE_SETTINGS",
                dh_repr(dh), dsa_multiplier);
-         SYSLOG2(DDCA_SYSLOG_VERBOSE,
+         DECORATED_SYSLOG(DDCA_SYSLOG_VERBOSE,
                "dh=%s, Keeping adjusted sleep multiplier %3.2f for SE_POST_WRITE or SE_POST_SAVE_SETTINGS",
                dh_repr(dh), dsa_multiplier);
 
@@ -234,7 +234,7 @@ adjust_sleep_time(
             sleep_event_name(event_type),
             adjusted_sleep_time_millis, (msg) ? msg : "");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
-      SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+      DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", s);
       free(s);
    }
 
