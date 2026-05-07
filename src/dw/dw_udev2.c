@@ -28,6 +28,8 @@
 #include "base/core.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
+
+#include "sysfs/sysfs_sys_drm_connector.h"
 /** \endcond */
 
 #include "dw_common.h"
@@ -136,11 +138,20 @@ bool dw_udev_watch(int watch_loop_millisec) {
                      dbgrpt_udev_event_basic_detail(detail,1);
                   }
                   char * connector_msg = NULL;
+                  char * connector_msg2 = NULL;
                   if (detail->prop_connector) {
                      I2C_Bus_Info * businfo = NULL;
+                     Sys_Drm_Connector * conn = NULL;
                      int ival = 0;
                      bool valid_int = str_to_int(detail->prop_connector, &ival, 10);
                      if (valid_int) {
+                        // if this is used for more than informational purpose, need to
+                        // seach sysfs directly, not rely on list that may have been made
+                        // invalid by an add or remove
+                        conn = find_sys_drm_connector_by_connector_id(ival);
+                        if (conn)
+                            connector_msg2 = g_strdup_printf("prop_connector = %d -> %s",
+                                  ival, conn->connector_name);
                         businfo = i2c_find_businfo_by_drm_connector_id(ival);
                         if (businfo) {
                            connector_msg = g_strdup_printf(
@@ -148,16 +159,23 @@ bool dw_udev_watch(int watch_loop_millisec) {
                                  ival, businfo->busno);
                         }
                      }
-                     if (!businfo) {
+                     if (!conn)
+                        connector_msg2 = g_strdup_printf(
+                              "Could not find DRM connector for connector id: %s",
+                              detail->prop_connector);
+                     if (!businfo)
                         connector_msg = g_strdup_printf(
                               "Could not find I2C_Bus_Info for connector id: %s",
                               detail->prop_connector);
-                     }
                   }
                   GPtrArray* collector = udev_event_detail_to_collector(detail, NULL);  // allocates collector
                   if (connector_msg) {
                      g_ptr_array_add(collector, strdup(connector_msg));
                      free(connector_msg);
+                  }
+                  if (connector_msg2) {
+                     g_ptr_array_add(collector, strdup(connector_msg2));
+                     free(connector_msg2);
                   }
                   g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
                   g_ptr_array_free(collector, true);
@@ -165,7 +183,9 @@ bool dw_udev_watch(int watch_loop_millisec) {
 
                // TODO: refine the test
                // if (streq(detail->sysname, "i2c-dev") || streq(detail->sysnamm, "drm"))
-               if (streq(detail->prop_action, "add")) {
+               if (streq(detail->prop_action, "add") &&
+                   !str_starts_with(detail->prop_devname, "/dev/dri"))
+               {
                   int pause_millis = 1000;
                   LOGGABLE_SLEEP(pause_millis, SLEEP_OPT_TRACEABLE,DDCA_SYSLOG_NOTICE,
                         "Pausing %d millisec after UDEV add event", pause_millis);
