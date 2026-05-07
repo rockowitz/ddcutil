@@ -1058,7 +1058,7 @@ parse_command(
 #endif
    gint     poll_watch_loop_millis_work = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 #endif
-   gint     resume_after_sleep_ms_work = DEFAULT_PAUSE_AFTER_RESUME_MS;
+   gint     resume_after_sleep_ms_work = -1;
 
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
@@ -2146,7 +2146,7 @@ parse_command(
    else
       parsed_cmd->poll_watch_loop_millisec = (uint16_t) poll_watch_loop_millis_work;
 #endif
-   if (resume_after_sleep_ms_work < 0) {
+   if (resume_after_sleep_ms_work < -1) {
       EMIT_PARSER_ERROR(errmsgs,
             "--resume-after-sleep-ms not a non-negative number: %d", resume_after_sleep_ms_work);
       parsing_ok = false;

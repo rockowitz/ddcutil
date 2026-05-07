@@ -424,6 +424,8 @@ STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
+   if (parsed_cmd->resume_after_sleep_ms >= 0)
+      pause_after_resume_ms = parsed_cmd->resume_after_sleep_ms;
 #ifdef FUTURE
    if (parsed_cmd->flags & CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS) {
       enable_dw_start_check_dev_i2c_devices_rw = true;
