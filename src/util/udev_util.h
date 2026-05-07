@@ -68,7 +68,7 @@ typedef struct {
    const char * prop_minor;
    const char * sysname;
    const char * syspath;
-   const char * attr_name;  // value of attribute "name" 
+   const char * attr_name;  // value of the attribute whose name is "name"
 } Udev_Event_Detail;
 
 Udev_Event_Detail* collect_udev_event_detail(struct udev_device * dev);
