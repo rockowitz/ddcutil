@@ -262,6 +262,9 @@ struct {
    uint16_t               xevent_watch_loop_millisec;
    uint16_t               poll_watch_loop_millisec;
 
+   // EACCES error related
+   int16_t                resume_after_sleep_ms;
+
    // Tracing and logging
    DDCA_Trace_Group       traced_groups;
    gchar **               traced_files;

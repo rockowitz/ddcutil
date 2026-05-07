@@ -970,6 +970,9 @@ parse_command(
    char     ddc_check_async_expl[80];
    g_snprintf(ddc_check_async_expl, 80, "Threshold for parallel examination of possible DDC devices. Default=%d.",
          DEFAULT_DDC_CHECK_ASYNC_THRESHOLD);
+   char     resume_after_sleep_ms_expl[80];
+   g_snprintf(resume_after_sleep_ms_expl, 80, "Pause after resume from sleep. Default=%d.",
+         DEFAULT_PAUSE_AFTER_RESUME_MS);
    const char * enable_dsa2_expl  = (enable_dsa2_flag) ? "Enable dynamic sleep algorithm (default)" : "Enable dynamic sleep algorithm";
    const char * disable_dsa2_expl = (enable_dsa2_flag) ? "Disable dynamic sleep algorithm" : "Disable dynamic sleep algorithm (default)";
 
@@ -1055,6 +1058,7 @@ parse_command(
 #endif
    gint     poll_watch_loop_millis_work = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 #endif
+   gint     resume_after_sleep_ms_work = DEFAULT_PAUSE_AFTER_RESUME_MS;
 
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
@@ -1247,6 +1251,8 @@ parse_command(
 #endif
       {"async",   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection (deprecated)", NULL},
 
+      {"resume-after-sleep-ms",   '\0', G_OPTION_FLAG_HIDDEN,
+                                         G_OPTION_ARG_INT, &resume_after_sleep_ms_work, resume_after_sleep_ms_expl, "milliseconds"},
       {"i2c-bus-checks-async-min",'\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &parsed_cmd->i2c_bus_check_async_min, i2c_bus_check_async_expl, NULL},
       {"ddc-checks-async-min",    '\0', G_OPTION_FLAG_HIDDEN,
@@ -2140,6 +2146,13 @@ parse_command(
    else
       parsed_cmd->poll_watch_loop_millisec = (uint16_t) poll_watch_loop_millis_work;
 #endif
+   if (resume_after_sleep_ms_work < 0) {
+      EMIT_PARSER_ERROR(errmsgs,
+            "--resume-after-sleep-ms not a non-negative number: %d", resume_after_sleep_ms_work);
+      parsing_ok = false;
+   }
+   else
+      parsed_cmd->resume_after_sleep_ms = (int16_t) resume_after_sleep_ms_work;
 
    // All options processed.  Check for consistency, set defaults
 
