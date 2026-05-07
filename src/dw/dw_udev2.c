@@ -30,6 +30,8 @@
 #include "base/sleep.h"
 
 #include "sysfs/sysfs_sys_drm_connector.h"
+
+#include "i2c/i2c_bus_core.h"
 /** \endcond */
 
 #include "dw_common.h"
@@ -186,7 +188,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
                if (streq(detail->prop_action, "add") &&
                    !str_starts_with(detail->prop_devname, "/dev/dri"))
                {
-                  int pause_millis = 1000;
+                  int pause_millis = pause_after_resume_ms;
                   LOGGABLE_SLEEP(pause_millis, SLEEP_OPT_TRACEABLE,DDCA_SYSLOG_NOTICE,
                         "Pausing %d millisec after UDEV add event", pause_millis);
                }
