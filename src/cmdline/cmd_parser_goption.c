@@ -1251,7 +1251,7 @@ parse_command(
 #endif
       {"async",   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection (deprecated)", NULL},
 
-      {"resume-after-sleep-ms",   '\0', G_OPTION_FLAG_HIDDEN,
+      {"pause-after-resume-ms",   '\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &resume_after_sleep_ms_work, resume_after_sleep_ms_expl, "milliseconds"},
       {"i2c-bus-checks-async-min",'\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &parsed_cmd->i2c_bus_check_async_min, i2c_bus_check_async_expl, NULL},
@@ -2148,7 +2148,7 @@ parse_command(
 #endif
    if (resume_after_sleep_ms_work < -1) {
       EMIT_PARSER_ERROR(errmsgs,
-            "--resume-after-sleep-ms not a non-negative number: %d", resume_after_sleep_ms_work);
+            "--pause-after-resume-ms not a valid value: %d", resume_after_sleep_ms_work);
       parsing_ok = false;
    }
    else
