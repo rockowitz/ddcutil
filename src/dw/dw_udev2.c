@@ -27,6 +27,7 @@
 
 #include "base/core.h"
 #include "base/rtti.h"
+#include "base/sleep.h"
 /** \endcond */
 
 #include "dw_common.h"
@@ -83,10 +84,8 @@ bool exclude_event( Udev_Event_Detail * detail) {
       exclude = true;
 #endif
 
-
    return exclude;
 }
-
 
 
 /** Poll udev to watch for display connection/disconnection
@@ -121,14 +120,14 @@ bool dw_udev_watch(int watch_loop_millisec) {
       }
       else if (rc < 0) {
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "poll() failed, errno=%d", errno);
-         SYSLOG2(DDCA_SYSLOG_ERROR,  "poll() failed, errno=%d", errno);
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,  "poll() failed, errno=%d", errno);
       }
       else {
          if (fds.revents&POLLIN) {
             struct udev_device *dev = udev_monitor_receive_device(mon);
             if (dev) {
                DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
-               SYSLOG2(DDCA_SYSLOG_NOTICE, "Udev event detected");
+               DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Udev event detected");
 
                Udev_Event_Detail * detail = collect_udev_event_detail(dev);
                if (!exclude_event(detail)) {
@@ -163,12 +162,20 @@ bool dw_udev_watch(int watch_loop_millisec) {
                   g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
                   g_ptr_array_free(collector, true);
                }
+
+               // TODO: refine the test
+               // if (streq(detail->sysname, "i2c-dev") || streq(detail->sysnamm, "drm"))
+               if (streq(detail->prop_action, "add")) {
+                  int pause_millis = 1000;
+                  LOGGABLE_SLEEP(pause_millis, SLEEP_OPT_TRACEABLE,DDCA_SYSLOG_NOTICE,
+                        "Pausing %d millisec after UDEV add event", pause_millis);
+               }
                free_udev_event_detail(detail);
                udev_device_unref(dev);
             }
             else {
                DBGTRC(true, DDCA_TRC_NONE, "udev_monitor_receive_device() failed");
-               SYSLOG2(DDCA_SYSLOG_ERROR,  "udev_monitor_receive_device() failed");
+               DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,  "udev_monitor_receive_device() failed");
             }
          }
          else {
