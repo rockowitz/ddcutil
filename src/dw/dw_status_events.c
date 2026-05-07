@@ -163,7 +163,7 @@ gpointer dw_execute_callback_func(gpointer data) {
    char * buf = g_strdup_printf("Invoking callback function %p for event %s in this thread "PRItid,
          cqe->func, display_status_event_repr_t(cqe->event), TID());
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", buf);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", buf);
    free(buf);
 
    record_active_callback_thread(g_thread_self());
@@ -191,7 +191,7 @@ gpointer dw_execute_callback_func(gpointer data) {
    unlock_all_displays_for_current_thread();      // should never be needed
 
    DBGTRC_DONE(debug, TRACE_GROUP, "%s", buf);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", buf);
    if (traced_function_stack_enabled)
       free_current_traced_function_stack();
 
@@ -302,7 +302,7 @@ void dw_emit_display_status_record(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "evt=%s", display_status_event_repr_t(evt));
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Emitting %s",  display_status_event_repr_t(evt));
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Emitting %s",  display_status_event_repr_t(evt));
 
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "evet->dref -> ", dref_reprx_t(evt->dref));
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
@@ -335,7 +335,7 @@ void dw_emit_display_status_record(
          dw_put_callback_queue(func, evt);
       }
    }
-   SYSLOG2(DDCA_SYSLOG_NOTICE,
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
          "Put %d event notification callbacks on display detection callbacks queue.",
          callback_ct);
    DBGTRC_DONE(debug, TRACE_GROUP,
@@ -354,7 +354,7 @@ void dw_emit_display_status_record(
 
    if (callback_ct > 0) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Starting %d callback threads", callback_ct);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting %d callback threads", callback_ct);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Starting %d callback threads", callback_ct);
       for (int ndx = 0; ndx < callback_ct; ndx++)  {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
          Callback_Queue_Entry * cqe = calloc(1, sizeof (Callback_Queue_Entry));
@@ -367,12 +367,12 @@ void dw_emit_display_status_record(
                                        cqe);
          // traced_function_stack_suspended = false;
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "libddcutil callback thread %p started", callback_thread);
-         SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
          g_thread_unref(callback_thread);
       }
    }
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Started %d event callback thread(s)", callback_ct);
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Started %d event callback thread(s)", callback_ct);
    DBGTRC_DONE(debug, TRACE_GROUP, "Started %d event callback thread(s)", callback_ct);
 }
 
@@ -422,7 +422,7 @@ void dw_emit_or_queue_display_status_event(
          dref,
          io_path);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "event: %s", display_status_event_repr_t(evt));
-   // SYSLOG2(DDCA_SYSLOG_NOTICE, "event: %s", display_status_event_repr(evt));
+   // DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "event: %s", display_status_event_repr(evt));
 
    g_mutex_lock(&emit_or_queue_mutex);  // or &emit_queue_mutex ???
    if (queue)
