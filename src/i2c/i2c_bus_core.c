@@ -444,7 +444,7 @@ retry:
                filename, psc_desc(errsv), __FILE__, __LINE__);
 
       if (err->status_code == -EACCES) {
-         syslog(LOG_ERR, "%s", err->detail);
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", err->detail);
          if (eacces_retry_ct == 0) {
             current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
             diagnose_open_failure_to_syslog(filename, err->detail);
@@ -460,9 +460,9 @@ retry:
 
             likely_transient = is_cur_user_acl_rw(filename);
             if (!likely_transient) {
-               BASIC_STD_SYSLOG(LOG_WARNING, "User ACL is not RW");
+               DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "User ACL is not RW");
                bool has_group_perms = cur_user_has_group_i2c_perms(filename);
-               SIMPLE_STD_SYSLOG(LOG_NOTICE, "Current user has group i2c perms on %s", filename);
+               DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Current user has group i2c perms on %s", filename);
                if (has_group_perms)
                   likely_transient = true;
             }
@@ -551,10 +551,10 @@ retry:
    }
 
    if ( ERRINFO_STATUS(err) == -EACCES)
-      SIMPLE_STD_SYSLOG(LOG_ERR, "open() failed with %d EACCES errors, total retry ms = %d",
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "open() failed with %d EACCES errors, total retry ms = %d",
             eacces_retry_ct, total_eacces_retry_ms);
    if (!err && eacces_retry_ct > 0)
-      SIMPLE_STD_SYSLOG(LOG_NOTICE, "open() succeeded with %d retries after %d millisec",
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "open() succeeded with %d retries after %d millisec",
             eacces_retry_ct, total_eacces_retry_ms);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
    return err;

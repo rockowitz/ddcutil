@@ -1,28 +1,3 @@
-
-
-
-
-
-
-
-
-
-#### Added 
-
-
-
-
-
-#### Fixed
-
-
-- Use atomic variables to fix time of use to time of check (TOCTOU) race 
-  conditions identified by Claude Code.
-
-
-
-
-
 ## [2.2.7] 2025-05-01
 
 ### General
@@ -74,15 +49,13 @@
   serial number that contains invalid ASCII characters
 - Write error message during **getvcp --brief*** regarding sysfs drm connector 
   not found to stderr, not stdout.  Issue #598.   
+- More consistent formatting of syslog output.
 
 ### Shared Library
 
 The shared library **libddcutil** is backwardly compatible with the one in 
 ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
 file is libddcutil.so.5.5.1.
-
-
-
 
 #### EACCES Errors
 
@@ -93,10 +66,56 @@ computers and Arch based distributions.
 
 The problem occurs after a resume from sleep.
 
-Reverting to using group i2c instead of udev token uaccess appears to resolve the problem, but this is not certain.
-Group ownership is a permanent attribute of the device node inode, set at creation and never cleared. It survives suspend/resume intact. udev rules (TAG+="uaccess" or MODE=) — uaccess works by having systemd-logind set a POSIX ACL on the device node for the current seat user. After resume, the kernel driver re-registers the device, which can trigger a new add uevent. Logind needs to process that event and re-apply the ACL.
+THe best (but not certain) explanation for these events is as follows.
+
+Reverting to using group i2c instead of udev token uaccess appears to resolve the 
+problem, but this is not certain. Group ownership is a permanent attribute of the device node inode, set at creation and never cleared. It survives suspend/resume intact. udev rules (TAG+="uaccess" or MODE=) — uaccess works by having systemd-logind set a POSIX ACL on the device node for the current seat user. After resume, the kernel driver re-registers the device, which can trigger a new add uevent. Logind needs to process that event and re-apply the ACL.
 
 To address this problem, pauses are insert at several points, including opening a /dev/i2c device, if the call occurs immediately after a resume from sleep.  If the ACL API reports that the /dev/i2c device does have the proper permissions, libddcutil pauses and retries opening the device. 
+
+
+parameterization: 
+DEFAULT_PAUSE_AFTER_RESUME_MS  500
+
+  parameterize tunable settings for EACCES recovery and errors
+    
+    global      default     option
+    pause_after_resume_ms   DEFAULT_PAUSE_AFTER_RESUME_MS = 1000    --i10
+    max_eacces_retry_ms     DEFAULT_MAX_EACCES_RETRY_MS   = 4000    --i11
+    max_eacces_retry_ct     DEFAULT_MAX_EACCES_RETRY_CT   =    3    --i12
+
+f18 - always report UDEV events report_udev_events
+--f19 stabilize_added_buses_with_edid
+--f27 disable dw_start check that all relevant i2c buses rw 
+--f28  disable ddci-init check that all relevant i2c buses rw
+--i7 stabilization poll millisec
+--i9  delay ddc_start_watch_displays_ms (0)    dw_start_watch_delay_ms
+
+--i8  udev_watch_loop_ms
+--i1  initial_stabilization_millisec
+--i7  stabilization_poll_millisec
+
+CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS
+enable_dw_start_check_dev_i2c_devices_rw
+enable_ddci_init_Start_check_i2dc_devices_rw
+
+--f27 disable dw_start check that all relevant i2c buses rw 
+--f28  disable ddci-init check that all relevant i2c buses rw
+
+
+global                         cur_          as_dist           cur          dist 
+                               default       default           set by       set by  
+pause_after_resume_ms              500           500               --i10
+max_eacces_retry_ms               4000          ?                 --i11
+max_eacces_retry_ct                  3            ?                 --i12
+udev_watch_loop_ms                                     --i8
+initial_stabilization_millisec                              --i1
+stabilization_poll_millisec                                 --i7
+dw_start_watch_delay_ms              0                          --i9
+enable_dw_start_check_i2c_devices,                           --enable-early-permission-checks
+enable_ddci_start_check_i2c-devices
+disable dw_start check that all relevant i2c buses rw       --f27
+disable ddci-init check that all relevant i2c buses rw     --f28
 
 
 
@@ -136,6 +155,8 @@ To address this problem, pauses are insert at several points, including opening 
   Crash in DDCutilPrivateSingleton::redetect after letting laptop sleep).
 - In **dw_create_display_status_event()**, the test for event type
   DDCA_EVENT_DDC_DISABLED incorrectly used flag DDCA_DISPLAY_EVENT_DDC_WORKING.
+- Use atomic variables to fix time of use to time of check (TOCTOU) race 
+  conditions identified by Claude Code.
 
 ### Building
 
