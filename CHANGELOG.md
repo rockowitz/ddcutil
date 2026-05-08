@@ -1,23 +1,97 @@
-## [2.2.7] 2025-05-01
+## [2.2.7] 2025-05-08
 
-### General
+#### EACCES Errors
 
-#### Added
+Calling open() on a /dev/i2c device for which the user has RW permission
+sometimes (rarely) fails with Linux error EACCES. This elusive problem has most
+frequently been reported on Framework computers and Arch based distributions.
 
+Reverting to using group i2c instead of udev token uaccess appears to resolve
+the problem, but this is not certain.
+
+The problem commonly occurs after a resume from sleep. The best (but not certain)
+explanation for these events is as follows. The userid, group id, and mode bits are
+permanent attributes of the device inode.  They survive suspend/resume intact. 
+udev rule TAG+="uaccess" works by having systemd-logind set a POSIX ACL on the 
+device node for the current seat user. After resume, the kernel driver re-registers
+the device, which can trigger a new add uevent. Logind needs to process that event 
+creating a window during with an EACCES error is possible. In short, it is a 
+race condition.
+
+To address this problem, pauses are inserted at several points, including before 
+opening a /dev/i2c device, if the call occurs immediately after a resume from sleep.  
+
+In addition, if an open() call fails with errno EACCES, the ACL API is used to 
+recheck device permissions. If the API reports that the /dev/i2c device does have
+the proper permissions, the open() call is retried for an extended period of time 
+on the presumption that it will eventually succeed.  If the ACL API does not
+report that the /dev/i2c device has proper permissions, the open() is nonetheless 
+retried once. 
+
+The behavior of open() calls and watching for display connection/disconnection has
+been parameterized in several ways. For many parameters, there is a tension: if 
+the delay time is too large, true EACCES errors can flood the system, making the 
+UI unresponsive; if the delay time is too small not enough time may be given for 
+the permissions to resolve.
+
+File src/base/parms.h contains the default values of several of these parameters.
+The following options have been added for the parameters most likely to be adjusted: 
+
+- ***~~pause-after-resume-ms***  The number of milliseconds libddcutil may pause 
+  after dbus reports a resume from sleep.  The default is 500, set by 
+  DEFAULT_AFTER_RESUME_MS in parms.h.
+- ***-max-eacces_retry-ms*** Limits the number of milliseconds for retrying open() 
+  calls when it appears likely, having checked the ACL, that the open() call will 
+  succeed eventually. The default is 3000, set by DEFAULT_EACCES_RETRY_MS in parms.h. 
+- ***--enable/disable-early-permission-checks***  Perform basic permission checks
+  before performing operations that might generate a flurry of EACCES errors.  
+  The drawback of this option is that the basic permission might be performed too
+  soon, reflecting permission failures that might otherwise resolved by the time
+  the open() calla are actually needed.  The default is enable, set by 
+  ENABLE_EARLY_PERMISSION_CHECKS in parms.h
+
+In addition, many parameters can be adjusted using utility options (***--fN***,
+***--iN***, etc.). The current definitions of the utility options are reported by
+command **ddcutil noop --settings**. These options exist to simplify testing; 
+there is no guarantee that their effect will be the same from one release to the next.
+
+#### Added 
+
+- Extensive diagnostics are written to the system log if opening a /dev/i2c
+  device fails with errno EACCES.
 - Implemented a basic segfault handler.  It writes the traced function stack
-  of the current thread to the system log, then invokes the prior handler.
+  of the current thread to the system log, then invokes the prior handler. 
+- Option ***max-eacces-retry-ms***.   
 
 #### Changed
 
-- Option ***--skip-ddc-checks***: valid only for command line **ddcutil**, not shared 
-  library **libddcutil**.
+- Re-enable reporting of laptop display connection/disconnection. 
+  Do not check DDC operation for the laptop /dev/i2c bus or for any
+  bus not supporting x37.
+- When watching for display connection/disconnection using watch-mode UDEV: 
+  - watch for UDEV notifications for subsystem i2c-dev as well as drm.
+  - write udev event detail to the system log
+- **dw_hotplug_change_handler()**: write additonal messages to the system log
+  when a /dev/i2c device unexpectedly no longer exists
+- Option ***--skip-ddc-checks***: valid only for command line **ddcutil**, not 
+  shared library **libddcutil**. If specified in config file ddcutilrc, it must
+  be in the [ddcutil] section, not the [global] section.
 - The installed udev rules file, 60-ddcutil-i2c.rules now sets group i2c and 
   mode 0660 as well as using token uaccess to assign /dev/i2c permissions. 
-  Users encountering the transient EACCES errors may need to use group permissions
-  to use the old group permissions method. 
+  Users encountering the transient EACCES errors may need to use the old group
+  permissions method. 
 
 #### Fixed
 
+- **ddca_redetect_displays()**: Recover from an unexpected system state that
+  previously triggered assert() failures. Diagnostics are written to the system
+  log. If display watch is not running on entry to the function, it is not 
+  restarted at the end. 
+  Addresses issue #595, (powerdevil crashes with assertion failure in libddcutil
+  after resume from sleep/hibernate) and KDE bug 517571 (KDE Power Management 
+  Crash in DDCutilPrivateSingleton::redetect after letting laptop sleep).
+- In **dw_create_display_status_event()**, the test for event type
+  DDCA_EVENT_DDC_DISABLED incorrectly used flag DDCA_DISPLAY_EVENT_DDC_WORKING.
 - man page ddcutil: Replace example "getvcp supported" by "getvcp all". 
   Group "supported" was replaced long ago by "all". Issue #579.
 - segfault in diagnose_open_failure_to_syslog(). Issue #596
@@ -50,111 +124,6 @@
 - Write error message during **getvcp --brief*** regarding sysfs drm connector 
   not found to stderr, not stdout.  Issue #598.   
 - More consistent formatting of syslog output.
-
-### Shared Library
-
-The shared library **libddcutil** is backwardly compatible with the one in 
-ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
-file is libddcutil.so.5.5.1.
-
-#### EACCES Errors
-
-Calling **open()** on a /dev/i2c device for which the user has
-RW permission sometimes (rarely) fails with Linux error EACCES.
-This elusive problem has been most frequently seen on Framework 
-computers and Arch based distributions.
-
-The problem occurs after a resume from sleep.
-
-THe best (but not certain) explanation for these events is as follows.
-
-Reverting to using group i2c instead of udev token uaccess appears to resolve the 
-problem, but this is not certain. Group ownership is a permanent attribute of the device node inode, set at creation and never cleared. It survives suspend/resume intact. udev rules (TAG+="uaccess" or MODE=) — uaccess works by having systemd-logind set a POSIX ACL on the device node for the current seat user. After resume, the kernel driver re-registers the device, which can trigger a new add uevent. Logind needs to process that event and re-apply the ACL.
-
-To address this problem, pauses are insert at several points, including opening a /dev/i2c device, if the call occurs immediately after a resume from sleep.  If the ACL API reports that the /dev/i2c device does have the proper permissions, libddcutil pauses and retries opening the device. 
-
-
-parameterization: 
-DEFAULT_PAUSE_AFTER_RESUME_MS  500
-
-  parameterize tunable settings for EACCES recovery and errors
-    
-    global      default     option
-    pause_after_resume_ms   DEFAULT_PAUSE_AFTER_RESUME_MS = 1000    --i10
-    max_eacces_retry_ms     DEFAULT_MAX_EACCES_RETRY_MS   = 4000    --i11
-    max_eacces_retry_ct     DEFAULT_MAX_EACCES_RETRY_CT   =    3    --i12
-
-f18 - always report UDEV events report_udev_events
---f19 stabilize_added_buses_with_edid
---f27 disable dw_start check that all relevant i2c buses rw 
---f28  disable ddci-init check that all relevant i2c buses rw
---i7 stabilization poll millisec
---i9  delay ddc_start_watch_displays_ms (0)    dw_start_watch_delay_ms
-
---i8  udev_watch_loop_ms
---i1  initial_stabilization_millisec
---i7  stabilization_poll_millisec
-
-CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS
-enable_dw_start_check_dev_i2c_devices_rw
-enable_ddci_init_Start_check_i2dc_devices_rw
-
---f27 disable dw_start check that all relevant i2c buses rw 
---f28  disable ddci-init check that all relevant i2c buses rw
-
-
-global                         cur_          as_dist           cur          dist 
-                               default       default           set by       set by  
-pause_after_resume_ms              500           500               --i10
-max_eacces_retry_ms               4000          ?                 --i11
-max_eacces_retry_ct                  3            ?                 --i12
-udev_watch_loop_ms                                     --i8
-initial_stabilization_millisec                              --i1
-stabilization_poll_millisec                                 --i7
-dw_start_watch_delay_ms              0                          --i9
-enable_dw_start_check_i2c_devices,                           --enable-early-permission-checks
-enable_ddci_start_check_i2c-devices
-disable dw_start check that all relevant i2c buses rw       --f27
-disable ddci-init check that all relevant i2c buses rw     --f28
-
-
-
-#### Added 
-
-- Calling **open()** on a /dev/i2c device for which the user otherwise has
-  RW permission sometimes (rarely) fails with Linux error EACCES. 
-  To aid in diagnosing this situation, libacl is used to report access control 
-  information about the device file in the system log.
-- Added a thread that watches for dbus PrepareForSleep messages, in order to 
-  calculate the time since the most recent return from sleep.  If opening a 
-  /dev/i2c device fails with errno EACCES shortly after returning from sleep, 
-  the open is retried.
-- Extensive diagnostics are written to the system log if opening a /dev/i2c
-  device fails with errno EACCES.   
-
-#### Changed
-
-- Re-enable reporting of laptop display connection/disconnection. 
-  Do not check DDC operation for the laptop /dev/i2c bus or for any
-  bus not supporting x37.
-- When watching for display connection/disconnection using watch-mode UDEV: 
-  - watch for UDEV notifications for subsystem i2c-dev as well as drm.
-  - write udev event detail to the system log
-- **dw_hotplug_change_handler()**: write additonal messages to the system log
-  when a /dev/i2c device unexpectedly no longer exists
-
-
-#### Fixed
-
-- **ddca_redetect_displays()**: Recover from an unexpected system state that
-  previously triggered assert() failures. Diagnostics are written to the system
-  log. If display watch is not running on entry to the function, it is not 
-  restarted at the end. 
-  Addresses issue #595, (powerdevil crashes with assertion failure in libddcutil
-  after resume from sleep/hibernate) and KDE bug 517571 (KDE Power Management 
-  Crash in DDCutilPrivateSingleton::redetect after letting laptop sleep).
-- In **dw_create_display_status_event()**, the test for event type
-  DDCA_EVENT_DDC_DISABLED incorrectly used flag DDCA_DISPLAY_EVENT_DDC_WORKING.
 - Use atomic variables to fix time of use to time of check (TOCTOU) race 
   conditions identified by Claude Code.
 
@@ -164,6 +133,23 @@ disable ddci-init check that all relevant i2c buses rw     --f28
   The default is enabled.  Needed to watch for sleep events.
 - File src/base/parms.h: Define QUIESCE operation constants: 
   QUIESCE_POLL_MAX_MILLISEC, QUIESCE_POLL_INTERVAL_MILLISEC
+
+
+### Shared Library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.5.1.
+
+#### Added
+
+- Added a thread that watches for dbus PrepareForSleep messages, in order to 
+  calculate the time since the most recent return from sleep.  If opening a 
+  /dev/i2c device fails with errno EACCES shortly after returning from sleep, 
+  the open is retried.
+- Option ***~~pause-after-resume-ms*** 
+- Option ***--enable/disable-early-permission-checks***
+
 
 
 ## [2.2.6] 2026-03-11
