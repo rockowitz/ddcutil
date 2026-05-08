@@ -79,7 +79,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 int  nonudev_poll_loop_millisec = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;   // 2000;
 int  retry_thread_sleep_factor_millisec = WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC;
-bool stabilize_added_buses_w_edid;  // if set, stabilize when displays added as well as removed
+bool stabilize_added_buses_w_edid = false;  // if set, stabilize when displays added as well as removed
 bool recheck_thread_active = false;
 GMutex process_event_mutex;
 
