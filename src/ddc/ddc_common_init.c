@@ -75,7 +75,7 @@
 
 
 // more naturally in ahi_base.c, but that would violate layering
-bool enable_ddci_init_check_dev_i2c_devices_rw = true;
+bool enable_ddci_init_check_dev_i2c_devices_rw = DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS;
 
 /** Assembles a #Error_Info struct and appends it to an array.
  *
@@ -426,7 +426,6 @@ STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
    if (parsed_cmd->resume_after_sleep_ms >= 0)
       pause_after_resume_ms = parsed_cmd->resume_after_sleep_ms;
-#ifdef FUTURE
    if (parsed_cmd->flags & CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS) {
       enable_dw_start_check_dev_i2c_devices_rw = true;
       enable_ddci_init_check_dev_i2c_devices_rw = true;
@@ -435,7 +434,6 @@ STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
       enable_dw_start_check_dev_i2c_devices_rw = false;
       enable_ddci_init_check_dev_i2c_devices_rw = false;
    }
-#endif
 }
 
 
