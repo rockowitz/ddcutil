@@ -93,7 +93,7 @@ int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool force_failure_i2c_all_relevant_i2c_buses_rw = false;
 bool force_failure_i2c_all_edids_readable_using_i2c = false;
 bool force_failure_i2c_open = false;
-int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;  // TODO: default in parms.h, settable as option
+int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;
 int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;
 int  max_eacces_retry_ct = DEFAULT_STD_EACCES_RETRY_CT;
 
