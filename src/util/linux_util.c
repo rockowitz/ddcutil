@@ -482,7 +482,9 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    rpt_facl_collect1(fqfn, collector, depth);
    rpt_lsof_collect0(fqfn, collector);
 
-  G_PTR_ARRAY_ADD_STRING(collector, "acl for user %d: %s", uid, get_user_acl(fqfn,  uid));
+   char * sacl = get_user_acl(fqfn, uid);
+   G_PTR_ARRAY_ADD_STRING(collector, "acl for user %d: %s", uid, sacl);
+   free(sacl);
 
 
 #ifdef USE_DBUS
