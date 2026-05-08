@@ -59,10 +59,10 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
-DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
 bool            enable_watch_displays = true;
-bool            enable_dw_start_check_dev_i2c_devices_rw = true;
-int             dw_start_watch_delay_ms = 0;
+bool            enable_dw_start_check_dev_i2c_devices_rw = DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS;
+int             dw_start_watch_delay_ms = START_WATCH_DELAY_MILLISEC;
+DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
 
 static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
