@@ -215,6 +215,14 @@ bye:
    return collector;
 }
 
+
+/** Returns the POSIX ACL for a given user and file.
+ *
+ *  @param  fqfn  fully qualified file name
+ *  @param  uid   user id
+ *  @return 3 character string, e.g. "rwx" indicating
+ *          permissions.  Caller must free.
+ */
 char * get_user_acl(const char * fqfn, uid_t uid) {
    bool debug  = false;
 
