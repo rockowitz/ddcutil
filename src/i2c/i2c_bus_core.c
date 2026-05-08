@@ -95,7 +95,7 @@ bool force_failure_i2c_all_edids_readable_using_i2c = false;
 bool force_failure_i2c_open = false;
 int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;  // TODO: default in parms.h, settable as option
 int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;
-int  max_eacces_retry_ct = DEFAULT_MAX_EACCES_RETRY_CT;
+int  max_eacces_retry_ct = DEFAULT_STD_EACCES_RETRY_CT;
 
 
 #ifdef OUT
@@ -366,8 +366,6 @@ bool cur_user_has_group_i2c_perms(const char * filename) {
 }
 
 
-// static bool first_open_error = false;
-
 /** Opens a I2C device specified by its file name, without further checks
  *  @param  filename   name of file to open
  *  @param  callopts   if bit CALLOPT_RDONLY set, open RO, otherwise open RW
@@ -431,12 +429,7 @@ retry:
    }
 
    if (*fd_loc < 0) {
-      // if (first_open_error) {
-      //    first_open_error = false;
-
       int errsv = -errno;
-      // if (force_i2c_open_failure)
-      //    errsv = -EACCES;
       char * msg = g_strdup_printf("open(%s) failed. errno=%s", filename, psc_desc(errsv));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
       free(msg);
@@ -448,7 +441,8 @@ retry:
          if (eacces_retry_ct == 0) {
             current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
             diagnose_open_failure_to_syslog(filename, err->detail);
-            syslog(LOG_WARNING, "open() EACCES failure, recently resumed from sleep: %s",
+            DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
+                                "open() EACCES failure, recently resumed from sleep: %s",
                                 sbool(recently_resumed));
 #ifdef OUT
          uint64_t now_ns   = cur_realtime_nanosec();
@@ -457,7 +451,6 @@ retry:
          bool should_retry3 = false;
 #endif
          
-
             likely_transient = is_cur_user_acl_rw(filename);
             if (!likely_transient) {
                DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "User ACL is not RW");
