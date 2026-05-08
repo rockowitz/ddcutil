@@ -105,7 +105,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i9:          Delay_ddc_start_watch_display() millisec (default = 0");
    rpt_vstring(depth+1, "Utility option --i10:         Pause after resume from sleep ms (default = %d)", DEFAULT_PAUSE_AFTER_RESUME_MS);
    rpt_vstring(depth+1, "Utility option --i11:         Max after EACCES retry ms (default=%d", DEFAULT_MAX_EACCES_RETRY_MS);
-   rpt_vstring(depth+1, "Utility option --i12:         Max after EACCES retry ct (default=%d)", DEFAULT_MAX_EACCES_RETRY_CT);
+   rpt_vstring(depth+1, "Utility option --i12:         Max after EACCES retry ct (default=%d)", DEFAULT_STD_EACCES_RETRY_CT);
    rpt_vstring(depth+1, "Utility option --i13:         Unused");
    rpt_vstring(depth+1, "Utility option --i14:         Unused");
    rpt_vstring(depth+1, "Utility option --i15:         Unused");
