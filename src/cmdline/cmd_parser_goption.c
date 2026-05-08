@@ -907,6 +907,16 @@ parse_command(
       }
    }
 
+#define DEFAULT_EXPL(_enable_expl_var, _disable_expl_var, _default_value, _base_explanation) \
+   if (_default_value) { \
+      _enable_expl_var  = _base_explanation" (default)"; \
+      _disable_expl_var = "do not"_base_explanation; \
+   } \
+   else { \
+      _enable_expl_var  = _base_explanation; \
+      _disable_expl_var = "do not "_base_explanation" (default)"; \
+   }
+
    Parsed_Cmd * parsed_cmd = new_parsed_cmd();
    parsed_cmd->parser_mode = parser_mode;
 
@@ -973,6 +983,9 @@ parse_command(
    char     resume_after_sleep_ms_expl[80];
    g_snprintf(resume_after_sleep_ms_expl, 80, "Pause after resume from sleep. Default=%d.",
          DEFAULT_PAUSE_AFTER_RESUME_MS);
+   char     eacces_retry_ms_expl[80];
+   g_snprintf(eacces_retry_ms_expl, 80, "Max ms for EACCES retry. Default=%d.",
+         DEFAULT_MAX_EACCES_RETRY_MS);
    const char * enable_dsa2_expl  = (enable_dsa2_flag) ? "Enable dynamic sleep algorithm (default)" : "Enable dynamic sleep algorithm";
    const char * disable_dsa2_expl = (enable_dsa2_flag) ? "Disable dynamic sleep algorithm" : "Disable dynamic sleep algorithm (default)";
 
@@ -1018,9 +1031,13 @@ parse_command(
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
    gboolean disable_api_flag = false;
-#ifdef FUTURE
-   gboolean enable_early_permission_checks_flag = false;
-#endif
+// #ifdef FUTURE
+   gboolean enable_early_permission_checks_flag = DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS;
+   char * enable_early_permission_expl = NULL;
+   char * disable_early_permission_expl = NULL;
+   DEFAULT_EXPL(enable_early_permission_expl, disable_early_permission_expl,
+         DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS, "precheck i2c permissions");
+// #endif
    gboolean discard_cached_capabilities_flag = false;
    gboolean discard_dsa_cache_flag = false;
 
@@ -1059,6 +1076,7 @@ parse_command(
    gint     poll_watch_loop_millis_work = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 #endif
    gint     resume_after_sleep_ms_work = -1;
+   gint     eacces_retry_ms_work = -1;
 
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
@@ -1253,6 +1271,8 @@ parse_command(
 
       {"pause-after-resume-ms",   '\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &resume_after_sleep_ms_work, resume_after_sleep_ms_expl, "milliseconds"},
+      {"max-eacces-retry-ms",     '\0', G_OPTION_FLAG_HIDDEN,
+                                         G_OPTION_ARG_INT, &eacces_retry_ms_work, eacces_retry_ms_expl, NULL},
       {"i2c-bus-checks-async-min",'\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &parsed_cmd->i2c_bus_check_async_min, i2c_bus_check_async_expl, NULL},
       {"ddc-checks-async-min",    '\0', G_OPTION_FLAG_HIDDEN,
@@ -1327,12 +1347,12 @@ parse_command(
 #endif
       {"disable-api", '\0', G_OPTION_FLAG_HIDDEN,
                                            G_OPTION_ARG_NONE, &disable_api_flag, "Completely disable API", NULL },
-#ifdef FUTURE
+// #ifdef FUTURE
       {"enable-early-permission-checks",  '\0', G_OPTION_FLAG_HIDDEN,
-                                           G_OPTION_ARG_NONE, &enable_early_permission_checks_flag, "Enable early permission checks", NULL },
+                           G_OPTION_ARG_NONE, &enable_early_permission_checks_flag, enable_early_permission_expl, NULL },
       {"disable-early-permission-checks", '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
-                              G_OPTION_ARG_NONE, &enable_early_permission_checks_flag, "Disable early permission checks", NULL },
-#endif
+                           G_OPTION_ARG_NONE, &enable_early_permission_checks_flag, disable_early_permission_expl, NULL },
+// #endif
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
@@ -1801,9 +1821,9 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_WATCH_DISPLAY_EVENTS,    enable_watch_displays);
 #endif
    SET_CMDFLAG(CMD_FLAG_DISABLE_API,       disable_api_flag);
-#ifdef FUTURE
-   SET_CMDFLAG(CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS, enable_early_permission_checks_flag);
-#endif
+// #ifdef FUTURE
+   SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS, enable_early_permission_checks_flag);
+// #endif
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_FILEIO,     i2c_io_fileio_flag);
@@ -2153,6 +2173,13 @@ parse_command(
    }
    else
       parsed_cmd->resume_after_sleep_ms = (int16_t) resume_after_sleep_ms_work;
+   if (eacces_retry_ms_work < -1) {
+      EMIT_PARSER_ERROR(errmsgs,
+            "--max-eacces-retry-ms not a valid value: %d", eacces_retry_ms_work);
+      parsing_ok = false;
+   }
+   else
+      parsed_cmd->eacces_retry_ms = (int16_t) eacces_retry_ms_work;
 
    // All options processed.  Check for consistency, set defaults
 
