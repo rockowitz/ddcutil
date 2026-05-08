@@ -114,10 +114,8 @@ typedef enum {
                          = 0x0200000000000000,
    CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR
                         =  0x0400000000000000,
-#ifdef FUTURE
    CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS
                         =  0x0800000000000000,
-#endif
    CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK
                          = 0x1000000000000000,
    CMD_FLAG_TRACED_FUNCTION_STACK_ERRORS_FATAL
@@ -264,6 +262,7 @@ struct {
 
    // EACCES error related
    int16_t                resume_after_sleep_ms;
+   int16_t                eacces_retry_ms;
 
    // Tracing and logging
    DDCA_Trace_Group       traced_groups;

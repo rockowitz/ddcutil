@@ -339,6 +339,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_int("i2c_bus_check_async_min", NULL, parsed_cmd->i2c_bus_check_async_min,             d1);
       rpt_int("ddc_check_async_min", NULL, parsed_cmd->ddc_check_async_min,                     d1);
       rpt_int("resume_after_sleep_ms", NULL, parsed_cmd->resume_after_sleep_ms,                  d1);
+      rpt_int("eacces_retry_ms",      NULL, parsed_cmd->eacces_retry_ms,                         d1);
 
       dbgrpt_ntsa(d1, "ddc_disabled", parsed_cmd->ddc_disabled);
 
