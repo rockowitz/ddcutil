@@ -111,8 +111,6 @@
 #define DEFAULT_DDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_WARNING
 #define DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_NOTICE
 
-#define DEFAULT_WATCH_MODE Watch_Mode_Dynamic
-
 //
 // Asynchronous Initialization
 //
@@ -142,16 +140,28 @@
 #define DETECT_X37_MAX_TRIES 3
 #define DETECT_X37_RETRY_MILLISEC 400
 
-#define DEFAULT_PAUSE_AFTER_RESUME_MS   500
-#define DEFAULT_MAX_EACCES_RETRY_MS    5000
-#define DEFAULT_MAX_EACCES_RETRY_CT       3
+//
+//  EACCES error recovery
+//
 
+#define DEFAULT_PAUSE_AFTER_RESUME_MS   500
+#define DEFAULT_MAX_EACCES_RETRY_MS    3000
+#define DEFAULT_STD_EACCES_RETRY_CT       1
+
+#define DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS  true
+// #define ENABLE_DDCI_INIT_CHECK_DEV_I2C_DEVICES_RW false
+// #define ENABLE_DW_START_CHECK_DEV_I2C_DEVICES_RW  true
 
 //
 // *** Watching for display changes
 //
 
-/** How frequently libddcutil watches for changes to connected displays */
+#define REPORT_UDEV_EVENTS    true   // report relevant detected UDEV events
+
+#define DEFAULT_WATCH_MODE Watch_Mode_Dynamic
+#define START_WATCH_DELAY_MILLISEC 0
+
+// How frequently libddcutil watches for changes to connected displays
 #define DEFAULT_UDEV_WATCH_LOOP_MILLISEC 500
 #define DEFAULT_POLL_WATCH_LOOP_MILLISEC 2000
 #define DEFAULT_XEVENT_WATCH_LOOP_MILLISEC 100
@@ -164,7 +174,7 @@
 /** Polling interval between stabilization checks */
 #define DEFAULT_STABILIZATION_POLL_MILLISEC 100
 
-// When checking that DDC communication has become enabled,
+// When checking if DDC communication has become enabled,
 // checks occur at increasing multiples of this value.
 #define WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC 500
 
