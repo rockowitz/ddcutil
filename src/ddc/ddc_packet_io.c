@@ -307,7 +307,9 @@ ddc_open_display(
       SYSLOG2(DDCA_SYSLOG_ERROR,"%s", s);
       dbgrpt_current_traced_function_stack(true, true, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
-      mark_display_ref_disconnected(dref);
+      // mark_display_ref_disconnected(dref);  // don't call - double lock
+      dref->disconnected = true;
+      dref->detail = NULL;
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "%s", s);
       free(s);
       goto bye;
@@ -482,7 +484,6 @@ ddc_open_display(
    }
 
 bye:
-   g_mutex_unlock (&dref->disconnect_mutex);
    if (err) {
       COUNT_STATUS_CODE(err->status_code);
    }
@@ -491,6 +492,7 @@ bye:
    }
    *dh_loc = dh;
    TRACED_ASSERT_IFF( !err, *dh_loc );
+   g_mutex_unlock (&dref->disconnect_mutex);
    // dbgrpt_distinct_display_descriptors(0);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*dh_loc=%s", dh_repr_p(*dh_loc));
    return err;
