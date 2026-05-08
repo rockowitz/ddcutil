@@ -6,17 +6,17 @@ Calling open() on a /dev/i2c device for which the user has RW permission
 sometimes (rarely) fails with Linux error EACCES. This elusive problem has most
 frequently been reported on Framework computers and Arch based distributions.
 
-Reverting to using group i2c instead of udev token uaccess appears to resolve
-the problem, but this is not certain.
+Reverting to using group i2c instead of udev token uaccess to grant permission
+appears to resolve the problem, but this is not certain.
 
 The problem commonly occurs after a resume from sleep. The best (but not certain)
 explanation for these events is as follows. The userid, group id, and mode bits are
 permanent attributes of the device inode.  They survive suspend/resume intact. 
-udev rule TAG+="uaccess" works by having systemd-logind set a POSIX ACL on the 
-device node for the current seat user. After resume, the kernel driver re-registers
-the device, which can trigger a new add uevent. Logind needs to process that event 
-creating a window during with an EACCES error is possible. In short, it is a 
-race condition.
+On the other hand, udev rule TAG+="uaccess" works by having systemd-logind set a 
+POSIX ACL on the device node for the current seat user. After resume, the kernel 
+driver re-registers the device, which can trigger a new add uevent. Logind needs
+to process that event, creating a window during with an EACCES error is possible. 
+In short, it is a race condition.
 
 To address this problem, pauses are inserted at several points, including before 
 opening a /dev/i2c device, if the call occurs immediately after a resume from sleep.  
@@ -35,7 +35,7 @@ UI unresponsive; if the delay time is too small not enough time may be given for
 the permissions to resolve.
 
 File src/base/parms.h contains the default values of several of these parameters.
-The following options have been added for the parameters most likely to be adjusted: 
+The following options have been added for those most likely to be adjusted: 
 
 - ***~~pause-after-resume-ms***  The number of milliseconds libddcutil may pause 
   after dbus reports a resume from sleep.  The default is 500, set by 
@@ -46,8 +46,8 @@ The following options have been added for the parameters most likely to be adjus
 - ***--enable/disable-early-permission-checks***  Perform basic permission checks
   before performing operations that might generate a flurry of EACCES errors.  
   The drawback of this option is that the basic permission might be performed too
-  soon, reflecting permission failures that might otherwise resolved by the time
-  the open() calla are actually needed.  The default is enable, set by 
+  soon, generating permission failures that might otherwise resolve by the time
+  the open() calls are actually needed.  The default is enable, set by 
   ENABLE_EARLY_PERMISSION_CHECKS in parms.h
 
 In addition, many parameters can be adjusted using utility options (***--fN***,
@@ -61,13 +61,13 @@ there is no guarantee that their effect will be the same from one release to the
   device fails with errno EACCES.
 - Implemented a basic segfault handler.  It writes the traced function stack
   of the current thread to the system log, then invokes the prior handler. 
-- Option ***max-eacces-retry-ms***.   
+- Option ***max-eacces-retry-ms***. (See above.)  
 
 #### Changed
 
 - Re-enable reporting of laptop display connection/disconnection. 
   Do not check DDC operation for the laptop /dev/i2c bus or for any
-  bus not supporting x37.
+  bus unresponsive on slave address x37.
 - When watching for display connection/disconnection using watch-mode UDEV: 
   - watch for UDEV notifications for subsystem i2c-dev as well as drm.
   - write udev event detail to the system log
@@ -75,7 +75,7 @@ there is no guarantee that their effect will be the same from one release to the
   when a /dev/i2c device unexpectedly no longer exists
 - Option ***--skip-ddc-checks***: valid only for command line **ddcutil**, not 
   shared library **libddcutil**. If specified in config file ddcutilrc, it must
-  be in the [ddcutil] section, not the [global] section.
+  now be in the [ddcutil] section, not the [global] section.
 - The installed udev rules file, 60-ddcutil-i2c.rules now sets group i2c and 
   mode 0660 as well as using token uaccess to assign /dev/i2c permissions. 
   Users encountering the transient EACCES errors may need to use the old group
@@ -108,7 +108,7 @@ there is no guarantee that their effect will be the same from one release to the
   display adapter test to look at only the first byte of the adapter class, 
   which must be x03. Pull request #597.
 - Fix incorrect ioctl call in **hiddev_get_report()**, used for monitors using
-  USB rather that I2C for communication with their Virtual Control Panels.
+  USB rather that I2C for communication with their Virtual Control Panel.
 - When reading the EDID bytewise using **get_edid_bytes_directly_using_fileio()**
   (currently done only for test purposes), only every other byte was saved.
 - Incorrect call to i2c-dev set address ioctl.
@@ -134,7 +134,6 @@ there is no guarantee that their effect will be the same from one release to the
 - File src/base/parms.h: Define QUIESCE operation constants: 
   QUIESCE_POLL_MAX_MILLISEC, QUIESCE_POLL_INTERVAL_MILLISEC
 
-
 ### Shared Library
 
 The shared library **libddcutil** is backwardly compatible with the one in 
@@ -147,10 +146,8 @@ file is libddcutil.so.5.5.1.
   calculate the time since the most recent return from sleep.  If opening a 
   /dev/i2c device fails with errno EACCES shortly after returning from sleep, 
   the open is retried.
-- Option ***~~pause-after-resume-ms*** 
-- Option ***--enable/disable-early-permission-checks***
-
-
+- Option ***~~pause-after-resume-ms*** (See above.)
+- Option ***--enable/disable-early-permission-checks*** (See above.)
 
 ## [2.2.6] 2026-03-11
 
