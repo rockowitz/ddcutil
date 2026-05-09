@@ -628,8 +628,15 @@ PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.40)
 required_packages="$required_packages glib-2.0 >= 2.40"
 PKG_CHECK_MODULES(JANSSON, jansson >= 2.0)
 required_packages="$required_packages jansson >= 2.0"
-PKG_CHECK_MODULES(ACL, libacl)
+PKG_CHECK_MODULES(ACL, libacl,
+   [],
+   [AC_CHECK_LIB(acl, acl_get_file,
+      [ACL_LIBS="-lacl" ACL_CFLAGS=""],
+      [AC_MSG_ERROR([libacl not found. Install libacl1-dev (Debian/Ubuntu) or libacl-devel (openSUSE/Fedora)])])])
 required_packages="$required_packages libacl"
+
+# On 32-bit platforms (e.g. armhf), 64-bit atomics require libatomic
+AC_SEARCH_LIBS([__atomic_store_8], [atomic])
 
 
 AS_IF( [test "x$enable_udev" = "xyes" ],
