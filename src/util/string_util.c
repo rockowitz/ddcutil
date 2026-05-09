@@ -1509,7 +1509,7 @@ char * hexstring3_t(
    *buf = '\0';
    for (int i=0; i < len; i++) {
       if (debug)
-         printf("(%s) i=%d, buf=%p, strlen(buf)=%ld\n", __func__, i, buf, strlen(buf));
+         printf("(%s) i=%d, buf=%p, strlen(buf)=%zu\n", __func__, i, buf, strlen(buf));
       // sprintf(buf+strlen(buf), pattern, bytes[i]);
       byte_to_hs(bytes[i], buf+strlen(buf), uppercase);
 
