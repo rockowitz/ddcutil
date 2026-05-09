@@ -391,11 +391,8 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    int limit_eacces_retry_ct = 4;
    bool recently_resumed = false;
 
-#ifdef BY_CLOCKTIME
-
-#endif
-   int paused_ms = 0;
 #ifdef USE_DBUS
+   int paused_ms = 0;
    paused_ms = ldbus_pause_if_recent_return_from_sleep(pause_after_resume_ms);
    if (paused_ms > 0) {
       recently_resumed = true;
