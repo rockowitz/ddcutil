@@ -124,6 +124,7 @@ ddca_get_non_table_vcp_value(
     } );
 
 bye:
+   ; // Needed on some platforms. A label can only be part of a statement. A declaration is not a statement.
    char * retvals = (psc==0)
                        ? g_strdup_printf(" valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
                                          valrec->mh, valrec->ml, valrec->sh, valrec->sl)
