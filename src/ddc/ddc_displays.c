@@ -437,7 +437,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 #else
          if (dpms_check_drm_asleep_by_dref(dref)) {
             dpms_state |= DPMS_SOME_DRM_ASLEEP;
-            dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
+            // dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
           }
           else {
              all_displays_asleep = false;
@@ -511,7 +511,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 #else
          if (dpms_check_drm_asleep_by_dref(dref)) {
             dpms_state |= DPMS_SOME_DRM_ASLEEP;
-            dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
+            // dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
           }
           else {
              all_displays_asleep = false;
