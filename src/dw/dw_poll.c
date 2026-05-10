@@ -287,27 +287,25 @@ int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
      }
 #else
      if (recently_resumed_from_sleep_by_clocktime()) {
-        BASIC_STD_FUNC_SYSLOG(LOG_WARNING, "Recently resumed from sleep detected");
+       BASIC_STD_FUNC_SYSLOG(LOG_WARNING, "Recently resumed from sleep detected");
 #ifdef BOTH
-        if (paused) {
+       if (paused) {
            BASIC_STD_FUNC_SYSLOG(LOG_WARNING,
                  "Already paused based on dbus notification. No additional pause.");
-        }
-        else {
+       }
+       else {
 #endif
            int delay_ms = pause_after_resume_ms;
            SIMPLE_STD_FUNC_SYSLOG(LOG_WARNING, "Pausing for %d millisec", delay_ms);
            dw_split_sleep(delay_ms);
            slept_millisec = delay_ms;
 #ifdef BOTH
-        }
+       }
 #endif
-     }
+    }
 #endif
-     return slept_millisec;
-  }
-
-
+   return slept_millisec;
+}
 
 
 /** Function that executes in the display watch thread.
