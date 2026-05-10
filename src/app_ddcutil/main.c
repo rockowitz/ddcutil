@@ -870,7 +870,7 @@ main(int argc, char *argv[]) {
    char * program_start_time_s = asctime(localtime(&program_start_time));
    if (program_start_time_s[strlen(program_start_time_s)-1] == 0x0a)
         program_start_time_s[strlen(program_start_time_s)-1] = 0;
-   init_baseline_accumulated_sleep_ns();  // increase this value indicates a sleep has occurred
+   init_accumulated_sleep();  // increase this value indicates a sleep has occurred
 
    add_local_rtti_functions();      // add entries for this file
    init_base_services();            // so tracing related modules are initialized

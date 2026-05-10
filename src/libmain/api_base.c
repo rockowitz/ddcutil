@@ -542,7 +542,7 @@ _libddcutil_constructor(void) {
 #endif
    init_api_services();     // other files in directory libmain
 
-   init_baseline_accumulated_sleep_ns();  // increase this value indicates a sleep has occurred
+   init_accumulated_sleep();  // increase this value indicates a sleep has occurred
 
 #ifdef TESTING_CLEANUP
    // int atexit_rc = atexit(done);   // TESTING CLEANUP

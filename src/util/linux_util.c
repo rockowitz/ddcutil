@@ -630,8 +630,8 @@ static uint64_t global_initial_accumulated_sleep_ns = UINT64_MAX;
 /** Per-thread baseline, initialized from the global on each thread's first call.
  * UINT64_MAX means this thread has not yet initialized its baseline.
  */
-static _Thread_local uint64_t baseline_accumulated_sleep_ns = UINT64_MAX;
-static _Thread_local uint64_t most_recent_reset_ms = 0;
+static _Thread_local uint64_t previous_accumulated_sleep_ns = UINT64_MAX;
+static _Thread_local uint64_t most_recent_reset_ms = 0; // UNUSED
 
 
 /** Gets the current accumulated sleep time. 
@@ -649,7 +649,6 @@ static uint64_t get_accumulated_sleep_ns() {
    return accumulated_sleep_ns;
 }
 
-
 /** Records the current accumulated sleep time as the global baseline.
  *
  *  Must be called once at program startup before any threads are created.
@@ -657,14 +656,15 @@ static uint64_t get_accumulated_sleep_ns() {
  *  call to recently_resumed_from_sleep(), so all threads can detect resumes
  *  that occur after this baseline was recorded.
  */
-void init_baseline_accumulated_sleep_ns() {
+void init_accumulated_sleep() {
    global_initial_accumulated_sleep_ns = get_accumulated_sleep_ns();
 }
 
+#ifdef UNUSED
 void reset_recently_resumed_by_clocktime_cache() {
    most_recent_reset_ms = 0;
 }
-
+#endif
 
 
 /** Detects whether the system has resumed from sleep since the prior
@@ -683,35 +683,41 @@ bool recently_resumed_from_sleep_by_clocktime() {
    bool resumed = false;
 
    uint64_t cur_boottime_ms = NANOS2MILLIS( cur_boot_time_nanosec());
-   if (cur_boottime_ms - most_recent_reset_ms < 5000) {
-      resumed = true;
+   if ((cur_boottime_ms - most_recent_reset_ms) < 5000) {
+      resumed = false;
       SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Called within 5 sec of reset");
    }
    else {
       uint64_t current_accumulated_sleep_ns  = get_accumulated_sleep_ns();
 
-      if (baseline_accumulated_sleep_ns == UINT64_MAX) {
+      if (previous_accumulated_sleep_ns == UINT64_MAX) {
          // First call on this thread: seed from the global baseline if available,
          // otherwise fall back to current value (no resume detectable this call).
-         baseline_accumulated_sleep_ns =
+         previous_accumulated_sleep_ns =
                (global_initial_accumulated_sleep_ns != UINT64_MAX)
-               ? global_initial_accumulated_sleep_ns
-               : current_accumulated_sleep_ns;
+                  ? global_initial_accumulated_sleep_ns
+                  : current_accumulated_sleep_ns;
       }
-      else {
-         uint64_t sleep_increase_ns = current_accumulated_sleep_ns - baseline_accumulated_sleep_ns;
-         if (sleep_increase_ns > UINT64_C(1000000000)) {
-            // Accumulated sleep grew by > 1 s since baseline => we resumed.
-            resumed = true;
-            baseline_accumulated_sleep_ns = current_accumulated_sleep_ns;
-            SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Resume from sleep detected by BOOTTIME/MONOTONIC");
-            most_recent_reset_ms = cur_boottime_ms;
-         }
+      uint64_t sleep_increase_ns = current_accumulated_sleep_ns - previous_accumulated_sleep_ns;
+      int sleep_increase_ms = NANOS2MILLIS(sleep_increase_ns);
+      if (sleep_increase_ms > 1000) {
+         // Accumulated sleep grew by > 1 sec since previous => we resumed.
+         resumed = true;
+         previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
+         SIMPLE_STD_FUNC_SYSLOG(LOG_INFO,
+               "Resume from sleep detected by BOOTTIME/MONOTONIC, sleep increase=%d ms,"
+               "previous=%u ms, current=%u ms",
+               sleep_increase_ms,
+               (uint) NANOS2MILLIS(previous_accumulated_sleep_ns),
+               (uint) NANOS2MILLIS(current_accumulated_sleep_ns));
+         most_recent_reset_ms = cur_boottime_ms; // UNUSED
       }
 
-      DBGF(debug, "baseline_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64
+      DBGF(debug, "previous_accumulated_sleep_ns=%d, current_accumulated_sleep_ns=%d"
                   ", returning %s",
-                  baseline_accumulated_sleep_ns, current_accumulated_sleep_ns, sbool(resumed));
+                  NANOS2MILLIS(previous_accumulated_sleep_ns),
+                  NANOS2MILLIS(current_accumulated_sleep_ns),
+                  sbool(resumed));
    }
    return resumed;
 }
