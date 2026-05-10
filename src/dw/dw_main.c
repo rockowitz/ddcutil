@@ -205,9 +205,9 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   SIMPLE_STD_SYSLOG(DDCA_SYSLOG_DEBUG, "Time since library initialized: %s seconds",
+   DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "Time since library initialized: %s seconds",
          formatted_elapsed_time_t(6));
-   SIMPLE_STD_SYSLOG(DDCA_SYSLOG_DEBUG, "Extra delay starting %s: %d millisec",
+   DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "Extra delay starting %s: %d millisec",
                                    __func__, dw_start_watch_delay_ms);
    if (dw_start_watch_delay_ms > 0) {
       SLEEP_MILLIS_WITH_SYSLOG2(DDCA_SYSLOG_DEBUG, dw_start_watch_delay_ms,
