@@ -131,8 +131,8 @@ there is no guarantee that their effect will be the same from one release to the
 
 - Add autoconf **config** option ***--enable-dbus***/***--disable-dbus***. 
   The default is enabled.  Needed to watch for sleep events.
-- File src/base/parms.h: Define QUIESCE operation constants: 
-  QUIESCE_POLL_MAX_MILLISEC, QUIESCE_POLL_INTERVAL_MILLISEC
+- ddcutil now depends on packages libacl1  and libdbus-1. The corresponding
+  development packages must be installed.
 
 ### Shared Library
 
