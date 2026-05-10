@@ -393,7 +393,9 @@ else {
       }
 #endif
 
-      bool paused = false;
+#ifdef BOTH
+     bool paused = false;
+#endif
 #ifdef USE_DBUS
       uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
       uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
@@ -411,21 +413,26 @@ else {
          DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
          LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
          free(msg2);
+         // paused = true;
       }
-#endif
+#else
       if (recently_resumed_from_sleep_by_clocktime()) {
          BASIC_STD_FUNC_SYSLOG(LOG_WARNING, "Recently resumed from sleep detected");
+#ifdef BOTH
          if (paused) {
             BASIC_STD_FUNC_SYSLOG(LOG_WARNING,
                   "Already paused based on dbus notification. No additional pause.");
          }
          else {
+#endif
             int delay_ms = 1000;
             SIMPLE_STD_FUNC_SYSLOG(LOG_WARNING, "Pausing for %d millisec", delay_ms);
             dw_split_sleep(delay_ms);
+#ifdef BOTH
          }
+#endif
       }
-
+#endif
       invoke_process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
             deferred_events, displays_to_recheck);
 
