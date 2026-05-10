@@ -258,6 +258,57 @@ void invoke_process_screen_change_event(
 }
 
 
+int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
+     bool debug = false;
+
+     int slept_millisec = 0;
+#ifdef BOTH
+    bool paused = false;
+#endif
+#ifdef USE_DBUS
+     uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
+     uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
+     char * msg = g_strdup_printf(
+                     "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
+                     elapsed_ns, elapsed_ms);
+     DBGTRC(debug, TRACE_GROUP, "%s", msg);
+     BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg);
+     free(msg);
+
+     if (elapsed_ms < pause_after_resume_ms) {
+        uint64_t remaining_sleep_ms = 1000 - elapsed_ms;
+        char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_sleep_ms);
+        BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg2);
+        DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
+        LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
+        slept_millisec = remaining_sleep_ms;
+        free(msg2);
+        // paused = true;
+     }
+#else
+     if (recently_resumed_from_sleep_by_clocktime()) {
+        BASIC_STD_FUNC_SYSLOG(LOG_WARNING, "Recently resumed from sleep detected");
+#ifdef BOTH
+        if (paused) {
+           BASIC_STD_FUNC_SYSLOG(LOG_WARNING,
+                 "Already paused based on dbus notification. No additional pause.");
+        }
+        else {
+#endif
+           int delay_ms = pause_after_resume_ms;
+           SIMPLE_STD_FUNC_SYSLOG(LOG_WARNING, "Pausing for %d millisec", delay_ms);
+           dw_split_sleep(delay_ms);
+           slept_millisec = delay_ms;
+#ifdef BOTH
+        }
+#endif
+     }
+#endif
+     return slept_millisec;
+  }
+
+
+
 
 /** Function that executes in the display watch thread.
  *
@@ -393,50 +444,9 @@ else {
       }
 #endif
 
-#ifdef BOTH
-     bool paused = false;
-#endif
-#ifdef USE_DBUS
-      uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
-      uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
-      char * msg = g_strdup_printf(
-                      "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
-                      elapsed_ns, elapsed_ms);
-      DBGTRC(debug, TRACE_GROUP, "%s", msg);
-      BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg);
-      free(msg);
-
-      if (elapsed_ms < pause_after_resume_ms) {
-         uint64_t remaining_sleep_ms = 1000 - elapsed_ms;
-         char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_sleep_ms);
-         BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg2);
-         DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
-         LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
-         free(msg2);
-         // paused = true;
-      }
-#else
-      if (recently_resumed_from_sleep_by_clocktime()) {
-         BASIC_STD_FUNC_SYSLOG(LOG_WARNING, "Recently resumed from sleep detected");
-#ifdef BOTH
-         if (paused) {
-            BASIC_STD_FUNC_SYSLOG(LOG_WARNING,
-                  "Already paused based on dbus notification. No additional pause.");
-         }
-         else {
-#endif
-            int delay_ms = 1000;
-            SIMPLE_STD_FUNC_SYSLOG(LOG_WARNING, "Pausing for %d millisec", delay_ms);
-            dw_split_sleep(delay_ms);
-#ifdef BOTH
-         }
-#endif
-      }
-#endif
+      pause_if_recently_resumed_from_sleep(pause_after_resume_ms);
       invoke_process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
             deferred_events, displays_to_recheck);
-
-
    } // while()
 
    if (wdd->watch_mode == Watch_Mode_Udev) {
