@@ -272,13 +272,13 @@ int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
                      "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
                      elapsed_ns, elapsed_ms);
      DBGTRC(debug, TRACE_GROUP, "%s", msg);
-     BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg);
+     DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", msg);
      free(msg);
 
      if (elapsed_ms < pause_after_resume_ms) {
         uint64_t remaining_sleep_ms = 1000 - elapsed_ms;
         char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_sleep_ms);
-        BASIC_STD_FUNC_SYSLOG(LOG_WARNING, msg2);
+        DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", msg2);
         DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
         LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
         slept_millisec = remaining_sleep_ms;
@@ -287,16 +287,16 @@ int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
      }
 #else
      if (recently_resumed_from_sleep_by_clocktime()) {
-       BASIC_STD_FUNC_SYSLOG(LOG_WARNING, "Recently resumed from sleep detected");
+       DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "Recently resumed from sleep detected");
 #ifdef BOTH
        if (paused) {
-           BASIC_STD_FUNC_SYSLOG(LOG_WARNING,
+           DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
                  "Already paused based on dbus notification. No additional pause.");
        }
        else {
 #endif
            int delay_ms = pause_after_resume_ms;
-           SIMPLE_STD_FUNC_SYSLOG(LOG_WARNING, "Pausing for %d millisec", delay_ms);
+           DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "Pausing for %d millisec", delay_ms);
            dw_split_sleep(delay_ms);
            slept_millisec = delay_ms;
 #ifdef BOTH
