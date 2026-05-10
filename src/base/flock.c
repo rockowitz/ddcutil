@@ -288,7 +288,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
          DBGMSG("Flock diagnostics:");
          show_flock(filename, false);
-         show_backtrace(0);
+         // show_backtrace(0);
          dbgrpt_current_traced_function_stack(/*reverse*/ false, false, 0);
          current_traced_function_stack_to_syslog(DDCA_SYSLOG_ERROR, /*reverse=*/ false);
       }
