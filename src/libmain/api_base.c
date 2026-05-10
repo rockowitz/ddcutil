@@ -661,7 +661,9 @@ _ddca_terminate(void) {
          dw_stop_watch_displays(/*wait=*/ true, &active_classes);   // in case it was started
       DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "After ddc_stop_watch_displays");
       // sleep(5); // still needed?
+#ifdef USE_DBUG
       ldbus_stop_sleep_watch_thread();
+#endif
       terminate_dw_services();
 #endif
       terminate_ddc_services();
@@ -884,6 +886,7 @@ ddci_init(const char *      libopts,
          DBGF(debug, "init_tracing succeeded");
    }
 
+#ifdef USE_DBUS
    if (!master_error) {
       DBGF(true, "Calling ldbus_start_sleep_watch_thread...");
       bool ok = ldbus_start_sleep_watch_thread();   // right location?
@@ -892,6 +895,7 @@ ddci_init(const char *      libopts,
          // for now, don't set master_error
       }
    }
+#endif
 
    if (!master_error) {
       requested_stats = parsed_cmd->stats_types;
