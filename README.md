@@ -2,7 +2,7 @@ ddcutil
 =======
 
 **The loss of access to www.ddcutil.com, which began the afternoon of Sunday, May 10
-has been fixed. If you're curious about what happened see the [discussion](https://github.com/rockowitz/ddcutil/discussions/610)**
+has been fixed. If you're curious about what happened, see this [discussion](https://github.com/rockowitz/ddcutil/discussions/610).**
 
 
 **ddcutil** is a Linux program for querying and changing monitor settings, such as 
