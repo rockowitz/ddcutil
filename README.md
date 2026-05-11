@@ -1,9 +1,9 @@
 ddcutil
 =======
 
-**AS OF SUNDAY MAY 10, THE URL WWW.DDCUTIL.COM NO LONGER DIRECTS YOU TO THE ACTUAL
-WEBSITE, ROCKOWITZ.GITHUB.IO.  UNTIL THIS PROBLEM IS RESOLVED, USE 
-THE ACTUAL WEBSITE NAME.**
+**The loss of access to www.ddcutil.com, which began the afternoon of Sunday, May 10
+has been fixed. If you're curious about what happened see the [discussion](https://github.com/rockowitz/ddcutil/discussions/610)**
+
 
 **ddcutil** is a Linux program for querying and changing monitor settings, such as 
 brightness, color levels, and input connector.
