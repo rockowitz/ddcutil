@@ -1007,12 +1007,14 @@ i2c_detect_x37(int fd, char * driver) {
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = 0;
-   int max_tries = DETECT_X37_MAX_TRIES;  //2;   // ***TEMP*** 3;
+   int max_tries =  a;
    int poll_wait_millisec = DETECT_X37_RETRY_MILLISEC;  // 400;
+   if (streq(driver, "nvidia"))
+      poll_wait_millisec = 2000;
    int loopctr;
    for (loopctr = 0; loopctr < max_tries; loopctr++) {  // retries seem to give no benefit
       // regard either a successful write() or a read() as indication slave address is valid
-      Byte    writebuf = 0x00;
+      Byte writebuf = 0x00;
       rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                    "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
@@ -1024,14 +1026,9 @@ i2c_detect_x37(int fd, char * driver) {
       }
       if (rc == 0)
          break;
-
-      int wait = poll_wait_millisec;
-      if (streq(driver, "nvidia"))
-         wait = 2000;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "driver=%s, sleeping for %d millisec", driver, wait);
-            // usleep(poll_wait_millisec*1000);
-      SLEEP_MILLIS_WITH_SYSLOG(wait, "Extra x37 sleep");
-      // sleep_millis(wait);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "driver=%s, sleeping for %d millisec",
+                             driver, poll_wait_millisec);
+      SLEEP_MILLIS_WITH_SYSLOG(poll_wait_millisec, "Extra x37 sleep");
    }
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"loopctr=%d", loopctr);
