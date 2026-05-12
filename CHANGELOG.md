@@ -65,17 +65,9 @@ there is no guarantee that their effect will be the same from one release to the
 
 #### Changed
 
-- Re-enable reporting of laptop display connection/disconnection. 
-  Do not check DDC operation for the laptop /dev/i2c bus or for any
-  bus unresponsive on slave address x37.
-- When watching for display connection/disconnection using watch-mode UDEV: 
-  - watch for UDEV notifications for subsystem i2c-dev as well as drm.
-  - write udev event detail to the system log
-- **dw_hotplug_change_handler()**: write additonal messages to the system log
-  when a /dev/i2c device unexpectedly no longer exists
-- Option ***--skip-ddc-checks***: valid only for command line **ddcutil**, not 
-  shared library **libddcutil**. If specified in config file ddcutilrc, it must
-  now be in the [ddcutil] section, not the [global] section.
+- Option ***--skip-ddc-checks***: is now valid only for command line **ddcutil**, 
+  not shared library **libddcutil**. If specified in config file ddcutilrc, it 
+  must now be in the [ddcutil] section, not the [global] section.
 - The installed udev rules file, 60-ddcutil-i2c.rules now sets group i2c and 
   mode 0660 as well as using token uaccess to assign /dev/i2c permissions. 
   Users encountering the transient EACCES errors may need to use the old group
@@ -83,22 +75,14 @@ there is no guarantee that their effect will be the same from one release to the
 
 #### Fixed
 
-- **ddca_redetect_displays()**: Recover from an unexpected system state that
-  previously triggered assert() failures. Diagnostics are written to the system
-  log. If display watch is not running on entry to the function, it is not 
-  restarted at the end. 
-  Addresses issue #595, (powerdevil crashes with assertion failure in libddcutil
-  after resume from sleep/hibernate) and KDE bug 517571 (KDE Power Management 
-  Crash in DDCutilPrivateSingleton::redetect after letting laptop sleep).
-- In **dw_create_display_status_event()**, the test for event type
-  DDCA_EVENT_DDC_DISABLED incorrectly used flag DDCA_DISPLAY_EVENT_DDC_WORKING.
+
 - man page ddcutil: Replace example "getvcp supported" by "getvcp all". 
   Group "supported" was replaced long ago by "all". Issue #579.
 - segfault in diagnose_open_failure_to_syslog(). Issue #596
 - Error parsing option ***--maxtries***.
 - Attempting to run command line programs lsof, getfacl (which can occur whan 
   analyzing unexpected behaviour or as part command **environment**) 
-  caused a segfault when those programs are not found on the user's system.
+  caused a segfault when those programs were not found on the user's system.
   Addresses segfault reported in issue #590.
 - In syslog messages, the reported thread id might actually be the process id. 
 - Change the sample rules file in data/etc/udev/rules.d/60-ddcutil-i2c.rules, 
@@ -148,6 +132,29 @@ file is libddcutil.so.5.5.1.
   the open is retried.
 - Option ***~~pause-after-resume-ms*** (See above.)
 - Option ***--enable/disable-early-permission-checks*** (See above.)
+
+#### Changed
+
+- Re-enable reporting of laptop display connection/disconnection. 
+  Do not check DDC operation for the laptop /dev/i2c bus or for any
+  bus unresponsive on slave address x37.
+- When watching for display connection/disconnection using watch-mode UDEV: 
+  - watch for UDEV notifications for subsystem i2c-dev as well as drm.
+  - write udev event detail to the system log
+- **dw_hotplug_change_handler()**: write additonal messages to the system log
+  when a /dev/i2c device unexpectedly no longer exists
+
+#### Fixed
+
+- In **dw_create_display_status_event()**, the test for event type
+  DDCA_EVENT_DDC_DISABLED incorrectly used flag DDCA_DISPLAY_EVENT_DDC_WORKING.
+- **ddca_redetect_displays()**: Recover from an unexpected system state that
+  previously triggered assert() failures. Diagnostics are written to the system
+  log. If display watch is not running on entry to the function, it is not 
+  restarted at the end. 
+  Addresses issue #595, (powerdevil crashes with assertion failure in libddcutil
+  after resume from sleep/hibernate) and KDE bug 517571 (KDE Power Management 
+  Crash in DDCutilPrivateSingleton::redetect after letting laptop sleep).
 
 ## [2.2.6] 2026-03-11
 
