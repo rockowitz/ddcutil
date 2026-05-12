@@ -75,7 +75,6 @@ there is no guarantee that their effect will be the same from one release to the
 
 #### Fixed
 
-
 - man page ddcutil: Replace example "getvcp supported" by "getvcp all". 
   Group "supported" was replaced long ago by "all". Issue #579.
 - segfault in diagnose_open_failure_to_syslog(). Issue #596
