@@ -269,7 +269,7 @@ void quiesce_api() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "");
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Quiescing libddcutil API...");
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Quiescing libddcutil API...");
    bool oops = false;
    int slept_microsec = 0;
 
@@ -300,7 +300,7 @@ void quiesce_api() {
             "Error quiescing libddcutil API. %d active API calls outstanding.", active_calls);
    }
    else {
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Quiesce libddcutil API complete");
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Quiesce libddcutil API complete");
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_API,
@@ -315,7 +315,7 @@ void unquiesce_api() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "");
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Unquiescing libddcutil API...");
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Unquiescing libddcutil API...");
    g_mutex_lock(&api_quiesced_mutex);
    api_quiesced = false;
    g_mutex_unlock(&api_quiesced_mutex);
@@ -367,7 +367,7 @@ Error_Info* perform_parse(
 static inline void emit_parse_info_msg(const char * msg, GPtrArray* infomsgs) {
    if (infomsgs)
       g_ptr_array_add(infomsgs, g_strdup_printf("%s%s", "libddcutil: ", msg));
-   SYSLOG2(DDCA_SYSLOG_NOTICE,"%s", msg);
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,"%s", msg);
 }
 
 
@@ -955,7 +955,7 @@ ddci_init(const char *      libopts,
 #ifdef OUT
       if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS) {
          dw_start_watch_displays(DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS);
-         SYSLOG2(DDCA_SYSLOG_NOTICE,
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
                "Started watch displays for DDCA_EVENT_CLASS_DISPLAY_CONNECTION | DDCA_EVENT_CLASS_DPMS");
    }
 #endif
@@ -1008,7 +1008,7 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    API_PROLOGX(debug, RESPECT_QUIESCE, "enabled_classes=0x%02x=%s",
                       enabled_classes, dw_event_classes_repr_t(enabled_classes));
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting ddca_start_watch_displays()");
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Starting ddca_start_watch_displays()");
 
 #ifdef WATCH_DISPLAYS
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "all_video_adapters_implement_drm=%s",
@@ -1061,7 +1061,7 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
    DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
 #endif
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE,  "Done     ddca_start_watch_displays returning %s - %s", psc_name(ddcrc), psc_desc(ddcrc));
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,  "Done     ddca_start_watch_displays returning %s - %s", psc_name(ddcrc), psc_desc(ddcrc));
 
    API_EPILOG_RET_DDCRC(debug, RESPECT_QUIESCE, ddcrc, "");
 }
@@ -1069,7 +1069,7 @@ ddca_start_watch_displays(DDCA_Display_Event_Class enabled_classes) {
 
 DDCA_Status
 ddca_stop_watch_displays(bool wait) {
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting ddca_stop_watch_displays()");
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Starting ddca_stop_watch_displays()");
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "wait=%s", SBOOL(wait));
 #ifdef WATCH_DISPLAYS
@@ -1078,7 +1078,7 @@ ddca_stop_watch_displays(bool wait) {
 #else
    DDCA_Status ddcrc = DDCRC_UNIMPLEMENTED;
 #endif
-   SYSLOG2(DDCA_SYSLOG_NOTICE,  "Done     ddca_stop_watch_displays returning %s - %s", psc_name(ddcrc), psc_desc(ddcrc));
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,  "Done     ddca_stop_watch_displays returning %s - %s", psc_name(ddcrc), psc_desc(ddcrc));
    API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, ddcrc, "");
 }
 
