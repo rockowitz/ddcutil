@@ -216,12 +216,12 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
    if (!enable_dw_start_check_dev_i2c_devices_rw) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
    }
    else {
       Error_Info * erec = i2c_all_relevant_i2c_buses_rw();
       if (erec) {
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
                "EDID(s) readable from /sys but not using I2C. Display change detection disabled.");
          syslog(LOG_WARNING, "%s", erec->detail);
          for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
@@ -244,7 +244,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       }
       else {
          x11_init_state = failed;
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR API unavailable. Switching to Watch_Mode_Dynamic");
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "X11 RANDR API unavailable. Switching to Watch_Mode_Dynamic");
          resolved_watch_mode = resolve_watch_mode(Watch_Mode_Dynamic);
       }
    }
@@ -252,12 +252,17 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
    int calculated_watch_loop_millisec = dw_calc_watch_loop_millisec(resolved_watch_mode);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
-         "Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
+   char * msg = g_strdup_printf("Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
-   MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,"%s", msg);
+   free(msg);
+   msg = g_strdup_printf(
          "                                         initial_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
          initial_stabilization_millisec, stabilization_poll_millisec);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,"%s", msg);
+   free(msg);
 
    g_mutex_lock(&watch_thread_mutex);
    if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
@@ -276,7 +281,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
                                     dw_recheck_displays_func,
                                     rdd);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started recheck_thread = %p", recheck_thread);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil recheck thread %p started", recheck_thread);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil recheck thread %p started", recheck_thread);
 
       // Start watch thread
       Watch_Displays_Data * wdd = calloc(1, sizeof(Watch_Displays_Data));
@@ -301,7 +306,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
                        dw_callback_displays_func,
                        cdd);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started callback_thread = %p", callback_thread);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
 #endif
 
       GThreadFunc watch_thread_func = dw_watch_display_connections;
@@ -314,7 +319,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       watch_thread_active = true;
       active_watch_displays_classes = event_classes;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started watch_thread = %p", watch_thread);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "libddcutil watch thread %p started", watch_thread);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil watch thread %p started", watch_thread);
    }
    g_mutex_unlock(&watch_thread_mutex);
 
@@ -379,7 +384,7 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
       watch_thread_active = false;
       if (enabled_classes_loc)
          *enabled_classes_loc = active_watch_displays_classes;
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
    }
    else {
       ddcrc = DDCRC_INVALID_OPERATION;
@@ -434,7 +439,7 @@ Error_Info *
 dw_redetect_displays() {
    bool debug = false || debug_locks;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
 
    Error_Info * err = NULL;
    DDCA_Display_Event_Class enabled_classes = DDCA_EVENT_CLASS_NONE;
@@ -446,7 +451,7 @@ dw_redetect_displays() {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ddc_stop_watch_displays() returned %s",
                                             psc_name(stop_watch_rc));
       if (stop_watch_rc != DDCRC_OK)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "ddc_stop_watch_displays() returned %s",
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "ddc_stop_watch_displays() returned %s",
                                       psc_name(stop_watch_rc));
    }
    ddc_discard_detected_displays();
@@ -462,7 +467,7 @@ dw_redetect_displays() {
    if (dsa2_is_enabled()) {
       Error_Info * erec = dsa2_restore_persistent_stats();
       if (erec) {
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected error from dsa2_restore_persistent_stats(): %s",
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected error from dsa2_restore_persistent_stats(): %s",
                errinfo_summary(erec));
          errinfo_free(erec);
       }
@@ -477,19 +482,19 @@ dw_redetect_displays() {
    if (active_rc == DDCRC_OK && stop_watch_rc==DDCRC_OK) {
       err = dw_start_watch_displays(enabled_classes);
       if (err)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "dw_start_watch_displays() returned %s",
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "dw_start_watch_displays() returned %s",
                                            errinfo_summary(err));
    }
    else {
       if (active_rc != DDCRC_OK)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
                "watch displays not started because no prior watch classes detected");
       if (stop_watch_rc != DDCRC_OK)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
                "watch displays not started because not running at start of redetection");
    }
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "all_displays=%p, all_displays->len = %d",
                                    all_display_refs, all_display_refs->len);
    return err;
