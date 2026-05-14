@@ -888,7 +888,7 @@ ddci_init(const char *      libopts,
 
 #ifdef USE_DBUS
    if (!master_error) {
-      DBGF(true, "Calling ldbus_start_sleep_watch_thread...");
+      DBGF(debug, "Calling ldbus_start_sleep_watch_thread...");
       bool ok = ldbus_start_sleep_watch_thread();   // right location?
       if (!ok) {
          DBGF(true, "ldbus_start_sleep_watch_thread() failed");
