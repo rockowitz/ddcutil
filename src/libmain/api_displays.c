@@ -106,12 +106,12 @@ DDCA_Status ddci_validate_ddca_display_ref2(
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref_from_ddca_dref() returned %s", dref_reprx_t(dref));
    if (!dref) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Unrecognized external display ref %p", dref);
-      SYSLOG2(DDCA_SYSLOG_WARNING, "Unrecognized external display ref %p", dref);
+      DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "Unrecognized external display ref %p", dref);
       result = DDCRC_ARG;
    }
    else if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Invalid marker");
-      SYSLOG2(DDCA_SYSLOG_WARNING, "Invalid marker for %s", dref_reprx_t(dref));
+      DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "Invalid marker for %s", dref_reprx_t(dref));
       result = DDCRC_ARG;
    }
    else {
@@ -119,7 +119,7 @@ DDCA_Status ddci_validate_ddca_display_ref2(
       if (dref->disconnected) {
          char * msg = g_strdup_printf("disconnected set for %s!",dref_reprx_t(dref));
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "%s", msg);
-         SYSLOG2(DDCA_SYSLOG_WARNING, "%s",msg);
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s",msg);
          free(msg);
          result = DDCRC_DISCONNECTED;
       }
@@ -469,7 +469,7 @@ ddca_redetect_displays() {
    Error_Info * erec = NULL;
    g_mutex_lock(&ddca_redetect_active_mutex);
    if (ddca_redetect_active) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when already active");
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when already active");
       ddcrc = DDCRC_INVALID_OPERATION;
    }
    else {
@@ -480,8 +480,8 @@ ddca_redetect_displays() {
 
    if (perform_detect) {
       if (active_callback_thread_ct() > 0) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when callback threads are active");
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Behavior is indeterminate.");
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Calling ddca_redetect_displays() when callback threads are active");
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Behavior is indeterminate.");
          // ddcrc = DDCRC_INVALID_OPERATION;
          // perform_detect = false;
       }
@@ -499,7 +499,7 @@ ddca_redetect_displays() {
 #endif
 
    ddcrc = DDCRC_INVALID_OPERATION;
-   SYSLOG2(DDCA_SYSLOG_ERROR, "ddca_redetect_displays() unsupported - libddcutil not built with support for watching display connection changes");
+   DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "ddca_redetect_displays() unsupported - libddcutil not built with support for watching display connection changes");
 #endif
 
    if (erec) {
