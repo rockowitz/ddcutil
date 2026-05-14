@@ -1007,7 +1007,7 @@ i2c_detect_x37(int fd, char * driver) {
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = 0;
-   int max_tries =  a;
+   int max_tries =  DETECT_X37_MAX_TRIES;  // 3;
    int poll_wait_millisec = DETECT_X37_RETRY_MILLISEC;  // 400;
    if (streq(driver, "nvidia"))
       poll_wait_millisec = 2000;
