@@ -48,10 +48,11 @@ ddci_init(const char *      libopts,
 #define API_PRECOND(expr) \
    do { \
       if (!(expr)) { \
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
                          #expr, __FILE__,  __LINE__);   \
          if (api_failure_mode & DDCI_PRECOND_STDERR) {  \
-            DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
+            DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, \
+                         "Precondition failure (%s) in function %s at line %d of file %s", \
                          #expr, __func__, __LINE__, __FILE__); \
             fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
                              #expr, __func__, __LINE__, __FILE__); \
@@ -73,10 +74,11 @@ ddci_init(const char *      libopts,
 #define API_PRECOND_W_EPILOG(expr) \
    do { \
       if (!(expr)) { \
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
                          #expr, __FILE__,  __LINE__);   \
          if (api_failure_mode & DDCI_PRECOND_STDERR) {  \
-            DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
+            DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, \
+                         "Precondition failure (%s) in function %s at line %d of file %s", \
                          #expr, __func__, __LINE__, __FILE__); \
             fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
                              #expr, __func__, __LINE__, __FILE__); \
@@ -94,10 +96,11 @@ ddci_init(const char *      libopts,
 #define API_PRECOND_RVALUE(expr) \
    ( { DDCA_Status ddcrc = 0; \
        if (!(expr)) { \
-          SYSLOG2(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
+          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d", \
                           #expr, __FILE__,  __LINE__);   \
           if (api_failure_mode & DDCI_PRECOND_STDERR) {  \
-             DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
+             DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, \
+                          "Precondition failure (%s) in function %s at line %d of file %s", \
                           #expr, __func__, __LINE__, __FILE__); \
              fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
                              #expr, __func__, __LINE__, __FILE__); \
@@ -112,12 +115,13 @@ ddci_init(const char *      libopts,
 #define API_PRECOND_RVALUE_EREC(expr) \
    ( { Error_Info * erec = NULL; \
        if (!(expr)) { \
-          SYSLOG2(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
+          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d", \
                           #expr, __FILE__,  __LINE__);   \
           erec = ERRINFO_NEW(DDCRC_ARG, "Precondition failed: \"%s\" in file %s at line %d",  \
                 #expr, __FILE__,  __LINE__);   \
           if (api_failure_mode & DDCI_PRECOND_STDERR) {  \
-             DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
+             DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, \
+                          "Precondition failure (%s) in function %s at line %d of file %s", \
                           #expr, __func__, __LINE__, __FILE__); \
              fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
                              #expr, __func__, __LINE__, __FILE__); \
