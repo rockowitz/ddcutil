@@ -428,7 +428,7 @@ unlock_display(Display_Lock_Record * dlr) {
    intmax_t current_thread_id = dlr->linux_thread_id;
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old linux_thread_id = %jd", dlr->linux_thread_id);
    if (dlr->display_mutex_thread != g_thread_self()) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to unlock display lock owned by different thread");
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Attempting to unlock display lock owned by different thread");
       err = errinfo_new(DDCRC_LOCKED, __func__, "Attempting to unlock display lock owned by different thread");
    }
    else {
@@ -597,7 +597,7 @@ int unlock_all_displays_for_current_thread() {
           dlr->display_mutex_thread = NULL;
           dlr->linux_thread_id = 0;
           g_mutex_unlock(&dlr->display_mutex);
-          SYSLOG2(DDCA_SYSLOG_NOTICE, "Unlocked display %s on current thread "PRItid,
+          DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Unlocked display %s on current thread "PRItid,
                 dpath_repr_t(&dlr->io_path), TID() );
        }
 

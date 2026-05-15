@@ -82,7 +82,7 @@ void show_flock(const char * filename, bool dest_syslog) {
       Null_Terminated_String_Array ntsa = end_capture_as_ntsa();
       for (int ndx = 0; ntsa[ndx]; ndx++) {
          char * s = ntsa[ndx];
-         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", s);
          s++;
       }
       ntsa_free(ntsa, true);
@@ -230,7 +230,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       if (total_wait_millisec > max_wait_millisec) {
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Max wait time %"PRIu64" milliseconds exceeded after %d flock() calls",
                max_wait_millisec, flock_call_ctr);
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Max wait time %"PRIu64" milliseconds exceeded after %d flock() calls",
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Max wait time %"PRIu64" milliseconds exceeded after %d flock() calls",
                max_wait_millisec, flock_call_ctr);
          flockrc = DDCRC_FLOCKED;
          break;
@@ -276,11 +276,11 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       if (flock_call_ctr == 1) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
          // floods syslog:
-         // SYSLOG2(DDCA_SYSLOG_DEBUG, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
+         // DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
       }
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
-         SYSLOG2(DDCA_SYSLOG_NOTICE, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "flock() for %s succeeded after %d calls", filename, flock_call_ctr);
       }
    }
    else {
@@ -293,8 +293,8 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
          current_traced_function_stack_to_syslog(DDCA_SYSLOG_ERROR, /*reverse=*/ false);
       }
 
-      SYSLOG2(DDCA_SYSLOG_ERROR, "flock() for %s failed on %d calls", filename, flock_call_ctr);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Flock diagnostics:");
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "flock() for %s failed on %d calls", filename, flock_call_ctr);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Flock diagnostics:");
       show_flock(filename, true);
       backtrace_to_syslog(LOG_ERR, 0);
    }

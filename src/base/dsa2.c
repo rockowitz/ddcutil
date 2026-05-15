@@ -1365,7 +1365,7 @@ dsa2_restore_persistent_stats() {
             if (rtable->cur_step > step_last) {
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, resetting invalid cur_step from %d to %d !!!",
                      busno, rtable->cur_step, step_last);
-               SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) busno=%d, resetting invalid cur_step from %d to %d",
+               DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "(%s) busno=%d, resetting invalid cur_step from %d to %d",
                      __func__, busno, rtable->cur_step, step_last);
                rtable->cur_step = step_last;
             }

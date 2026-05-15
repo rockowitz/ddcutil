@@ -1060,12 +1060,12 @@ DDCA_Status dref_lock(Display_Ref * dref) {
    DDCA_Status ddcrc = (lock_succeeded) ? 0 : DDCRC_LOCKED;
 
    if (total_elapsed_millisec == 0)
-      SYSLOG2(DDCA_SYSLOG_DEBUG, "dref %s, lock succeeded with no wait", dref_reprx_t(dref));
+      DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "dref %s, lock succeeded with no wait", dref_reprx_t(dref));
    else if (total_elapsed_millisec < max_wait_millisec)
-      SYSLOG2(DDCA_SYSLOG_DEBUG, "dref %s, lock succeeded after %d milliseconds, %d g_mutex_trylock() calls",
+      DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "dref %s, lock succeeded after %d milliseconds, %d g_mutex_trylock() calls",
               dref_reprx_t(dref), max_wait_millisec, trylock_ctr);
    else
-      SYSLOG2(DDCA_SYSLOG_ERROR, "dref %s, max lock wait time exceeded, %d milliseconds, %d g_mutex_trylock() calls",
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "dref %s, max lock wait time exceeded, %d milliseconds, %d g_mutex_trylock() calls",
             dref_reprx_t(dref), max_wait_millisec, trylock_ctr);
 
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, ddcrc, "dref %s", dref_reprx_t(dref));

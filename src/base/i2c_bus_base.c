@@ -180,7 +180,7 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
    if (businfo->edid) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Calling free_parsed_edid for %p, marker=%s",
             businfo->edid, hexstring_t((Byte*) businfo->marker, 4));
-      SYSLOG2(DDCA_SYSLOG_DEBUG, "Calling free_parsed_edid for %p, marker=%s",
+      DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "Calling free_parsed_edid for %p, marker=%s",
             businfo->edid, hexstring_t((Byte*) businfo->marker,4));
       free_parsed_edid(businfo->edid);
       businfo->edid = NULL;
@@ -431,7 +431,7 @@ void i2c_free_bus_info(I2C_Bus_Info * businfo) {
                businfo->busno, businfo->edid, hexstring_t((Byte*) businfo->marker,4));
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "%s", msg);
          if (IS_DBGTRC(debug, TRACE_GROUP))
-            SYSLOG2(DDCA_SYSLOG_DEBUG, "%s", msg);
+            DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "%s", msg);
          free_parsed_edid(businfo->edid);
          businfo->edid = NULL;
       }
@@ -777,17 +777,17 @@ Error_Info * i2c_check_device_access(char * dev_name) {
            s = g_strdup_printf("access(%s) returned ENOENT", dev_name);
            DBGMSG("%s", s);
            err = ERRINFO_NEW(-ENOENT, "%s", s);
-           SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+           DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", s);
          }
          else if (errsv == EACCES) {
            s = g_strdup_printf("Device %s lacks R/W permissions", dev_name);
            // DBGMSG("%s", s);
            err = ERRINFO_NEW(-EACCES, "%s", s);
-           SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+           DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", s);
          }
          else {
            s = g_strdup_printf( "access() returned errno = %s", psc_desc(errsv));
-           SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+           DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", s);
            err = ERRINFO_NEW(-ENOENT, "%s", s);
          }
          free(s);
