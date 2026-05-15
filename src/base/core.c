@@ -1003,8 +1003,8 @@ void program_logic_error(
    f0printf(f, "%s\n", buffer);
    fflush(f);
 
-   SYSLOG2(DDCA_SYSLOG_ERROR, "%s", buf2);
-   SYSLOG2(DDCA_SYSLOG_ERROR, "%s", buffer);
+   DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", buf2);
+   DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", buffer);
 }
 
 
