@@ -1,6 +1,6 @@
-/* @file rtti.c
+/** @file rtti.c
  *
- * Runtime trace information
+ * Runtime trace information 
  */
 
 // Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
