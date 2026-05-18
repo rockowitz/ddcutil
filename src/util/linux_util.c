@@ -10,7 +10,9 @@
 
 /** \cond */
 #include <assert.h>
+#ifdef __GLIBC__
 #include <execinfo.h>      // for segv handler
+#endif
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
