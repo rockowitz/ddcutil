@@ -660,5 +660,6 @@ void init_feature_metadata() {
    RTTI_ADD_FUNC(dfm_free);
    RTTI_ADD_FUNC(dfm_from_dyn_feature_metadata);
    RTTI_ADD_FUNC(dfm_to_ddca_feature_metadata);
+   RTTI_ADD_FUNC(free_ddca_feature_metadata);
 }
 
