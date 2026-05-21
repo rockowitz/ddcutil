@@ -212,6 +212,12 @@ ddca_libddcutil_filename(void) {
 }
 
 
+uint64_t
+ddca_elapsed_nanosec(void) {
+   return elapsed_time_nanosec();
+}
+
+
 bool increment_active_api_calls(const char * funcname) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "funcname=%s, active_calls=%d", funcname, active_calls);

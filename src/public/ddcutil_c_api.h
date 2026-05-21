@@ -99,6 +99,22 @@ ddca_build_options(void);
 
 
  //
+ // Timestamps
+ //
+
+ /** Returns the number of nanoseconds since library initialization.
+  *
+  *  @return nanoseconds since library initialization
+  *
+  *  @remark
+  *  For showing consistent timestamps in client.
+  *
+  *  @since 2.2.8
+  */
+ uint64_t
+ ddca_elapsed_nanosec(void);
+
+ //
  // Error Detail
  //
 
