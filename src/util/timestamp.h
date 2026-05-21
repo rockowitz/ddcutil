@@ -23,6 +23,7 @@ extern "C" {
 uint64_t cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
 void     show_timestamp_history(); // For debugging
 uint64_t elapsed_time_nanosec();   // nanoseconds since start of program, first call initializes
+char *   formatted_elapsed_time0_t(uint64_t et_nanos, guint precision);
 char *   formatted_elapsed_time_t(guint precision); // printable elapsed time
 char *   formatted_time_t(uint64_t nanos);
 char *   formatted_epoch_time_t(time_t epoch_seconds);

@@ -217,20 +217,19 @@ static uint64_t ipow(const uint64_t base, guint n)
 }
 
 
-/** Returns the elapsed time in seconds since start of program execution
- *  as a formatted, printable string.
+/** Returns a printable elapsed time for given elapsed time in nanoseconds
  *
  *  The string is built in a thread specific private buffer.  The returned
  *  string is valid until the next call of this function in the same thread.
  *
- *  @param  precision  number of digits after the decimal point
+ *  @param  et_nanos   elapsed time in nanoseconds
+ *  @param  precision   number of digits after the decimal point
  *  @return formatted elapsed time
  */
-char * formatted_elapsed_time_t(guint precision) {
+char * formatted_elapsed_time0_t(uint64_t et_nanos, guint precision) {
    static GPrivate  formatted_elapsed_time_key = G_PRIVATE_INIT(g_free);
    char * elapsed_buf = get_thread_fixed_buffer(&formatted_elapsed_time_key, 40);
 
-   uint64_t et_nanos         = elapsed_time_nanosec();
    uint64_t isecs            = et_nanos/ (1000 * 1000 * 1000);
    uint64_t adjusted_isecs   = isecs * ipow(10,precision);
    uint64_t fractional_units = et_nanos / ipow(10, (9-precision));
@@ -241,6 +240,21 @@ char * formatted_elapsed_time_t(guint precision) {
 
    // printf("(%s) |%s|\n", __func__, elapsed_buf);
    return elapsed_buf;
+}
+
+
+/** Returns the elapsed time in seconds since start of program execution
+ *  as a formatted, printable string.
+ *
+ *  The string is built in a thread specific private buffer.  The returned
+ *  string is valid until the next call of this function in the same thread.
+ *
+ *  @param  precision  number of digits after the decimal point
+ *  @return formatted elapsed time
+ */
+char * formatted_elapsed_time_t(guint precision) {
+   uint64_t et_nanos         = elapsed_time_nanosec();
+   return formatted_elapsed_time0_t(et_nanos, precision);
 }
 
 
