@@ -1414,6 +1414,9 @@ parse_command(
       {"trcfrom",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,      "Trace call stack from function","function name" },
 	   {"trcback",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->backtraced_functions, "Report caller stack of function","function name" },
       {"trcfile",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
+#ifdef BUSNO_CONNECTOR
+      {"bus-drm-connector", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->bus_drm_connectors, "I2C bus / DRM connector association", "\"busno connector-name\""},
+#endif
       {"enable-traced-function-stack", '\0', G_OPTION_FLAG_NONE,
                                            G_OPTION_ARG_NONE, &enable_tfs_flag,  enable_tfs_expl, NULL},
       {"disable-traced-function-stack",'\0', G_OPTION_FLAG_REVERSE,
