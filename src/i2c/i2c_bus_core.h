@@ -44,8 +44,6 @@ extern int  pause_after_resume_ms;
 extern int  max_eacces_retry_ms;
 extern int  max_eacces_retry_ct;
 
-Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices);
-
 // Bus open and close
 void             i2c_add_open_failures_reported(Bit_Set_256 failures);
 void             i2c_include_open_failures_reported(int busno);
@@ -66,33 +64,37 @@ Error_Info *     i2c_check_bus(I2C_Bus_Info * businfo);
 Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 
 // Bus inventory - detect and probe buses
-
-Byte_Value_Array                // one byte for each I2C bus number
-                 i2c_get_device_numbers_using_udev(bool include_ignorable_devices);
-
-
+Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices);
+Byte_Value_Array i2c_get_device_numbers_using_udev(bool include_ignorable_devices);
+Byte_Value_Array i2c_detect_attached_buses();
 Bit_Set_256      i2c_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 Bit_Set_256      i2c_nonlaptop_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 GPtrArray *      i2c_detect_buses0();
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
-Byte_Value_Array i2c_detect_attached_buses();
+
 Bit_Set_256      i2c_detect_attached_buses_as_bitset();
 Bit_Set_256      i2c_filter_buses_w_edid_as_bitset(Bit_Set_256 bs_all_buses);
 Bit_Set_256      i2c_buses_w_edid_as_bitset();
 
-
 // Reports
 void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
-
 
 Error_Info *     i2c_all_relevant_i2c_buses_rw();
 #ifdef UNUSED
 Error_Info *     i2c_all_edids_readable_using_i2c();
 #endif
 
+// Miscellaneous
+bool is_valid_drm_connector_name(const char * connector_name);
+
 // Initialization
 void             subinit_i2c_bus_core();
 void             init_i2c_bus_core();
+
+#ifdef USER_DRM_CONNECTOR
+void add_busno_connector(int busno, const char * connector_name);
+void dbgrpt_busno_connector_table(int depth);
+#endif
 
 #endif /* I2C_BUS_CORE_H_ */

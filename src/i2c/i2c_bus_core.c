@@ -1694,6 +1694,55 @@ Byte * get_connector_edid(const char * connector_name) {
  }
 #endif
 
+#ifdef USER_DRM_CONNECTOR
+ typedef struct {
+    int    busno;
+    char * drm_connector_name;
+ } Busno_Connector_Table_Entry;
+
+ void free_busno_connector_table_entry (void * ptr) {
+    Busno_Connector_Table_Entry * entry = (Busno_Connector_Table_Entry *) ptr;
+    if (entry) {
+       free(entry->drm_connector_name);  // ok if null
+    }
+    free(entry);
+ }
+
+ GPtrArray * user_busno_connector_table;
+
+ // probably belongs elsewhere
+ bool is_valid_drm_connector_name(const char * connector_name) {
+    char fq_name[20];
+    g_snprintf(fq_name, 20, "/sys/class/drm/%s", connector_name);
+    bool result = directory_exists(fq_name);
+    DBG("%s - %s", connector_name, sbool(result));
+    return result;
+ }
+
+
+void add_busno_connector(int busno, const char * connector_name) {
+   Busno_Connector_Table_Entry* entry = calloc(1, sizeof(Busno_Connector_Table_Entry));
+   entry->busno = busno;
+   entry->drm_connector_name = strdup(connector_name);
+   if (!user_busno_connector_table)
+      user_busno_connector_table = g_ptr_array_new_full(4, free_busno_connector_table_entry);
+   g_ptr_array_add(user_busno_connector_table, entry);
+}
+
+
+void dbgrpt_busno_connector_table(int depth) {
+   rpt_label(depth, "busno_connector_table contents:");
+   if (busno_connector_table) {
+      for (int ndx = 0; ndx < user_busno_connector_table->len; ndx++) {
+         Busno_Connector_Table_Entry * entry = g_ptr_array_index(user_busno_connector_table, ndx);
+         rpt_vstring(depth+1, "/dev/i2c-%d  -  %s",  cur->busno; cur->drm_connector_name);
+      }
+   }
+   else
+      rpt_label(depth+1, "Empty");
+}
+#endif
+
 
  /** Sets the card-connector related fields in a #I2C_Bus_Info instance,
   *  by searching for the EDID value in the DRM card-connector directories
