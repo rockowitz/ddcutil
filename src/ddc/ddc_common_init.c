@@ -119,7 +119,15 @@ i2c_discard_caches(Cache_Types caches) {
    }
 }
 
-
+/** Initialize the traced function subsystem.
+ *
+ *  @param  parsed_cmd
+ *  @return Error_Info instance if error
+ *
+ *  @remark
+ *  This function is called directly from main.c and ahi_base.c because
+ *  tracing has to be initialized early.
+ */
 Error_Info *
 init_tracing(Parsed_Cmd * parsed_cmd)
 {
@@ -227,37 +235,24 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 }
 
 
-STATIC Error_Info * init_ignored_display_models(Parsed_Cmd * parsed_cmd) {
+STATIC void init_ignored_display_models(Parsed_Cmd * parsed_cmd, GPtrArray * errinfo_accumulator) {
    bool debug = false;
-   Error_Info * errinfo = NULL;
-   GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func((GDestroyNotify) errinfo_free);
    if (parsed_cmd->ddc_disabled) {
-    for (int ndx = 0; ndx < ntsa_length(parsed_cmd->ddc_disabled); ndx++) {
-          // DBGF(debug, "Adding disabled_mmid: %s", parsed_cmd->ddc_disabled[ndx]);
-          char * cur_mmid = parsed_cmd->ddc_disabled[ndx];
-          bool found = ignore_mmk_by_string(cur_mmid);
-          if (!found) {
-             Error_Info * err = errinfo_new(DDCRC_CONFIG_ERROR, "Invalid mmid: %s", cur_mmid);
-             g_ptr_array_add(errinfo_accumulator, err);
-          }
-       }
-    }
-
+      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->ddc_disabled); ndx++) {
+         char * cur_mmid = parsed_cmd->ddc_disabled[ndx];
+         bool found = ignore_mmk_by_string(cur_mmid);
+         if (!found)
+            g_ptr_array_add(errinfo_accumulator,
+                  errinfo_new(DDCRC_CONFIG_ERROR, "Invalid mmid: %s", cur_mmid));
+      }
+   }
    if (debug)
       dbgrpt_ignored_mmk_table(2);
-
-   if (errinfo_accumulator->len > 0)
-      errinfo = errinfo_new_with_causes_gptr(
-            DDCRC_CONFIG_ERROR, errinfo_accumulator, __func__, "Invalid mmid(s):");
-   g_ptr_array_free(errinfo_accumulator, true);
-   return errinfo;
 }
 
 
-STATIC Error_Info *
-init_failsim(Parsed_Cmd * parsed_cmd) {
-   Error_Info * result = NULL;
-
+STATIC void
+init_failsim(Parsed_Cmd * parsed_cmd, GPtrArray * errinfo_accumulator) {
 #ifdef ENABLE_FAILSIM
    fsim_set_name_to_number_funcs(
          status_name_to_modulated_number,
@@ -268,17 +263,16 @@ init_failsim(Parsed_Cmd * parsed_cmd) {
          printf("Loaded failure simulation control file %s\n", parsed_cmd->failsim_control_fn);
          fsim_report_failure_simulation_table(2);
       }
-      else  {
+      else {
          // fprintf(stderr, "Error loading failure simulation control file %s.\n",
          //                 parsed_cmd->failsim_control_fn);
-         result = ERRINFO_NEW(DDCRC_CONFIG_ERROR,
-                              "Error loading failure simulation control file %s",
-                              parsed_cmd->failsim_control_fn);
+         g_ptr_array_add(errinfo_accumulator,
+               ERRINFO_NEW(DDCRC_CONFIG_ERROR,
+                           "Error loading failure simulation control file %s",
+                           parsed_cmd->failsim_control_fn));
       }
    }
 #endif
-
-   return result;
 }
 
 
@@ -316,7 +310,7 @@ init_max_tries(Parsed_Cmd * parsed_cmd)
 
 
 STATIC void
-init_performance_options(Parsed_Cmd * parsed_cmd)
+init_performance_options(Parsed_Cmd * parsed_cmd, GPtrArray * errinfo_accumulator)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
@@ -371,14 +365,8 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
       }
       else {
          Error_Info * stats_errs = dsa2_restore_persistent_stats();
-         if (stats_errs) {
-            // for now, just dump to terminal
-            rpt_vstring(0, stats_errs->detail);
-            for (int ndx = 0; ndx < stats_errs->cause_ct; ndx++) {
-               rpt_vstring(1, stats_errs->causes[ndx]->detail);
-            }
-            errinfo_free(stats_errs);
-         }
+         if (stats_errs)
+            g_ptr_array_add(errinfo_accumulator, stats_errs);
       }
       if (parsed_cmd->min_dynamic_multiplier >= 0.0f) {
           dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->min_dynamic_multiplier);
@@ -524,6 +512,52 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       max_eacces_retry_ct  = parsed_cmd->i10;
 }
 
+#ifdef USER_DRM_CONNECTOR
+STATIC void init_busno_connector_table(Parsed_Cmd * parsed_cmd, GPtrArray * errinfo_accumulator) {
+   bool debug = false;
+
+   if (parsed_cmd->bus_drm_connectors) {
+      for (int ndx = 0; parsed_cmd->bus_drm_connectors[ndx]; ndx++) {
+         char * entry = parsed_cmd->bus_drm_connectors[ndx];
+         char busno_str[40];
+         char connector_name[80];
+         if (sscanf(entry, "%39s %79s", busno_str, connector_name) != 2) {
+            g_ptr_array_add(errinfo_accumulator,
+                  errinfo_new(DDCRC_CONFIG_ERROR,
+                        "--bus-drm-connector: invalid argument: \"%s\"", entry));
+            continue;
+         }
+         int busno = -1;
+         if (sscanf(busno_str, "/dev/i2c-%d", &busno) != 1 &&
+             sscanf(busno_str, "i2c-%d", &busno) != 1 &&
+             sscanf(busno_str, "%d", &busno) != 1)
+         {
+            g_ptr_array_add(errinfo_accumulator,
+                  errinfo_new(DDCRC_CONFIG_ERROR,
+                        "--bus-drm-connector: invalid bus number \"%s\" in \"%s\"", busno_str, entry));
+            continue;
+         }
+         if (!i2c_device_exists(busno)) {
+            g_ptr_array_add(errinfo_accumulator,
+                  errinfo_new(DDCRC_CONFIG_ERROR,
+                        "--bus-drm-connector: bus /dev/i2c-%d does not exist (from \"%s\")", busno, entry));
+            continue;
+         }
+         if (!is_valid_drm_connector_name(connector_name)) {
+            g_ptr_array_add(errinfo_accumulator,
+                  errinfo_new(DDCRC_CONFIG_ERROR,
+                        "--bus-drm-connector: invalid DRM connector name \"%s\" (from \"%s\")",
+                        connector_name, entry));
+            continue;
+         }
+         DBGMSF(debug, "Adding busno=%d, connector=%s", busno, connector_name);
+         add_busno_connector(busno, connector_name);
+      }
+   }
+   dbgrpt_busno_connector_table(0);
+}
+#endif
+
 
 /** Initialization code common to the standalone program ddcutil and
  *  the shared library libddcutil. Called from both main.c and api.base.c.
@@ -537,6 +571,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDC, "parsed_cmd = %p", parsed_cmd);
    Error_Info * final_result = NULL;
+   GPtrArray * errinfo_accumulator = g_ptr_array_new_with_free_func((GDestroyNotify) errinfo_free);
 
    install_segv_handler();
    // DBGMSF(true, "forcing a segfault to test handler...");
@@ -550,11 +585,11 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (euid == 0 && ruid != euid)
       running_as_root = true;
 
-   final_result = init_failsim(parsed_cmd);
-   if (final_result)
-      goto bye;      // main_rc == EXIT_FAILURE
-
-   final_result = init_ignored_display_models(parsed_cmd);
+   init_failsim(parsed_cmd, errinfo_accumulator);
+   init_ignored_display_models(parsed_cmd, errinfo_accumulator);
+#ifdef USER_DRM_CONNECTOR
+   init_busno_connector_table(parsed_cmd, errinfo_accumulator);
+#endif
 
    edp_always_laptop = parsed_cmd->flags&CMD_FLAG_EDP_ALWAYS_LAPTOP;
 
@@ -668,7 +703,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    usb_ignore_vid_pid_values(parsed_cmd->ignored_usb_vid_pid_ct, values);
 #endif
 
-   init_performance_options(parsed_cmd);
+   init_performance_options(parsed_cmd, errinfo_accumulator);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
    skip_ddc_checks = parsed_cmd->flags & CMD_FLAG_SKIP_DDC_CHECKS;
 #ifdef BUILD_SHARED_LIB
@@ -682,8 +717,12 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    init_algorithm_options(parsed_cmd);
    init_experimental_options(parsed_cmd);
 
-bye:
-   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_DDC, final_result,  "");
+   if (errinfo_accumulator->len > 0)
+      final_result = errinfo_new_with_causes_gptr(
+            DDCRC_CONFIG_ERROR, errinfo_accumulator, __func__, "Initialization errors:");
+   g_ptr_array_free(errinfo_accumulator, true);
+
+   DBGTRC_RET_ERRINFO(debug, DDCA_TRC_DDC, final_result, "");
    return final_result;
 }
 
