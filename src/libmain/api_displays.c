@@ -1001,6 +1001,9 @@ DDCA_Drm_Connector_Found_By drm_to_ddca_connector_found_by(Drm_Connector_Found_B
    case DRM_CONNECTOR_NOT_FOUND:      ddca_value = DDCA_DRM_CONNECTOR_NOT_FOUND;      break;
    case DRM_CONNECTOR_FOUND_BY_BUSNO: ddca_value = DDCA_DRM_CONNECTOR_FOUND_BY_BUSNO; break;
    case DRM_CONNECTOR_FOUND_BY_EDID:  ddca_value = DDCA_DRM_CONNECTOR_FOUND_BY_EDID;  break;
+#ifdef USER_BUSNO_CONNECTOR
+   case DRM_CONNECTOR_FOUND_BY_USER:  ddca_value = DDCA_DRM_CONNECTOR_FOUND_BY_USER;  break;
+#endif
    case DRM_CONNECTOR_NOT_CHECKED:    assert(false);
    }
    return ddca_value;

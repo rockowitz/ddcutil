@@ -104,6 +104,9 @@ const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
    case DRM_CONNECTOR_NOT_FOUND:      result = "DRM_CONNECTOR_NOT_FOUND";      break;
    case DRM_CONNECTOR_FOUND_BY_BUSNO: result = "DRM_CONNECTOR_FOUND_BY_BUSNO"; break;
    case DRM_CONNECTOR_FOUND_BY_EDID:  result = "DRM_CONNECTOR_FOUND_BY_EDID";  break;
+#ifdef USER_CONNECTOR
+   case DRM_CONNECTOR_FOUND_BY_USER:  result = "DRM_CONNECTOR_FOUND_BY_USER";  break;
+#endif
    }
    return result;
 }
@@ -116,6 +119,9 @@ const char * drm_connector_found_by_public_name(Drm_Connector_Found_By found_by)
    case DRM_CONNECTOR_NOT_FOUND:      result = "Not found";      break;
    case DRM_CONNECTOR_FOUND_BY_BUSNO: result = "I2C bus number"; break;
    case DRM_CONNECTOR_FOUND_BY_EDID:  result = "EDID";           break;
+#ifdef USER_CONNECTOR
+   case DRM_CONNECTOR_FOUND_BY_USER:  result = "User";           break;
+#endif
    }
    return result;
 }
