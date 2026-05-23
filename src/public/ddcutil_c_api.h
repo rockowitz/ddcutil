@@ -503,11 +503,15 @@ ddca_report_locks(
 
 /** Gets display references list for all detected displays.
  *
- *  @param[in]  include_invalid_displays if true, displays that do not support DDC are included
- *  @param[out] drefs_loc where to return pointer to null-terminated array of #DDCA_Display_Ref
+ *  @param[in]  include_invalid_displays  if true, displays that do not support DDC are included
+ *  @param[out] drefs_loc  where to return pointer to null-terminated array of #DDCA_Display_Ref
  *  @retval     0  always succeeds
  *
  *  @since 1.2.0
+ *
+ *  @note
+ *  Caller is responsible for freeing the list, which is just an array of
+ *  display reference numbers.
  */
 DDCA_Status
 ddca_get_display_refs(
