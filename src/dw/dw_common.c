@@ -67,6 +67,8 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
+static const int Dbgtrc_Dbgrpt_Depth = 4;  // most closely matches dbgtrc indentation
+
 // Timing globals are atomic to handle concurrent reads in watch
 // thread and writes by ddca_set_display_settings()
 _Atomic(uint16_t)  initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
@@ -378,14 +380,14 @@ bool dw_hotplug_change_handler(
 
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       //  i2c_dbgrpt_buses(false, false, 1);
-      DBGMSG("buses before event processed:");
-      i2c_dbgrpt_buses_summary(1);
-      DBGMSG("display references before event processed:");
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "buses before event processed:");
+      i2c_dbgrpt_buses_summary(Dbgtrc_Dbgrpt_Depth);
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "display references before event processed:");
       // ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
       //                                 false,    // report_businfo
       //                                 1);       // depth
-      ddc_dbgrpt_display_refs_terse(true, 1);
-      rpt_nl();
+      ddc_dbgrpt_display_refs_terse(true, Dbgtrc_Dbgrpt_Depth);
+      // rpt_nl();
    }
 
    Bit_Set_256_Iterator iter = bs256_iter_new(bs_buses_w_edid_removed);
@@ -481,21 +483,20 @@ bool dw_hotplug_change_handler(
 
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       rpt_nl();
-      rpt_label(0,"After buses added or removed:");
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "After buses added or removed:");
       // i2c_dbgrpt_buses(false, false, 1);
-      i2c_dbgrpt_buses_summary(1);
-      rpt_label(0,"After display refs added or marked disconnected:");
+      i2c_dbgrpt_buses_summary(Dbgtrc_Dbgrpt_Depth);
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "After display refs added or marked disconnected:");
       // ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
       //                                 false,    // report_businfo
       //                                 1);       // depth
-      ddc_dbgrpt_display_refs_terse(true, 1);
+      ddc_dbgrpt_display_refs_terse(true, Dbgtrc_Dbgrpt_Depth);
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP,event_emitted, "");
    // debug_current_traced_function_stack(false);   // ** TEMP **/
    return event_emitted;
 }
-
 
 #ifdef OLD
 /** Repeatedly calls i2c_detect_buses0() until the value read equals the prior value.
