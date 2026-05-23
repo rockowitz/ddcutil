@@ -456,7 +456,7 @@ ddca_create_display_ref(
 
 
 DDCA_Status
-ddca_redetect_displays() {
+ddca_redetect_displays(void) {
    bool debug = false;
    API_PROLOGX(debug, NORESPECT_QUIESCE, "");
 
@@ -1710,7 +1710,7 @@ ddca_enable_dynamic_sleep(bool onoff)
 }
 
 
-bool ddca_is_dynamic_sleep_enabled()
+bool ddca_is_dynamic_sleep_enabled(void)
 {
    bool debug = false;
    API_PROLOG(debug, "");

@@ -302,7 +302,7 @@ ddca_set_sleep_multiplier(double multiplier);
  *  @return  sleep multiplier, -1.0f if no display open on current thread
  */
 __attribute__ ((deprecated)) double
-ddca_get_sleep_multiplier();
+ddca_get_sleep_multiplier(void);
 
 
 /** Sets an explicit sleep multiplier factor for the specified display.
@@ -352,7 +352,7 @@ ddca_enable_dynamic_sleep(bool onoff);
  *  @since 2.1.0
  */
 bool
-ddca_is_dynamic_sleep_enabled();
+ddca_is_dynamic_sleep_enabled(void);
 
 
 //
@@ -679,7 +679,7 @@ ddca_report_displays(
  *  @since 1.2.0
  */
 DDCA_Status
-ddca_redetect_displays();
+ddca_redetect_displays(void);
 
 
 //

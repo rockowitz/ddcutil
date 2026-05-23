@@ -1431,7 +1431,7 @@ ddca_set_sleep_multiplier(double multiplier)
 }
 
 double
-ddca_get_sleep_multiplier()
+ddca_get_sleep_multiplier(void)
 {
    bool debug = false;
    if (traced_function_stack_enabled)
@@ -1470,7 +1470,7 @@ ddca_set_sleep_multiplier(double multiplier)
 }
 
 double
-ddca_get_sleep_multiplier()
+ddca_get_sleep_multiplier(void)
 {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_API, "");
