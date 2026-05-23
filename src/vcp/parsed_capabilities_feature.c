@@ -63,6 +63,7 @@ Capabilities_Feature_Record * parse_capabilities_feature(
       int         value_string_len,
       GPtrArray * error_messages)
 {
+   assert(value_string_len >= 0);   // quiet pointless OrbisAI Security diagnostic
    bool debug = false;
    if (debug) {
       DBGMSG("Starting. Feature: 0x%02x", feature_id);
