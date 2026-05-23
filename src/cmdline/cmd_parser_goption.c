@@ -17,10 +17,13 @@
 #include <time.h>
 
 #include "util/coredefs.h"
+#include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/error_info.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
+
+#include "public/ddcutil_types.h"
 
 #include "base/build_info.h"
 #include "base/build_timestamp.h"
