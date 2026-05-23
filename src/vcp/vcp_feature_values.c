@@ -1,6 +1,6 @@
 // vcp_feature_values.c
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -130,7 +130,7 @@ const int summarize_single_vcp_value_buffer_size = SUMMARIZE_SINGLE_VCP_VALUE_BU
  *  \return buffer
  */
 char * summarize_single_vcp_value_r(
-      DDCA_Any_Vcp_Value * valrec,
+      const DDCA_Any_Vcp_Value * valrec,
       char * buffer,
       int    bufsz)
 {
@@ -194,7 +194,7 @@ char * summarize_single_vcp_value_r(
  *  \param  valrec vcp value to summarize
  *  \return pointer to summary string
  */
-char * summarize_single_vcp_value(DDCA_Any_Vcp_Value * valrec) {
+char * summarize_single_vcp_value(const DDCA_Any_Vcp_Value * valrec) {
    static GPrivate  summarize_key = G_PRIVATE_INIT(g_free);
    static GPrivate  summarize_len_key = G_PRIVATE_INIT(g_free);
 

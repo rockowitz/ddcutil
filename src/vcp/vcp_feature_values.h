@@ -121,8 +121,8 @@ void  dbgrpt_single_vcp_value( DDCA_Any_Vcp_Value * valrec, int depth);
 
 
 extern const int summarize_single_vcp_value_buffer_size;
-char * summarize_single_vcp_value_r(DDCA_Any_Vcp_Value * valrec, char * buffer, int bufsz);
-char * summarize_single_vcp_value(DDCA_Any_Vcp_Value * valrec);
+char * summarize_single_vcp_value_r(const DDCA_Any_Vcp_Value * valrec, char * buffer, int bufsz);
+char * summarize_single_vcp_value(const DDCA_Any_Vcp_Value * valrec);
 
 
 // Vcp_Value_Set declarations
