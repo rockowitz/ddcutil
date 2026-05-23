@@ -441,7 +441,7 @@ ddca_set_output_level(
  *  @remark
  *  This is a convenience function.
  */
-char *
+const char *
 ddca_output_level_name(
       DDCA_Output_Level val);   /**< output level id */
 

@@ -63,7 +63,6 @@ FILE * ferr();
 DDCA_Output_Level get_output_level();
 DDCA_Output_Level set_output_level(DDCA_Output_Level newval);
 void set_default_thread_output_level(DDCA_Output_Level ol);
-// const  adding "const" would require api change to ddca_output_level_name()
-char *            output_level_name(DDCA_Output_Level val);
+const char *      output_level_name(DDCA_Output_Level val);
 
 #endif /* CORE_PER_THREAD_SETTINGS_H_ */

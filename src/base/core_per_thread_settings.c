@@ -281,8 +281,7 @@ DDCA_Output_Level set_output_level(DDCA_Output_Level newval) {
  *
  *  \ingroup msglevel
  */
-// const  adding "const" causes api change ddca_output_level_name(), defer until next api change
-char * output_level_name(DDCA_Output_Level val) {
+const char * output_level_name(DDCA_Output_Level val) {
    char * result = NULL;
    switch (val) {
       case DDCA_OL_TERSE:

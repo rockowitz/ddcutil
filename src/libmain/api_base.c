@@ -1284,7 +1284,7 @@ ddca_set_output_level(DDCA_Output_Level newval) {
 }
 
 
-char *
+const char *
 ddca_output_level_name(DDCA_Output_Level val) {
    return output_level_name(val);
 }
