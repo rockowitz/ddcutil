@@ -405,7 +405,8 @@ ddca_start_capture(
  *  @return captured output as a string, caller responsible for freeing
  *
  *  @note
- *  If output is not currently being captured, returns a 0 length string.
+ *  If output is not currently being captured, returns a newly allocated
+ *  0 length string.
  *
  *  @note  Writes messages to actual **stderr** in case of error.
  *  @since 0.9.0
