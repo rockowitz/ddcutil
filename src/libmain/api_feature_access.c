@@ -528,11 +528,11 @@ bye:
     */
 static DDCA_Status
 ddci_format_any_vcp_value(
-      DDCA_Vcp_Feature_Code    feature_code,
-      DDCA_MCCS_Version_Spec   vspec,
-      Monitor_Model_Key * mmid,
-      DDCA_Any_Vcp_Value *     anyval,
-      char **                  formatted_value_loc)
+      DDCA_Vcp_Feature_Code          feature_code,
+      DDCA_MCCS_Version_Spec         vspec,
+      Monitor_Model_Key *            mmid,
+      const DDCA_Any_Vcp_Value *     anyval,
+      char **                        formatted_value_loc)
 {
    bool debug = false;
    free_thread_error_detail();
@@ -585,7 +585,7 @@ ddci_format_any_vcp_value(
        ddcrc = DDCRC_ARG;
        goto bye;
    }
-   bool ok = dyn_format_feature_detail(dfm, vspec, anyval,formatted_value_loc);
+   bool ok = dyn_format_feature_detail(dfm, vspec, (DDCA_Any_Vcp_Value *) anyval, formatted_value_loc);
    if (!ok) {
        ddcrc = DDCRC_ARG;    // ??
        assert(!*formatted_value_loc);
@@ -605,10 +605,10 @@ bye:
 
 DDCA_Status
 ddca_format_any_vcp_value_by_dref(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Display_Ref        ddca_dref,
-      DDCA_Any_Vcp_Value *    valrec,
-      char **                 formatted_value_loc)
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Display_Ref            ddca_dref,
+      const DDCA_Any_Vcp_Value *  valrec,
+      char **                     formatted_value_loc)
 {
    bool debug = false;
    free_thread_error_detail();
@@ -652,11 +652,11 @@ ddca_format_any_vcp_value_by_dref(
 */
 static DDCA_Status
 ddci_format_non_table_vcp_value(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_MCCS_Version_Spec      vspec,
-      Monitor_Model_Key *         mmid,
-      DDCA_Non_Table_Vcp_Value *  valrec,
-      char **                     formatted_value_loc)
+      DDCA_Vcp_Feature_Code             feature_code,
+      DDCA_MCCS_Version_Spec            vspec,
+      Monitor_Model_Key *               mmid,
+      const DDCA_Non_Table_Vcp_Value *  valrec,
+      char **                           formatted_value_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x, vspec=%d.%d, mmid=%s, formatted_value_loc=%p",
@@ -709,10 +709,10 @@ bye:
 
 DDCA_Status
 ddca_format_non_table_vcp_value_by_dref(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Display_Ref            ddca_dref,
-      DDCA_Non_Table_Vcp_Value *  valrec,
-      char **                     formatted_value_loc)
+      DDCA_Vcp_Feature_Code             feature_code,
+      DDCA_Display_Ref                  ddca_dref,
+      const DDCA_Non_Table_Vcp_Value *  valrec,
+      char **                           formatted_value_loc)
 {
    bool debug = false;
    free_thread_error_detail();
@@ -755,11 +755,11 @@ ddca_format_non_table_vcp_value_by_dref(
  */
 static DDCA_Status
 ddci_format_table_vcp_value(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_MCCS_Version_Spec  vspec,
-      Monitor_Model_Key * mmid,
-      DDCA_Table_Vcp_Value *  table_value,
-      char **                 formatted_value_loc)
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_MCCS_Version_Spec        vspec,
+      Monitor_Model_Key *           mmid,
+      const DDCA_Table_Vcp_Value *  table_value,
+      char **                       formatted_value_loc)
 {
    // free_thread_error_detail();   // unnecessary, done by ddca_format_any_vcp_value();
    bool debug = false;
@@ -781,10 +781,10 @@ ddci_format_table_vcp_value(
 
 DDCA_Status
 ddca_format_table_vcp_value_by_dref(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Display_Ref        ddca_dref,
-      DDCA_Table_Vcp_Value *  table_value,
-      char **                 formatted_value_loc)
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_Display_Ref              ddca_dref,
+      const DDCA_Table_Vcp_Value *  table_value,
+      char **                       formatted_value_loc)
 {
    bool debug = false;
    free_thread_error_detail();
@@ -1063,10 +1063,10 @@ ddca_set_non_table_vcp_value2(
 static
 Error_Info *
 ddci_set_table_vcp_value_verify(
-      DDCA_Display_Handle     ddca_dh,
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Table_Vcp_Value *      table_value,
-      DDCA_Table_Vcp_Value **     verified_value_loc)
+      DDCA_Display_Handle           ddca_dh,
+      DDCA_Vcp_Feature_Code         feature_code,
+      const DDCA_Table_Vcp_Value *  table_value,
+      DDCA_Table_Vcp_Value **       verified_value_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "feature_code=0x%02x", feature_code);
@@ -1106,9 +1106,9 @@ ddci_set_table_vcp_value_verify(
 
 DDCA_Status
 ddca_set_table_vcp_value(
-      DDCA_Display_Handle     ddca_dh,
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Table_Vcp_Value *  table_value)
+      DDCA_Display_Handle           ddca_dh,
+      DDCA_Vcp_Feature_Code         feature_code,
+      const DDCA_Table_Vcp_Value *  table_value)
 {
    bool debug = false;
    free_thread_error_detail();

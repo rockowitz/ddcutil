@@ -1645,10 +1645,10 @@ ddca_get_any_vcp_value_using_implicit_type(
  */
 DDCA_Status
 ddca_format_table_vcp_value_by_dref(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Display_Ref        ddca_dref,
-      DDCA_Table_Vcp_Value *  table_value,
-      char **                 formatted_value_loc);
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_Display_Ref              ddca_dref,
+      const DDCA_Table_Vcp_Value *  table_value,
+      char **                       formatted_value_loc);
 
 /** Returns a formatted representation of a non-table VCP value.
  *  It is the responsibility of the caller to free the returned string.
@@ -1662,10 +1662,10 @@ ddca_format_table_vcp_value_by_dref(
  */
 DDCA_Status
 ddca_format_non_table_vcp_value_by_dref(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Display_Ref            dref,
-      DDCA_Non_Table_Vcp_Value *  valrec,
-      char **                     formatted_value_loc);
+      DDCA_Vcp_Feature_Code             feature_code,
+      DDCA_Display_Ref                  dref,
+      const DDCA_Non_Table_Vcp_Value *  valrec,
+      char **                           formatted_value_loc);
 
 /** Returns a formatted representation of a VCP value of any type
  *  It is the responsibility of the caller to free the returned string.
@@ -1679,10 +1679,10 @@ ddca_format_non_table_vcp_value_by_dref(
  */
 DDCA_Status
 ddca_format_any_vcp_value_by_dref(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Display_Ref        dref,
-      DDCA_Any_Vcp_Value *    valrec,
-      char **                 formatted_value_loc);
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_Display_Ref              dref,
+      const DDCA_Any_Vcp_Value *    valrec,
+      char **                       formatted_value_loc);
 
 
 //
@@ -1739,9 +1739,9 @@ ddca_set_non_table_vcp_value2(
  */
 DDCA_Status
 ddca_set_table_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      DDCA_Vcp_Feature_Code    feature_code,
-      DDCA_Table_Vcp_Value *   new_value);
+      DDCA_Display_Handle            ddca_dh,
+      DDCA_Vcp_Feature_Code          feature_code,
+      const DDCA_Table_Vcp_Value *   new_value);
 
 /** Sets a VCP value of any type.
  *
