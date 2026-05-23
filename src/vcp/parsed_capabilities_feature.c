@@ -78,7 +78,7 @@ Capabilities_Feature_Record * parse_capabilities_feature(
    vfr->feature_id = feature_id;
    // relying on calloc to 0 all other fields
 
-   if (value_string_start) {
+   if (value_string_start && value_string_len >= 0) {
       vfr->value_string = (char *) malloc( value_string_len+1);
       memcpy(vfr->value_string, value_string_start, value_string_len);
       vfr->value_string[value_string_len] = '\0';
