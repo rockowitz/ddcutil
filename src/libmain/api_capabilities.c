@@ -138,7 +138,7 @@ dbgrpt_ddca_capabilities(DDCA_Capabilities * p_caps, int depth) {
 
 DDCA_Status
 ddca_parse_capabilities_string(
-      char *                   capabilities_string,
+      const char *             capabilities_string,
       DDCA_Capabilities **     parsed_capabilities_loc)
 {
    bool debug = false;

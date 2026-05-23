@@ -978,7 +978,7 @@ ddca_get_capabilities_string(
  */
 DDCA_Status
 ddca_parse_capabilities_string(
-      char *                   capabilities_string,
+      const char *             capabilities_string,
       DDCA_Capabilities **     parsed_capabilities_loc);
 
 /** Frees a DDCA_Capabilities struct
@@ -1803,7 +1803,7 @@ ddca_get_profile_related_values(
 DDCA_Status
 ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
-      char *               profile_values_string);
+      const char *         profile_values_string);
 
 
 //

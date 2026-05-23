@@ -799,7 +799,7 @@ bye:
  *  @return pointer to newly allocated #Parsed_Capabilities structure
  */
 Parsed_Capabilities* parse_capabilities_string(
-      char * caps)
+      const char * caps)
 {
    assert(caps);
 #ifdef CAPABILITIES_TESTS
@@ -807,7 +807,7 @@ Parsed_Capabilities* parse_capabilities_string(
    caps = test_cap_strings[3];
 #endif
 
-   return parse_capabilities(caps, strlen(caps));
+   return parse_capabilities((char *) caps, strlen(caps));
 }
 
 

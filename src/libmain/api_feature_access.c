@@ -1218,7 +1218,7 @@ bye:
 DDCA_Status
 ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
-      char *               profile_values_string)
+      const char *         profile_values_string)
 {
    bool debug = false;
    free_thread_error_detail();

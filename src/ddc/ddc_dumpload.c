@@ -584,7 +584,7 @@ loadvcp_by_ntsa(
 // n. called from ddct_public:
 Error_Info *
 loadvcp_by_string(
-      char *           catenated,
+      const char *     catenated,
       Display_Handle * dh)
 {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");

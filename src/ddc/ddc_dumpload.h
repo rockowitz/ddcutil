@@ -58,7 +58,7 @@ loadvcp_by_dumpload_data(
 
 Error_Info *
 loadvcp_by_string(
-      char *           catenated,
+      const char *     catenated,
       Display_Handle * dh);
 
 Error_Info *

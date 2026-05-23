@@ -41,7 +41,7 @@ typedef struct {
 } Parsed_Capabilities;
 
 
-Parsed_Capabilities* parse_capabilities_string(char * capabilities);
+Parsed_Capabilities* parse_capabilities_string(const char * capabilities);
 void                 free_parsed_capabilities(Parsed_Capabilities * pcaps);
 Bit_Set_256          get_parsed_capabilities_feature_ids(Parsed_Capabilities * pcaps, bool readable_only);
 bool                 parsed_capabilities_supports_table_commands(Parsed_Capabilities * pcaps);
