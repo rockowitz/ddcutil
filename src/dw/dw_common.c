@@ -375,11 +375,14 @@ bool dw_hotplug_change_handler(
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_added: %s",
             BS256_REPR(bs_buses_w_edid_added));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_attached_buses_removedd: %s",
+            BS256_REPR(bs_attached_buses_removed));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_attached_buses_added: %s",
+            BS256_REPR(bs_attached_buses_added));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "events_queue=%p",
             events_queue);
    }
    // debug_current_traced_function_stack(false);   // ** TEMP **/
-
 
    if (bs256_count(bs_attached_buses_removed) > 0 ) {
       Bit_Set_256_Iterator iter = bs256_iter_new(bs_attached_buses_removed);
@@ -525,14 +528,22 @@ bool dw_hotplug_change_handler(
 
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       rpt_nl();
+      bool saved_reports_to_syslog = redirect_reports_to_syslog;
+      redirect_reports_to_syslog = true;
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "After buses added or removed:");
       // i2c_dbgrpt_buses(false, false, 1);
+      i2c_dbgrpt_buses_summary(Dbgtrc_Dbgrpt_Depth);
+      redirect_reports_to_syslog = false;
       i2c_dbgrpt_buses_summary(Dbgtrc_Dbgrpt_Depth);
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "After display refs added or marked disconnected:");
       // ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
       //                                 false,    // report_businfo
       //                                 1);       // depth
+      redirect_reports_to_syslog = true;
       ddc_dbgrpt_display_refs_terse(true, Dbgtrc_Dbgrpt_Depth);
+      redirect_reports_to_syslog = false;
+      ddc_dbgrpt_display_refs_terse(true, Dbgtrc_Dbgrpt_Depth);
+      redirect_reports_to_syslog = saved_reports_to_syslog;
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP,event_emitted, "");
