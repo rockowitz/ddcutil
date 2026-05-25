@@ -396,7 +396,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busndx=%d, businfo=%p", busndx, businfo);
       // if (IS_DBGTRC(debug, DDCA_TRC_NONE))
       //    i2c_dbgrpt_bus_info(businfo, 2);
-      if ( businfo->edid ) {
+      if ( !businfo->removed && businfo->edid ) {
          Display_Ref * dref = NULL;
          // Do not restore serialized display ref if slave address x37 inactive
          // Prevents creating a display ref with stale contents
