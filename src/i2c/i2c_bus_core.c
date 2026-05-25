@@ -96,6 +96,8 @@ bool force_failure_i2c_open = false;
 int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;
 int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;
 int  max_eacces_retry_ct = DEFAULT_STD_EACCES_RETRY_CT;
+bool use_x37_detection_table = false;
+bool primitive_sysfs = false;
 
 
 #ifdef OUT
@@ -1898,7 +1900,7 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
  *  as an argument.
  *
  *  @param  businfo  pointer to #I2C_Bus_Info struct in which information will be set
- *  @return status code
+ *  @return NULL if success, Error_Info struct if error
  */
 Error_Info * i2c_check_bus(I2C_Bus_Info * businfo) {
    bool debug = false;
@@ -2564,7 +2566,7 @@ int i2c_detect_buses() {
 
    if (!all_i2c_buses) {
       all_i2c_buses = i2c_detect_buses0();
-      g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
+      // g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
    }
    int result = all_i2c_buses->len;
 
@@ -2582,7 +2584,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    if (i2c_device_exists(busno) ) {
       if (!all_i2c_buses) {
          all_i2c_buses = g_ptr_array_sized_new(1);
-         g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
+         // g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
       }
       businfo = i2c_new_bus_info(busno);
       businfo->flags = I2C_BUS_EXISTS;
@@ -2855,41 +2857,55 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 
 
 static void init_i2c_bus_core_func_name_table() {
-   RTTI_ADD_FUNC(i2c_buses_bitset_from_businfo_array);
-   RTTI_ADD_FUNC(i2c_nonlaptop_buses_bitset_from_businfo_array);
-   RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
-   RTTI_ADD_FUNC(check_x37_for_businfo);
-   RTTI_ADD_FUNC(get_connector_edid);
-   RTTI_ADD_FUNC(i2c_get_device_numbers_using_udev);
-   RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
-   RTTI_ADD_FUNC(i2c_async_scan);
-   RTTI_ADD_FUNC(i2c_check_bus);
-   RTTI_ADD_FUNC(i2c_check_edid_exists_by_dh);
-   RTTI_ADD_FUNC(i2c_check_open_bus_alive);
-   RTTI_ADD_FUNC(i2c_close_bus);
-   RTTI_ADD_FUNC(i2c_close_bus_basic);
-   RTTI_ADD_FUNC(i2c_detect_attached_buses);
-   RTTI_ADD_FUNC(i2c_detect_buses);
-   RTTI_ADD_FUNC(i2c_detect_buses0);
-   RTTI_ADD_FUNC(i2c_detect_single_bus);
-   RTTI_ADD_FUNC(i2c_detect_x37);
-   RTTI_ADD_FUNC(i2c_edid_exists);
-   RTTI_ADD_FUNC(i2c_enable_cross_instance_locks);
-   RTTI_ADD_FUNC(i2c_get_and_check_bus_info);
-   RTTI_ADD_FUNC(i2c_non_async_scan);
-   RTTI_ADD_FUNC(i2c_open_bus);
-   RTTI_ADD_FUNC(i2c_open_bus_basic);
-   RTTI_ADD_FUNC(i2c_report_active_bus);
-   RTTI_ADD_FUNC(i2c_threaded_initial_checks_by_businfo);
-   RTTI_ADD_FUNC(is_adapter_class_display_controller);
-   RTTI_ADD_FUNC(is_laptop_drm_connector_name);
-   RTTI_ADD_FUNC(is_laptop_for_businfo);
-
    RTTI_ADD_FUNC(simple_rw_test);
+   RTTI_ADD_FUNC(i2c_all_relevant_i2c_buses_rw);
 #ifdef UNUSED
    RTTI_ADD_FUNC(i2c_all_edids_readable_using_i2c);
 #endif
-   RTTI_ADD_FUNC(i2c_all_relevant_i2c_buses_rw);
+#ifdef ALT_LOCK_RECORD
+   RTTI_ADD_FUNC(lock_display_by_businfo);
+   RTTI_ADD_FUNC(unlock_display_by_businfo);
+#endif
+   RTTI_ADD_FUNC(i2c_open_bus_basic);
+   RTTI_ADD_FUNC(i2c_open_bus);
+   RTTI_ADD_FUNC(i2c_close_bus_basic);
+   RTTI_ADD_FUNC(i2c_close_bus);
+   RTTI_ADD_FUNC(i2c_check_edid_exists_by_dh);
+#ifdef UNUSED
+   RTTI_ADD_FUNC(i2c_check_edid_exists_by_businfo);
+#endif
+   RTTI_ADD_FUNC(i2c_detect_x37);
+   RTTI_ADD_FUNC(i2c_check_open_bus_alive);
+#ifdef UNUSED
+   RTTI_ADD_FUNC(check_edids);
+   RTTI_ADD_FUNC(compare_edid_read_methods);
+#endif
+   RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
+   RTTI_ADD_FUNC(get_connector_edid);
+   RTTI_ADD_FUNC(i2c_edid_exists);
+   RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
+   RTTI_ADD_FUNC(is_adapter_class_display_controller);
+#ifdef UNUSED
+   RTTI_ADD_FUNC(add_one_drm_connector_name);
+   RTTI_ADD_FUNC(get_drm_connector_names);
+   RTTI_ADD_FUNC(drm_connectors_exist);
+#endif
+   RTTI_ADD_FUNC(set_connector_for_businfo_using_edid);
+   RTTI_ADD_FUNC(is_laptop_for_businfo);
+   RTTI_ADD_FUNC(check_x37_for_businfo);
+   RTTI_ADD_FUNC(i2c_check_bus);
+   RTTI_ADD_FUNC(i2c_threaded_initial_checks_by_businfo);
+   RTTI_ADD_FUNC(i2c_async_scan);
+   RTTI_ADD_FUNC(i2c_non_async_scan);
+   RTTI_ADD_FUNC(i2c_get_device_numbers_using_udev);
+   RTTI_ADD_FUNC(i2c_detect_attached_buses);
+   RTTI_ADD_FUNC(i2c_detect_buses0);
+   RTTI_ADD_FUNC(i2c_get_and_check_bus_info);
+   RTTI_ADD_FUNC(i2c_detect_buses);
+   RTTI_ADD_FUNC(i2c_detect_single_bus);
+   RTTI_ADD_FUNC(i2c_buses_bitset_from_businfo_array);
+   RTTI_ADD_FUNC(i2c_nonlaptop_buses_bitset_from_businfo_array);
+   RTTI_ADD_FUNC(i2c_report_active_bus);
 }
 
 

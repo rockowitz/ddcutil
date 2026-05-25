@@ -43,6 +43,8 @@ extern bool force_failure_i2c_open;
 extern int  pause_after_resume_ms;
 extern int  max_eacces_retry_ms;
 extern int  max_eacces_retry_ct;
+extern bool use_x37_detection_table;
+extern bool primitive_sysfs;
 
 // Bus open and close
 void             i2c_add_open_failures_reported(Bit_Set_256 failures);
@@ -86,7 +88,7 @@ Error_Info *     i2c_all_edids_readable_using_i2c();
 #endif
 
 // Miscellaneous
-bool is_valid_drm_connector_name(const char * connector_name);
+// bool is_valid_drm_connector_name(const char * connector_name);
 
 // Initialization
 void             subinit_i2c_bus_core();
