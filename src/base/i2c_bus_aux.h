@@ -18,6 +18,9 @@
 #include "base/display_lock.h"
 #endif
 
+// Globals
+extern bool      use_x37_detection_table;
+
 // Retrieve and inspect bus information
 
 // Keep in sync with i2c_bus_flags_table
@@ -127,7 +130,6 @@ X37_Detection_State  i2c_query_x37_detected(int busno, Byte * edidbytes);
 void             i2c_exclude_buses(Bit_Set_256 excluded_busnos_flags);
 bool             i2c_bus_is_excluded(int busno);
 bool             i2c_bus_is_not_excluded(int busno);
-
 
 void init_i2c_bus_aux(void);
 

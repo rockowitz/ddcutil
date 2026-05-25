@@ -84,6 +84,7 @@ GMutex    master_dw_mutex;
 #ifdef LAPTOPS_IGNORABLE
 bool      watch_laptops                  = false;
 #endif
+bool      use_drm_connector_states       = false;
 
 
 uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {

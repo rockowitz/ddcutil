@@ -29,6 +29,7 @@ extern GMutex             master_dw_mutex;
 #ifdef LAPTOPS_IGNORABLE
 extern bool               watch_laptops;
 #endif
+extern bool               use_drm_connector_states;
 
 uint32_t  dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);
 uint32_t  dw_split_sleep(int watch_loop_millisec);

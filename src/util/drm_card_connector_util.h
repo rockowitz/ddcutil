@@ -1,6 +1,6 @@
 /** @file drm_card_connector_util.h */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DRM_CARD_CONNECTOR_UTIL_H_
@@ -8,6 +8,8 @@
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+
+extern bool all_video_adapters_implement_drm;
 
 bool   check_video_adapters_list_implements_drm(GPtrArray * adapter_devices);
 bool   check_all_video_adapters_implement_drm();

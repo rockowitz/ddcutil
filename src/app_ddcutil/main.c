@@ -103,6 +103,7 @@
 #include "ddc/ddc_vcp.h"
 
 #ifdef WATCH_DISPLAYS
+#include "dw/dw_common.h"
 #include "dw/dw_dref.h"
 #include "dw/dw_main.h"
 #include "dw/dw_services.h"

@@ -21,6 +21,7 @@
 #include "util/ddcutil_config_file.h"
 #include "util/dbus_util.h"
 #include "util/debug_util.h"
+#include "util/drm_card_connector_util.h"
 #include "util/file_util.h"
 #include "util/linux_util.h"
 #include "util/msg_util.h"
@@ -50,6 +51,7 @@
 
 #include "sysfs/sysfs_base.h"
 
+#include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"   // for testing watch_devices
 #include "i2c/i2c_execute.h"    // for i2c_set_addr()
 

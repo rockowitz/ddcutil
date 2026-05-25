@@ -1,6 +1,9 @@
-// i2c_bus_collections.c
+/** @file i2c_bus_collections.c
+ *
+ *  Operations on multiple i2c devices
+ */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -9,77 +12,29 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <glib-2.0/glib.h>
-#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 /** \endcond */
 
-#include "util/acl_util.h"
-#include "util/coredefs_base.h"
-#include "util/dbus_util.h"
-#include "util/debug_util.h"
 #include "util/data_structures.h"
-#include "util/edid.h"
 #include "util/error_info.h"
-#include "util/failsim.h"
-#include "util/file_util.h"
-#include "util/glib_string_util.h"
-#include "util/i2c_util.h"
-#include "util/linux_util.h"
 #include "util/msg_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/subprocess_util.h"
-#include "util/sysfs_filter_functions.h"
-#include "util/sysfs_i2c_util.h"
-#include "util/sysfs_util.h"
 #include "util/traced_function_stack.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
 #endif
-#include "util/utilrpt.h"
-#ifdef USE_X11
-#include "util/x11_util.h"
-#endif
-
-#include "public/ddcutil_types.h"
 
 #include "base/core.h"
-#include "base/ddc_errno.h"
-#include "base/display_lock.h"
-#include "base/flock.h"
 #include "base/i2c_bus_base.h"
-#include "base/linux_errno.h"
-#include "base/monitor_model_key.h"
 #include "base/parms.h"
-#include "base/per_display_data.h"
 #include "base/rtti.h"
-#include "base/sleep.h"
-#include "base/status_code_mgt.h"
-#include "base/tuned_sleep.h"
 
-#include "sysfs/sysfs_i2c_info.h"
-#include "sysfs/sysfs_dpms.h"
 #include "sysfs/sysfs_base.h"
-#include "sysfs/sysfs_sys_drm_connector.h"
+#include "sysfs/sysfs_i2c_info.h"
 #include "sysfs/sysfs_conflicting_drivers.h"
-
-#ifdef TARGET_BSD
-#include "bsd/i2c-dev.h"
-#else
-#include "i2c/wrap_i2c-dev.h"
-#endif
-
-#include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_execute.h"
-#include "i2c/i2c_edid.h"
 
 #include "i2c/i2c_bus_core.h"
 
@@ -112,9 +67,6 @@ i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
    }
    return bva;
 }
-
-
-
 
 
 /** Checks that all /dev/i2c buses that might possibly be used for DDC

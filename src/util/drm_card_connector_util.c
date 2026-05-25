@@ -1,6 +1,6 @@
 // drm_card_connector_util.c
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  
@@ -33,13 +33,16 @@
 #include "sysfs_util.h"
 #include "timestamp.h"
 
+#include "libdrm_util.h"
 
 #include "drm_card_connector_util.h"
 
+// Globals
+bool all_video_adapters_implement_drm = false;
 
-int    lookup_drm_connector_type(const char * name);
-char * drm_connector_type_name(Byte val);
-char * drm_connector_type_title(Byte val);
+// int    lookup_drm_connector_type(const char * name);
+// char * drm_connector_type_name(Byte val);
+// char * drm_connector_type_title(Byte val);
 
 
 // from sysfs_i2c_util.c

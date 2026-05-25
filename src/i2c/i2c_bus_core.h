@@ -9,30 +9,21 @@
 #define I2C_BUS_CORE_H_
 
 /** \cond */
-#include <glib-2.0/glib.h>
 #include <stdbool.h>
-#include <stdio.h>
 /** \endcond */
 
 #include "util/data_structures.h"
-#include "util/edid.h"
 #include "util/error_info.h"
 
 #include "base/core.h"
 #include "base/displays.h"
-#include "base/execution_stats.h"
 #include "base/i2c_bus_base.h"
-#include "base/parms.h"
 #include "base/status_code_mgt.h"
-
-#include "sysfs/sysfs_sys_drm_connector.h"
 
 /** \def I2C_SLAVE_ADDR_MAX Addresses on an I2C bus are 7 bits in size */
 #define I2C_SLAVE_ADDR_MAX 128
 
 
-extern bool all_video_adapters_implement_drm;
-extern bool use_drm_connector_states;
 extern bool try_get_edid_from_sysfs_first;
 
 extern bool cross_instance_locks_enabled;
@@ -42,7 +33,6 @@ extern bool force_failure_i2c_open;
 extern int  pause_after_resume_ms;
 extern int  max_eacces_retry_ms;
 extern int  max_eacces_retry_ct;
-extern bool use_x37_detection_table;
 extern bool primitive_sysfs;
 
 // Bus open and close
@@ -62,19 +52,13 @@ Error_Info *     i2c_check_bus(I2C_Bus_Info * businfo);
 I2C_Bus_Info *   i2c_get_and_check_bus_info(int busno);
 bool             i2c_edid_exists(int busno);
 bool             i2c_check_edid_exists_by_dh(Display_Handle * dh);
-Error_Info *     i2c_check_bus(I2C_Bus_Info * businfo);
 Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 
 // Reports
 void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
 
-Error_Info * simple_rw_test(int busno);
-Error_Info *     i2c_all_relevant_i2c_buses_rw();
-#ifdef UNUSED
-Error_Info *     i2c_all_edids_readable_using_i2c();
-#endif
-
 // Miscellaneous
+Error_Info *     simple_rw_test(int busno);
 // bool is_valid_drm_connector_name(const char * connector_name);
 
 // Initialization

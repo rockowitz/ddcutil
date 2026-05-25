@@ -24,6 +24,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
+#include "util/timestamp.h"
 
 #include "base/core.h"
 #include "base/displays.h"
