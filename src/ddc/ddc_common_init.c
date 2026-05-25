@@ -50,6 +50,7 @@
 
 #include "dynvcp/dyn_feature_files.h"
 
+#include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_execute.h"

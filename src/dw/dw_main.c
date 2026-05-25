@@ -38,6 +38,7 @@
 
 #include "sysfs/sysfs_base.h"
 
+#include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_edid.h"
 

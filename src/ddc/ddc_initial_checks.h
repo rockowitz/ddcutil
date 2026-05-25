@@ -1,6 +1,6 @@
 /** @file ddc_initial_checks.h */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_INITIAL_CHECKS_H_
@@ -11,6 +11,7 @@
 #include "util/error_info.h"
 #include "base/displays.h"
 
+extern bool  i2c_force_bus;
 extern bool  skip_ddc_checks;
 extern bool  monitor_state_tests;
 

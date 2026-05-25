@@ -60,8 +60,10 @@
 #include "sysfs/sysfs_sys_drm_connector.h"
 #include "sysfs/sysfs_base.h"  // for is_sysfs_unreliable()
 
+#include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"

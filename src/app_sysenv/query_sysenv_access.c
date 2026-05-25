@@ -33,6 +33,7 @@
 #include "base/linux_errno.h"
 /** \endcond */
 
+#include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
 
 #include "query_sysenv_access.h"

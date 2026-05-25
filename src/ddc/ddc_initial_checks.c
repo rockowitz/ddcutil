@@ -62,7 +62,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 bool skip_ddc_checks = false;
 bool monitor_state_tests = false;
-
+bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 
 //
 // Utility Functions

@@ -56,6 +56,7 @@
 #include "sysfs/sysfs_dpms.h"
 #include "sysfs/sysfs_sys_drm_connector.h"
 
+#include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_displays.h"
