@@ -99,7 +99,10 @@ STATIC void process_screen_change_event(
 
    BS256 bs_old_attached_buses = *p_bs_attached_buses;
    BS256 bs_old_buses_w_edid   = *p_bs_buses_w_edid;
+   assert(bs256_is_subset(bs_old_buses_w_edid, bs_old_attached_buses));
 
+   // Mutes for next 2 assignments?
+   // Guarantee: bs_new_buses_w_edid is a subset of bs_new_attached_buses
    BS256 bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
 #ifdef IGNORE_LAPTOPS
    if (watch_laptops) {
@@ -112,6 +115,7 @@ STATIC void process_screen_change_event(
    }
 #endif
    BS256 bs_new_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_new_attached_buses);
+   assert(bs256_is_subset(bs_new_buses_w_edid, bs_new_attached_buses));
 
    Bit_Set_256 bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
    Bit_Set_256 bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_new_buses_w_edid);
@@ -133,7 +137,7 @@ STATIC void process_screen_change_event(
 
       bs_new_buses_w_edid = dw_stabilized_buses_bs(bs_new_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
 
-      // bs_added_buses_w_edid was declared BS26, why shadowed?
+      // bs_added_buses_w_edid was declared BS256, why shadowed?
       bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
       bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_new_buses_w_edid);
       bs_added_attached_buses   = bs256_and_not(bs_new_attached_buses, bs_old_attached_buses);
@@ -151,12 +155,27 @@ STATIC void process_screen_change_event(
    bs_old_buses_w_edid   = bs_new_buses_w_edid;
    bs_old_attached_buses = bs_new_attached_buses;
 
+#ifdef MOVE_TO_HOTPLUG_CHANGE_HANDLER
+   if (bs256_count(bs_removed_attached_buses) > 0 ) {
+      Bit_Set_256_Iterator iter = bs256_iter_new(bs_removed_attached_buses);
+      while(true) {
+         int busno = bs256_iter_next(iter);
+         if (busno < 0)
+            break;
+
+         i2c_remove_bus_by_busno(busno);
+      }
+   }
+#endif
+
    bool hotplug_change_handler_emitted = false;
    bool connected_buses_w_edid_changed = bs256_count(bs_removed_buses_w_edid) > 0 ||
                                        bs256_count(bs_added_buses_w_edid) > 0;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "connected_buses_changed = %s", SBOOL(connected_buses_w_edid_changed));
    if (connected_buses_w_edid_changed) {
       hotplug_change_handler_emitted = dw_hotplug_change_handler(
+                                           bs_removed_attached_buses,
+                                           bs_added_attached_buses,
                                            bs_removed_buses_w_edid,
                                            bs_added_buses_w_edid,
                                            deferred_events,
