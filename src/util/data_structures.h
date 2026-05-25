@@ -212,6 +212,7 @@ Bit_Set_256    bs256_remove(Bit_Set_256 flags, uint8_t val);
 Bit_Set_256    bs256_or(Bit_Set_256 set1, Bit_Set_256 set2);         // union
 Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersection
 Bit_Set_256    bs256_and_not(Bit_Set_256 set1, Bit_Set_256 set2);    // subtract
+bool           bs256_is_subset(Bit_Set_256 subset, Bit_Set_256 superset);
 #define bs256_minus bs256_and_not
 
 void           bs256_repr(Bit_Set_256 flags, char * buffer, int buflen);

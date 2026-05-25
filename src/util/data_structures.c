@@ -1161,6 +1161,16 @@ Bit_Set_256 bs256_and_not(
 }
 
 
+bool bs256_is_subset(
+      Bit_Set_256 possible_subset,
+      Bit_Set_256 superset)
+{
+   Bit_Set_256 excess = bs256_and_not(possible_subset, superset);
+   bool result = bs256_eq(excess, EMPTY_BIT_SET_256);
+   return result;
+}
+
+
 #define BS256_REPR_BUF_SZ (3*32+1)
 /** Represents a #Bit_Set_256 value as a sequence of 32 hex values.
  *
