@@ -360,6 +360,8 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
  *          false if not
  */
 bool dw_hotplug_change_handler(
+      Bit_Set_256    bs_attached_buses_removed,
+      Bit_Set_256    bs_attached_buses_added,
       Bit_Set_256    bs_buses_w_edid_removed,
       Bit_Set_256    bs_buses_w_edid_added,
       GArray *       events_queue,
@@ -375,6 +377,43 @@ bool dw_hotplug_change_handler(
             events_queue);
    }
    // debug_current_traced_function_stack(false);   // ** TEMP **/
+
+
+   if (bs256_count(bs_attached_buses_removed) > 0 ) {
+      Bit_Set_256_Iterator iter = bs256_iter_new(bs_attached_buses_removed);
+      while(true) {
+         int busno = bs256_iter_next(iter);
+         if (busno < 0)
+            break;
+
+         i2c_remove_bus_by_busno(busno);
+      }
+   }
+
+   if (bs256_count(bs_attached_buses_added) > 0 ) {
+      Bit_Set_256_Iterator iter = bs256_iter_new(bs_attached_buses_added);
+      while(true) {
+         int busno = bs256_iter_next(iter);
+         if (busno < 0)
+            break;
+
+         I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
+         assert(businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_CHECKED);
+         businfo->flags = I2C_BUS_EXISTS;
+         DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);
+         Error_Info * errs = i2c_check_bus(businfo);
+         if (errs) {
+            // dump to syslog
+         }
+         else {
+            // if there's already a businfo rec in all_i2c_buses, it's an error
+
+            g_ptr_array_add(all_i2c_buses, businfo);
+         }
+      }
+   }
+
+
 
    bool event_emitted = false;
 
@@ -396,6 +435,7 @@ bool dw_hotplug_change_handler(
       if (busno < 0)
          break;
 
+      // Is the display disconnected but the bus still exists?
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
       if (!businfo) {
          SYSLOG2(DDCA_SYSLOG_ERROR, "Failed to find I2C_BUS_INFO for /dev/i2c-%d", busno);
