@@ -17,6 +17,7 @@
 #include "util/traced_function_stack.h"
 
 #include "base/core.h"
+#include "base/display_lock.h"
 #include "base/dw_base.h"
 #include "base/sleep.h"
 #include "base/rtti.h"
