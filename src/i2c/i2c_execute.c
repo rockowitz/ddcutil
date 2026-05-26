@@ -147,16 +147,16 @@ i2c_set_addr(int fd, int addr) {
                              (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
                              addr);
       DBGTRC_NOPREFIX(debug || get_output_level() >= DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
-      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msgbuf);
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msgbuf);
 
    }
    else if (result == 0 && op == I2C_SLAVE_FORCE) {
       char msgbuf[80];
-      g_snprintf(msgbuf, 80, "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
-            filename_for_fd_t(fd),
-            addr);
+      g_snprintf(msgbuf, 80,
+            "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
+            filename_for_fd_t(fd),  addr);
       DBGTRC_NOPREFIX(debug || get_output_level() >= DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
-      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msgbuf);
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msgbuf);
    }
 
    assert(result <= 0);
@@ -483,18 +483,19 @@ i2c_ioctl_writer(
    int errsv = errno;
    if (rc < 0) {
       if (rc != -1) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Unexpected: ioctl() write returned %d", rc);
-         SYSLOG2(DDCA_SYSLOG_ERROR,
-               "Unexpected: (%s) ioctl() write returned %d", __func__, rc);
-         // show_backtrace(1);
+         char * msg = g_strdup_printf("Unexpected: ioctl() write returned %d", rc);
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "%s", msg);
+         free(msg);
       }
       rc = -errsv;
    }
    else {    // (rc >= 0) {
       if (rc != 1)   {   // expected success value
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Unexpected: ioctl() write returned %d", rc);
-         SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) Unexpected: ioctl() write returned %d", __func__, rc);
-         // show_backtrace(1);
+         char * msg = g_strdup_printf("Unexpected: ioctl() write returned %d", rc);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", msg);
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+         free(msg);
       }
       rc = 0;
    }
@@ -553,25 +554,24 @@ i2c_ioctl_reader1(
      );
    int errsv = errno;
    if (rc < 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "Error in ioctl() read, rc=%d, errno=%s, device=%s",
-                        rc, psc_desc(-errsv), filename_for_fd_t(fd));
-      SYSLOG2(DDCA_SYSLOG_DEBUG, "(%s) Error in ioctl() read, rc=%d, errno=%s, device=%s",
-            __func__, rc, psc_desc(-errsv), filename_for_fd_t(fd));
+      char * msg = g_strdup_printf("Error in ioctl() read, rc=%d, errno=%s, device=%s",
+            rc, psc_desc(-errsv), filename_for_fd_t(fd));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", msg);
+      DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "%s", msg);
+      free(msg);
+      current_traced_function_stack_to_syslog(LOG_ERR,true);
       if (IS_DBGTRC(debug, TRACE_GROUP)) {
-         show_backtrace(0);
          dbgrpt_traced_callstack_call_table(0);
       }
       rc = -errsv;
    }
    else {
       if (rc != 1) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "Unexpected ioctl() read rc=%d, bytect =%d,  device=%s",
-                           rc, bytect, filename_for_fd_t(fd));
-         SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) Unexpected ioctl() read rc = %d, bytect =%d, device=%s",
-               __func__, rc, bytect, filename_for_fd_t(fd));
-        //  show_backtrace(1);
+         char * msg = g_strdup_printf( "Unexpected ioctl() read rc=%d, bytect =%d,  device=%s",
+                                       rc, bytect, filename_for_fd_t(fd));
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,"%s", msg);
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+         free(msg);
       }
       rc = 0;
    }
