@@ -375,7 +375,7 @@ bool dw_hotplug_change_handler(
    if (IS_DBGTRC(debug, TRACE_GROUP)) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_buses_w_edid_added: %s",
             BS256_REPR(bs_buses_w_edid_added));
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_attached_buses_removedd: %s",
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_attached_buses_removed: %s",
             BS256_REPR(bs_attached_buses_removed));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "bs_attached_buses_added: %s",
             BS256_REPR(bs_attached_buses_added));
