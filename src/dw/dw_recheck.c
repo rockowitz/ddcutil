@@ -24,7 +24,6 @@
 #include "ddc/ddc_initial_checks.h"
 
 #include "dw_common.h"
-#include "dw_dref.h"
 #include "dw_status_events.h"
 #include "dw_poll.h"   //  or process_event_mutex, todo: move
 
@@ -297,6 +296,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
 
 
 void init_dw_recheck() {
+   RTTI_ADD_FUNC(dw_put_recheck_queue);
    RTTI_ADD_FUNC(dw_recheck_dref);
    RTTI_ADD_FUNC(dw_recheck_displays_func);
 }
