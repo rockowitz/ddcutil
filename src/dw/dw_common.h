@@ -10,7 +10,6 @@
 #include <sys/types.h>
 
 #include "util/data_structures.h"
-#include "util/linux_util.h"
 
 #include "base/displays.h"
 
@@ -32,11 +31,13 @@ uint32_t  dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);
 uint32_t  dw_split_sleep(int watch_loop_millisec);
 void      dw_terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid);
 
+#ifdef UNUSED
 typedef void (*Display_Change_Handler)(
                  GPtrArray *          buses_removed,
                  GPtrArray *          buses_added,
                  GPtrArray *          connectors_removed,
                  GPtrArray *          connectors_added);
+#endif 
 
 #define WATCH_DISPLAYS_DATA_MARKER "WDDM"
 typedef struct {
