@@ -9,10 +9,6 @@
 #ifndef DW_DREF_H_
 #define DW_DREF_H_
 
-#include <stdbool.h>
-
-#include "util/error_info.h"
-
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
 
