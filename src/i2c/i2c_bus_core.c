@@ -142,12 +142,14 @@ static Bit_Set_256 open_failures_reported;
  *
  *  @param failures   set of bus numbers
  */
+#ifdef DETERMINED_UNUSED
 void
 i2c_add_open_failures_reported(Bit_Set_256 failures) {
    g_mutex_lock(&open_failures_mutex);
    open_failures_reported = bs256_or(open_failures_reported, failures);
    g_mutex_unlock(&open_failures_mutex);
 }
+#endif
 
 
 /** Adds a single bus number to the set of open failures already reported.

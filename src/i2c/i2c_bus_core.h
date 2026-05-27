@@ -35,7 +35,9 @@ extern int  max_eacces_retry_ct;
 extern bool primitive_sysfs;
 
 // Bus open and close
+#ifdef DETERMINED_UNUSED
 void             i2c_add_open_failures_reported(Bit_Set_256 failures);
+#endif
 void             i2c_include_open_failures_reported(int busno);
 Error_Info *     i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc);
 Error_Info *     i2c_open_bus_basic_by_busno(int busno,  Byte callopts, int* fd_loc);
