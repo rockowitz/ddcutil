@@ -12,15 +12,9 @@
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
-#include <string.h>
 
-#include "util/backtrace.h"
-#include "util/data_structures.h"
-#include "util/debug_util.h"
 #include "util/edid.h"
 #include "util/error_info.h"
-#include "util/report_util.h"
-#include "util/string_util.h"
 /** \endcond */
 
 #include "public/ddcutil_types.h"
@@ -29,7 +23,6 @@
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
 #include "base/monitor_model_key.h"
-#include "base/parms.h"
 #include "base/rtti.h"
 
 #include "ddc/ddc_displays.h"
@@ -197,6 +190,5 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
 void init_dw_dref()  {
    RTTI_ADD_FUNC(dw_add_display_by_businfo);
    RTTI_ADD_FUNC(dw_add_display_ref);
-   RTTI_ADD_FUNC(mark_display_ref_disconnected);
    RTTI_ADD_FUNC(dw_remove_display_by_businfo);
 }
