@@ -9,16 +9,17 @@
 #include "config.h"
 
 #include "base/core.h"
+#include "base/rtti.h"
 
-#include "dw/dw_common.h"
-#include "dw/dw_dref.h"
-#include "dw/dw_main.h"
-#include "dw/dw_poll.h"
-#include "dw/dw_recheck.h"
-#include "dw/dw_status_events.h"
-#include "dw/dw_udev2.h"
+#include "dw_common.h"
+#include "dw_dref.h"
+#include "dw_main.h"
+#include "dw_poll.h"
+#include "dw_recheck.h"
+#include "dw_status_events.h"
+#include "dw_udev2.h"
 #ifdef USE_X11
-#include "dw/dw_xevent.h"
+#include "dw_xevent.h"
 #endif
 
 #include "dw_services.h"
@@ -39,6 +40,8 @@ void init_dw_services() {
 #ifdef USE_X11
    init_dw_xevent();
 #endif
+
+   RTTI_ADD_FUNC(terminate_dw_services);
 
    DBGMSF(debug, "Done");
 }

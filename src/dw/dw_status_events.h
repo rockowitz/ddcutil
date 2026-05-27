@@ -1,12 +1,12 @@
 /** @file dw_status_events.h */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DW_STATUS_EVENTS_H_
 #define DW_STATUS_EVENTS_H_
 
-#include "glib-2.0/glib.h"
+#include <glib-2.0/glib.h>
 
 #include "public/ddcutil_types.h"
 
