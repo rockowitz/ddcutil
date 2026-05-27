@@ -11,8 +11,6 @@
 #include "util/report_util.h"
 
 #include "base/core.h"
-#include "base/displays.h"       // for terminate_watch_thread
-#include "base/i2c_bus_base.h"   // for DW_SLEEP()
 #include "base/rtti.h"
 #include "base/sleep.h"
 
@@ -212,7 +210,7 @@ void dw_send_x11_termination_message(XEvent_Data * evdata) {
  *  @param  evt   XEvent to test
  *  @param  arg   pointer to Watch_Displays_Data
  */
-Bool dw_is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
+STATIC Bool dw_is_ddc_event(Display * dsp, XEvent * evt, XPointer arg) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dsp=%p, evt=%p, arg=%p", dsp, evt, arg);
 
