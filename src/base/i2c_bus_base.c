@@ -30,6 +30,7 @@ GPtrArray * all_i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
 GPtrArray * removed_i2c_buses = NULL;
 static GMutex all_i2c_buses_mutex;
 
+
 //
 // Generalized Bus_Info retrieval
 //
@@ -72,7 +73,7 @@ int i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno) 
 }
 
 
-int i2c_find_bus_info_index_in_gptrarray_by_businfo(GPtrArray * buses, I2C_Bus_Info * businfo) {
+static int i2c_find_bus_info_index_in_gptrarray_by_businfo(GPtrArray * buses, I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGMSF(debug, "Starting. businfo=%p", businfo);
 
@@ -186,28 +187,108 @@ I2C_Bus_Info * i2c_find_businfo_by_drm_connector_id(int drm_connector_id) {
 // Lifecycle
 //
 
-#ifdef UNUSED
-void i2c_add_bus_info(I2C_Bus_Info * businfo) {
+
+bool i2c_add_businfo(I2C_Bus_Info * businfo){
    assert(businfo);
    bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Adding businfo record for bus %d to all_i2c_buses", businfo->busno);
    assert(businfo->busno != 255 && businfo->busno != -1);
 
    g_mutex_lock(&all_i2c_buses_mutex);
-   g_ptr_array_add(all_i2c_buses, businfo);
+   if (!all_i2c_buses)
+      all_i2c_buses = g_ptr_array_new();
+
+   bool ok = true;
+   guint existing_index;
+   if (g_ptr_array_find(all_i2c_buses, businfo, &existing_index)) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "businfo=%p already  in all_i2c_buses", businfo);
+      ok = false;
+   }
+   if (i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, businfo->busno)) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "businfo record for bus %d already in all_i2c_buses", businfo->busno);
+      ok = false;
+   }
+   if (ok)
+      g_ptr_array_add(all_i2c_buses, businfo);
    g_mutex_unlock(&all_i2c_buses_mutex);
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, ok, "");
+   return ok;
 }
 
 
-I2C_Bus_Info * i2c_add_bus(int busno) {
+
+I2C_Bus_Info * i2c_add_bus_new_by_busno(int busno) {
    I2C_Bus_Info *  businfo = i2c_new_bus_info(busno);
    businfo->flags = I2C_BUS_EXISTS;
-   i2c_add_bus_info(businfo);
+   bool inserted = i2c_add_businfo(businfo);
+   assert(inserted);    // can't fail, it's newly created
    return businfo;
 }
+
+
+bool i2c_remove_businfo(I2C_Bus_Info * businfo){
+   assert(businfo);
+   bool debug  = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d, removed=%s, flags=%s",
+            businfo, businfo->busno, sbool(businfo->removed), i2c_interpret_bus_flags_t(businfo->flags));
+
+   g_mutex_lock(&all_i2c_buses_mutex);
+   if (!all_i2c_buses)
+      all_i2c_buses = g_ptr_array_new();
+   if (!removed_i2c_buses)
+      removed_i2c_buses = g_ptr_array_new();
+
+   bool found = false;
+   int all_index     = i2c_find_bus_info_index_in_gptrarray_by_businfo(all_i2c_buses, businfo);
+   int removed_index = i2c_find_bus_info_index_in_gptrarray_by_businfo(removed_i2c_buses, businfo);
+#ifdef ALT
+   guint existing_index;
+   bool found = g_ptr_array_find(all_i2c_buses, businfo, &existing_index);
 #endif
+
+   assert(!(all_index >= 0 && removed_index >= 0));   // inconsistent data structure
+
+   if (all_index < 0 && removed_index >- 0) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "already removed");
+   }
+
+   else if (all_index <= 0) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "not found");
+   }
+
+   else {
+      found = true;
+      businfo->removed = true;
+
+      g_ptr_array_add(removed_i2c_buses, businfo);
+      g_ptr_array_remove_index(all_i2c_buses, all_index);
+   }
+
+   g_mutex_unlock(&all_i2c_buses_mutex);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, found,"");
+   return found;
+}
+
+
+void i2c_remove_businfo_by_busno(int busno) {
+      bool debug  = false;
+      DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
+      assert(busno);
+      g_mutex_lock(&all_i2c_buses_mutex);
+      int  busNdx = i2c_find_bus_info_index_by_busno(busno);
+      if (busNdx < 0) {
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Record for busno %d not found in all_i2c_buses array", busno);
+      }
+      else {
+         I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, busNdx);
+         i2c_remove_businfo(businfo);
+      }
+      g_mutex_unlock(&all_i2c_buses_mutex);
+      DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
 
 
 /** Gets the I2C_Bus_Info struct for the specified bus.
@@ -393,6 +474,7 @@ void i2c_remove_bus_by_busno(int busno) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
+#ifdef UNUSED
 
 // called if display removed, bus may or may not still exist
 void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
@@ -424,7 +506,7 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
-
+#endif
 
 
 //
@@ -541,7 +623,8 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_new_bus_info);
    RTTI_ADD_FUNC(i2c_free_bus_info);
    RTTI_ADD_FUNC(i2c_get_bus_info);
-   RTTI_ADD_FUNC(i2c_remove_bus_by_busno);
+   RTTI_ADD_FUNC(i2c_remove_businfo);
+   RTTI_ADD_FUNC(i2c_remove_businfo_by_busno);
    RTTI_ADD_FUNC(i2c_reset_bus_info);
    RTTI_ADD_FUNC(i2c_discard_buses0);
    RTTI_ADD_FUNC(i2c_discard_buses);

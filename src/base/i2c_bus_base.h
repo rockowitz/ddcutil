@@ -28,13 +28,16 @@ int              i2c_find_bus_info_index_by_busno(int busno);
 int              i2c_find_bus_info_index_by_businfo(I2C_Bus_Info * businfo);
 
 // Lifecycle
-I2C_Bus_Info *   i2c_add_bus(int busno);
-// void             i2c_add_bus_info(I2C_Bus_Info * businfo);
+bool i2c_add_businfo(I2C_Bus_Info * businfo);
+
+I2C_Bus_Info * i2c_add_bus_new_by_busno(int busno);
+bool           i2c_remove_businfo(I2C_Bus_Info * businfo);
+void           i2c_remove_businfo_by_busno(int busno);
+
+// void          i2c_add_bus_info(I2C_Bus_Info * businfo);
 I2C_Bus_Info *   i2c_get_bus_info(int busno, bool* new_info);
 
-void             i2c_remove_bus_by_busno(int busno);
 void             i2c_reset_bus_info(I2C_Bus_Info * businfo);
-void             i2c_remove_bus_by_businfo(I2C_Bus_Info * businfo);
 
 // Reset arrays
 void             i2c_discard_buses0(GPtrArray* buses);
