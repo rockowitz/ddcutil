@@ -7,11 +7,11 @@
 #define DW_MAIN_H_
 
 /** \cond */
-#include <glib-2.0/glib.h>
-
 #include "public/ddcutil_types.h"
 
 #include "util/error_info.h"
+
+#include "base/displays.h"
 /** \endcond */
 
 extern DDC_Watch_Mode watch_displays_mode;
