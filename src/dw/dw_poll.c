@@ -11,61 +11,39 @@
 
 /** \cond */
 #include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <glib-2.0/glib.h>
-#include <libudev.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #ifdef USE_X11
 #include <X11/Xlib.h>
 #endif
 
 #include "util/common_inlines.h"
-#include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/dbus_util.h"
-#include "util/debug_util.h"
-#include "util/file_util.h"
-#include "util/glib_string_util.h"
-#include "util/glib_util.h"
-#include "util/libdrm_aux_util.h"
 #include "util/linux_util.h"
-#include "util/msg_util.h"
 #include "util/report_util.h"
-#include "util/string_util.h"
-#include "util/sysfs_filter_functions.h"
-#include "util/sysfs_i2c_util.h"
-#include "util/sysfs_util.h"
 #include "util/timestamp.h"
 #include "util/traced_function_stack.h"
-#include "util/udev_util.h"
 
 #include "base/core.h"
 #include "base/displays.h"
-#include "base/ddc_errno.h"
 #include "base/drm_connector_state.h"
 #include "base/i2c_bus_base.h"
-#include "base/linux_errno.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
 /** \endcond */
 
 #include "sysfs/sysfs_dpms.h"
-#include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_displays.h"
-#include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_vcp.h"
 
 #include "dw_common.h"
-#include "dw_dref.h"
 #include "dw_recheck.h"
 #include "dw_status_events.h"
 #include "dw_udev2.h"
@@ -225,7 +203,7 @@ STATIC void process_screen_change_event(
 }
 
 
-void invoke_process_screen_change_event(
+STATIC void invoke_process_screen_change_event(
       BS256*     bs_old_attached_buses_loc,
       BS256*     bs_old_buses_w_edid_loc,
       GArray* deferred_events,
@@ -269,7 +247,7 @@ void invoke_process_screen_change_event(
 }
 
 
-int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
+STATIC int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
      bool debug = false;
 
      int slept_millisec = 0;
@@ -470,4 +448,7 @@ void init_dw_poll() {
    RTTI_ADD_FUNC(dw_watch_display_connections);
    RTTI_ADD_FUNC(invoke_process_screen_change_event);
    RTTI_ADD_FUNC(process_screen_change_event);
+#ifdef USE_DBUS
+   RTTI_ADD_FUNC(pause_if_recently_resumed_from_sleep);
+#endif
 }
