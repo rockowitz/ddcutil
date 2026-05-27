@@ -17,38 +17,27 @@
 #include "public/ddcutil_status_codes.h"
 
 #include "util/common_inlines.h"
-#include "util/coredefs.h"
-#include "util/data_structures.h"
-#include "util/debug_util.h"
 #include "util/error_info.h"
-#include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
 #include "util/timestamp.h"
 
 #include "base/core.h"
 #include "base/displays.h"
-#include "base/ddcutil_types_internal.h"
 #include "base/dsa2.h"
 #include "base/drm_connector_state.h"
-#include "base/i2c_bus_base.h"
 #include "base/parms.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
 /** \endcond */
 
-#include "sysfs/sysfs_base.h"
-
 #include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_edid.h"
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
 
-#include "dw_status_events.h"
 #include "dw_common.h"
-#include "dw_udev2.h"
 #include "dw_recheck.h"
 #include "dw_poll.h"
 #ifdef USE_X11
