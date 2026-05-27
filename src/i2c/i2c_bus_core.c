@@ -66,6 +66,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 // Globals
 bool try_get_edid_from_sysfs_first = true;
+bool force_failure_i2c_open = false;
 
 int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;
 int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;
@@ -188,7 +189,7 @@ unlock_display_by_businfo(I2C_Bus_Info * businfo) {
 #endif
 
 
-bool cur_user_has_group_i2c_perms(const char * filename) {
+static bool cur_user_has_group_i2c_perms(const char * filename) {
    bool has_group_perms = false;
    if (!group_i2c_exists()) {
       BASIC_STD_SYSLOG(LOG_WARNING, "Group i2c does not exist");
@@ -1127,7 +1128,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
 #endif
 
 
-bool is_displaylink_device(int busno) {
+static bool is_displaylink_device(int busno) {
    bool debug = false;
    bool result = false;
    char bus_path[40];
@@ -1149,11 +1150,11 @@ typedef struct {
 } Found_Sys_Drm_Connector;
 
 
-void free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec) {
+static void free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec) {
    free(rec.connector_name);
 }
 
-void dbgrpt_found_sys_drm_connector(Found_Sys_Drm_Connector val, int depth) {
+static void dbgrpt_found_sys_drm_connector(Found_Sys_Drm_Connector val, int depth) {
    rpt_vstring(depth, "Found_Sys_Drm_Connector:");
    rpt_vstring(depth+1, "connector_name:   %s", val.connector_name);
    rpt_vstring(depth+1, "connector_id:     %d", val.connector_id);
@@ -1177,7 +1178,7 @@ void dbgrpt_found_sys_drm_connector(Found_Sys_Drm_Connector val, int depth) {
  *  the heap, avoiding the need for the caller to free.
  */
 // n. result returned on stack
-Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
+static Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
                                  int busno, Byte * edid_bytes)
 {
    bool debug  = false;
@@ -1251,7 +1252,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
  *  @return pointer to EDID bytes, caller responsible for freeing
  *          NULL if not found
  */
-Byte * get_connector_edid(const char * connector_name) {
+static Byte * get_connector_edid(const char * connector_name) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_name = %s", connector_name);
    int d = (debug) ? 1 : -1;
@@ -1415,7 +1416,7 @@ Byte * get_connector_edid(const char * connector_name) {
  // the function logic
  //
 
- Parsed_Edid * get_parsed_edid_for_businfo_using_sysfs(I2C_Bus_Info * businfo) {
+ static Parsed_Edid * get_parsed_edid_for_businfo_using_sysfs(I2C_Bus_Info * businfo) {
      assert(businfo);
      bool debug  = false;
      DBGTRC_STARTING(debug, DDCA_TRC_NONE,
@@ -1457,7 +1458,7 @@ Byte * get_connector_edid(const char * connector_name) {
   *  @param  adapter_class  class value as string
   *  @return true/false
   */
- bool is_adapter_class_display_controller(const char * adapter_class) {
+ static bool is_adapter_class_display_controller(const char * adapter_class) {
     bool debug = false;
     DBGTRC_STARTING(debug, DDCA_TRC_NONE, "class = %s", adapter_class);
 
@@ -1605,7 +1606,7 @@ void dbgrpt_busno_connector_table(int depth) {
   *  Writes to the system and (possibly) to the terminal if the instance is
   *  not found.
   */
-void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
+static void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
           "Finding DRM connector name for bus i2c-%d using EDID, connector_directories_exist=%s",
@@ -1645,7 +1646,7 @@ void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
 
 bool edp_always_laptop = true;
 
-bool is_laptop_for_businfo(I2C_Bus_Info * businfo) {
+static bool is_laptop_for_businfo(I2C_Bus_Info * businfo) {
    bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d, edp_always_laptop=%s",
          businfo, businfo->busno, SBOOL(edp_always_laptop));
@@ -1682,7 +1683,7 @@ bool is_laptop_for_businfo(I2C_Bus_Info * businfo) {
 }
 
 
-bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
+static bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "fd=%d, businfo=%p, use_x37_detection_table=%s",
          fd, businfo, SBOOL(use_x37_detection_table));
@@ -1748,8 +1749,9 @@ bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
  *
  *  @param  businfo  pointer to #I2C_Bus_Info struct in which information will be set
  *  @return NULL if success, Error_Info struct if error
+ *  #retval Error_Info(-ENOENT) if but does not exist
  */
-Error_Info * i2c_check_bus(I2C_Bus_Info * businfo) {
+Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p, primitive_sysfs=%s",
          businfo->busno, businfo, SBOOL(primitive_sysfs) );
@@ -2120,8 +2122,9 @@ bye:
 
 
 
+
 // Called by dw_hotplug_change_handler()
-I2C_Bus_Info * i2c_get_and_check_bus_info(int busno) {
+I2C_Bus_Info * i2c_get_and_check_bus_info(int busno, I2C_Check_Bus_Mode check_bus_mode) {
    bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
 
@@ -2129,7 +2132,7 @@ I2C_Bus_Info * i2c_get_and_check_bus_info(int busno) {
    I2C_Bus_Info* businfo =  i2c_get_bus_info(busno, &new_info);
    if (!new_info)
       i2c_reset_bus_info(businfo);
-   Error_Info * err = i2c_check_bus(businfo);
+   Error_Info * err = i2c_check_bus(businfo, check_bus_mode);
    ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, DDCA_TRC_NONE) || is_report_ddc_errors_enabled());
 #ifdef OLD
    if (new_info | !(businfo->flags&I2C_BUS_INITIAL_CHECK_DONE)) {
@@ -2353,6 +2356,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(lock_display_by_businfo);
    RTTI_ADD_FUNC(unlock_display_by_businfo);
 #endif
+   RTTI_ADD_FUNC(simple_rw_test);
    RTTI_ADD_FUNC(i2c_open_bus_basic);
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_close_bus_basic);
