@@ -9,10 +9,7 @@
 #define DW_UDEV2_H_
 
 /** \cond */
-#include <glib-2.0/glib.h>
 #include <stdbool.h>
-
-#include "public/ddcutil_types.h"
 /** \endcond */
 
 extern bool report_udev_events;

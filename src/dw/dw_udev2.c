@@ -3,14 +3,13 @@
  *  Watch for monitor addition and removal using UDEV
  */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
 #include "public/ddcutil_types.h"
 
 /** \cond */
-#include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <libudev.h>
@@ -19,9 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/coredefs.h"
 #include "util/debug_util.h"
-#include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/udev_util.h"
 
@@ -36,7 +33,7 @@
 
 #include "dw_common.h"
 
-#include "dw/dw_udev2.h"
+#include "dw_udev2.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
@@ -77,7 +74,7 @@ void dw_udev_teardown() {
 }
 
 
-bool exclude_event( Udev_Event_Detail * detail) {
+STATIC bool exclude_event( Udev_Event_Detail * detail) {
    bool exclude = false;
 
 #ifdef NO
