@@ -114,7 +114,9 @@ I2C_Bus_Info *   i2c_copy_bus_info(I2C_Bus_Info * businfo);
 // Basic I2C bus operations
 bool             i2c_device_exists(int busno); // Simple bus detection, no side effects
 int              i2c_device_count();           // simple /dev/i2c-n count, no side effects
+#ifdef UNUSED
 Error_Info *     i2c_check_device_access(char * dev_name);
+#endif
 
 // Record display X37 status for reconnection
 typedef enum {
@@ -132,5 +134,6 @@ bool             i2c_bus_is_excluded(int busno);
 bool             i2c_bus_is_not_excluded(int busno);
 
 void init_i2c_bus_aux(void);
+void terminate_i2c_bus_aux(void);
 
 #endif  // I2C_BUS_AUX_H_
