@@ -8,8 +8,9 @@
 
 #include "config.h"
 
+#include "util/debug_util.h"
+
 #include "base/core.h"
-#include "base/rtti.h"
 
 #include "dw_common.h"
 #include "dw_dref.h"
@@ -28,7 +29,7 @@
 /** Initialize files in dw directory */
 void init_dw_services() {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGF(debug, "Starting");
 
    init_dw_common();
    init_dw_dref();
@@ -41,16 +42,14 @@ void init_dw_services() {
    init_dw_xevent();
 #endif
 
-   RTTI_ADD_FUNC(terminate_dw_services);
-
-   DBGMSF(debug, "Done");
+   DBGF(debug, "Done");
 }
 
 
 /** Termination for files in dw directory */
 void terminate_dw_services() {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "");
+   DBGF(debug, "Starting");
 
-   DBGTRC_DONE(debug, DDCA_TRC_CONN, "");
+   DBGF(debug, "Done");
 }
