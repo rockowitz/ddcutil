@@ -19,7 +19,6 @@
 
 #include "util/data_structures.h"
 #include "util/error_info.h"
-#include "util/msg_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/traced_function_stack.h"
@@ -47,7 +46,6 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool force_failure_i2c_all_relevant_i2c_buses_rw = false;
 bool force_failure_i2c_all_edids_readable_using_i2c = false;
-bool force_failure_i2c_open = false;
 
 /** Gets a list of all /dev/i2c devices by checking the file system
  *  if devices named /dev/i2c-N exist.
@@ -182,7 +180,7 @@ i2c_threaded_initial_checks_by_businfo(gpointer data) {
    TRACED_ASSERT(memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0 );
    DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d", businfo->busno );
 
-   Error_Info * err = i2c_check_bus(businfo);
+   Error_Info * err = i2c_check_bus(businfo, EDID_STATUS_UNKNOWN);
    // g_thread_exit(NULL);
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "bus=/dev/i2c-%d", businfo->busno );
@@ -233,7 +231,7 @@ i2c_async_scan(GPtrArray * i2c_buses) {
  *
  *  @param i2c_buses #GPtrArray of pointers to #I2C_Bus_Info
  */
-void
+static void
 i2c_non_async_scan(GPtrArray * i2c_buses) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "checking %d buses", i2c_buses->len);
@@ -243,7 +241,7 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
       I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "Calling i2c_check_bus() synchronously for bus %d", businfo->busno);
-      err = i2c_check_bus(businfo);
+      err = i2c_check_bus(businfo, EDID_STATUS_UNKNOWN);
       ERRINFO_FREE_WITH_REPORT(err,IS_DBGTRC(debug, TRACE_GROUP) || is_report_ddc_errors_enabled());
    }
 
@@ -469,7 +467,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
       }
       businfo = i2c_new_bus_info(busno);
       businfo->flags = I2C_BUS_EXISTS;
-      Error_Info * err = i2c_check_bus(businfo);
+      Error_Info * err = i2c_check_bus(businfo, EDID_STATUS_UNKNOWN);
       ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug,DDCA_TRC_I2C) || is_report_ddc_errors_enabled());
       if (debug)
          i2c_dbgrpt_bus_info(businfo, true, 0);
@@ -535,7 +533,6 @@ Bit_Set_256 i2c_nonlaptop_buses_bitset_from_businfo_array(
 
 
 void init_i2c_bus_collections(void) {
-   RTTI_ADD_FUNC(simple_rw_test);
    RTTI_ADD_FUNC(i2c_all_relevant_i2c_buses_rw);
 #ifdef UNUSED
    RTTI_ADD_FUNC(i2c_all_edids_readable_using_i2c);
