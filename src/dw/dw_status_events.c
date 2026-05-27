@@ -7,12 +7,12 @@
 
 #include <assert.h>
 #include <glib-2.0/glib.h>
+#include <string.h>
 
 #include "public/ddcutil_types.h"
-#include "public/ddcutil_c_api.h"
 #include "public/ddcutil_status_codes.h"
 
-#include "util/debug_util.h"
+#include "util/drm_card_connector_util.h"
 #include "util/timestamp.h"
 #include "util/traced_function_stack.h"
 
@@ -22,9 +22,6 @@
 #include "base/sleep.h"
 #include "base/rtti.h"
 
-#include "sysfs/sysfs_sys_drm_connector.h"
-
-#include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_packet_io.h"
 
 #include "dw_common.h"
@@ -63,19 +60,19 @@ void assert_ddca_display_status_event_size_unchanged() {
 GAsyncQueue *  callback_queue = NULL;
 GMutex *  callback_queue_mutex = NULL;
 
-void dw_free_callback_queue_entry(Callback_Queue_Entry * entry) {
+STATIC void dw_free_callback_queue_entry(Callback_Queue_Entry * entry) {
    // free_display_status_event(entry->event);  // ???
    free(entry);
 }
 
 
-GAsyncQueue * init_callback_queue() {
+STATIC GAsyncQueue * init_callback_queue() {
    callback_queue = g_async_queue_new();
    return callback_queue;
 }
 
 
-void dw_put_callback_queue(DDCA_Display_Status_Callback_Func func,
+STATIC void dw_put_callback_queue(DDCA_Display_Status_Callback_Func func,
                            DDCA_Display_Status_Event         event)
 {
    bool debug =  true;
@@ -90,7 +87,7 @@ void dw_put_callback_queue(DDCA_Display_Status_Callback_Func func,
 }
 
 
-Callback_Queue_Entry * next_callback_queue_entry() {
+STATIC Callback_Queue_Entry * next_callback_queue_entry() {
    bool debug =  true;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "");
 
@@ -114,7 +111,7 @@ Callback_Queue_Entry * next_callback_queue_entry() {
  *  @param  data  Callback_Displays_Data struct
  *  @return ??
  */
-gpointer dw_callback_displays_func(gpointer data) {
+STATIC gpointer dw_callback_displays_func(gpointer data) {
    bool debug =  true;
    traced_function_stack_enabled = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
