@@ -30,7 +30,9 @@ int              i2c_find_bus_info_index_by_businfo(I2C_Bus_Info * businfo);
 // Lifecycle
 bool i2c_add_businfo(I2C_Bus_Info * businfo);
 
+#ifdef DETERMINED_UNUSED
 I2C_Bus_Info * i2c_add_bus_new_by_busno(int busno);
+#endif
 bool           i2c_remove_businfo(I2C_Bus_Info * businfo);
 void           i2c_remove_businfo_by_busno(int busno);
 

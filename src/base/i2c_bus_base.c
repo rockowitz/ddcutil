@@ -218,6 +218,7 @@ bool i2c_add_businfo(I2C_Bus_Info * businfo){
 
 
 
+#ifdef DETERMINED_UNUSED
 I2C_Bus_Info * i2c_add_bus_new_by_busno(int busno) {
    I2C_Bus_Info *  businfo = i2c_new_bus_info(busno);
    businfo->flags = I2C_BUS_EXISTS;
@@ -225,6 +226,7 @@ I2C_Bus_Info * i2c_add_bus_new_by_busno(int busno) {
    assert(inserted);    // can't fail, it's newly created
    return businfo;
 }
+#endif
 
 
 bool i2c_remove_businfo(I2C_Bus_Info * businfo){
@@ -474,8 +476,6 @@ void i2c_remove_bus_by_busno(int busno) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
-#ifdef UNUSED
-
 // called if display removed, bus may or may not still exist
 void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
    bool debug  = false;
@@ -506,7 +506,6 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
-#endif
 
 
 //
