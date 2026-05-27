@@ -21,6 +21,7 @@
 #ifdef ENABLE_FAILSIM
 #include "util/failsim.h"
 #endif
+#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
