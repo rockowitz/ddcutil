@@ -438,7 +438,7 @@ static GHashTable * x37_detection_table = NULL;
  *  @param  edidbytes  pointer to 128 byte EDID
  *  @return hash table key as newly allocated string
  */
-char * x37_detection_table_key(int busno, Byte* edidbytes) {
+static char * x37_detection_table_key(int busno, Byte* edidbytes) {
    char * buf = g_strdup_printf("%s%d", hexstring_t(edidbytes,128), busno);
    return buf;
 }
