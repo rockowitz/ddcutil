@@ -19,6 +19,7 @@
 #include "util/data_structures.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
+#include "util/timestamp.h"
 #include "util/traced_function_stack.h"
 
 #include "base/core.h"
@@ -88,8 +89,10 @@ uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
  */
 uint32_t dw_split_sleep(int watch_loop_millisec) {
    assert(watch_loop_millisec > 0);
-   uint64_t max_sleep_microsec = watch_loop_millisec * (uint64_t)1000;
-   uint64_t sleep_step_microsec = MIN(200, max_sleep_microsec);     // .2 sec
+   uint64_t max_sleep_microsec = MILLIS2MICROS(watch_loop_millisec);
+   uint64_t sleep_step_microsec = MILLIS2MICROS(200);   // normal sleep step is .2 seconds
+   if (sleep_step_microsec > max_sleep_microsec)        // but can't exceed the max sleep time
+      sleep_step_microsec = max_sleep_microsec;
    uint64_t slept = 0;
    for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
       usleep(sleep_step_microsec);
@@ -149,6 +152,7 @@ void dw_free_callback_displays_data(Callback_Displays_Data * cdd) {
 
 #ifdef UNUSED
 void ddc_i2c_filter_sleep_events(GArray * events) {
+   assert(events);
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "Initial events queue length: %d", events->len);
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
@@ -157,7 +161,6 @@ void ddc_i2c_filter_sleep_events(GArray * events) {
          DBGMSG("%s", display_status_event_repr_t(evt));
       }
    }
-   assert(events);
    int initial_ndx = 0;
    while (initial_ndx < events->len) {
       DDCA_Display_Status_Event evt = g_array_index(events, DDCA_Display_Status_Event, initial_ndx);
@@ -179,7 +182,7 @@ void ddc_i2c_filter_sleep_events(GArray * events) {
                 // for a different bus, ignore
                 continue;
              }
-             if (evt.event_type == DDCA_EVENT_DPMS_ASLEEP) {
+             if (evt2.event_type == DDCA_EVENT_DPMS_ASLEEP) {
                 // multiple successive awake events, need to figure out logic
                 // ignore for now
                 DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Multiple DDCA_EVENT_DPMS_ASLEEP events");
@@ -363,10 +366,10 @@ bool dw_hotplug_change_handler(
    // debug_current_traced_function_stack(false);   // ** TEMP **/
 
    bool emitted = false;
-   //  Error_Info * err = NULL;
+   Error_Info * err = NULL;
 
-   int  mbsz = 100;
-   char msgbuf[mbsz];
+#define  MBSZ 100
+   char msgbuf[MBSZ];
 
 #ifdef NOT_HERE
    if (bs256_count(bs_attached_buses_removed) > 0 ) {
@@ -447,9 +450,9 @@ bool dw_hotplug_change_handler(
    // Handle removed buses that were not already handled because they had an edid
 
    if (bs256_count(bs_attached_buses_removed) > 0 ) {
-       Bit_Set_256_Iterator iter = bs256_iter_new(bs_attached_buses_removed);
+       Bit_Set_256_Iterator iter2 = bs256_iter_new(bs_attached_buses_removed);
        while(true) {
-          int busno = bs256_iter_next(iter);
+          int busno = bs256_iter_next(iter2);
           if (busno < 0)
              break;
 
@@ -458,11 +461,11 @@ bool dw_hotplug_change_handler(
              i2c_remove_businfo_by_busno(busno);
           }
        }
+       bs256_iter_free(iter2);
     }
 
    // Buses with EDID added
 
-   Error_Info * err = NULL;    // *** temp ***
    iter = bs256_iter_new(bs_buses_w_edid_added);
    while (true) {
       int busno = bs256_iter_next(iter);
@@ -474,27 +477,30 @@ bool dw_hotplug_change_handler(
          // simple case, monitor connected to existing bus
          if (!businfo) {
             // report error, recover
-            g_snprintf(msgbuf, mbsz,
+            g_snprintf(msgbuf, MBSZ,
                 "Businfo struct not found for pre-exisiting bus %d. Creating new businfo", busno);
             DUAL_MSG(DDCA_SYSLOG_ERROR, msgbuf);
             businfo = i2c_new_bus_info(busno);
             businfo->flags = I2C_BUS_EXISTS;
+            i2c_add_businfo(businfo);
          }
          else {
             i2c_reset_bus_info(businfo);
          }
          err = i2c_check_bus(businfo, EDID_EXISTS);
          if (err) {
-            g_snprintf(msgbuf, mbsz,
+            g_snprintf(msgbuf, MBSZ,
                  "Unexpected error checking bus %d: %s", busno, errinfo_summary(err));
             DUAL_MSG(DDCA_SYSLOG_ERROR, msgbuf);
+            ERRINFO_FREE_WITH_REPORT(err, false);
+            err = NULL;
          }
       }
 
       else {   //edid on newly attached bus
          // newly attached bus
          if (businfo) {
-            g_snprintf(msgbuf, mbsz,
+            g_snprintf(msgbuf, MBSZ,
                "Replacing existing businfo that should not exist for bus %d being added!!!", busno);
             DUAL_MSG(DDCA_SYSLOG_ERROR, msgbuf);
             i2c_remove_businfo(businfo);
@@ -504,7 +510,7 @@ bool dw_hotplug_change_handler(
          businfo->flags = I2C_BUS_EXISTS;
          err = i2c_check_bus(businfo, EDID_EXISTS);
          if (err) {
-            g_snprintf(msgbuf, mbsz,
+            g_snprintf(msgbuf, MBSZ,
                   "Unexpected error checking bus %d: %s", busno, errinfo_summary(err));
             DUAL_MSG(DDCA_SYSLOG_ERROR, msgbuf);
             ERRINFO_FREE_WITH_REPORT(err, false);
@@ -515,10 +521,10 @@ bool dw_hotplug_change_handler(
 
       // Create display ref and emit
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Adding display ref for bus: %d", busno);
-      g_snprintf(msgbuf, mbsz, "Adding connected display with bus %d", busno);
+      g_snprintf(msgbuf, MBSZ, "Adding connected display with bus %d", busno);
       DUAL_MSG(DDCA_SYSLOG_NOTICE, msgbuf);
       Display_Ref* dref = dw_add_display_by_businfo(businfo);
-      if (dref && !(dref->flags& DREF_TRANSIENT)) {   // how could it be transient here???
+      if (dref && !(dref->flags & DREF_TRANSIENT)) {   // how could it be transient here???
          add_published_dref_id_by_dref(dref);
          if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)
                && (businfo->flags & I2C_BUS_ADDR_X37)
@@ -536,7 +542,6 @@ bool dw_hotplug_change_handler(
       }
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Newly detected display has disappeared!!!");
-         emitted = false;
       }
    }
    bs256_iter_free(iter);
@@ -678,7 +683,7 @@ dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
       char buf[100];
       g_snprintf(buf, 100,
             "Required %d extra %d millisecond calls to i2c_buses_w_edid_as_bitset()",
-            stablect+1, stabilization_poll_millisec);
+            stablect-1, stabilization_poll_millisec);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", buf);
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", buf);
    }
@@ -738,7 +743,6 @@ void init_dw_common() {
    RTTI_ADD_FUNC(dw_hotplug_change_handler);
    RTTI_ADD_FUNC(record_active_callback_thread);
    RTTI_ADD_FUNC(remove_active_callback_thread);
-   RTTI_ADD_FUNC(active_callback_thread_ct);
 
    g_mutex_init(&master_dw_mutex);
 }
