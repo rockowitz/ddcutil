@@ -129,7 +129,7 @@ void dw_free_watch_displays_data(Watch_Displays_Data * wdd) {
 }
 
 
-
+#ifdef UNUSED
 Callback_Displays_Data * dw_new_callback_displays_data() {
    Callback_Displays_Data * cdd = calloc(1, sizeof(Callback_Displays_Data));
    cdd->main_process_id = PID();
@@ -144,6 +144,7 @@ void dw_free_callback_displays_data(Callback_Displays_Data * cdd) {
       free(cdd);
    }
 }
+#endif
 
 
 #ifdef UNUSED
