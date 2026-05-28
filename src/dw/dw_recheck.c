@@ -100,7 +100,7 @@ init_recheck_queue() {
  */
 void dw_put_recheck_queue(Display_Ref* dref) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_reprx_t(dref));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_reprx_t(dref));
 
    Recheck_Queue_Entry * entry = calloc(1, sizeof(Recheck_Queue_Entry));
    entry->dref = dref;
@@ -111,7 +111,7 @@ void dw_put_recheck_queue(Display_Ref* dref) {
    g_async_queue_push(recheck_queue, entry);
    // g_mutex_unlock(recheck_queue_mutex);
 
-   DBGTRC_DONE(debug, DDCA_TRC_CONN, "");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
