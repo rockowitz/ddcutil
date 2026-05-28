@@ -72,9 +72,9 @@ STATIC void process_screen_change_event(
       )
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "*p_bs_old_attached_buses -> %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "*p_bs_old_attached_buses -> %s",
                          bs256_to_string_decimal_t(*p_bs_attached_buses, "", ","));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_CONN, "*p_bs_buses_w_edid   -> %s",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "*p_bs_buses_w_edid   -> %s",
                          bs256_to_string_decimal_t(*p_bs_buses_w_edid,   "", ",")) ;
 
    BS256 bs_old_attached_buses = *p_bs_attached_buses;
@@ -193,9 +193,9 @@ STATIC void process_screen_change_event(
    *p_bs_attached_buses  = bs_old_attached_buses;
    *p_bs_buses_w_edid    = bs_old_buses_w_edid;
 
-   DBGTRC_DONE(debug, DDCA_TRC_CONN, "*p_bs_old_attached_buses -> %s",
+   DBGTRC_DONE(debug, TRACE_GROUP, "*p_bs_old_attached_buses -> %s",
          bs256_to_string_decimal_t(*p_bs_attached_buses, "", ","));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_CONN, "*p_bs_buses_w_edid -> %s",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "*p_bs_buses_w_edid -> %s",
          bs256_to_string_decimal_t(*p_bs_buses_w_edid,   "", ","));
 }
 
