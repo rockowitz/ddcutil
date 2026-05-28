@@ -258,13 +258,17 @@ gpointer dw_recheck_displays_func(gpointer data) {
                 NANOS2MILLIS(cur_time_nanos - rqe->initial_ts_nanos));
 
             dref->dispno = DISPNO_REMOVED;
-             dw_emit_or_queue_display_status_event(
-                   DDCA_EVENT_DISPLAY_DISCONNECTED,
-                   dref->drm_connector,
-                   dref,
-                   dref->io_path,
-                   NULL);   //                    rdd->deferred_event_queue);
-             dw_free_recheck_queue_entry(rqe);
+            DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "locking process_event_mutex");
+            g_mutex_lock(&process_event_mutex);
+            dw_emit_or_queue_display_status_event(
+                  DDCA_EVENT_DISPLAY_DISCONNECTED,
+                  dref->drm_connector,
+                  dref,
+                  dref->io_path,
+                  NULL);   //                    rdd->deferred_event_queue);
+            g_mutex_unlock(&process_event_mutex);
+            DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "unlocked process_event_mutex");
+            dw_free_recheck_queue_entry(rqe);
          }
          else {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
