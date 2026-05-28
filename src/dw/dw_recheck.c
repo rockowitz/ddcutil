@@ -297,7 +297,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
          dw_free_recheck_queue_entry(rqe);
       }
       while (true) {
-         Recheck_Queue_Entry * rqe = g_async_queue_timeout_pop(recheck_queue, 0);
+         Recheck_Queue_Entry * rqe = g_async_queue_try_pop(recheck_queue);
          if (!rqe)
             break;
          emit_recheck_debug_msg(debug, DDCA_SYSLOG_ERROR,
