@@ -43,11 +43,11 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 void dw_add_display_ref(Display_Ref * dref) {
    bool debug = false;
    debug = debug || debug_locks;
-   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
    g_mutex_lock(&all_display_refs_mutex);
    g_ptr_array_add(all_display_refs, dref);
    g_mutex_unlock(&all_display_refs_mutex);
-   DBGTRC_DONE(debug, DDCA_TRC_CONN, "dref=%s", dref_repr_t(dref));
+   DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
 }
 
 
@@ -55,7 +55,7 @@ void dw_add_display_ref(Display_Ref * dref) {
  *  for that display.
  *
  *  @param businfo  I2C_Bus_Info record for the bus
- *  @return         true Display_Ref added, false if not.
+ *  @return         Display_Ref if created and added, NULL if not
  *
  *  @remark
  *  Called only when ddc_watch_displays_common.c handling display change
@@ -63,7 +63,7 @@ void dw_add_display_ref(Display_Ref * dref) {
 Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    assert(businfo);
-   DBGTRC_STARTING(debug, DDCA_TRC_CONN, "businfo=%p, busno=%d", businfo, businfo->busno);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       i2c_dbgrpt_bus_info(businfo, /* include sysinfo*/ true, 4);
    //    ddc_dbgrpt_display_refs_summary(/* include_invalid_displays*/ true, /* report_businfo */ false, 2 );
@@ -81,67 +81,76 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
    // i2c_check_bus2(businfo);  // if display on bus was previously removed, info in businfo, particularly EDID, will be stale
    if (!businfo->edid) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No display detected on bus %d", businfo->busno);
+      goto bye;
    }
-   else {
-      dref = create_bus_display_ref(businfo->busno);
-      // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
-      // dref->dispno = ++dispno_max;   // dispno not used in libddcutil except to indicate invalid
-      dref->pedid = copy_parsed_edid(businfo->edid);
-      dref->mmid  = mmk_new(
-                       dref->pedid->mfg_id,
-                       dref->pedid->model_name,
-                       dref->pedid->product_code);
 
-      // dref->detail.bus_detail = businfo;
-      dref->detail = businfo;
-      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-      dref->flags |= DREF_DDC_IS_MONITOR;
-      dref->drm_connector = g_strdup(businfo->drm_connector_name);
-      dref->drm_connector_id = businfo->drm_connector_id;
+   dref = create_bus_display_ref(businfo->busno);
+   // dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
+   // dref->dispno = ++dispno_max;   // dispno not used in libddcutil except to indicate invalid
+   dref->pedid = copy_parsed_edid(businfo->edid);
+   dref->mmid  = mmk_new(
+                    dref->pedid->mfg_id,
+                    dref->pedid->model_name,
+                    dref->pedid->product_code);
 
-      if (businfo->flags & I2C_BUS_ADDR_X37) {
-         DDCA_Status rc = dref_lock(dref);
-         if (rc != 0) {
-            DBGMSG("dref_lock() returned %s",psc_desc(rc));
-            err = ERRINFO_NEW(rc, "dref_lock() failed");
-            SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() returned %s",psc_desc(rc));
-         }
-         else {
-            err = ddc_initial_checks_by_dref(dref, true);
-            dref_unlock(dref);
-            if (err) {
-               DBGMSG("ddc_initial_checks_by_dref() returned error:");
-               if (err->cause_ct > 0) {
-                  SYSLOG2(DDCA_SYSLOG_ERROR, "ddc_initial_checks_by_dref() returned %s", errinfo_summary(err));
-               }
-               else {
-                  SYSLOG2(DDCA_SYSLOG_ERROR, "ddc_initial_checks_by_dref() returned %s",psc_desc(err->status_code));
-               }
-               errinfo_report(err, 2);
+   // dref->detail.bus_detail = businfo;
+   dref->detail = businfo;
+   dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+   dref->flags |= DREF_DDC_IS_MONITOR;
+   dref->drm_connector = g_strdup(businfo->drm_connector_name);
+   dref->drm_connector_id = businfo->drm_connector_id;
+
+   bool detected_disconnected = false;
+   if (businfo->flags & I2C_BUS_ADDR_X37) {
+      DDCA_Status lock_rc = dref_lock(dref);
+      if (lock_rc != 0) {
+         DBGMSG("dref_lock() returned %s",psc_desc(lock_rc));
+         err = ERRINFO_NEW(lock_rc, "dref_lock() failed");
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "dref_lock() returned %s",psc_desc(lock_rc));
+      }
+      else {
+         err = ddc_initial_checks_by_dref(dref, true);
+         dref_unlock(dref);
+         if (err) {
+            DBGMSG("ddc_initial_checks_by_dref() returned error:");
+            if (err->cause_ct > 0) {
+               DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,
+                     "ddc_initial_checks_by_dref() returned %s", errinfo_summary(err));
             }
+            else {
+               DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,
+                     "ddc_initial_checks_by_dref() returned %s",psc_desc(err->status_code));
+            }
+            errinfo_report(err, 2);
          }
       }
 
       if (err && err->status_code == DDCRC_DISCONNECTED) {
          assert(dref->disconnected);
-         DBGTRC_NOPREFIX(true, DDCA_TRC_CONN, "pathological case, dref=%s", dref_reprx_t(dref));
+         DBGTRC_NOPREFIX(true, TRACE_GROUP, "pathological case, dref=%s", dref_reprx_t(dref));
          // pathological case, monitor went away
+         detected_disconnected = true;
       }
-      else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-               "Display %s found on bus %d", dref_repr_t(dref), businfo->busno);
-         if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
-            dref->dispno = DISPNO_INVALID;
-         else
-            dref->dispno = ++dispno_max;
-         dw_add_display_ref(dref);
-      }
-      errinfo_free(err);
-   }   // edid exists
+   }
 
+   if (detected_disconnected) {
+      free_display_ref(dref);
+      dref = NULL;
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "Display %s found on bus %d", dref_repr_t(dref), businfo->busno);
+      if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
+         dref->dispno = DISPNO_INVALID;
+      else
+         dref->dispno = ++dispno_max;
+      dw_add_display_ref(dref);
+   }
+   errinfo_free(err);
 
    // ddc_dbgrpt_display_refs_summary(/* include_invalid_displays*/ true, /* report_businfo */ true, 2 );
-   DBGTRC_DONE(debug, DDCA_TRC_CONN, "Returning dref %s", dref_reprx_t(dref));
+bye:
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref %s", dref_reprx_t(dref));
    if (IS_DBGTRC(debug, DDCA_TRC_NONE) && dref)
       dbgrpt_display_ref_summary(dref, /* include_businfo*/ false, 2);
    return dref;
@@ -159,14 +168,13 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno=%d", businfo, businfo->busno);
 
-   i2c_reset_bus_info(businfo);
    int busno = businfo->busno;
-
-   Display_Ref * dref = GET_DREF_BY_BUSNO(businfo->busno, /*ignore_invalid*/ true);
+   Display_Ref * dref = GET_DREF_BY_BUSNO(busno, /*ignore_invalid*/ true);
+   i2c_reset_bus_info(businfo);
    char buf[100];
-   g_snprintf(buf, 100, "Removing connected display on bus %d", businfo->busno);
+   g_snprintf(buf, 100, "Removing connected display on bus %d", busno);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", buf);
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf); // *** TEMP ***
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", buf);
    if (dref) {
       if (dref->disconnected) {
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "(%s) Dref %s already marked disconnected", __func__, dref_reprx_t(dref));
@@ -179,7 +187,7 @@ Display_Ref * dw_remove_display_by_businfo(I2C_Bus_Info * businfo) {
       char s[80];
       g_snprintf(s, 80, "No Display_Ref found for i2c bus: %d", busno);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"%s", s);
-      SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "(%s) %s", __func__, s);
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning dref=%p=%s", dref, dref_reprx_t(dref));
