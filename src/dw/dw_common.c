@@ -317,6 +317,13 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
 #endif
 
 
+#define DUAL_MSG(_ddca_syslog_level, _msgbuf) \
+   do { \
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", _msgbuf); \
+      DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
+   } while (0)
+
+
 /** Updates persistent data structures for bus changes and either
  *  emits change events or queues them for later processing.
  *
@@ -355,8 +362,11 @@ bool dw_hotplug_change_handler(
    }
    // debug_current_traced_function_stack(false);   // ** TEMP **/
 
-   bool emit = false;
+   bool emitted = false;
    //  Error_Info * err = NULL;
+
+   int  mbsz = 100;
+   char msgbuf[mbsz];
 
 #ifdef NOT_HERE
    if (bs256_count(bs_attached_buses_removed) > 0 ) {
@@ -395,20 +405,10 @@ bool dw_hotplug_change_handler(
 
    bool event_emitted = false;
 
-   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      //  i2c_dbgrpt_buses(false, false, 1);
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "buses before event processed:");
-      i2c_dbgrpt_buses_summary(Dbgtrc_Dbgrpt_Depth);
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "display references before event processed:");
-      // ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
-      //                                 false,    // report_businfo
-      //                                 1);       // depth
-      ddc_dbgrpt_display_refs_terse(true, Dbgtrc_Dbgrpt_Depth);
-      // rpt_nl();
-   }
 
 #endif
 
+   // Buses with EDID, removed
 
    Bit_Set_256_Iterator iter = bs256_iter_new(bs_buses_w_edid_removed);
    while(true) {
@@ -427,7 +427,7 @@ bool dw_hotplug_change_handler(
       if (dref) {
          dw_emit_or_queue_display_status_event(DDCA_EVENT_DISPLAY_DISCONNECTED,
                dref->drm_connector, dref, dref->io_path, events_queue);
-         emit = true;
+         emitted = true;
       }
 
       if (bs256_contains(bs_attached_buses_removed, busno)) {
@@ -443,6 +443,8 @@ bool dw_hotplug_change_handler(
    }
    bs256_iter_free(iter);
 
+   // Attached buses removed
+   // Handle removed buses that were not already handled because they had an edid
 
    if (bs256_count(bs_attached_buses_removed) > 0 ) {
        Bit_Set_256_Iterator iter = bs256_iter_new(bs_attached_buses_removed);
@@ -458,49 +460,63 @@ bool dw_hotplug_change_handler(
        }
     }
 
+   // Buses with EDID added
+
    Error_Info * err = NULL;    // *** temp ***
    iter = bs256_iter_new(bs_buses_w_edid_added);
    while (true) {
-      int  mbsz = 100;
-      char msgbuf[mbsz];
       int busno = bs256_iter_next(iter);
       if (busno < 0)
          break;
 
-
       I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
-      if (bs256_contains(bs_attached_buses_added, busno)) {
-         // newly attached bus
-         if (businfo) {
-            g_snprintf(msgbuf, mbsz, "businfo already exists for bus %d being added!!!", busno);
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", msgbuf);
-            DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msgbuf);
-            // how to recover?
-         }
-         else {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to set of buses", busno);
+      if (!bs256_contains(bs_attached_buses_added, busno)) {
+         // simple case, monitor connected to existing bus
+         if (!businfo) {
+            // report error, recover
+            g_snprintf(msgbuf, mbsz,
+                "Businfo struct not found for pre-exisiting bus %d. Creating new businfo", busno);
+            DUAL_MSG(DDCA_SYSLOG_ERROR, msgbuf);
             businfo = i2c_new_bus_info(busno);
             businfo->flags = I2C_BUS_EXISTS;
-            err = i2c_check_bus(businfo, EDID_EXISTS);
-            i2c_add_businfo(businfo);
-            emit = true;
+         }
+         else {
+            i2c_reset_bus_info(businfo);
+         }
+         err = i2c_check_bus(businfo, EDID_EXISTS);
+         if (err) {
+            g_snprintf(msgbuf, mbsz,
+                 "Unexpected error checking bus %d: %s", busno, errinfo_summary(err));
+            DUAL_MSG(DDCA_SYSLOG_ERROR, msgbuf);
          }
       }
-      else {
-         // simple case, monitor connecto to existing bus
-         i2c_reset_bus_info(businfo);
+
+      else {   //edid on newly attached bus
+         // newly attached bus
+         if (businfo) {
+            g_snprintf(msgbuf, mbsz,
+               "Replacing existing businfo that should not exist for bus %d being added!!!", busno);
+            DUAL_MSG(DDCA_SYSLOG_ERROR, msgbuf);
+            i2c_remove_businfo(businfo);
+         }
+         businfo = i2c_new_bus_info(busno);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to set of buses", busno);
+         businfo->flags = I2C_BUS_EXISTS;
          err = i2c_check_bus(businfo, EDID_EXISTS);
-         emit = true;
+         if (err) {
+            g_snprintf(msgbuf, mbsz,
+                  "Unexpected error checking bus %d: %s", busno, errinfo_summary(err));
+            DUAL_MSG(DDCA_SYSLOG_ERROR, msgbuf);
+            ERRINFO_FREE_WITH_REPORT(err, false);
+            err = NULL;
+         }
+         i2c_add_businfo(businfo);
       }
 
-      // now create display ref and emit
+      // Create display ref and emit
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Adding display ref for bus: %d", busno);
       g_snprintf(msgbuf, mbsz, "Adding connected display with bus %d", busno);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", msgbuf);
-      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msgbuf);
-      DDCA_IO_Path path;
-      path.io_mode = DDCA_IO_I2C;
-      path.path.i2c_busno = busno;
+      DUAL_MSG(DDCA_SYSLOG_NOTICE, msgbuf);
       Display_Ref* dref = dw_add_display_by_businfo(businfo);
       if (dref && !(dref->flags& DREF_TRANSIENT)) {   // how could it be transient here???
          add_published_dref_id_by_dref(dref);
@@ -511,20 +527,21 @@ bool dw_hotplug_change_handler(
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
             g_ptr_array_add(drefs_to_recheck, dref);
          }
+         DDCA_IO_Path path;
+         path.io_mode = DDCA_IO_I2C;
+         path.path.i2c_busno = busno;
          dw_emit_or_queue_display_status_event(
             DDCA_EVENT_DISPLAY_CONNECTED, businfo->drm_connector_name, dref, path, events_queue);
-         emit = true;
+         emitted = true;
       }
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Newly detected display has disappeared!!!");
-         emit = false;
+         emitted = false;
       }
    }
    bs256_iter_free(iter);
 
-   ERRINFO_FREE_WITH_REPORT(err, true);   // *** TEMP ***
-
-   // Now deail with newly attached buses with no edid
+   // Buses without edid attached
    iter = bs256_iter_new(bs_attached_buses_added);
    while (true) {
       int busno = bs256_iter_next(iter);
@@ -532,41 +549,40 @@ bool dw_hotplug_change_handler(
          break;
 
       if (bs256_contains(bs_buses_w_edid_added, busno)) {
-         // nothing to do, already added
-         continue;
+         continue;    // already processed
       }
-
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding /dev/"I2C"-%d to set of buses", busno);
       I2C_Bus_Info* businfo = i2c_new_bus_info(busno);
       businfo->flags = I2C_BUS_EXISTS;
-      err = i2c_check_bus(businfo, EDID_DOES_NOT_EXIST);
       i2c_add_businfo(businfo);
    }
    bs256_iter_free(iter);
 
+   bool saved_reports_to_syslog = redirect_reports_to_syslog;
+   redirect_reports_to_syslog = true;
+   rpt_label(Dbgtrc_Dbgrpt_Depth, "After buses added or removed:");
+   i2c_dbgrpt_buses_summary(Dbgtrc_Dbgrpt_Depth+1);
+   rpt_label(Dbgtrc_Dbgrpt_Depth, "After display refs added or marked disconnected:");
+   ddc_dbgrpt_display_refs_terse(true, Dbgtrc_Dbgrpt_Depth+1);
+   redirect_reports_to_syslog = saved_reports_to_syslog;
+
+
+#ifdef HUH
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      rpt_nl();
-      bool saved_reports_to_syslog = redirect_reports_to_syslog;
-      redirect_reports_to_syslog = true;
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "After buses added or removed:");
-      // i2c_dbgrpt_buses(false, false, 1);
+      //  i2c_dbgrpt_buses(false, false, 1);
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "buses before event processed:");
       i2c_dbgrpt_buses_summary(Dbgtrc_Dbgrpt_Depth);
-      redirect_reports_to_syslog = false;
-      i2c_dbgrpt_buses_summary(Dbgtrc_Dbgrpt_Depth);
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "After display refs added or marked disconnected:");
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "display references before event processed:");
       // ddc_dbgrpt_display_refs_summary(true,     // include_invalid_displays
       //                                 false,    // report_businfo
       //                                 1);       // depth
-      redirect_reports_to_syslog = true;
       ddc_dbgrpt_display_refs_terse(true, Dbgtrc_Dbgrpt_Depth);
-      redirect_reports_to_syslog = false;
-      ddc_dbgrpt_display_refs_terse(true, Dbgtrc_Dbgrpt_Depth);
-      redirect_reports_to_syslog = saved_reports_to_syslog;
+      // rpt_nl();
    }
+#endif
 
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP,emit, "");
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP,emitted, "");
    // debug_current_traced_function_stack(false);   // ** TEMP **/
-   return emit;
+   return emitted;
 }
 
 
