@@ -107,7 +107,6 @@ STATIC void process_screen_change_event(
 
       bs_new_buses_w_edid = dw_stabilized_buses_bs(bs_new_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
 
-      // bs_added_buses_w_edid was declared BS256, why shadowed?
       bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
       bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_new_buses_w_edid);
       bs_added_attached_buses   = bs256_and_not(bs_new_attached_buses, bs_old_attached_buses);
@@ -150,11 +149,9 @@ STATIC void process_screen_change_event(
                                            bs_added_buses_w_edid,
                                            deferred_events,
                                            displays_to_recheck);
-   }
-
-   if (hotplug_change_handler_emitted)
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "hotplug_change_handler_emitted = %s",
             sbool (hotplug_change_handler_emitted));
+   }
 
 
 #ifdef WATCH_ASLEEP
@@ -251,9 +248,6 @@ STATIC int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
      bool debug = false;
 
      int slept_millisec = 0;
-#ifdef BOTH
-    bool paused = false;
-#endif
 #ifdef USE_DBUS
      uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
      uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
@@ -261,37 +255,26 @@ STATIC int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
                      "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
                      elapsed_ns, elapsed_ms);
      DBGTRC(debug, TRACE_GROUP, "%s", msg);
-     DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", msg);
+     DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msg);
      free(msg);
 
      if (elapsed_ms < pause_after_resume_ms) {
-        uint64_t remaining_sleep_ms = 1000 - elapsed_ms;
-        char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_sleep_ms);
-        DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", msg2);
+        uint64_t remaining_sleep_ms = pause_after_resume_ms - elapsed_ms;
+        char * msg2 = g_strdup_printf("Pausing for %"PRIu64" ms", remaining_sleep_ms);
+        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msg2);
         DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
         LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
         slept_millisec = remaining_sleep_ms;
         free(msg2);
-        // paused = true;
      }
 #else
      if (recently_resumed_from_sleep_by_clocktime()) {
-       DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "Recently resumed from sleep detected");
-#ifdef BOTH
-       if (paused) {
-           DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
-                 "Already paused based on dbus notification. No additional pause.");
-       }
-       else {
-#endif
-           int delay_ms = pause_after_resume_ms;
-           DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "Pausing for %d millisec", delay_ms);
-           dw_split_sleep(delay_ms);
-           slept_millisec = delay_ms;
-#ifdef BOTH
-       }
-#endif
-    }
+        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Recently resumed from sleep detected");
+        int delay_ms = pause_after_resume_ms;
+        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Pausing for %d millisec", delay_ms);
+        dw_split_sleep(delay_ms);
+        slept_millisec = delay_ms;
+     }
 #endif
    return slept_millisec;
 }
@@ -344,7 +327,8 @@ gpointer dw_watch_display_connections(gpointer data) {
    BS256 bs_old_buses_w_edid   = i2c_buses_bitset_from_businfo_array(all_i2c_buses, true);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial i2c buses with edids: %s",
           BS256_REPR(bs_old_buses_w_edid));
-   if (IS_DBGTRC(debug, DDCA_TRC_NONE) && false) {
+#ifdef TMI
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
        rpt_vstring(0, "Initial I2C buses:");
        i2c_dbgrpt_buses_summary(1);
        rpt_vstring(0, "Initial Display Refs:");
@@ -356,6 +340,7 @@ gpointer dw_watch_display_connections(gpointer data) {
           report_drm_connector_states_basic(/*refresh*/ true, 1);
        }
     }
+#endif
 
    GArray * deferred_events = NULL;
    if (use_deferred_event_queue) {
@@ -374,13 +359,14 @@ gpointer dw_watch_display_connections(gpointer data) {
    while (!terminate_watch_thread) {
       if (deferred_events && deferred_events->len > 0) {
          dw_emit_deferred_events(deferred_events);
+         skip_next_sleep = true;
       }
       else {     // skip polling loop sleep if deferred events were output
          if (!skip_next_sleep && wdd->watch_mode == Watch_Mode_Poll) {
             slept_millisec = dw_split_sleep(wdd->watch_loop_millisec);
          }
+         skip_next_sleep = false;
       }
-      skip_next_sleep = false;
       if (terminate_watch_thread)
          continue;
       dw_terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
