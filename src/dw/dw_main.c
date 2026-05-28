@@ -81,7 +81,7 @@ STATIC bool is_watch_mode_x11_available() {
 
    bool result = false;
 #ifdef USE_X11
-   if (!(x11_init_state == failed)) {
+   if (x11_init_state != failed) {
       char * xdg_session_type = getenv("XDG_SESSION_TYPE");
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE=|%s|", xdg_session_type);
       if (xdg_session_type &&         // can xdg_session_type ever not be set
