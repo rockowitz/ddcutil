@@ -196,6 +196,11 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
+   if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
+      err = ERRINFO_NEW(DDCRC_ARG, "Invalid event classes");
+      goto bye;
+   }
+
    DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "Time since library initialized: %s seconds",
          formatted_elapsed_time_t(6));
    DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "Extra delay starting %s: %d millisec",
@@ -256,10 +261,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    free(msg);
 
    g_mutex_lock(&watch_thread_mutex);
-   if (!(event_classes & (DDCA_EVENT_CLASS_DPMS|DDCA_EVENT_CLASS_DISPLAY_CONNECTION))) {
-      err = ERRINFO_NEW(DDCRC_ARG, "Invalid event classes");
-   }
-   else if (watch_thread) {
+   if (watch_thread) {
       err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Watch thread already running");
    }
    else {
