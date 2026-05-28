@@ -15,6 +15,16 @@
 
 #include "base/displays.h"
 
+#define RECHECK_DISPLAYS_DATA_MARKER "RDDM"
+typedef struct {
+   char                     marker[4];
+#ifdef UNUSED
+   pid_t                    main_process_id;  //?
+   pid_t                    main_thread_id;   //?
+#endif
+  } Recheck_Displays_Data;
+
+void     dw_free_recheck_displays_data(Recheck_Displays_Data * rdd);
 void     dw_put_recheck_queue(Display_Ref* dref);
 gpointer dw_recheck_displays_func(gpointer data);
 

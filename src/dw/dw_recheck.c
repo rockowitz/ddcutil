@@ -44,6 +44,17 @@ static int simple_ipow(int base, int exponent) {
 #endif
 
 
+
+void dw_free_recheck_displays_data(Recheck_Displays_Data * rdd) {
+   if (rdd) {
+      assert( memcmp(rdd->marker, RECHECK_DISPLAYS_DATA_MARKER, 4) == 0 );
+      rdd->marker[3] = 'x';
+      free(rdd);
+   }
+}
+
+
+
 static void emit_recheck_debug_msg(
       bool debug,
       DDCA_Syslog_Level syslog_level,

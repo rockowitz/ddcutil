@@ -129,14 +129,6 @@ void dw_free_watch_displays_data(Watch_Displays_Data * wdd) {
 }
 
 
-void dw_free_recheck_displays_data(Recheck_Displays_Data * rdd) {
-   if (rdd) {
-      assert( memcmp(rdd->marker, RECHECK_DISPLAYS_DATA_MARKER, 4) == 0 );
-      rdd->marker[3] = 'x';
-      free(rdd);
-   }
-}
-
 
 Callback_Displays_Data * dw_new_callback_displays_data() {
    Callback_Displays_Data * cdd = calloc(1, sizeof(Callback_Displays_Data));
@@ -200,8 +192,8 @@ void ddc_i2c_filter_sleep_events(GArray * events) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing events %d, %d", asleep_ndx, awake_ndx);
             DDCA_Display_Status_Event evt_asleep = g_array_index(events, DDCA_Display_Status_Event, asleep_ndx);
             DDCA_Display_Status_Event evt_awake  = g_array_index(events, DDCA_Display_Status_Event, awake_ndx);
-            SYSLOG2(DDCA_SYSLOG_NOTICE, "Filtered out sleep event: %s", display_status_event_repr_t(evt_asleep));
-            SYSLOG2(DDCA_SYSLOG_NOTICE, "Filtered out sleep event: %s", display_status_event_repr_t(evt_awake));
+            DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Filtered out sleep event: %s", display_status_event_repr_t(evt_asleep));
+            DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Filtered out sleep event: %s", display_status_event_repr_t(evt_awake));
             g_array_remove_index(events, awake_ndx);
             g_array_remove_index(events, asleep_ndx);
             initial_ndx = asleep_ndx - 1;
@@ -425,7 +417,7 @@ bool dw_hotplug_change_handler(
 
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
       if (!businfo) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Failed to find I2C_BUS_INFO for /dev/i2c-%d", busno);
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Failed to find I2C_BUS_INFO for /dev/i2c-%d", busno);
          continue;
       }
 
@@ -440,7 +432,7 @@ bool dw_hotplug_change_handler(
       if (bs256_contains(bs_attached_buses_removed, busno)) {
          char * s = g_strdup_printf("Removing /dev/i2c-%d which no longer exists.", busno);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
-         SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", s);
          free(s);
          i2c_remove_businfo_by_busno(busno);
       }
@@ -481,7 +473,7 @@ bool dw_hotplug_change_handler(
          if (businfo) {
             g_snprintf(msgbuf, mbsz, "businfo already exists for bus %d being added!!!", busno);
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", msgbuf);
-            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msgbuf);
+            DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msgbuf);
             // how to recover?
          }
          else {
@@ -504,7 +496,7 @@ bool dw_hotplug_change_handler(
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Adding display ref for bus: %d", busno);
       g_snprintf(msgbuf, mbsz, "Adding connected display with bus %d", busno);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", msgbuf);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", msgbuf);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msgbuf);
       DDCA_IO_Path path;
       path.io_mode = DDCA_IO_I2C;
       path.path.i2c_busno = busno;
@@ -601,7 +593,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
          char * s = g_strdup_printf(
                "Delaying %d milliseconds to avoid a false disconnect/connect sequence...", initial_stabilization_millisec);
          DBGTRC(debug, TRACE_GROUP, "%s", s);
-         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
          usleep(initial_stabilization_millisec * 1000);
       }
@@ -622,7 +614,7 @@ ddc_i2c_stabilized_buses(GPtrArray* prior, bool some_displays_disconnected) {
    }
    if (stablect > 1) {
       DBGTRC(debug, TRACE_GROUP, "Required %d extra calls to i2c_get_buses0()", stablect+1);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_get_buses0()", __func__, stablect-1);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to i2c_get_buses0()", __func__, stablect-1);
    }
 
    DBGTRC_RET_STRING(debug, DDCA_TRC_NONE, BS256_REPR(bs_prior),"");
@@ -648,7 +640,7 @@ dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
                "Delaying %d milliseconds to avoid a false disconnect/connect sequence...",
                initial_stabilization_millisec);
          DBGTRC(debug, TRACE_GROUP, "%s", s);
-         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
          SLEEP_MILLIS_WITH_SYSLOG(initial_stabilization_millisec,  "Initial stabilization delay");
       }
@@ -671,7 +663,7 @@ dw_stabilized_buses_bs(Bit_Set_256 bs_prior, bool some_displays_disconnected) {
             "Required %d extra %d millisecond calls to i2c_buses_w_edid_as_bitset()",
             stablect+1, stabilization_poll_millisec);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", buf);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", buf);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", buf);
    }
 
    DBGTRC_RET_STRING(debug, TRACE_GROUP, BS256_REPR(bs_prior),"");
