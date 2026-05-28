@@ -485,7 +485,7 @@ dw_redetect_displays() {
                "watch displays not started because no prior watch classes detected");
       if (stop_watch_rc != DDCRC_OK)
          DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
-               "watch displays not started because not running at start of redetection");
+               "watch displays not restarted because dw_stop_watch_displays() failed");
    }
 
    DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
