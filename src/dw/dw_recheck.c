@@ -288,13 +288,20 @@ gpointer dw_recheck_displays_func(gpointer data) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
 
-      // free what's left on the queue
+      // free what's left on the queues
+      while (g_queue_get_length(to_check_again) > 0) {
+         Recheck_Queue_Entry * rqe = g_queue_pop_head(to_check_again);
+         emit_recheck_debug_msg(debug, DDCA_SYSLOG_ERROR,
+               "Flushing to_check_again entry for %s",
+                  dref_reprx_t(rqe->dref));
+         dw_free_recheck_queue_entry(rqe);
+      }
       while (true) {
          Recheck_Queue_Entry * rqe = g_async_queue_timeout_pop(recheck_queue, 0);
          if (!rqe)
             break;
          emit_recheck_debug_msg(debug, DDCA_SYSLOG_ERROR,
-               "Flushing request queue entry for %s ",
+               "Flushing recheck_queue entry for %s",
                   dref_reprx_t(rqe->dref));
          dw_free_recheck_queue_entry(rqe);
       }
