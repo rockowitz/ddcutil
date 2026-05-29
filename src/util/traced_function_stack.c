@@ -1,6 +1,6 @@
 /** @file traced_function_stack.c */
 
-// Copyright (C) 2024-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -518,8 +518,16 @@ static void free_traced_function_stack(GQueue * stack) {
    }
 
    if (stack) {
+      if (all_traced_function_stacks) {
+         for (guint ndx = 0; ndx < all_traced_function_stacks->len; ndx++) {
+            All_Traced_Function_Stacks_Entry * entry = g_ptr_array_index(all_traced_function_stacks, ndx);
+            if (entry->traced_function_stack == stack) {
+               g_ptr_array_remove_index(all_traced_function_stacks, ndx);
+               break;
+            }
+         }
+      }
       g_queue_free_full(stack, g_free);
-      g_ptr_array_remove(all_traced_function_stacks, stack);
    }
 
    if (debug)
@@ -566,8 +574,6 @@ void free_all_traced_function_stacks() {
          if (debug)
             printf("Freeing traced function stack for thread %d\n", entry->thread_id);
          free_traced_function_stack(entry->traced_function_stack);
-         g_ptr_array_remove_index(all_traced_function_stacks, ndx);
-         free(entry);
       }
       g_ptr_array_free(all_traced_function_stacks, true);
       all_traced_function_stacks = NULL;
