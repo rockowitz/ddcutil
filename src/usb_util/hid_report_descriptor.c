@@ -452,7 +452,7 @@ Parsed_Hid_Report *
 find_hid_report(Parsed_Hid_Collection * col, Byte report_type, uint16_t report_id) {
    Parsed_Hid_Report * result = NULL;
 
-   if (col->reports->len) {
+   if (col->reports && col->reports->len) {
       for (int ndx=0; ndx < col->reports->len && !result; ndx++) {
          Parsed_Hid_Report * cur = g_ptr_array_index(col->reports, ndx);
          if (cur->report_type == report_type && cur->report_id == report_id)
@@ -1014,11 +1014,13 @@ bool is_monitor_by_parsed_hid_report_descriptor(Parsed_Hid_Descriptor * phd) {
    bool is_monitor = false;
 
    Parsed_Hid_Collection * root_collection = phd->root_collection;
-   for (int ndx = 0; ndx < root_collection->child_collections->len; ndx++) {
-      Parsed_Hid_Collection * col = g_ptr_array_index(root_collection->child_collections, ndx);
-      if (col->extended_usage == (0x0080 << 16 | 0x0001) ) {
-         is_monitor = true;
-         break;
+   if (root_collection->child_collections) {
+      for (int ndx = 0; ndx < root_collection->child_collections->len; ndx++) {
+         Parsed_Hid_Collection * col = g_ptr_array_index(root_collection->child_collections, ndx);
+         if (col->extended_usage == (0x0080 << 16 | 0x0001) ) {
+            is_monitor = true;
+            break;
+         }
       }
    }
 
@@ -1033,7 +1035,7 @@ uint16_t get_vcp_code_from_parsed_hid_report(Parsed_Hid_Report * rpt) {
          rpt->hid_fields->len == 1) {
       Parsed_Hid_Field * f = g_ptr_array_index(rpt->hid_fields, 0);
       // n. ignoring possibility of report count > 1, multiple usages
-      if (f->usage_page == 0x80) {
+      if (f->usage_page == 0x80 && f->extended_usages && f->extended_usages->len > 0) {
          // vcp_code = f->extended_usage & 0xffff;
          vcp_code = g_array_index(f->extended_usages, uint32_t, 0) & 0xffff;
          assert( (vcp_code & 0xff00) == 0);
@@ -1099,13 +1101,15 @@ Parsed_Hid_Collection * get_monitor_application_collection(Parsed_Hid_Descriptor
    Parsed_Hid_Collection * result = NULL;
 
    Parsed_Hid_Collection * root_collection = phd->root_collection;
-   for (int ndx = 0; ndx < root_collection->child_collections->len; ndx++) {
-      Parsed_Hid_Collection * col = g_ptr_array_index(root_collection->child_collections, ndx);
-      if (debug)
-         printf("(%s) extended_usage = 0x%08x\n", __func__, col->extended_usage);
-      if (col->extended_usage == (0x0080 << 16 | 0x0001) ) {
-         result = col;
-         break;
+   if (root_collection->child_collections) {
+      for (int ndx = 0; ndx < root_collection->child_collections->len; ndx++) {
+         Parsed_Hid_Collection * col = g_ptr_array_index(root_collection->child_collections, ndx);
+         if (debug)
+            printf("(%s) extended_usage = 0x%08x\n", __func__, col->extended_usage);
+         if (col->extended_usage == (0x0080 << 16 | 0x0001) ) {
+            result = col;
+            break;
+         }
       }
    }
 
