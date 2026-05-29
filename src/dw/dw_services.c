@@ -11,6 +11,7 @@
 #include "util/debug_util.h"
 
 #include "base/core.h"
+#include "base/rtti.h"
 
 #include "dw_common.h"
 #include "dw_dref.h"
@@ -43,6 +44,7 @@ void init_dw_services() {
 #ifdef USE_X11
    init_dw_xevent();
 #endif
+
    RTTI_ADD_FUNC(init_dw_services);
    RTTI_ADD_FUNC(terminate_dw_services);
 
