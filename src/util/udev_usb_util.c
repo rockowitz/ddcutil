@@ -3,7 +3,7 @@
   * USB specific udev utility functions
   */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -313,7 +313,7 @@ void probe_udev_subsystem(char * subsystem, bool show_usb_parent, int depth) {
             be several levels up the tree, but the function will find
             it.*/
          dev = udev_device_get_parent_with_subsystem_devtype(
-                dev,
+                dev0,
                 "usb",
                 "usb_device");
          if (!dev) {
