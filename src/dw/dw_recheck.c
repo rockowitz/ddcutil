@@ -401,7 +401,6 @@ gpointer dw_recheck_displays_func(gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
    Recheck_Displays_Data*  rdd = (Recheck_Displays_Data *) data;
-   init_recheck_queue();
    // recheck_thread_active = true;
 
    // GPtrArray * displays_to_recheck = g_ptr_array_new();
@@ -542,6 +541,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
 
 
 void init_dw_recheck() {
+   init_recheck_queue();
    RTTI_ADD_FUNC(dw_put_recheck_queue);
    RTTI_ADD_FUNC(dw_recheck_dref);
    RTTI_ADD_FUNC(dw_recheck_displays_func);
