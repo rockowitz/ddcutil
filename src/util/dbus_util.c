@@ -274,7 +274,10 @@ bool ldbus_start_sleep_watch_thread() {
       goto bye;
    }
 
-   dbus_connection_add_filter(conn, ldbus_handle_message, NULL, NULL);
+   if (!dbus_connection_add_filter(conn, ldbus_handle_message, NULL, NULL)) {
+      ok = false;
+      goto bye;
+   }
 
    Dbus_Connection_Data * dcd = calloc(1,sizeof(Dbus_Connection_Data));
    dbus_connection_ref(conn);   // thread holds its own reference
