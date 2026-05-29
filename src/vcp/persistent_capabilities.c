@@ -136,8 +136,8 @@ load_persistent_capabilities_file(GHashTable** capabilities_hash_loc) {
                }
                free(aline);
             }
-            g_ptr_array_free(linearray, true);
          }
+         g_ptr_array_free(linearray, true);
          if (errs) {
             delete_capabilities_file();
             g_hash_table_remove_all(*capabilities_hash_loc);
