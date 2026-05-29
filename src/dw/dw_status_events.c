@@ -209,7 +209,6 @@ static GMutex callbacks_mutex;
  *
  *  @param  func      function to register
  *  @retval DDCRC_OK
- *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *
  *  The function must be of type DDCA_Display_Detection_Callback_Func.
  *  It is not an error if the function is already registered.
@@ -218,16 +217,10 @@ DDCA_Status dw_register_display_status_callback(DDCA_Display_Status_Callback_Fun
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
-   DDCA_Status result = DDCRC_INVALID_OPERATION;
-   // if (check_all_video_adapters_implement_drm()) {   // unnecessary, performed in caller
-      // uint64_t t0 = cur_realtime_nanosec();
-      g_mutex_lock(&callbacks_mutex);
-      generic_register_callback(&display_detection_callbacks, func);
-      g_mutex_unlock(&callbacks_mutex);
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "generic_register_callback() took %"PRIu64" micoseconds",
-      //      NANOS2MICROS(cur_realtime_nanosec()-t0) );
-      result = DDCRC_OK;
-   // }
+   DDCA_Status result = DDCRC_OK;
+   g_mutex_lock(&callbacks_mutex);
+   generic_register_callback(&display_detection_callbacks, func);
+   g_mutex_unlock(&callbacks_mutex);
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
@@ -239,25 +232,21 @@ DDCA_Status dw_register_display_status_callback(DDCA_Display_Status_Callback_Fun
  *  @param  function of type DDCA_Display_Detection_Callback_func
  *  @retval DDCRC_OK  normal return
  *  @retval DDCRC_NOT_FOUND function not in list of registered functions
- *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
- *                                  or not all video devices support DRM
  */
 DDCA_Status dw_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
-   DDCA_Status result = DDCRC_INVALID_OPERATION;
-   if (check_all_video_adapters_implement_drm()) {
-      g_mutex_lock(&callbacks_mutex);
-      result = generic_unregister_callback(display_detection_callbacks, func);
-      g_mutex_unlock(&callbacks_mutex);
-   }
+   g_mutex_lock(&callbacks_mutex);
+   DDCA_Status result = generic_unregister_callback(display_detection_callbacks, func);
+   g_mutex_unlock(&callbacks_mutex);
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
 }
 
 
+// originally coded to allow for dref==NULL for bus attach/detach events
 DDCA_Display_Status_Event
 dw_create_display_status_event(
       DDCA_Display_Event_Type event_type,
@@ -277,7 +266,8 @@ dw_create_display_status_event(
    evt.event_type = event_type;
    if (connector_name)
       g_snprintf(evt.connector_name, sizeof(evt.connector_name), "%s", connector_name);
-   evt.io_path = (dref) ? dref->io_path : io_path;
+   // evt.io_path = (dref) ? dref->io_path : io_path;
+   evt.io_path = dref->io_path;
    if (event_type == DDCA_EVENT_DDC_ENABLED)
       ASSERT_WITH_BACKTRACE(dref->flags&DREF_DDC_COMMUNICATION_WORKING);
    if ((event_type == DDCA_EVENT_DISPLAY_CONNECTED && (dref->flags&DREF_DDC_COMMUNICATION_WORKING))
@@ -339,10 +329,9 @@ void dw_emit_display_status_record(
    DBGTRC_DONE(debug, TRACE_GROUP,
          "Put %d event notification callbacks on display detection callbacks queue",
          callback_ct);
-   }
 #endif
 
-// Take snapsnot of display_detection_calbacks
+// Take snapshot of display_detection_callbacks
    g_mutex_lock(&callbacks_mutex);
    int callback_ct = (display_detection_callbacks) ? display_detection_callbacks->len : 0;
    DDCA_Display_Status_Callback_Func funcs[callback_ct];
@@ -383,11 +372,18 @@ GMutex emit_or_queue_mutex;
  *
  *  @param  event_type  e.g. DDCA_EVENT_CONNECTED, DDCA_EVENT_AWAKE
  *  @param  connector_name
- *  @param  dref        display reference, NULL if DDCA_EVENT_BUS_ATTACHED
- *                                              or DDCA_EVENT_BUS_DETACHED
- *  @param  io_path     for DDCA_EVENT_BUS_ATTACHED or DDCA_EVENT_BUS_DETACHED
+ *  @param  dref        display reference
+ *  @param  io_path
  *  @param  queue       if non-null, append status event record
  */
+#ifdef OLD_OOC
+/*
+*  @param  dref        display reference, NULL if DDCA_EVENT_BUS_ATTACHED
+*                                              or DDCA_EVENT_BUS_DETACHED
+*  @param  io_path     for DDCA_EVENT_BUS_ATTACHED or DDCA_EVENT_BUS_DETACHED
+*/
+#endif
+
 void dw_emit_or_queue_display_status_event(
       DDCA_Display_Event_Type event_type,
       const char *            connector_name,
@@ -396,15 +392,16 @@ void dw_emit_or_queue_display_status_event(
       GArray*                 queue)
 {
    bool debug = false;
-   if (dref) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, dispno=%d, disconnected=%s, event_type=%d=%s, connector_name=%s",
-            dref, dref_reprx_t(dref), dref->dispno, sbool(dref->disconnected),
-            event_type, dw_display_event_type_name(event_type), connector_name);
-#ifdef NEW
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
+   assert(dref);
+
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
             dref, dref_reprx_t(dref),
             event_type, dw_display_event_type_name(event_type));
-#endif
+#ifdef OLD
+   if (dref) {
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, dispno=%d, disconnected=%s, event_type=%d=%s, connector_name=%s",
+         dref, dref_reprx_t(dref), dref->dispno, sbool(dref->disconnected),
+               event_type, dw_display_event_type_name(event_type), connector_name);
    }
    else {
       DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, io_path=%s, event_type=%d=%s",
@@ -412,6 +409,7 @@ void dw_emit_or_queue_display_status_event(
             dpath_repr_t(&io_path),
             event_type, dw_display_event_type_name(event_type));
    }
+#endif
    // debug_current_traced_function_stack(false);   // ** TEMP **/
 
    DDCA_Display_Status_Event evt = dw_create_display_status_event(
@@ -422,7 +420,7 @@ void dw_emit_or_queue_display_status_event(
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "event: %s", display_status_event_repr_t(evt));
    // DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "event: %s", display_status_event_repr(evt));
 
-   g_mutex_lock(&emit_or_queue_mutex);  // or &emit_queue_mutex ???
+   g_mutex_lock(&emit_or_queue_mutex);
    if (queue)
       g_array_append_val(queue,evt);   // TODO also need to lock where queue flushed
    else
