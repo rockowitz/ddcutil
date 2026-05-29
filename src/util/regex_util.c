@@ -154,8 +154,8 @@ bool compile_and_eval_regex(const char * pattern, const char * value) {
       }
       save_compiled_regex(pattern, re);
    }
-   g_mutex_unlock(&regex_hash_table_mutex);
    bool result = eval_regex(re, value);
+   g_mutex_unlock(&regex_hash_table_mutex);
    DBGF(debug, "Done. Returning %s", sbool(result));
    return result;
 }
@@ -183,8 +183,8 @@ bool compile_and_eval_regex_with_matches(
       }
       save_compiled_regex(pattern, re);
    }
-   g_mutex_unlock(&regex_hash_table_mutex);
    bool result = eval_regex_with_matches(re, value, max_matches, pm);
+   g_mutex_unlock(&regex_hash_table_mutex);
    DBGF(debug, "Done. Returning %s", sbool(result));
    return result;
 }
