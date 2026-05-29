@@ -981,7 +981,9 @@ errinfo_summary(Error_Info * erec) {
 
    // DBG("errinfo_name_func=%p, errinfo_desc_func=%p",errinfo_name_func, errinfo_desc_func);
 
-   char * rc_name = errinfo_name_func(erec->status_code);  // thread safe buffer owned by psc_desc(), do not free()
+   char * rc_name = errinfo_name_func
+                      ? errinfo_name_func(erec->status_code)  // thread safe buffer owned by psc_desc(), do not free()
+                      : "unknown";
   // char * rc_desc = errinfo_desc_func(erec->status_code);
 
    gchar * buf1 = NULL;
