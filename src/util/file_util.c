@@ -622,8 +622,8 @@ dir_ordered_foreach_with_arg(
          DBGF(debug, "Calling Dir_Foreach_Func, dirname=%s, fn=%s", __func__, dirname, fn);
          func(dirname, fn, accumulator, depth);
       }
-      g_ptr_array_free(simple_filenames, true);
    }
+   g_ptr_array_free(simple_filenames, true);
 
    DBGF(debug, "Done.");
 }
