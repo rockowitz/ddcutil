@@ -57,5 +57,7 @@ void terminate_dw_services() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
+   terminate_dw_recheck();
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }

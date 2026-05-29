@@ -29,5 +29,6 @@ void     dw_put_recheck_queue(Display_Ref* dref);
 gpointer dw_recheck_displays_func(gpointer data);
 
 void     init_dw_recheck();
+void     terminate_dw_recheck();
 
 #endif /* DW_RECHECK_H_ */

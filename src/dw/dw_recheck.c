@@ -93,6 +93,18 @@ init_recheck_queue() {
 }
 
 
+static void destroy_recheck_queue() {
+   if (recheck_queue) {
+      Recheck_Queue_Entry * rqe;
+      while ((rqe = g_async_queue_try_pop(recheck_queue)) != NULL)
+         dw_free_recheck_queue_entry(rqe);
+      g_async_queue_unref(recheck_queue);
+      recheck_queue = NULL;
+   }
+}
+
+
+
 /** Adds a display reference to the recheck queue
  *
  *  @param dref display reference
@@ -545,4 +557,14 @@ void init_dw_recheck() {
    RTTI_ADD_FUNC(dw_put_recheck_queue);
    RTTI_ADD_FUNC(dw_recheck_dref);
    RTTI_ADD_FUNC(dw_recheck_displays_func);
+   RTTI_ADD_FUNC(terminate_dw_recheck);
 }
+
+
+void terminate_dw_recheck() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   destroy_recheck_queue();
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
