@@ -289,7 +289,7 @@ lock_display2(
              "Calling g_mutex_trylcock(), mutex=%p, device=%s, lock_call_ctr=%d, total_wait_millisec %d",
              dlr->display_mutex, dpath_repr_t(&dlr->io_path), lock_call_ctr, total_wait_millisec);
 
-       bool locked = g_mutex_trylock(&dlr->display_mutex);
+       locked = g_mutex_trylock(&dlr->display_mutex);
        if (locked) {
            continue;
        }
