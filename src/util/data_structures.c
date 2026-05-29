@@ -1,6 +1,6 @@
 /** @file data_structures.c  General purpose data structures */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -418,7 +418,8 @@ csb_free(Circular_String_Buffer * csb, bool free_strings) {
          first = csb->ct % csb->size;
       // printf("(%s) first=%d\n", __func__, first);
 
-      for (int ndx = 0; ndx < csb->ct; ndx++) {
+      int count = (csb->ct < csb->size) ? csb->ct : csb->size;
+      for (int ndx = 0; ndx < count; ndx++) {
          int pos = (first + ndx) % csb->size;
          char * s = csb->lines[pos];
          // printf("(%s) line %d, |%s|\n", __func__, ndx, s);
