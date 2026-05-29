@@ -413,7 +413,7 @@ rpt_attr_int(
       found = str_to_int(sval, &ival, 10);
       if (!found) {
          char buf[40];
-         g_strdup_printf(buf, 40, "Not an integer: %s", sval);
+         g_snprintf(buf, 40, "Not an integer: %s", sval);
          rpt_attr_output(depth, pb1, ": ", buf);
       }
       else {
