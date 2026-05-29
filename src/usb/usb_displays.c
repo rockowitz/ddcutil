@@ -508,8 +508,11 @@ get_usb_monitor_list() {
          }
 
          free_usb_detailed_device_summary(devsum);
-         if (denied)
+         if (denied) {
+            free(detail);
+            detail = NULL;
             continue;
+         }
       }
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "detail = |%s|", detail);
 
