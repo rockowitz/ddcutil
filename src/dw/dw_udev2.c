@@ -43,7 +43,7 @@ bool    report_udev_events = false;
 
 static struct udev* udev = NULL;
 static struct udev_monitor *mon = NULL;
-static int monitor_fd= 0;
+static int monitor_fd= -1;
 
 
 void dw_udev_setup() {
