@@ -25,11 +25,13 @@
 
 #include "dw_services.h"
 
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
+
 
 /** Initialize files in dw directory */
 void init_dw_services() {
    bool debug = false;
-   DBGF(debug, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    init_dw_common();
    init_dw_dref();
@@ -41,15 +43,17 @@ void init_dw_services() {
 #ifdef USE_X11
    init_dw_xevent();
 #endif
+   RTTI_ADD_FUNC(init_dw_services);
+   RTTI_ADD_FUNC(terminate_dw_services);
 
-   DBGF(debug, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
 /** Termination for files in dw directory */
 void terminate_dw_services() {
    bool debug = false;
-   DBGF(debug, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
-   DBGF(debug, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
