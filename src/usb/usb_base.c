@@ -7,6 +7,8 @@
 // Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -28,13 +30,11 @@
 
 #include "usb/usb_base.h"
 
-
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
 
 // In keeping with the style of Linux USB code, this file prefers
 // "struct xxx {}" to "typedef struct {} xxx"
-
 
 //
 // Basic USB HID Device Operations
@@ -204,16 +204,18 @@ hiddev_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloptions
    int saved_field_index = finfo->field_index;
    int rc = ioctl(fd, HIDIOCGFIELDINFO, finfo);
    if (rc != 0) {
-      int errsv = errno;
+      int errsv = -errno;
       if (calloptions & CALLOPT_ERR_MSG)
          REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", errsv);
+      rc = errsv;
    }
-   assert(rc == 0);
-   if (finfo->field_index != saved_field_index && (calloptions & CALLOPT_WARN_FINDEX)) {
-      printf("(%s) !!! ioctl(HIDIOCGFIELDINFO) changed field_index from %d to %d\n",
-             __func__, saved_field_index, finfo->field_index);
-      printf("(%s) finfo.maxusage=%d\n",
-             __func__,  finfo->maxusage);
+   else {
+      if (finfo->field_index != saved_field_index && (calloptions & CALLOPT_WARN_FINDEX)) {
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
+               "!!! ioctl(HIDIOCGFIELDINFO) changed field_index from %d to %d",
+              saved_field_index, finfo->field_index);
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "finfo.maxusage=%d",  finfo->maxusage);
+      }
    }
    return rc;
 }
