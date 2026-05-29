@@ -25,6 +25,7 @@ extern _Atomic(uint16_t)  xevent_watch_loop_millisec;
 extern _Atomic(bool)      terminate_watch_thread;
 extern _Atomic(bool)      terminate_using_x11_event;
 extern GMutex             master_dw_mutex;
+extern GMutex             process_event_mutex;
 extern bool               use_drm_connector_states;
 
 uint32_t  dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);

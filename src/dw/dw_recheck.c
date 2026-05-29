@@ -25,7 +25,7 @@
 
 #include "dw_common.h"
 #include "dw_status_events.h"
-#include "dw_poll.h"   //  or process_event_mutex, todo: move
+#include "dw_poll.h"   // for retry_thread_sleep_factor_millisec
 
 #include "dw_recheck.h"
 

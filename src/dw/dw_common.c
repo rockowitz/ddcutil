@@ -61,6 +61,7 @@ _Atomic(uint16_t)  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MI
 _Atomic(bool)  terminate_watch_thread    = false;
 _Atomic(bool)  terminate_using_x11_event = false;
 GMutex    master_dw_mutex;
+GMutex    process_event_mutex;
 bool      use_drm_connector_states       = false;
 
 
