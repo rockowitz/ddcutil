@@ -6,7 +6,7 @@
  *  the ddcui source tree.
  */
 
-// Copyright (C) 2021-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -208,7 +208,7 @@ int merge_command_tokens(
                      new_ndx, combined[new_ndx], combined[new_ndx]);
       }
       combined[new_ndx] = NULL;
-      DBGF(debug, "Final new_ndx = %d", __func__, new_ndx);
+      DBGF(debug, "Final new_ndx = %d", new_ndx);
       *merged_argv_loc = combined;
       merged_argc      = new_ct - 1;
       assert(merged_argc == ntsa_length(combined));
