@@ -291,7 +291,8 @@ char * execute_shell_cmd_one_line_result(const char * shell_cmd) {
    char * result = NULL;
    GPtrArray * response = execute_shell_cmd_collect(shell_cmd);
    if (response) {
-      result = g_strdup(g_ptr_array_index(response, 0));
+      if (response->len > 0)
+         result = g_strdup(g_ptr_array_index(response, 0));
       g_ptr_array_free(response, true);
    }
    return result;
