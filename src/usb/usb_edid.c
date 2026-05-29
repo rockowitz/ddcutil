@@ -277,7 +277,7 @@ get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
                           dev_info->busnum, dev_info->devnum, dev_info->vendor, dev_info->product);
 
    Parsed_Edid * parsed_edid = NULL;
-   char * edid_source;
+   char * edid_source = NULL;
    struct model_sn_pair * model_sn = NULL;
 
    // Special handling for Eizo monitors
