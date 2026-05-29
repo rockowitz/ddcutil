@@ -434,7 +434,5 @@ void init_dw_poll() {
    RTTI_ADD_FUNC(dw_watch_display_connections);
    RTTI_ADD_FUNC(invoke_process_screen_change_event);
    RTTI_ADD_FUNC(process_screen_change_event);
-#ifdef USE_DBUS
    RTTI_ADD_FUNC(pause_if_recently_resumed_from_sleep);
-#endif
 }
