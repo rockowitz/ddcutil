@@ -2,7 +2,7 @@
  * Functions that provide a simple failure simulation framework.
  */
 
-// Copyright (C) 2017-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -387,7 +387,9 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines, GPtrArray * errmsgs) {
    }
 
    ok = true;
-   fst = g_hash_table_new(g_str_hash, g_str_equal);
+   if (fst)
+      g_hash_table_destroy(fst);
+   fst = g_hash_table_new_full(g_str_hash, g_str_equal, fsim_destroy_key, fsim_destroy_func_rec);
    for (int ndx = 0; ndx < lines->len; ndx++) {
       char * aline = g_ptr_array_index(lines, ndx);
       if (debug)
