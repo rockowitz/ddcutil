@@ -160,7 +160,7 @@ int str_contains(const char * value_to_test, const char * segment) {
    if (value_to_test && segment) {
       int seglen = strlen(segment);
       int laststart = strlen(value_to_test) - seglen;
-      for (int ndx = 0; ndx < laststart; ndx++) {
+      for (int ndx = 0; ndx <= laststart; ndx++) {
          if (str_starts_with(value_to_test+ndx, segment)) {
             result = ndx;
             break;
