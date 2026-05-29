@@ -127,18 +127,13 @@ bool dw_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
          break;
       found = XCheckTypedEvent(evdata->dpy, evdata->screen_change_eventno, &event);
       if (found) {
-         if (debug)
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Received event type %d", event.type);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Received event type %d", event.type);
          XAnyEvent *e = (XAnyEvent*) &event;
-         if (debug)
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "windows change event  serial %ld, synthetic %s, window %ju,",
-                  e->serial, sbool(e->send_event), (uintmax_t)e->window);
-         bool more = true;
-         while (more) {
-            more = XCheckTypedEvent(evdata->dpy, evdata->screen_change_eventno, &event);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+               "windows change event  serial %ld, synthetic %s, window %ju,",
+               e->serial, sbool(e->send_event), (uintmax_t)e->window);
+         while (XCheckTypedEvent(evdata->dpy, evdata->screen_change_eventno, &event))
             flushct++;
-         }
          if (debug)
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Flushed %d events", flushct);
          break;
@@ -268,12 +263,9 @@ bool dw_next_X11_event_of_interest(XEvent_Data * evdata) {
       result = true;
 
       XEvent event;
-      bool more = true;
       int flushct = 0;
-      while (more) {
-         more = XCheckTypedEvent(evdata->dpy, evdata->screen_change_eventno, &event);
+      while (XCheckTypedEvent(evdata->dpy, evdata->screen_change_eventno, &event))
          flushct++;
-      }
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Flushed %d events", flushct);
    }
 
