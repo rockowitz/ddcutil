@@ -44,7 +44,6 @@ static int simple_ipow(int base, int exponent) {
 #endif
 
 
-
 void dw_free_recheck_displays_data(Recheck_Displays_Data * rdd) {
    if (rdd) {
       assert( memcmp(rdd->marker, RECHECK_DISPLAYS_DATA_MARKER, 4) == 0 );
@@ -150,17 +149,17 @@ dw_recheck_dref(Display_Ref * dref) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_reprx_t(dref));
    Error_Info * err = NULL;
 
-   // DDCA_Status ddcrc = dref_lock(dref);
-   // if (ddcrc != 0) {
-   // err = ERRINFO_NEW(ddcrc, "dref_lock() failed for %s", dref_reprx_t(dref));
-   // SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() failed for %s", dref_reprx_t(dref));
-   // }
-   // else {
+   DDCA_Status ddcrc = dref_lock(dref);
+   if (ddcrc != 0) {
+      err = ERRINFO_NEW(ddcrc, "dref_lock() failed for %s", dref_reprx_t(dref));
+      SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() failed for %s", dref_reprx_t(dref));
+   }
+   else {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Obtained lock on %s:", dref_reprx_t(dref));
       err = ddc_initial_checks_by_dref(dref, false);
       dref_unlock(dref);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Released lock on %s:", dref_reprx_t(dref));
-   // }
+   }
 
    DBGTRC_RET_ERRINFO(debug, DDCA_TRC_NONE, err, "");
    return err;
@@ -487,17 +486,13 @@ gpointer dw_recheck_displays_func(gpointer data) {
                 NANOS2MILLIS(cur_time_nanos - rqe->initial_ts_nanos));
 
             dref->dispno = DISPNO_REMOVED;
-            DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "locking process_event_mutex");
-            g_mutex_lock(&process_event_mutex);
-            dw_emit_or_queue_display_status_event(
-                  DDCA_EVENT_DISPLAY_DISCONNECTED,
-                  dref->drm_connector,
-                  dref,
-                  dref->io_path,
-                  NULL);   //                    rdd->deferred_event_queue);
-            g_mutex_unlock(&process_event_mutex);
-            DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "unlocked process_event_mutex");
-            dw_free_recheck_queue_entry(rqe);
+             dw_emit_or_queue_display_status_event(
+                   DDCA_EVENT_DISPLAY_DISCONNECTED,
+                   dref->drm_connector,
+                   dref,
+                   dref->io_path,
+                   NULL);   //                    rdd->deferred_event_queue);
+             dw_free_recheck_queue_entry(rqe);
          }
          else {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
