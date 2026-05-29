@@ -41,7 +41,7 @@ I2C_Bus_Info * i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int bu
 
    I2C_Bus_Info * result = NULL;
    for (int ndx = 0; ndx < buses->len; ndx++) {
-      I2C_Bus_Info * cur_info = g_ptr_array_index(all_i2c_buses, ndx);
+      I2C_Bus_Info * cur_info = g_ptr_array_index(buses, ndx);
       if (cur_info->busno == busno) {
          result = cur_info;
          break;
@@ -60,7 +60,7 @@ int i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno) 
     int result = -1;
     if (buses) {
        for (int ndx = 0; ndx < buses->len; ndx++) {
-          I2C_Bus_Info * cur_info = g_ptr_array_index(all_i2c_buses, ndx);
+          I2C_Bus_Info * cur_info = g_ptr_array_index(buses, ndx);
           if (cur_info->busno == busno) {
              result = ndx;
              break;
@@ -80,7 +80,7 @@ static int i2c_find_bus_info_index_in_gptrarray_by_businfo(GPtrArray * buses, I2
     int result = -1;
     if (buses) {
        for (int ndx = 0; ndx < buses->len; ndx++) {
-          I2C_Bus_Info * cur_info = g_ptr_array_index(all_i2c_buses, ndx);
+          I2C_Bus_Info * cur_info = g_ptr_array_index(buses, ndx);
           if (cur_info == businfo) {
              result = ndx;
              break;
