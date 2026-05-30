@@ -489,10 +489,10 @@ get_parsed_libmain_config(const char * libopts_string,
       free(msg);
 
       result = perform_parse(new_argc, new_argv, combined, parsed_cmd_loc);
-      ntsa_free(new_argv, true);
       free(combined);
       free(untokenized_option_string);
    }
+   ntsa_free(new_argv, true);
 
    DBGF(debug, "Done.     *parsed_cmd_loc=%p. Returning %s",
               *parsed_cmd_loc, errinfo_summary(result));
