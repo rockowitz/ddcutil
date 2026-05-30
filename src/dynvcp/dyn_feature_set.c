@@ -321,12 +321,6 @@ bool test_show_feature(
            }
         }
 
-        if ( feature_flags & DDCA_TABLE)  {
-           // DBGMSF(debug, "Before final check for table feature.  showit=%s", bool_repr(showit));
-           if (exclude_table_features)
-              showit = false;
-           // DBGMSF(debug, "After final check for table feature.  showit=%s", bool_repr(showit));
-        }
         // if (showit) {
         //    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding feature 0x%02x", feature_code);
         //    g_ptr_array_add(members_dfm, dfm);
