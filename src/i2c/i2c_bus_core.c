@@ -2083,7 +2083,7 @@ void i2c_recheck_bus(I2C_Bus_Info * businfo) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Restored(2) %s", x37_detection_state_name(x37_detection_state));
          if (x37_detection_state == X37_Not_Recorded) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_detect() for /dev/i2c-%d...", businfo->busno);
-            int rc = i2c_detect_x37(fd);
+            int rc = i2c_detect_x37(fd, businfo->driver);
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s. i2c_detect_x37() returned %s", dev_name, psc_desc(rc));
             X37_Detection_State detection_state = X37_Not_Detected;
             if (rc == 0) {
