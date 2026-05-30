@@ -473,7 +473,7 @@ static void report_one_bus_i2c(
 
 // used in query_sysenv_sysfs.c
 void dbgrpt_sys_bus_i2c(int depth) {
-   bool debug = FALSE;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
 
    rpt_label(depth, "Examining /sys/bus/i2c/devices:");
