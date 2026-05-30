@@ -277,8 +277,6 @@ static Byte_Value_Array parse_cmds_segment(
    if (!ok) {
       char * s = g_strdup_printf("Error processing commands list: %.*s", len, start);
       g_ptr_array_add(messages, s);
-   }
-   if (!ok) {
       bva_free(cmd_ids);
       cmd_ids = NULL;
    }
@@ -614,7 +612,6 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
 
    // assert(*pos == '(');
    DBGMSF(debug, "pos=%p, trimmed_start=%p", pos, trimmed_start);
-   segment->name_len = pos - trimmed_start;
    DBGMSF(debug, "start=%p, len=%d, trimmed_start=%p", start, len, trimmed_start);
    DBGMSF(debug, "name_len = %d, name_start = %p -> %.*s", segment->name_len, segment->name_start,
                                                    segment->name_len, segment->name_start);
