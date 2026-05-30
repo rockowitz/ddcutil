@@ -515,6 +515,7 @@ void cib_get_latest(Circular_Integer_Buffer * cib, int ct, int latest_values[]) 
    while(ctr < ct) {
       int ndx = (ctr > 0) ? (ctr-1) % cib->size : cib->size - 1;
       latest_values[ctr] = cib->values[ ndx ];
+      ctr++;
    }
 }
 
