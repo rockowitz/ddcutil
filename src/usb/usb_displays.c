@@ -749,7 +749,7 @@ Display_Info_List usb_get_valid_displays() {
    Display_Info_List info_list = {0,NULL};
    Display_Info info_recs[256];  // coverity flags uninitialized scalar
 
-   DBGMSF(debug, "Found %d USB displays", __func__, usb_monitors->len);
+   DBGMSF(debug, "Found %d USB displays", usb_monitors->len);
    info_list.info_recs = calloc(usb_monitors->len,sizeof(Display_Info));
    for (int ndx=0; ndx<all_usb_monitors->len; ndx++) {
       Usb_Monitor_Info  * curmon = g_ptr_array_index(usb_monitors,ndx);
