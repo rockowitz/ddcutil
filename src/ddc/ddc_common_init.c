@@ -479,6 +479,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       enable_write_detect_to_status = true;
 #endif
 
+   if (parsed_cmd->flags2 & CMD_FLAG2_F25)
+      use_new_recheck_algorithm = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F27)
       enable_dw_start_check_dev_i2c_devices_rw = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F28)
