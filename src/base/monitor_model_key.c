@@ -64,9 +64,9 @@ Monitor_Model_Key
 mmk_value_from_edid(Parsed_Edid * edid) {
    Monitor_Model_Key result;
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
-   /* coverity[OVERRUN] */             (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
-   /* coverity[overrun-buffer-val] */  (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
-   /* coverity[access_debuf_const] */  (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
+// /* coverity[OVERRUN] */             (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
+// /* coverity[overrun-buffer-val] */  (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
+// /* coverity[access_debuf_const] */  (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
 
    // STRLCPY(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
    memcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
