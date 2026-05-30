@@ -70,6 +70,10 @@ static void emit_recheck_debug_msg(
 }
 
 
+//
+// Recheck Queue
+//
+
 typedef struct {
    Display_Ref*  dref;
    uint64_t      initial_ts_nanos;
@@ -84,7 +88,6 @@ static void dw_free_recheck_queue_entry(Recheck_Queue_Entry * entry) {
 
 GAsyncQueue *  recheck_queue = NULL;
 // GMutex *  recheck_queue_mutex = NULL;
-
 
 static GAsyncQueue *
 init_recheck_queue() {
@@ -102,7 +105,6 @@ static void destroy_recheck_queue() {
       recheck_queue = NULL;
    }
 }
-
 
 
 /** Adds a display reference to the recheck queue
@@ -125,6 +127,10 @@ void dw_put_recheck_queue(Display_Ref* dref) {
    DBGTRC_DONE(debug, DDCA_TRC_CONN, "");
 }
 
+//
+// End of Recheck Queue
+
+
 
 #ifdef NO
 typedef struct {
@@ -133,18 +139,14 @@ typedef struct {
 } Recheck_Displays_Data;
 #endif
 
-// START NEW
+//
+// Function used by both the current algorithm and the new one
+//
 
-static GAsyncQueue * finished_worker_queue = NULL;
-
-static GAsyncQueue *
-init_finished_worker_queue() {
-   finished_worker_queue = g_async_queue_new();
-   return finished_worker_queue;
-}
-
-
-/** Perform initial checks on a Display_Ref being rechecked
+/** Perform initial checks on a Display_Ref being rechecked.
+ *
+ *  Locks the display ref, performs initial checks,
+ *  then unlocks.
  *
  *  @param  dref   display reference
  *  @retval Error_Info(DDCRC_LOCKED)  from dref_lock()
@@ -178,21 +180,31 @@ dw_recheck_dref(Display_Ref * dref) {
 }
 
 
-// NEW WAY
+// START NEW
+
+static GAsyncQueue * finished_worker_queue = NULL;
+
+GAsyncQueue *
+init_finished_worker_queue() {
+   finished_worker_queue = g_async_queue_new();
+   return finished_worker_queue;
+}
 
 
+/**
+ *  Runs in the worker thread
+ */
 Error_Info *
 dw_recheck_and_emit( Recheck_Queue_Entry* rqe) {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "rqe->dref=%s", dref_repr_t(rqe->dref));
    Error_Info * err = NULL;
-
    uint64_t cur_time_nanos = cur_realtime_nanosec();
 
-    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());
-    g_mutex_lock(&master_dw_mutex);
+   // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());
+   // g_mutex_lock(&master_dw_mutex);
 
     Display_Ref * dref = rqe->dref;
-    // DBGMSG("   rechecking %s", dref_repr_t(dref));
     err = dw_recheck_dref(dref);    // <===
     DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "after dw_recheck_dref(), dref->flags=%s",
           interpret_dref_flags_t(dref->flags));
@@ -222,8 +234,8 @@ dw_recheck_and_emit( Recheck_Queue_Entry* rqe) {
 
        else {
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                 "ddc still not enabled for %s, retrying at sleepctr=%d ...",
-                 dref_reprx_t(rqe->dref), rqe->sleepctr + 1);
+                 "ddc still not enabled for %s, sleepctr=%d ",
+                 dref_reprx_t(rqe->dref), rqe->sleepctr);
           // rqe->sleepctr++;   // not here
           // g_async_queue_push(recheck_queue, rqe);
        }
@@ -249,138 +261,149 @@ dw_recheck_and_emit( Recheck_Queue_Entry* rqe) {
     }
     else {
        // its a real error
+       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Unexpected errors examining %s: %s",
+             dref_repr_t(dref), errinfo_summary(err));
+       // ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, DDCA_TRC_NONE) ||  is_report_ddc_errors_enabled() || true );
     }
 
-    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
-    g_mutex_unlock(&master_dw_mutex);
+    // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
+    // g_mutex_unlock(&master_dw_mutex);
 
+    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "");
     return err;
  }
 
+
+/** Worker thread for checking if communication has become enabled
+ *  on a single DIsplay Ref
+ *
+ *  @param  data  pointer to a RecheckQueueEntry struct
+ */
 // NEW
 gpointer dw_worker_thread_func(gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
    Recheck_Queue_Entry *  rqe = (Recheck_Queue_Entry*) data;
-   int max_sleepctr      = 4;
-   // int pop_interval_millis = 100;
+   Display_Ref * dref = rqe->dref;
+   const int max_sleepctr      = 4;
 
-    while (!terminate_watch_thread) {
-       // uint64_t pop_interval_micros = MILLIS2MICROS(pop_interval_millis);
-       if (rqe->sleepctr >= max_sleepctr) {
-          emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
-                "ddc did not become enabled for %s after %d retries",
-                dref_reprx_t(rqe->dref), max_sleepctr);
-          // dw_free_recheck_queue_entry(rqe);
-          break;
-       }
-
+   bool retry = true;
+    while (!terminate_watch_thread && retry) {
        int sleep_ms = retry_thread_sleep_factor_millisec * (1 << rqe->sleepctr);
-       // TO DO: replace with split_sleep()
-       SLEEP_MILLIS_WITH_SYSLOG(sleep_ms, "Recheck interval");
-
+       dw_split_sleep(sleep_ms);
        if (terminate_watch_thread) {
           break;
        }
 
-       // uint64_t cur_time_nanos = cur_realtime_nanosec();
-
        DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());
-       g_mutex_lock(&master_dw_mutex);
-
-       Display_Ref * dref = rqe->dref;
-       // DBGMSG("   rechecking %s", dref_repr_t(dref));
+       g_mutex_lock(&master_dw_mutex);   // needed?
        Error_Info * err = dw_recheck_and_emit(rqe);
-       DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "after dw_recheck_dref(), dref->flags=%s",
+       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "after dw_recheck_dref(), dref->flags=%s",
              interpret_dref_flags_t(dref->flags));
-
-       if (err) {
-          g_mutex_unlock(&master_dw_mutex);
-          break;
-       }
-       if (!err && dref->flags&DREF_DDC_COMMUNICATION_WORKING) {
-          g_mutex_unlock(&master_dw_mutex);
-          break;
-       }
-
-       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                    "ddc still not enabled for %s, retrying at sleepctr=%d ...",
-                    dref_reprx_t(rqe->dref), rqe->sleepctr + 1);
-       rqe->sleepctr++;
-       ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, DDCA_TRC_NONE) ||  is_report_ddc_errors_enabled() );
-
-       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
        g_mutex_unlock(&master_dw_mutex);
-    }
 
-    if (terminate_watch_thread) {
-       char * s = "recheck worker thread terminating because watch thread terminated";
-       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
-       SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
-    }
+       // 5 cases
+       if (!err) {
+          if (dref->flags&DREF_DDC_COMMUNICATION_WORKING) {
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DDC communication for %s became enabled after %d tries.", dref_repr_t(dref), rqe->sleepctr);
+             retry = false;
+          }
+          else if (rqe->sleepctr >= max_sleepctr) {
+                emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
+                        "ddc did not become enabled for %s after %d retries",
+                         dref_reprx_t(rqe->dref), max_sleepctr);
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DDC communication for %s did not become enabled after %d tries.", dref_repr_t(dref), rqe->sleepctr);
+            retry = false;
+          }
+          else {
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                          "ddc still not enabled for %s, retrying at %d tries.  Retrying",
+                          dref_reprx_t(rqe->dref), rqe->sleepctr);
+          }
+       }
+       else {
+          if (ERRINFO_STATUS(err) == DDCRC_DISCONNECTED) {
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                   "Display %s has become disconnected, will be handled on next iteration of main watch loop");
+             errinfo_free(err);
+             err = NULL;
+             retry = false;
+          }
+          else {
+             // it's a real error
+             ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, DDCA_TRC_NONE) ||  is_report_ddc_errors_enabled() );
+             err = NULL;
+          }
+          err = NULL;
 
-    DBGTRC_DONE(debug, TRACE_GROUP, "terminating recheck worker thread");
-    // free_current_traced_function_stack(); // ??
+       }
+       rqe->sleepctr++;
+    }
 
     g_async_queue_push(finished_worker_queue, g_thread_self());
-   return NULL;
+    DBGTRC_DONE(debug, TRACE_GROUP, "terminating recheck worker thread");
+    free_current_traced_function_stack();
+    return rqe;
 }
 
 
 // NEW
-gpointer dw_manager_thread_func(gpointer data) {
+gpointer dw_manager_recheck_thread_func(gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
    Recheck_Displays_Data*  rdd = (Recheck_Displays_Data *) data;
-   init_recheck_queue();
-   // recheck_thread_active = true;
+   //  init_recheck_queue();  done by caller
 
    GPtrArray* worker_threads = g_ptr_array_new();
-
    init_finished_worker_queue();
    int pop_interval_millis = 100;
+   uint64_t pop_interval_micros = MILLIS2MICROS(pop_interval_millis);
 
-     while (!terminate_watch_thread) {
-        uint64_t pop_interval_micros = MILLIS2MICROS(pop_interval_millis);
-        Recheck_Queue_Entry* rqe = g_async_queue_timeout_pop(recheck_queue, pop_interval_micros);
-
-        if (terminate_watch_thread) {
-           if (rqe)
-              dw_free_recheck_queue_entry(rqe);
-           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "terminating recheck thread execution");
-           break;
-        }
-
-        // check if any worker threads have terminated
-        // if so, note its return value and remove from worker_threads array
-        {
-           GThread * done;
-           while ((done = g_async_queue_try_pop(finished_worker_queue)) != NULL) {
-              gpointer retval = g_thread_join(done);   // returns immediately; thread already finished
-              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Joined terminated worker thread %p, retval=%p", done, retval);
-              g_ptr_array_remove(worker_threads, done);
-           }
-        }
-
-        if (!rqe)    // pop failed with timeout
-           continue;
-
-        // create and start worker thread
-         GThread * worker_thread = g_thread_new("recheck_worker_thread",             // optional thread name
-               dw_worker_thread_func,                       rqe);
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started recheck workerrecheck_thread = %p", worker_thread);
-         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil recheck worker_thread %p started", worker_thread);
-         g_ptr_array_add(worker_threads, worker_thread);
+   bool retry = true;
+   while (!terminate_watch_thread && retry) {
+      // check if any worker threads have terminated
+      // if so, note its return value and remove it from worker_threads array
+      GThread * done_worker = NULL;
+      while ((done_worker = g_async_queue_try_pop(finished_worker_queue)) != NULL) {
+         gpointer retval = g_thread_join(done_worker);   // returns immediately; done_worker already finished
+         Recheck_Queue_Entry * rqe = (Recheck_Queue_Entry*) retval;
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Joined terminated worker thread %p, retval=%p", done_worker, retval);
+         free(rqe);
+         g_ptr_array_remove(worker_threads, done_worker);
+         g_thread_unref(done_worker);
       }
 
-     dw_free_recheck_displays_data(rdd);   // actually just a free()
-     DBGTRC_DONE(debug, TRACE_GROUP, "terminating recheck manager thread");
-     // free_current_traced_function_stack();
-     // recheck_thread_active = false;
-     g_thread_exit(NULL);
-     return NULL;     // no effect, but avoids compiler error
-}
+      Recheck_Queue_Entry* rqe = g_async_queue_timeout_pop(recheck_queue, pop_interval_micros);
+      if (rqe)  {  // pop
+         // create and start worker thread
+         GThread * worker_thread = g_thread_new(
+               "recheck_worker_thread",             // optional thread name
+               dw_worker_thread_func, (void*) rqe);
+         g_ptr_array_add(worker_threads, worker_thread);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started worker_thread = %p", worker_thread);
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil recheck worker_thread %p started", worker_thread);
+      }
+   }
 
+   // join any remaining threads
+   while (worker_threads->len > 0) {
+         GThread* worker_thread = g_ptr_array_index(worker_threads, 0);
+         gpointer retval = g_thread_join(worker_thread);   // returns eventually
+         Recheck_Queue_Entry * rqe = (Recheck_Queue_Entry*) retval;
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Joined terminated worker thread %p, retval=%p", worker_thread, retval);
+         free(rqe);
+         g_ptr_array_remove_index(worker_threads, 0);
+         g_thread_unref(worker_thread);
+   }
+
+   g_ptr_array_free(worker_threads, true);
+
+   dw_free_recheck_displays_data(rdd);   // actually just a free()
+   DBGTRC_DONE(debug, TRACE_GROUP, "terminating recheck manager thread");
+   free_current_traced_function_stack();
+   // recheck_thread_active = false;
+   return NULL;     // terminates thread
+}
 // END NEW
 
 

@@ -28,6 +28,9 @@ void     dw_free_recheck_displays_data(Recheck_Displays_Data * rdd);
 void     dw_put_recheck_queue(Display_Ref* dref);
 gpointer dw_recheck_displays_func(gpointer data);
 
+// NEW WAY:
+gpointer dw_manager_recheck_thread_func(gpointer data);
+
 void     init_dw_recheck();
 void     terminate_dw_recheck();
 
