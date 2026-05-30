@@ -124,7 +124,7 @@ int read_ddcutil_config_file(
 
    Parsed_Ini_File * ini_file = NULL;
    int load_rc = ini_file_load(config_fn, valid_pairs, kvpct, errmsgs, &ini_file);
-   if (load_rc && debug) {
+   if (!load_rc && debug) {
       ini_file_dump(ini_file);
    }
    ASSERT_IFF(load_rc==0, ini_file);
