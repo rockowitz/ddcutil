@@ -215,7 +215,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    int d1 = depth+1;
 
    I2C_Bus_Info * businfo = (dref->io_path.io_mode == DDCA_IO_I2C) ? dref->detail : NULL;
-   TRACED_ASSERT(businfo && memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
+   if (businfo)
+      assert(memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
 
    switch(dref->dispno) {
    case DISPNO_DDC_DISABLED:
@@ -270,16 +271,17 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          char * drm_dpms    = NULL;
          char * drm_enabled = NULL;
          // char * drm_connector_name = i2c_get_drm_connector_name(businfo);
-         char * drm_connector_name = businfo->drm_connector_name;
-         possibly_write_detect_to_status_by_businfo(businfo);
-         if (drm_connector_name) { // would be null for a non drm driver
-            RPT_ATTR_TEXT(-1, &drm_dpms,    "/sys/class/drm", drm_connector_name, "dpms");
-            RPT_ATTR_TEXT(-1, &drm_status,  "/sys/class/drm", drm_connector_name, "status");  // connected, disconnected
-            RPT_ATTR_TEXT(-1, &drm_enabled, "/sys/class/drm", drm_connector_name, "enabled");  //enabled, disabled
+         char * drm_connector_name = businfo ? businfo->drm_connector_name : NULL;
+         if (businfo) {
+            possibly_write_detect_to_status_by_businfo(businfo);
+            if (drm_connector_name) { // would be null for a non drm driver
+               RPT_ATTR_TEXT(-1, &drm_dpms,    "/sys/class/drm", drm_connector_name, "dpms");
+               RPT_ATTR_TEXT(-1, &drm_status,  "/sys/class/drm", drm_connector_name, "status");  // connected, disconnected
+               RPT_ATTR_TEXT(-1, &drm_enabled, "/sys/class/drm", drm_connector_name, "enabled");  //enabled, disabled
+            }
          }
 
-         I2C_Bus_Info * businfo = dref->detail;
-         if (!(businfo->flags & I2C_BUS_LVDS_OR_EDP) && businfo->flags & I2C_BUS_ADDR_X37) {
+         if (businfo && !(businfo->flags & I2C_BUS_LVDS_OR_EDP) && businfo->flags & I2C_BUS_ADDR_X37) {
             rpt_vstring(d1, "DDC communication failed");
             if (output_level >= DDCA_OL_VERBOSE && dref->communication_error_summary) {
                rpt_vstring(d1, "Failure detail: getvcp of feature x10 returned %s",
@@ -300,7 +302,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                msg = "Use non-phantom device";
             }
          }
-         else if (businfo->flags & I2C_BUS_DDC_DISABLED)
+         else if (businfo && businfo->flags & I2C_BUS_DDC_DISABLED)
             msg = "DDC communication disabled";
          else { // non-phantom
             if (dref->io_path.io_mode == DDCA_IO_I2C)
