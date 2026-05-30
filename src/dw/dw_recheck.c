@@ -199,29 +199,8 @@ dw_recheck_and_emit( Recheck_Queue_Entry* rqe) {
     // dbgrpt_display_ref(dref,false,2);
     // I2C_Bus_Info * businfo = (I2C_Bus_Info *) dref->detail;
 
-    if (err->status_code == DDCRC_DISCONNECTED) {
-          emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
-              "Display %s no longer detected after %"PRIu64" milliseconds",
-              dref_reprx_t(dref),
-              NANOS2MILLIS(cur_time_nanos - rqe->initial_ts_nanos));
-          dref->dispno = DISPNO_REMOVED;
-          DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "locking process_event_mutex");
-          g_mutex_lock(&process_event_mutex);
-          dw_emit_or_queue_display_status_event(
-                DDCA_EVENT_DISPLAY_DISCONNECTED,
-                dref->drm_connector,
-                dref,
-                dref->io_path,
-                NULL);   //                    rdd->deferred_event_queue);
-          g_mutex_unlock(&process_event_mutex);
-          DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "unlocked process_event_mutex");
-          // dw_free_recheck_queue_entry(rqe);
-    }
-    else if (err) {
-       // its a real errors
-    }
-    else {
-       assert(!err);
+    if (!err) {
+       // success path
        if (dref->flags&DREF_DDC_COMMUNICATION_WORKING) {
           emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
               "ddc became enabled for %s after %ld milliseconds",
@@ -249,6 +228,27 @@ dw_recheck_and_emit( Recheck_Queue_Entry* rqe) {
           // g_async_queue_push(recheck_queue, rqe);
        }
        // .. ERRINFO_FREE_WITH_REPORT(err, IS_DBGTRC(debug, DDCA_TRC_NONE) ||  is_report_ddc_errors_enabled() );
+    }
+    else if (err->status_code == DDCRC_DISCONNECTED) {
+          emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
+              "Display %s no longer detected after %"PRIu64" milliseconds",
+              dref_reprx_t(dref),
+              NANOS2MILLIS(cur_time_nanos - rqe->initial_ts_nanos));
+          dref->dispno = DISPNO_REMOVED;
+          DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "locking process_event_mutex");
+          g_mutex_lock(&process_event_mutex);
+          dw_emit_or_queue_display_status_event(
+                DDCA_EVENT_DISPLAY_DISCONNECTED,
+                dref->drm_connector,
+                dref,
+                dref->io_path,
+                NULL);   //                    rdd->deferred_event_queue);
+          g_mutex_unlock(&process_event_mutex);
+          DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "unlocked process_event_mutex");
+          // dw_free_recheck_queue_entry(rqe);
+    }
+    else {
+       // its a real error
     }
 
     DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
