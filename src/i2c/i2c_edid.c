@@ -316,7 +316,6 @@ i2c_get_edid_bytes_using_i2c_layer(
 
    int rc = 0;
    bool write_before_read = EDID_Write_Before_Read;
-   rc = 0;
    if (write_before_read) {
       Byte byte_to_write = 0x00;
       rc = invoke_i2c_writer(fd, 0x50, 1, &byte_to_write);
