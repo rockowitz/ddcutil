@@ -1065,7 +1065,7 @@ vcp_create_table_dummy_feature_for_hexid(DDCA_Vcp_Feature_Code id) {
    else {
       pentry->v20_name = "Unknown feature";
    }
-   pentry->table_formatter = default_table_feature_detail_function,
+   pentry->table_formatter = default_table_feature_detail_function;
    pentry->v20_flags = DDCA_RW | DDCA_NORMAL_TABLE;
    pentry->vcp_global_flags = DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY;   // indicates caller should free
    pentry->vcp_global_flags |= DDCA_SYNTHETIC;                          // indicates generated feature metadata
