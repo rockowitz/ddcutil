@@ -27,6 +27,7 @@ extern _Atomic(bool)      terminate_using_x11_event;
 extern GMutex             master_dw_mutex;
 extern GMutex             process_event_mutex;
 extern bool               use_drm_connector_states;
+extern bool               force_recheck;
 
 uint32_t  dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);
 uint32_t  dw_split_sleep(int watch_loop_millisec);

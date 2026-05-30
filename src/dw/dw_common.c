@@ -63,6 +63,7 @@ _Atomic(bool)  terminate_using_x11_event = false;
 GMutex    master_dw_mutex;
 GMutex    process_event_mutex;
 bool      use_drm_connector_states       = false;
+bool      force_recheck                  = false;
 
 
 uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
@@ -527,9 +528,9 @@ bool dw_hotplug_change_handler(
       Display_Ref* dref = dw_add_display_by_businfo(businfo);
       if (dref && !(dref->flags & DREF_TRANSIENT)) {   // how could it be transient here???
          add_published_dref_id_by_dref(dref);
-         if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)
-               && (businfo->flags & I2C_BUS_ADDR_X37)
-               && drefs_to_recheck)
+         if (   businfo->flags & I2C_BUS_ADDR_X37
+             && (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) || force_recheck)
+             && drefs_to_recheck)
          {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to drefs_to_recheck", dref_reprx_t(dref));
             g_ptr_array_add(drefs_to_recheck, dref);

@@ -79,7 +79,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(26, "Traced function stack errors are fatal");
    REPORT_FLAG_OPTION(27, "Disable dw_start() check that all relevant I2C buses rw");
    REPORT_FLAG_OPTION(28, "Disable ddci_init() check that all relevant i2c buses rw");
-   REPORT_FLAG_OPTION(29, "Unused");
+   REPORT_FLAG_OPTION(29, "Force recheck when display added");
    REPORT_FLAG_OPTION(30, "Unused");
    REPORT_FLAG_OPTION(31, "fail_i2c_all_relevant_i2c_buses_rw");
 #ifdef OLD
