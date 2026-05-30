@@ -97,7 +97,6 @@ bool bus_info_matches_selector(I2C_Bus_Info * bus_info, I2C_Bus_Selector * sel) 
    if (sel->busno >= 0) {
       DBGMSF(debug, "bus_info->busno = %d", bus_info->busno);
       if (sel->busno != bus_info->busno)  {
-         result = false;
          goto bye;
       }
       DBGMSF(debug, "busno test passed");
@@ -108,28 +107,24 @@ bool bus_info_matches_selector(I2C_Bus_Info * bus_info, I2C_Bus_Selector * sel) 
 
    if (sel->mfg_id && strlen(sel->mfg_id) > 0) {
       if ((!edid) || strlen(edid->mfg_id) == 0 || !streq(sel->mfg_id, edid->mfg_id) ) {
-         result = false;
          goto bye;
       }
       some_test_passed = true;
    }
    if (sel->model_name && strlen(sel->model_name) > 0) {
       if ((!edid) || strlen(edid->model_name) == 0 || !streq(sel->model_name, edid->model_name) ) {
-         result = false;
          goto bye;
       }
       some_test_passed = true;
    }
    if (sel->serial_ascii && strlen(sel->serial_ascii) > 0) {
       if ((!edid) || strlen(edid->serial_ascii) == 0 || !streq(sel->serial_ascii, edid->serial_ascii) ) {
-         result = false;
          goto bye;
       }
       some_test_passed = true;
    }
    if (sel->edidbytes) {
       if ((!edid) || (memcmp(sel->edidbytes, edid->bytes, 128) != 0)  ) {
-         result = false;
          goto bye;
       }
       some_test_passed = true;
