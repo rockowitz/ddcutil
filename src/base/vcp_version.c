@@ -283,8 +283,6 @@ DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec) {
       result = DDCA_MCCS_V30;
    else if (vspec.major == 2 && vspec.minor == 2)
       result = DDCA_MCCS_V22;
-   else if (vspec.major == 2 && vspec.minor == 1)
-      result = DDCA_MCCS_V21;
    else if (vspec.major == 0 && vspec.minor == 0)
       result = DDCA_MCCS_VUNK;
    // case UNQUERIED should never arise
