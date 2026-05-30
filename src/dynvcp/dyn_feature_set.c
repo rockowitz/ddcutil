@@ -95,7 +95,7 @@ char * dyn_feature_set_repr_t(Dyn_Feature_Set * fset) {
    static GPrivate  dynfs_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dynfs_repr_key, 200);
-   snprintf(buf, 100, "[%s,%s]",  feature_subset_name(fset->subset), dref_repr_t(fset->dref));
+   snprintf(buf, 200, "[%s,%s]",  feature_subset_name(fset->subset), dref_repr_t(fset->dref));
    return buf;
 }
 
