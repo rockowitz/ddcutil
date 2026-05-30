@@ -462,6 +462,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
             rqe = g_queue_pop_head(to_check_again);
             g_async_queue_push_front(recheck_queue, rqe);
          }
+         rqe = NULL;
          uint64_t pop_interval_micros = MILLIS2MICROS(pop_interval_millis);
          rqe = g_async_queue_timeout_pop(recheck_queue, pop_interval_micros);
          if (terminate_watch_thread) {
