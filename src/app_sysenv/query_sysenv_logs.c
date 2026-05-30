@@ -377,15 +377,15 @@ void probe_logs(Env_Accumulator * accum) {
    log_daemon_found   = probe_log("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
    log_syslog_found   = probe_log("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
 
-   logs_checked |= (LOG_MESSAGES | LOG_KERN | LOG_DAEMON | LOG_SYSLOG);
+   logs_checked |= (LOG_MESSAGES | LOG_KERN1 | LOG_DAEMON1 | LOG_SYSLOG1);
    if (log_messages_found)
       logs_found |= LOG_MESSAGES;
    if (log_kern_found)
-      logs_found |= LOG_KERN;
+      logs_found |= LOG_KERN1;
    if (log_daemon_found)
-      logs_found |= LOG_DAEMON;
+      logs_found |= LOG_DAEMON1;
    if (log_syslog_found)
-      logs_found |= LOG_SYSLOG;
+      logs_found |= LOG_SYSLOG1;
 
    // for now, just report the logs seen to avoid warning about unused vars
 #ifdef NO
