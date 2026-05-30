@@ -82,8 +82,8 @@ uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
 
 
 /** Performs a sleep in short segments so that it can be responsively terminated
- *  when dw_stop_watch_displays() is called. Each segment is no longer than
- *  200 milliseconds.
+ *  when global #terminate_watch_thread is set (by dw_stop_watch_displays()).
+ *  Each segment is no longer than 200 milliseconds.
  *
  *  @param  watch_loop_millisec  intended total milliseconds to sleep
  *  @return actual total milliseconds
