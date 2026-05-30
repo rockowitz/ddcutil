@@ -541,6 +541,7 @@ dyn_create_feature_set(
                                               dref,
                                               feature_set_flags & FSF_CHECK_UDF,
                                               true);    // with_default
+          assert(dfm); // avoid bogus warning re need to test for null value
           bool showit = true;
           if (!(dfm->version_feature_flags & DDCA_READABLE)) {
              showit = false;
@@ -661,6 +662,7 @@ create_dyn_feature_set_from_feature_set_ref(
                                               NULL,
                                               flags & FSF_CHECK_UDF,
                                               true);    // with_default
+          assert(dfm_entry);  // avoid bogus warning about possible null value
           g_ptr_array_add(fset->members_dfm, dfm_entry);
        }
        bs256_iter_free(iter);
