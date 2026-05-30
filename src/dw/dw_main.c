@@ -54,6 +54,7 @@ bool            enable_watch_displays = true;
 bool            enable_dw_start_check_dev_i2c_devices_rw = DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS;
 int             dw_start_watch_delay_ms = START_WATCH_DELAY_MILLISEC;
 DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
+bool            use_new_recheck_algorithm = false;
 
 static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
@@ -271,11 +272,9 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       Recheck_Displays_Data * rdd = calloc(1, sizeof(Recheck_Displays_Data));
       memcpy(rdd->marker, RECHECK_DISPLAYS_DATA_MARKER,4);
       recheck_thread = g_thread_new("display_recheck_thread",             // optional thread name
-#ifdef NEW_WAY
-                                    dw_manager_recheck_thread_func
-#else
-                                    dw_recheck_displays_func,
-#endif
+                                    use_new_recheck_algorithm
+                                       ? dw_manager_recheck_thread_func
+                                       : dw_recheck_displays_func,
                                     rdd);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started recheck_thread = %p", recheck_thread);
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil recheck thread %p started", recheck_thread);

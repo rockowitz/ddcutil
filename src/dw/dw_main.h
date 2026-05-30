@@ -18,6 +18,7 @@ extern DDC_Watch_Mode watch_displays_mode;
 extern bool           enable_watch_displays;
 extern bool           enable_dw_start_check_dev_i2c_devices_rw;
 extern int            dw_start_watch_delay_ms;
+extern bool           use_new_recheck_algorithm;
 
 Error_Info * dw_start_watch_displays(DDCA_Display_Event_Class event_classes);
 DDCA_Status  dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes);
