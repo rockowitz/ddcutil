@@ -354,7 +354,6 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
    Buffer * buf0 = buffer_new(1000, __func__);
    int  busct = 0;
    Public_Status_Code psc;
-   Status_Errno rc = 0;
    bool saved_i2c_force_slave_addr_flag = i2c_forceable_slave_addr_flag;
 
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
@@ -438,42 +437,40 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
 
          rpt_nl();
          rpt_vstring(d2, "Trying simple VCP read of feature 0x10...");
-         if (rc == 0) {
-            int maxtries = 3;
-            psc = -1;
-            for (int tryctr=0; tryctr<maxtries && psc < 0; tryctr++) {
-               psc = try_single_getvcp_call(fd, busno, 0x10, d2);
-               if (psc == 0 || psc == DDCRC_NULL_RESPONSE || psc == DDCRC_REPORTED_UNSUPPORTED) {
-                  switch (psc) {
-                  case 0:
-                     rpt_vstring(d2, "Attempt %d to read feature succeeded.", tryctr+1);
-                     break;
-                  case DDCRC_REPORTED_UNSUPPORTED:
-                     rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_REPORTED_UNSUPPORTED", tryctr+1);
-                     psc = 0;
-                     break;
-                  case DDCRC_NULL_RESPONSE:
-                     rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_NULL_RESPONSE", tryctr+1);
-                     break;
-                  }
+         maxtries = 3;
+         psc = -1;
+         for (int tryctr=0; tryctr<maxtries && psc < 0; tryctr++) {
+            psc = try_single_getvcp_call(fd, busno, 0x10, d2);
+            if (psc == 0 || psc == DDCRC_NULL_RESPONSE || psc == DDCRC_REPORTED_UNSUPPORTED) {
+               switch (psc) {
+               case 0:
+                  rpt_vstring(d2, "Attempt %d to read feature succeeded.", tryctr+1);
+                  break;
+               case DDCRC_REPORTED_UNSUPPORTED:
+                  rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_REPORTED_UNSUPPORTED", tryctr+1);
+                  psc = 0;
+                  break;
+               case DDCRC_NULL_RESPONSE:
+                  rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_NULL_RESPONSE", tryctr+1);
                   break;
                }
-               if (get_modulation(psc) == RR_ERRNO) {    // also RR_ADL?
-                  rpt_vstring(d2, "Attempt %d to read feature returned hard error: %s", tryctr+1, psc_desc(psc));
-                  break;
-               }
-               rpt_vstring(d2, "Attempt %d to read feature failed. status = %s.  %s",
-                             tryctr+1, psc_desc(psc), (tryctr < maxtries-1) ? "Retrying..." : "");
+               break;
             }
-            if (psc == 0)
-               rpt_vstring(d2, "DDC communication succeeded");
-            else {
-               rpt_vstring(d2, "DDC communication failed.");
-               // If this message remains it should be split into multiple messages depending
-               // on whether this is a laptop display
-               // if (edid)
-               //    rpt_vstring(d2, "Is DDC/CI enabled in the monitor's on-screen display?");
+            if (get_modulation(psc) == RR_ERRNO) {    // also RR_ADL?
+               rpt_vstring(d2, "Attempt %d to read feature returned hard error: %s", tryctr+1, psc_desc(psc));
+               break;
             }
+            rpt_vstring(d2, "Attempt %d to read feature failed. status = %s.  %s",
+                          tryctr+1, psc_desc(psc), (tryctr < maxtries-1) ? "Retrying..." : "");
+         }
+         if (psc == 0)
+            rpt_vstring(d2, "DDC communication succeeded");
+         else {
+            rpt_vstring(d2, "DDC communication failed.");
+            // If this message remains it should be split into multiple messages depending
+            // on whether this is a laptop display
+            // if (edid)
+            //    rpt_vstring(d2, "Is DDC/CI enabled in the monitor's on-screen display?");
          }
 
          if (edid) {
