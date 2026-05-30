@@ -115,7 +115,7 @@ void ptd_cross_thread_operation_end() {
    // if (unlock_requested) {
       cross_thread_operation_active = false;
       cross_thread_operation_owner = 0;
-      g_private_set(&this_thread_has_lock, false);
+      g_private_set(&this_thread_has_lock, GINT_TO_POINTER(false));
       ptd_unlock_count++;
       assert(ptd_lock_count == ptd_unlock_count);
       g_mutex_unlock(&cross_thread_operation_mutex);
