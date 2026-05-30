@@ -379,7 +379,6 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_CMDFLAG("walltime prefix",         CMD_FLAG_WALLTIME_TRACE,          d1);
       RPT_CMDFLAG("thread id prefix",        CMD_FLAG_THREAD_ID_TRACE,         d1);
       RPT_CMDFLAG("process id prefix",       CMD_FLAG_PROCESS_ID_TRACE,        d1);
-      RPT_CMDFLAG("process id prefix",       CMD_FLAG_PROCESS_ID_TRACE,        d1);
       RPT_CMDFLAG("enable traced function stack", CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK,        d1);
       RPT_CMDFLAG("traced function stack errors fatal", CMD_FLAG_TRACED_FUNCTION_STACK_ERRORS_FATAL, d1);
 
