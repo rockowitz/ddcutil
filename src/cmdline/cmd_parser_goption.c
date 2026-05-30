@@ -2058,8 +2058,8 @@ parse_command(
 
 #ifdef ENABLE_USB
    if (ignored_vid_pid) {
-      int ndx = 0;
-      for (char * cur = ignored_vid_pid[ndx]; cur && ndx < 10; cur=ignored_vid_pid[++ndx]) {
+      for (int ndx = 0; ndx < 10 && ignored_vid_pid[ndx]; ndx++) {
+         char * cur = ignored_vid_pid[ndx];
          // DBGMSG("cur[%d]=%p -> %s", ndx, cur, cur);
          uint16_t vid;
          uint16_t pid;
