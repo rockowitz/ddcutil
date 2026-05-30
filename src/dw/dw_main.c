@@ -271,7 +271,11 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       Recheck_Displays_Data * rdd = calloc(1, sizeof(Recheck_Displays_Data));
       memcpy(rdd->marker, RECHECK_DISPLAYS_DATA_MARKER,4);
       recheck_thread = g_thread_new("display_recheck_thread",             // optional thread name
+#ifdef NEW_WAY
+                                    dw_manager_recheck_thread_func
+#else
                                     dw_recheck_displays_func,
+#endif
                                     rdd);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started recheck_thread = %p", recheck_thread);
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil recheck thread %p started", recheck_thread);
