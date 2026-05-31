@@ -672,7 +672,7 @@ _ddca_terminate(void) {
 #ifdef USE_DBUG
       ldbus_stop_sleep_watch_thread();
 #endif
-      terminate_dw_services();
+      // terminate_dw_services(); // handled by terminate_ddc_services()
 #endif
       terminate_ddc_services();
       terminate_base_services();
