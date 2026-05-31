@@ -91,12 +91,18 @@ GAsyncQueue *  recheck_queue = NULL;
 
 static GAsyncQueue *
 init_recheck_queue() {
+   bool debug = false;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "");
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Executing");
+
    recheck_queue = g_async_queue_new();
    return recheck_queue;
 }
 
 
 static void destroy_recheck_queue() {
+   bool debug = true;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP,"recheck_queue=%p", recheck_queue);
    if (recheck_queue) {
       Recheck_Queue_Entry * rqe;
       while ((rqe = g_async_queue_try_pop(recheck_queue)) != NULL)
@@ -114,6 +120,7 @@ static void destroy_recheck_queue() {
 void dw_put_recheck_queue(Display_Ref* dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_CONN, "dref=%s", dref_reprx_t(dref));
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Executing. dref=%s", dref_reprx_t(dref));
 
    Recheck_Queue_Entry * entry = calloc(1, sizeof(Recheck_Queue_Entry));
    entry->dref = dref;
@@ -577,10 +584,13 @@ gpointer dw_recheck_displays_func(gpointer data) {
 
 
 void init_dw_recheck() {
+   bool debug = true;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "");
    init_recheck_queue();
    RTTI_ADD_FUNC(dw_put_recheck_queue);
    RTTI_ADD_FUNC(dw_recheck_dref);
    RTTI_ADD_FUNC(dw_recheck_displays_func);
+   RTTI_ADD_FUNC(init_dw_recheck);
    RTTI_ADD_FUNC(terminate_dw_recheck);
 }
 
