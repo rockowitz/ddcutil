@@ -148,7 +148,7 @@ int ldbus_pause_if_recent_return_from_sleep(int minimum_ms) {
    uint64_t remaining_ms = 0;
    if (elapsed_ms < minimum_ms) {
       remaining_ms = minimum_ms - elapsed_ms;
-      char * msg2 = g_strdup_printf("Pausing for %"PRIu64, remaining_ms);
+      char * msg2 = g_strdup_printf("Pausing for %"PRIu64" ms", remaining_ms);
       syslog(LOG_NOTICE, "%s(%s)%s", prefix, __func__, msg2);
       DBGF(debug,"%s", msg2);
       usleep(MILLIS2MICROS(remaining_ms));
