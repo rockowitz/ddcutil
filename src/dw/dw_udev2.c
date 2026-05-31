@@ -145,7 +145,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
                      bool valid_int = str_to_int(detail->prop_connector, &ival, 10);
                      if (valid_int) {
                         // if this is used for more than informational purpose, need to
-                        // seach sysfs directly, not rely on list that may have been made
+                        // search sysfs directly, not rely on list that may have been made
                         // invalid by an add or remove
                         conn = find_sys_drm_connector_by_connector_id(ival);
                         if (conn)
