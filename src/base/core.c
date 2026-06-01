@@ -47,6 +47,7 @@
 #include "util/glib_util.h"
 #include "util/glib_string_util.h"
 #include "util/linux_util.h"
+#include "util/msg_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -57,6 +58,7 @@
 #include "base/core_per_thread_settings.h"
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
+#include "base/parms.h"
 #include "base/trace_control.h"
 
 #include "base/core.h"
@@ -70,6 +72,7 @@ bool timestamp_in_syslog_debug_msgs = true;
 bool tracing_initialized = false;
 bool library_disabled = false;
 bool running_as_root = false;
+int  funcname_field_size = STD_FUNCNAME_FIELD_SIZE;
 
 Execution_Mode execution_mode = MODE_DDCUTIL;  // will always be explicitly set
 
@@ -597,8 +600,9 @@ static bool vdbgtrc(
          char * decorated_msg = (options & DBGTRC_OPTIONS_SEVERE)
                    ? g_strdup_printf("%s%s",
                           retval_info, base_msg)
-                   : g_strdup_printf("%s%s%s%s(%-30s) %s%s",
-                          process_prefix, thread_prefix, walltime_prefix, elapsed_prefix, funcname,
+                   : g_strdup_printf("%s%s%s%s(%-*s) %s%s",
+                          process_prefix, thread_prefix, walltime_prefix, elapsed_prefix,
+                          funcname_field_size, funcname,
                           retval_info, base_msg);
          if (debug)
             printf("decorated_msg=%p->|%s|\n", decorated_msg, decorated_msg);
@@ -638,37 +642,37 @@ static bool vdbgtrc(
 #ifdef OLD
             char * syslog_msg = NULL;
             if (timestamp_in_syslog_debug_msgs) {
-               syslog_msg = g_strdup_printf("%s%s(%-30s) %s%s%s",
-                           thread_prefix, elapsed_prefix, funcname, retval_info, base_msg,
+               syslog_msg = g_strdup_printf("%s%s(%-*s) %s%s%s",
+                           thread_prefix, elapsed_prefix, funcname_field_size, funcname, retval_info, base_msg,
                            (tag_output) ? " (J)" : "");
             }
             else {
-               syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
-                           thread_prefix, funcname, retval_info, base_msg,
+               syslog_msg = g_strdup_printf("%s(%-*s) %s%s%s",
+                           thread_prefix, funcname_field_size, funcname, retval_info, base_msg,
                            (tag_output) ? " (J)" : "");
             }
             syslog(LOG_DEBUG, "%s%s", (tag_output) ? "&&" : "", syslog_msg);
             free(syslog_msg);
 #else
-            SIMPLE_STD_SYSLOG(LOG_DEBUG, "(%-30s) %s%s", funcname, retval_info, base_msg);
+            SIMPLE_STD_SYSLOG(LOG_DEBUG, "(%-*s) %s%s", funcname_field_size, funcname, retval_info, base_msg);
 #endif
 
          }
          else if ( (options & DBGTRC_OPTIONS_SEVERE) && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
 #ifdef OLD
-            char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s%s",
-                                     thread_prefix, funcname, retval_info, base_msg,
+            char * syslog_msg = g_strdup_printf("%s(%-*s) %s%s%s",
+                                     thread_prefix, funcname_field_size, funcname, retval_info, base_msg,
                                      (tag_output) ? " (K)" : ""  );
             syslog(LOG_ERR, "%s%s", (tag_output) ? "&&" : "", syslog_msg);
             free(syslog_msg);
 #else
-            SIMPLE_STD_SYSLOG(LOG_ERR, "(%-30s) %s%s", funcname, retval_info, base_msg);
+            SIMPLE_STD_SYSLOG(LOG_ERR, "(%-*s) %s%s", funcname_field_size, funcname, retval_info, base_msg);
 #endif
          }
          else if (redirect_reports_to_syslog) {
-            syslog(LOG_NOTICE, "%s%s(%-30s) %s%s%s",
+            syslog(LOG_NOTICE, "%s%s(%-*s) %s%s%s",
                   (tag_output) ? "&&" : "",
-                  thread_prefix, funcname, retval_info, base_msg,
+                  thread_prefix, funcname_field_size, funcname, retval_info, base_msg,
                   (tag_output) ? " (L)" : ""  );
          }
 

@@ -841,7 +841,7 @@ ddci_init(const char *      libopts,
          add_traced_function("dw_stop_watch_displays");
          add_traced_function("dw_hotplug_change_handler");
          add_traced_function("dw_emit_display_status_record");
-         add_traced_function("i2c_open_bus_basic");
+         // add_traced_function("i2c_open_bus_basic");
       }
    }
 

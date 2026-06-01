@@ -67,6 +67,7 @@ extern bool tracing_initialized;
 extern bool library_disabled;
 extern bool timestamp_in_syslog_debug_msgs;
 extern bool running_as_root;
+extern int  funcname_field_size;
 
 
 typedef enum {
@@ -648,6 +649,13 @@ extern const char * valid_syslog_levels_string;
  *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
  *  @param  fmt                message format
  *  @param  ...                message arguments
+ *
+ *  @remark
+ *  The function name field is pre-formatted with g_strdup_printf() rather than
+ *  using a dynamic width specifier (%-*s) directly in the syslog() call.
+ *  syslog() does not reliably support the * width modifier, so passing
+ *  funcname_field_size as a width argument would not produce the expected
+ *  padding on all platforms.
  */
 #define DECORATED_SYSLOG(_ddcutil_severity, format, ...) \
 do { \
@@ -657,7 +665,42 @@ do { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
          char prefix[100] = {0}; \
             get_msg_decoration(prefix, 100, true); \
-         syslog(syslog_priority, "%s%s%s", prefix, body, (tag_output) ? " (N)" : ""  ); \
+         char * funcname_field = g_strdup_printf("%-*s", funcname_field_size, __func__); \
+         syslog(syslog_priority, "%s(%s) %s%s", prefix, funcname_field, body, (tag_output) ? " (N)" : ""  ); \
+         g_free(funcname_field); \
+         free(body); \
+      } \
+   } \
+} while(0)
+
+
+/** Variant of DECORATED_SYSLOG() that accepts an explicit function name
+ *  instead of using __func__.  Use when the caller wants to attribute the
+ *  message to a function other than the one in which the macro is expanded,
+ *  e.g. when a helper function receives the caller's function name as a
+ *  parameter and should propagate it to the syslog output.
+ *
+ *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
+ *  @param _func               function name to use in the function name field
+ *  @param  format             message format
+ *  @param  ...                message arguments
+ *
+ *  @remark
+ *  See DECORATED_SYSLOG() for why the function name field is pre-formatted
+ *  with g_strdup_printf() rather than passed as a dynamic width argument to
+ *  syslog().
+ */
+#define DECORATED_SYSLOGX(_ddcutil_severity, _func, format, ...) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+         char prefix[100] = {0}; \
+            get_msg_decoration(prefix, 100, true); \
+         char * funcname_field = g_strdup_printf("%-*s", funcname_field_size, _func); \
+         syslog(syslog_priority, "%s(%s) %s%s", prefix, funcname_field, body, (tag_output) ? " (N)" : ""  ); \
+         g_free(funcname_field); \
          free(body); \
       } \
    } \

@@ -411,9 +411,6 @@ gpointer dw_watch_display_connections(gpointer data) {
       dw_udev_teardown();
    }
 
-   // n. slept == 0 if no sleep was performed
-   DBGTRC_DONE(debug, TRACE_GROUP,
-         "Terminating thread.  Final polling sleep was %d millisec.", slept_millisec);
    g_ptr_array_free(displays_to_recheck, false);
    dw_free_watch_displays_data(wdd);
    if (deferred_events)
@@ -422,10 +419,15 @@ gpointer dw_watch_display_connections(gpointer data) {
    if (watch_dpms)
       g_ptr_array_free(sleepy_connectors, true);
 #endif
+
+   // n. slept == 0 if no sleep was performed
+   DBGTRC_DONE(debug, TRACE_GROUP,
+         "Terminating thread.  Final polling sleep was %d millisec.", slept_millisec);
    free_current_traced_function_stack();
-   g_thread_exit(0);
-   assert(false);    // avoid clang warning re wdd use after free
-   return NULL;    // satisfy compiler check that value returned
+   // g_thread_exit(0);
+   // assert(false);    // avoid clang warning re wdd use after free
+   // return NULL;    // satisfy compiler check that value returned
+   return NULL;
 }
 
 

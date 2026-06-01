@@ -22,6 +22,7 @@ extern bool stdout_stderr_redirected;
 
 extern __thread bool msg_decoration_suspended;
 
+void       set_funcname_field_size(int fieldsize);
 char*      get_msg_decoration(char * buf, uint bufsize, bool dest_syslog);
 char*      formatted_wall_time();
 

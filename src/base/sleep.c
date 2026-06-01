@@ -126,7 +126,7 @@ void loggable_sleep(
       SYSLOG2(syslog_level, "(%s) %s: Sleeping for %d milliseconds", func, message, millisec);
 #endif
 #endif
-      DECORATED_SYSLOG(syslog_level, "%s: Sleeping for %d milliseconds", message, millisec);
+      DECORATED_SYSLOGX(syslog_level, func, "%s: Sleeping for %d milliseconds", message, millisec);
    }
 
    if (message)

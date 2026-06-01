@@ -33,6 +33,13 @@ bool stdout_stderr_redirected = false;
 
 bool __thread msg_decoration_suspended = false;
 
+static int funcname_field_size = 30;
+
+
+void set_funcname_field_size(int fieldsize) {
+   funcname_field_size = fieldsize;
+}
+
 
 /** Creates a message prefix.  Depending on settings and destination this
  *  prefix may include:
@@ -76,7 +83,7 @@ char * get_msg_decoration(char * buf, uint bufsz, bool dest_syslog) {
          if (traced_function_stack_enabled) {
             char * s = peek_traced_function();
             if (s)
-               g_snprintf(funcname_prefix, 80, "(%-30s)", s);
+               g_snprintf(funcname_prefix, 80, "(%-*s)", funcname_field_size, s);
          }
       }
 
