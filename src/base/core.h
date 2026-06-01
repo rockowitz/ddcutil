@@ -727,6 +727,13 @@ do { \
       DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
    } while (0)
 
+#define DUAL_MSGV(_ddca_syslog_level, format, ...) \
+   do { \
+      if (!stdout_stderr_redirected) \
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, format, ##__VA_ARGS__); \
+      DECORATED_SYSLOG(_ddca_syslog_level, format, ##__VA_ARGS__); \
+   } while (0)
+
 
 
 
