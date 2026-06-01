@@ -338,9 +338,9 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "wait=%s, watch_thread=%p", SBOOL(wait), watch_thread );
-   if (wait) {
-      wait = false;
-      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,"Forcing wait = false on dw_stop_watch_displays");
+   if (!wait) {
+      wait = true;
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,"Forcing wait = true on dw_stop_watch_displays");
    }
 
    DDCA_Status ddcrc = DDCRC_OK;
