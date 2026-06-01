@@ -212,8 +212,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    }
 
    if (!enable_dw_start_check_dev_i2c_devices_rw) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
-      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
+      DUAL_MSG(DDCA_SYSLOG_NOTICE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
    }
    else {
       Error_Info * erec = i2c_all_relevant_i2c_buses_rw();
@@ -251,14 +250,12 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
    char * msg = g_strdup_printf("Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
-   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,"%s", msg);
+   DUAL_MSG(DDCA_SYSLOG_NOTICE, msg);
    free(msg);
    msg = g_strdup_printf(
          "                                         initial_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
          initial_stabilization_millisec, stabilization_poll_millisec);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
-   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,"%s", msg);
+   DUAL_MSG(DDCA_SYSLOG_NOTICE, msg);
    free(msg);
 
    g_mutex_lock(&watch_thread_mutex);
@@ -276,7 +273,8 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
                                        ? dw_manager_recheck_thread_func
                                        : dw_recheck_displays_func,
                                     rdd);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started recheck_thread = %p", recheck_thread);
+      if (!stdout_stderr_redirected)
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started recheck_thread = %p", recheck_thread);
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil recheck thread %p started", recheck_thread);
 
       // Start watch thread
@@ -301,7 +299,8 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
                        "callback_displays_thread",             // optional thread name
                        dw_callback_displays_func,
                        cdd);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started callback_thread = %p", callback_thread);
+      if (!stdout_stderr_redirected)
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started callback_thread = %p", callback_thread);
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil callback thread %p started", callback_thread);
 #endif
 
@@ -314,7 +313,8 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
                        wdd);
       watch_thread_active = true;
       active_watch_displays_classes = event_classes;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started watch_thread = %p", watch_thread);
+      if (!stdout_stderr_redirected)
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Started watch_thread = %p", watch_thread);
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "libddcutil watch thread %p started", watch_thread);
    }
    g_mutex_unlock(&watch_thread_mutex);

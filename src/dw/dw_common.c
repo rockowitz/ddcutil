@@ -322,13 +322,6 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
 #endif
 
 
-#define DUAL_MSG(_ddca_syslog_level, _msgbuf) \
-   do { \
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", _msgbuf); \
-      DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
-   } while (0)
-
-
 /** Updates persistent data structures for bus changes and either
  *  emits change events or queues them for later processing.
  *
