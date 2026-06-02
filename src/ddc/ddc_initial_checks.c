@@ -113,14 +113,21 @@ read_unsupported_feature(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s. feature_code=0x%02x", dh_repr(dh), feature_code);
-   I2C_Bus_Info * businfo = (I2C_Bus_Info *) dh->dref->detail;
-   Per_Display_Data * pdd = dh->dref->pdd;
+   Error_Info * ddc_excp = NULL;
+   Display_Ref * dref = dh->dref;
+   if (dref->disconnected) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Detected disconnected dref: %s", dh_repr(dh));
+      ddc_excp = ERRINFO_NEW(DDCRC_DISCONNECTED, "");
+      goto bye;
+   }
+   I2C_Bus_Info * businfo = (I2C_Bus_Info *) dref->detail;
+   Per_Display_Data * pdd = dref->pdd;
    Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
    // turns off possible abbreviated NULL msg handling in ddc_write_read_with_retry()
    dh->testing_unsupported_feature_active = true;
    bool dynamic_sleep_was_active = false;
 
-   Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+   ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "busno=%d,  sleep-multiplier=%5.2f, ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
@@ -183,6 +190,7 @@ retry:
       pdd_set_dynamic_sleep_active(pdd, true);
    dh->testing_unsupported_feature_active = false;
    free(parsed_response_loc);
+bye:
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
@@ -205,6 +213,10 @@ check_how_unsupported_reported(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    Display_Ref* dref = dh->dref;
+   if (dref->disconnected) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Detected disconnected dref: %s", dh_repr(dh));
+      goto bye;
+   }
    I2C_Bus_Info * businfo = (I2C_Bus_Info *) dref->detail;
    assert(dref->io_path.io_mode == DDCA_IO_I2C);
 
@@ -269,6 +281,7 @@ check_how_unsupported_reported(Display_Handle * dh) {
                              DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED |
                              DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED ) );
 #endif
+bye:
    DBGTRC_DONE(debug, TRACE_GROUP, "dref->flags=%s", interpret_dref_flags_t(dref->flags));
 }
 
@@ -296,7 +309,12 @@ check_supported_feature(Display_Handle *      dh,
 
    Per_Display_Data * pdd = dh->dref->pdd;
    Display_Ref * dref = dh->dref;
-   I2C_Bus_Info * businfo = dh->dref->detail;
+   if (dref->disconnected) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Detected disconnected dref: %s", dh_repr(dh));
+      ddc_excp = ERRINFO_NEW(DDCRC_DISCONNECTED, "");
+      goto bye;
+   }
+   I2C_Bus_Info * businfo = dref->detail;
 
    DDCA_Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
@@ -384,6 +402,7 @@ check_supported_feature(Display_Handle *      dh,
          "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s, status: %s",
          feature_code, errinfo_summary(ddc_excp), psc_desc(psc));
 
+bye:
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "*p_shsl=0x%04x", *p_shsl);
    return ddc_excp;
 }
@@ -429,13 +448,18 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s",interpret_dref_flags_t(dh->dref->flags));
 
    Display_Ref * dref = dh->dref;
+   Error_Info * ddc_excp = NULL;
+   if (dref->disconnected) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Detected disconnected dref: %s", dh_repr(dh));
+      ddc_excp = ERRINFO_NEW(DDCRC_DISCONNECTED, "");
+      goto bye;
+   }
    I2C_Bus_Info * businfo = dref->detail;
    Per_Display_Data * pdd = dref->pdd;
    // bool iomode_is_i2c = dh->dref->io_path.io_mode == DDCA_IO_I2C;
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusted sleep-multiplier = %5.2f",
                                        pdd_get_adjusted_sleep_multiplier(pdd));
-   Error_Info * ddc_excp = NULL;
 
    bool saved_dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
 
@@ -528,6 +552,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
 
    pdd_set_dynamic_sleep_active(dref->pdd, saved_dynamic_sleep_active);   // in case it was set false
 
+bye:
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "Final flags: %s", interpret_dref_flags_t(dref->flags));
    return ddc_excp;
 }
