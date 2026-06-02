@@ -1052,6 +1052,10 @@ i2c_detect_x37(int fd, char * driver) {
 Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    bool debug = false;
    assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+   if (dh->dref->disconnected) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref already marked disconnected, returning DDCRC_DISCONNECTED");
+      return ERRINFO_NEW(DDCRC_DISCONNECTED, "");
+   }
    I2C_Bus_Info * businfo = dh->dref->detail;
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "dh=%s, busno=%d, businfo=%p", dh_repr(dh), businfo->busno, businfo );
