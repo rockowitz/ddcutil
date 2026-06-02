@@ -1060,10 +1060,20 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    }
 
    I2C_Bus_Info * businfo = dh->dref->detail;
-   assert(businfo && ( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
-   assert( (businfo->flags & I2C_BUS_EXISTS) &&
-           (businfo->flags & I2C_BUS_PROBED)
-         );
+   if (!businfo || memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) != 0) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Invalid businfo %p for %s", businfo, dh_repr(dh));
+      err = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "Invalid businfo %p for %s", businfo, dh_repr(dh));
+      goto bye;
+   }
+   if (!(businfo->flags & I2C_BUS_EXISTS) || !(businfo->flags & I2C_BUS_PROBED)) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "businfo for %s missing flag %s%s", dh_repr(dh),
+            (businfo->flags & I2C_BUS_EXISTS) ? "" : "I2C_BUS_EXISTS ",
+            (businfo->flags & I2C_BUS_PROBED) ? "" : "I2C_BUS_PROBED");
+      err = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "businfo for %s missing flag %s%s", dh_repr(dh),
+            (businfo->flags & I2C_BUS_EXISTS) ? "" : "I2C_BUS_EXISTS ",
+            (businfo->flags & I2C_BUS_PROBED) ? "" : "I2C_BUS_PROBED");
+      goto bye;
+   }
 
 #ifdef REDUNDANT
    if (current_traced_function_stack_size() > 0) {
