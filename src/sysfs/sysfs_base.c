@@ -725,7 +725,7 @@ void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo) {
 
 void possibly_write_detect_to_status_by_dref(Display_Ref * dref) {
    if (enable_write_detect_to_status) {
-      if (dref->io_path.io_mode == DDCA_IO_I2C) {
+      if (dref->io_path.io_mode == DDCA_IO_I2C && !dref->disconnected) {
          I2C_Bus_Info * businfo = dref->detail;
          possibly_write_detect_to_status_by_businfo(businfo);
       }
