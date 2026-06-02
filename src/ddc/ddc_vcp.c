@@ -208,8 +208,14 @@ ddc_get_nontable_vcp_value_full(
 
    Error_Info * excp = NULL;
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
-   I2C_Bus_Info * businfo = dh->dref->detail;
    *parsed_response_loc = NULL;
+   Display_Ref * dref = dh->dref;
+   if (dref->disconnected) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Detected disconnected dref: %s", dh_repr(dh));
+      excp = ERRINFO_NEW(DDCRC_DISCONNECTED, "");
+      goto bye;
+   }
+   I2C_Bus_Info * businfo = dref->detail;
 
    if (enable_mock_data) {
       Error_Info * mock_errinfo = mock_get_nontable_vcp_value(feature_code, parsed_response_loc);
@@ -319,6 +325,7 @@ ddc_get_nontable_vcp_value_full(
    }
    *parsed_response_loc = parsed_response;
 
+bye:
    DBGTRC_RET_ERRINFO2(debug, TRACE_GROUP, excp, *parsed_response_loc, "");
    ASSERT_IFF(!excp, *parsed_response_loc);
    return excp;
