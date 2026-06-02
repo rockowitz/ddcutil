@@ -901,13 +901,14 @@ i2c_detect_x37(int fd, char * driver) {
 Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    bool debug = false;
    assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
+   Error_Info * err = NULL;
    if (dh->dref->disconnected) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref already marked disconnected, returning DDCRC_DISCONNECTED");
-      return ERRINFO_NEW(DDCRC_DISCONNECTED, "");
+      err = ERRINFO_NEW(DDCRC_DISCONNECTED, "dh->dref-disconnected == true");
+      goto bye;
    }
+
    I2C_Bus_Info * businfo = dh->dref->detail;
-   DBGTRC_STARTING(debug, TRACE_GROUP,
-         "dh=%s, busno=%d, businfo=%p", dh_repr(dh), businfo->busno, businfo );
    assert(businfo && ( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
    assert( (businfo->flags & I2C_BUS_EXISTS) &&
            (businfo->flags & I2C_BUS_PROBED)
@@ -925,7 +926,6 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    }
 #endif
 
-   Error_Info * err = NULL;
    bool edid_exists = false;
    int tryctr = 0;
    for (; !edid_exists && tryctr < CHECK_OPEN_BUS_ALIVE_MAX_TRIES; tryctr++) {
@@ -985,6 +985,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
                "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
    }
 
+bye:
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "");
    return err;
 }
