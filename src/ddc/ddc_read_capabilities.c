@@ -138,7 +138,7 @@ ddc_get_capabilities_string(
             char * s = capabilities_cache_file_name();
             // DBGMSG("rpt_get_ornamentation_enabled() = %s", sbool(rpt_get_ornamentation_enabled()));
             rpt_vstring(0, "Obtained cached capabilities string from %s", s);
-            SYSLOG2(DDCA_SYSLOG_INFO, "Read cached capabilities string from %s", s);
+            DECORATED_SYSLOG(DDCA_SYSLOG_INFO, "Read cached capabilities string from %s", s);
             free(s);
          }
 
