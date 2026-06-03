@@ -204,8 +204,7 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
                  "is_sysfs_reliable_for_busno(%d) returned false and session_type = X11. "
                  "Using X11 to determine if display is asleep",
                   businfo->busno);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
-      SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+      DUAL_MSGV(DDCA_SYSLOG_WARNING, "%s", s);
       free(s);
       asleep = dpms_is_x11_asleep();
    }
