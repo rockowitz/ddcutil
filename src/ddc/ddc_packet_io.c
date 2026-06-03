@@ -291,8 +291,7 @@ ddc_open_display(
    if (dref->disconnected) {
       char * s = g_strdup_printf("Attempting to open disconnected display reference %s",
             dref_repr_t(dref));
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
-      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+      DUAL_MSGNV(DDCA_SYSLOG_ERROR, "%s", s);
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "%s", s);
       free(s);
       goto bye;
@@ -303,8 +302,7 @@ ddc_open_display(
    if (!dref_detail) {
       char * s = g_strdup_printf( "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s",
             dref_repr_t(dref));
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
-      SYSLOG2(DDCA_SYSLOG_ERROR,"%s", s);
+      DUAL_MSGNV(DDCA_SYSLOG_ERROR,"%s", s);
       dbgrpt_current_traced_function_stack(true, true, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
       // mark_display_ref_disconnected(dref);  // don't call - double lock
@@ -333,9 +331,7 @@ ddc_open_display(
             tryct++;
             goto retry_status;
          }
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "%s still disconnected after 1 second delay and retry", dref_reprx_t(dref));
-         SYSLOG2(DDCA_SYSLOG_WARNING,
+         DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP,
                "%s still disconnected after 1 second delay and retry", dref_reprx_t(dref));
          err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
       }
@@ -529,8 +525,8 @@ ddc_close_display(Display_Handle * dh) {
                TRACED_ASSERT(rc < 0);
                char * msg = g_strdup_printf("i2c_close_bus returned %d, errno=%s",
                                             rc, psc_desc(errno) );
-               SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msg);
-               err = errinfo_new(rc, __func__, msg);
+               DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+               err = ERRINFO_NEW(rc, msg);
                free(msg);
                COUNT_STATUS_CODE(rc);
             }
@@ -563,7 +559,7 @@ ddc_close_display(Display_Handle * dh) {
 #ifdef NO
    Error_Info * err2 = unlock_display_by_dref(dref);
    if (err2) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", err2->detail);
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", err2->detail);
       if (!err)
          err = err2;
       else
@@ -623,7 +619,7 @@ void ddc_close_all_displays_for_current_thread(bool error_if_open) {
          Display_Handle * dh = g_ptr_array_index(open_displays_for_thread, ndx);
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing %s...", dh_repr_p(dh));
          if (error_if_open) {
-        	 SYSLOG2(DDCA_SYSLOG_ERROR,"Closing %s that should not be open", dh_repr_p(dh) );
+            DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,"Closing %s that should not be open", dh_repr_p(dh) );
          }
          closed_ct++;
          ddc_close_display_wo_return(dh);
@@ -914,14 +910,7 @@ ddc_write_read_with_retry(
       try_errors[tryctr] = cur_excp;
 
       if (psc == 0 && ddcrc_null_response_ct > 0) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY,
-               "%s, expected_subtype=0x%02x, sleep-multiplier=%5.2f, ddc_write_read() succeeded"
-               " after %d sleep and retry for DDC Null Response",
-               dh_repr(dh),
-               expected_subtype,
-               pdd_get_adjusted_sleep_multiplier(pdd),
-               ddcrc_null_response_ct);
-         SYSLOG2(DDCA_SYSLOG_DEBUG,
+         DUAL_MSGXV(DDCA_SYSLOG_DEBUG, TRACE_GROUP | DDCA_TRC_RETRY,
                "%s, expected_subtype=0x%02x, sleep-multiplier=%5.2f, ddc_write_read() succeeded"
                " after %d sleep and retry for DDC Null Response",
                dh_repr(dh),
