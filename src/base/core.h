@@ -711,6 +711,7 @@ do { \
 } while(0)
 
 
+#ifdef OLD
 // Deprecated.  Use DECORATED_SYSLOGX()
 #define SYSLOG2(_ddcutil_severity, format, ...) \
 do { \
@@ -723,6 +724,7 @@ do { \
       } \
    } \
 } while(0)
+#endif
 
 //
 // DUAL_MSGN() variants
