@@ -94,8 +94,7 @@ bool dpms_is_x11_asleep() {
          result = (state && (power_level != DPMSModeOn) );
       }
       else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "get_x11_dpms_info() failed.");
-         SYSLOG2(DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed");
+         DUAL_MSG(DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed.");
       }
    }
 #endif
@@ -231,8 +230,7 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
          char * s = g_strdup_printf(
                "is_sysfs_reliable_for_busno(%d) returned false and session type != X11. Assuming not asleep",
                businfo->busno);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
-         SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
+         DUAL_MSGV(DDCA_SYSLOG_WARNING, "%s", s);
          free(s);
       }
       else {
