@@ -576,20 +576,20 @@ bool ddc_store_displays_cache() {
       char * fn = ddc_displays_cache_file_name();
       if (!fn) {
          SEVEREMSG("Unable to determine display cache file name");
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Unable to determine display cache file name");
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Unable to determine display cache file name");
       }
       else {
          FILE * fp = NULL;
          fopen_mkdir(fn, "w", ferr(), &fp );
          if (!fp) {
             SEVEREMSG("Error opening file %s:%s", fn, strerror(errno));
-            SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening file %s:%s", fn, strerror(errno));
+            DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Error opening file %s:%s", fn, strerror(errno));
          }
          else {
             size_t bytes_written = fwrite(json_text, strlen(json_text), 1, fp);
             if (bytes_written < strlen(json_text)) {
                SEVEREMSG("Error writing file %s:%s", fn, strerror(errno));
-               SYSLOG2(DDCA_SYSLOG_ERROR, "Error writing file %s:%s", fn, strerror(errno));
+               DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Error writing file %s:%s", fn, strerror(errno));
             }
             else {
                ok = true;
