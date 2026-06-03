@@ -623,13 +623,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    char * architecture   = execute_shell_cmd_one_line_result("uname -m");
    // char * distributor_id = execute_shell_cmd_one_line_result("lsb_release -s -i");  // e.g. Ubuntu, Raspbian
 
-   if (ntsa_find(expected_architectures, architecture) >= 0) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_DDC, "Found a known architecture: %s", architecture);
-   }
-   else {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_DDC, "Unexpected architecture %s.  Please report.", architecture);
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Unexpected architecture %s.", architecture);
-   }
+   if (ntsa_find(expected_architectures, architecture) >= 0)
+      DUAL_MSGXV(DDCA_SYSLOG_ERROR, DDCA_TRC_DDC, "Unexpected architecture %s.", architecture);
 
   // bool is_raspbian = distributor_id && streq(distributor_id, "Raspbian");
    bool is_arm      = architecture   &&
