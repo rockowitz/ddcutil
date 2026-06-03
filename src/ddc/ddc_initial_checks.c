@@ -133,7 +133,7 @@ read_unsupported_feature(
             "busno=%d,  sleep-multiplier=%5.2f, ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
             businfo->busno, pdd_get_adjusted_sleep_multiplier(pdd),
             feature_code, errinfo_summary(ddc_excp));
-retry:
+//retry:
    if (!ddc_excp) {
       if (value_bytes_zero_for_nontable_value(parsed_response_loc)) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
@@ -144,7 +144,7 @@ retry:
          if (get_output_level() >= DDCA_OL_VERBOSE)
             rpt_vstring(0, "/dev/i2c-%d, Feature 0x%02x should not exist, but the monitor reports it as valid",
                   businfo->busno, feature_code);
-         SYSLOG2(DDCA_SYSLOG_WARNING,
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
             "busno=%d, Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds,"
             " returning mh=0x%02x ml=0x%02x sh=0x%02x sl=0x%02x",
             businfo->busno, feature_code,
@@ -160,6 +160,7 @@ retry:
       }
       else {
          if (!dynamic_sleep_was_active) {
+#ifdef OLD
             char * msg = g_strdup_printf( "busno=%d, sleep-multiplier=%5.2f,"
                   " Testing for unsupported feature 0x%02x returned %s",
                   businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
@@ -167,14 +168,25 @@ retry:
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", msg);
             SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msg);
             free(msg);
+#endif
+            DUAL_MSGXV(DDCA_SYSLOG_ERROR, TRACE_GROUP,
+                  "busno=%d, sleep-multiplier=%5.2f,"
+                  " Testing for unsupported feature 0x%02x returned %s",
+                  businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
+                  feature_code, errinfo_summary(ddc_excp));
          }
          if (pdd_is_dynamic_sleep_active(pdd) ) {
             dynamic_sleep_was_active = true;
             ERRINFO_FREE(ddc_excp);
+#ifdef OLD
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep and retrying");
             SYSLOG2(DDCA_SYSLOG_ERROR, "Turning off dynamic sleep and retrying");
+#endif
+            DUAL_MSGX(DDCA_SYSLOG_ERROR, TRACE_GROUP, "Turning off dynamic sleep and retrying");
+
             pdd_set_dynamic_sleep_active(pdd, false);
             ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+#ifdef OLD
             char * msg = g_strdup_printf( "busno=%d, sleep-multiplier=%5.2f,"
                   " Retesting for unsupported feature 0x%02x returned %s",
                   businfo->busno,   pdd_get_adjusted_sleep_multiplier(pdd),
@@ -182,7 +194,12 @@ retry:
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", msg);
             SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msg);
             free(msg);
-            goto retry;
+#endif
+            DUAL_MSGXV(DDCA_SYSLOG_ERROR, TRACE_GROUP,
+                  "busno=%d, sleep-multiplier=%5.2f,"
+                  " Retesting for unsupported feature 0x%02x returned %s",
+                  businfo->busno,   pdd_get_adjusted_sleep_multiplier(pdd),
+                  feature_code, errinfo_summary(ddc_excp));
          }
       }
    }
@@ -237,14 +254,14 @@ check_how_unsupported_reported(Display_Handle * dh) {
 
    if (psc == 0) {
       dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
-      SYSLOG2(DDCA_SYSLOG_ERROR,
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,
             "busno=%d, All features that should not exist detected. "
             "Monitor does not indicate unsupported", businfo->busno);
    }
    else {
       if (psc == DDCRC_RETRIES) {
             dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // our best guess
-            SYSLOG2(DDCA_SYSLOG_ERROR,
+            DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,
                   "busno=%d, DDCRC_RETRIES failure reading all unsupported features. "
                   "Setting DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED",
                   businfo->busno);
@@ -334,6 +351,7 @@ check_supported_feature(Display_Handle *      dh,
 #endif
 
    if (ddc_excp) {
+#ifdef OLD
       char * msg = g_strdup_printf(
             "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
             businfo->busno,
@@ -343,6 +361,13 @@ check_supported_feature(Display_Handle *      dh,
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "!!!! %s", msg);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "(%s) %s", __func__, msg);
       free(msg);
+#endif
+      DUAL_MSGXV(DDCA_SYSLOG_NOTICE, TRACE_GROUP,
+            "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
+                        businfo->busno,
+                        pdd_get_adjusted_sleep_multiplier(pdd),
+                        feature_code,
+                        errinfo_summary(ddc_excp));
 
       dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
 
@@ -375,6 +400,7 @@ check_supported_feature(Display_Handle *      dh,
                }
 
                dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
+#ifdef OLD
                char * s = g_strdup_printf(
                      "busno=%d, sleep-multiplier=%5.2f."
                      " Retesting for supported feature 0x%02x returned %s",
@@ -385,6 +411,14 @@ check_supported_feature(Display_Handle *      dh,
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
                SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_NOTICE, "%s", s);
                free(s);
+#endif
+               DUAL_MSGXV( (ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_NOTICE, TRACE_GROUP,
+                     "busno=%d, sleep-multiplier=%5.2f."
+                     " Retesting for supported feature 0x%02x returned %s",
+                     businfo->busno,
+                     pdd_get_adjusted_sleep_multiplier(pdd),
+                     feature_code,
+                     dref->communication_error_summary);
             }
          }
       }
@@ -635,8 +669,9 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
                       DREF_DDC_COMMUNICATION_WORKING |
                       DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED);
       dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "dref=%s, skipping initial ddc checks", dref_reprx_t(dref));
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Skipping initial ddc checks");
+      // SYSLOG2(DDCA_SYSLOG_NOTICE, "dref=%s, skipping initial ddc checks", dref_reprx_t(dref));
+      // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Skipping initial ddc checks");
+      DUAL_MSGXV(DDCA_SYSLOG_NOTICE, TRACE_GROUP, "dref=%s, skipping initial ddc checks", dref_reprx_t(dref));
       result = true;
    }
    else {
@@ -648,7 +683,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
       if (err)  {
          char * msg = g_strdup_printf("Unable to open %s: %s",
          dpath_repr_t(&dref->io_path), psc_desc(err->status_code));
-         SYSLOG2(DDCA_SYSLOG_WARNING, "%s", msg);
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", msg);
          free(msg);
       }
       else {
