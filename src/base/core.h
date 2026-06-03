@@ -280,10 +280,11 @@ bool dbgtrc_returning_string(
       }                 \
       else {           \
          int line = __LINE__;  \
-         dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__,   \
+         if (!stdout_stderr_redirected || !test_emit_syslog(DDCA_SYSLOG_ERROR))  \
+            dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__,   \
                       "Assertion failed: \"%s\" in file %s at line %d",  \
                       #_assertion, __FILE__,  __LINE__);   \
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Assertion failed: \"%s\" in file %s at line %d",  \
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Assertion failed: \"%s\" in file %s at line %d",  \
                          #_assertion, __FILE__,  __LINE__);   \
          /* assert(#_assertion); */ \
          __assert_fail(#_assertion, __FILE__, line, __func__);  \
@@ -722,19 +723,17 @@ do { \
 
 #define DUAL_MSG(_ddca_syslog_level, _msgbuf) \
    do { \
-      if (!stdout_stderr_redirected) \
+      if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", _msgbuf); \
       DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
    } while (0)
 
 #define DUAL_MSGV(_ddca_syslog_level, format, ...) \
    do { \
-      if (!stdout_stderr_redirected) \
+      if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, format, ##__VA_ARGS__); \
       DECORATED_SYSLOG(_ddca_syslog_level, format, ##__VA_ARGS__); \
    } while (0)
-
-
 
 
 /** Writes a message to the current ferr() or fout() device and, depending on
