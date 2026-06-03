@@ -94,7 +94,7 @@ bool dpms_is_x11_asleep() {
          result = (state && (power_level != DPMSModeOn) );
       }
       else {
-         DUAL_MSG(DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed.");
+         DUAL_MSGN(DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed.");
       }
    }
 #endif

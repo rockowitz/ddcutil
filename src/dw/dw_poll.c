@@ -308,7 +308,7 @@ gpointer dw_watch_display_connections(gpointer data) {
 
    // may need to wait on startup
    while (!all_i2c_buses) {
-      DUAL_MSG(DDCA_SYSLOG_NOTICE, "Waiting 500 ms for all_i2c_buses");
+      DUAL_MSGN(DDCA_SYSLOG_NOTICE, "Waiting 500 ms for all_i2c_buses");
       SLEEP_MILLIS_WITH_STATS(500);
    }
 

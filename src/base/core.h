@@ -641,6 +641,9 @@ bool                test_emit_syslog(DDCA_Syslog_Level msg_level);
 int                 syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Level level);
 extern const char * valid_syslog_levels_string;
 
+//
+// DECORATED_SYSLOG() variants
+//
 
 /** Checks that the specified ddcutil severity level is at least as great
  *  as the severity cutoff level currently in effect.  If so, the ddcutil
@@ -708,6 +711,7 @@ do { \
 } while(0)
 
 
+// Deprecated.  Use DECORATED_SYSLOGX()
 #define SYSLOG2(_ddcutil_severity, format, ...) \
 do { \
    if (test_emit_syslog(_ddcutil_severity)) { \
@@ -720,15 +724,18 @@ do { \
    } \
 } while(0)
 
+//
+// DUAL_MSGN() variants
+//
 
-#define DUAL_MSG(_ddca_syslog_level, _msgbuf) \
+#define DUAL_MSGN(_ddca_syslog_level, _msgbuf) \
    do { \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", _msgbuf); \
       DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
    } while (0)
 
-#define DUAL_MSGV(_ddca_syslog_level, format, ...) \
+#define DUAL_MSGNV(_ddca_syslog_level, format, ...) \
    do { \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, format, ##__VA_ARGS__); \

@@ -474,7 +474,7 @@ bool dw_hotplug_change_handler(
             // report error, recover
             g_snprintf(msgbuf, MBSZ,
                 "Businfo struct not found for pre-exisiting bus %d. Creating new businfo", busno);
-            DUAL_MSGV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
+            DUAL_MSGNV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
             businfo = i2c_new_bus_info(busno);
             businfo->flags = I2C_BUS_EXISTS;
             i2c_add_businfo(businfo);
@@ -486,7 +486,7 @@ bool dw_hotplug_change_handler(
          if (err) {
             g_snprintf(msgbuf, MBSZ,
                  "Unexpected error checking bus %d: %s", busno, errinfo_summary(err));
-            DUAL_MSGV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
+            DUAL_MSGNV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
             ERRINFO_FREE_WITH_REPORT(err, false);
             err = NULL;
          }
@@ -497,7 +497,7 @@ bool dw_hotplug_change_handler(
          if (businfo) {
             g_snprintf(msgbuf, MBSZ,
                "Replacing existing businfo that should not exist for bus %d being added!!!", busno);
-            DUAL_MSGV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
+            DUAL_MSGNV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
             i2c_remove_businfo(businfo);
          }
          businfo = i2c_new_bus_info(busno);
@@ -507,7 +507,7 @@ bool dw_hotplug_change_handler(
          if (err) {
             g_snprintf(msgbuf, MBSZ,
                   "Unexpected error checking bus %d: %s", busno, errinfo_summary(err));
-            DUAL_MSGV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
+            DUAL_MSGNV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
             ERRINFO_FREE_WITH_REPORT(err, false);
             err = NULL;
          }
@@ -517,7 +517,7 @@ bool dw_hotplug_change_handler(
       // Create display ref and emit
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Adding display ref for bus: %d", busno);
       g_snprintf(msgbuf, MBSZ, "Adding connected display with bus %d", busno);
-      DUAL_MSGV(DDCA_SYSLOG_NOTICE, "%s", msgbuf);
+      DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "%s", msgbuf);
       Display_Ref* dref = dw_add_display_by_businfo(businfo);
       if (dref && !(dref->flags & DREF_TRANSIENT)) {   // how could it be transient here???
          add_published_dref_id_by_dref(dref);
