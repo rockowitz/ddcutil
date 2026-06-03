@@ -153,9 +153,8 @@ is_nvidia_einval_bug(
       if (streq(driver_name, "nvidia")) {
          nvidia_einval_bug_encountered = true;
          i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
-         char * msg = "nvidia/i2c-dev bug encountered. Forcing future io to I2C_IO_STRATEGY_FILEIO. Retrying";
-         DBGTRC(debug, TRACE_GROUP, msg);
-         SYSLOG2(DDCA_SYSLOG_WARNING, "%s", msg);
+         DUAL_MSG(DDCA_SYSLOG_WARNING,
+             "nvidia/i2c-dev bug encountered. Forcing future io to I2C_IO_STRATEGY_FILEIO. Retrying");
          result = true;
       }
       free(driver_name);
