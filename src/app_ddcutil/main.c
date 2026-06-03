@@ -1076,7 +1076,7 @@ main(int argc, char *argv[]) {
                execution_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting.  ddcutil version %s", get_full_ddcutil_version());
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Starting.  ddcutil version %s", get_full_ddcutil_version());
    if (parsed_cmd->flags & CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK) {
       push_traced_function(__func__);
       traced_function_stack_initialized = true;
@@ -1084,7 +1084,7 @@ main(int argc, char *argv[]) {
 
    if (preparse_verbose) {
       if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0) {
-         SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
       }
    }
 
@@ -1414,7 +1414,7 @@ bye:
 
    DBGMSF(main_debug, "syslog_opened=%s", sbool(syslog_opened));
    if (syslog_opened) {
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "Terminating. Returning %d", main_rc);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Terminating. Returning %d", main_rc);
       DBGF(main_debug, "Calling closelog()...");
       closelog();
    }
