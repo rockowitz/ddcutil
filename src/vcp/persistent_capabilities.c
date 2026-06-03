@@ -372,10 +372,7 @@ void set_persistent_capabilites(
    g_mutex_lock(&persistent_capabilities_mutex);
    if (capabilities_cache_enabled) {
       if (non_unique_model_id(mmk)) {
-         if (!stdout_stderr_redirected)
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                         "Not saving capabilities for non-unique Monitor_Model_Key.");
-         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
+         DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP,
                "Not saving capabilities for non-unique Monitor_Model_Key: %s",
                mmk_string(mmk));
       }
