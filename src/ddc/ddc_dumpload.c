@@ -386,12 +386,12 @@ ddc_set_multiple(
       ddc_excp = ddc_set_verified_vcp_value_with_retry(dh, vrec, NULL);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
       if (ddc_excp) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Error setting value for VCP feature code 0x%02x: %s",
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Error setting value for VCP feature code 0x%02x: %s",
                          feature_code, psc_desc(psc) );
          if (psc == DDCRC_RETRIES)
-            SYSLOG2(DDCA_SYSLOG_ERROR, "    Try errors: %s", errinfo_causes_string(ddc_excp));
+            DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "    Try errors: %s", errinfo_causes_string(ddc_excp));
          if (ndx < value_ct-1)
-            SYSLOG2(DDCA_SYSLOG_ERROR, "Not attempt to set additional values.");
+            DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Not attempt to set additional values.");
          break;
       }
 
@@ -493,7 +493,7 @@ loadvcp_by_dumpload_data(
       if (!dref) {
          char * msg = g_strdup_printf("Monitor not connected: %s - %s",
                                       pdata->model, pdata->serial_ascii );
-         SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msg);
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
          ddc_excp = ERRINFO_NEW(DDCRC_INVALID_DISPLAY, "%s", msg);
          g_free(msg);
          goto bye;
@@ -502,7 +502,7 @@ loadvcp_by_dumpload_data(
       ddc_excp = ddc_open_display(dref, CALLOPT_NONE, &dh);
       ASSERT_IFF(dh, !ddc_excp);    // avoid bogus coverity error
       if (ddc_excp) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening display %s: %s",
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Error opening display %s: %s",
                                     dref_repr_t(dref), ddcrc_desc_t(ddc_excp->status_code));
          goto bye;
       }
