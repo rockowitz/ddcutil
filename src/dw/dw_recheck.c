@@ -65,8 +65,11 @@ static void emit_recheck_debug_msg(
    vsnprintf(buffer, 200, format, args);
    va_end(args);
 
+#ifdef OLD
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", buffer);
    SYSLOG2(syslog_level, "%s", buffer);
+#endif
+   DUAL_MSGNV(syslog_level, "%s", buffer);
 }
 
 
@@ -173,7 +176,7 @@ dw_recheck_dref(Display_Ref * dref) {
    DDCA_Status ddcrc = dref_lock(dref);
    if (ddcrc != 0) {
       err = ERRINFO_NEW(ddcrc, "dref_lock() failed for %s", dref_reprx_t(dref));
-      SYSLOG2(DDCA_SYSLOG_ERROR, "dref_lock() failed for %s", dref_reprx_t(dref));
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "dref_lock() failed for %s", dref_reprx_t(dref));
    }
    else {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Obtained lock on %s:", dref_reprx_t(dref));
@@ -550,9 +553,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
    }
 
    if (terminate_watch_thread) {
-      char * s = "recheck thread terminating because watch thread terminated";
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+      DUAL_MSGN(DDCA_SYSLOG_NOTICE, "recheck thread terminating because watch thread terminated");
 
       // free what's left on the queues
       while (g_queue_get_length(to_check_again) > 0) {
