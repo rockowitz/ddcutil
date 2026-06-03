@@ -255,7 +255,8 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
          DBGMSG( "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
          dbgrpt_display_ref(dref,  true,  2);
          dbgrpt_current_traced_function_stack(/*reverse*/ true, true, 0);
-         SYSLOG2(DDCA_SYSLOG_ERROR, "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,
+               "DREF_DDC_COMMUNICATION_WORKING not set. dref=%s", dref_repr_t(dref));
          current_traced_function_stack_to_syslog(LOG_ERR, /* reverse */ false);
          backtrace_to_syslog(LOG_ERR, 0);
 
@@ -277,7 +278,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
          }
          else {
             // DBGMSF(debug, "ddc_open_display() failed");
-            SYSLOG2((ddc_excp->status_code == -EBUSY) ? DDCA_SYSLOG_INFO : DDCA_SYSLOG_ERROR,
+            DECORATED_SYSLOG((ddc_excp->status_code == -EBUSY) ? DDCA_SYSLOG_INFO : DDCA_SYSLOG_ERROR,
                     "Unable to open display %s: %s", dref_repr_t(dref), psc_desc(ddc_excp->status_code));
             dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
             errinfo_free(ddc_excp);
