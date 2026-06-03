@@ -109,7 +109,7 @@ load_persistent_capabilities_file(GHashTable** capabilities_hash_loc) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
          if (!data_file_name) {
             SEVEREMSG("Unable to determine capabilities cache file name");
-            SYSLOG2(DDCA_SYSLOG_ERROR, "Unable to determine capabilities cache file name");
+            DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Unable to determine capabilities cache file name");
             errs = ERRINFO_NEW(-ENOENT, "Unable to determine capabilities cache file name");
             goto bye;
          }
@@ -164,7 +164,7 @@ static void save_persistent_capabilities_file() {
    if (capabilities_cache_enabled) {
       if (!data_file_name) {
          SEVEREMSG("Cannot determine capabilities cache file name");
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Cannot determine capabilities cache file name");
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Cannot determine capabilities cache file name");
          goto bye1;
       }
       FILE * fp = NULL;
@@ -183,7 +183,7 @@ static void save_persistent_capabilities_file() {
             int ct = fprintf(fp, "%s:%s\n", (char *) key, (char*) value);
             if (ct < 0) {
                SEVEREMSG("Error writing to file %s:%s", data_file_name, strerror(errno) );
-               SYSLOG2(DDCA_SYSLOG_ERROR, "Error writing to file %s:%s", data_file_name, strerror(errno) );
+               DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Error writing to file %s:%s", data_file_name, strerror(errno) );
                break;
             }
          }
@@ -309,7 +309,7 @@ char * get_persistent_capabilities(Monitor_Model_Key* mmk)
    char * result = NULL;
    if (capabilities_cache_enabled) {
       if (non_unique_model_id(mmk)) {
-         SYSLOG2(DDCA_SYSLOG_WARNING, "Non unique Monitor_Model_Key %s", mmk_repr(*mmk));
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "Non unique Monitor_Model_Key %s", mmk_repr(*mmk));
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Non unique Monitor_Model_Key. Returning NULL");
       }
       else {
@@ -372,9 +372,10 @@ void set_persistent_capabilites(
    g_mutex_lock(&persistent_capabilities_mutex);
    if (capabilities_cache_enabled) {
       if (non_unique_model_id(mmk)) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+         if (!stdout_stderr_redirected)
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                          "Not saving capabilities for non-unique Monitor_Model_Key.");
-         SYSLOG2(DDCA_SYSLOG_WARNING,
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
                "Not saving capabilities for non-unique Monitor_Model_Key: %s",
                mmk_string(mmk));
       }
