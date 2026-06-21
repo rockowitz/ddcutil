@@ -206,7 +206,7 @@ static bool cur_user_has_group_i2c_perms(const char * filename) {
          }
          else {
             if (!is_file_group_acl_rw(filename)) {
-               SIMPLE_STD_SYSLOG(LOG_WARNING, "Group permissons on %s not RW",filename);
+               SIMPLE_STD_SYSLOG(LOG_WARNING, "Group permissions on %s not RW",filename);
             }
             else {
                has_group_perms = true;
