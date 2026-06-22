@@ -669,7 +669,7 @@ _ddca_terminate(void) {
          dw_stop_watch_displays(/*wait=*/ true, &active_classes);   // in case it was started
       DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "After ddc_stop_watch_displays");
       // sleep(5); // still needed?
-#ifdef USE_DBUG
+#ifdef USE_DBUS
       ldbus_stop_sleep_watch_thread();
 #endif
       // terminate_dw_services(); // handled by terminate_ddc_services()
