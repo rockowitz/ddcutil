@@ -126,9 +126,19 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
       }
 
       if (err && err->status_code == DDCRC_DISCONNECTED) {
-         assert(dref->disconnected);
-         DBGTRC_NOPREFIX(true, TRACE_GROUP, "pathological case, dref=%s", dref_reprx_t(dref));
-         // pathological case, monitor went away
+         // The display went away during initial checks. This is reached either
+         // because dref->disconnected was already set, or because the live DDC
+         // check in ddc_initial_checks_by_dref() -> ddc_initial_checks_by_dh()
+         // failed on a now-absent display (a hot-unplug race, e.g. a DP-MST dock
+         // unplug or sleep/wake). The latter path does NOT set dref->disconnected,
+         // so we must not assert it -- aborting here takes down the libddcutil
+         // host process (e.g. org_kde_powerdevil) on a routine disconnect.
+         // Either way the display is gone; handle it the same as the pre-marked
+         // case (other ddc_initial_checks_by_dref() callers, e.g. dw_recheck.c,
+         // likewise key off the DDCRC_DISCONNECTED status, not the flag).
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "Display on bus %d went away during initial checks, dref=%s",
+               businfo->busno, dref_reprx_t(dref));
          detected_disconnected = true;
       }
    }
