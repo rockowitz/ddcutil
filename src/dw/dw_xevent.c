@@ -52,17 +52,8 @@ void dw_deinit_xevent_screen_change_notification(XEvent_Data * evdata) {
 XEvent_Data * dw_init_xevent_screen_change_notification() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-
-   // Must precede any other Xlib call made by this process. Without it, Xlib's
-   // per-Display data structures are not thread-safe, and evdata->dpy is used
-   // concurrently by the watch thread (blocked in XIfEvent()/XCheckTypedEvent())
-   // and by whichever thread calls dw_send_x11_termination_message() /
-   // dw_stop_watch_displays() to end the watch.
-   static gsize x11_threads_initialized = 0;
-   if (g_once_init_enter(&x11_threads_initialized)) {
-      XInitThreads();
-      g_once_init_leave(&x11_threads_initialized, 1);
-   }
+   // XInitThreads() is called in init_dw_services(), at process startup,
+   // before any Xlib call this process makes. See the comment there.
 
    bool ok = false;
    // check for extension
