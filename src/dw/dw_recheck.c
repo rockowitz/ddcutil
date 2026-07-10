@@ -310,9 +310,10 @@ gpointer dw_worker_thread_func(gpointer data) {
        Error_Info * err = dw_recheck_and_emit(rqe);
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "after dw_recheck_dref(), dref->flags=%s",
              interpret_dref_flags_t(dref->flags));
-       g_mutex_unlock(&master_dw_mutex);
 
        // 5 cases
+       // dref->flags is examined below, so master_dw_mutex must stay held until
+       // that examination is complete, matching every other writer of dref->flags.
        if (!err) {
           if (dref->flags&DREF_DDC_COMMUNICATION_WORKING) {
              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DDC communication for %s became enabled after %d tries.", dref_repr_t(dref), rqe->sleepctr);
@@ -347,6 +348,9 @@ gpointer dw_worker_thread_func(gpointer data) {
           err = NULL;
 
        }
+
+       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
+       g_mutex_unlock(&master_dw_mutex);
        rqe->sleepctr++;
     }
 
