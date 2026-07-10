@@ -876,10 +876,7 @@ main(int argc, char *argv[]) {
 
    add_local_rtti_functions();      // add entries for this file
    init_base_services();            // so tracing related modules are initialized
-   init_ddc_services();             // initializes i2c, usb, ddc, vcp, dynvcp
-#ifdef WATCH_DISPLAYS
-   init_dw_services();              // initializes subdir dw
-#endif
+   init_ddc_services();             // initializes i2c, usb, ddc, vcp, dynvcp, dw
    init_app_ddcutil_services();
 #ifdef ENABLE_ENVCMDS
    init_app_sysenv_services();

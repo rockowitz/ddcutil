@@ -244,12 +244,11 @@ void init_ddc_services() {
    init_ddc_multi_part_io();
    init_ddc_vcp();
    init_ddc_vcp_version();
-
-   RTTI_ADD_FUNC(ddc_report_stats_main);
-
 #ifdef WATCH_DISPLAYS
    init_dw_services();
 #endif
+
+   RTTI_ADD_FUNC(ddc_report_stats_main);
 
    if (debug)
       dbgrpt_rtti_func_name_table(1, /* show_internal*/ true);

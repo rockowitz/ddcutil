@@ -544,10 +544,7 @@ _libddcutil_constructor(void) {
 
    init_api_base();         // registers functions in RTTI table
    init_base_services();    // initializes tracing related modules
-   init_ddc_services();     // initializes i2c, usb, ddc, vcp, dynvcp
-#ifdef WATCH_DISPLAYS
-   init_dw_services();      // initializes dw
-#endif
+   init_ddc_services();     // initializes i2c, usb, ddc, vcp, dynvcp, dw
    init_api_services();     // other files in directory libmain
 
    init_accumulated_sleep();  // increase this value indicates a sleep has occurred
