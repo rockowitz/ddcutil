@@ -403,6 +403,10 @@ gpointer dw_watch_display_connections(gpointer data) {
 #endif
 
       pause_if_recently_resumed_from_sleep(pause_after_resume_ms);
+      // Draining after the pause, not in dw_udev_watch(), coalesces the burst
+      // of udev events that arrives during the pause itself into this rescan.
+      if (wdd->watch_mode == Watch_Mode_Udev)
+         dw_udev_drain();
       invoke_process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
             deferred_events, displays_to_recheck);
    } // while()

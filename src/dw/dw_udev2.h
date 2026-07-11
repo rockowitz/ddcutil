@@ -17,6 +17,7 @@ extern bool report_udev_events;
 void dw_udev_setup();
 void dw_udev_teardown();
 bool dw_udev_watch(int watch_loop_millisec);
+int  dw_udev_drain();
 
 void init_dw_udev2();
 #endif /* DW_UDEV2_H_ */
