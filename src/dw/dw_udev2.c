@@ -221,6 +221,18 @@ bool dw_udev_watch(int watch_loop_millisec) {
          struct udev_device * dev2 = udev_monitor_receive_device(mon);
          if (!dev2)
             break;
+
+         if (debug || report_udev_events) {
+            Udev_Event_Detail * detail = collect_udev_event_detail(dev2);
+            if (exclude_event(detail))
+               DBGMSG("Draining event that would be excluded anyway");
+            else
+               DBGMSG("Draining event that would not otherwise be excluded");
+            DBGMSG("Detail for drained event");
+            dbgrpt_udev_event_basic_detail(detail,1);
+            free_udev_event_detail(detail);
+         }
+              
          udev_device_unref(dev2);
          drained_ct++;
       }
