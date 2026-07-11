@@ -24,6 +24,7 @@ extern _Atomic(uint16_t)  poll_watch_loop_millisec;
 extern _Atomic(uint16_t)  xevent_watch_loop_millisec;
 extern _Atomic(bool)      terminate_watch_thread;
 extern _Atomic(bool)      terminate_using_x11_event;
+extern _Atomic(bool)      dw_event_processing_pending;
 extern GMutex             master_dw_mutex;
 extern GMutex             process_event_mutex;
 extern bool               use_drm_connector_states;

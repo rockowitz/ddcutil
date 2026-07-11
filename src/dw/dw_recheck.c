@@ -153,6 +153,31 @@ typedef struct {
 // Function used by both the current algorithm and the new one
 //
 
+/** Waits, up to a bound, for the watch thread to finish processing any
+ *  pending screen change event before a recheck acquires master_dw_mutex.
+ *
+ *  A recheck probe of a display whose DDC is not yet responsive can hold
+ *  master_dw_mutex for seconds (DDC retries with sleeps).  Without this
+ *  deferral, a probe started just before a screen change event arrives -
+ *  or queued ahead of the watch thread on the mutex - stalls hotplug event
+ *  processing exactly when events are most frequent, e.g. just after
+ *  resume from sleep.  The wait is bounded so that a pathological stream
+ *  of events cannot postpone rechecks indefinitely; on timeout the caller
+ *  simply blocks on the mutex as before.
+ */
+STATIC void dw_defer_recheck_while_event_pending() {
+   const int max_deferral_millis   = 10000;
+   const int check_interval_millis = 100;
+   int deferred_millis = 0;
+   while (dw_event_processing_pending && !terminate_watch_thread &&
+          deferred_millis < max_deferral_millis)
+   {
+      dw_split_sleep(check_interval_millis);
+      deferred_millis += check_interval_millis;
+   }
+}
+
+
 /** Perform initial checks on a Display_Ref being rechecked.
  *
  *  Locks the display ref, performs initial checks,
@@ -301,6 +326,11 @@ gpointer dw_worker_thread_func(gpointer data) {
     while (!terminate_watch_thread && retry) {
        int sleep_ms = retry_thread_sleep_factor_millisec * (1 << rqe->sleepctr);
        dw_split_sleep(sleep_ms);
+       if (terminate_watch_thread) {
+          break;
+       }
+
+       dw_defer_recheck_while_event_pending();
        if (terminate_watch_thread) {
           break;
        }
@@ -498,6 +528,12 @@ gpointer dw_recheck_displays_func(gpointer data) {
                 dref_reprx_t(rqe->dref), max_sleep_time_millis);
          dw_free_recheck_queue_entry(rqe);
          continue;
+      }
+
+      dw_defer_recheck_while_event_pending();
+      if (terminate_watch_thread) {
+         dw_free_recheck_queue_entry(rqe);
+         break;
       }
 
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());

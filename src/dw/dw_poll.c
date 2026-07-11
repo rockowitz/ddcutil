@@ -209,6 +209,10 @@ STATIC void invoke_process_screen_change_event(
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
 
+   // Announce the pending event before acquiring master_dw_mutex, so that
+   // recheck worker threads defer starting new probes (which can hold the
+   // mutex for seconds) rather than queueing in front of event processing.
+   dw_event_processing_pending = true;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Locking master_dw_mutex, thread_id = %d", TID());
    g_mutex_lock(&master_dw_mutex);
 
@@ -239,6 +243,7 @@ STATIC void invoke_process_screen_change_event(
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Unlocking master_dw_mutex, thread_id = %d", TID());
    g_mutex_unlock(&master_dw_mutex);
+   dw_event_processing_pending = false;
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }

@@ -60,6 +60,12 @@ _Atomic(uint16_t)  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MI
 
 _Atomic(bool)  terminate_watch_thread    = false;
 _Atomic(bool)  terminate_using_x11_event = false;
+// True while the watch thread has a screen change event waiting for, or being
+// processed under, master_dw_mutex.  Recheck worker threads consult it to
+// defer starting a probe, which can hold master_dw_mutex for seconds, so that
+// event processing is not stalled behind them.  Set and cleared only by
+// invoke_process_screen_change_event().
+_Atomic(bool)  dw_event_processing_pending = false;
 GMutex    master_dw_mutex;
 GMutex    process_event_mutex;
 bool      use_drm_connector_states       = false;
