@@ -203,6 +203,33 @@ bool dw_udev_watch(int watch_loop_millisec) {
       }
    }
 
+   // A resume from sleep causes a burst of udev events in quick succession, as
+   // every GPU/connector/i2c-dev node re-registers. Without draining them here,
+   // the caller runs one full bus/EDID rescan per queued event instead of one
+   // rescan for the whole burst, which is expensive and shows up as a CPU spike
+   // right after resume. Coalesce: once we have an event to report, drain any
+   // additional events already queued (non-blocking) before returning, since the
+   // subsequent rescan reads current system state directly and does not depend
+   // on having seen every individual event.
+   if (found) {
+      int drained_ct = 0;
+      const int max_drain_ct = 500;   // safety bound, avoid delaying thread termination
+      while (drained_ct < max_drain_ct && !terminate_watch_thread) {
+         int rc = poll(&fds, 1, 0);   // non-blocking: only drain what's already queued
+         if (rc <= 0 || !(fds.revents & POLLIN))
+            break;
+         struct udev_device * dev2 = udev_monitor_receive_device(mon);
+         if (!dev2)
+            break;
+         udev_device_unref(dev2);
+         drained_ct++;
+      }
+      if (drained_ct > 0) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Drained %d additional queued udev event(s)", drained_ct);
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Drained %d additional queued udev event(s)", drained_ct);
+      }
+   }
+
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, terminate_watch_thread, "");
    return terminate_watch_thread;
 }
