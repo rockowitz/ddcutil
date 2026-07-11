@@ -248,28 +248,29 @@ STATIC int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
      bool debug = false;
 
      int slept_millisec = 0;
+     // Syslog only when a pause is actually taken.  This function runs on
+     // every pass of the watch loop in poll mode, so an unconditional message
+     // would flood the log with one line per poll interval.
 #ifdef USE_DBUS
      uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
      uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
-     char * msg = g_strdup_printf(
-                     "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
-                     elapsed_ns, elapsed_ms);
-     DBGTRC(debug, TRACE_GROUP, "%s", msg);
-     DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msg);
-     free(msg);
+     DBGTRC(debug, TRACE_GROUP,
+            "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
+            elapsed_ns, elapsed_ms);
 
-     if (elapsed_ms < pause_after_resume_ms) {
-        uint64_t remaining_sleep_ms = pause_after_resume_ms - elapsed_ms;
-        char * msg2 = g_strdup_printf("Pausing for %"PRIu64" ms", remaining_sleep_ms);
-        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msg2);
-        DBGTRC(debug, DDCA_TRC_NONE, "%s", msg2);
-        LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg2);
+     if (elapsed_ms < (uint64_t) pause_after_resume_ms) {
+        uint64_t remaining_sleep_ms = (uint64_t) pause_after_resume_ms - elapsed_ms;
+        char * msg = g_strdup_printf(
+              "Time since last return from sleep = %"PRIu64" ms, pausing for %"PRIu64" ms",
+              elapsed_ms, remaining_sleep_ms);
+        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msg);
+        DBGTRC(debug, DDCA_TRC_NONE, "%s", msg);
+        LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg);
         slept_millisec = remaining_sleep_ms;
-        free(msg2);
+        free(msg);
      }
 #else
      if (recently_resumed_from_sleep_by_clocktime()) {
-        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Recently resumed from sleep detected");
         // Sleep only the time remaining until pause_after_resume_ms has elapsed
         // since the resume was detected. The detector's grace window keeps
         // reporting "recently resumed" for 5 seconds, so sleeping the full
@@ -279,7 +280,8 @@ STATIC int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
         uint64_t since_detect_ms = millisec_since_resume_detected_by_clocktime();
         if (since_detect_ms < (uint64_t) pause_after_resume_ms) {
            int delay_ms = (int) ((uint64_t) pause_after_resume_ms - since_detect_ms);
-           DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Pausing for %d millisec", delay_ms);
+           DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
+                 "Recently resumed from sleep, pausing for %d millisec", delay_ms);
            dw_split_sleep(delay_ms);
            slept_millisec = delay_ms;
         }
