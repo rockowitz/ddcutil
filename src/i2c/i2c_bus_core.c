@@ -253,12 +253,17 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
             "paused for %d millisec at start of i2c_open_bus_basic()", paused_ms);
    }
-#endif
-#ifdef BY_CLOCKTIME
-   if (!recently_resumed) {
-      recently_resumed = recently_resumed_from_sleep_by_clocktime();
-      if (recently_resumed) {
-         SLEEP_MILLIS_WITH_SYSLOG(pause_after_resume_ms, "Pausing for recent resume by clocktime");
+#else
+   recently_resumed = recently_resumed_from_sleep_by_clocktime();
+   if (recently_resumed) {
+      // As in the dbus branch, sleep only the time remaining until
+      // pause_after_resume_ms has elapsed since the resume was detected,
+      // not the full amount on every open within the detector's 5 second
+      // grace window: a post-resume rescan opens many buses in succession.
+      uint64_t since_detect_ms = millisec_since_resume_detected_by_clocktime();
+      if (since_detect_ms < (uint64_t) pause_after_resume_ms) {
+         int delay_ms = (int) ((uint64_t) pause_after_resume_ms - since_detect_ms);
+         SLEEP_MILLIS_WITH_SYSLOG(delay_ms, "Pausing for recent resume by clocktime");
       }
    }
 #endif
