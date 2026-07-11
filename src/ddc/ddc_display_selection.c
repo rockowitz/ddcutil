@@ -150,6 +150,9 @@ ddc_find_display_ref_by_selector(Display_Selector * dsel) {
    Display_Ref * result = NULL;
 
    GPtrArray * all_displays = ddc_get_all_display_refs();
+   // Hold all_display_refs_mutex: this executes on API threads while the
+   // display watch thread may be appending newly detected displays.
+   g_mutex_lock(&all_display_refs_mutex);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * drec = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT(memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
@@ -160,6 +163,7 @@ ddc_find_display_ref_by_selector(Display_Selector * dsel) {
          }
       }
    }
+   g_mutex_unlock(&all_display_refs_mutex);
 
    DBGTRC_RET_STRING(debug, TRACE_GROUP, dref_repr_t(result), "result=%p", result);
    return result;

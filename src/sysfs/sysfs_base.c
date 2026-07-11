@@ -1530,6 +1530,9 @@ int search_all_businfo_records_by_connector_name(char *connector_name) {
    if (busno < 0) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Examining businfo records...");
       // look through all businfo records for one with the connector name
+      // Hold all_i2c_buses_mutex: the display watch thread may be adding
+      // or removing entries concurrently.
+      g_mutex_lock(&all_i2c_buses_mutex);
       for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
          I2C_Bus_Info *businfo = g_ptr_array_index(all_i2c_buses, ndx);
          DBGMSG("Examining businfo record for bus %d, I2C_BUS_PROBED=%s, connector_found_by=%s",
@@ -1541,6 +1544,7 @@ int search_all_businfo_records_by_connector_name(char *connector_name) {
             break;
          }
       }
+      g_mutex_unlock(&all_i2c_buses_mutex);
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "returning busno %d", busno);

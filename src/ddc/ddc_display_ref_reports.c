@@ -651,7 +651,16 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
    ddc_ensure_displays_detected();
 
    int display_ct = 0;
-   GPtrArray * all_displays = ddc_get_all_display_refs();
+   // Snapshot under the mutex rather than holding it across the loop:
+   // reporting a display can be slow, and the display watch thread may be
+   // appending newly detected displays concurrently.  Display_Refs are
+   // persistent, so the copied pointers remain valid after release.
+   g_mutex_lock(&all_display_refs_mutex);
+   GPtrArray * raw_displays = ddc_get_all_display_refs();
+   GPtrArray * all_displays = g_ptr_array_sized_new(raw_displays->len);
+   for (int ndx = 0; ndx < raw_displays->len; ndx++)
+      g_ptr_array_add(all_displays, g_ptr_array_index(raw_displays, ndx));
+   g_mutex_unlock(&all_display_refs_mutex);
    GPtrArray * edid_use_records = create_edid_use_table();
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Created edid_use_records = %p", edid_use_records);
    for (int ndx=0; ndx<all_displays->len; ndx++) {
@@ -677,6 +686,7 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
       report_ambiguous_connector_for_edid(edid_use_records, depth);
    }
    free_edid_use_table(edid_use_records);
+   g_ptr_array_free(all_displays, true);   // frees only the container, not the drefs
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %d", display_ct);
    return display_ct;

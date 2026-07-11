@@ -156,6 +156,9 @@ I2C_Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
 
    I2C_Bus_Info * bus_info = NULL;
    assert(all_i2c_buses);
+   // Hold all_i2c_buses_mutex: this executes on API threads while the display
+   // watch thread may be adding or removing entries.
+   g_mutex_lock(&all_i2c_buses_mutex);
    int busct = all_i2c_buses->len;
 
    for (int ndx = 0; ndx < busct; ndx++) {
@@ -165,6 +168,7 @@ I2C_Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
          break;
       }
    }
+   g_mutex_unlock(&all_i2c_buses_mutex);
 
     DBGMSF(debug, "returning %p", bus_info );
     if (debug && bus_info) {

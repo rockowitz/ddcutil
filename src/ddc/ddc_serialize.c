@@ -418,6 +418,9 @@ char * ddc_serialize_displays_and_buses() {
    GPtrArray* all_displays = ddc_get_all_display_refs();
    json_t* jdisplays = json_array();
 
+   // Hold all_display_refs_mutex: serialization can run while the display
+   // watch thread is appending newly detected displays.
+   g_mutex_lock(&all_display_refs_mutex);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
@@ -426,6 +429,7 @@ char * ddc_serialize_displays_and_buses() {
          json_decref(node);
       }
    }
+   g_mutex_unlock(&all_display_refs_mutex);
    json_object_set_new(root, "all_displays", jdisplays);
 
 #ifdef CACHE_BUS_INFO

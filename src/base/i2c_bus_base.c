@@ -28,7 +28,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 GPtrArray * all_i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
 GPtrArray * removed_i2c_buses = NULL;
-static GMutex all_i2c_buses_mutex;
+GMutex all_i2c_buses_mutex;
 
 
 //
@@ -133,14 +133,20 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
    bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
 
+   // Locked: callers run on API and callback threads while the display watch
+   // thread adds and removes entries; an unlocked scan can read the array's
+   // backing store as g_ptr_array_add() reallocates it.
+   g_mutex_lock(&all_i2c_buses_mutex);
    I2C_Bus_Info * businfo =
        i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
+   g_mutex_unlock(&all_i2c_buses_mutex);
 
    DBGMSF(debug, "Done.     Returning: %p", businfo);
    return businfo;
 }
 
 
+// Caller must hold all_i2c_buses_mutex.
 int i2c_find_bus_info_index_by_busno(int busno) {
 
    int result = i2c_find_bus_info_index_in_gptrarray_by_busno(all_i2c_buses, busno);
@@ -168,6 +174,7 @@ I2C_Bus_Info * i2c_find_businfo_by_drm_connector_id(int drm_connector_id) {
    DBGMSF(debug, "Starting. drm_connector_id=%d", drm_connector_id);
 
    I2C_Bus_Info * result = NULL;
+   g_mutex_lock(&all_i2c_buses_mutex);
    if (all_i2c_buses) {
       for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
          I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
@@ -177,6 +184,7 @@ I2C_Bus_Info * i2c_find_businfo_by_drm_connector_id(int drm_connector_id) {
          }
       }
    }
+   g_mutex_unlock(&all_i2c_buses_mutex);
 
    DBGMSF(debug, "Done.     Returning: %p", result);
    return result;
@@ -229,13 +237,8 @@ I2C_Bus_Info * i2c_add_bus_new_by_busno(int busno) {
 #endif
 
 
-bool i2c_remove_businfo(I2C_Bus_Info * businfo){
-   assert(businfo);
-   bool debug  = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d, removed=%s, flags=%s",
-            businfo, businfo->busno, sbool(businfo->removed), i2c_interpret_bus_flags_t(businfo->flags));
-
-   g_mutex_lock(&all_i2c_buses_mutex);
+// Caller must hold all_i2c_buses_mutex.
+static bool i2c_remove_businfo_locked(I2C_Bus_Info * businfo) {
    if (!all_i2c_buses)
       all_i2c_buses = g_ptr_array_new();
    if (!removed_i2c_buses)
@@ -251,11 +254,11 @@ bool i2c_remove_businfo(I2C_Bus_Info * businfo){
 
    assert(!(all_index >= 0 && removed_index >= 0));   // inconsistent data structure
 
-   if (all_index < 0 && removed_index >- 0) {
+   if (all_index < 0 && removed_index >= 0) {
       DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "already removed");
    }
 
-   else if (all_index <= 0) {
+   else if (all_index < 0) {
       DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "not found");
    }
 
@@ -267,7 +270,20 @@ bool i2c_remove_businfo(I2C_Bus_Info * businfo){
       g_ptr_array_remove_index(all_i2c_buses, all_index);
    }
 
+   return found;
+}
+
+
+bool i2c_remove_businfo(I2C_Bus_Info * businfo){
+   assert(businfo);
+   bool debug  = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d, removed=%s, flags=%s",
+            businfo, businfo->busno, sbool(businfo->removed), i2c_interpret_bus_flags_t(businfo->flags));
+
+   g_mutex_lock(&all_i2c_buses_mutex);
+   bool found = i2c_remove_businfo_locked(businfo);
    g_mutex_unlock(&all_i2c_buses_mutex);
+
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, found,"");
    return found;
 }
@@ -284,7 +300,9 @@ void i2c_remove_businfo_by_busno(int busno) {
       }
       else {
          I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, busNdx);
-         i2c_remove_businfo(businfo);
+         // n. calling i2c_remove_businfo() here would relock
+         // all_i2c_buses_mutex, which this thread already holds
+         i2c_remove_businfo_locked(businfo);
       }
       g_mutex_unlock(&all_i2c_buses_mutex);
       DBGTRC_DONE(debug, TRACE_GROUP, "");

@@ -184,6 +184,13 @@ ddc_non_async_scan(GPtrArray * all_displays) {
  *  Detection must already have occurred.
  *
  *  @return **GPtrArray of #Display_Ref instances
+ *
+ *  @remark
+ *  Returns the live array, not a copy.  The display watch thread appends to
+ *  it at hotplug time, which can reallocate the array's backing store, so
+ *  callers that can execute while the watch thread is active must either
+ *  iterate under #all_display_refs_mutex or take a snapshot under it.
+ *  #ddc_get_filtered_display_refs() provides a safely built copy.
  */
 GPtrArray *
 ddc_get_all_display_refs() {
@@ -266,6 +273,7 @@ void ddc_dbgrpt_display_refs_terse(bool include_invalid_displays, int depth) {
 int
 ddc_get_display_count(bool include_invalid_displays) {
    int display_ct = -1;
+   g_mutex_lock(&all_display_refs_mutex);
    if (all_display_refs) {
       display_ct = 0;
       for (int ndx=0; ndx<all_display_refs->len; ndx++) {
@@ -276,6 +284,7 @@ ddc_get_display_count(bool include_invalid_displays) {
          }
       }
    }
+   g_mutex_unlock(&all_display_refs_mutex);
    return display_ct;
 }
 
@@ -656,6 +665,9 @@ ddc_discard_detected_displays() {
 #endif
    reset_published_dref_hash();
    if (all_display_refs) {
+      // hold the mutex across the flag loop as well as the free, so no
+      // reader can be traversing the array while it is being torn down
+      g_mutex_lock(&all_display_refs_mutex);
       for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
          dref->flags |= DREF_TRANSIENT;  // hack to allow all Display References to be freed
@@ -668,11 +680,10 @@ ddc_discard_detected_displays() {
 #endif
 #endif
       }
-      g_mutex_lock(&all_display_refs_mutex);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calling g_ptr_array_free(all_display_refs, true)...");
       g_ptr_array_free(all_display_refs, true);
-      g_mutex_unlock(&all_display_refs_mutex);
       all_display_refs = NULL;
+      g_mutex_unlock(&all_display_refs_mutex);
       if (display_open_errors) {
          g_ptr_array_free(display_open_errors, true);
          display_open_errors = NULL;
@@ -913,15 +924,24 @@ void check_drefs_alive() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (ddc_displays_already_detected()) {
-      GPtrArray * all_displays = ddc_get_all_display_refs();
-      for (int ndx = 0; ndx < all_displays->len; ndx++) {
-         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      // Snapshot under the mutex rather than holding it across the loop:
+      // is_dref_alive() performs I2C I/O.  Display_Refs are persistent, so
+      // the copied pointers remain valid after the mutex is released.
+      g_mutex_lock(&all_display_refs_mutex);
+      GPtrArray * displays_snapshot = g_ptr_array_sized_new(all_display_refs->len);
+      for (int ndx = 0; ndx < all_display_refs->len; ndx++)
+         g_ptr_array_add(displays_snapshot, g_ptr_array_index(all_display_refs, ndx));
+      g_mutex_unlock(&all_display_refs_mutex);
+
+      for (int ndx = 0; ndx < displays_snapshot->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(displays_snapshot, ndx);
          bool alive = is_dref_alive(dref);
          if (alive != (dref->flags & DREF_ALIVE) )
             (void) dref_set_alive(dref, alive);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref=%s, is_alive=%s",
                          dref_repr_t(dref), SBOOL(dref->flags & DREF_ALIVE));
       }
+      g_ptr_array_free(displays_snapshot, true);
    }
    else {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "displays not yet detected");

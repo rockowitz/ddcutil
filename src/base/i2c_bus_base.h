@@ -15,6 +15,10 @@
 
 extern GPtrArray * all_i2c_buses;
 extern GPtrArray * removed_i2c_buses;
+// Serializes access to all_i2c_buses.  The display watch thread adds and
+// removes entries at hotplug time; any code that iterates the array and can
+// execute on another thread must hold this mutex (or take a snapshot under it).
+extern GMutex      all_i2c_buses_mutex;
 
 // Generalized Bus_Info retrieval
 I2C_Bus_Info *   i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int busno);
