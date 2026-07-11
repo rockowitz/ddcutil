@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "util/debug_util.h"
+#include "util/linux_util.h"
 #include "util/string_util.h"
 #include "util/udev_util.h"
 
@@ -185,6 +186,14 @@ bool dw_udev_watch(int watch_loop_millisec) {
                if (streq(detail->prop_action, "add") &&
                    !str_starts_with(detail->prop_devname, "/dev/dri"))
                {
+#ifndef USE_DBUS
+                  // Run the clocktime resume detector before pausing, so its
+                  // detection timestamp precedes this sleep and the caller's
+                  // pause_if_recently_resumed_from_sleep() counts this sleep
+                  // toward pause_after_resume_ms instead of pausing again in
+                  // full. No-op if a resume did not recently occur.
+                  recently_resumed_from_sleep_by_clocktime();
+#endif
                   int pause_millis = pause_after_resume_ms;
                   LOGGABLE_SLEEP(pause_millis, SLEEP_OPT_TRACEABLE,DDCA_SYSLOG_NOTICE,
                         "Pausing %d millisec after UDEV add event", pause_millis);

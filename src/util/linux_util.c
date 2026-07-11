@@ -737,3 +737,20 @@ bool recently_resumed_from_sleep_by_clocktime() {
    }
    return resumed;
 }
+
+
+/** Returns the number of milliseconds since a resume from sleep was last
+ *  detected on this thread by recently_resumed_from_sleep_by_clocktime().
+ *
+ *  Lets callers that pause for a fixed interval after a resume sleep only
+ *  the time remaining in that interval, rather than the full interval on
+ *  every call within the detector's grace window.
+ *
+ *  @return milliseconds since the resume was detected,
+ *          UINT64_MAX if no resume has been detected on this thread
+ */
+uint64_t millisec_since_resume_detected_by_clocktime() {
+   if (most_recent_reset_ms == 0)
+      return UINT64_MAX;
+   return NANOS2MILLIS(cur_boot_time_nanosec()) - most_recent_reset_ms;
+}

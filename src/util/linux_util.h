@@ -11,6 +11,7 @@
 // #include <acl/libacl.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "linux_basic_util.h"
 
@@ -35,4 +36,5 @@ void       install_segv_handler(void);
 
 void       init_accumulated_sleep();
 bool       recently_resumed_from_sleep_by_clocktime();
+uint64_t   millisec_since_resume_detected_by_clocktime();
 #endif /* LINUX_UTIL_H_ */

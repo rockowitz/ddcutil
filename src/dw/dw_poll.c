@@ -270,10 +270,19 @@ STATIC int pause_if_recently_resumed_from_sleep(int pause_after_resume_ms) {
 #else
      if (recently_resumed_from_sleep_by_clocktime()) {
         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Recently resumed from sleep detected");
-        int delay_ms = pause_after_resume_ms;
-        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Pausing for %d millisec", delay_ms);
-        dw_split_sleep(delay_ms);
-        slept_millisec = delay_ms;
+        // Sleep only the time remaining until pause_after_resume_ms has elapsed
+        // since the resume was detected. The detector's grace window keeps
+        // reporting "recently resumed" for 5 seconds, so sleeping the full
+        // pause_after_resume_ms on every call would pause redundantly for each
+        // event batch in a post-resume udev burst, and again after the pause
+        // already taken in dw_udev_watch() for an add event.
+        uint64_t since_detect_ms = millisec_since_resume_detected_by_clocktime();
+        if (since_detect_ms < (uint64_t) pause_after_resume_ms) {
+           int delay_ms = (int) ((uint64_t) pause_after_resume_ms - since_detect_ms);
+           DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Pausing for %d millisec", delay_ms);
+           dw_split_sleep(delay_ms);
+           slept_millisec = delay_ms;
+        }
      }
 #endif
    return slept_millisec;
