@@ -99,7 +99,7 @@ _Atomic uint64_t last_resume_from_sleep_ns = 0;
  *  permissions shortly after the nodes appear), so the first opens get the
  *  same settling pause from ldbus_pause_if_recent_return_from_sleep().
  */
-void ldbus_elapsed_since_resume_fromm_sleep_mark_start() {
+void ldbus_elapsed_since_resume_from_sleep_mark_start() {
    bool debug = false;
 
    last_resume_from_sleep_ns = last_prepare_for_sleep_ns = cur_boot_time_nanosec();
@@ -113,7 +113,7 @@ void ldbus_elapsed_since_resume_fromm_sleep_mark_start() {
  *  sleep, detected via D-Bus.
  *
  *  If no resume has occurred, the reference point is the start of the
- *  sleep-watch thread, per ldbus_elapsed_since_resume_fromm_sleep_mark_start(),
+ *  sleep-watch thread, per ldbus_elapsed_since_resume_from_sleep_mark_start(),
  *  so program startup is intentionally reported like a recent resume.
  *
  *  @return nanoseconds since last resume (or since sleep-watch thread start)
@@ -233,7 +233,7 @@ gpointer ldbus_watch_sleep_events_thread(gpointer data) {
    Dbus_Connection_Data * dcd = (Dbus_Connection_Data*) data;
    DBGF(debug,"Listening for PrepareForSleep...");
 
-   ldbus_elapsed_since_resume_fromm_sleep_mark_start();
+   ldbus_elapsed_since_resume_from_sleep_mark_start();
    int timeout_ms = 500;    // - = never
    while (!quit_sleep_watch_thread) {
        dbus_connection_read_write_dispatch(dcd->conn, timeout_ms);
