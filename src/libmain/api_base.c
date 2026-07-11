@@ -291,7 +291,13 @@ void quiesce_api() {
       int poll_interval_microsec = poll_interval_millisec * 1000;
       oops = true;
       for (; slept_microsec < poll_max_microsec; slept_microsec += poll_interval_microsec) {
+         // Release the mutex while sleeping: decrement_active_api_calls()
+         // needs it to record call completion.  Holding it across the sleep
+         // kept active_calls from ever reaching 0, so the loop always ran
+         // to the timeout and quiesced with calls still outstanding.
+         g_mutex_unlock(&active_calls_mutex);
          usleep(poll_interval_microsec);
+         g_mutex_lock(&active_calls_mutex);
          if (active_calls == 0) {
             oops = false;
             break;
