@@ -92,6 +92,13 @@ _Atomic uint64_t last_prepare_for_sleep_ns = 0;
 _Atomic uint64_t last_resume_from_sleep_ns = 0;
 
 
+/** Seeds the resume timestamps with the current time at sleep-watch thread
+ *  startup, deliberately treating program start like a resume from sleep.
+ *  The window just after boot/login has the same transient EACCES race on
+ *  /dev/i2c-N opens as the window just after resume (udev rules apply device
+ *  permissions shortly after the nodes appear), so the first opens get the
+ *  same settling pause from ldbus_pause_if_recent_return_from_sleep().
+ */
 void ldbus_elapsed_since_resume_fromm_sleep_mark_start() {
    bool debug = false;
 
@@ -102,10 +109,14 @@ void ldbus_elapsed_since_resume_fromm_sleep_mark_start() {
 }
 
 
-/** Returns the number of nanoseconds since the most
- *  recent return from sleep, detected via D-Bus.
+/** Returns the number of nanoseconds since the most recent return from
+ *  sleep, detected via D-Bus.
  *
- *  @return nanoseconds since last resume, UINT64_MAX if no resume detected
+ *  If no resume has occurred, the reference point is the start of the
+ *  sleep-watch thread, per ldbus_elapsed_since_resume_fromm_sleep_mark_start(),
+ *  so program startup is intentionally reported like a recent resume.
+ *
+ *  @return nanoseconds since last resume (or since sleep-watch thread start)
  */
 uint64_t ldbus_elapsed_since_resume_from_sleep_ns() {
    bool debug = false;
