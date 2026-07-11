@@ -630,7 +630,9 @@ static uint64_t global_initial_accumulated_sleep_ns = UINT64_MAX;
  * UINT64_MAX means this thread has not yet initialized its baseline.
  */
 static _Thread_local uint64_t previous_accumulated_sleep_ns = UINT64_MAX;
-static _Thread_local uint64_t most_recent_reset_ms = 0; // UNUSED
+// End time (CLOCK_BOOTTIME ms) of the 5-sec "recently resumed" grace window
+// after the most recent detected resume. See recently_resumed_from_sleep_by_clocktime().
+static _Thread_local uint64_t most_recent_reset_ms = 0;
 
 
 /** Gets the current accumulated sleep time. 
@@ -682,8 +684,21 @@ bool recently_resumed_from_sleep_by_clocktime() {
    bool resumed = false;
 
    uint64_t cur_boottime_ms = NANOS2MILLIS( cur_boot_time_nanosec());
+   // Grace window: keep reporting "recently resumed" for 5 sec after the
+   // resume was actually detected below. This branch is redundant for
+   // *suppressing* false repeats -- the delta check in the else branch
+   // already self-resets, since previous_accumulated_sleep_ns is updated
+   // to current_accumulated_sleep_ns the moment a resume is detected, so
+   // sleep_increase_ns on the very next call is ~0 (just real elapsed
+   // time) and naturally evaluates to "not resumed" without this branch's
+   // help. Its only real effect is *extending* the true result for 5 sec
+   // past the single detecting call, for callers that want a longer
+   // "just resumed" allowance than one call. most_recent_reset_ms is a
+   // misleading name for what it does here: it doesn't reset the resume
+   // detector's baseline (previous_accumulated_sleep_ns does that) -- it
+   // only marks when this grace window should end.
    if ((cur_boottime_ms - most_recent_reset_ms) < 5000) {
-      resumed = false;
+      resumed = true;
       SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Called within 5 sec of reset");
    }
    else {
@@ -698,21 +713,23 @@ bool recently_resumed_from_sleep_by_clocktime() {
                   : current_accumulated_sleep_ns;
       }
       uint64_t sleep_increase_ns = current_accumulated_sleep_ns - previous_accumulated_sleep_ns;
-      int sleep_increase_ms = NANOS2MILLIS(sleep_increase_ns);
-      if (sleep_increase_ms > 1000) {
+      // Compare in uint64_t nanoseconds throughout -- narrowing to int
+      // milliseconds before comparing would overflow for a suspend
+      // longer than ~24.8 days (INT_MAX ms).
+      if (sleep_increase_ns > UINT64_C(1000000000)) {
          // Accumulated sleep grew by > 1 sec since previous => we resumed.
          resumed = true;
          previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
          SIMPLE_STD_FUNC_SYSLOG(LOG_INFO,
-               "Resume from sleep detected by BOOTTIME/MONOTONIC, sleep increase=%d ms,"
-               "previous=%u ms, current=%u ms",
-               sleep_increase_ms,
-               (uint) NANOS2MILLIS(previous_accumulated_sleep_ns),
-               (uint) NANOS2MILLIS(current_accumulated_sleep_ns));
-         most_recent_reset_ms = cur_boottime_ms; // UNUSED
+               "Resume from sleep detected by BOOTTIME/MONOTONIC, sleep increase=%"PRIu64" ms,"
+               "previous=%"PRIu64" ms, current=%"PRIu64" ms",
+               NANOS2MILLIS(sleep_increase_ns),
+               NANOS2MILLIS(previous_accumulated_sleep_ns),
+               NANOS2MILLIS(current_accumulated_sleep_ns));
+         most_recent_reset_ms = cur_boottime_ms;
       }
 
-      DBGF(debug, "previous_accumulated_sleep_ns=%d, current_accumulated_sleep_ns=%d"
+      DBGF(debug, "previous_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64
                   ", returning %s",
                   NANOS2MILLIS(previous_accumulated_sleep_ns),
                   NANOS2MILLIS(current_accumulated_sleep_ns),
