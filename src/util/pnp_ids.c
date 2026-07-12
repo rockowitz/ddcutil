@@ -2308,7 +2308,10 @@ static char * pnp_name_from_internal_table(char * id, int first, int last) {
 //
 
 static GHashTable * ids_hash = NULL;
-static bool hwdata_checked = false;
+// Guards one-time initialization of ids_hash by load_pnp_ids_from_hwdata_file().
+// Without it, concurrent first calls to pnp_name() each ran the loader, racing
+// on the same global GHashTable and double-freeing values on duplicate keys.
+static gsize        pnp_ids_initialized = 0;
 
 static void dbgrpt_ids_hash(int depth) {
    int d1 = depth+1;
@@ -2394,9 +2397,13 @@ static char * pnp_name_from_hash(char * id) {
  */
 char * pnp_name(char * id) {
    char * result = NULL;
-   if (!hwdata_checked) {
+   // One-time init: exactly one thread runs the loader; others block until it
+   // completes.  Provides the acquire/release ordering that makes ids_hash
+   // safely visible to all threads afterward.  ids_hash is not modified after
+   // initialization, so the lookups below need no further locking.
+   if (g_once_init_enter(&pnp_ids_initialized)) {
       load_pnp_ids_from_hwdata_file();
-      hwdata_checked = true;
+      g_once_init_leave(&pnp_ids_initialized, 1);
    }
 
    if (ids_hash) {
