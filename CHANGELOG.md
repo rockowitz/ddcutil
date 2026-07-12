@@ -1,3 +1,19 @@
+## [2.2.8] 2026-07-12
+
+#### Fixed
+
+- Thread safety: fixed a double free crash caused by unsynchronized lazy
+  initialization of the PNP manufacturer id table in **pnp_name()**. It could
+  occur when multiple threads first resolved EDID manufacturer names
+  concurrently, e.g. reporting displays from several threads.
+- Thread safety: fixed a use-after-free crash caused by unsynchronized access
+  to the per-thread data table in **ptd_get_per_thread_data()**, which could
+  occur under concurrent libddcutil API calls.
+- **ddca_report_displays()** now respects API quiescing. Previously, calling it
+  concurrently with **ddca_redetect_displays()** could crash by dereferencing
+  display references freed by the redetection.
+
+
 ## [2.2.7] 2025-05-08
 
 #### EACCES Errors
