@@ -246,7 +246,13 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    switch(dref->io_path.io_mode) {
    case DDCA_IO_I2C:
       {
-         i2c_report_active_bus(businfo, d1);
+         // businfo is NULL if the display was disconnected after the dref
+         // was selected for reporting: mark_display_ref_disconnected()
+         // clears dref->detail
+         if (businfo)
+            i2c_report_active_bus(businfo, d1);
+         else
+            rpt_vstring(d1, "I2C bus information no longer available");
       }
       break;
    case DDCA_IO_USB:
@@ -305,7 +311,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          else if (businfo && businfo->flags & I2C_BUS_DDC_DISABLED)
             msg = "DDC communication disabled";
          else { // non-phantom
-            if (dref->io_path.io_mode == DDCA_IO_I2C)
+            // n. businfo is NULL if the display has been disconnected
+            if (dref->io_path.io_mode == DDCA_IO_I2C && businfo)
             {
 #ifdef OLD
                 if (businfo->flags & I2C_BUS_EDP)
