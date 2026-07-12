@@ -331,7 +331,7 @@ void dw_emit_display_status_record(
          callback_ct);
 #endif
 
-// Take snapshot of display_detection_callbacks
+   // Take snapshot of display_detection_callbacks
    // Heap allocated rather than a variable length array: a VLA of size 0,
    // which occurs whenever no callbacks are registered, is undefined behavior.
    g_mutex_lock(&callbacks_mutex);
