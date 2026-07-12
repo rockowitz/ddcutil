@@ -233,8 +233,13 @@ lock_display(
 
 bye:
    if (locked) {  // note that this thread owns the lock
+        // The owner fields are read by the self-lock check above and by
+        // unlock_display() under master_display_lock_mutex; write them
+        // under the same mutex.
+        g_mutex_lock(&master_display_lock_mutex);
         dlr->display_mutex_thread = g_thread_self();
         dlr->linux_thread_id = get_thread_id();
+        g_mutex_unlock(&master_display_lock_mutex);
    }
 
    // need a new DDC status code
@@ -536,7 +541,13 @@ dbgrpt_display_locks(int depth) {
 }
 
 
-/** Deletes the display lock table and creates a new one
+/** Deletes all unlocked records in the display lock table.
+ *
+ *  Records whose display_mutex is currently held are preserved: freeing a
+ *  locked GMutex is undefined behavior, the owning thread holds a pointer
+ *  to the record that it will later pass to unlock_display(), and deleting
+ *  the record would let a subsequent lock request create a second record
+ *  for the same io path, breaking mutual exclusion.
  */
 void
 reset_display_locks_table() {
@@ -546,21 +557,35 @@ reset_display_locks_table() {
    if (IS_DBGTRC(debug, TRACE_GROUP))
       dbgrpt_display_locks(1);
 
+   // master_display_lock_mutex guards the owner fields examined here,
+   // descriptors_mutex guards the table.  Acquisition order matches the
+   // only other function that takes both.
+   g_mutex_lock(&master_display_lock_mutex);
    g_mutex_lock(&descriptors_mutex);
    if (lock_records) {
       int active_ct = 0;
-      for (int ndx = 0; ndx < lock_records->len; ndx++) {
-         Display_Lock_Record* cur= g_ptr_array_index(lock_records, ndx);
-         if (cur->display_mutex_thread)
+      int freed_ct = 0;
+      for (int ndx = lock_records->len - 1; ndx >= 0; ndx--) {
+         Display_Lock_Record* cur = g_ptr_array_index(lock_records, ndx);
+         if (cur->display_mutex_thread) {
             active_ct++;
+         }
+         else {
+            g_ptr_array_remove_index(lock_records, ndx);  // g_free's the record
+            freed_ct++;
+         }
       }
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "Deleting lock record table with %d display lock records, %d active",
-            lock_records->len, active_ct);
-      g_ptr_array_free(lock_records, true);
+            "Deleted %d display lock records, kept %d active", freed_ct, active_ct);
+      if (active_ct > 0)
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
+               "%d display lock record(s) still locked, not deleted", active_ct);
    }
-   lock_records = g_ptr_array_new_with_free_func(g_free);
+   else {
+      lock_records = g_ptr_array_new_with_free_func(g_free);
+   }
    g_mutex_unlock(&descriptors_mutex);
+   g_mutex_unlock(&master_display_lock_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -580,6 +605,10 @@ int unlock_all_displays_for_current_thread() {
       rpt_label(depth,"index  lock-record-ptr  dpath                         display_mutex_thread");
    }
 
+   // master_display_lock_mutex guards the owner fields written here,
+   // descriptors_mutex guards the table.  Same acquisition order as
+   // reset_display_locks_table().
+   g_mutex_lock(&master_display_lock_mutex);
    g_mutex_lock(&descriptors_mutex);
    int unlocked_ct = 0;
    for (int ndx=0; ndx < lock_records->len; ndx++) {
@@ -603,6 +632,7 @@ int unlock_all_displays_for_current_thread() {
 
    }
    g_mutex_unlock(&descriptors_mutex);
+   g_mutex_unlock(&master_display_lock_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d", unlocked_ct);
    return unlocked_ct;
