@@ -30,89 +30,11 @@
 //
 // Locking
 //
+// A recursive mutex allows functions that take the lock to call each other
+// (e.g. try_data_reset2_all() -> try_data_reset2()) without the hand-rolled
+// per-thread "already locked" bookkeeping this file previously maintained.
 
-static GMutex try_data_mutex;
-static GPrivate this_thread_has_lock;
-static bool debug_mutex = false;
-
-
-/** If **try_data_mutex** is not already locked by the current thread,
- *  lock it.
- *
- *  \remark
- *  This function is necessary because the behavior if a GLib mutex is
- *  relocked by the current thread is undefined.
- */
-
-// avoids locking if this thread already owns the lock, since behavior undefined
-bool lock_if_unlocked() {
-   bool debug = false;
-   debug = debug || debug_mutex;
-
-   bool lock_performed = false;
-   bool thread_has_lock = GPOINTER_TO_INT(g_private_get(&this_thread_has_lock));
-   DBGMSF(debug, "Already locked: %s", sbool(thread_has_lock));
-   if (!thread_has_lock) {
-      g_mutex_lock(&try_data_mutex);
-      lock_performed = true;
-      // should this be a depth counter rather than a boolean?
-      g_private_set(&this_thread_has_lock, GINT_TO_POINTER(true));
-      if (debug) {
-         intmax_t cur_thread_id = get_thread_id();
-         DBGMSG("Locked by thread %d", cur_thread_id);
-      }
-   }
-
-   DBGMSF(debug, "Returning: %s", sbool(lock_performed) );
-   return lock_performed;
-}
-
-
-/** Unlocks the **try_data_mutex** set by a call to #lock_if_unlocked
- *
- *  \param  unlock_requested perform unlock
- */
-void unlock_if_needed(bool unlock_requested) {
-   bool debug = false;
-   debug = debug || debug_mutex;
-   DBGMSF(debug, "unlock_requested=%s", sbool(unlock_requested));
-
-   if (unlock_requested) {
-      // is it actually locked?
-      bool currently_locked = GPOINTER_TO_INT(g_private_get(&this_thread_has_lock));
-      DBGMSF(debug, "currently_locked = %s", sbool(currently_locked));
-      if (currently_locked) {
-         g_private_set(&this_thread_has_lock, GINT_TO_POINTER(false));
-         if (debug) {
-            intmax_t cur_thread_id = get_thread_id();
-            DBGMSG("Unlocked by thread %d", cur_thread_id);
-         }
-         g_mutex_unlock(&try_data_mutex);
-      }
-   }
-
-   DBGMSF(debug, "Done");
-}
-
-
-/** Requests a lock on the **try data** data structure.
- *  A lock is not performed if the current thread already holds the lock
- *
- *  \return  true if a lock was actually performed
- */
-bool try_data_lock() {
-   return lock_if_unlocked();
-}
-
-
-/** Requests that the currently held lock on the **try_data** data structure
- *  be released
- *
- *  \param release_requested  if true, attempt to unlock
- */
-void try_data_unlock(bool release_requested) {
-   unlock_if_needed(release_requested);
-}
+static GRecMutex try_data_mutex;
 
 
 // counters usage:
@@ -201,7 +123,7 @@ void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtr
 
    assert(new_maxtries >= 1 && new_maxtries <= MAX_MAX_TRIES);
 
-   bool this_function_performed_lock = lock_if_unlocked();
+   g_rec_mutex_lock(&try_data_mutex);
 
    stats_rec->maxtries = new_maxtries;
    if (new_maxtries < stats_rec->lowest_maxtries)
@@ -209,7 +131,7 @@ void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtr
    if (new_maxtries > stats_rec->highest_maxtries)
       stats_rec->highest_maxtries = new_maxtries;
 
-   unlock_if_needed(this_function_performed_lock);
+   g_rec_mutex_unlock(&try_data_mutex);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE,  "");
 }
@@ -228,7 +150,7 @@ void try_data_reset2(Retry_Operation retry_type) {
    bool debug = false;
    DBGMSF(debug, "Starting, retry type: %s", retry_type_name(retry_type));
 
-   bool this_function_performed_lock = lock_if_unlocked();
+   g_rec_mutex_lock(&try_data_mutex);
 
    DBGMSF(debug, "Setting highest_maxtries, lowest_maxtries = current maxtries: %d",
                  try_data[retry_type].maxtries);
@@ -241,7 +163,7 @@ void try_data_reset2(Retry_Operation retry_type) {
    for (int ndx=0; ndx < MAX_MAX_TRIES+1; ndx++)
       try_data[retry_type].counters[ndx] = 0;
 
-   unlock_if_needed(this_function_performed_lock);
+   g_rec_mutex_unlock(&try_data_mutex);
 
    DBGMSF(debug, "Done");
 }
@@ -250,13 +172,14 @@ void try_data_reset2(Retry_Operation retry_type) {
 /** Resets the counters for all retry types
  */
 void try_data_reset2_all() {
-   bool this_function_performed_lock = lock_if_unlocked();
+   // recursive mutex: try_data_reset2() relocks it on this thread
+   g_rec_mutex_lock(&try_data_mutex);
 
    for (int retry_type = 0; retry_type < RETRY_OP_COUNT; retry_type++) {
       try_data_reset2(retry_type);
    }
 
-   unlock_if_needed(this_function_performed_lock);
+   g_rec_mutex_unlock(&try_data_mutex);
 }
 
 
@@ -280,7 +203,7 @@ void try_data_record_tries2(Display_Handle * dh, Retry_Operation retry_type, DDC
    drd_record_display_tries(pdd, retry_type, ddcrc, tryct);
 
    Try_Data2 * stats_rec = &try_data[retry_type];
-   bool locked_by_this_func = lock_if_unlocked();
+   g_rec_mutex_lock(&try_data_mutex);
    if (ddcrc == 0) {
       DBGMSF(debug, "Current stats_rec->maxtries=%d", stats_rec->maxtries);
       assert(0 < tryct && tryct <= stats_rec->maxtries);
@@ -297,7 +220,7 @@ void try_data_record_tries2(Display_Handle * dh, Retry_Operation retry_type, DDC
       stats_rec->counters[0] += 1;
    }
 
-   unlock_if_needed(locked_by_this_func);
+   g_rec_mutex_unlock(&try_data_mutex);
 }
 
 
@@ -331,7 +254,7 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
    Try_Data2 * stats_rec = &try_data[retry_type];
    rpt_vstring(depth, "Retry statistics for %s", retry_type_description(retry_type));
 
-   bool this_function_performed_lock = lock_if_unlocked();
+   g_rec_mutex_lock(&try_data_mutex);
 
    // doesn't distinguish write vs read
    // rpt_vstring(depth, "Retry statistics for ddc %s exchange", ddc_retry_type_description(stats_rec->retry_type));
@@ -371,7 +294,7 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
       rpt_vstring(d1, "Total attempts:                   %3d", total_attempts);
    }
 
-   unlock_if_needed(this_function_performed_lock);
+   g_rec_mutex_unlock(&try_data_mutex);
 }
 
 

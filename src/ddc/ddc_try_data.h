@@ -20,8 +20,6 @@
 
 void     try_data_init_retry_type(Retry_Operation retry_type, Retry_Op_Value maxtries);
 void     init_ddc_try_data();
-bool     try_data_lock();
-void     try_data_unlock(bool this_function_owns_lock);
 Retry_Op_Value
          try_data_get_maxtries2(Retry_Operation retry_type);
 void     try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtries);
