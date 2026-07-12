@@ -1,4 +1,5 @@
-## [2.2.8] 2026-07-12
+## [2.2.8] 2026-07-12   COLLECTED NOTES, NOT YET EDITED
+
 
 #### Added
 
