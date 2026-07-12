@@ -332,9 +332,12 @@ void dw_emit_display_status_record(
 #endif
 
 // Take snapshot of display_detection_callbacks
+   // Heap allocated rather than a variable length array: a VLA of size 0,
+   // which occurs whenever no callbacks are registered, is undefined behavior.
    g_mutex_lock(&callbacks_mutex);
    int callback_ct = (display_detection_callbacks) ? display_detection_callbacks->len : 0;
-   DDCA_Display_Status_Callback_Func funcs[callback_ct];
+   DDCA_Display_Status_Callback_Func * funcs =
+         g_new(DDCA_Display_Status_Callback_Func, MAX(callback_ct, 1));
    for (int ndx = 0; ndx < callback_ct; ndx++)
       funcs[ndx] = g_ptr_array_index(display_detection_callbacks, ndx);
    g_mutex_unlock(&callbacks_mutex);
@@ -359,6 +362,7 @@ void dw_emit_display_status_record(
       }
    }
 
+   g_free(funcs);
    DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Started %d event callback thread(s)", callback_ct);
    DBGTRC_DONE(debug, TRACE_GROUP, "Started %d event callback thread(s)", callback_ct);
 }
