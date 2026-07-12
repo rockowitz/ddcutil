@@ -47,7 +47,11 @@ static GRecMutex try_data_mutex;
 typedef
 struct {
    Retry_Operation retry_type;
-   Retry_Op_Value  maxtries;
+   // Atomic: try_data_get_maxtries2() reads maxtries on the retry hot path
+   // without try_data_mutex, and try_data_init_retry_type() writes it at
+   // startup without the mutex.  The writers in try_data_set_maxtries2() /
+   // try_data_reset2() still hold the mutex, for the lowest/highest coordination.
+   _Atomic(Retry_Op_Value)  maxtries;
    Retry_Op_Value  counters[MAX_MAX_TRIES+2];
    Retry_Op_Value  highest_maxtries;
    Retry_Op_Value  lowest_maxtries;
