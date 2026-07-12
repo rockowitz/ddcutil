@@ -22,24 +22,18 @@
  *  Exit status: 0 if no failure detected, 1 otherwise. A crash, hang, or
  *  ASan/assert abort is itself the finding.
  *
- *  Op selection: by default the workers run display-ref enumeration and display
- *  open/getvcp/close (ops 0 and 3), which are safe to run concurrently with the
- *  redetect driver -- the combination this harness primarily validates. Pass a
- *  4th argument to force a single op index (0..4): 0 = get_display_refs,
- *  1 = get_display_info_list2, 2 = report_displays, 3 = open/getvcp/close,
- *  4 = yield.
+ *  Op selection: by default the workers run a random mix of all operations
+ *  alongside the redetect driver. Pass a 4th argument to force a single op index
+ *  (0..4): 0 = get_display_refs, 1 = get_display_info_list2, 2 = report_displays,
+ *  3 = open/getvcp/close, 4 = yield.
  *
- *  ops 1 and 2 are NOT in the default mix. They originally corrupted the heap
- *  under concurrency via two unsynchronized global hash tables (per_thread_data.c
- *  and pnp_ids.c); both were found by this harness and fixed, and ops 1 and 2 are
- *  now clean under concurrency on their own (verified under ASan, e.g.
- *  `stress_watch 10 16 999999 2`). They remain excluded from the default mix
- *  because concurrent report_displays / get_display_info_list2 while the redetect
- *  driver is active still crashes: redetect frees the Display_Refs, and
- *  ddca_report_displays() in particular does not respect the API quiesce, so it
- *  dereferences freed drefs (ASan: SEGV in record_i2c_edid_use). That is a
- *  separate, still-open issue; run ops 1/2 with redetect disabled (large 3rd arg)
- *  to exercise them without it.
+ *  This harness found and drove the fixes for three concurrency bugs that this
+ *  mix originally exposed: heap corruption in two unsynchronized global hash
+ *  tables (per_thread_data.c, pnp_ids.c), and a use-after-free from
+ *  ddca_report_displays() running through ddca_redetect_displays()'s quiesce
+ *  window and dereferencing freed Display_Refs (fixed by making report respect
+ *  quiesce). With those fixed, the full mix plus active redetect runs clean under
+ *  an ASan build.
  */
 
 // Copyright (C) 2026 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -89,13 +83,8 @@ static void * worker(void * arg) {
    // exercised.
    ddca_set_fout(NULL);
 
-   // Default mix = ops safe to run alongside the redetect driver.  ops 1 and 2
-   // are reachable only via forced_op (see file header).
-   static const int default_ops[] = {0, 3, 3, 4};
    while (!atomic_load(&stop)) {
-      int which = (forced_op >= 0)
-                     ? forced_op
-                     : default_ops[rand_r(&seed) % (int)(sizeof(default_ops)/sizeof(default_ops[0]))];
+      int which = (forced_op >= 0) ? forced_op : rand_r(&seed) % 5;
       switch (which) {
 
       case 0: {   // enumerate display refs (reads all_display_refs)
