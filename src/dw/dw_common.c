@@ -494,6 +494,7 @@ bool dw_hotplug_change_handler(
                  "Unexpected error checking bus %d: %s", busno, errinfo_summary(err));
             DUAL_MSGNV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
             ERRINFO_FREE_WITH_REPORT(err, false);
+            /* coverity[UNUSED_VALUE] defensive null-after-free; err is reassigned before its next read */
             err = NULL;
          }
       }
@@ -515,6 +516,7 @@ bool dw_hotplug_change_handler(
                   "Unexpected error checking bus %d: %s", busno, errinfo_summary(err));
             DUAL_MSGNV(DDCA_SYSLOG_ERROR, "%s", msgbuf);
             ERRINFO_FREE_WITH_REPORT(err, false);
+            /* coverity[UNUSED_VALUE] defensive null-after-free; err is reassigned before its next read */
             err = NULL;
          }
          i2c_add_businfo(businfo);
