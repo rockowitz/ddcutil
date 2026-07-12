@@ -664,10 +664,12 @@ ddc_discard_detected_displays() {
    discard_usb_monitor_list();
 #endif
    reset_published_dref_hash();
+   // Test all_display_refs under the mutex, not before it: checking outside and
+   // modifying inside would let two concurrent callers both pass the check and
+   // both free/NULL the array.  Hold the mutex across the flag loop and free so
+   // no reader can traverse the array while it is torn down.
+   g_mutex_lock(&all_display_refs_mutex);
    if (all_display_refs) {
-      // hold the mutex across the flag loop as well as the free, so no
-      // reader can be traversing the array while it is being torn down
-      g_mutex_lock(&all_display_refs_mutex);
       for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
          dref->flags |= DREF_TRANSIENT;  // hack to allow all Display References to be freed
@@ -683,12 +685,12 @@ ddc_discard_detected_displays() {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calling g_ptr_array_free(all_display_refs, true)...");
       g_ptr_array_free(all_display_refs, true);
       all_display_refs = NULL;
-      g_mutex_unlock(&all_display_refs_mutex);
       if (display_open_errors) {
          g_ptr_array_free(display_open_errors, true);
          display_open_errors = NULL;
       }
    }
+   g_mutex_unlock(&all_display_refs_mutex);
    reset_display_locks_table();
    // free_sys_drm_connectors();
    i2c_discard_buses();
