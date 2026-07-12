@@ -1558,18 +1558,22 @@ dbgrpt_display_info_list(
 // Reports
 //
 
-// TODO: deprecate, does not respect quiesced
 int
 ddca_report_displays(bool include_invalid_displays, int depth) {
    bool debug = false;
-   API_PROLOG(debug, "");
+   // RESPECT_QUIESCE: ddc_report_displays() dereferences Display_Refs that
+   // ddca_redetect_displays() frees.  Participating in the quiesce protocol
+   // makes redetect wait for an in-flight report to finish, and makes a report
+   // that starts during redetect return DDCRC_QUIESCED (a negative value)
+   // rather than touch freed drefs.
+   API_PROLOGX(debug, RESPECT_QUIESCE, "");
    int display_ct = 0;
    if (!library_initialization_failed) {
       display_ct = ddc_report_displays(include_invalid_displays, depth);
    }
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API, "Returning: %d", display_ct);
    DISABLE_API_CALL_TRACING();
-   API_EPILOG_NO_RETURN(debug, false, ""); // hack
+   API_EPILOG_NO_RETURN(debug, RESPECT_QUIESCE, "");
    return display_ct;
 }
 
