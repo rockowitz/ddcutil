@@ -523,6 +523,11 @@ dbgrpt_display_locks(int depth) {
 
    rpt_vstring(depth, "lock_records@%p", lock_records);
 
+   // master_display_lock_mutex guards the owner fields (display_mutex_thread,
+   // linux_thread_id) read below; descriptors_mutex guards the table.  Acquire
+   // in the same order as reset_display_locks_table() /
+   // unlock_all_displays_for_current_thread().
+   g_mutex_lock(&master_display_lock_mutex);
    g_mutex_lock(&descriptors_mutex);
    if (lock_records) {    // should always be true but just in case
       int d1 = depth+1;
@@ -536,6 +541,7 @@ dbgrpt_display_locks(int depth) {
       }
    }
    g_mutex_unlock(&descriptors_mutex);
+   g_mutex_unlock(&master_display_lock_mutex);
 
    redirect_reports_to_syslog = saved_reports_to_syslog;
 }
