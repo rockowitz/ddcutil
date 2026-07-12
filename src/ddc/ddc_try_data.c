@@ -47,11 +47,11 @@ static GRecMutex try_data_mutex;
 typedef
 struct {
    Retry_Operation retry_type;
-   // Atomic: try_data_get_maxtries2() reads maxtries on the retry hot path
-   // without try_data_mutex, and try_data_init_retry_type() writes it at
-   // startup without the mutex.  The writers in try_data_set_maxtries2() /
-   // try_data_reset2() still hold the mutex, for the lowest/highest coordination.
-   _Atomic(Retry_Op_Value)  maxtries;
+   // Guarded by try_data_mutex: every accessor takes the mutex, including the
+   // try_data_get_maxtries2() reader.  The sole exception is
+   // try_data_init_retry_type(), which writes it lock-free but only at startup,
+   // before any concurrent access is possible (see that function).
+   Retry_Op_Value  maxtries;
    Retry_Op_Value  counters[MAX_MAX_TRIES+2];
    Retry_Op_Value  highest_maxtries;
    Retry_Op_Value  lowest_maxtries;
@@ -72,14 +72,20 @@ static Try_Data2 try_data[RETRY_OP_COUNT];
  *
  * @param  retry_type  Retry_Operation type
  * @param  maxtries    maximum number of tries
- */
+ *
+ * @remark
+ * This function called by module initialization function init_ddc_try_data(),
+ * and also from #ddc_common_init() to apply the values passed on option --maxtries,
+ * so ono concurrency conflicts are possible and locking is not necessary.
+ *  */
 void try_data_init_retry_type(Retry_Operation retry_type, Retry_Op_Value maxtries) {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_NONE, "Executing. retry_type=%s, maxtries=%d", retry_type_name(retry_type), maxtries);
    try_data[retry_type].retry_type       = retry_type;
    try_data[retry_type].maxtries         = maxtries;
    try_data[retry_type].highest_maxtries = maxtries;
    try_data[retry_type].lowest_maxtries  = maxtries;
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
+                   "retry_type=%s, maxtries=%d", retry_type_name(retry_type), maxtries);
 }
 
 
@@ -105,7 +111,9 @@ void init_ddc_try_data() {
  */
 Retry_Op_Value try_data_get_maxtries2(Retry_Operation retry_type) {
    bool debug = false;
+   g_rec_mutex_lock(&try_data_mutex);
    int result = try_data[retry_type].maxtries;
+   g_rec_mutex_unlock(&try_data_mutex);
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "retry type=%s, returning %d", retry_type_name(retry_type), result);
    return result;
 }
