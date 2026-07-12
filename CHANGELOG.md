@@ -49,6 +49,12 @@
 - Additional data races fixed: a TOCTOU race on **dref->flags** in the recheck
   worker thread, a race on **retry_thread_sleep_factor_millisec**, and a TOCTOU
   race in **compile_and_eval_regex()**.
+- Thread safety (found by Coverity static analysis): serialized several
+  unsynchronized reads of shared global state that is written under a mutex —
+  the detected-display list and bus-open-error list, the retry **maxtries**
+  setting, the active API-call count, and the display-lock owner fields — and
+  closed a check-then-act (lock evasion) window when discarding detected
+  displays.
 - Memory leaks: command-line argv on a config-file error, persistent
   capabilities file lines, USB monitor detail on a denied path, directory
   filenames on an **opendir()** failure, and a hash table created without
