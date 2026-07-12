@@ -36,12 +36,18 @@ GHashTable *    per_display_data_hash = NULL;
 //
 // Locking
 //
-static GPrivate pdd_this_thread_has_lock;
-static GPrivate pdd_lock_depth; // GINT_TO_POINTER(0);
-static bool     debug_mutex = false;
-static int      pdd_lock_count = 0;
-static int      pdd_unlock_count = 0;
-static int      pdd_cross_thread_operation_blocked_count = 0;
+// A single recursive mutex serializes both hash accesses in
+// pdd_get_per_display_data() and the cross display operations that iterate
+// the hash.  These formerly used two separate mutexes, so a hash insert
+// could race a cross operation's hash iteration.  The recursive mutex also
+// eliminates the hand-rolled per-thread lock-depth bookkeeping formerly
+// needed because relocking a plain GMutex is undefined.
+
+static GRecMutex pdd_mutex;
+static bool      debug_mutex = false;
+static int       pdd_lock_count = 0;
+static int       pdd_unlock_count = 0;
+static int       pdd_cross_thread_operation_blocked_count = 0;
 
 DDCA_Sleep_Multiplier       default_user_sleep_multiplier = 1.0; // may be changed by --sleep-multiplier option
 User_Multiplier_Source default_user_multiplier_source = Default;
@@ -52,71 +58,14 @@ void dbgrpt_per_display_data_locks(int depth) {
    rpt_vstring(depth, "pdd_cross_thread_operation_blocked_count:  %-4d", pdd_cross_thread_operation_blocked_count);
 }
 
-static GMutex try_data_mutex;
-
-
-/** If **try_data_mutex** is not already locked by the current thread,
- *  lock it.
- *
- *  \remark
- *  This function is necessary because the behavior if a GLib mutex is
- *  relocked by the current thread is undefined.
- */
-
-// avoids locking if this thread already owns the lock, since behavior undefined
-bool pdd_lock_if_unlocked() {
-   bool debug = false;
-   debug = debug || debug_mutex;
-
-   bool lock_performed = false;
-   bool thread_has_lock = GPOINTER_TO_INT(g_private_get(&pdd_this_thread_has_lock));
-   DBGMSF(debug, "Already locked: %s", sbool(thread_has_lock));
-   if (!thread_has_lock) {
-      g_mutex_lock(&try_data_mutex);
-      lock_performed = true;
-      // should this be a depth counter rather than a boolean?
-      g_private_set(&pdd_this_thread_has_lock, GINT_TO_POINTER(true));
-      if (debug) {
-         intmax_t cur_thread_id = get_thread_id();
-         DBGMSG("Locked by thread %d", cur_thread_id);
-      }
-   }
-
-   DBGMSF(debug, "Returning: %s", sbool(lock_performed) );
-   return lock_performed;
-}
-
-
-/** Unlocks the **try_data_mutex** set by a call to #lock_if_unlocked
- *
- *  \param  unlock_requested perform unlock
- */
-void pdd_unlock_if_needed(bool unlock_requested) {
-   bool debug = false;
-   debug = debug || debug_mutex;
-   DBGMSF(debug, "unlock_requested=%s", sbool(unlock_requested));
-
-   if (unlock_requested) {
-      // is it actually locked?
-      bool currently_locked = GPOINTER_TO_INT(g_private_get(&pdd_this_thread_has_lock));
-      DBGMSF(debug, "currently_locked = %s", sbool(currently_locked));
-      if (currently_locked) {
-         g_private_set(&pdd_this_thread_has_lock, GINT_TO_POINTER(false));
-         if (debug) {
-            intmax_t cur_thread_id = get_thread_id();
-            DBGMSG("Unlocked by thread %d", cur_thread_id);
-         }
-         g_mutex_unlock(&try_data_mutex);
-      }
-   }
-
-   DBGMSF(debug, "Done");
-}
-
-
-static bool    cross_thread_operation_active = false;
-static GMutex  cross_thread_operation_mutex;
-static pid_t   cross_thread_operation_owner;
+// cross_thread_operation_active and cross_thread_operation_owner are atomic
+// because pdd_cross_display_operation_block() reads them, and spins on
+// cross_thread_operation_active, without holding the mutex.
+static _Atomic(bool)     cross_thread_operation_active = false;
+static _Atomic(intmax_t) cross_thread_operation_owner = 0;
+// Nesting depth of the recursive mutex.  Mutated only while the mutex is
+// held, so no additional protection is needed.
+static int               cross_thread_operation_depth = 0;
 
 // The locking strategy relies on the fact that in practice conflicts
 // will be rare, and critical sections short.
@@ -131,7 +80,13 @@ static pid_t   cross_thread_operation_owner;
 //   These are referred to as cross thread operations.
 //   Alt, perhaps clearer, refer to them as multi-thread data instances.
 
-/**
+/** Starts a cross display operation.
+ *
+ *  The mutex is recursive, so functions that start a cross display operation
+ *  can call each other freely.
+ *
+ *  @param  caller  name of calling function, for debug messages
+ *  @return true if this is the outermost start on the current thread
  */
 bool pdd_cross_display_operation_start(const char * caller) {
    // Only 1 cross display action can be active at one time.
@@ -139,19 +94,13 @@ bool pdd_cross_display_operation_start(const char * caller) {
 
    bool debug = false;
    debug = debug || debug_mutex;
-
-   bool lock_performed = false;
-
-   int display_lock_depth = GPOINTER_TO_INT(g_private_get(&pdd_lock_depth));
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
-      "Caller %s, lock depth: %d. pdd_lock_count=%d, pdd_unlock_count=%d",
-      caller, display_lock_depth, pdd_lock_count, pdd_unlock_count);
+      "Caller %s, pdd_lock_count=%d, pdd_unlock_count=%d",
+      caller, pdd_lock_count, pdd_unlock_count);
 
-   if (display_lock_depth == 0) {    // (A)
-   // if (!thread_has_lock) {
-      // display_lock_depth is per-thread, so must be unchanged from (A)
-      g_mutex_lock(&cross_thread_operation_mutex);
-      lock_performed = true;
+   g_rec_mutex_lock(&pdd_mutex);
+   bool lock_performed = (++cross_thread_operation_depth == 1);
+   if (lock_performed) {
       cross_thread_operation_active = true;
       pdd_lock_count++;
       Thread_Output_Settings * thread_settings = get_thread_settings();
@@ -160,37 +109,32 @@ bool pdd_cross_display_operation_start(const char * caller) {
       DBGMSF(debug, "          Locked performed by thread %d", cur_thread_id);
       SLEEP_MILLIS_WITH_STATS(10);   // give all per-thread functions time to finish
    }
-   display_lock_depth+=1;
-   g_private_set(&pdd_lock_depth, GINT_TO_POINTER(display_lock_depth));
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
-         "Caller: %s, pdd_display_lock_depth=%d, pdd_lock_count=%d, pdd_unlock_cound=%d, Returning lock_performed: %s,",
-         caller, display_lock_depth, pdd_lock_count, pdd_unlock_count, sbool(lock_performed));
+         "Caller: %s, depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d, Returning lock_performed: %s,",
+         caller, cross_thread_operation_depth, pdd_lock_count, pdd_unlock_count, sbool(lock_performed));
    return lock_performed;
 }
 
 
 void pdd_cross_display_operation_end(const char * caller) {
    bool debug = false;
-   int display_lock_depth = GPOINTER_TO_INT(g_private_get(&pdd_lock_depth));
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
-         "Caller: %s, display_lock_depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d",
-         caller, display_lock_depth, pdd_lock_count, pdd_unlock_count);
-   assert(display_lock_depth >= 1);
-   g_private_set(&pdd_lock_depth, GINT_TO_POINTER(display_lock_depth-1));
+         "Caller: %s, depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d",
+         caller, cross_thread_operation_depth, pdd_lock_count, pdd_unlock_count);
+   assert(cross_thread_operation_depth >= 1);
 
-   if (display_lock_depth == 1) {
+   if (--cross_thread_operation_depth == 0) {
       cross_thread_operation_active = false;
       cross_thread_operation_owner = 0;
       pdd_unlock_count++;
       assert(pdd_lock_count == pdd_unlock_count);
-      g_mutex_unlock(&cross_thread_operation_mutex);
    }
    else {
       assert( pdd_lock_count > pdd_unlock_count );
    }
-   display_lock_depth -= 1;
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Caller: %s, display_lock_depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d",
-         caller, display_lock_depth, pdd_lock_count, pdd_unlock_count);
+   g_rec_mutex_unlock(&pdd_mutex);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Caller: %s, depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d",
+         caller, cross_thread_operation_depth, pdd_lock_count, pdd_unlock_count);
 }
 
 
@@ -395,7 +339,9 @@ Per_Display_Data * pdd_get_per_display_data(DDCA_IO_Path dpath, bool create_if_n
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting per display data for %s, create_if_not_found = %s",
          dpath_repr_t(&dpath), sbool(create_if_not_found));
 
-   bool this_function_owns_lock = pdd_lock_if_unlocked();
+   // Recursive mutex, shared with the cross display operations: a hash
+   // insert here must not run concurrently with their hash iterations.
+   g_rec_mutex_lock(&pdd_mutex);
    assert(per_display_data_hash);    // allocated by init_display_data_module()
    int hval = dpath_hash(dpath);
    Per_Display_Data * pdd = g_hash_table_lookup(per_display_data_hash, GINT_TO_POINTER(hval));
@@ -403,7 +349,6 @@ Per_Display_Data * pdd_get_per_display_data(DDCA_IO_Path dpath, bool create_if_n
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Per_Display_Data not found for %s", dpath_repr_t(&dpath));
       pdd = g_new0(Per_Display_Data, 1);
       pdd->dpath = dpath;
-      g_private_set(&pdd_lock_depth, GINT_TO_POINTER(0));
       pdd_init_pdd(pdd);
 
       g_hash_table_insert(per_display_data_hash, GINT_TO_POINTER(hval), pdd);
@@ -412,7 +357,7 @@ Per_Display_Data * pdd_get_per_display_data(DDCA_IO_Path dpath, bool create_if_n
       if (debug)
          dbgrpt_per_display_data(pdd, 1);
    }
-   pdd_unlock_if_needed(this_function_owns_lock);
+   g_rec_mutex_unlock(&pdd_mutex);
    DBGTRC_NOPREFIX(  debug, TRACE_GROUP, "Device dpath:%s", dpath_repr_t(&dpath) );
    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, Per_Display_Data, dbgrpt_per_display_data, pdd);
    return pdd;
