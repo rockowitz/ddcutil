@@ -29,17 +29,20 @@
 //
 // Sleep statistics
 //
+// Maintained as individual atomic counters so the sleep hot path can update
+// them without a mutex.  A copy returned by get_sleep_stats() may reflect
+// slightly different moments in its individual fields; for accumulated
+// statistics that is inconsequential.
 
-static Sleep_Stats sleep_stats;
-G_LOCK_DEFINE(sleep_stats);
+static _Atomic(int)      total_sleep_calls = 0;
+static _Atomic(int)      requested_sleep_milliseconds = 0;
+static _Atomic(uint64_t) actual_sleep_nanos = 0;
 
 /** Sets all sleep statistics to 0. */
 void init_sleep_stats() {
-   G_LOCK(sleep_stats);
-   sleep_stats.total_sleep_calls = 0;
-   sleep_stats.requested_sleep_milliseconds = 0;
-   sleep_stats.actual_sleep_nanos = 0;
-   G_UNLOCK(sleep_stats);
+   total_sleep_calls = 0;
+   requested_sleep_milliseconds = 0;
+   actual_sleep_nanos = 0;
 }
 
 
@@ -53,9 +56,9 @@ void init_sleep_stats() {
  */
 Sleep_Stats get_sleep_stats() {
    Sleep_Stats stats_copy;
-   G_LOCK(sleep_stats);
-   stats_copy = sleep_stats;
-   G_UNLOCK(sleep_stats);
+   stats_copy.total_sleep_calls            = total_sleep_calls;
+   stats_copy.requested_sleep_milliseconds = requested_sleep_milliseconds;
+   stats_copy.actual_sleep_nanos           = actual_sleep_nanos;
    return stats_copy;
 }
 
@@ -139,11 +142,10 @@ void loggable_sleep(
       usleep(microsec);   // usleep takes microseconds, not milliseconds
       if (opts&SLEEP_OPT_STATS) {
          // DBGMSF(debug, "Logging stats");
-         G_LOCK(sleep_stats);
-         sleep_stats.actual_sleep_nanos += (cur_realtime_nanosec()-start_nanos);
-         sleep_stats.requested_sleep_milliseconds += millisec;
-         sleep_stats.total_sleep_calls++;
-         G_UNLOCK(sleep_stats);
+         // atomic increments, no mutex needed
+         actual_sleep_nanos += (cur_realtime_nanosec()-start_nanos);
+         requested_sleep_milliseconds += millisec;
+         total_sleep_calls++;
       }
    }
 

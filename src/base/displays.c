@@ -664,8 +664,7 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 // entries whose keys are the external DDCA_Display_Ref and whose values
 // are pointers to the internal Display_Ref.
 
-static uint max_dref_id = 0;
-static GMutex max_dref_id_mutex;
+static _Atomic(uint) max_dref_id = 0;
 static GHashTable * published_dref_hash = NULL;
 static GMutex dref_hash_mutex;
 
@@ -751,9 +750,7 @@ void reset_published_dref_hash() {
 
 static uint next_dref_id(Display_Ref * dref) {
    bool debug = false;
-   g_mutex_lock (&max_dref_id_mutex);
-   guint nextid = ++max_dref_id;
-   g_mutex_unlock(&max_dref_id_mutex);
+   guint nextid = ++max_dref_id;   // atomic increment
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "nextid = %u", nextid);
    return nextid;
 }

@@ -35,11 +35,13 @@
 //
 
 typedef struct {
-   IO_Event_Type  id;
-   const char *   name;
-   const char *   desc;
-   uint64_t       call_nanosec;
-   int            call_count;
+   IO_Event_Type      id;
+   const char *       name;
+   const char *       desc;
+   // atomic so that the counters can be updated in the I/O hot path
+   // without a mutex
+   _Atomic(uint64_t)  call_nanosec;
+   _Atomic(int)       call_count;
 } IO_Event_Type_Stats;
 
 
@@ -63,12 +65,11 @@ typedef struct {
 // Global Variables
 //
 
-static uint64_t             program_start_timestamp;
-static uint64_t             resettable_start_timestamp;
+static uint64_t             program_start_timestamp;   // set once at startup
+static _Atomic(uint64_t)    resettable_start_timestamp;
 static Status_Code_Counts * primary_error_code_counts = NULL;
 static Status_Code_Counts * retryable_error_code_counts = NULL;
-static GMutex               status_code_counts_mutex;
-static GMutex               global_stats_mutex;
+static GMutex               status_code_counts_mutex;   // guards the Status_Code_Counts hash tables
 
 static bool                 debug_status_code_counts_mutex  = false;
 static bool                 debug_global_stats_mutex = false;
@@ -91,7 +92,6 @@ IO_Event_Type_Stats io_event_stats[] = {
    {IE_OTHER,        "IE_OTHER",        "other I/O calls",          0, 0},
 };
 #define IO_EVENT_TYPE_CT (sizeof(io_event_stats)/sizeof(IO_Event_Type_Stats))
-static GMutex io_event_stats_mutex;
 static bool   debug_io_event_stats_mutex;
 
 
@@ -100,12 +100,10 @@ void reset_io_event_stats() {
    bool debug = false || debug_io_event_stats_mutex;
    DBGMSF(debug, "Starting");
 
-   g_mutex_lock(&io_event_stats_mutex);
    for (int ndx = 0; ndx < IO_EVENT_TYPE_CT; ndx++) {
       io_event_stats[ndx].call_count   = 0;
       io_event_stats[ndx].call_nanosec = 0;
    }
-   g_mutex_unlock(&io_event_stats_mutex);
 
    DBGMSF(debug, "Done");
 }
@@ -181,12 +179,9 @@ void log_io_call(
    DBGMSF(debug, "event_type=%d %-10s, elapsed_nanos=%"PRIu64", as millis=%"PRIu64,
                   event_type, io_event_name(event_type), elapsed_nanos, elapsed_nanos/(1000*1000) );
 
-   g_mutex_lock(&io_event_stats_mutex);
-
+   // atomic increments, no mutex needed
    io_event_stats[event_type].call_count++;
    io_event_stats[event_type].call_nanosec += elapsed_nanos;
-
-   g_mutex_unlock(&io_event_stats_mutex);
 
    DBGMSF(debug, "Updated total nanosec = %"PRIu64", as millis=%"PRIu64,
                   io_event_stats[event_type].call_nanosec, io_event_stats[event_type].call_nanosec /(1000*1000) );
@@ -543,31 +538,26 @@ const char * sleep_event_name(Sleep_Event_Type event_type) {
    return sleep_event_names[event_type];
 }
 
-static int    sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
-static int    total_sleep_event_ct = 0;
-static GMutex sleep_stats_mutex;
+// atomic so that counters can be updated in the sleep hot path without a mutex
+static _Atomic(int) sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
+static _Atomic(int) total_sleep_event_ct = 0;
 
 
 void reset_sleep_event_counts() {
    bool debug = false || debug_sleep_stats_mutex;
    DBGMSF(debug, "Starting");
 
-   g_mutex_lock(&sleep_stats_mutex);
    for (int ndx = 0; ndx < SLEEP_EVENT_ID_CT; ndx++) {
       sleep_event_cts_by_id[ndx] = 0;
    }
-   g_mutex_unlock(&sleep_stats_mutex);
 
    DBGMSF(debug, "Done");
 }
 
 
 void record_sleep_event(Sleep_Event_Type event_type) {
-   // For better performance, separate mutex for each index in array
-   g_mutex_lock(&sleep_stats_mutex);
-   sleep_event_cts_by_id[event_type]++;
-   total_sleep_event_ct++;
-   g_mutex_unlock(&sleep_stats_mutex);
+   sleep_event_cts_by_id[event_type]++;   // atomic increment
+   total_sleep_event_ct++;                // atomic increment
 }
 
 
@@ -617,9 +607,7 @@ void reset_execution_stats() {
    reset_status_code_counts();
    reset_io_event_stats();
 
-   g_mutex_lock(&global_stats_mutex);
-   resettable_start_timestamp = cur_realtime_nanosec();
-   g_mutex_unlock(&global_stats_mutex);
+   resettable_start_timestamp = cur_realtime_nanosec();   // atomic store
 
    DBGMSF(debug, "Done");
 }
@@ -635,9 +623,7 @@ void reset_execution_stats() {
 void report_elapsed_stats(int depth) {
    uint64_t end_nanos = cur_realtime_nanosec();
    if (program_start_timestamp != resettable_start_timestamp) {
-      g_mutex_lock(&global_stats_mutex);    // not really needed, make coverity happy
-      uint64_t cur_elapsed_nanos = end_nanos - resettable_start_timestamp;
-      g_mutex_unlock(&global_stats_mutex);
+      uint64_t cur_elapsed_nanos = end_nanos - resettable_start_timestamp;   // atomic load
       rpt_vstring(depth,
             "Elapsed milliseconds since last reset (nanosec):%10"PRIu64"  (%13"PRIu64")",
             cur_elapsed_nanos / (1000*1000),
