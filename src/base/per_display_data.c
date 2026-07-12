@@ -44,7 +44,7 @@ GHashTable *    per_display_data_hash = NULL;
 // needed because relocking a plain GMutex is undefined.
 
 static GRecMutex pdd_mutex;
-static bool      debug_mutex = false;
+static bool      pdd_debug_mutex = false;
 static int       pdd_lock_count = 0;
 static int       pdd_unlock_count = 0;
 static int       pdd_cross_thread_operation_blocked_count = 0;
@@ -58,14 +58,14 @@ void dbgrpt_per_display_data_locks(int depth) {
    rpt_vstring(depth, "pdd_cross_thread_operation_blocked_count:  %-4d", pdd_cross_thread_operation_blocked_count);
 }
 
-// cross_thread_operation_active and cross_thread_operation_owner are atomic
+// pdd_cross_thread_operation_active and pdd_cross_thread_operation_owner are atomic
 // because pdd_cross_display_operation_block() reads them, and spins on
-// cross_thread_operation_active, without holding the mutex.
-static _Atomic(bool)     cross_thread_operation_active = false;
-static _Atomic(intmax_t) cross_thread_operation_owner = 0;
+// pdd_cross_thread_operation_active, without holding the mutex.
+static _Atomic(bool)     pdd_cross_thread_operation_active = false;
+static _Atomic(intmax_t) pdd_cross_thread_operation_owner = 0;
 // Nesting depth of the recursive mutex.  Mutated only while the mutex is
 // held, so no additional protection is needed.
-static int               cross_thread_operation_depth = 0;
+static int               pdd_cross_thread_operation_depth = 0;
 
 // The locking strategy relies on the fact that in practice conflicts
 // will be rare, and critical sections short.
@@ -93,25 +93,25 @@ bool pdd_cross_display_operation_start(const char * caller) {
    // All per_display actions must wait
 
    bool debug = false;
-   debug = debug || debug_mutex;
+   debug = debug || pdd_debug_mutex;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
       "Caller %s, pdd_lock_count=%d, pdd_unlock_count=%d",
       caller, pdd_lock_count, pdd_unlock_count);
 
    g_rec_mutex_lock(&pdd_mutex);
-   bool lock_performed = (++cross_thread_operation_depth == 1);
+   bool lock_performed = (++pdd_cross_thread_operation_depth == 1);
    if (lock_performed) {
-      cross_thread_operation_active = true;
+      pdd_cross_thread_operation_active = true;
       pdd_lock_count++;
       Thread_Output_Settings * thread_settings = get_thread_settings();
       intmax_t cur_thread_id = thread_settings->tid;  // alt: get_thread_id()
-      cross_thread_operation_owner = cur_thread_id;
+      pdd_cross_thread_operation_owner = cur_thread_id;
       DBGMSF(debug, "          Locked performed by thread %d", cur_thread_id);
       SLEEP_MILLIS_WITH_STATS(10);   // give all per-thread functions time to finish
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
          "Caller: %s, depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d, Returning lock_performed: %s,",
-         caller, cross_thread_operation_depth, pdd_lock_count, pdd_unlock_count, sbool(lock_performed));
+         caller, pdd_cross_thread_operation_depth, pdd_lock_count, pdd_unlock_count, sbool(lock_performed));
    return lock_performed;
 }
 
@@ -120,12 +120,12 @@ void pdd_cross_display_operation_end(const char * caller) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
          "Caller: %s, depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d",
-         caller, cross_thread_operation_depth, pdd_lock_count, pdd_unlock_count);
-   assert(cross_thread_operation_depth >= 1);
+         caller, pdd_cross_thread_operation_depth, pdd_lock_count, pdd_unlock_count);
+   assert(pdd_cross_thread_operation_depth >= 1);
 
-   if (--cross_thread_operation_depth == 0) {
-      cross_thread_operation_active = false;
-      cross_thread_operation_owner = 0;
+   if (--pdd_cross_thread_operation_depth == 0) {
+      pdd_cross_thread_operation_active = false;
+      pdd_cross_thread_operation_owner = 0;
       pdd_unlock_count++;
       assert(pdd_lock_count == pdd_unlock_count);
    }
@@ -134,7 +134,7 @@ void pdd_cross_display_operation_end(const char * caller) {
    }
    g_rec_mutex_unlock(&pdd_mutex);
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Caller: %s, depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d",
-         caller, cross_thread_operation_depth, pdd_lock_count, pdd_unlock_count);
+         caller, pdd_cross_thread_operation_depth, pdd_lock_count, pdd_unlock_count);
 }
 
 
@@ -146,11 +146,11 @@ void pdd_cross_display_operation_block(const char * caller) {
    // intmax_t cur_displayid = get_display_id();
    Thread_Output_Settings * thread_settings = get_thread_settings();
    intmax_t cur_displayid = thread_settings->tid;
-   if (cross_thread_operation_active && cur_displayid != cross_thread_operation_owner) {
+   if (pdd_cross_thread_operation_active && cur_displayid != pdd_cross_thread_operation_owner) {
       __sync_fetch_and_add(&pdd_cross_thread_operation_blocked_count, 1);
       do {
          SLEEP_MILLIS_WITH_STATS(10);
-      } while (cross_thread_operation_active);
+      } while (pdd_cross_thread_operation_active);
    }
 }
 

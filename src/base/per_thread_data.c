@@ -32,26 +32,26 @@ void ptd_profile_function_report(Per_Thread_Data * ptd, gpointer depth);
 
 // Master table of sleep data for all threads
 GHashTable *    per_thread_data_hash = NULL;   // key is thread id
-static bool     debug_mutex = false;
+static bool     ptd_debug_mutex = false;
        int      ptd_lock_count = 0;
        int      ptd_unlock_count = 0;
-       int      cross_thread_operation_blocked_count = 0;
+       int      ptd_cross_thread_operation_blocked_count = 0;
 
 void dbgrpt_per_thread_data_locks(int depth) {
    rpt_vstring(depth, "ptd_lock_count:                        %-4d", ptd_lock_count);
    rpt_vstring(depth, "ptd_unlock_count:                      %-4d", ptd_unlock_count);
-   rpt_vstring(depth, "cross_thread_operation_blocked_count:  %-4d", cross_thread_operation_blocked_count);
+   rpt_vstring(depth, "ptd_cross_thread_operation_blocked_count:  %-4d", ptd_cross_thread_operation_blocked_count);
 }
 
-// cross_thread_operation_active and cross_thread_operation_owner are atomic
+// ptd_cross_thread_operation_active and ptd_cross_thread_operation_owner are atomic
 // because ptd_cross_thread_operation_block() reads them, and spins on
-// cross_thread_operation_active, without holding the mutex.
-static _Atomic(bool)     cross_thread_operation_active = false;
-static GRecMutex         cross_thread_operation_mutex;
-static _Atomic(intmax_t) cross_thread_operation_owner = 0;
+// ptd_cross_thread_operation_active, without holding the mutex.
+static _Atomic(bool)     ptd_cross_thread_operation_active = false;
+static GRecMutex         ptd_cross_thread_operation_mutex;
+static _Atomic(intmax_t) ptd_cross_thread_operation_owner = 0;
 // Nesting depth of the recursive mutex.  Mutated only while the mutex is
 // held, so no additional protection is needed.
-static int               cross_thread_operation_depth = 0;
+static int               ptd_cross_thread_operation_depth = 0;
 
 // The locking strategy relies on the fact that in practice conflicts
 // will be rare, and critical sections short.
@@ -79,19 +79,19 @@ bool ptd_cross_thread_operation_start() {
    // All per_thread actions must wait
 
    bool debug = false;
-   debug = debug || debug_mutex;
+   debug = debug || ptd_debug_mutex;
 
-   g_rec_mutex_lock(&cross_thread_operation_mutex);
-   bool lock_performed = (++cross_thread_operation_depth == 1);
+   g_rec_mutex_lock(&ptd_cross_thread_operation_mutex);
+   bool lock_performed = (++ptd_cross_thread_operation_depth == 1);
    if (lock_performed) {
-      cross_thread_operation_active = true;
+      ptd_cross_thread_operation_active = true;
 
       ptd_lock_count++;
 
       Thread_Output_Settings * thread_settings = get_thread_settings();
       // intmax_t cur_thread_id = get_thread_id();
       intmax_t cur_thread_id = thread_settings->tid;
-      cross_thread_operation_owner = cur_thread_id;
+      ptd_cross_thread_operation_owner = cur_thread_id;
       DBGMSF(debug, "Locked by thread %d", cur_thread_id);
       SLEEP_MILLIS_WITH_STATS(10);   // give all per-thread functions time to finish
    }
@@ -101,18 +101,18 @@ bool ptd_cross_thread_operation_start() {
 
 
 void ptd_cross_thread_operation_end() {
-   assert(cross_thread_operation_depth >= 1);
+   assert(ptd_cross_thread_operation_depth >= 1);
 
-   if (--cross_thread_operation_depth == 0) {
-      cross_thread_operation_active = false;
-      cross_thread_operation_owner = 0;
+   if (--ptd_cross_thread_operation_depth == 0) {
+      ptd_cross_thread_operation_active = false;
+      ptd_cross_thread_operation_owner = 0;
       ptd_unlock_count++;
       assert(ptd_lock_count == ptd_unlock_count);
    }
    else {
       assert( ptd_lock_count > ptd_unlock_count );
    }
-   g_rec_mutex_unlock(&cross_thread_operation_mutex);
+   g_rec_mutex_unlock(&ptd_cross_thread_operation_mutex);
 }
 
 
@@ -124,11 +124,11 @@ void ptd_cross_thread_operation_block() {
    // intmax_t cur_threadid = get_thread_id();
    Thread_Output_Settings * thread_settings = get_thread_settings();
    intmax_t cur_threadid = thread_settings->tid;
-   if (cross_thread_operation_active && cur_threadid != cross_thread_operation_owner) {
-      __sync_fetch_and_add(&cross_thread_operation_blocked_count, 1);
+   if (ptd_cross_thread_operation_active && cur_threadid != ptd_cross_thread_operation_owner) {
+      __sync_fetch_and_add(&ptd_cross_thread_operation_blocked_count, 1);
       do {
          SLEEP_MILLIS_WITH_STATS(10);
-      } while (cross_thread_operation_active);
+      } while (ptd_cross_thread_operation_active);
    }
 }
 

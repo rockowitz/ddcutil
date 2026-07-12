@@ -27,7 +27,7 @@ void terminate_per_thread_data();  // release all resources
 
 extern int  ptd_lock_count;
 extern int  ptd_unlock_count;
-extern int  cross_thread_operation_blocked_count;
+extern int  ptd_cross_thread_operation_blocked_count;
 
 typedef struct {
    char *    function;

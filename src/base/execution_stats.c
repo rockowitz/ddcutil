@@ -73,7 +73,7 @@ static GMutex               status_code_counts_mutex;   // guards the Status_Cod
 
 static bool                 debug_status_code_counts_mutex  = false;
 static bool                 debug_global_stats_mutex = false;
-static bool                 debug_sleep_stats_mutex = false;
+static bool                 debug_sleep_event_stats = false;
 
 
 //
@@ -544,7 +544,7 @@ static _Atomic(int) total_sleep_event_ct = 0;
 
 
 void reset_sleep_event_counts() {
-   bool debug = false || debug_sleep_stats_mutex;
+   bool debug = false || debug_sleep_event_stats;
    DBGMSF(debug, "Starting");
 
    for (int ndx = 0; ndx < SLEEP_EVENT_ID_CT; ndx++) {

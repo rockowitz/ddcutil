@@ -162,11 +162,10 @@ void loggable_sleep(
 void sleep_millis(int milliseconds) {
    uint64_t start_nanos = cur_realtime_nanosec();
    usleep(milliseconds*1000);   // usleep takes microseconds, not milliseconds
-   G_LOCK(sleep_stats);
-   sleep_stats.actual_sleep_nanos += (cur_realtime_nanosec()-start_nanos);
-   sleep_stats.requested_sleep_milliseconds += milliseconds;
-   sleep_stats.total_sleep_calls++;
-   G_UNLOCK(sleep_stats);
+   // atomic increments, no mutex needed
+   actual_sleep_nanos += (cur_realtime_nanosec()-start_nanos);
+   requested_sleep_milliseconds += milliseconds;
+   total_sleep_calls++;
 }
 #endif
 
