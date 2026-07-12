@@ -212,9 +212,9 @@ ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_remove
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "include_invalid_displays=%s, include_removed_drefs=%s",
          sbool(include_invalid_displays), sbool(include_removed_drefs));
-   TRACED_ASSERT(all_display_refs);
 
    g_mutex_lock(&all_display_refs_mutex);
+   TRACED_ASSERT(all_display_refs);   // read under the mutex that guards all_display_refs
    GPtrArray * result = g_ptr_array_sized_new(all_display_refs->len);
    for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
@@ -295,7 +295,12 @@ ddc_get_display_count(bool include_invalid_displays) {
  */
 GPtrArray *
 ddc_get_bus_open_errors() {
-   return display_open_errors;
+   // display_open_errors is written under all_display_refs_mutex (set at
+   // detection, cleared at discard); read the pointer under the same mutex.
+   g_mutex_lock(&all_display_refs_mutex);
+   GPtrArray * result = display_open_errors;
+   g_mutex_unlock(&all_display_refs_mutex);
+   return result;
 }
 
 
@@ -742,7 +747,10 @@ ddc_validate_display_ref2(Display_Ref * dref, Dref_Validation_Options validation
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s, validation_options=x%02x",
          dref, dref_reprx_t(dref), validation_options);
+   // all_display_refs is guarded by all_display_refs_mutex
+   g_mutex_lock(&all_display_refs_mutex);
    assert(all_display_refs);
+   g_mutex_unlock(&all_display_refs_mutex);
 
    DDCA_Status ddcrc = DDCRC_OK;
    if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
