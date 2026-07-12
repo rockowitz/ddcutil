@@ -1,5 +1,35 @@
 ## [2.2.8] 2026-07-12
 
+#### Added
+
+- **ddca_elapsed_nanosec()**: number of nanoseconds since the library was
+  initialized.
+- Utility options ***--f25*** (select the recheck algorithm at runtime) and
+  ***--f29*** (force a recheck when a display is added).
+
+#### Changed
+
+- Reworked detection and handling of resume from sleep. Resume is detected via
+  the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
+  comparing CLOCK_BOOTTIME and CLOCK_MONOTONIC. Pauses are inserted before
+  opening a /dev/i2c device and in the display watch loop for a short interval
+  after a resume, and a burst of udev events following a resume is coalesced to
+  avoid a storm of redundant bus rescans.
+- Substantial refactoring and thread-safety hardening of the display watch
+  subsystem (**src/dw**) and the I2C bus modules (**i2c_bus_base.c** split into
+  **i2c_bus_aux.c** and **i2c_bus_collections.c**). Access to the shared display
+  and bus tables is now serialized against the watch thread.
+- Public API: const-qualified string input parameters (and some return values),
+  added explicit **void** to empty parameter lists, and documented that the
+  caller is responsible for freeing the result of **ddca_get_display_refs()**
+  and **ddca_end_capture()**.
+- System log messaging reworked: **DECORATED_SYSLOG()** and the **DUAL_MSG()**
+  macro family replace **SYSLOG2()**, reducing duplicate messages.
+- **dw_stop_watch_displays()** now always waits for the watch thread to
+  terminate.
+- **XInitThreads()** is now called at library-initialization time, before the
+  first Xlib call.
+
 #### Fixed
 
 - Thread safety: fixed a double free crash caused by unsynchronized lazy
@@ -12,6 +42,32 @@
 - **ddca_report_displays()** now respects API quiescing. Previously, calling it
   concurrently with **ddca_redetect_displays()** could crash by dereferencing
   display references freed by the redetection.
+- Segfault (reported under KDE) when a display disconnected while in use, caused
+  by a NULL **dref->detail** in **i2c_check_open_bus_alive()**. Reads of
+  **dref->detail** are now guarded against concurrent disconnect in several
+  functions.
+- Additional data races fixed: a TOCTOU race on **dref->flags** in the recheck
+  worker thread, a race on **retry_thread_sleep_factor_millisec**, and a TOCTOU
+  race in **compile_and_eval_regex()**.
+- Memory leaks: command-line argv on a config-file error, persistent
+  capabilities file lines, USB monitor detail on a denied path, directory
+  filenames on an **opendir()** failure, and a hash table created without
+  destroy functions in failsim.
+- Double-free in **csb_free()** when the circular string buffer had wrapped.
+- NULL dereferences: **ini_file_dump()** error path, **errinfo_summary()**, and
+  reporting a USB display that has no bus info.
+- Off-by-one errors in **str_contains()** and in the ignored VID/PID parsing
+  loop.
+- Wrong array used in three I2C bus-info search functions in
+  **i2c_bus_base.c**.
+- Resume-from-sleep detection: inverted grace window and integer narrowing in
+  the clocktime algorithm.
+- **i2c_detect_x37()**: a typo that broke compilation, and a missing driver
+  argument.
+- Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
+  Pull request #613.
+- Numerous additional logic errors, code smells, and latent NULL-dereference
+  and leak issues identified by static analysis.
 
 
 ## [2.2.7] 2025-05-08
