@@ -439,7 +439,7 @@ dw_get_active_watch_classes(DDCA_Display_Event_Class * classes_loc) {
 Error_Info *
 dw_redetect_displays() {
    bool debug = false || debug_locks;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_display_refss=%p", all_display_refs);
    DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
 
    Error_Info * err = NULL;
