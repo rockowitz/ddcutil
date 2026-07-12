@@ -65,6 +65,7 @@ void dbgrpt_regex_hash_table() {
 void free_regex_hash_table() {
    bool debug = false;
    DBGF(debug, "Starting. regex_hash_table=%p", (void*)regex_hash_table);
+   g_mutex_lock(&regex_hash_table_mutex);
    if (regex_hash_table) {
       if (debug) {
          DBG("Hash table contents:");
@@ -73,6 +74,7 @@ void free_regex_hash_table() {
       g_hash_table_destroy(regex_hash_table);
       regex_hash_table = NULL;
    }
+   g_mutex_unlock(&regex_hash_table_mutex);
    DBGF(debug, "Done.");
 }
 
@@ -137,9 +139,19 @@ static bool eval_regex(regex_t * re, const char * value) {
 }
 
 
-bool compile_and_eval_regex(const char * pattern, const char * value) {
+/** Returns the compiled regex for a pattern, compiling and caching it on
+ *  first use.
+ *
+ *  Only the hash table lookup and insertion run under
+ *  regex_hash_table_mutex.  The returned regex may safely be used after
+ *  the mutex is released: regexec() on a compiled regex is thread-safe,
+ *  and a cached regex is never freed while the program runs, since a
+ *  pattern is compiled at most once (the lookup and insertion are atomic
+ *  with respect to each other, so g_hash_table_replace() never destroys
+ *  an entry that is in use).
+ */
+static regex_t * get_or_compile_regex(const char * pattern) {
    bool debug = false;
-   DBGF(debug, "Starting. pattern=|%s|, value=|%s|", pattern, value);
    g_mutex_lock(&regex_hash_table_mutex);
    regex_t * re = get_compiled_regex(pattern);
    // printf("(%s) forcing re = NULL\n", __func__);
@@ -154,8 +166,18 @@ bool compile_and_eval_regex(const char * pattern, const char * value) {
       }
       save_compiled_regex(pattern, re);
    }
-   bool result = eval_regex(re, value);
    g_mutex_unlock(&regex_hash_table_mutex);
+   return re;
+}
+
+
+bool compile_and_eval_regex(const char * pattern, const char * value) {
+   bool debug = false;
+   DBGF(debug, "Starting. pattern=|%s|, value=|%s|", pattern, value);
+   regex_t * re = get_or_compile_regex(pattern);
+   // Evaluation runs outside the mutex; holding it here serialized all
+   // regex evaluation across threads.
+   bool result = eval_regex(re, value);
    DBGF(debug, "Done. Returning %s", sbool(result));
    return result;
 }
@@ -169,22 +191,10 @@ bool compile_and_eval_regex_with_matches(
 {
    bool debug = false;
    DBGF(debug, "Starting. pattern=|%s|, value=|%s|", pattern, value);
-   g_mutex_lock(&regex_hash_table_mutex);
-   regex_t * re = get_compiled_regex(pattern);
-   // printf("(%s) forcing re = NULL\n", __func__);
-   // re = NULL;
-   if (!re) {
-      re = calloc(1, sizeof(regex_t));
-      DBGF(debug, "Allocated regex %p, compiling...", (void*)re);
-      int rc = regcomp(re, pattern, REG_EXTENDED);
-      if (rc != 0) {
-         printf("(%s) regcomp() returned %d\n", __func__, rc);
-         assert(rc == 0);
-      }
-      save_compiled_regex(pattern, re);
-   }
+   regex_t * re = get_or_compile_regex(pattern);
+   // Evaluation runs outside the mutex; holding it here serialized all
+   // regex evaluation across threads.
    bool result = eval_regex_with_matches(re, value, max_matches, pm);
-   g_mutex_unlock(&regex_hash_table_mutex);
    DBGF(debug, "Done. Returning %s", sbool(result));
    return result;
 }
