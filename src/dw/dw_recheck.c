@@ -516,7 +516,13 @@ gpointer dw_recheck_displays_func(gpointer data) {
             }
         }
       }
-      if (terminate_watch_thread) {
+      // rqe is NULL here only if terminate_watch_thread was observed set in
+      // the pop loop.  Test rqe rather than re-reading the flag: a fresh
+      // read is an independent atomic load that could diverge from the one
+      // that ended the loop, and a re-read that races to true here would
+      // leak a successfully popped rqe.  A non-NULL rqe proceeds; the
+      // deferral check below still notices termination and frees it.
+      if (!rqe) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "terminating recheck thread execution");
          break;
       }
