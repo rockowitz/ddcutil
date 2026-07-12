@@ -284,6 +284,7 @@ void quiesce_api() {
    g_mutex_lock(&api_quiesced_mutex);
 
    g_mutex_lock(&active_calls_mutex);
+   int final_active_calls;
    if (active_calls > 0) {
       int poll_max_millisec      = QUIESCE_POLL_MAX_MILLISEC;
       int poll_interval_millisec = QUIESCE_POLL_INTERVAL_MILLISEC;
@@ -304,6 +305,7 @@ void quiesce_api() {
          }
       }
    }
+   final_active_calls = active_calls;   // capture under the mutex for reporting
    g_mutex_unlock(&active_calls_mutex);
 
    api_quiesced = true;
@@ -311,7 +313,7 @@ void quiesce_api() {
 
    if (oops) {
       MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
-            "Error quiescing libddcutil API. %d active API calls outstanding.", active_calls);
+            "Error quiescing libddcutil API. %d active API calls outstanding.", final_active_calls);
    }
    else {
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Quiesce libddcutil API complete");
@@ -319,7 +321,7 @@ void quiesce_api() {
 
    DBGTRC_DONE(debug, DDCA_TRC_API,
          "Terminating with %d active API calls outstanding. Waited %d millisec",
-         active_calls, slept_microsec/1000);
+         final_active_calls, slept_microsec/1000);
 }
 
 

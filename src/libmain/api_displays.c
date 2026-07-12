@@ -489,7 +489,9 @@ ddca_redetect_displays(void) {
       erec = dw_redetect_displays();
       ddcrc = ERRINFO_STATUS(erec);
       unquiesce_api();
+      g_mutex_lock(&ddca_redetect_active_mutex);
       ddca_redetect_active = false;
+      g_mutex_unlock(&ddca_redetect_active_mutex);
    }
 #else
 #ifdef FUTURE
