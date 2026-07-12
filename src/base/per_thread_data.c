@@ -32,6 +32,11 @@ void ptd_profile_function_report(Per_Thread_Data * ptd, gpointer depth);
 
 // Master table of sleep data for all threads
 GHashTable *    per_thread_data_hash = NULL;   // key is thread id
+// Guards structural access to per_thread_data_hash.  Each thread only touches
+// its own key, but g_hash_table_insert() can resize the whole table, freeing
+// the bucket array that another thread's concurrent lookup or a cross-thread
+// iteration is reading.  Recursive so a lock holder can re-enter safely.
+static GRecMutex per_thread_data_hash_mutex;
 static bool     ptd_debug_mutex = false;
        int      ptd_lock_count = 0;
        int      ptd_unlock_count = 0;
@@ -184,9 +189,10 @@ Per_Thread_Data * ptd_get_per_thread_data() {
    // DBGMSF(debug, "Getting thread sleep data for thread %d", cur_thread_id);
    // bool this_function_owns_lock = ptd_lock_if_unlocked();
    assert(per_thread_data_hash);    // allocated by init_thread_data_module()
-   // DBGMSG("per_thread_data_hash = %p", per_thread_data_hash);
-   // n. data hash for current thread can only be looked up from current thread,
-   // so there's nothing can happen to per_thread_data_hash before g_hash_table_insert()
+   // Lock even though this thread only looks up/inserts its own key: a
+   // concurrent insert on another thread can resize the table and free the
+   // storage this lookup reads.  See per_thread_data_hash_mutex.
+   g_rec_mutex_lock(&per_thread_data_hash_mutex);
    Per_Thread_Data * data = g_hash_table_lookup(per_thread_data_hash,
                                             GINT_TO_POINTER(cur_thread_id));
    if (!data) {
@@ -209,7 +215,7 @@ Per_Thread_Data * ptd_get_per_thread_data() {
       if (debug)
         dbgrpt_per_thread_data(data, 1);
    }
-   // ptd_unlock_if_needed(this_function_owns_lock);
+   g_rec_mutex_unlock(&per_thread_data_hash_mutex);
    return data;
 }
 
@@ -294,6 +300,9 @@ void ptd_apply_all(Ptd_Func func, void * arg) {
    bool debug = false;
    assert(per_thread_data_hash);    // allocated by init_thread_data_module()
 
+      // Hold the hash mutex across the whole traversal so a concurrent
+      // ptd_get_per_thread_data() insert cannot resize the table mid-iteration.
+      g_rec_mutex_lock(&per_thread_data_hash_mutex);
       GHashTableIter iter;
       gpointer key, value;
       g_hash_table_iter_init (&iter,per_thread_data_hash);
@@ -302,6 +311,7 @@ void ptd_apply_all(Ptd_Func func, void * arg) {
          DBGMSF(debug, "Thread id: %d", data->thread_id);
          func(data, arg);
       }
+      g_rec_mutex_unlock(&per_thread_data_hash_mutex);
 
    ptd_cross_thread_operation_end();
 }
@@ -321,6 +331,10 @@ void ptd_apply_all_sorted(Ptd_Func func, void * arg) {
    ptd_cross_thread_operation_start();
    assert(per_thread_data_hash);
 
+   // Hold the hash mutex across the whole traversal so a concurrent
+   // ptd_get_per_thread_data() insert cannot resize the table while it is
+   // being read.
+   g_rec_mutex_lock(&per_thread_data_hash_mutex);
    DBGMSF(debug, "hash table size = %d", g_hash_table_size(per_thread_data_hash));
    GList * keys = g_hash_table_get_keys (per_thread_data_hash);
    GList * new_head = g_list_sort(keys, gaux_ptr_intcomp);
@@ -334,6 +348,7 @@ void ptd_apply_all_sorted(Ptd_Func func, void * arg) {
       func(data, arg);
    }
    g_list_free(new_head);   // would keys also work?
+   g_rec_mutex_unlock(&per_thread_data_hash_mutex);
 
    ptd_cross_thread_operation_end();
    DBGMSF(debug, "Done");
