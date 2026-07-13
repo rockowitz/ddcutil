@@ -1218,7 +1218,8 @@ ddca_get_display_refs(
    assert(*drefs_loc);
 
    if (!IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
-      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Returned DDCA_Display_Ref list: ");
+      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Called with include_invalid_displays=%s", SBOOL(include_invalid_displays));
+      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Returning DDCA_Display_Ref list: ");
       cur_ddca_dref = result_list;
       while (*cur_ddca_dref) {
          Display_Ref * dref = dref_from_published_ddca_dref(*cur_ddca_dref);
