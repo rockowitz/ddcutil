@@ -19,5 +19,5 @@ void dw_udev_teardown();
 bool dw_udev_watch(int watch_loop_millisec);
 int  dw_udev_drain();
 
-void init_dw_udev2();
+void init_dw_udev();
 #endif /* DW_UDEV_H_ */

@@ -275,7 +275,7 @@ int dw_udev_drain() {
 }
 
 
-void init_dw_udev2() {
+void init_dw_udev() {
    RTTI_ADD_FUNC(dw_udev_setup);
    RTTI_ADD_FUNC(dw_udev_teardown);
    RTTI_ADD_FUNC(dw_udev_watch);

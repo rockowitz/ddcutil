@@ -52,7 +52,7 @@ void init_dw_services() {
    init_dw_poll();
    init_dw_recheck();
    init_dw_status_events();
-   init_dw_udev2();
+   init_dw_udev();
 #ifdef USE_X11
    init_dw_xevent();
 #endif
