@@ -761,6 +761,8 @@ int ntsa_findx(
       const char *                 value,
       String_Comp_Func             func)
 {
+   bool debug = true;
+
    assert(string_array);
    int result = -1;
    int ndx = 0;
@@ -773,7 +775,10 @@ int ntsa_findx(
       }
       ndx++;
    }
-   // printf("(%s) Returning: %d\n", __func__, result);
+   if (debug) {
+      ntsa_show(string_array);
+      printf("(%s) value=|%s|,  Returning: %d\n", __func__, value, result);
+   }
    return result;
 }
 
