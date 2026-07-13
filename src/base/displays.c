@@ -1030,7 +1030,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
  *  The maximum elapsed time and frequency of calls to g_mutex_trylock() is
  *  hardcoded.
  *
- *  @param  dref         display refrence
+ *  @param  dref         display reference
  *  @retval DDCRC_OK     lock was obtained
  *  @retval DDCRC_LOCKED maximum elapsed time exceeded
  */
@@ -1075,6 +1075,8 @@ void dref_unlock(Display_Ref * dref) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "unlocking dref %s ...", dref_reprx_t(dref));
 
    g_mutex_unlock(&dref->access_mutex);
+   // to match the syslog message in dref_lock():
+   DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "unlocked dref %s", dref_reprx_t(dref));
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "dref %s unlocked", dref_reprx_t(dref));
 }
