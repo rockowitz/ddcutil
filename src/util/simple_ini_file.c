@@ -324,7 +324,7 @@ int ini_file_load(
                          ? g_strdup_printf("Line %d: invalid: %s", ndx+1, trimmed)
                          : g_strdup_printf("Line %d: invalid before section header: %s",
                                            ndx+1, trimmed);
-            emit_error_msg(errmsgs, "%s", msg);   // "%s": file content must not be a format string
+            emit_error_msg(errmsgs, "%s", msg);
             free(msg);
             error_ct++;
          }
