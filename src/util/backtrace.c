@@ -166,7 +166,10 @@ GPtrArray * get_backtrace(int stack_adjust) {
          perror("backtrace_symbols unavailable");
    }
    else {
-      result = g_ptr_array_sized_new(nptrs-stack_adjust);
+      int reserve_ct = nptrs - stack_adjust;
+      if (reserve_ct < 0)     // g_ptr_array_sized_new() takes a guint
+         reserve_ct = 0;
+      result = g_ptr_array_sized_new(reserve_ct);
       if (debug)
          printf("Current call stack\n");
       for (j = 0; j < nptrs; j++) {
