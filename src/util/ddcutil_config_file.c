@@ -47,6 +47,13 @@ int tokenize_options_line(const char * string, char ***tokens_loc) {
       flags |= WRDE_SHOWERR;
    int rc = wordexp(string, &p, flags);
    DBGF(debug, "wordexp returned %d", rc);
+   if (rc != 0) {
+      // p.we_wordv, p.we_wordc are undefined, e.g. unmatched quote,
+      // command substitution rejected by WRDE_NOCMD
+      fprintf(stderr, "Error tokenizing options line: |%s|\n", string);
+      *tokens_loc = ntsa_create_empty_array();
+      return 0;
+   }
    *tokens_loc = p.we_wordv;
    if (debug) {
       DBGF(debug,"Tokens:");
