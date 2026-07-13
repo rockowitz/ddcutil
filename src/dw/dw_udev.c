@@ -1,4 +1,4 @@
-/** @file dw_udev2.c
+/** @file dw_udev.c
  *
  *  Watch for monitor addition and removal using UDEV
  */
@@ -34,7 +34,7 @@
 
 #include "dw_common.h"
 
-#include "dw_udev2.h"
+#include "dw_udev.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;

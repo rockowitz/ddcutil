@@ -19,7 +19,7 @@
 #include "dw_poll.h"
 #include "dw_recheck.h"
 #include "dw_status_events.h"
-#include "dw_udev2.h"
+#include "dw_udev.h"
 #ifdef USE_X11
 #include "dw_xevent.h"
 #endif

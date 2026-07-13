@@ -1,12 +1,12 @@
-/** @file dw_udev2.h
+/** @file dw_udev.h
  *  Watch for monitor addition and removal using UDEV
  */
 
 // Copyright (C) 2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DW_UDEV2_H_
-#define DW_UDEV2_H_
+#ifndef DW_UDEV_H_
+#define DW_UDEV_H_
 
 /** \cond */
 #include <stdbool.h>
@@ -20,4 +20,4 @@ bool dw_udev_watch(int watch_loop_millisec);
 int  dw_udev_drain();
 
 void init_dw_udev2();
-#endif /* DW_UDEV2_H_ */
+#endif /* DW_UDEV_H_ */
