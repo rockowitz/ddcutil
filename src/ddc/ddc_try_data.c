@@ -31,7 +31,7 @@
 // Locking
 //
 // A recursive mutex allows functions that take the lock to call each other
-// (e.g. try_data_reset2_all() -> try_data_reset2()) without the hand-rolled
+// (e.g. try_data_reset_all() -> try_data_reset()) without the hand-rolled
 // per-thread "already locked" bookkeeping this file previously maintained.
 
 static GRecMutex try_data_mutex;
@@ -48,7 +48,7 @@ typedef
 struct {
    Retry_Operation retry_type;
    // Guarded by try_data_mutex: every accessor takes the mutex, including the
-   // try_data_get_maxtries2() reader.  The sole exception is
+   // try_data_get_maxtries() reader.  The sole exception is
    // try_data_init_retry_type(), which writes it lock-free but only at startup,
    // before any concurrent access is possible (see that function).
    Retry_Op_Value  maxtries;
@@ -96,7 +96,7 @@ void init_ddc_try_data() {
       try_data_init_retry_type(retry_type, default_maxtries[retry_type]);
    }
 
-   RTTI_ADD_FUNC(try_data_get_maxtries2);
+   RTTI_ADD_FUNC(try_data_get_maxtries);
 }
 
 
@@ -109,7 +109,7 @@ void init_ddc_try_data() {
  *  \param  retry_type
  *  \return maxtries value
  */
-Retry_Op_Value try_data_get_maxtries2(Retry_Operation retry_type) {
+Retry_Op_Value try_data_get_maxtries(Retry_Operation retry_type) {
    bool debug = false;
    g_rec_mutex_lock(&try_data_mutex);
    int result = try_data[retry_type].maxtries;
@@ -124,7 +124,7 @@ Retry_Op_Value try_data_get_maxtries2(Retry_Operation retry_type) {
  * \param retry_type
  * \param new_maxtries
  */
-void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtries) {
+void try_data_set_maxtries(Retry_Operation retry_type, Retry_Op_Value new_maxtries) {
    bool debug = false;
 
    Try_Data2 * stats_rec = &try_data[retry_type];
@@ -158,7 +158,7 @@ void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtr
  *
  *  @param retry type
  */
-void try_data_reset2(Retry_Operation retry_type) {
+void try_data_reset(Retry_Operation retry_type) {
    bool debug = false;
    DBGMSF(debug, "Starting, retry type: %s", retry_type_name(retry_type));
 
@@ -183,12 +183,12 @@ void try_data_reset2(Retry_Operation retry_type) {
 
 /** Resets the counters for all retry types
  */
-void try_data_reset2_all() {
-   // recursive mutex: try_data_reset2() relocks it on this thread
+void try_data_reset_all() {
+   // recursive mutex: try_data_reset() relocks it on this thread
    g_rec_mutex_lock(&try_data_mutex);
 
    for (int retry_type = 0; retry_type < RETRY_OP_COUNT; retry_type++) {
-      try_data_reset2(retry_type);
+      try_data_reset(retry_type);
    }
 
    g_rec_mutex_unlock(&try_data_mutex);
@@ -205,7 +205,7 @@ void try_data_reset2_all() {
  *  Also calls #trd_record_cur_thread_ties() to record the transaction status
  *  in the per-thread data structure.
  */
-void try_data_record_tries2(Display_Handle * dh, Retry_Operation retry_type, DDCA_Status ddcrc, int tryct) {
+void try_data_record_tries(Display_Handle * dh, Retry_Operation retry_type, DDCA_Status ddcrc, int tryct) {
    bool debug = false;
    DBGMSF(debug, "retry_type = %d - %s,  ddcrc=%d, tryct=%d",
                  retry_type, retry_type_name(retry_type), ddcrc, tryct);
@@ -241,7 +241,7 @@ void try_data_record_tries2(Display_Handle * dh, Retry_Operation retry_type, DDC
 //
 
 // used to test whether there's anything to report
-static int try_data_get_total_attempts2(Retry_Operation retry_type) {
+static int try_data_get_total_attempts(Retry_Operation retry_type) {
    int total_attempts = 0;
    int ndx;
    for (ndx=0; ndx <= MAX_MAX_TRIES+1; ndx++) {
@@ -259,7 +259,7 @@ static int try_data_get_total_attempts2(Retry_Operation retry_type) {
  *  \param depth        logical indentation depth
  *
  */
-void try_data_report2(Retry_Operation retry_type, int depth) {
+void try_data_report(Retry_Operation retry_type, int depth) {
    // bool debug = false;
    int d1 = depth+1;
    rpt_nl();
@@ -270,7 +270,7 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
 
    // doesn't distinguish write vs read
    // rpt_vstring(depth, "Retry statistics for ddc %s exchange", ddc_retry_type_description(stats_rec->retry_type));
-   int total_attempts = try_data_get_total_attempts2(retry_type);
+   int total_attempts = try_data_get_total_attempts(retry_type);
 
    if (total_attempts == 0) {
       rpt_vstring(d1, "No tries attempted");
@@ -312,21 +312,21 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
 
 #ifdef OLD
 void ddc_report_write_read_stats(int depth) {
-   try_data_report2(WRITE_READ_TRIES_OP, depth);
+   try_data_report(WRITE_READ_TRIES_OP, depth);
 }
 
 void ddc_report_write_only_stats(int depth) {
-   try_data_report2(WRITE_ONLY_TRIES_OP, depth);
+   try_data_report(WRITE_ONLY_TRIES_OP, depth);
 }
 
 /** Reports the statistics for multi-part reads */
 void ddc_report_multi_part_read_stats(int depth) {
-   try_data_report2(MULTI_PART_READ_OP, depth);
+   try_data_report(MULTI_PART_READ_OP, depth);
 }
 
 /** Reports the statistics for multi-part writes */
 void ddc_report_multi_part_write_stats(int depth) {
-   try_data_report2(MULTI_PART_WRITE_OP, depth);
+   try_data_report(MULTI_PART_WRITE_OP, depth);
 }
 #endif
 
@@ -366,10 +366,10 @@ void ddc_report_ddc_stats(int depth) {
    // rpt_nl();
    // retry related stats
    ddc_report_max_tries(depth);
-   try_data_report2(WRITE_ONLY_TRIES_OP, depth);   //   ddc_report_write_only_stats(depth);
-   try_data_report2(WRITE_READ_TRIES_OP, depth);   //   ddc_report_write_read_stats(depth);
-   try_data_report2(MULTI_PART_READ_OP,  depth);   //   ddc_report_multi_part_read_stats(depth);
-   try_data_report2(MULTI_PART_WRITE_OP, depth);   //   ddc_report_multi_part_write_stats(depth);
+   try_data_report(WRITE_ONLY_TRIES_OP, depth);   //   ddc_report_write_only_stats(depth);
+   try_data_report(WRITE_READ_TRIES_OP, depth);   //   ddc_report_write_read_stats(depth);
+   try_data_report(MULTI_PART_READ_OP,  depth);   //   ddc_report_multi_part_read_stats(depth);
+   try_data_report(MULTI_PART_WRITE_OP, depth);   //   ddc_report_multi_part_write_stats(depth);
 }
 
 

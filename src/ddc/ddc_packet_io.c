@@ -873,7 +873,7 @@ ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  max_tries = (explicit_max_tries > 0) ? explicit_max_tries
-                                             : try_data_get_maxtries2(WRITE_READ_TRIES_OP);
+                                             : try_data_get_maxtries(WRITE_READ_TRIES_OP);
    int  ddcrc_null_response_max = 3;
    Error_Info * master_error = NULL;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"ddcrc_null_response_max=%d, read_bytewise=%s",
@@ -1090,7 +1090,7 @@ ddc_write_read_with_retry(
       }
    }
 
-   try_data_record_tries2(dh, WRITE_READ_TRIES_OP, psc, tryctr);
+   try_data_record_tries(dh, WRITE_READ_TRIES_OP, psc, tryctr);
 
 bye:
    DBGTRC_DONE(debug, TRACE_GROUP, "Total Tries (tryctr): %d. *response_packet_pointer_loc=%p,  Returning: %s",
@@ -1199,7 +1199,7 @@ ddc_write_only_with_retry(
    Error_Info *       try_errors[MAX_MAX_TRIES];
    Error_Info *       ddc_excp = NULL;
 
-   int max_tries = try_data_get_maxtries2(WRITE_ONLY_TRIES_OP);
+   int max_tries = try_data_get_maxtries(WRITE_ONLY_TRIES_OP);
    TRACED_ASSERT(max_tries > 0);
    for (tryctr=0, psc=-999, retryable=true;
        tryctr < max_tries && psc < 0 && retryable;
@@ -1257,7 +1257,7 @@ ddc_write_only_with_retry(
    }
 
 bye:
-   try_data_record_tries2(dh, WRITE_ONLY_TRIES_OP, psc, tryctr);
+   try_data_record_tries(dh, WRITE_ONLY_TRIES_OP, psc, tryctr);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }

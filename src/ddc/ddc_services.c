@@ -76,14 +76,14 @@
 
 // /** Resets all DDC level statistics */
 // void ddc_reset_ddc_stats() {
-//    try_data_reset2_all();
+//    try_data_reset_all();
 // }
 
 
 /** Resets all statistics */
 void ddc_reset_stats_main() {
    // ddc_reset_ddc_stats();
-   try_data_reset2_all();
+   try_data_reset_all();
    reset_execution_stats();
    ptd_profile_reset_all_stats();
 }

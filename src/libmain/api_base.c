@@ -1314,13 +1314,13 @@ ddca_max_max_tries(void) {
 
 //  *** THIS IS FOR THE CURRENT THREAD
 //  *** replace using function specifying display
-//  *** for now, revert to old try_data_get_maxtries2()
+//  *** for now, revert to old try_data_get_maxtries()
 int
 ddca_get_max_tries(DDCA_Retry_Type retry_type) {
    // stats for multi part writes and reads are separate, but the
    // max tries for both are identical
 // #ifndef NDEBUG
-   Retry_Op_Value result3 = try_data_get_maxtries2((Retry_Operation) retry_type);
+   Retry_Op_Value result3 = try_data_get_maxtries((Retry_Operation) retry_type);
 // #endif
    // // new way using retry_mgt
    // Retry_Op_Value result2 = trd_get_thread_max_tries((Retry_Operation) retry_type);
@@ -1341,10 +1341,10 @@ ddca_set_max_tries(
    if (max_tries < 1 || max_tries > MAX_MAX_TRIES)
       rc = DDCRC_ARG;
    else {
-      try_data_set_maxtries2((Retry_Operation) retry_type, max_tries);
+      try_data_set_maxtries((Retry_Operation) retry_type, max_tries);
       // for DDCA_MULTI_PART_TRIES, set both  MULTI_PART_WRITE_OP and MULTI_PART_READ_OP
       if (retry_type == DDCA_MULTI_PART_TRIES)
-         try_data_set_maxtries2(MULTI_PART_WRITE_OP, max_tries);
+         try_data_set_maxtries(MULTI_PART_WRITE_OP, max_tries);
 
       // new way, set in retry_mgt
 #ifdef TRD

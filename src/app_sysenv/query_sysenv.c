@@ -773,10 +773,10 @@ void force_envcmd_settings(Parsed_Cmd * parsed_cmd) {
    f0printf(fout(), "Setting output level very-verbose...\n");
     set_output_level(DDCA_OL_VV);  // affects this thread only
     f0printf(fout(), "Setting maximum retries...\n");
-    try_data_set_maxtries2(WRITE_ONLY_TRIES_OP, MAX_MAX_TRIES);
-    try_data_set_maxtries2(WRITE_READ_TRIES_OP, MAX_MAX_TRIES);
-    try_data_set_maxtries2(MULTI_PART_READ_OP,  MAX_MAX_TRIES);
-    try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
+    try_data_set_maxtries(WRITE_ONLY_TRIES_OP, MAX_MAX_TRIES);
+    try_data_set_maxtries(WRITE_READ_TRIES_OP, MAX_MAX_TRIES);
+    try_data_set_maxtries(MULTI_PART_READ_OP,  MAX_MAX_TRIES);
+    try_data_set_maxtries(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
     f0printf(fout(), "Forcing --stats...\n");
     parsed_cmd->stats_types = DDCA_STATS_ALL;
     f0printf(fout(), "Forcing --disable-capabilities-cache...\n");

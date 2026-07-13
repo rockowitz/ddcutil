@@ -179,7 +179,7 @@ multi_part_read_with_retry(
       Buffer**         buffer_loc)
 {
    bool debug = false;
-   Retry_Op_Value max_multi_part_read_tries = try_data_get_maxtries2(MULTI_PART_READ_OP);
+   Retry_Op_Value max_multi_part_read_tries = try_data_get_maxtries(MULTI_PART_READ_OP);
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
@@ -277,7 +277,7 @@ multi_part_read_with_retry(
    }
 
    // if counts for DDCRC_ALL_TRIES_ZERO?
-   try_data_record_tries2(dh, MULTI_PART_READ_OP, rc, tryctr);
+   try_data_record_tries(dh, MULTI_PART_READ_OP, rc, tryctr);
 
    *buffer_loc = accumulator;
    ASSERT_IFF(ddc_excp, !*buffer_loc);
@@ -361,7 +361,7 @@ multi_part_write_with_retry(
      Byte             vcp_code,
      Buffer *         value_to_set)
 {
-   Retry_Op_Value max_multi_part_write_tries = try_data_get_maxtries2(MULTI_PART_WRITE_OP);
+   Retry_Op_Value max_multi_part_write_tries = try_data_get_maxtries(MULTI_PART_WRITE_OP);
    bool debug = false;
    if (IS_TRACING())
       puts("");

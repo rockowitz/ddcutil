@@ -21,10 +21,10 @@
 void     try_data_init_retry_type(Retry_Operation retry_type, Retry_Op_Value maxtries);
 void     init_ddc_try_data();
 Retry_Op_Value
-         try_data_get_maxtries2(Retry_Operation retry_type);
-void     try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtries);
-void     try_data_reset2_all();
-void     try_data_record_tries2(Display_Handle * dh, Retry_Operation retry_type, DDCA_Status rc, int tryct);
+         try_data_get_maxtries(Retry_Operation retry_type);
+void     try_data_set_maxtries(Retry_Operation retry_type, Retry_Op_Value new_maxtries);
+void     try_data_reset_all();
+void     try_data_record_tries(Display_Handle * dh, Retry_Operation retry_type, DDCA_Status rc, int tryct);
 
 void     ddc_report_max_tries(int depth);
 void     ddc_report_ddc_stats(int depth);
