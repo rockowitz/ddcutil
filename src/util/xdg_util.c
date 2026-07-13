@@ -354,6 +354,10 @@ static char * find_xdg_path_file(
    char *path2 = g_strdup(path);
    xdg_dirs_iter_init(path2, &iter_state);
    while ( !fqfn && (next_dir = xdg_dirs_iter_next(&iter_state)) ) {
+      if (strlen(next_dir) == 0) {   // e.g. "::" in path, o.w. lastndx is -1
+         free(next_dir);
+         continue;
+      }
       int lastndx = strlen(next_dir) - 1;
       if (next_dir[lastndx] == '/')
          next_dir[lastndx] = '\0';
