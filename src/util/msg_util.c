@@ -89,7 +89,9 @@ char * get_msg_decoration(char * buf, uint bufsz, bool dest_syslog) {
 
       g_snprintf(buf, bufsz, "%s%s%s%s%s",
             process_prefix, thread_prefix, walltime_prefix, elapsed_prefix, funcname_prefix);
-      if (strlen(buf) > 0)
+      // check for truncation: the prefixes can total more than bufsz,
+      // in which case appending would write past the end of buf
+      if (strlen(buf) > 0 && strlen(buf) < bufsz - 1)
          strcat(buf, " ");
    }
 
