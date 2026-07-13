@@ -184,7 +184,7 @@ void buffer_put(Buffer * buffer, Byte * bytes, int bytect) {
    }
    assert (bytect <= buffer->buffer_size);
    memcpy(buffer->bytes, bytes, bytect);
-   buffer->len = buffer->len + bytect;
+   buffer->len = bytect;      // sets the value, does not append to it
    // printf("(%s) Returning.  cur len = %d\n", __func__, buffer->len);
 }
 
@@ -449,7 +449,9 @@ csb_to_g_ptr_array(Circular_String_Buffer * csb) {
       first = csb->ct % csb->size;
    // printf("(%s) first=%d\n", __func__, first);
 
-   for (int ndx = 0; ndx < csb->ct; ndx++) {
+   // defensive programming, courtesy of claude:
+   int count = (csb->ct < csb->size) ? csb->ct : csb->size;
+   for (int ndx = 0; ndx < count; ndx++) {
       int pos = (first + ndx) % csb->size;
       char * s = csb->lines[pos];
       // printf("(%s) line %d, |%s|\n", __func__, ndx, s);
@@ -1562,7 +1564,10 @@ Bit_Set_256 bs256_from_string(
        else {
           result = EMPTY_BIT_SET_256;
           *error_msgs_loc = g_ptr_array_to_ntsa(errors, false);
-          g_ptr_array_free(errors, false);
+          // true: free the pointer segment as well, o.w. it leaks.
+          // The strings survive (no free func is set) and are now
+          // owned by *error_msgs_loc.
+          g_ptr_array_free(errors, true);
        }
     }
     ntsa_free(pieces, /* free_strings */ true);
@@ -1623,7 +1628,7 @@ int bs32_count(
 
    int result = 0;
    for (int bitndx = 0; bitndx < 32; bitndx++) {
-      unsigned char flagbit = (0x80 >> bitndx);
+      uint32_t flagbit = ((uint32_t)1 << bitndx);
       if (bbset & flagbit)
          result += 1;
    }
@@ -1983,6 +1988,7 @@ bool generic_unregister_callback(GPtrArray* registered_callbacks, void *func) {
            if ( func == g_ptr_array_index(registered_callbacks, ndx)) {
               g_ptr_array_remove_index(registered_callbacks,ndx);
               found = true;
+              ndx--;     // don't skip the entry that shifted into this slot
            }
         }
      }
