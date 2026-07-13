@@ -55,7 +55,7 @@ struct {
    Retry_Op_Value  counters[MAX_MAX_TRIES+2];
    Retry_Op_Value  highest_maxtries;
    Retry_Op_Value  lowest_maxtries;
-} Try_Data2;
+} Try_Data;
 
 
 static Retry_Op_Value default_maxtries[] = {
@@ -65,7 +65,7 @@ static Retry_Op_Value default_maxtries[] = {
       INITIAL_MAX_MULTI_EXCHANGE_TRIES };
 
 
-static Try_Data2 try_data[RETRY_OP_COUNT];
+static Try_Data try_data[RETRY_OP_COUNT];
 
 
 /* Initializes a Try_Data data structure
@@ -127,7 +127,7 @@ Retry_Op_Value try_data_get_maxtries(Retry_Operation retry_type) {
 void try_data_set_maxtries(Retry_Operation retry_type, Retry_Op_Value new_maxtries) {
    bool debug = false;
 
-   Try_Data2 * stats_rec = &try_data[retry_type];
+   Try_Data * stats_rec = &try_data[retry_type];
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "stats type: %s for %s, new_maxtries: %d",
                  retry_type_name(stats_rec->retry_type),
                  retry_type_description(stats_rec->retry_type),
@@ -214,7 +214,7 @@ void try_data_record_tries(Display_Handle * dh, Retry_Operation retry_type, DDCA
    Per_Display_Data * pdd = dh->dref->pdd;
    drd_record_display_tries(pdd, retry_type, ddcrc, tryct);
 
-   Try_Data2 * stats_rec = &try_data[retry_type];
+   Try_Data * stats_rec = &try_data[retry_type];
    g_rec_mutex_lock(&try_data_mutex);
    if (ddcrc == 0) {
       DBGMSF(debug, "Current stats_rec->maxtries=%d", stats_rec->maxtries);
@@ -263,7 +263,7 @@ void try_data_report(Retry_Operation retry_type, int depth) {
    // bool debug = false;
    int d1 = depth+1;
    rpt_nl();
-   Try_Data2 * stats_rec = &try_data[retry_type];
+   Try_Data * stats_rec = &try_data[retry_type];
    rpt_vstring(depth, "Retry statistics for %s", retry_type_description(retry_type));
 
    g_rec_mutex_lock(&try_data_mutex);
@@ -332,7 +332,7 @@ void ddc_report_multi_part_write_stats(int depth) {
 
 
 static inline void ddc_report_max_tries_for_op(Retry_Operation op, char * title, int depth) {
-   Try_Data2 td = try_data[op];
+   Try_Data td = try_data[op];
    rpt_vstring(depth, "%-32s   %6d %8d %7d %7d",
                title,
                td.maxtries,
