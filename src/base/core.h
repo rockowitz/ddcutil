@@ -678,6 +678,29 @@ do { \
 } while(0)
 
 
+/** Variant of DECORATED_SYSLOG that does not include function name.
+ *
+ *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
+ *  @param  fmt                message format
+ *  @param  ...                message arguments
+ *
+ */
+#define DECORATED_SYSLOG_NOFUNC(_ddcutil_severity, format, ...) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+         char prefix[100] = {0}; \
+            get_msg_decoration(prefix, 100, true); \
+         syslog(syslog_priority, "%s %s%s", prefix, body, (tag_output) ? " (N)" : ""  ); \
+         free(body); \
+      } \
+   } \
+} while(0)
+
+
+
 /** Variant of DECORATED_SYSLOG() that accepts an explicit function name
  *  instead of using __func__.  Use when the caller wants to attribute the
  *  message to a function other than the one in which the macro is expanded,
