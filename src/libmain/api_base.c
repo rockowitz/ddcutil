@@ -387,7 +387,7 @@ Error_Info* perform_parse(
 static inline void emit_parse_info_msg(const char * msg, GPtrArray* infomsgs) {
    if (infomsgs)
       g_ptr_array_add(infomsgs, g_strdup_printf("%s%s", "libddcutil: ", msg));
-   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,"%s", msg);
+   DECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_NOTICE,"%s", msg);
 }
 
 
