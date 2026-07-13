@@ -550,6 +550,7 @@ void free_current_traced_function_stack() {
       g_mutex_lock(&all_traced_function_stacks_mutex);
       free_traced_function_stack(traced_function_stack);
       g_mutex_unlock(&all_traced_function_stacks_mutex);
+      traced_function_stack = NULL;   // o.w. dangling, a subsequent push would use freed queue
    }
 }
 
