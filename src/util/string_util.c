@@ -761,7 +761,7 @@ int ntsa_findx(
       const char *                 value,
       String_Comp_Func             func)
 {
-   bool debug = true;
+   bool debug = false;
 
    assert(string_array);
    int result = -1;
