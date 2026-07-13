@@ -373,6 +373,10 @@ bool dbgtrc_returning_string(
               __func__, __LINE__, __FILE__, "Done      "format, ##__VA_ARGS__); \
    } while (0)
 
+#define DBGTRC_EXECUTING(debug_flag, trace_group, format, ...) \
+    dbgtrc( (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_STARTING | DBGTRC_OPTIONS_DONE, \
+            __func__, __LINE__, __FILE__, "Executing "format, ##__VA_ARGS__)
+
 #define DBGTRC_EXECUTED(debug_flag, trace_group, format, ...) \
     dbgtrc( (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_STARTING | DBGTRC_OPTIONS_DONE, \
             __func__, __LINE__, __FILE__, "Executed  "format, ##__VA_ARGS__)

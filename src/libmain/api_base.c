@@ -991,9 +991,9 @@ bye:
       save_thread_error_detail(public_error_detail);
       errinfo_free(master_error);
    }
-   else {
-      SIMPLE_STD_FUNC_SYSLOG(LOG_NOTICE, "Done.  Returning 0");
-   }
+   // else {
+   //    SIMPLE_STD_FUNC_SYSLOG(LOG_NOTICE, "Done.  Returning 0");
+   // }
    DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
    return ddcrc;
 }
