@@ -356,6 +356,8 @@ char * strtrim(const char * s) {
  * @return extracted substring, in newly allocated memory
  */
 char * substr(const char * s, size_t startpos, size_t ct) {
+   if (startpos > strlen(s))       // o.w. ct calculation below underflows
+      startpos = strlen(s);
    if (startpos + ct > strlen(s))
       ct = strlen(s) - startpos;
    char * result = calloc(ct+1, sizeof(char));
@@ -547,6 +549,7 @@ strsplit_maxlength(
    if (debug)
       printf("(%s) max_piece_length=%u, delims=|%s|, str_to_split=|%s|\n",
              __func__, max_piece_length, delims, str_to_split);
+   assert(max_piece_length > 0);   // o.w. the loop below never advances
 
    GPtrArray * pieces = g_ptr_array_sized_new(20);
    char * str_to_split2 = g_strdup(str_to_split);   // work around constness
@@ -1203,7 +1206,8 @@ bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result)
 {
    // printf("(%s) s = |%s|\n", __func__, s);
    bool ok = false;
-   char * suc = strdup_uc(s);
+   char * suc0 = strdup_uc(s);   // original allocation, for free()
+   char * suc = suc0;
    if (str_starts_with(suc, "0X"))
          suc = suc + 2;
    else if (*suc == 'X')
@@ -1220,6 +1224,7 @@ bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result)
       }
       ok = hhs_to_byte_in_buf(buf, result);
    }
+   free(suc0);
    // printf("(%s) returning %s, *result=0x%02x\n", __func__, SBOOL(ok), *result);
    return ok;
 }
@@ -1310,9 +1315,10 @@ bool hhs4_to_uint16(char * hhs4, uint16_t* result_loc) {
    if (strlen(hhs4) == 4) {
       uint8_t hi_byte;
       uint8_t lo_byte;
-      if (hhc_to_byte_in_buf(&hhs4[0], &hi_byte) && hhc_to_byte_in_buf(&hhs4[2], &lo_byte) )
+      if (hhc_to_byte_in_buf(&hhs4[0], &hi_byte) && hhc_to_byte_in_buf(&hhs4[2], &lo_byte) ) {
          *result_loc = hi_byte << 8 | lo_byte;
-      ok = true;
+         ok = true;      // only report success if both conversions succeeded
+      }
    }
    // printf("(%s) Returning %s, *result_loc = 0x%04x\n", __func__, sbool(ok), *result_loc);
    return ok;
@@ -1370,7 +1376,8 @@ char * hexstring(const unsigned char * bytes, int len)
       snprintf(str_buf+3*i, alloc_size-3*i, "%02x ", bytes[i]);
    }
    // printf ("(%s) Final null offset: %d\n", __func__, 3*len-1);
-   str_buf[3*len-1] = 0x00;
+   // if len == 0, index would be -1
+   str_buf[ (len == 0) ? 0 : 3*len-1 ] = 0x00;
    // printf("(%s) Returning: |%s|\n", __func__, str_buf);
    return str_buf;
 }
