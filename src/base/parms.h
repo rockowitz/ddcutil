@@ -161,7 +161,7 @@
 #define DEFAULT_WATCH_MODE Watch_Mode_Dynamic
 #define START_WATCH_DELAY_MILLISEC 0
 
-// How frequently libddcutil watches for changes to connected displays
+// How frequently libddcutil checks for changes to connected displays
 #define DEFAULT_UDEV_WATCH_LOOP_MILLISEC 500
 #define DEFAULT_POLL_WATCH_LOOP_MILLISEC 2000
 #define DEFAULT_XEVENT_WATCH_LOOP_MILLISEC 100
