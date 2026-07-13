@@ -112,7 +112,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
    bool found = false;
    int pollctr = 0;
    while(!found && !terminate_watch_thread) {
-      int j = ++pollctr%10;
+      int j = ++pollctr%100;
       // DBGF(true, "pollctr=%d, j=%d", pollctr, j);
       if (j == 1)
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling poll()...(%d)", pollctr);
@@ -268,10 +268,9 @@ int dw_udev_drain() {
       udev_device_unref(dev2);
       drained_ct++;
    }
-   if (drained_ct > 0) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Drained %d additional queued udev event(s)", drained_ct);
-      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Drained %d additional queued udev event(s)", drained_ct);
-   }
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Drained %d additional queued udev event(s)", drained_ct);
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Drained %d additional queued udev event(s)", drained_ct);
+
    return drained_ct;
 }
 
