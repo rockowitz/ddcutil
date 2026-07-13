@@ -38,12 +38,12 @@ void *
 get_thread_dynamic_buffer(
       GPrivate * buf_key_ptr,
       GPrivate * bufsz_key_ptr,
-      guint16    required_size);
+      guint      required_size);
 
 void *
 get_thread_fixed_buffer(
       GPrivate * buf_key_ptr,
-      guint16    required_size);
+      guint      required_size);
 
 GPtrArray *
 gaux_ptr_array_truncate(

@@ -357,7 +357,7 @@ void *
 get_thread_dynamic_buffer(
       GPrivate * buf_key_ptr,
       GPrivate * bufsz_key_ptr,
-      guint16    required_size)
+      guint      required_size)   // guint16 silently wrapped for sizes > 65535
 {
    // printf("(%s) buf_key_ptr=%p, bufsz_key_ptr=%p, required_size=%d\n",
    //        __func__, buf_key_ptr, bufsz_key_ptr, required_size);
@@ -377,7 +377,7 @@ get_thread_dynamic_buffer(
    // if (buf)
    //    g_free(buf);
 
-   if ( !bufsz_ptr || *bufsz_ptr < required_size) {
+   if ( !bufsz_ptr || *bufsz_ptr < (int) required_size) {
       buf = g_new(char, required_size);
       // printf("(%s) Calling g_private_set()\n", __func__);
       g_private_replace(buf_key_ptr, buf);
@@ -412,7 +412,7 @@ get_thread_dynamic_buffer(
 void *
 get_thread_fixed_buffer(
       GPrivate * buf_key_ptr,
-      guint16    buffer_size)
+      guint      buffer_size)   // guint16 silently wrapped for sizes > 65535
 {
    // printf("(%s) buf_key_ptr=%p, buffer_size=%d\n", __func__, buf_key_ptr, buffer_size);
    assert(buffer_size > 0);
