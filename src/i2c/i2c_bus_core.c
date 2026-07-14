@@ -385,7 +385,7 @@ retry:
                      "Sleeping for 100 ms and retrying (attempt %d)...", eacces_retry_ct);
                syslog(LOG_WARNING, "%s", smsg);
                DBGTRC(debug, DDCA_TRC_NONE, "%s", smsg);
-               LOGGABLE_SLEEP(100, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", smsg);
+               LOGGABLE_SLEEP(100, SLEEP_OPT_TRACEABLE, DDCA_SYSLOG_WARNING, "%s", smsg);
                free(smsg);
             } else {
                syslog(LOG_WARNING,
