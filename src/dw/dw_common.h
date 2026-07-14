@@ -103,6 +103,9 @@ void record_active_callback_thread(GThread* thread);
 void remove_active_callback_thread(GThread* thread);
 int  active_callback_thread_ct();
 
+int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms);
+
+
 void init_dw_common();
 
 #endif /* DW_COMMON_H_ */

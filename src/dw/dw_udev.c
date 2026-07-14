@@ -111,6 +111,8 @@ bool dw_udev_watch(int watch_loop_millisec) {
 
    bool found = false;
    int pollctr = 0;
+   bool add_event_detected = false;
+
    while(!found && !terminate_watch_thread) {
       int j = ++pollctr%100;
       if (j == 1)
@@ -120,15 +122,16 @@ bool dw_udev_watch(int watch_loop_millisec) {
          // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "poll() timed out");
       }
       else if (rc < 0) {
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "poll() failed, errno=%d", errno);
-         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,  "poll() failed, errno=%d", errno);
+         // DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "poll() failed, errno=%d", errno);
+         // DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,  "poll() failed, errno=%d", errno);
+         DUAL_MSGXV(DDCA_SYSLOG_ERROR,  DDCA_TRC_NONE, "poll() failed, errno=%d", errno);
       }
       else {
          if (fds.revents&POLLIN) {
             struct udev_device *dev = udev_monitor_receive_device(mon);
             if (dev) {
-               DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
-               DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Udev event detected");
+               // DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
+               // DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Udev event detected");
                DUAL_MSGX(DDCA_SYSLOG_NOTICE, DDCA_TRC_NONE, "udev event detected");
 
                Udev_Event_Detail * detail = collect_udev_event_detail(dev);
@@ -179,37 +182,64 @@ bool dw_udev_watch(int watch_loop_millisec) {
                   }
                   g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
                   g_ptr_array_free(collector, true);
-               }
 
-               // TODO: refine the test
-               // if (streq(detail->sysname, "i2c-dev") || streq(detail->sysnamm, "drm"))
-               if (streq(detail->prop_action, "add") &&
-                   !str_starts_with(detail->prop_devname, "/dev/dri"))
-               {
-#ifndef USE_DBUS
-                  // Run the clocktime resume detector before pausing, so its
-                  // detection timestamp precedes this sleep and the caller's
-                  // pause_if_recently_resumed_from_sleep() counts this sleep
-                  // toward pause_after_resume_ms instead of pausing again in
-                  // full. No-op if a resume did not recently occur.
-                  recently_resumed_from_sleep_by_clocktime();
-#endif
-                  int pause_millis = pause_after_resume_ms;
-                  LOGGABLE_SLEEP(pause_millis, SLEEP_OPT_TRACEABLE,DDCA_SYSLOG_NOTICE,
-                        "Pausing %d millisec after UDEV add event", pause_millis);
-               }
+                  // TODO: refine the test
+                  // if (streq(detail->sysname, "i2c-dev") || streq(detail->sysnamm, "drm"))
+                  if (streq(detail->prop_action, "add") &&
+                      !str_starts_with(detail->prop_devname, "/dev/dri"))
+                  {
+                     add_event_detected = true;
+
+                  }
+               }  // !exclude_event(detail)
                free_udev_event_detail(detail);
                udev_device_unref(dev);
             }
             else {
-               DBGTRC(true, DDCA_TRC_NONE, "udev_monitor_receive_device() failed");
-               DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,  "udev_monitor_receive_device() failed");
+               // DBGTRC(true, DDCA_TRC_NONE, "udev_monitor_receive_device() failed");
+               // DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,  "udev_monitor_receive_device() failed");
+               DUAL_MSGX(DDCA_SYSLOG_ERROR, DDCA_TRC_NONE,  "udev_monitor_receive_device() failed");
             }
          }
          else {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not for us. fds.revents=0x%04x", fds.revents);
          }
       }
+   }     // while()
+
+   if (!terminate_watch_thread) {
+      int already_paused_ms = 0;
+
+      if (add_event_detected) {
+         int pause_after_add_ms = pause_after_resume_ms;   // ??
+
+#ifndef USE_DBUS
+         // Run the clocktime resume detector before pausing, so its detection
+         // timestamp precedes this sleep and dw_pause_if_recently_resumed_from_sleep()
+         // below counts this sleep toward pause_after_resume_ms instead of
+         // pausing again in full. No-op if a resume did not recently occur.
+         recently_resumed_from_sleep_by_clocktime();
+#endif
+         LOGGABLE_SLEEP(pause_after_add_ms, SLEEP_OPT_TRACEABLE,DDCA_SYSLOG_NOTICE,
+               "Pausing %d millisec after UDEV add event", pause_after_add_ms);
+         already_paused_ms = pause_after_add_ms;
+      }
+
+      if (already_paused_ms < pause_after_resume_ms) {
+         // n. returns the milliseconds actually slept, usually 0 if no recent resume;
+         // do not credit the full interval, o.w. the coalesce pause below never runs
+         already_paused_ms += dw_pause_if_recently_resumed_from_sleep(pause_after_resume_ms);
+      }
+
+      int drain_pause_ms = 200;    // ??
+
+      int remaining_pause_ms = drain_pause_ms - already_paused_ms;
+      if (remaining_pause_ms > 0) {
+         LOGGABLE_SLEEP(remaining_pause_ms, SLEEP_OPT_TRACEABLE, DDCA_SYSLOG_NOTICE,
+                        "Allowing time for events to coalesce");
+      }
+
+      dw_udev_drain();
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, terminate_watch_thread, "");
@@ -224,12 +254,12 @@ bool dw_udev_watch(int watch_loop_millisec) {
  *  every GPU/connector/i2c-dev node re-registers. Without draining them,
  *  the watch loop runs one full bus/EDID rescan per queued event instead of
  *  one rescan for the whole burst, which is expensive and shows up as a CPU
- *  spike right after resume. Coalesce: after dw_udev_watch() reports an event
- *  and the post-resume pause has completed, drain any additional events
+ *  spike right after resume. Coalesce: after dw_udev_watch() detects an event
+ *  and its post-event pauses have completed, drain any additional events
  *  already queued (non-blocking) before rescanning, since the rescan reads
  *  current system state directly and does not depend on having seen every
- *  individual event. Called after the pause rather than within
- *  dw_udev_watch() so that events arriving during the pause itself are also
+ *  individual event. Called from the epilogue of dw_udev_watch(), after the
+ *  pauses, so that events arriving during the pauses themselves are also
  *  coalesced into the single rescan.
  *
  *  @return number of events drained

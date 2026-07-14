@@ -248,67 +248,6 @@ STATIC void dw_invoke_process_screen_change_event(
 }
 
 
-/** Pause execution if recently resumed from sleep. Permissions are assigned
- *  by udev after the /dev/i2c devices ara creaetd.
- *
- *  @param min_interval_ms Pause execution if less than
- *                         this number of ms since return from sleep
- *  @return number of milliseconds actually slept
- *
- *  If the number of milliseconds since last resumed from sleep
- *  is less than **min_iterval_ms**, sleep for the difference
- *  between the difference between of milliseconds since resume
- *  and **min_interval_ms**.
- */
-STATIC int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
-     bool debug = false;
-     DBGTRC_STARTING(debug, TRACE_GROUP, "min_interval_ms = %d", min_interval_ms);
-
-     int slept_millisec = 0;
-     // Syslog only when a pause is actually taken.  This function runs on
-     // every pass of the watch loop in poll mode, so an unconditional message
-     // would flood the log with one line per poll interval.
-#ifdef USE_DBUS
-     uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
-     uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
-     DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-            "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
-            elapsed_ns, elapsed_ms);
-
-     if (elapsed_ms < (uint64_t) min_interval_ms) {
-        uint64_t remaining_sleep_ms = (uint64_t) min_interval_ms - elapsed_ms;
-        char * msg = g_strdup_printf(
-              "Time since last return from sleep = %"PRIu64" ms, pausing for %"PRIu64" ms",
-              elapsed_ms, remaining_sleep_ms);
-        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msg);
-        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", msg);
-        LOGGABLE_SLEEP(remaining_sleep_ms, SLEEP_OPT_TRACEABLE, LOG_WARNING, "%s", msg);
-        slept_millisec = remaining_sleep_ms;
-        free(msg);
-     }
-#else
-     if (recently_resumed_from_sleep_by_clocktime()) {
-        // Sleep only the time remaining until min_interval_ms has elapsed
-        // since the resume was detected. The detector's grace window keeps
-        // reporting "recently resumed" for 5 seconds, so sleeping the full
-        // min_interval_ms on every call would pause redundantly for each
-        // event batch in a post-resume udev burst, and again after the pause
-        // already taken in dw_udev_watch() for an add event.
-        uint64_t since_detect_ms = millisec_since_resume_detected_by_clocktime();
-        if (since_detect_ms < (uint64_t) min_interval_ms) {
-           int delay_ms = (int) ((uint64_t) pause_after_resume_ms - since_detect_ms);
-           DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
-                 "Recently resumed from sleep, pausing for %d millisec", delay_ms);
-           dw_split_sleep(delay_ms);
-           slept_millisec = delay_ms;
-        }
-     }
-#endif
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d slept_millisec", slept_millisec);
-   return slept_millisec;
-}
-
 
 /** Function that executes in the display watch thread.
  *
@@ -431,11 +370,10 @@ gpointer dw_watch_display_connections(gpointer data) {
       }
 #endif
 
-      dw_pause_if_recently_resumed_from_sleep(pause_after_resume_ms);
-      // Draining after the pause, not in dw_udev_watch(), coalesces the burst
-      // of udev events that arrives during the pause itself into this rescan.
-      if (wdd->watch_mode == Watch_Mode_Udev)
-         dw_udev_drain();
+      if (wdd->watch_mode != Watch_Mode_Udev) {  // for Udev mode, pause occurs in dw_udev_watch()
+         dw_pause_if_recently_resumed_from_sleep(pause_after_resume_ms);
+      }
+
       dw_invoke_process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
             deferred_events, displays_to_recheck);
    } // while()
@@ -468,5 +406,4 @@ void init_dw_poll() {
    RTTI_ADD_FUNC(dw_watch_display_connections);
    RTTI_ADD_FUNC(dw_invoke_process_screen_change_event);
    RTTI_ADD_FUNC(dw_process_screen_change_event);
-   RTTI_ADD_FUNC(dw_pause_if_recently_resumed_from_sleep);
 }
