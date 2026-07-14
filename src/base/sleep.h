@@ -86,9 +86,9 @@ void loggable_sleep(
       const char *           format, ...);
 
 
-#define LOGGABLE_SLEEP(_millis, _opts, _syslog_level, _msg, ...) \
+#define LOGGABLE_SLEEP(_millis, _opts, _ddca_syslog_level, _msg, ...) \
    do { \
-      loggable_sleep(_millis, _opts, _syslog_level, \
+      loggable_sleep(_millis, _opts, _ddca_syslog_level, \
                      __func__, __LINE__, __FILE__, _msg,  ##__VA_ARGS__); \
    } while(0)
 
