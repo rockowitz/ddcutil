@@ -113,7 +113,6 @@ bool dw_udev_watch(int watch_loop_millisec) {
    int pollctr = 0;
    while(!found && !terminate_watch_thread) {
       int j = ++pollctr%100;
-      // DBGF(true, "pollctr=%d, j=%d", pollctr, j);
       if (j == 1)
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling poll()...(%d)", pollctr);
       int rc = poll(&fds, 1, poll_timeout_millisec);   // consider using ppol()
@@ -130,9 +129,10 @@ bool dw_udev_watch(int watch_loop_millisec) {
             if (dev) {
                DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
                DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Udev event detected");
+               DUAL_MSGX(DDCA_SYSLOG_NOTICE, DDCA_TRC_NONE, "udev event detected");
 
                Udev_Event_Detail * detail = collect_udev_event_detail(dev);
-               if (!exclude_event(detail)) {
+               if (!exclude_event(detail)) {   // currently never excludes
                   found = true;
                   if (debug || report_udev_events) {
                      dbgrpt_udev_event_basic_detail(detail,1);
