@@ -261,7 +261,13 @@ int dw_udev_drain() {
          else
             DBGMSG("Draining event that would not otherwise be excluded");
          DBGMSG("Detail for drained event");
-         dbgrpt_udev_event_basic_detail(detail,1);
+         dbgrpt_udev_event_basic_detail(detail,1);   // apparently does only to terminal
+
+         GPtrArray* collector = udev_event_detail_to_collector(detail, NULL);  // allocates collector
+         g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
+         g_ptr_array_free(collector, true);
+
+
          free_udev_event_detail(detail);
       }
 
