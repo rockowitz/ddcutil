@@ -33,8 +33,8 @@ endif
 # library directly, since these symbols are not exported from libddcutil, so it
 # does not depend on ENABLE_SHARED_LIB_COND.  Run by "make check" (the demo
 # clients are not, as they require an attached display).
-check_PROGRAMS += test_string_util test_glib_util
-TESTS = test_string_util test_glib_util
+check_PROGRAMS += test_string_util test_glib_util test_debug_util
+TESTS = test_string_util test_glib_util test_debug_util
 
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
@@ -53,6 +53,9 @@ test_string_util_LDADD         = ../util/libutil.la $(GLIB_LIBS)
 test_glib_util_SOURCES         = test_glib_util.c
 test_glib_util_CPPFLAGS        = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_glib_util_LDADD           = ../util/libutil.la $(GLIB_LIBS)
+test_debug_util_SOURCES        = test_debug_util.c
+test_debug_util_CPPFLAGS       = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_debug_util_LDADD          = ../util/libutil.la $(GLIB_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
