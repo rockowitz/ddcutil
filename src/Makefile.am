@@ -24,9 +24,6 @@ MOSTLYCLEANFILES =
 CLEANFILES =
 DISTCLEANFILES = public/ddcutil_macros.h
 
-# todo: factor out swig 
-# todo: fails if swig/.libs doesn't exist
-# rm -rf swig/ddc_swig_wrap.c swig/ddc_swig.py swig/ddc_swig.pyc
 # Plo files in deps directories are automatically included in generated Makefiles for some reason
 # test -z `find . -name ".deps"   -type d` || rm -rf `find . -name ".deps"   -type d`
 # For conditionally included files, e.g. those in usb_util, make clean does not delete 
@@ -106,9 +103,7 @@ dist-hook:
 	find $(distdir) -name ".deps" -type d -prune -exec rm -rfv {} \;  
 	find $(distdir) -name ".libs" -type d -prune -exec rm -rfv {} \;  
 	find $(distdir) -name "*.lo"  -exec rm -v {} \;  
-	find $(distdir) -name "*.o"   -exec rm -v {} \;  
-	rm -rfv $(distdir)/swig/pyenv
-	rm -rfv $(distdir)/swig/__pycache__
+	find $(distdir) -name "*.o"   -exec rm -v {} \;
 	rm -fv ${distdir}/public/ddcutil_macros.h
 	find ${distdir} -name adl_archived -type d -prune -exec rm -rfv {} \;
 	find ${distdir}  -name "*old"  -type d -prune -exec rm -rfv {} \;
