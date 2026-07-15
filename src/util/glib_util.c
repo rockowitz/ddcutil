@@ -14,8 +14,6 @@
 #include <string.h>
 /** \endcond */
 
-#include "string_util.h"
-
 #include "glib_util.h"
 
 #ifdef ALTERNATIVE
@@ -290,9 +288,7 @@ gaux_ptr_array_from_null_terminated_array(
 // GEqualFunc
 
 gboolean gaux_streq(gconstpointer a, gconstpointer b) {
-   gboolean result = streq((const char *) a, (const char *) b);
-   // printf("(%s) a=|%s|, b=|%s|, returning %s\n", __func__, (const char * )a, (const char *) b, sbool(result));
-   return result;
+   return strcmp((const char *) a, (const char *) b) == 0;
 }
 
 
