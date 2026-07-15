@@ -1,6 +1,10 @@
 # File src/sample_clients/Makefile.am
 # Makefile for sample and test programs for libddcutil
 
+# serial-tests: use the simple test runner (run each TEST, check exit status)
+# rather than the parallel-tests harness, which requires config/test-driver.
+AUTOMAKE_OPTIONS = serial-tests
+
 AM_CPPFLAGS=     \
 -I$(srcdir)      \
 -I$(top_srcdir)/src/public \
@@ -25,6 +29,13 @@ check_PROGRAMS += \
   stress_watch
 endif
 
+# Unit test for src/util/string_util.c.  Links the internal util convenience
+# library directly, since these symbols are not exported from libddcutil, so it
+# does not depend on ENABLE_SHARED_LIB_COND.  Run by "make check" (the demo
+# clients are not, as they require an attached display).
+check_PROGRAMS += test_string_util
+TESTS = test_string_util
+
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
 demo_display_selection_SOURCES = demo_display_selection.c
@@ -36,6 +47,9 @@ demo_redirection_SOURCES       = demo_redirection.c
 demo_vcpinfo_SOURCES           = demo_vcpinfo.c
 stress_watch_SOURCES           = stress_watch.c
 stress_watch_LDADD             = ../libddcutil.la -lpthread
+test_string_util_SOURCES       = test_string_util.c
+test_string_util_CPPFLAGS      = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_string_util_LDADD         = ../util/libutil.la $(GLIB_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
