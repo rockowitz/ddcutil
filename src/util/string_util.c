@@ -326,7 +326,7 @@ char * trim_in_place(char * s) {
       p++;
    int len = strlen(p);
    while (len > 0 && isspace(p[len-1]))
-      s[--len] = '\0';
+      p[--len] = '\0';
    return p;
 }
 
