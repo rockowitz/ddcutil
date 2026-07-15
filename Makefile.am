@@ -69,7 +69,6 @@ clang:
 	        -o clang-report                         \
 		./autogen.sh				\
 	        --disable_gobject_api                   \
-		--enable-cython                         \
 	        ;                                       \
 	scan-build --use-analyzer=/usr/bin/clang        \
 	        -o clang-report                         \
