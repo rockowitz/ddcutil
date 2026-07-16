@@ -41,8 +41,9 @@
   **libdrm_util**, **libdrm_aux_util**, **linux_basic_util**, **linux_util**,
   **regex_util**, **multi_level_map**, **pnp_ids**, **simple_ini_file**,
   **subprocess_util**, **sysfs_filter_functions**, **sysfs_util**,
-  **sysfs_i2c_util**, **systemd_util**, **udev_i2c_util**, **udev_util**, and
-  **udev_usb_util**), run via **make check** in **src/sample_clients**.
+  **sysfs_i2c_util**, **systemd_util**, **udev_i2c_util**, **udev_util**,
+  **udev_usb_util**, **utilrpt**, **xdg_util**, and **x11_util**), run via
+  **make check** in **src/sample_clients**.
 
 #### Fixed
 
