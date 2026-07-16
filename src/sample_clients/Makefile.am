@@ -34,9 +34,11 @@ endif
 # does not depend on ENABLE_SHARED_LIB_COND.  Run by "make check" (the demo
 # clients are not, as they require an attached display).
 check_PROGRAMS += test_string_util test_glib_util test_debug_util test_timestamp \
-  test_data_structures test_file_util_base test_traced_function_stack test_msg_util
+  test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
+  test_report_util
 TESTS = test_string_util test_glib_util test_debug_util test_timestamp \
-  test_data_structures test_file_util_base test_traced_function_stack test_msg_util
+  test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
+  test_report_util
 
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
@@ -73,6 +75,9 @@ test_traced_function_stack_LDADD    = ../util/libutil.la $(GLIB_LIBS)
 test_msg_util_SOURCES          = test_msg_util.c
 test_msg_util_CPPFLAGS         = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_msg_util_LDADD            = ../util/libutil.la $(GLIB_LIBS)
+test_report_util_SOURCES       = test_report_util.c
+test_report_util_CPPFLAGS      = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_report_util_LDADD         = ../util/libutil.la $(GLIB_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
