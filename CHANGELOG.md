@@ -1,4 +1,4 @@
-## [2.2.8] 2026-07-12   COLLECTED NOTES, NOT YET EDITED
+## [2.2.8] 2026-07-16   COLLECTED NOTES, NOT YET EDITED
 
 
 #### Added
@@ -30,6 +30,13 @@
   terminate.
 - **XInitThreads()** is now called at library-initialization time, before the
   first Xlib call.
+- Removed vestigial **swig**, **cffi**, and **cython** references from the build
+  files, along with their archived source trees.
+- Added a suite of standalone unit tests for the utility functions in
+  **src/util** (**string_util**, **glib_util**, **data_structures**,
+  **timestamp**, **file_util_base**, **msg_util**, **report_util**, the traced
+  function stack, **ddcutil_config_file**, **dbus_util**, and **acl_util**),
+  run via **make check** in **src/sample_clients**.
 
 #### Fixed
 
@@ -73,6 +80,17 @@
   argument.
 - Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
   Pull request #613.
+- **trim_in_place()** corrupted strings that began with whitespace, in some
+  cases returning only the first character. Found by the newly added unit tests.
+- **rpt_hex_dump()** advanced the data pointer instead of the loop index,
+  mis-formatting the dump.
+- **ini_file_load()** no longer passes file content to the error message
+  function as a printf format string.
+- Memory errors and a false success return in **string_util.c**, and several
+  errors in rarely exercised **data_structures.c** code paths.
+- Traced function stack (debug/trace output): guarded a use-after-free of the
+  thread-local stack pointer after it is freed, and corrected an inverted
+  ordering that reversed the stack across nested callbacks.
 - Numerous additional logic errors, code smells, and latent NULL-dereference
   and leak issues identified by static analysis.
 
