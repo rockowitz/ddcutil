@@ -35,8 +35,9 @@
 - Added a suite of standalone unit tests for the utility functions in
   **src/util** (**string_util**, **glib_util**, **data_structures**,
   **timestamp**, **file_util_base**, **msg_util**, **report_util**, the traced
-  function stack, **ddcutil_config_file**, **dbus_util**, and **acl_util**),
-  run via **make check** in **src/sample_clients**.
+  function stack, **ddcutil_config_file**, **dbus_util**, **acl_util**,
+  **drm_card_connector_util**, and **device_id_util**), run via **make check**
+  in **src/sample_clients**.
 
 #### Fixed
 
