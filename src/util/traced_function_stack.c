@@ -235,13 +235,16 @@ int current_traced_function_stack_size() {
 GPtrArray * get_current_traced_function_stack_contents(bool most_recent_last) {
    GPtrArray* callstack = g_ptr_array_new_with_free_func(g_free);
    int qsize = g_queue_get_length(traced_function_stack);
+   // The queue head (peek_nth(0)) is the most recently pushed function.
    if (most_recent_last) {
-      for (int ndx = 0; ndx < qsize; ndx++) {
+      // emit oldest first, so the most recent function is last
+      for (int ndx = qsize-1; ndx >= 0; ndx--) {
          g_ptr_array_add(callstack, strdup((char*) g_queue_peek_nth(traced_function_stack, ndx)));
       }
    }
    else {
-      for (int ndx = qsize-1; ndx >= 0; ndx--) {
+      // emit most recent first
+      for (int ndx = 0; ndx < qsize; ndx++) {
           g_ptr_array_add(callstack, strdup((char*) g_queue_peek_nth(traced_function_stack, ndx)));
        }
    }
