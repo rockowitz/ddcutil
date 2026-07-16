@@ -37,8 +37,10 @@
   **timestamp**, **file_util_base**, **msg_util**, **report_util**, the traced
   function stack, **ddcutil_config_file**, **dbus_util**, **acl_util**,
   **drm_card_connector_util**, **device_id_util**, **error_info**, **edid**,
-  **glib_string_util**, **file_util**, and **failsim**), run via **make check**
-  in **src/sample_clients**.
+  **glib_string_util**, **file_util**, **failsim**, **i2c_util**,
+  **libdrm_util**, **libdrm_aux_util**, **linux_basic_util**, **linux_util**,
+  **regex_util**, **multi_level_map**, **pnp_ids**, and **simple_ini_file**),
+  run via **make check** in **src/sample_clients**.
 
 #### Fixed
 
