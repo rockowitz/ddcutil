@@ -41,7 +41,7 @@ check_PROGRAMS += test_string_util test_glib_util test_debug_util test_timestamp
   test_i2c_util test_libdrm_util test_libdrm_aux_util test_linux_basic_util \
   test_linux_util test_regex_util test_multi_level_map test_pnp_ids \
   test_simple_ini_file test_subprocess_util test_sysfs_filter_functions \
-  test_sysfs_util test_sysfs_i2c_util
+  test_sysfs_util test_sysfs_i2c_util test_systemd_util
 TESTS = test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
   test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
@@ -50,7 +50,14 @@ TESTS = test_string_util test_glib_util test_debug_util test_timestamp \
   test_i2c_util test_libdrm_util test_libdrm_aux_util test_linux_basic_util \
   test_linux_util test_regex_util test_multi_level_map test_pnp_ids \
   test_simple_ini_file test_subprocess_util test_sysfs_filter_functions \
-  test_sysfs_util test_sysfs_i2c_util
+  test_sysfs_util test_sysfs_i2c_util test_systemd_util
+
+# The udev-based tests build only when the udev subsystem is enabled, since the
+# udev_* modules are then compiled into libutil.
+if ENABLE_UDEV_COND
+check_PROGRAMS += test_udev_i2c_util test_udev_util test_udev_usb_util
+TESTS += test_udev_i2c_util test_udev_util test_udev_usb_util
+endif
 
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
@@ -163,6 +170,18 @@ test_sysfs_util_LDADD          = ../util/libutil.la $(GLIB_LIBS)
 test_sysfs_i2c_util_SOURCES    = test_sysfs_i2c_util.c
 test_sysfs_i2c_util_CPPFLAGS   = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_sysfs_i2c_util_LDADD      = ../util/libutil.la $(GLIB_LIBS)
+test_systemd_util_SOURCES      = test_systemd_util.c
+test_systemd_util_CPPFLAGS     = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_systemd_util_LDADD        = ../util/libutil.la $(GLIB_LIBS) $(SYSTEMD_LIBS)
+test_udev_i2c_util_SOURCES     = test_udev_i2c_util.c
+test_udev_i2c_util_CPPFLAGS    = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(UDEV_CFLAGS)
+test_udev_i2c_util_LDADD       = ../util/libutil.la $(GLIB_LIBS) $(UDEV_LIBS)
+test_udev_util_SOURCES         = test_udev_util.c
+test_udev_util_CPPFLAGS        = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(UDEV_CFLAGS)
+test_udev_util_LDADD           = ../util/libutil.la $(GLIB_LIBS) $(UDEV_LIBS)
+test_udev_usb_util_SOURCES     = test_udev_usb_util.c
+test_udev_usb_util_CPPFLAGS    = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(UDEV_CFLAGS)
+test_udev_usb_util_LDADD       = ../util/libutil.la $(GLIB_LIBS) $(UDEV_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
