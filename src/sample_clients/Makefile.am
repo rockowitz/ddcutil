@@ -39,14 +39,16 @@ check_PROGRAMS += test_string_util test_glib_util test_debug_util test_timestamp
   test_drm_card_connector_util test_device_id_util test_error_info test_edid \
   test_glib_string_util test_file_util test_failsim \
   test_i2c_util test_libdrm_util test_libdrm_aux_util test_linux_basic_util \
-  test_linux_util
+  test_linux_util test_regex_util test_multi_level_map test_pnp_ids \
+  test_simple_ini_file
 TESTS = test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
   test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
   test_drm_card_connector_util test_device_id_util test_error_info test_edid \
   test_glib_string_util test_file_util test_failsim \
   test_i2c_util test_libdrm_util test_libdrm_aux_util test_linux_basic_util \
-  test_linux_util
+  test_linux_util test_regex_util test_multi_level_map test_pnp_ids \
+  test_simple_ini_file
 
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
@@ -135,6 +137,18 @@ test_linux_util_SOURCES        = test_linux_util.c
 test_linux_util_CPPFLAGS       = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_linux_util_LDADD          = ../util/libutil.la $(GLIB_LIBS) $(DBUS_LIBS) \
   $(LIBDRM_LIBS) $(ACL_LIBS)
+test_regex_util_SOURCES        = test_regex_util.c
+test_regex_util_CPPFLAGS       = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_regex_util_LDADD          = ../util/libutil.la $(GLIB_LIBS)
+test_multi_level_map_SOURCES   = test_multi_level_map.c
+test_multi_level_map_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_multi_level_map_LDADD     = ../util/libutil.la $(GLIB_LIBS)
+test_pnp_ids_SOURCES           = test_pnp_ids.c
+test_pnp_ids_CPPFLAGS          = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_pnp_ids_LDADD             = ../util/libutil.la $(GLIB_LIBS)
+test_simple_ini_file_SOURCES   = test_simple_ini_file.c
+test_simple_ini_file_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_simple_ini_file_LDADD     = ../util/libutil.la $(GLIB_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
