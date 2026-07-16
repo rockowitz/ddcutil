@@ -14,6 +14,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "backtrace.h"
 #include "debug_util.h"
 #include "error_info.h"
 #include "file_util.h"
