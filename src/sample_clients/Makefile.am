@@ -36,11 +36,13 @@ endif
 check_PROGRAMS += test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
   test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
-  test_drm_card_connector_util test_device_id_util test_error_info test_edid
+  test_drm_card_connector_util test_device_id_util test_error_info test_edid \
+  test_glib_string_util test_file_util test_failsim
 TESTS = test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
   test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
-  test_drm_card_connector_util test_device_id_util test_error_info test_edid
+  test_drm_card_connector_util test_device_id_util test_error_info test_edid \
+  test_glib_string_util test_file_util test_failsim
 
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
@@ -101,6 +103,17 @@ test_error_info_LDADD          = ../util/libutil.la $(GLIB_LIBS)
 test_edid_SOURCES              = test_edid.c
 test_edid_CPPFLAGS             = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_edid_LDADD                = ../util/libutil.la $(GLIB_LIBS)
+test_glib_string_util_SOURCES  = test_glib_string_util.c
+test_glib_string_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_glib_string_util_LDADD    = ../util/libutil.la $(GLIB_LIBS)
+test_file_util_SOURCES         = test_file_util.c
+test_file_util_CPPFLAGS        = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_file_util_LDADD           = ../util/libutil.la $(GLIB_LIBS)
+# failsim.c is only compiled into libutil under --enable-failsim, so the test
+# compiles it directly to remain runnable in the default configuration.
+test_failsim_SOURCES           = test_failsim.c ../util/failsim.c
+test_failsim_CPPFLAGS          = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_failsim_LDADD             = ../util/libutil.la $(GLIB_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
