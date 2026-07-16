@@ -35,10 +35,12 @@ endif
 # clients are not, as they require an attached display).
 check_PROGRAMS += test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
-  test_report_util test_ddcutil_config_file test_dbus_util test_acl_util
+  test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
+  test_drm_card_connector_util test_device_id_util
 TESTS = test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
-  test_report_util test_ddcutil_config_file test_dbus_util test_acl_util
+  test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
+  test_drm_card_connector_util test_device_id_util
 
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
@@ -87,6 +89,12 @@ test_dbus_util_LDADD           = ../util/libutil.la $(GLIB_LIBS) $(DBUS_LIBS)
 test_acl_util_SOURCES          = test_acl_util.c
 test_acl_util_CPPFLAGS         = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(ACL_CFLAGS)
 test_acl_util_LDADD            = ../util/libutil.la $(GLIB_LIBS) $(ACL_LIBS)
+test_drm_card_connector_util_SOURCES  = test_drm_card_connector_util.c
+test_drm_card_connector_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(LIBDRM_CFLAGS)
+test_drm_card_connector_util_LDADD    = ../util/libutil.la $(GLIB_LIBS) $(LIBDRM_LIBS)
+test_device_id_util_SOURCES    = test_device_id_util.c
+test_device_id_util_CPPFLAGS   = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_device_id_util_LDADD      = ../util/libutil.la $(GLIB_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
