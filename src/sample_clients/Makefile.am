@@ -36,11 +36,11 @@ endif
 check_PROGRAMS += test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
   test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
-  test_drm_card_connector_util test_device_id_util
+  test_drm_card_connector_util test_device_id_util test_error_info test_edid
 TESTS = test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
   test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
-  test_drm_card_connector_util test_device_id_util
+  test_drm_card_connector_util test_device_id_util test_error_info test_edid
 
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
@@ -95,6 +95,12 @@ test_drm_card_connector_util_LDADD    = ../util/libutil.la $(GLIB_LIBS) $(LIBDRM
 test_device_id_util_SOURCES    = test_device_id_util.c
 test_device_id_util_CPPFLAGS   = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_device_id_util_LDADD      = ../util/libutil.la $(GLIB_LIBS)
+test_error_info_SOURCES        = test_error_info.c
+test_error_info_CPPFLAGS       = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_error_info_LDADD          = ../util/libutil.la $(GLIB_LIBS)
+test_edid_SOURCES              = test_edid.c
+test_edid_CPPFLAGS             = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_edid_LDADD                = ../util/libutil.la $(GLIB_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
