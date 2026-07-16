@@ -19,6 +19,7 @@
 #include "glib_util.h"
 #include "report_util.h"
 #include "string_util.h"
+#include "syslog_util.h"
 
 #include "traced_function_stack.h"
 
