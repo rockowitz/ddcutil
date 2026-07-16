@@ -37,12 +37,16 @@ check_PROGRAMS += test_string_util test_glib_util test_debug_util test_timestamp
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
   test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
   test_drm_card_connector_util test_device_id_util test_error_info test_edid \
-  test_glib_string_util test_file_util test_failsim
+  test_glib_string_util test_file_util test_failsim \
+  test_i2c_util test_libdrm_util test_libdrm_aux_util test_linux_basic_util \
+  test_linux_util
 TESTS = test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
   test_report_util test_ddcutil_config_file test_dbus_util test_acl_util \
   test_drm_card_connector_util test_device_id_util test_error_info test_edid \
-  test_glib_string_util test_file_util test_failsim
+  test_glib_string_util test_file_util test_failsim \
+  test_i2c_util test_libdrm_util test_libdrm_aux_util test_linux_basic_util \
+  test_linux_util
 
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
@@ -114,6 +118,23 @@ test_file_util_LDADD           = ../util/libutil.la $(GLIB_LIBS)
 test_failsim_SOURCES           = test_failsim.c ../util/failsim.c
 test_failsim_CPPFLAGS          = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_failsim_LDADD             = ../util/libutil.la $(GLIB_LIBS)
+test_i2c_util_SOURCES          = test_i2c_util.c
+test_i2c_util_CPPFLAGS         = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_i2c_util_LDADD            = ../util/libutil.la $(GLIB_LIBS)
+test_libdrm_util_SOURCES       = test_libdrm_util.c
+test_libdrm_util_CPPFLAGS      = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(LIBDRM_CFLAGS)
+test_libdrm_util_LDADD         = ../util/libutil.la $(GLIB_LIBS) $(LIBDRM_LIBS)
+test_libdrm_aux_util_SOURCES   = test_libdrm_aux_util.c
+test_libdrm_aux_util_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(LIBDRM_CFLAGS)
+test_libdrm_aux_util_LDADD     = ../util/libutil.la $(GLIB_LIBS) $(LIBDRM_LIBS)
+test_linux_basic_util_SOURCES  = test_linux_basic_util.c
+test_linux_basic_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_linux_basic_util_LDADD    = ../util/libutil.la $(GLIB_LIBS)
+# linux_util.o transitively pulls the acl/dbus/drm util modules, so link their libs.
+test_linux_util_SOURCES        = test_linux_util.c
+test_linux_util_CPPFLAGS       = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_linux_util_LDADD          = ../util/libutil.la $(GLIB_LIBS) $(DBUS_LIBS) \
+  $(LIBDRM_LIBS) $(ACL_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
