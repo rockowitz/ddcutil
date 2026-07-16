@@ -39,8 +39,9 @@
   **drm_card_connector_util**, **device_id_util**, **error_info**, **edid**,
   **glib_string_util**, **file_util**, **failsim**, **i2c_util**,
   **libdrm_util**, **libdrm_aux_util**, **linux_basic_util**, **linux_util**,
-  **regex_util**, **multi_level_map**, **pnp_ids**, and **simple_ini_file**),
-  run via **make check** in **src/sample_clients**.
+  **regex_util**, **multi_level_map**, **pnp_ids**, **simple_ini_file**,
+  **subprocess_util**, **sysfs_filter_functions**, **sysfs_util**, and
+  **sysfs_i2c_util**), run via **make check** in **src/sample_clients**.
 
 #### Fixed
 
