@@ -36,7 +36,8 @@
   **src/util** (**string_util**, **glib_util**, **data_structures**,
   **timestamp**, **file_util_base**, **msg_util**, **report_util**, the traced
   function stack, **ddcutil_config_file**, **dbus_util**, **acl_util**,
-  **drm_card_connector_util**, and **device_id_util**), run via **make check**
+  **drm_card_connector_util**, **device_id_util**, **error_info**, **edid**,
+  **glib_string_util**, **file_util**, and **failsim**), run via **make check**
   in **src/sample_clients**.
 
 #### Fixed
@@ -81,6 +82,8 @@
   argument.
 - Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
   Pull request #613.
+- Build: added a missing **backtrace.h** include in **failsim.c**, which failed
+  to compile under **--enable-failsim** with modern GCC.
 - **trim_in_place()** corrupted strings that began with whitespace, in some
   cases returning only the first character. Found by the newly added unit tests.
 - **rpt_hex_dump()** advanced the data pointer instead of the loop index,
