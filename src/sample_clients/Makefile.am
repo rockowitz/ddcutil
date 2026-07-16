@@ -35,10 +35,10 @@ endif
 # clients are not, as they require an attached display).
 check_PROGRAMS += test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
-  test_report_util
+  test_report_util test_ddcutil_config_file test_dbus_util test_acl_util
 TESTS = test_string_util test_glib_util test_debug_util test_timestamp \
   test_data_structures test_file_util_base test_traced_function_stack test_msg_util \
-  test_report_util
+  test_report_util test_ddcutil_config_file test_dbus_util test_acl_util
 
 laclient_SOURCES               = clmain.c
 demo_capabilities_SOURCES      = demo_capabilities.c
@@ -78,6 +78,15 @@ test_msg_util_LDADD            = ../util/libutil.la $(GLIB_LIBS)
 test_report_util_SOURCES       = test_report_util.c
 test_report_util_CPPFLAGS      = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_report_util_LDADD         = ../util/libutil.la $(GLIB_LIBS)
+test_ddcutil_config_file_SOURCES  = test_ddcutil_config_file.c
+test_ddcutil_config_file_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_ddcutil_config_file_LDADD    = ../util/libutil.la $(GLIB_LIBS)
+test_dbus_util_SOURCES         = test_dbus_util.c
+test_dbus_util_CPPFLAGS        = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(DBUS_CFLAGS)
+test_dbus_util_LDADD           = ../util/libutil.la $(GLIB_LIBS) $(DBUS_LIBS)
+test_acl_util_SOURCES          = test_acl_util.c
+test_acl_util_CPPFLAGS         = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(ACL_CFLAGS)
+test_acl_util_LDADD            = ../util/libutil.la $(GLIB_LIBS) $(ACL_LIBS)
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
