@@ -17,10 +17,17 @@ AM_CFLAGS = -Wall -fPIC
 LIBBASE = $(top_builddir)/src/base/libbase.la
 LIBUTIL = $(top_builddir)/src/util/libutil.la
 
+# Several base modules transitively pull the udev/drm/dbus/acl util modules
+# (via the display-path and connector reporting helpers), so those tests link
+# their libs.
+EXTRA_SYSLIBS = $(UDEV_LIBS) $(LIBDRM_LIBS) $(DBUS_LIBS) $(ACL_LIBS)
+
 check_PROGRAMS = test_core test_core_per_thread_settings test_ddc_errno \
-  test_linux_errno test_trace_control test_ddc_packets test_display_lock
+  test_linux_errno test_trace_control test_ddc_packets test_display_lock \
+  test_displays test_display_retry_data test_drm_connector_state
 TESTS = test_core test_core_per_thread_settings test_ddc_errno \
-  test_linux_errno test_trace_control test_ddc_packets test_display_lock
+  test_linux_errno test_trace_control test_ddc_packets test_display_lock \
+  test_displays test_display_retry_data test_drm_connector_state
 
 test_core_SOURCES  = test_core.c
 test_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
@@ -46,9 +53,18 @@ test_ddc_packets_SOURCES       = test_ddc_packets.c
 test_ddc_packets_CPPFLAGS      = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_ddc_packets_LDADD         = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS)
 
-# display_lock.o transitively pulls the udev/drm/dbus/acl util modules (via the
-# display-path reporting helpers), so link their libs.
 test_display_lock_SOURCES      = test_display_lock.c
 test_display_lock_CPPFLAGS     = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_display_lock_LDADD        = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(UDEV_LIBS) \
-  $(LIBDRM_LIBS) $(DBUS_LIBS) $(ACL_LIBS)
+test_display_lock_LDADD        = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_displays_SOURCES          = test_displays.c
+test_displays_CPPFLAGS         = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_displays_LDADD            = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_display_retry_data_SOURCES  = test_display_retry_data.c
+test_display_retry_data_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_display_retry_data_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_drm_connector_state_SOURCES  = test_drm_connector_state.c
+test_drm_connector_state_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(LIBDRM_CFLAGS)
+test_drm_connector_state_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
