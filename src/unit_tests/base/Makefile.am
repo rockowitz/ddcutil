@@ -24,10 +24,12 @@ EXTRA_SYSLIBS = $(UDEV_LIBS) $(LIBDRM_LIBS) $(DBUS_LIBS) $(ACL_LIBS)
 
 check_PROGRAMS = test_core test_core_per_thread_settings test_ddc_errno \
   test_linux_errno test_trace_control test_ddc_packets test_display_lock \
-  test_displays test_display_retry_data test_drm_connector_state
+  test_displays test_display_retry_data test_drm_connector_state \
+  test_dw_base test_execution_stats test_dsa2 test_dynamic_features
 TESTS = test_core test_core_per_thread_settings test_ddc_errno \
   test_linux_errno test_trace_control test_ddc_packets test_display_lock \
-  test_displays test_display_retry_data test_drm_connector_state
+  test_displays test_display_retry_data test_drm_connector_state \
+  test_dw_base test_execution_stats test_dsa2 test_dynamic_features
 
 test_core_SOURCES  = test_core.c
 test_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
@@ -68,3 +70,20 @@ test_display_retry_data_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SY
 test_drm_connector_state_SOURCES  = test_drm_connector_state.c
 test_drm_connector_state_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS) $(LIBDRM_CFLAGS)
 test_drm_connector_state_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_dw_base_SOURCES           = test_dw_base.c
+test_dw_base_CPPFLAGS          = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_dw_base_LDADD             = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_execution_stats_SOURCES   = test_execution_stats.c
+test_execution_stats_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_execution_stats_LDADD     = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+# dsa2.c uses libm (math.h).
+test_dsa2_SOURCES              = test_dsa2.c
+test_dsa2_CPPFLAGS             = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_dsa2_LDADD                = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+
+test_dynamic_features_SOURCES  = test_dynamic_features.c
+test_dynamic_features_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_dynamic_features_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
