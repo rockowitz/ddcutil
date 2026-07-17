@@ -17,8 +17,10 @@ AM_CFLAGS = -Wall -fPIC
 LIBBASE = $(top_builddir)/src/base/libbase.la
 LIBUTIL = $(top_builddir)/src/util/libutil.la
 
-check_PROGRAMS = test_core test_core_per_thread_settings
-TESTS = test_core test_core_per_thread_settings
+check_PROGRAMS = test_core test_core_per_thread_settings test_ddc_errno \
+  test_linux_errno test_trace_control
+TESTS = test_core test_core_per_thread_settings test_ddc_errno \
+  test_linux_errno test_trace_control
 
 test_core_SOURCES  = test_core.c
 test_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
@@ -27,3 +29,15 @@ test_core_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS)
 test_core_per_thread_settings_SOURCES  = test_core_per_thread_settings.c
 test_core_per_thread_settings_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_core_per_thread_settings_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS)
+
+test_ddc_errno_SOURCES         = test_ddc_errno.c
+test_ddc_errno_CPPFLAGS        = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_ddc_errno_LDADD           = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS)
+
+test_linux_errno_SOURCES       = test_linux_errno.c
+test_linux_errno_CPPFLAGS      = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_linux_errno_LDADD         = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS)
+
+test_trace_control_SOURCES     = test_trace_control.c
+test_trace_control_CPPFLAGS    = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_trace_control_LDADD       = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS)
