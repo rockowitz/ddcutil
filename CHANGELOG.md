@@ -1,4 +1,4 @@
-## [2.2.8] 2026-07-16   COLLECTED NOTES, NOT YET EDITED
+## [2.2.8] 2026-07-17   COLLECTED NOTES, NOT YET EDITED
 
 
 #### Added
@@ -43,10 +43,11 @@
   **subprocess_util**, **sysfs_filter_functions**, **sysfs_util**,
   **sysfs_i2c_util**, **systemd_util**, **udev_i2c_util**, **udev_util**,
   **udev_usb_util**, **utilrpt**, **xdg_util**, **x11_util**, and **backtrace**;
-  every .c file in **src/util** now has a unit test), plus a test for
-  **src/base/core.c**. The tests live in the new **src/unit_tests** tree
-  (**src/unit_tests/util** and **src/unit_tests/base**) and are run via
-  **make check**.
+  every .c file in **src/util** now has a unit test), plus tests for
+  **src/base** modules (**core**, **core_per_thread_settings**, **ddc_errno**,
+  **linux_errno**, **trace_control**, **ddc_packets**, and **display_lock**).
+  The tests live in the new **src/unit_tests** tree (**src/unit_tests/util** and
+  **src/unit_tests/base**) and are run via **make check**.
 
 #### Fixed
 
