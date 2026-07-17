@@ -43,8 +43,10 @@
   **subprocess_util**, **sysfs_filter_functions**, **sysfs_util**,
   **sysfs_i2c_util**, **systemd_util**, **udev_i2c_util**, **udev_util**,
   **udev_usb_util**, **utilrpt**, **xdg_util**, **x11_util**, and **backtrace**;
-  every .c file in **src/util** now has a unit test), run via **make check** in
-  **src/sample_clients**.
+  every .c file in **src/util** now has a unit test), plus a test for
+  **src/base/core.c**. The tests live in the new **src/unit_tests** tree
+  (**src/unit_tests/util** and **src/unit_tests/base**) and are run via
+  **make check**.
 
 #### Fixed
 
