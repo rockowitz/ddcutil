@@ -14,10 +14,16 @@ AM_CFLAGS = -Wall -fPIC
 
 # Unit tests link the internal libbase/libutil convenience libraries directly,
 # since these symbols are not exported from libddcutil. Run by "make check".
-check_PROGRAMS = test_core
-TESTS = test_core
+LIBBASE = $(top_builddir)/src/base/libbase.la
+LIBUTIL = $(top_builddir)/src/util/libutil.la
+
+check_PROGRAMS = test_core test_core_per_thread_settings
+TESTS = test_core test_core_per_thread_settings
 
 test_core_SOURCES  = test_core.c
 test_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_core_LDADD    = $(top_builddir)/src/base/libbase.la \
-  $(top_builddir)/src/util/libutil.la $(GLIB_LIBS)
+test_core_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS)
+
+test_core_per_thread_settings_SOURCES  = test_core_per_thread_settings.c
+test_core_per_thread_settings_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_core_per_thread_settings_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS)
