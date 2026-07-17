@@ -1,6 +1,6 @@
 # src/Makefile.am
 
-DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dw dynvcp i2c libmain sysfs  sample_clients test usb usb_util util vcp
+DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dw dynvcp i2c libmain sysfs  sample_clients test usb usb_util util vcp unit_tests
 # contain only header files:
 EXTRA_DIST = bsd private public
 
@@ -19,6 +19,10 @@ SUBDIRS += app_sysenv app_ddcutil cmdline .
 if ENABLE_SHARED_LIB_COND
 SUBDIRS += sample_clients
 endif
+
+# Standalone unit tests for internal modules. Built after the base/util
+# convenience libraries they link against.
+SUBDIRS += unit_tests
 
 MOSTLYCLEANFILES =   
 CLEANFILES =
