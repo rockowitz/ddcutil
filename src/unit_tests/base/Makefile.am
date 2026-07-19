@@ -27,13 +27,19 @@ check_PROGRAMS = test_core test_core_per_thread_settings test_ddc_errno \
   test_displays test_display_retry_data test_drm_connector_state \
   test_dw_base test_execution_stats test_dsa2 test_dynamic_features \
   test_vcp_version test_feature_lists test_monitor_model_key \
-  test_feature_set_ref test_status_code_mgt
+  test_feature_set_ref test_status_code_mgt \
+  test_rtti test_ddc_command_codes test_stats test_build_info test_tuned_sleep \
+  test_feature_metadata test_i2c_bus_aux test_flock test_i2c_bus_base \
+  test_per_thread_data
 TESTS = test_core test_core_per_thread_settings test_ddc_errno \
   test_linux_errno test_trace_control test_ddc_packets test_display_lock \
   test_displays test_display_retry_data test_drm_connector_state \
   test_dw_base test_execution_stats test_dsa2 test_dynamic_features \
   test_vcp_version test_feature_lists test_monitor_model_key \
-  test_feature_set_ref test_status_code_mgt
+  test_feature_set_ref test_status_code_mgt \
+  test_rtti test_ddc_command_codes test_stats test_build_info test_tuned_sleep \
+  test_feature_metadata test_i2c_bus_aux test_flock test_i2c_bus_base \
+  test_per_thread_data
 
 test_core_SOURCES  = test_core.c
 test_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
@@ -111,3 +117,43 @@ test_feature_set_ref_LDADD     = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSL
 test_status_code_mgt_SOURCES   = test_status_code_mgt.c
 test_status_code_mgt_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_status_code_mgt_LDADD     = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_rtti_SOURCES              = test_rtti.c
+test_rtti_CPPFLAGS             = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_rtti_LDADD                = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_ddc_command_codes_SOURCES  = test_ddc_command_codes.c
+test_ddc_command_codes_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_ddc_command_codes_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_stats_SOURCES             = test_stats.c
+test_stats_CPPFLAGS            = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_stats_LDADD               = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_build_info_SOURCES        = test_build_info.c
+test_build_info_CPPFLAGS       = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_build_info_LDADD          = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_tuned_sleep_SOURCES       = test_tuned_sleep.c
+test_tuned_sleep_CPPFLAGS      = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_tuned_sleep_LDADD         = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_feature_metadata_SOURCES  = test_feature_metadata.c
+test_feature_metadata_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_feature_metadata_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_i2c_bus_aux_SOURCES       = test_i2c_bus_aux.c
+test_i2c_bus_aux_CPPFLAGS      = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_i2c_bus_aux_LDADD         = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_flock_SOURCES             = test_flock.c
+test_flock_CPPFLAGS            = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_flock_LDADD               = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_i2c_bus_base_SOURCES      = test_i2c_bus_base.c
+test_i2c_bus_base_CPPFLAGS     = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_i2c_bus_base_LDADD        = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_per_thread_data_SOURCES   = test_per_thread_data.c
+test_per_thread_data_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_per_thread_data_LDADD     = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
