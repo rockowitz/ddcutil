@@ -25,11 +25,15 @@ EXTRA_SYSLIBS = $(UDEV_LIBS) $(LIBDRM_LIBS) $(DBUS_LIBS) $(ACL_LIBS)
 check_PROGRAMS = test_core test_core_per_thread_settings test_ddc_errno \
   test_linux_errno test_trace_control test_ddc_packets test_display_lock \
   test_displays test_display_retry_data test_drm_connector_state \
-  test_dw_base test_execution_stats test_dsa2 test_dynamic_features
+  test_dw_base test_execution_stats test_dsa2 test_dynamic_features \
+  test_vcp_version test_feature_lists test_monitor_model_key \
+  test_feature_set_ref test_status_code_mgt
 TESTS = test_core test_core_per_thread_settings test_ddc_errno \
   test_linux_errno test_trace_control test_ddc_packets test_display_lock \
   test_displays test_display_retry_data test_drm_connector_state \
-  test_dw_base test_execution_stats test_dsa2 test_dynamic_features
+  test_dw_base test_execution_stats test_dsa2 test_dynamic_features \
+  test_vcp_version test_feature_lists test_monitor_model_key \
+  test_feature_set_ref test_status_code_mgt
 
 test_core_SOURCES  = test_core.c
 test_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
@@ -87,3 +91,23 @@ test_dsa2_LDADD                = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSL
 test_dynamic_features_SOURCES  = test_dynamic_features.c
 test_dynamic_features_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_dynamic_features_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_vcp_version_SOURCES       = test_vcp_version.c
+test_vcp_version_CPPFLAGS      = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_vcp_version_LDADD         = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_feature_lists_SOURCES     = test_feature_lists.c
+test_feature_lists_CPPFLAGS    = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_feature_lists_LDADD       = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_monitor_model_key_SOURCES  = test_monitor_model_key.c
+test_monitor_model_key_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_monitor_model_key_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_feature_set_ref_SOURCES   = test_feature_set_ref.c
+test_feature_set_ref_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_feature_set_ref_LDADD     = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_status_code_mgt_SOURCES   = test_status_code_mgt.c
+test_status_code_mgt_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_status_code_mgt_LDADD     = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
