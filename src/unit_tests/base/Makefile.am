@@ -30,7 +30,9 @@ check_PROGRAMS = test_core test_core_per_thread_settings test_ddc_errno \
   test_feature_set_ref test_status_code_mgt \
   test_rtti test_ddc_command_codes test_stats test_build_info test_tuned_sleep \
   test_feature_metadata test_i2c_bus_aux test_flock test_i2c_bus_base \
-  test_per_thread_data
+  test_per_thread_data \
+  test_build_timestamp test_monitor_quirks test_sleep test_per_display_data \
+  test_base_services
 TESTS = test_core test_core_per_thread_settings test_ddc_errno \
   test_linux_errno test_trace_control test_ddc_packets test_display_lock \
   test_displays test_display_retry_data test_drm_connector_state \
@@ -39,7 +41,9 @@ TESTS = test_core test_core_per_thread_settings test_ddc_errno \
   test_feature_set_ref test_status_code_mgt \
   test_rtti test_ddc_command_codes test_stats test_build_info test_tuned_sleep \
   test_feature_metadata test_i2c_bus_aux test_flock test_i2c_bus_base \
-  test_per_thread_data
+  test_per_thread_data \
+  test_build_timestamp test_monitor_quirks test_sleep test_per_display_data \
+  test_base_services
 
 test_core_SOURCES  = test_core.c
 test_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
@@ -157,3 +161,24 @@ test_i2c_bus_base_LDADD        = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSL
 test_per_thread_data_SOURCES   = test_per_thread_data.c
 test_per_thread_data_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 test_per_thread_data_LDADD     = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_build_timestamp_SOURCES   = test_build_timestamp.c
+test_build_timestamp_CPPFLAGS  = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_build_timestamp_LDADD     = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_monitor_quirks_SOURCES    = test_monitor_quirks.c
+test_monitor_quirks_CPPFLAGS   = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_monitor_quirks_LDADD      = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+test_sleep_SOURCES             = test_sleep.c
+test_sleep_CPPFLAGS            = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_sleep_LDADD               = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+# per_display_data and base_services pull dsa2, which uses libm.
+test_per_display_data_SOURCES  = test_per_display_data.c
+test_per_display_data_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_per_display_data_LDADD    = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+
+test_base_services_SOURCES     = test_base_services.c
+test_base_services_CPPFLAGS    = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+test_base_services_LDADD       = $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
