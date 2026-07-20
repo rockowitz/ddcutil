@@ -514,6 +514,14 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_FVAL(30, d1);
       RPT_FVAL(31, d1);
       RPT_FVAL(32, d1);
+      RPT_FVAL(33, d1);
+      RPT_FVAL(34, d1);
+      RPT_FVAL(35, d1);
+      RPT_FVAL(36, d1);
+      RPT_FVAL(37, d1);
+      RPT_FVAL(38, d1);
+      RPT_FVAL(39, d1);
+      RPT_FVAL(40, d1);
 
 #undef RPT_FVAL
 
