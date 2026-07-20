@@ -552,22 +552,39 @@ gpointer dw_recheck_displays_func(gpointer data) {
             interpret_dref_flags_t(dref->flags));
       // dbgrpt_display_ref(dref,false,2);
       if (!err) {
-         emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
-             "ddc became enabled for %s after %ld milliseconds",
-              dref_reprx_t(dref), NANOS2MILLIS(cur_realtime_nanosec() - rqe->initial_ts_nanos));
-         dref->dispno = ++dispno_max;
+         if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
+            emit_recheck_debug_msg(debug, DDCA_SYSLOG_NOTICE,
+                "ddc became enabled for %s after %ld milliseconds",
+                 dref_reprx_t(dref), NANOS2MILLIS(cur_realtime_nanosec() - rqe->initial_ts_nanos));
+            dref->dispno = ++dispno_max;
 
-         DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "locking process_event_mutex");
-         g_mutex_lock(&process_event_mutex);
-         dw_emit_or_queue_display_status_event(
-               DDCA_EVENT_DDC_ENABLED,
-               dref->drm_connector,
-               dref,
-               dref->io_path,
-               NULL);    //  deferred_event_queue);
-         g_mutex_unlock(&process_event_mutex);
-         DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "unlocked process_event_mutex");
-         dw_free_recheck_queue_entry(rqe);
+            DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "locking process_event_mutex");
+            g_mutex_lock(&process_event_mutex);
+            dw_emit_or_queue_display_status_event(
+                  DDCA_EVENT_DDC_ENABLED,
+                  dref->drm_connector,
+                  dref,
+                  dref->io_path,
+                  NULL);    //  deferred_event_queue);
+            g_mutex_unlock(&process_event_mutex);
+            DBGTRC_NOPREFIX(false, DDCA_TRC_NONE, "unlocked process_event_mutex");
+            dw_free_recheck_queue_entry(rqe);
+         }
+         else {
+            // dw_recheck_dref() can succeed while DDC communication is still
+            // not working.  Emitting DDCA_EVENT_DDC_ENABLED in that state
+            // would trip the assert in dw_create_display_status_event(); in
+            // releases before the assert (and before the wrong-constant fix
+            // in commit 94b0a03b) it produced a DDCA_EVENT_DDC_ENABLED event
+            // misleadingly reporting ddc working: false
+            // (https://bugs.kde.org/show_bug.cgi?id=517290).  Requeue for
+            // another attempt; the max recheck time test above bounds the
+            // retries.
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                   "ddc still not enabled for %s after %d milliseconds, retrying ...",
+                   dref_reprx_t(rqe->dref), sleep_interval_millis);
+            g_queue_push_head(to_check_again, rqe);
+         }
       }
       else {
          if (err->status_code == DDCRC_DISCONNECTED) {
