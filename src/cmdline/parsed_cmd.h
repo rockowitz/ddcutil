@@ -166,7 +166,6 @@ typedef enum {
    CMD_FLAG2_F30                  = 0x20000000,
    CMD_FLAG2_F31                  = 0x40000000,
    CMD_FLAG2_F32                  = 0x80000000,
-
    CMD_FLAG2_F33                = 0x0100000000,
    CMD_FLAG2_F34                = 0x0200000000,
    CMD_FLAG2_F35                = 0x0400000000,
