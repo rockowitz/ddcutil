@@ -5,12 +5,44 @@
 
 - **ddca_elapsed_nanosec()**: number of nanoseconds since the library was
   initialized.
-- Utility options ***--f25*** (select the recheck algorithm at runtime),
+- Utility options ***--F33*** .. ***--F40***, 
+- Added a suite of standalone unit tests for the utility functions in directories
+  src/util and src/base. The tests live in the new **src/unit_tests** tree and
+  are run via **make check**.
+
+<!--
+ ***--f25*** (select the recheck algorithm at runtime),
   ***--f29*** (force a recheck when a display is added), and ***--f32***
   through ***--f36*** (see Changed, below). ***--f33*** through ***--f40***
   are now defined as utility flags; most remain unused.
+-->
+
+<!--
+- Added a suite of standalone unit tests for the utility functions in
+  **src/util** (**string_util**, **glib_util**, **data_structures**,
+  **timestamp**, **file_util_base**, **msg_util**, **report_util**, the traced
+  function stack, **ddcutil_config_file**, **dbus_util**, **acl_util**,
+  **drm_card_connector_util**, **device_id_util**, **error_info**, **edid**,
+  **glib_string_util**, **file_util**, **failsim**, **i2c_util**,
+  **libdrm_util**, **libdrm_aux_util**, **linux_basic_util**, **linux_util**,
+  **regex_util**, **multi_level_map**, **pnp_ids**, **simple_ini_file**,
+  **subprocess_util**, **sysfs_filter_functions**, **sysfs_util**,
+  **sysfs_i2c_util**, **systemd_util**, **udev_i2c_util**, **udev_util**,
+  **udev_usb_util**, **utilrpt**, **xdg_util**, **x11_util**, and **backtrace**;
+  every .c file in **src/util** now has a unit test), plus tests for
+  the **src/base** modules (every .c file in **src/base** now has a unit test
+  as well). The tests live in
+  the new **src/unit_tests** tree (**src/unit_tests/util** and
+  **src/unit_tests/base**) and are run via **make check**.
+-->
+
 
 #### Changed
+
+- Public API: const-qualified string input parameters (and some return values),
+  added explicit **void** to empty parameter lists, and documented that the
+  caller is responsible for freeing the result of **ddca_get_display_refs()**
+  and **ddca_end_capture()**.
 
 - Reworked detection and handling of resume from sleep. Resume is detected via
   the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
@@ -22,12 +54,14 @@
   subsystem (**src/dw**) and the I2C bus modules (**i2c_bus_base.c** split into
   **i2c_bus_aux.c** and **i2c_bus_collections.c**). Access to the shared display
   and bus tables is now serialized against the watch thread.
-- Public API: const-qualified string input parameters (and some return values),
-  added explicit **void** to empty parameter lists, and documented that the
-  caller is responsible for freeing the result of **ddca_get_display_refs()**
-  and **ddca_end_capture()**.
+
+- Reduce duplicated messages in the system log when trace output is redirected
+  to the system log.
+<!--
 - System log messaging reworked: **DECORATED_SYSLOG()** and the **DUAL_MSG()**
   macro family replace **SYSLOG2()**, reducing duplicate messages.
+-->
+
 - **dw_stop_watch_displays()** now always waits for the watch thread to
   terminate.
 - Experimental, off by default: the display watch thread can block in poll()
@@ -52,22 +86,9 @@
   first Xlib call.
 - Removed vestigial **swig**, **cffi**, and **cython** references from the build
   files, along with their archived source trees.
-- Added a suite of standalone unit tests for the utility functions in
-  **src/util** (**string_util**, **glib_util**, **data_structures**,
-  **timestamp**, **file_util_base**, **msg_util**, **report_util**, the traced
-  function stack, **ddcutil_config_file**, **dbus_util**, **acl_util**,
-  **drm_card_connector_util**, **device_id_util**, **error_info**, **edid**,
-  **glib_string_util**, **file_util**, **failsim**, **i2c_util**,
-  **libdrm_util**, **libdrm_aux_util**, **linux_basic_util**, **linux_util**,
-  **regex_util**, **multi_level_map**, **pnp_ids**, **simple_ini_file**,
-  **subprocess_util**, **sysfs_filter_functions**, **sysfs_util**,
-  **sysfs_i2c_util**, **systemd_util**, **udev_i2c_util**, **udev_util**,
-  **udev_usb_util**, **utilrpt**, **xdg_util**, **x11_util**, and **backtrace**;
-  every .c file in **src/util** now has a unit test), plus tests for
-  the **src/base** modules (every .c file in **src/base** now has a unit test
-  as well). The tests live in
-  the new **src/unit_tests** tree (**src/unit_tests/util** and
-  **src/unit_tests/base**) and are run via **make check**.
+
+
+
 
 #### Fixed
 
@@ -98,11 +119,8 @@
   capabilities file lines, USB monitor detail on a denied path, directory
   filenames on an **opendir()** failure, and a hash table created without
   destroy functions in failsim.
-- Double-free in **csb_free()** when the circular string buffer had wrapped.
-- NULL dereferences: **ini_file_dump()** error path, **errinfo_summary()**, and
-  reporting a USB display that has no bus info.
-- Off-by-one errors in **str_contains()** and in the ignored VID/PID parsing
-  loop.
+
+    - NULL dereferences:       reporting a USB display that has no bus info.
 - Wrong array used in three I2C bus-info search functions in
   **i2c_bus_base.c**.
 - Resume-from-sleep detection: inverted grace window and integer narrowing in
@@ -111,19 +129,27 @@
   argument.
 - Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
   Pull request #613.
-- Build: added a missing **backtrace.h** include in **failsim.c**, which failed
+  - Build: added a missing **backtrace.h** include in **failsim.c**, which failed
   to compile under **--enable-failsim** with modern GCC.
-- **trim_in_place()** corrupted strings that began with whitespace, in some
-  cases returning only the first character. Found by the newly added unit tests.
-- **rpt_hex_dump()** advanced the data pointer instead of the loop index,
-  mis-formatting the dump.
-- **ini_file_load()** no longer passes file content to the error message
-  function as a printf format string.
-- Memory errors and a false success return in **string_util.c**, and several
-  errors in rarely exercised **data_structures.c** code paths.
-- Traced function stack (debug/trace output): guarded a use-after-free of the
-  thread-local stack pointer after it is freed, and corrected an inverted
-  ordering that reversed the stack across nested callbacks.
+
+- Fixed numerous minor bugs to utility functions that were identified by 
+  unit testing;
+    - **trim_in_place()** corrupted strings that began with whitespace, in some
+      cases returning only the first character. 
+    - **rpt_hex_dump()** advanced the data pointer instead of the loop index,
+      mis-formatting the dump.
+    - **ini_file_load()** Corret passing of the message text to the error message
+    - Memory errors and a false success return in **string_util.c**
+    - Double-free in **csb_free()** when the circular string buffer had wrapped.
+    - NULL dereferences: **ini_file_dump()** error path in simple_ini_file.c, 
+       **errinfo_summary()** in errof_info.c
+    - Off-by-one errors in **str_contains()** and in the ignored VID/PID parsing
+      loop in pnp_ids.c
+    - Several errors in rarely exercised **data_structures.c** code paths.
+    - Traced function stack (debug/trace output): guarded a use-after-free of the
+      thread-local stack pointer after it is freed, and corrected an inverted
+      ordering that reversed the stack across nested callbacks.
+
 - The default recheck thread declared DDC enabled, and emitted
   **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
   even if DDC communication was not yet working. In releases through 2.2.6,
@@ -131,6 +157,7 @@
   this produced DDCA_EVENT_DDC_ENABLED events reporting ddc working: false
   (KDE bug 517290). The event is now emitted only when DDC communication is
   confirmed working; otherwise the recheck is requeued.
+
 - Numerous additional logic errors, code smells, and latent NULL-dereference
   and leak issues identified by static analysis.
 
