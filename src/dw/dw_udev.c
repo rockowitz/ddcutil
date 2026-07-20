@@ -105,9 +105,18 @@ bool dw_udev_watch(int watch_loop_millisec) {
       DBGTRC(true, DDCA_TRC_NONE, "resetting poll_timeout_millisec to %d for testing", poll_timeout_millisec);
    }
 
-   struct pollfd fds;
-   fds.fd = monitor_fd;
-   fds.events = POLLIN;
+   struct pollfd fds[2];
+   fds[0].fd = monitor_fd;
+   fds[0].events = POLLIN;
+   nfds_t nfds = 1;
+   if (use_eventfd && terminate_watch_thread_fd >= 0) {
+      // block until a udev event arrives or termination is signaled;
+      // the while condition rechecks terminate_watch_thread
+      fds[1].fd = terminate_watch_thread_fd;
+      fds[1].events = POLLIN;
+      nfds = 2;
+      poll_timeout_millisec = -1;
+   }
 
    bool found = false;
    int pollctr = 0;
@@ -117,7 +126,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
       int j = ++pollctr%100;
       if (j == 1)
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling poll()...(%d)", pollctr);
-      int rc = poll(&fds, 1, poll_timeout_millisec);   // consider using ppol()
+      int rc = poll(fds, nfds, poll_timeout_millisec);   // consider using ppol()
       if (rc == 0) {
          // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "poll() timed out");
       }
@@ -127,7 +136,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
          DUAL_MSGXV(DDCA_SYSLOG_ERROR,  DDCA_TRC_NONE, "poll() failed, errno=%d", errno);
       }
       else {
-         if (fds.revents&POLLIN) {
+         if (fds[0].revents&POLLIN) {
             struct udev_device *dev = udev_monitor_receive_device(mon);
             if (dev) {
                // DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
@@ -202,7 +211,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
             }
          }
          else {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not for us. fds.revents=0x%04x", fds.revents);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not for us. fds[0].revents=0x%04x", fds[0].revents);
          }
       }
    }     // while()

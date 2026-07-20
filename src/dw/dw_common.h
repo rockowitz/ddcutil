@@ -30,6 +30,16 @@ extern GMutex             process_event_mutex;
 extern bool               use_drm_connector_states;
 extern bool               force_recheck;
 
+// If true, blocking waits in the watch thread poll() the relevant fd together
+// with terminate_watch_thread_fd instead of sleeping in timed polling loops.
+extern _Atomic(bool)      use_eventfd;
+// eventfd signaled when watch thread termination is requested, -1 if not created
+extern int                terminate_watch_thread_fd;
+
+void      dw_create_terminate_eventfd();
+void      dw_signal_terminate_eventfd();
+void      dw_close_terminate_eventfd();
+
 uint32_t  dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode);
 uint32_t  dw_split_sleep(int watch_loop_millisec);
 void      dw_terminate_if_invalid_thread_or_process(pid_t cur_pid, pid_t cur_tid);

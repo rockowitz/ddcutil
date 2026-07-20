@@ -3,6 +3,8 @@
 // Copyright (C) 2024-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <errno.h>
+#include <poll.h>
 #include <stdbool.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -140,9 +142,27 @@ bool dw_detect_xevent_screen_change(XEvent_Data *evdata, int poll_interval) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Flushed %d events", flushct);
          break;
       } else {
-         // if (debug)
-         //    printf(".");
-         SLEEP_MILLIS_SIMPLE(poll_interval);
+         if (use_eventfd && terminate_watch_thread_fd >= 0) {
+            // Block until data arrives on the X connection or termination is
+            // signaled.  XCheckTypedEvent() has already drained the socket and
+            // flushed the output buffer, so poll() will not miss queued events.
+            // The loop top rechecks terminate_watch_thread.
+            struct pollfd fds[2];
+            fds[0].fd = ConnectionNumber(evdata->dpy);
+            fds[0].events = POLLIN;
+            fds[1].fd = terminate_watch_thread_fd;
+            fds[1].events = POLLIN;
+            int rc = poll(fds, 2, -1);
+            if (rc < 0 && errno != EINTR) {
+               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "poll() failed, errno=%d", errno);
+               SLEEP_MILLIS_SIMPLE(poll_interval);   // avoid spinning
+            }
+         }
+         else {
+            // if (debug)
+            //    printf(".");
+            SLEEP_MILLIS_SIMPLE(poll_interval);
+         }
       }
    }
 

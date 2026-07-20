@@ -8,10 +8,12 @@
 
 /** \cond */
 #include <assert.h>
+#include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/eventfd.h>
 #include <unistd.h>
 
 #include "util/common_inlines.h"
@@ -61,6 +63,8 @@ _Atomic(uint16_t)  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MI
 
 _Atomic(bool)  terminate_watch_thread    = false;
 _Atomic(bool)  terminate_using_x11_event = false;
+_Atomic(bool)  use_eventfd               = false;
+int            terminate_watch_thread_fd = -1;
 // True while the watch thread has a screen change event waiting for, or being
 // processed under, master_dw_mutex.  Recheck worker threads consult it to
 // defer starting a probe, which can hold master_dw_mutex for seconds, so that
@@ -71,6 +75,46 @@ GMutex    master_dw_mutex;
 GMutex    process_event_mutex;
 bool      use_drm_connector_states       = false;
 bool      force_recheck                  = false;
+
+
+/** Creates the eventfd used to wake blocking waits in the watch thread
+ *  when termination is requested.  No-op unless use_eventfd is set or the
+ *  eventfd already exists.  If eventfd() fails, terminate_watch_thread_fd
+ *  remains -1 and the timed polling code paths are used.
+ */
+void dw_create_terminate_eventfd() {
+   if (use_eventfd && terminate_watch_thread_fd < 0) {
+      terminate_watch_thread_fd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+      if (terminate_watch_thread_fd < 0)
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "eventfd() failed, errno=%d", errno);
+   }
+}
+
+
+/** Wakes any watch thread wait blocked on the termination eventfd.
+ *  Callers must set terminate_watch_thread (or otherwise arrange loop exit)
+ *  first.  No-op if the eventfd does not exist.
+ */
+void dw_signal_terminate_eventfd() {
+   if (terminate_watch_thread_fd >= 0) {
+      uint64_t increment = 1;
+      ssize_t rc = write(terminate_watch_thread_fd, &increment, sizeof(increment));
+      if (rc < 0)
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,
+               "write() to terminate_watch_thread_fd failed, errno=%d", errno);
+   }
+}
+
+
+/** Closes the termination eventfd if it exists.  Called after the watch
+ *  thread has been joined.
+ */
+void dw_close_terminate_eventfd() {
+   if (terminate_watch_thread_fd >= 0) {
+      close(terminate_watch_thread_fd);
+      terminate_watch_thread_fd = -1;
+   }
+}
 
 
 uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {

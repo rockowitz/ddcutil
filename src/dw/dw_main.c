@@ -306,6 +306,9 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
 
       GThreadFunc watch_thread_func = dw_watch_display_connections;
 
+      // no-op unless use_eventfd is set
+      dw_create_terminate_eventfd();
+
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling g_thread_new()...");
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
@@ -370,6 +373,9 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
       terminate_watch_thread = true;
 #endif
 
+      // wake a watch thread blocked in poll(); no-op if the eventfd does not exist
+      dw_signal_terminate_eventfd();
+
       // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
       // usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
       if (wait) {
@@ -383,6 +389,7 @@ dw_stop_watch_displays(bool wait, DDCA_Display_Event_Class* enabled_classes_loc)
       watch_thread = NULL;
       recheck_thread = NULL;
       watch_thread_active = false;
+      dw_close_terminate_eventfd();
       if (enabled_classes_loc)
          *enabled_classes_loc = active_watch_displays_classes;
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
