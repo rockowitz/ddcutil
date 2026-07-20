@@ -6,8 +6,9 @@
 - **ddca_elapsed_nanosec()**: number of nanoseconds since the library was
   initialized.
 - Utility options ***--f25*** (select the recheck algorithm at runtime),
-  ***--f29*** (force a recheck when a display is added), and ***--f30***
-  (eventfd-based blocking waits in the display watch thread).
+  ***--f29*** (force a recheck when a display is added), and ***--f32***
+  through ***--f36*** (see Changed, below). ***--f33*** through ***--f40***
+  are now defined as utility flags; most remain unused.
 
 #### Changed
 
@@ -31,22 +32,22 @@
   terminate.
 - Experimental, off by default: the display watch thread can block in poll()
   on the watched fd plus a termination eventfd instead of sleeping in timed
-  polling loops (global **use_eventfd**, settable with ***--f30***; global
-  **split_sleep_eventfd** similarly converts the segmented sleeps of
-  **dw_split_sleep()** to a single wait). Eliminates the watch thread's
-  periodic wakeups (up to 10 per second in Xevent mode), which degrade idle
-  power residency when libddcutil is embedded in a long-running process such
-  as KDE PowerDevil.
+  polling loops (global **use_eventfd**, settable with ***--f32***; global
+  **split_sleep_eventfd**, settable with ***--f33***, similarly converts the
+  segmented sleeps of **dw_split_sleep()** to a single wait). Eliminates the
+  watch thread's periodic wakeups (up to 10 per second in Xevent mode), which
+  degrade idle power residency when libddcutil is embedded in a long-running
+  process such as KDE PowerDevil.
 - Experimental, off by default: mitigations for the transient EACCES window
   after resume from sleep, during which the /dev/i2c devices exist but udev
   has not yet reapplied uaccess ACLs so open() fails (KDE bug 522329, reported
   as 100% single-core CPU and desktop lag on wake): global
-  **rescan_on_eacces** defers display change processing until the window
-  passes instead of treating every monitor as disconnected;
-  **rate_limit_eacces_diagnostics** emits the expensive EACCES diagnostics at
-  most once per 10 seconds instead of once per bus open;
-  **edid_exists_checks_drm_status** skips opening an i2c device whose DRM
-  connector reports "disconnected".
+  **rate_limit_eacces_diagnostics** (***--f34***) emits the expensive EACCES
+  diagnostics at most once per 10 seconds instead of once per bus open;
+  **edid_exists_checks_drm_status** (***--f35***) skips opening an i2c device
+  whose DRM connector reports "disconnected"; **rescan_on_eacces**
+  (***--f36***) defers display change processing until the window passes
+  instead of treating every monitor as disconnected.
 - **XInitThreads()** is now called at library-initialization time, before the
   first Xlib call.
 - Removed vestigial **swig**, **cffi**, and **cython** references from the build
