@@ -200,6 +200,77 @@ i2c_get_edid_bytes_directly_using_ioctl(
 }
 
 
+/** Reads the EDID in a single I2C_RDWR ioctl.
+ *
+ *  Some monitors, e.g. Dell P2725DE ignore an offset write sent as a transaction
+ *  of its own and return the wrong 128 byte block for the subsequent read.
+ *
+ * @param   fd             file descriptor for open /dev/i2c-n
+ * @param   rawedid        buffer in which to return bytes of the EDID
+ * @param   edid_read_size number of bytes to read
+ * @return  status code
+ */
+static Status_Errno_DDC
+i2c_get_edid_bytes_using_single_ioctl(
+   int     fd,
+   Buffer* rawedid,
+   int     edid_read_size)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d",
+                 fd, filename_for_fd_t(fd), edid_read_size);
+   assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
+
+   int rc = 0;
+   Byte byte_to_write = 0x00;
+
+   // messages needs to be allocated, cannot be on stack:
+   struct i2c_msg * messages = calloc(2, sizeof(struct i2c_msg));
+   struct i2c_rdwr_ioctl_data  msgset;
+   memset(&msgset,0,sizeof(msgset));  // see comment in i2c_get_edid_bytes_directly_using_ioctl()
+
+   messages[0].addr  = 0x50;
+   messages[0].flags = 0;
+   messages[0].len   = 1;
+   messages[0].buf   = &byte_to_write;
+
+   messages[1].addr  = 0x50;
+   messages[1].flags = I2C_M_RD;
+   messages[1].len   = edid_read_size;
+   messages[1].buf   = rawedid->bytes;
+
+   msgset.msgs  = messages;
+   msgset.nmsgs = 2;
+
+   RECORD_IO_EVENT(
+         fd,
+         IE_IOCTL_READ,
+         ( rc = ioctl(fd, I2C_RDWR, &msgset) )
+         );
+   int errsv = errno;
+   if (rc < 0) {
+      if (debug) {
+         REPORT_IOCTL_ERROR("I2C_RDWR", errno);
+      }
+      rc = -errsv;
+   }
+   else {
+      if (rc != 2)      // expected success value: number of messages executed
+         DBGMSG("Unexpected: ioctl() returned %d", rc);
+      buffer_set_length(rawedid, edid_read_size);
+      rc = 0;
+   }
+   free(messages);
+
+   if ( (debug || IS_TRACING()) && rc == 0) {
+      DBGMSG("Returning buffer:");
+      rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
+   }
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
+   return rc;
+}
+
+
 static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_fileio(
    int     fd,
@@ -386,6 +457,23 @@ retry:
    }
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "EDID_Read_Uses_Smbus = %s", sbool(EDID_Read_Uses_Smbus));
    #endif
+
+   if (cur_strategy_id == I2C_IO_STRATEGY_IOCTL && !read_bytewise) {
+      int edid_read_size = (EDID_Read_Size == 256) ? 256 : 128;
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                    "Trying EDID read using single ioctl. edid_read_size=%d", edid_read_size);
+      rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, edid_read_size);
+      if (rc == 0 && !is_valid_raw_edid(rawedid->bytes, rawedid->len)) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Invalid EDID from single ioctl read");
+         rc = DDCRC_INVALID_EDID;
+      }
+      if (rc == 0) {
+         DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "using single ioctl");
+         return rc;
+      }
+      rc = -1;
+   }
+
    while (tryctr < max_tries && rc != 0) {
       int edid_read_size = EDID_Read_Size;
       if (EDID_Read_Size == 0)
@@ -516,6 +604,7 @@ i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 
 void init_i2c_edid() {
    RTTI_ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
+   RTTI_ADD_FUNC(i2c_get_edid_bytes_using_single_ioctl);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly_using_fileio);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly_using_ioctl);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
