@@ -487,6 +487,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       enable_ddci_init_check_dev_i2c_devices_rw = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F29)
       force_recheck = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F30)
+      use_eventfd = true;    // watch thread blocks in poll() instead of timed polling loops
    if (parsed_cmd->flags2 & CMD_FLAG2_F31)
       force_failure_i2c_all_relevant_i2c_buses_rw = true;
 
