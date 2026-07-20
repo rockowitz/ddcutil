@@ -80,13 +80,11 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(27, "Disable dw_start() check that all relevant I2C buses rw");
    REPORT_FLAG_OPTION(28, "Disable ddci_init() check that all relevant i2c buses rw");
    REPORT_FLAG_OPTION(29, "Force recheck when display added");
-   REPORT_FLAG_OPTION(30, "use_eventfd: eventfd-based blocking waits in watch thread");
+   REPORT_FLAG_OPTION(30, "Unused");
    REPORT_FLAG_OPTION(31, "fail_i2c_all_relevant_i2c_buses_rw");
-#ifdef OLD
-   REPORT_FLAG_OPTION(32, "fail_i2c_all_edids_readable_using_i2c");
-#endif
-   REPORT_FLAG_OPTION(33, "Unused");
-   REPORT_FLAG_OPTION(34, "Unused");
+   REPORT_FLAG_OPTION(32, "use_eventfd: eventfd-based blocking waits in watch thread");
+   REPORT_FLAG_OPTION(33, "split_sleep_eventfd: single poll() wait in dw_split_sleep()");
+   REPORT_FLAG_OPTION(34, "rescan_on_eacces: rescan display change scan while EACCES is seen");
    REPORT_FLAG_OPTION(35, "Unused");
    REPORT_FLAG_OPTION(36, "Unused");
    REPORT_FLAG_OPTION(37, "Unused");
