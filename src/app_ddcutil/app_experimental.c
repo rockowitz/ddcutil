@@ -84,9 +84,9 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(31, "fail_i2c_all_relevant_i2c_buses_rw");
    REPORT_FLAG_OPTION(32, "use_eventfd: eventfd-based blocking waits in watch thread");
    REPORT_FLAG_OPTION(33, "split_sleep_eventfd: single poll() wait in dw_split_sleep()");
-   REPORT_FLAG_OPTION(34, "rescan_on_eacces: rescan display change scan while EACCES is seen");
-   REPORT_FLAG_OPTION(35, "Unused");
-   REPORT_FLAG_OPTION(36, "Unused");
+   REPORT_FLAG_OPTION(34, "rate_limit_eacces_diagnostics: throttle expensive EACCES diagnostics");
+   REPORT_FLAG_OPTION(35, "edid_exists_checks_drm_status: skip device open if DRM connector disconnected");
+   REPORT_FLAG_OPTION(36, "rescan_on_eacces: rescan display change scan while EACCES is seen");
    REPORT_FLAG_OPTION(37, "Unused");
    REPORT_FLAG_OPTION(38, "Unused");
    REPORT_FLAG_OPTION(39, "Unused");
