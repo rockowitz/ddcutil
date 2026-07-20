@@ -73,6 +73,11 @@ int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;
 int  max_eacces_retry_ct = DEFAULT_STD_EACCES_RETRY_CT;
 bool primitive_sysfs = false;
 
+// If true, the expensive EACCES diagnostics in i2c_open_bus_basic() (traced
+// function stack dump, open failure diagnosis) are emitted at most once per
+// interval instead of once per open call.
+bool rate_limit_eacces_diagnostics = false;
+
 
 #ifdef OUT
 // Timestamp of the first EACCES open failure in the current cycle.
@@ -293,8 +298,24 @@ retry:
       if (err->status_code == -EACCES) {
          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", err->detail);
          if (eacces_retry_ct == 0) {
-            current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
-            diagnose_open_failure_to_syslog(filename, err->detail);
+            bool emit_diagnostics = true;
+            if (rate_limit_eacces_diagnostics) {
+               // During the post-resume EACCES window every bus open fails, and
+               // stabilization rescans multiply the failures.  Emit the expensive
+               // diagnostics (traced function stack dump, open failure diagnosis)
+               // at most once per interval, not once per open call.
+               static _Atomic(uint64_t) last_eacces_diagnostics_ns = 0;
+               const uint64_t eacces_diagnostics_interval_ns = 10 * (uint64_t)1000000000;  // 10 seconds
+               uint64_t diag_now_ns = cur_realtime_nanosec();
+               emit_diagnostics =
+                     (diag_now_ns - last_eacces_diagnostics_ns > eacces_diagnostics_interval_ns);
+               if (emit_diagnostics)
+                  last_eacces_diagnostics_ns = diag_now_ns;
+            }
+            if (emit_diagnostics) {
+               current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
+               diagnose_open_failure_to_syslog(filename, err->detail);
+            }
             DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
                                 "open() EACCES failure, recently resumed from sleep: %s",
                                 sbool(recently_resumed));
