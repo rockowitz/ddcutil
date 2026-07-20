@@ -33,6 +33,9 @@ extern bool               force_recheck;
 // If true, blocking waits in the watch thread poll() the relevant fd together
 // with terminate_watch_thread_fd instead of sleeping in timed polling loops.
 extern _Atomic(bool)      use_eventfd;
+// If true, dw_split_sleep() performs a single poll() on
+// terminate_watch_thread_fd instead of sleeping in 200 ms segments.
+extern _Atomic(bool)      split_sleep_eventfd;
 // eventfd signaled when watch thread termination is requested, -1 if not created
 extern int                terminate_watch_thread_fd;
 

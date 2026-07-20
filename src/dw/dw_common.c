@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
+#include <poll.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,6 +65,7 @@ _Atomic(uint16_t)  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MI
 _Atomic(bool)  terminate_watch_thread    = false;
 _Atomic(bool)  terminate_using_x11_event = false;
 _Atomic(bool)  use_eventfd               = false;
+_Atomic(bool)  split_sleep_eventfd       = false;
 int            terminate_watch_thread_fd = -1;
 // True while the watch thread has a screen change event waiting for, or being
 // processed under, master_dw_mutex.  Recheck worker threads consult it to
@@ -78,12 +80,13 @@ bool      force_recheck                  = false;
 
 
 /** Creates the eventfd used to wake blocking waits in the watch thread
- *  when termination is requested.  No-op unless use_eventfd is set or the
- *  eventfd already exists.  If eventfd() fails, terminate_watch_thread_fd
- *  remains -1 and the timed polling code paths are used.
+ *  when termination is requested.  No-op unless use_eventfd or
+ *  split_sleep_eventfd is set, or if the eventfd already exists.  If
+ *  eventfd() fails, terminate_watch_thread_fd remains -1 and the timed
+ *  polling code paths are used.
  */
 void dw_create_terminate_eventfd() {
-   if (use_eventfd && terminate_watch_thread_fd < 0) {
+   if ((use_eventfd || split_sleep_eventfd) && terminate_watch_thread_fd < 0) {
       terminate_watch_thread_fd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
       if (terminate_watch_thread_fd < 0)
          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "eventfd() failed, errno=%d", errno);
@@ -137,18 +140,54 @@ uint32_t dw_calc_watch_loop_millisec(DDC_Watch_Mode watch_mode) {
  *  when global #terminate_watch_thread is set (by dw_stop_watch_displays()).
  *  Each segment is no longer than 200 milliseconds.
  *
+ *  If #split_sleep_eventfd is set (and the termination eventfd exists), the
+ *  sleep is instead a single poll() on the termination eventfd with the
+ *  intended sleep time as its timeout: one wakeup per sleep instead of one
+ *  every 200 milliseconds, and immediate rather than up-to-200 ms response
+ *  to termination.
+ *
  *  @param  watch_loop_millisec  intended total milliseconds to sleep
  *  @return actual total milliseconds
  */
 uint32_t dw_split_sleep(int watch_loop_millisec) {
    assert(watch_loop_millisec > 0);
    uint64_t max_sleep_microsec = MILLIS2MICROS(watch_loop_millisec);
-   uint64_t sleep_step_microsec = MILLIS2MICROS(200);   // normal sleep step is .2 seconds
-   if (sleep_step_microsec > max_sleep_microsec)        // but can't exceed the max sleep time
-      sleep_step_microsec = max_sleep_microsec;
    uint64_t slept = 0;
-   for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
-      usleep(sleep_step_microsec);
+
+   if (split_sleep_eventfd && terminate_watch_thread_fd >= 0) {
+      gint64 start_us = g_get_monotonic_time();
+      int remaining_millisec = watch_loop_millisec;
+      while (remaining_millisec > 0 && !terminate_watch_thread) {
+         struct pollfd fds;
+         fds.fd = terminate_watch_thread_fd;
+         fds.events = POLLIN;
+         int rc = poll(&fds, 1, remaining_millisec);
+         if (rc > 0)        // termination signaled
+            break;
+         if (rc == 0)       // full interval slept
+            break;
+         if (errno != EINTR) {
+            DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,
+                  "poll() on terminate_watch_thread_fd failed, errno=%d", errno);
+            break;
+         }
+         // interrupted by a signal: sleep the remainder
+         uint64_t elapsed_us = g_get_monotonic_time() - start_us;
+         remaining_millisec = watch_loop_millisec - elapsed_us/1000;
+      }
+      slept = g_get_monotonic_time() - start_us;
+      if (slept > max_sleep_microsec)
+         slept = max_sleep_microsec;
+   }
+
+   else {
+      uint64_t sleep_step_microsec = MILLIS2MICROS(200);   // normal sleep step is .2 seconds
+      if (sleep_step_microsec > max_sleep_microsec)        // but can't exceed the max sleep time
+         sleep_step_microsec = max_sleep_microsec;
+      for (; slept < max_sleep_microsec && !terminate_watch_thread; slept += sleep_step_microsec)
+         usleep(sleep_step_microsec);
+   }
+
    return slept/1000;
 }
 
