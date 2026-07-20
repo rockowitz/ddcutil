@@ -77,6 +77,9 @@ bool primitive_sysfs = false;
 // function stack dump, open failure diagnosis) are emitted at most once per
 // interval instead of once per open call.
 bool rate_limit_eacces_diagnostics = false;
+// If true, i2c_edid_exists() does not open the device when the DRM connector
+// for the bus reports status "disconnected".
+bool edid_exists_checks_drm_status = false;
 
 
 #ifdef OUT
@@ -1427,6 +1430,27 @@ static Byte * get_connector_edid(const char * connector_name) {
        }
        if (checked_connector_for_edid)
           goto bye;
+    }
+
+    // *** Possibly check the DRM connector status before resorting to opening the device
+
+    // Even where the sysfs EDID is not trusted (e.g. nvidia, for which
+    // is_sysfs_reliable_for_busno() returns false), the connector status
+    // attribute is meaningful.  If the connector reports "disconnected" there
+    // is no monitor, hence no EDID to read: skip opening the device, which is
+    // comparatively expensive and, in the post-resume EACCES window, can block
+    // for seconds in open retries.  Status "unknown" falls through to the
+    // device open.
+    if (edid_exists_checks_drm_status && drm_connector_name) {
+       char * status = NULL;
+       GET_ATTR_TEXT(&status, "/sys/class/drm", drm_connector_name, "status");
+       bool disconnected = status && streq(status, "disconnected");
+       free(status);
+       if (disconnected) {
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                "DRM connector %s reports disconnected, not opening device", drm_connector_name);
+          goto bye;
+       }
     }
 
     // *** Open bus

@@ -33,6 +33,7 @@ extern int  pause_after_resume_ms;
 extern int  max_eacces_retry_ms;
 extern int  max_eacces_retry_ct;
 extern bool rate_limit_eacces_diagnostics;
+extern bool edid_exists_checks_drm_status;
 extern bool primitive_sysfs;
 
 // Bus open and close
