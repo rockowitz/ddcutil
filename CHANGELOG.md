@@ -5,8 +5,9 @@
 
 - **ddca_elapsed_nanosec()**: number of nanoseconds since the library was
   initialized.
-- Utility options ***--f25*** (select the recheck algorithm at runtime) and
-  ***--f29*** (force a recheck when a display is added).
+- Utility options ***--f25*** (select the recheck algorithm at runtime),
+  ***--f29*** (force a recheck when a display is added), and ***--f30***
+  (eventfd-based blocking waits in the display watch thread).
 
 #### Changed
 
@@ -28,6 +29,24 @@
   macro family replace **SYSLOG2()**, reducing duplicate messages.
 - **dw_stop_watch_displays()** now always waits for the watch thread to
   terminate.
+- Experimental, off by default: the display watch thread can block in poll()
+  on the watched fd plus a termination eventfd instead of sleeping in timed
+  polling loops (global **use_eventfd**, settable with ***--f30***; global
+  **split_sleep_eventfd** similarly converts the segmented sleeps of
+  **dw_split_sleep()** to a single wait). Eliminates the watch thread's
+  periodic wakeups (up to 10 per second in Xevent mode), which degrade idle
+  power residency when libddcutil is embedded in a long-running process such
+  as KDE PowerDevil.
+- Experimental, off by default: mitigations for the transient EACCES window
+  after resume from sleep, during which the /dev/i2c devices exist but udev
+  has not yet reapplied uaccess ACLs so open() fails (KDE bug 522329, reported
+  as 100% single-core CPU and desktop lag on wake): global
+  **rescan_on_eacces** defers display change processing until the window
+  passes instead of treating every monitor as disconnected;
+  **rate_limit_eacces_diagnostics** emits the expensive EACCES diagnostics at
+  most once per 10 seconds instead of once per bus open;
+  **edid_exists_checks_drm_status** skips opening an i2c device whose DRM
+  connector reports "disconnected".
 - **XInitThreads()** is now called at library-initialization time, before the
   first Xlib call.
 - Removed vestigial **swig**, **cffi**, and **cython** references from the build
@@ -44,10 +63,8 @@
   **sysfs_i2c_util**, **systemd_util**, **udev_i2c_util**, **udev_util**,
   **udev_usb_util**, **utilrpt**, **xdg_util**, **x11_util**, and **backtrace**;
   every .c file in **src/util** now has a unit test), plus tests for
-  **src/base** modules (**core**, **core_per_thread_settings**, **ddc_errno**,
-  **linux_errno**, **trace_control**, **ddc_packets**, **display_lock**,
-  **displays**, **display_retry_data**, **drm_connector_state**, **dw_base**,
-  **execution_stats**, **dsa2**, and **dynamic_features**). The tests live in
+  the **src/base** modules (every .c file in **src/base** now has a unit test
+  as well). The tests live in
   the new **src/unit_tests** tree (**src/unit_tests/util** and
   **src/unit_tests/base**) and are run via **make check**.
 
@@ -106,6 +123,13 @@
 - Traced function stack (debug/trace output): guarded a use-after-free of the
   thread-local stack pointer after it is freed, and corrected an inverted
   ordering that reversed the stack across nested callbacks.
+- The default recheck thread declared DDC enabled, and emitted
+  **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
+  even if DDC communication was not yet working. In releases through 2.2.6,
+  combined with an incorrect constant in event construction (fixed in 2.2.7),
+  this produced DDCA_EVENT_DDC_ENABLED events reporting ddc working: false
+  (KDE bug 517290). The event is now emitted only when DDC communication is
+  confirmed working; otherwise the recheck is requeued.
 - Numerous additional logic errors, code smells, and latent NULL-dereference
   and leak issues identified by static analysis.
 
