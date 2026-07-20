@@ -84,7 +84,35 @@ STATIC void dw_process_screen_change_event(
    // Mutes for next 2 assignments?
    // Guarantee: bs_new_buses_w_edid is a subset of bs_new_attached_buses
    BS256 bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
-   BS256 bs_new_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_new_attached_buses);
+   bool eacces_seen = false;
+   BS256 bs_new_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_new_attached_buses, &eacces_seen);
+
+   // After resume from sleep there is a window in which the /dev/i2c devices
+   // exist but udev has not yet reapplied uaccess ACLs, so open() fails with
+   // EACCES.  In that state a connected monitor is indistinguishable from a
+   // disconnected one; processing the scan would emit a spurious mass
+   // disconnect, followed by a reconnect once the ACLs are restored, each
+   // with its full stabilization and recheck cascade.  Rescan until the
+   // window passes; if EACCES persists, fall through and process the scan
+   // as read (the pre-existing behavior).
+   int eacces_rescan_ct = 0;
+   const int max_eacces_rescan_ct = 3;
+   while (eacces_seen && eacces_rescan_ct < max_eacces_rescan_ct && !terminate_watch_thread) {
+      eacces_rescan_ct++;
+      DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
+            "EACCES opening /dev/i2c device(s). Rescanning (%d of %d)...",
+            eacces_rescan_ct, max_eacces_rescan_ct);
+      dw_split_sleep(1000);
+      if (terminate_watch_thread)
+         break;
+      bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
+      eacces_seen = false;
+      bs_new_buses_w_edid = i2c_filter_buses_w_edid_as_bitset(bs_new_attached_buses, &eacces_seen);
+   }
+   if (eacces_seen)
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,
+            "EACCES opening /dev/i2c device(s) persists. Processing possibly inaccurate scan.");
+
    assert(bs256_is_subset(bs_new_buses_w_edid, bs_new_attached_buses));
 
    Bit_Set_256 bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);

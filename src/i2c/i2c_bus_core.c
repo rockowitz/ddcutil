@@ -1320,9 +1320,17 @@ static Byte * get_connector_edid(const char * connector_name) {
  /** Checks if an I2C bus has an EDID
   *
   *  @param  busno
+  *  @param  eacces_loc  if non-NULL, set to true if the device could not be
+  *                      opened due to EACCES; never set to false, so a caller
+  *                      can accumulate over multiple buses
   *  @return true/false
+  *
+  *  @remark
+  *  An EACCES open failure (e.g. the window after resume from sleep before
+  *  udev has reapplied device ACLs) also returns false; check *eacces_loc to
+  *  distinguish that case from a disconnected monitor.
   */
- bool i2c_edid_exists(int busno) {
+ bool i2c_edid_exists(int busno, bool * eacces_loc) {
     bool debug = false;
     DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
     // int d = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 1 : -1;
@@ -1409,6 +1417,20 @@ static Byte * get_connector_edid(const char * connector_name) {
     master_err = i2c_open_bus(businfo->busno, businfo->CALLOPT_WAIT, &fd);
  #endif
     if (master_err) {
+       // Report EACCES to the caller: a transient permission failure must be
+       // distinguishable from a disconnected monitor.
+       if (eacces_loc) {
+          if (master_err->status_code == -EACCES)
+             *eacces_loc = true;
+          else {
+             for (int ndx = 0; ndx < master_err->cause_ct; ndx++) {
+                if (master_err->causes[ndx]->status_code == -EACCES) {
+                   *eacces_loc = true;
+                   break;
+                }
+             }
+          }
+       }
        goto bye;
     }
 

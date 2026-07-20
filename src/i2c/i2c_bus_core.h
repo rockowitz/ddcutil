@@ -58,7 +58,7 @@ typedef enum {
 // Bus inspection
 Error_Info *     i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_bus_mode);
 I2C_Bus_Info *   i2c_get_and_check_bus_info(int busno,  I2C_Check_Bus_Mode check_bus_mode);
-bool             i2c_edid_exists(int busno);
+bool             i2c_edid_exists(int busno, bool * eacces_loc);
 bool             i2c_check_edid_exists_by_dh(Display_Handle * dh);
 Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 

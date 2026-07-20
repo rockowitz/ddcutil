@@ -333,12 +333,19 @@ Bit_Set_256 i2c_detect_attached_buses_as_bitset() {
 }
 
 
-Bit_Set_256 i2c_filter_buses_w_edid_as_bitset(BS256 bs_all_buses) {
+/** Filters a set of bus numbers to those whose bus has an EDID.
+ *
+ *  @param  bs_all_buses  buses to check
+ *  @param  eacces_loc    if non-NULL, set to true if any device could not be
+ *                        opened due to EACCES (see i2c_edid_exists())
+ *  @return buses with an EDID
+ */
+Bit_Set_256 i2c_filter_buses_w_edid_as_bitset(BS256 bs_all_buses, bool * eacces_loc) {
    BS256 bs_buses_w_edid = EMPTY_BIT_SET_256;
    Bit_Set_256_Iterator iter =  bs256_iter_new(bs_all_buses);
    int bitno = bs256_iter_next(iter);
    while (bitno >= 0) {
-      if (i2c_edid_exists(bitno))
+      if (i2c_edid_exists(bitno, eacces_loc))
          bs_buses_w_edid = bs256_insert(bs_buses_w_edid, bitno);
       bitno = bs256_iter_next(iter);
    }
@@ -349,7 +356,7 @@ Bit_Set_256 i2c_filter_buses_w_edid_as_bitset(BS256 bs_all_buses) {
 
 Bit_Set_256 i2c_buses_w_edid_as_bitset() {
    BS256 bs_all_buses = i2c_detect_attached_buses_as_bitset();
-   return i2c_filter_buses_w_edid_as_bitset(bs_all_buses);
+   return i2c_filter_buses_w_edid_as_bitset(bs_all_buses, NULL);
 }
 
 
