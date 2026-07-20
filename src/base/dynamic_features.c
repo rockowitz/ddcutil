@@ -675,7 +675,7 @@ create_dynamic_features_rec(
 
 
 void init_base_dynamic_features() {
-   RTTI_ADD_FUNC(dyn_get_dynamic_feature_metadata)
+   RTTI_ADD_FUNC(dyn_get_dynamic_feature_metadata);
    RTTI_ADD_FUNC(create_dynamic_features_rec);
    RTTI_ADD_FUNC(dyn_free_feature_metadata);
    RTTI_ADD_FUNC(dfr_new);

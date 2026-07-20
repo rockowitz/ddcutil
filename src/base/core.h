@@ -595,7 +595,7 @@ do { \
 
 #define REPORT_IOCTL_ERROR(_ioctl_name, _errnum) \
       dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_SEVERE, __func__, __LINE__, __FILE__, \
-             "Error in ioctl(%s), %s", _ioctl_name, linux_errno_desc(_errnum));
+             "Error in ioctl(%s), %s", _ioctl_name, linux_errno_desc(_errnum))
 
 // reports a program logic error
 void program_logic_error(
