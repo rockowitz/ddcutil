@@ -84,8 +84,11 @@ STATIC void dw_process_screen_change_event(
    // Mutes for next 2 assignments?
    // Guarantee: bs_new_buses_w_edid is a subset of bs_new_attached_buses
    BS256 bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
+   // eacces_seen remains false unless rescan_on_eacces is set, so the rescan
+   // loop below executes only when that global is set
    bool eacces_seen = false;
-   BS256 bs_new_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_new_attached_buses, &eacces_seen);
+   BS256 bs_new_buses_w_edid   = i2c_filter_buses_w_edid_as_bitset(bs_new_attached_buses,
+                                       (rescan_on_eacces) ? &eacces_seen : NULL);
 
    // After resume from sleep there is a window in which the /dev/i2c devices
    // exist but udev has not yet reapplied uaccess ACLs, so open() fails with
