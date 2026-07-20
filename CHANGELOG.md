@@ -82,8 +82,7 @@
   whose DRM connector reports "disconnected"; **rescan_on_eacces**
   (***--f36***) defers display change processing until the window passes
   instead of treating every monitor as disconnected.
-- **XInitThreads()** is now called at library-initialization time, before the
-  first Xlib call.
+
 - Removed vestigial **swig**, **cffi**, and **cython** references from the build
   files, along with their archived source trees.
 
@@ -91,7 +90,8 @@
 
 
 #### Fixed
-
+- **XInitThreads()** is now called at library-initialization time, before the
+  first Xlib call.
 - Thread safety: fixed a double free crash caused by unsynchronized lazy
   initialization of the PNP manufacturer id table in **pnp_name()**. It could
   occur when multiple threads first resolved EDID manufacturer names
