@@ -1566,6 +1566,18 @@ static Byte * get_connector_edid(const char * connector_name) {
     return result;
  }
 
+ // probably belongs elsewhere
+
+bool is_valid_drm_connector_name(const char * connector_name) {
+   bool debug = false;
+   char fq_name[20];
+   g_snprintf(fq_name, 20, "/sys/class/drm/%s", connector_name);
+   bool result = directory_exists(fq_name);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Connector_name=|BG|,. returning %s",
+         connector_name, sbool(result));
+   return result;
+}
+
 
 #ifdef UNUSED
  // TODO: MOVE ELSEWHERE
@@ -1618,7 +1630,7 @@ static Byte * get_connector_edid(const char * connector_name) {
  }
 
 
- /** Do card-connector directores exist?
+ /** Do card-connector directories exist?
   *
   *  @return true/false
   */
@@ -1633,7 +1645,7 @@ static Byte * get_connector_edid(const char * connector_name) {
  }
 #endif
 
-#ifdef USER_DRM_CONNECTOR
+#ifdef USER_BUSNO_CONNECTOR
  typedef struct {
     int    busno;
     char * drm_connector_name;
@@ -1649,15 +1661,6 @@ static Byte * get_connector_edid(const char * connector_name) {
 
  GPtrArray * user_busno_connector_table;
 
- // probably belongs elsewhere
- bool is_valid_drm_connector_name(const char * connector_name) {
-    char fq_name[20];
-    g_snprintf(fq_name, 20, "/sys/class/drm/%s", connector_name);
-    bool result = directory_exists(fq_name);
-    DBG("%s - %s", connector_name, sbool(result));
-    return result;
- }
-
 
 void add_busno_connector(int busno, const char * connector_name) {
    Busno_Connector_Table_Entry* entry = calloc(1, sizeof(Busno_Connector_Table_Entry));
@@ -1671,14 +1674,60 @@ void add_busno_connector(int busno, const char * connector_name) {
 
 void dbgrpt_busno_connector_table(int depth) {
    rpt_label(depth, "busno_connector_table contents:");
-   if (busno_connector_table) {
+   if (user_busno_connector_table) {
       for (int ndx = 0; ndx < user_busno_connector_table->len; ndx++) {
          Busno_Connector_Table_Entry * entry = g_ptr_array_index(user_busno_connector_table, ndx);
-         rpt_vstring(depth+1, "/dev/i2c-%d  -  %s",  cur->busno; cur->drm_connector_name);
+         rpt_vstring(depth+1, "/dev/i2c-%d  -  %s",  entry->busno, entry->drm_connector_name);
       }
    }
    else
       rpt_label(depth+1, "Empty");
+}
+
+
+/** Sets the card-connector related fields in a #I2C_Bus_Info instance,
+ *  by searching for the bus number in the user-supplied table
+ *
+ *  @param businfo pointer to I2C_Bus_Info instance
+ *  @return true if found, false if not
+ *
+ *  @remark
+ *  Writes to the system and (possibly) to the terminal if the instance is
+ *  not found.
+ */
+// static
+bool set_connector_for_businfo_using_user_bus_connector_table(
+      I2C_Bus_Info * businfo)
+{
+   bool debug  = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+          "Finding DRM connector name for bus i2c-%d using busno_connector_table",
+          businfo->busno);
+
+   bool result = false;
+   businfo->drm_connector_name = NULL;
+   if (user_busno_connector_table) {
+      for (int ndx = 0; ndx < user_busno_connector_table->len; ndx++) {
+         Busno_Connector_Table_Entry * entry = g_ptr_array_index(user_busno_connector_table, ndx);
+         if (entry->busno == businfo->busno) {
+            if (!is_valid_drm_connector_name(entry->drm_connector_name)) {
+               SEVEREMSG("Invalid DRM connector name %s for busno %d in busno_connector_table",
+                     entry->drm_connector_name, entry->busno);
+               break;
+            }
+            businfo->drm_connector_name = strdup(entry->drm_connector_name);
+            businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_USER;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "Found connector name for /dev/i2c-%d using busno_connector_table: %s",
+                   businfo->busno, businfo->drm_connector_name);
+            break;
+         }
+      }
+   }
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "drm_connector_name=%s",
+         result, businfo->drm_connector_name ? businfo->drm_connector_name : "NULL");
+   return result;
 }
 #endif
 
@@ -2469,6 +2518,9 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(add_one_drm_connector_name);
    RTTI_ADD_FUNC(get_drm_connector_names);
    RTTI_ADD_FUNC(drm_connectors_exist);
+#endif
+#ifdef USER_BUSNO_CONNECTOR
+   RTTI_ADD_FUNC(set_connector_for_businfo_using_user_bus_connector_table);
 #endif
    RTTI_ADD_FUNC(set_connector_for_businfo_using_edid);
    RTTI_ADD_FUNC(is_laptop_for_businfo);

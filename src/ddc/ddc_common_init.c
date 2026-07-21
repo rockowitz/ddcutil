@@ -153,8 +153,8 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
    {
       xrpt_trc_to_syslog = true;
-       dbgtrc_trace_to_syslog = true;
-       syslog_level = DDCA_SYSLOG_DEBUG;               // extern in core.h // why doesn't this work?
+      dbgtrc_trace_to_syslog = true;
+      syslog_level = DDCA_SYSLOG_DEBUG;               // extern in core.h // why doesn't this work?
    }
 
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
@@ -524,8 +524,11 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       max_eacces_retry_ct  = parsed_cmd->i12;
 }
 
-#ifdef USER_DRM_CONNECTOR
-STATIC void init_busno_connector_table(Parsed_Cmd * parsed_cmd, GPtrArray * errinfo_accumulator) {
+#ifdef USER_BUSNO_CONNECTOR
+STATIC void init_busno_connector_table(
+      Parsed_Cmd * parsed_cmd,
+      GPtrArray * errinfo_accumulator)
+{
    bool debug = false;
 
    if (parsed_cmd->bus_drm_connectors) {
@@ -535,7 +538,7 @@ STATIC void init_busno_connector_table(Parsed_Cmd * parsed_cmd, GPtrArray * erri
          char connector_name[80];
          if (sscanf(entry, "%39s %79s", busno_str, connector_name) != 2) {
             g_ptr_array_add(errinfo_accumulator,
-                  errinfo_new(DDCRC_CONFIG_ERROR,
+                  ERRINFO_NEW(DDCRC_CONFIG_ERROR,
                         "--bus-drm-connector: invalid argument: \"%s\"", entry));
             continue;
          }
@@ -545,19 +548,21 @@ STATIC void init_busno_connector_table(Parsed_Cmd * parsed_cmd, GPtrArray * erri
              sscanf(busno_str, "%d", &busno) != 1)
          {
             g_ptr_array_add(errinfo_accumulator,
-                  errinfo_new(DDCRC_CONFIG_ERROR,
-                        "--bus-drm-connector: invalid bus number \"%s\" in \"%s\"", busno_str, entry));
+                  ERRINFO_NEW(DDCRC_CONFIG_ERROR,
+                        "--bus-drm-connector: invalid bus number \"%s\" in \"%s\"",
+                        busno_str, entry));
             continue;
          }
          if (!i2c_device_exists(busno)) {
             g_ptr_array_add(errinfo_accumulator,
-                  errinfo_new(DDCRC_CONFIG_ERROR,
-                        "--bus-drm-connector: bus /dev/i2c-%d does not exist (from \"%s\")", busno, entry));
+                  ERRINFO_NEW(DDCRC_CONFIG_ERROR,
+                        "--bus-drm-connector: bus /dev/i2c-%d does not exist (from \"%s\")",
+                        busno, entry));
             continue;
          }
          if (!is_valid_drm_connector_name(connector_name)) {
             g_ptr_array_add(errinfo_accumulator,
-                  errinfo_new(DDCRC_CONFIG_ERROR,
+                  ERRINFO_NEW(DDCRC_CONFIG_ERROR,
                         "--bus-drm-connector: invalid DRM connector name \"%s\" (from \"%s\")",
                         connector_name, entry));
             continue;
@@ -599,7 +604,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    init_failsim(parsed_cmd, errinfo_accumulator);
    init_ignored_display_models(parsed_cmd, errinfo_accumulator);
-#ifdef USER_DRM_CONNECTOR
+#ifdef USER_BUSNO_CONNECTOR
    init_busno_connector_table(parsed_cmd, errinfo_accumulator);
 #endif
 

@@ -69,13 +69,13 @@ void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
 
 // Miscellaneous
 Error_Info *     simple_rw_test(int busno);
-// bool is_valid_drm_connector_name(const char * connector_name);
+bool             is_valid_drm_connector_name(const char * connector_name);
 
 // Initialization
 void             subinit_i2c_bus_core();
 void             init_i2c_bus_core();
 
-#ifdef USER_DRM_CONNECTOR
+#ifdef USER_BUSNO_CONNECTOR
 void add_busno_connector(int busno, const char * connector_name);
 void dbgrpt_busno_connector_table(int depth);
 #endif

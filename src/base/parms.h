@@ -207,4 +207,7 @@
 
 #define STD_FUNCNAME_FIELD_SIZE 30
 
+// enable option "--bus connector"
+// #define USER_BUSNO_CONNECTOR
+
 #endif /* PARMS_H_ */

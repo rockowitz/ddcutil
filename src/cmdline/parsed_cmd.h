@@ -280,7 +280,7 @@ struct {
    gchar **               traced_api_calls;
    gchar **               backtraced_functions;
    char *                 trace_destination;
-#ifdef BUSNO_CONNECTOR
+#ifdef USER_BUSNO_CONNECTOR
    gchar **               bus_drm_connectors;
 #endif
    DDCA_Syslog_Level      syslog_level;

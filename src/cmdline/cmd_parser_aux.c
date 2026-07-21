@@ -573,7 +573,7 @@ char * trcfile_multiple_call_option_help =
        "  times to trace multiple functions, e.g. \"--trcfile ddc_edid.c --trcfile ddc_output.c\"\n"
       ;
 
-#ifdef BUSNO_CONNECTOR
+#ifdef USER_BUSNO_CONNECTOR
 char * bus_drm_connector_multiple_call_option_help =
        "Bus/DRM connector association:\n"
        "  The argument to --bus-drm-connector is a quoted string containing an I2C bus number\n"
