@@ -3,11 +3,13 @@
  *  Low level functions for writing to and reading from the I2C bus,
  *  using various mechanisms.
  */
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_EXECUTE_H_
 #define I2C_EXECUTE_H_
+
+#include <linux/i2c-dev.h>
 
 #include "util/coredefs.h"
 #include "base/status_code_mgt.h"
@@ -58,6 +60,10 @@ Status_Errno_DDC i2c_ioctl_reader(
       bool   read_bytewise,
       int    bytect,
       Byte * readbuf);
+
+void dbgrpt_i2c_rdwr_ioctl_data(
+      int depth,
+      struct i2c_rdwr_ioctl_data * data);
 
 void init_i2c_execute();
 

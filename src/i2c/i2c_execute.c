@@ -406,7 +406,7 @@ dbgrpt_i2c_msg(int depth, struct i2c_msg message) {
 }
 
 
-STATIC void
+void
 dbgrpt_i2c_rdwr_ioctl_data(int depth, struct i2c_rdwr_ioctl_data * data) {
    bool debug = false;
    DBGMSF(debug, "data=%p", data);
@@ -534,7 +534,7 @@ i2c_ioctl_reader1(
    // messages needs to be allocated, cannot be on stack:
    struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
    struct i2c_rdwr_ioctl_data  msgset;
-   memset(&msgset,0,sizeof(msgset));  // see comment in is2_ioctl_writer()
+   memset(&msgset,0,sizeof(msgset));  // see comment in i2c_ioctl_writer()
 
    messages[0].addr  = slave_addr;
    messages[0].flags = I2C_M_RD;
