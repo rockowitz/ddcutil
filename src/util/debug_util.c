@@ -76,7 +76,7 @@ bool simple_dbgmsg(
       // f0puts(buf2, stdout);
       // f0putc('\n', stdout);
       // rpt_vstring(0, "%s", buf2);
-	  fprintf(stdout, "%s", buf2);
+	   fprintf(stdout, "%s\n", buf2);
       fflush(stdout);
       free(buffer);
       free(buf2);
