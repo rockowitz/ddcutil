@@ -252,7 +252,9 @@ GPtrArray * scan_sys_drm_connectors(int depth) {
 
 /** Gets the value of global #sys_drm_connectors.
  *
- *  @param rescan free the existing data structure
+ *  @param   rescan free the existing data structure
+ *  @return  pointer to array of #Sys_Drm_Connector structs,
+ *           one for each connector found
  *
  *  If sys_drm_connectors == NULL or rescan was set,
  *  scan the /sys/class/drm/<connector> directories
