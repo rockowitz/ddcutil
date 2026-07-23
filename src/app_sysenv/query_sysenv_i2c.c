@@ -278,6 +278,54 @@ static bool simple_ioctl_read_edid(
 
 
 
+static bool execute_get_edid_bytes_using_single_ioctl(
+      int  busno,
+      int  read_size,
+      int  depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. busno=%d, read_size=%d", busno, read_size);
+   assert(read_size == 128 || read_size == 256);
+
+   rpt_nl();
+   rpt_vstring(depth,
+         "Attempting simple %d byte EDID read of /dev/i2c-%d,"
+         " using i2c_get_edid_bytes_using_single_ioctl()",
+                  read_size, busno
+                  );
+   int rc = 0;
+   char i2cdev[20];
+   // Byte edid_buf[256];  // valgrind reports uninitialized value error, so dynamically allocate buffer
+   snprintf(i2cdev, 20, "/dev/i2c-%d", busno);
+   bool ok = false;
+   int fd = open(i2cdev, O_RDWR );
+   if (fd < 0) {
+      rpt_vstring(depth, "Open failed for %s, errno=%s", i2cdev, linux_errno_desc(errno));
+   }
+   else {
+      Buffer * rawedid = buffer_new(256, "rawedid");
+
+      DBGMSF(debug, "Calling i2c_get_edid_bytes_using_single_ioctl(), read_size=%d, rawedid=%p",
+                    read_size, rawedid);
+
+      rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, read_size);
+
+      if (rc < 0) {
+         rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
+      }
+      else {
+         rpt_hex_dump(rawedid->bytes, read_size, depth+1);
+         ok = true;
+      }
+
+      close(fd);
+      buffer_free(rawedid, "rawedid");
+   }
+   DBGMSF(debug, "Returning: %s", sbool(ok));
+   return ok;
+}
+
+
 void test_edid_read_variants(Env_Accumulator * accum) {
    bool debug = false;
    DBGMSF(debug, "Starting");
@@ -305,7 +353,14 @@ void test_edid_read_variants(Env_Accumulator * accum) {
 
          rpt_label(d2, "Tests using ioctl write and read...");
          bool ok = false;
+
+         Status_Errno_DDC ddcrc = execute_get_edid_bytes_using_single_ioctl(
+                                       busno, 128, d2);
+         DBGMSF(debug, "execute_get_edid_bytes_using_single_ioctl() returned %s", psc_desc(ddcrc));
+
+         rpt_nl();
          rpt_label(d2, "Without write before read...");
+         rpt_label(d2, "Known to Sometimes fail w/o write before read, skipping tests");
 #ifdef NOT_NEEDED
          // sometimes fails w/o write before read, further testing unnecessary
          ok = simple_ioctl_read_edid(busno, 128, false, d2);
