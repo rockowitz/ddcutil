@@ -10,6 +10,7 @@
 #ifndef DDCUTIL_TYPES_INTERNAL_H_
 #define DDCUTIL_TYPES_INTERNAL_H_
 
+#include "public/ddcutil_types.h"
 
 /** Callback function to report VCP value change */
 typedef void (*DDCA_Notification_Func)(DDCA_Status psc, DDCA_Any_Vcp_Value* valrec);
