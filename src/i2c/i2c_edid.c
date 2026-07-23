@@ -6,12 +6,16 @@
 // Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "config.h"
-
-/** \cond */
+#include <asm-generic/errno.h>
+#include <asm-generic/errno-base.h>
 #include <assert.h>
+#include <base/ddcutil_types_internal.h>
+#include <base/trace_control.h>
 #include <errno.h>
-#include <glib-2.0/glib.h>
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
+#include <util/coredefs_base.h>
+
 #ifdef TEST_EDID_SMBUG
 #include <i2c/smbus.h>
 #endif
@@ -30,19 +34,21 @@
 #include "util/file_util.h"
 #include "util/i2c_util.h"
 #include "util/report_util.h"
+
 #include "util/string_util.h"
 #include "util/utilrpt.h"
-
 #include "base/parms.h"
 #include "base/core.h"
 #include "base/execution_stats.h"
 #include "base/rtti.h"
+#include "base/sleep.h"
 
 #ifdef TARGET_BSD
 #include "bsd/i2c-dev.h"
 #else
 #include "i2c/wrap_i2c-dev.h"
 #endif
+#include "i2c/i2c_execute.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 
 #include "i2c/i2c_edid.h"
@@ -209,8 +215,12 @@ i2c_get_edid_bytes_directly_using_ioctl(
  * @param   rawedid        buffer in which to return bytes of the EDID
  * @param   edid_read_size number of bytes to read
  * @return  status code
+ *
+ * @remark
+ * From user przemech, based on function drm_do_probe_ddc_edid() in kernel source
+ * file drivers/gpu/drm/drm_probe_helper.c, which uses a single ioctl() to read the EDID.
  */
-static Status_Errno_DDC
+Status_Errno_DDC
 i2c_get_edid_bytes_using_single_ioctl(
    int     fd,
    Buffer* rawedid,
@@ -242,6 +252,9 @@ i2c_get_edid_bytes_using_single_ioctl(
    msgset.msgs  = messages;
    msgset.nmsgs = 2;
 
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+      dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
+
    RECORD_IO_EVENT(
          fd,
          IE_IOCTL_READ,
@@ -266,6 +279,7 @@ i2c_get_edid_bytes_using_single_ioctl(
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
    }
+
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
@@ -440,9 +454,9 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size, max_tries);
    // n. prior to gcc 11, declaration cannot immediately follow label
    I2C_IO_Strategy_Id cur_strategy_id = I2C_IO_STRATEGY_NOT_SET;
-retry:
    cur_strategy_id = i2c_get_io_strategy_id();
    assert(cur_strategy_id != I2C_IO_STRATEGY_NOT_SET);
+retry:
    DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_id_name(cur_strategy_id) );
    int rc = -1;
    bool read_bytewise = EDID_Read_Bytewise;
@@ -458,22 +472,6 @@ retry:
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "EDID_Read_Uses_Smbus = %s", sbool(EDID_Read_Uses_Smbus));
    #endif
 
-   if (cur_strategy_id == I2C_IO_STRATEGY_IOCTL && !read_bytewise) {
-      int edid_read_size = (EDID_Read_Size == 256) ? 256 : 128;
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                    "Trying EDID read using single ioctl. edid_read_size=%d", edid_read_size);
-      rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, edid_read_size);
-      if (rc == 0 && !is_valid_raw_edid(rawedid->bytes, rawedid->len)) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Invalid EDID from single ioctl read");
-         rc = DDCRC_INVALID_EDID;
-      }
-      if (rc == 0) {
-         DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "using single ioctl");
-         return rc;
-      }
-      rc = -1;
-   }
-
    while (tryctr < max_tries && rc != 0) {
       int edid_read_size = EDID_Read_Size;
       if (EDID_Read_Size == 0)
@@ -483,6 +481,37 @@ retry:
                     " edid_read_size=%d, read_bytewise=%s, using %s",
                     tryctr, max_tries, edid_read_size, sbool(read_bytewise),
                     (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
+
+      // try using new i2c_get_edid-bytes_single_ioctl*() function first, if applicable
+      if (cur_strategy_id == I2C_IO_STRATEGY_IOCTL && !read_bytewise) {
+          int edid_read_size = (EDID_Read_Size == 256) ? 256 : 128;
+          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                        "Trying EDID read using single ioctl. edid_read_size=%d", edid_read_size);
+          rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, edid_read_size);
+          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                "i2c_get_edid_bytes_using_single_ioctl returned %s", psc_desc(rc));
+          if (rc == 0 && !is_valid_raw_edid(rawedid->bytes, rawedid->len)) {
+             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Invalid EDID from single ioctl read");
+             rc = DDCRC_INVALID_EDID;
+          }
+          if (rc == 0) {
+             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Valid EDID read using single ioctl");
+             tryctr++;
+             break;
+          }
+          if (rc == -ENXIO) {
+             tryctr++;
+             break;   // no point in retrying
+          }
+          if (rc == -EINVAL) {
+             int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
+             assert(busno >= 0);
+             if ( is_nvidia_einval_bug(I2C_IO_STRATEGY_IOCTL, busno, rc)) {
+                cur_strategy_id = I2C_IO_STRATEGY_FILEIO;
+                goto retry;
+             }
+          }
+      }
 
       char * called_func_name = NULL;
       if (EDID_Read_Uses_I2C_Layer) {
@@ -505,8 +534,15 @@ retry:
             if (rc == -EINVAL) {
                int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
                assert(busno >= 0);
-               if ( is_nvidia_einval_bug(I2C_IO_STRATEGY_IOCTL, busno, rc))
-                   goto retry;
+               if ( is_nvidia_einval_bug(I2C_IO_STRATEGY_IOCTL, busno, rc)) {
+                  cur_strategy_id = I2C_IO_STRATEGY_FILEIO;
+                  goto retry;
+               }
+            }
+            if (rc == 0) {
+               DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP,
+                  "%s() succeeded after i2c_get_edid_bytes_using_single_ioctl() failed.",
+                  called_func_name);
             }
          }
          else {
@@ -517,9 +553,12 @@ retry:
          }
       }  // use local functions
       tryctr++;
-      if (rc == -ENXIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT || rc == -EBUSY) {    // removed -EIO 3/4/2021
+      if (rc == -ENXIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT ) {    // removed -EIO 3/4/2021, moved -EBUSY 7/24/2026
          // DBGMSG("breaking");
          break;
+      }
+      if (rc == -EBUSY) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID read failed with -EBUSY.  Will retry.");
       }
       assert(rc <= 0);
       if (rc == 0) {
@@ -551,6 +590,11 @@ retry:
             }
          }
       }  // get bytes succeeded
+      if (rc == -EBUSY) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID read failed with -EBUSY.  Will retry after 100 ms.");
+         LOGGABLE_SLEEP(100, SLEEP_OPT_TRACEABLE, DDCA_SYSLOG_WARNING,
+               "EDID read failed with -EBUSY.  Will retry after 100 ms.");
+      }
    }
 
    if (rc < 0)

@@ -1,7 +1,7 @@
 /** \file i2c_edid.h
  */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_EDID_H_
@@ -27,6 +27,8 @@ extern bool EDID_Read_Uses_Smbus;
 
 Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid);
 Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc);
+Status_Errno_DDC i2c_get_edid_bytes_using_single_ioctl(
+                    int fd, Buffer* rawedid, int edid_read_size);
 
 void init_i2c_edid();
 
