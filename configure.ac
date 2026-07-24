@@ -91,6 +91,7 @@ AC_CONFIG_FILES([
 	src/unit_tests/sysfs/Makefile
 	src/unit_tests/cmdline/Makefile
 	src/unit_tests/util/Makefile
+	src/unit_tests/vcp/Makefile
 	man/Makefile 
 	data/Makefile 
 	docs/Makefile
