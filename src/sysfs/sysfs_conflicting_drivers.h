@@ -20,6 +20,9 @@ typedef struct {
    gsize   eeprom_edid_size;
 } Sys_Conflicting_Driver;
 
+void        free_sys_conflicting_driver(Sys_Conflicting_Driver * rec);
+char *      best_conflicting_driver_name(Sys_Conflicting_Driver * rec);
+void        dbgrpt_conflicting_driver(Sys_Conflicting_Driver * conflict, int depth);
 GPtrArray * collect_conflicting_drivers(int busno, int depth);
 GPtrArray * collect_conflicting_drivers_for_any_bus(int depth);
 void        report_conflicting_drivers(GPtrArray * conflicts, int depth);   // for a single busno
