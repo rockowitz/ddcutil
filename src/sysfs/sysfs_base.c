@@ -1208,7 +1208,11 @@ char * sysfs_find_adapter(char * path) {
    char * rp2 = NULL;
 
    // strlen(rp1) > 1  should be unnecessary, but just in case:
-   while(!devpath && strlen(rp1) > 0 && !streq(rp1, "/")) {
+   // rp1 can become NULL if RPT_ATTR_REALPATH() below fails to resolve ".."
+   // (e.g. the starting path itself does not exist), in which case the walk
+   // up the directory chain has hit a dead end: stop rather than call
+   // strlen(NULL).
+   while(!devpath && rp1 && strlen(rp1) > 0 && !streq(rp1, "/")) {
       if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
           devpath = rp1;
       }
