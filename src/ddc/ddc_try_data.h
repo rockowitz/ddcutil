@@ -25,6 +25,7 @@ Retry_Op_Value
 void     try_data_set_maxtries(Retry_Operation retry_type, Retry_Op_Value new_maxtries);
 void     try_data_reset_all();
 void     try_data_record_tries(Display_Handle * dh, Retry_Operation retry_type, DDCA_Status rc, int tryct);
+void     try_data_report(Retry_Operation retry_type, int depth);
 
 void     ddc_report_max_tries(int depth);
 void     ddc_report_ddc_stats(int depth);
