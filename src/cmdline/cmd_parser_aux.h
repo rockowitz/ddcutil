@@ -46,6 +46,7 @@ bool parse_int_arg(char * val, int * pIval);
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref);
 bool parse_feature_ids(char ** vals, int vals_ct, int cmd_id, Feature_Set_Ref * fsref);
 Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_ct);
+VCP_Feature_Subset find_subset(char * name, int cmd_id);
 
 bool validate_output_level(Parsed_Cmd* parsed_cmd);
 
