@@ -199,12 +199,18 @@ bye1:
 
 
 static inline bool generic_model_name(char * model_name) {
+   // Monitor_Model_Key.model_name has already been through FIXUP_MODEL_NAME()
+   // (see mmk_value(), mmk_value_from_edid(), et al in monitor_model_key.c),
+   // which replaces every non-alphanumeric character, including spaces,
+   // with '_'.  These comparison strings must therefore use '_' rather than
+   // the raw model name as it appears in the EDID, or they will never match
+   // and this non-unique-model protection will silently never trigger.
    char * generic_names[] = {
-         "LG IPS FULLHD",
-         "LG UltraFine",
-         "LG Ultrawide",
-         "LG UltraWide",
-         "Samsung Syncmaster"};
+         "LG_IPS_FULLHD",
+         "LG_UltraFine",
+         "LG_Ultrawide",
+         "LG_UltraWide",
+         "Samsung_Syncmaster"};
    int namect = ARRAY_SIZE(generic_names);
    bool result = false;
    for (int ndx = 0; ndx < namect; ndx++) {
