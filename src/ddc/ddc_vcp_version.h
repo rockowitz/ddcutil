@@ -15,6 +15,7 @@
 #include "base/vcp_version.h"
 
 DDCA_MCCS_Version_Spec get_overriding_vcp_version(Display_Ref * dref);
+DDCA_MCCS_Version_Spec get_saved_vcp_version(Display_Ref * dref);
 DDCA_MCCS_Version_Spec set_vcp_version_xdf_by_dh(Display_Handle * dh);
 DDCA_MCCS_Version_Spec get_vcp_version_by_dh(    Display_Handle * dh);
 DDCA_MCCS_Version_Spec get_vcp_version_by_dref(  Display_Ref *    dref);
