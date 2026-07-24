@@ -66,9 +66,10 @@ int main(int argc, char ** argv) {
    CK_STR(out, "");
 
    // default min funcname size is 30: funcname is left-justified in a 30-wide
-   // field, wrapped in "(...) ", followed by the formatted message, no newline
+   // field, wrapped in "(...) ", followed by the formatted message and a
+   // trailing newline -- simple_dbgmsg() writes one full line per call
    char expected30[256];
-   snprintf(expected30, sizeof(expected30), "(%-*s) %s", 30, "abc", "hello");
+   snprintf(expected30, sizeof(expected30), "(%-*s) %s\n", 30, "abc", "hello");
    r = false;
    CAPTURE(out, r = simple_dbgmsg(true, "abc", 1, "file.c", "hello"));
    CK(r == true);
@@ -77,24 +78,24 @@ int main(int argc, char ** argv) {
    // set a small field width and check the exact literal output
    set_simple_dbgmsg_min_funcname_size(5);
    CAPTURE(out, simple_dbgmsg(true, "f", 1, "file.c", "hello"));
-   CK_STR(out, "(f    ) hello");     // "f" left-justified in 5, no trailing newline
+   CK_STR(out, "(f    ) hello\n");     // "f" left-justified in 5
 
    // variadic message arguments are substituted
    CAPTURE(out, simple_dbgmsg(true, "f", 1, "file.c", "x=%d y=%s z=%02x", 42, "hi", 10));
-   CK_STR(out, "(f    ) x=42 y=hi z=0a");
+   CK_STR(out, "(f    ) x=42 y=hi z=0a\n");
 
    // funcname longer than the field width is not truncated (it is a minimum)
    CAPTURE(out, simple_dbgmsg(true, "longfuncname", 1, "file.c", "m"));
-   CK_STR(out, "(longfuncname) m");
+   CK_STR(out, "(longfuncname) m\n");
 
    // empty format string
    CAPTURE(out, simple_dbgmsg(true, "f", 1, "file.c", "%s", ""));
-   CK_STR(out, "(f    ) ");
+   CK_STR(out, "(f    ) \n");
 
    // changing the field width takes effect
    set_simple_dbgmsg_min_funcname_size(10);
    CAPTURE(out, simple_dbgmsg(true, "f", 1, "file.c", "q"));
-   CK_STR(out, "(f         ) q");   // "f" left-justified in 10
+   CK_STR(out, "(f         ) q\n");   // "f" left-justified in 10
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);
