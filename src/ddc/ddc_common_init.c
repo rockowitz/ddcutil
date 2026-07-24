@@ -8,13 +8,12 @@
 // Contains initialization functions extracted from main.c so they can
 // be shared with libmain/api.base.c
 
-#include <assert.h>
+#include "config.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
-
-#include "config.h"
 
 #include "util/debug_util.h"
 #include "util/drm_card_connector_util.h"
