@@ -287,6 +287,36 @@ bool enable_capabilities_cache(bool newval) {
 }
 
 
+/** Ensures the in-memory capabilities_hash table exists, loading it from
+ *  the persistent capabilities cache file if capabilities caching is
+ *  enabled and the table has not yet been loaded.
+ *
+ *  Must be called with persistent_capabilities_mutex held.
+ */
+static void ensure_capabilities_hash_loaded(void) {
+   bool debug = false;
+   if (!capabilities_hash) {  // if not yet loaded
+      Error_Info * load_errs = load_persistent_capabilities_file(&capabilities_hash);
+      if (load_errs) {
+         if (ERRINFO_STATUS(load_errs) == -ENOENT)
+            errinfo_free(load_errs);
+         else {
+            char * data_file_name = capabilities_cache_file_name();
+            SEVEREMSG("Error(s) loading persistent capabilities file %s", data_file_name);
+            free(data_file_name);
+            for (int ndx =0; ndx < load_errs->cause_ct; ndx++) {
+               Error_Info * cur = load_errs->causes[ndx];
+               SEVEREMSG("  %s", cur->detail);
+            }
+            BASE_ERRINFO_FREE_WITH_REPORT(load_errs,false);
+         }
+      }
+   }
+   assert(capabilities_hash);
+   DBGMSF(debug, "capabilities_hash = %p", capabilities_hash);
+}
+
+
 /** Look up the capabilities string for a monitor model.
  *
  *  The returned value is owned by the persistent capabilities
@@ -314,26 +344,7 @@ char * get_persistent_capabilities(Monitor_Model_Key* mmk)
       }
       else {
          g_mutex_lock(&persistent_capabilities_mutex);
-         Error_Info * load_errs = NULL;
-         DBGMSF(debug, "capabilities_hash = %p", capabilities_hash);
-         if (!capabilities_hash) {  // if not yet loaded
-            load_errs = load_persistent_capabilities_file(&capabilities_hash);
-            if (load_errs) {
-               if (ERRINFO_STATUS(load_errs) == -ENOENT)
-                  errinfo_free(load_errs);
-               else {
-                  char * data_file_name = capabilities_cache_file_name();
-                  SEVEREMSG("Error(s) loading persistent capabilities file %s", data_file_name);
-                  free(data_file_name);
-                  for (int ndx =0; ndx < load_errs->cause_ct; ndx++) {
-                     Error_Info * cur = load_errs->causes[ndx];
-                     SEVEREMSG("  %s", cur->detail);
-                  }
-                  BASE_ERRINFO_FREE_WITH_REPORT(load_errs,false);
-               }
-            }
-         }
-         assert(capabilities_hash);
+         ensure_capabilities_hash_loaded();
          char * mms = g_strdup(mmk_string(mmk));
          if (debug) {
             DBGMSG("Hash table before lookup:");
@@ -377,6 +388,7 @@ void set_persistent_capabilites(
                mmk_string(mmk));
       }
       else {
+         ensure_capabilities_hash_loaded();
          char * mms = g_strdup(mmk_string(mmk));
          g_hash_table_insert(capabilities_hash, mms, g_strdup(capabilities));
          if (debug || IS_TRACING())
