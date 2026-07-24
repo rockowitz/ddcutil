@@ -590,7 +590,15 @@ bool ddc_store_displays_cache() {
             DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Error opening file %s:%s", fn, strerror(errno));
          }
          else {
-            size_t bytes_written = fwrite(json_text, strlen(json_text), 1, fp);
+            // n. size and nmemb swapped from the (arguably) more natural
+            // fwrite(json_text, 1, strlen(json_text), fp) so that the
+            // return value is a byte count, comparable to strlen(json_text)
+            // below; fwrite(ptr, size, nmemb, fp) returns the number of
+            // complete *nmemb*-sized items written, so with nmemb=1 the
+            // previous form always returned 0 or 1, making the size check
+            // below spuriously fail (and report a stale errno) even when
+            // the write fully succeeded.
+            size_t bytes_written = fwrite(json_text, 1, strlen(json_text), fp);
             if (bytes_written < strlen(json_text)) {
                SEVEREMSG("Error writing file %s:%s", fn, strerror(errno));
                DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Error writing file %s:%s", fn, strerror(errno));
