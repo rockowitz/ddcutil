@@ -20,6 +20,9 @@ extern bool i2c_forceable_slave_addr_flag;
 
 Status_Errno i2c_set_addr(int fd, int addr);
 
+void set_i2c_fileio_use_timeout(bool yesno);
+bool get_i2c_fileio_use_timeout();
+
 /** Function template for I2C write function */
 typedef Status_Errno_DDC (*I2C_Writer)(
       int    fd,
