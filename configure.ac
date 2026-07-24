@@ -88,6 +88,7 @@ AC_CONFIG_FILES([
 	src/unit_tests/Makefile
 	src/unit_tests/base/Makefile
 	src/unit_tests/i2c/Makefile
+	src/unit_tests/sysfs/Makefile
 	src/unit_tests/util/Makefile
 	man/Makefile 
 	data/Makefile 
