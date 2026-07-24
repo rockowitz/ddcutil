@@ -41,7 +41,11 @@
 int tokenize_options_line(const char * string, char ***tokens_loc) {
    bool debug = false;
    DBGF(debug,"string -> |%s|", string);
-   wordexp_t p;
+   // Zero-initialized so that wordfree() below is always safe to call: on
+   // some syntax errors (e.g. an unterminated quote) wordexp() returns
+   // failure without touching p at all, leaving we_wordv/we_wordc as
+   // uninitialized stack garbage if p were not pre-zeroed.
+   wordexp_t p = {0};
    int flags = WRDE_NOCMD;
    if (debug)
       flags |= WRDE_SHOWERR;
