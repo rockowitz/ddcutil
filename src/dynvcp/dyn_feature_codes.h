@@ -12,11 +12,19 @@
 
 #include "ddcutil_types.h"
 
+#include "base/dynamic_features.h"
 #include "base/feature_metadata.h"
 
 #include "vcp/vcp_feature_codes.h"
 
 #include "ddc/ddc_vcp_version.h"
+
+Display_Feature_Metadata *
+dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
+     DDCA_Vcp_Feature_Code    feature_code,
+     Dynamic_Features_Rec *   dfr,
+     DDCA_MCCS_Version_Spec   vspec,
+     bool                     with_default);
 
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_mmk_and_vspec(
