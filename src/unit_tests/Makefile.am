@@ -2,3 +2,6 @@
 # Parent directory for standalone unit tests of internal (non-exported) modules.
 
 SUBDIRS = base util i2c sysfs cmdline vcp ddc
+if WATCH_DISPLAYS_COND
+SUBDIRS += dw
+endif

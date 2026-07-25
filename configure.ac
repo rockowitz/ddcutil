@@ -93,6 +93,7 @@ AC_CONFIG_FILES([
 	src/unit_tests/util/Makefile
 	src/unit_tests/vcp/Makefile
 	src/unit_tests/ddc/Makefile
+	src/unit_tests/dw/Makefile
 	man/Makefile 
 	data/Makefile 
 	docs/Makefile
