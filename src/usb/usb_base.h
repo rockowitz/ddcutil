@@ -62,7 +62,7 @@ Status_Errno hiddev_get_report(     int fd, struct hiddev_report_info * rinfo, B
 
 typedef uint32_t Vid_Pid_Value;
 #define VID_PID_VALUE_TO_VID(_vid_pid) (_vid_pid >> 16)
-#define VID_PID_VALUE_TO_PID(_vid_pid) (_vid_pid & 0xff)
+#define VID_PID_VALUE_TO_PID(_vid_pid) (_vid_pid & 0xffff)
 #define VID_PID_VALUE(_vid,_pid) ( _vid << 16 | _pid)
 
 void usb_ignore_hiddevs(Bit_Set_32 ignored_hiddevs);
