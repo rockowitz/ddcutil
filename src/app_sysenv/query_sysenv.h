@@ -13,6 +13,10 @@
 
 #include "cmdline/parsed_cmd.h"
 
+#include "app_sysenv/query_sysenv_base.h"
+
+void final_analysis(Env_Accumulator * accum, int depth);
+
 void force_envcmd_settings(Parsed_Cmd * parsed_cmd);
 void query_sysenv(bool quickenv);
 
