@@ -99,6 +99,7 @@ AC_CONFIG_FILES([
 	src/unit_tests/usb_util/Makefile
 	src/unit_tests/usb/Makefile
 	src/unit_tests/app_ddcutil/Makefile
+	src/unit_tests/app_sysenv/Makefile
 	man/Makefile
 	data/Makefile 
 	docs/Makefile

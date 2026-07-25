@@ -11,3 +11,6 @@ endif
 if ENABLE_USB_COND
 SUBDIRS += usb_util usb
 endif
+if ENABLE_ENVCMDS_COND
+SUBDIRS += app_sysenv
+endif
