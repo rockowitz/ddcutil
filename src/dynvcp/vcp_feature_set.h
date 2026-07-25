@@ -47,6 +47,12 @@ create_vcp_feature_set_from_feature_set_ref(
    Feature_Set_Flags       flags);
  //  bool                    force);
 
+VCP_Feature_Set *
+create_vcp_feature_set(
+      VCP_Feature_Subset     subset_id,
+      DDCA_MCCS_Version_Spec vcp_version,
+      Feature_Set_Flags      feature_setflags);
+
 
 
 #ifdef UNUSED
