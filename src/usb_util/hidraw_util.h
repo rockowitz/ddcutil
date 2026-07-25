@@ -25,6 +25,8 @@
 #ifndef HIDRAW_UTIL_H_
 #define HIDRAW_UTIL_H_
 
+const char * bus_str(int bus);
+
 void probe_hidraw(bool show_monitors_only, int depth);
 
 bool hidraw_is_monitor_device(char * devname);
