@@ -536,7 +536,11 @@ ddca_dbgrpt_display_ref(
    if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
-   Display_Ref * dref = ddca_dref;
+   // n. as with ddca_dref_repr() just above, ddca_dref is an opaque handle
+   // (under NUMERIC_DDCA_DISPLAY_REF, a small integer dref_id, not a real
+   // pointer) and must be resolved through the published-dref table rather
+   // than cast directly to Display_Ref*.
+   Display_Ref * dref = dref_from_published_ddca_dref(ddca_dref);
    if (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) {
       rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
       dbgrpt_display_ref(dref, true, depth+1);
