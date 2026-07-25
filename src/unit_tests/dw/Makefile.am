@@ -12,18 +12,6 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
-# Copy the built test executables to src/unit_test_executables/dw
-# after `make check` builds them here, so the compiled binaries land
-# in a directory separate from these sources. Does not change how or
-# where compilation/linking itself happens.
-EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/dw
-
-check-local: $(check_PROGRAMS)
-	@mkdir -p $(EXEC_OUTPUT_DIR)
-	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
-
-clean-local:
-	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
 
 # Like src/unit_tests/ddc, dw/*.c files cross-reference each other and the
 # rest of the ddcutil core extensively, so there is no small per-directory
@@ -47,17 +35,17 @@ if USE_LIBDRM_COND
 EXTRA_SYSLIBS += $(LIBDRM_LIBS)
 endif
 
-check_PROGRAMS = test_dw_common test_dw_dref test_dw_status_events
-TESTS = test_dw_common test_dw_dref test_dw_status_events
+check_PROGRAMS = ../../unit_test_executables/dw/test_dw_common ../../unit_test_executables/dw/test_dw_dref ../../unit_test_executables/dw/test_dw_status_events
+TESTS = ../../unit_test_executables/dw/test_dw_common ../../unit_test_executables/dw/test_dw_dref ../../unit_test_executables/dw/test_dw_status_events
 
-test_dw_common_SOURCES  = test_dw_common.c
-test_dw_common_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_dw_common_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_dw_test_dw_common_SOURCES  = test_dw_common.c
+______unit_test_executables_dw_test_dw_common_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_dw_test_dw_common_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_dw_dref_SOURCES  = test_dw_dref.c
-test_dw_dref_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_dw_dref_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_dw_test_dw_dref_SOURCES  = test_dw_dref.c
+______unit_test_executables_dw_test_dw_dref_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_dw_test_dw_dref_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_dw_status_events_SOURCES  = test_dw_status_events.c
-test_dw_status_events_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_dw_status_events_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_dw_test_dw_status_events_SOURCES  = test_dw_status_events.c
+______unit_test_executables_dw_test_dw_status_events_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_dw_test_dw_status_events_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm

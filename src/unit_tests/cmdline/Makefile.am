@@ -12,18 +12,6 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
-# Copy the built test executables to src/unit_test_executables/cmdline
-# after `make check` builds them here, so the compiled binaries land
-# in a directory separate from these sources. Does not change how or
-# where compilation/linking itself happens.
-EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/cmdline
-
-check-local: $(check_PROGRAMS)
-	@mkdir -p $(EXEC_OUTPUT_DIR)
-	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
-
-clean-local:
-	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
 
 # Unit tests link the internal libcmdline/libbase/libutil convenience
 # libraries directly, since these symbols are not exported from libddcutil.
@@ -39,17 +27,17 @@ if USE_X11_COND
 EXTRA_SYSLIBS += $(LIBX11_LIBS) $(XEXT_LIBS) $(XRANDR_LIBS)
 endif
 
-check_PROGRAMS = test_cmd_parser_aux test_cmd_parser_goption test_parsed_cmd
-TESTS = test_cmd_parser_aux test_cmd_parser_goption test_parsed_cmd
+check_PROGRAMS = ../../unit_test_executables/cmdline/test_cmd_parser_aux ../../unit_test_executables/cmdline/test_cmd_parser_goption ../../unit_test_executables/cmdline/test_parsed_cmd
+TESTS = ../../unit_test_executables/cmdline/test_cmd_parser_aux ../../unit_test_executables/cmdline/test_cmd_parser_goption ../../unit_test_executables/cmdline/test_parsed_cmd
 
-test_cmd_parser_aux_SOURCES  = test_cmd_parser_aux.c
-test_cmd_parser_aux_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_cmd_parser_aux_LDADD    = $(LIBCMDLINE) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_cmdline_test_cmd_parser_aux_SOURCES  = test_cmd_parser_aux.c
+______unit_test_executables_cmdline_test_cmd_parser_aux_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_cmdline_test_cmd_parser_aux_LDADD    = $(LIBCMDLINE) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_cmd_parser_goption_SOURCES  = test_cmd_parser_goption.c
-test_cmd_parser_goption_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_cmd_parser_goption_LDADD    = $(LIBCMDLINE) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_cmdline_test_cmd_parser_goption_SOURCES  = test_cmd_parser_goption.c
+______unit_test_executables_cmdline_test_cmd_parser_goption_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_cmdline_test_cmd_parser_goption_LDADD    = $(LIBCMDLINE) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_parsed_cmd_SOURCES  = test_parsed_cmd.c
-test_parsed_cmd_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_parsed_cmd_LDADD    = $(LIBCMDLINE) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_cmdline_test_parsed_cmd_SOURCES  = test_parsed_cmd.c
+______unit_test_executables_cmdline_test_parsed_cmd_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_cmdline_test_parsed_cmd_LDADD    = $(LIBCMDLINE) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm

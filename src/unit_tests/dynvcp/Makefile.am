@@ -12,18 +12,6 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
-# Copy the built test executables to src/unit_test_executables/dynvcp
-# after `make check` builds them here, so the compiled binaries land
-# in a directory separate from these sources. Does not change how or
-# where compilation/linking itself happens.
-EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/dynvcp
-
-check-local: $(check_PROGRAMS)
-	@mkdir -p $(EXEC_OUTPUT_DIR)
-	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
-
-clean-local:
-	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
 
 # Like src/unit_tests/ddc and src/unit_tests/dw, dynvcp/*.c files
 # cross-reference vcp/base/ddc extensively, so there is no small
@@ -47,27 +35,27 @@ if USE_LIBDRM_COND
 EXTRA_SYSLIBS += $(LIBDRM_LIBS)
 endif
 
-check_PROGRAMS = test_vcp_feature_set test_dyn_feature_set \
-  test_dyn_feature_codes test_dyn_feature_files test_dyn_parsed_capabilities
-TESTS = test_vcp_feature_set test_dyn_feature_set \
-  test_dyn_feature_codes test_dyn_feature_files test_dyn_parsed_capabilities
+check_PROGRAMS = ../../unit_test_executables/dynvcp/test_vcp_feature_set ../../unit_test_executables/dynvcp/test_dyn_feature_set \
+  ../../unit_test_executables/dynvcp/test_dyn_feature_codes ../../unit_test_executables/dynvcp/test_dyn_feature_files ../../unit_test_executables/dynvcp/test_dyn_parsed_capabilities
+TESTS = ../../unit_test_executables/dynvcp/test_vcp_feature_set ../../unit_test_executables/dynvcp/test_dyn_feature_set \
+  ../../unit_test_executables/dynvcp/test_dyn_feature_codes ../../unit_test_executables/dynvcp/test_dyn_feature_files ../../unit_test_executables/dynvcp/test_dyn_parsed_capabilities
 
-test_vcp_feature_set_SOURCES  = test_vcp_feature_set.c
-test_vcp_feature_set_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_vcp_feature_set_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_dynvcp_test_vcp_feature_set_SOURCES  = test_vcp_feature_set.c
+______unit_test_executables_dynvcp_test_vcp_feature_set_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_dynvcp_test_vcp_feature_set_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_dyn_feature_set_SOURCES  = test_dyn_feature_set.c
-test_dyn_feature_set_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_dyn_feature_set_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_dynvcp_test_dyn_feature_set_SOURCES  = test_dyn_feature_set.c
+______unit_test_executables_dynvcp_test_dyn_feature_set_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_dynvcp_test_dyn_feature_set_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_dyn_feature_codes_SOURCES  = test_dyn_feature_codes.c
-test_dyn_feature_codes_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_dyn_feature_codes_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_dynvcp_test_dyn_feature_codes_SOURCES  = test_dyn_feature_codes.c
+______unit_test_executables_dynvcp_test_dyn_feature_codes_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_dynvcp_test_dyn_feature_codes_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_dyn_feature_files_SOURCES  = test_dyn_feature_files.c
-test_dyn_feature_files_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_dyn_feature_files_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_dynvcp_test_dyn_feature_files_SOURCES  = test_dyn_feature_files.c
+______unit_test_executables_dynvcp_test_dyn_feature_files_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_dynvcp_test_dyn_feature_files_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_dyn_parsed_capabilities_SOURCES  = test_dyn_parsed_capabilities.c
-test_dyn_parsed_capabilities_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_dyn_parsed_capabilities_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_dynvcp_test_dyn_parsed_capabilities_SOURCES  = test_dyn_parsed_capabilities.c
+______unit_test_executables_dynvcp_test_dyn_parsed_capabilities_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_dynvcp_test_dyn_parsed_capabilities_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm

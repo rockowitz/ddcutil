@@ -12,18 +12,6 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
-# Copy the built test executables to src/unit_test_executables/sysfs
-# after `make check` builds them here, so the compiled binaries land
-# in a directory separate from these sources. Does not change how or
-# where compilation/linking itself happens.
-EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/sysfs
-
-check-local: $(check_PROGRAMS)
-	@mkdir -p $(EXEC_OUTPUT_DIR)
-	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
-
-clean-local:
-	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
 
 # Unit tests link the internal libsysfs/libi2c/libbase/libutil convenience
 # libraries directly, since these symbols are not exported from libddcutil.
@@ -40,37 +28,37 @@ if USE_X11_COND
 EXTRA_SYSLIBS += $(LIBX11_LIBS) $(XEXT_LIBS) $(XRANDR_LIBS)
 endif
 
-check_PROGRAMS = test_sysfs_base test_sysfs_conflicting_drivers \
-  test_sysfs_dpms test_sysfs_i2c_info test_sysfs_i2c_sys_info \
-  test_sysfs_services test_sysfs_sys_drm_connector
-TESTS = test_sysfs_base test_sysfs_conflicting_drivers \
-  test_sysfs_dpms test_sysfs_i2c_info test_sysfs_i2c_sys_info \
-  test_sysfs_services test_sysfs_sys_drm_connector
+check_PROGRAMS = ../../unit_test_executables/sysfs/test_sysfs_base ../../unit_test_executables/sysfs/test_sysfs_conflicting_drivers \
+  ../../unit_test_executables/sysfs/test_sysfs_dpms ../../unit_test_executables/sysfs/test_sysfs_i2c_info ../../unit_test_executables/sysfs/test_sysfs_i2c_sys_info \
+  ../../unit_test_executables/sysfs/test_sysfs_services ../../unit_test_executables/sysfs/test_sysfs_sys_drm_connector
+TESTS = ../../unit_test_executables/sysfs/test_sysfs_base ../../unit_test_executables/sysfs/test_sysfs_conflicting_drivers \
+  ../../unit_test_executables/sysfs/test_sysfs_dpms ../../unit_test_executables/sysfs/test_sysfs_i2c_info ../../unit_test_executables/sysfs/test_sysfs_i2c_sys_info \
+  ../../unit_test_executables/sysfs/test_sysfs_services ../../unit_test_executables/sysfs/test_sysfs_sys_drm_connector
 
-test_sysfs_base_SOURCES  = test_sysfs_base.c
-test_sysfs_base_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_sysfs_base_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_sysfs_test_sysfs_base_SOURCES  = test_sysfs_base.c
+______unit_test_executables_sysfs_test_sysfs_base_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_sysfs_test_sysfs_base_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_sysfs_conflicting_drivers_SOURCES  = test_sysfs_conflicting_drivers.c
-test_sysfs_conflicting_drivers_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_sysfs_conflicting_drivers_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_sysfs_test_sysfs_conflicting_drivers_SOURCES  = test_sysfs_conflicting_drivers.c
+______unit_test_executables_sysfs_test_sysfs_conflicting_drivers_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_sysfs_test_sysfs_conflicting_drivers_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_sysfs_dpms_SOURCES  = test_sysfs_dpms.c
-test_sysfs_dpms_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_sysfs_dpms_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_sysfs_test_sysfs_dpms_SOURCES  = test_sysfs_dpms.c
+______unit_test_executables_sysfs_test_sysfs_dpms_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_sysfs_test_sysfs_dpms_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_sysfs_i2c_info_SOURCES  = test_sysfs_i2c_info.c
-test_sysfs_i2c_info_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_sysfs_i2c_info_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_sysfs_test_sysfs_i2c_info_SOURCES  = test_sysfs_i2c_info.c
+______unit_test_executables_sysfs_test_sysfs_i2c_info_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_sysfs_test_sysfs_i2c_info_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_sysfs_i2c_sys_info_SOURCES  = test_sysfs_i2c_sys_info.c
-test_sysfs_i2c_sys_info_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_sysfs_i2c_sys_info_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_sysfs_test_sysfs_i2c_sys_info_SOURCES  = test_sysfs_i2c_sys_info.c
+______unit_test_executables_sysfs_test_sysfs_i2c_sys_info_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_sysfs_test_sysfs_i2c_sys_info_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_sysfs_services_SOURCES  = test_sysfs_services.c
-test_sysfs_services_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_sysfs_services_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_sysfs_test_sysfs_services_SOURCES  = test_sysfs_services.c
+______unit_test_executables_sysfs_test_sysfs_services_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_sysfs_test_sysfs_services_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_sysfs_sys_drm_connector_SOURCES  = test_sysfs_sys_drm_connector.c
-test_sysfs_sys_drm_connector_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_sysfs_sys_drm_connector_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_sysfs_test_sysfs_sys_drm_connector_SOURCES  = test_sysfs_sys_drm_connector.c
+______unit_test_executables_sysfs_test_sysfs_sys_drm_connector_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_sysfs_test_sysfs_sys_drm_connector_LDADD    = $(LIBSYSFS) $(LIBI2C) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)

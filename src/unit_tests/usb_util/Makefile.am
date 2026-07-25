@@ -12,18 +12,6 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
-# Copy the built test executables to src/unit_test_executables/usb_util
-# after `make check` builds them here, so the compiled binaries land
-# in a directory separate from these sources. Does not change how or
-# where compilation/linking itself happens.
-EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/usb_util
-
-check-local: $(check_PROGRAMS)
-	@mkdir -p $(EXEC_OUTPUT_DIR)
-	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
-
-clean-local:
-	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
 
 # Unit tests link the internal libusbutil/libbase/libutil convenience
 # libraries directly, since these symbols are not exported from libddcutil.
@@ -39,37 +27,37 @@ if USE_X11_COND
 EXTRA_SYSLIBS += $(LIBX11_LIBS) $(XEXT_LIBS) $(XRANDR_LIBS)
 endif
 
-check_PROGRAMS = test_usb_hid_common test_base_hid_report_descriptor \
-  test_hid_report_descriptor test_hiddev_reports test_hiddev_util \
-  test_hidraw_util test_libusb_util
-TESTS = test_usb_hid_common test_base_hid_report_descriptor \
-  test_hid_report_descriptor test_hiddev_reports test_hiddev_util \
-  test_hidraw_util test_libusb_util
+check_PROGRAMS = ../../unit_test_executables/usb_util/test_usb_hid_common ../../unit_test_executables/usb_util/test_base_hid_report_descriptor \
+  ../../unit_test_executables/usb_util/test_hid_report_descriptor ../../unit_test_executables/usb_util/test_hiddev_reports ../../unit_test_executables/usb_util/test_hiddev_util \
+  ../../unit_test_executables/usb_util/test_hidraw_util ../../unit_test_executables/usb_util/test_libusb_util
+TESTS = ../../unit_test_executables/usb_util/test_usb_hid_common ../../unit_test_executables/usb_util/test_base_hid_report_descriptor \
+  ../../unit_test_executables/usb_util/test_hid_report_descriptor ../../unit_test_executables/usb_util/test_hiddev_reports ../../unit_test_executables/usb_util/test_hiddev_util \
+  ../../unit_test_executables/usb_util/test_hidraw_util ../../unit_test_executables/usb_util/test_libusb_util
 
-test_usb_hid_common_SOURCES  = test_usb_hid_common.c
-test_usb_hid_common_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_usb_hid_common_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_util_test_usb_hid_common_SOURCES  = test_usb_hid_common.c
+______unit_test_executables_usb_util_test_usb_hid_common_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_util_test_usb_hid_common_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_base_hid_report_descriptor_SOURCES  = test_base_hid_report_descriptor.c
-test_base_hid_report_descriptor_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_base_hid_report_descriptor_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_util_test_base_hid_report_descriptor_SOURCES  = test_base_hid_report_descriptor.c
+______unit_test_executables_usb_util_test_base_hid_report_descriptor_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_util_test_base_hid_report_descriptor_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_hid_report_descriptor_SOURCES  = test_hid_report_descriptor.c
-test_hid_report_descriptor_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_hid_report_descriptor_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_util_test_hid_report_descriptor_SOURCES  = test_hid_report_descriptor.c
+______unit_test_executables_usb_util_test_hid_report_descriptor_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_util_test_hid_report_descriptor_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_hiddev_reports_SOURCES  = test_hiddev_reports.c
-test_hiddev_reports_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_hiddev_reports_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_util_test_hiddev_reports_SOURCES  = test_hiddev_reports.c
+______unit_test_executables_usb_util_test_hiddev_reports_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_util_test_hiddev_reports_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_hiddev_util_SOURCES  = test_hiddev_util.c
-test_hiddev_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_hiddev_util_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_util_test_hiddev_util_SOURCES  = test_hiddev_util.c
+______unit_test_executables_usb_util_test_hiddev_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_util_test_hiddev_util_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_hidraw_util_SOURCES  = test_hidraw_util.c
-test_hidraw_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_hidraw_util_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_util_test_hidraw_util_SOURCES  = test_hidraw_util.c
+______unit_test_executables_usb_util_test_hidraw_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_util_test_hidraw_util_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_libusb_util_SOURCES  = test_libusb_util.c
-test_libusb_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_libusb_util_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_util_test_libusb_util_SOURCES  = test_libusb_util.c
+______unit_test_executables_usb_util_test_libusb_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_util_test_libusb_util_LDADD    = $(LIBUSBUTIL) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm

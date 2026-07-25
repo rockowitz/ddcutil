@@ -12,18 +12,6 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
-# Copy the built test executables to src/unit_test_executables/usb
-# after `make check` builds them here, so the compiled binaries land
-# in a directory separate from these sources. Does not change how or
-# where compilation/linking itself happens.
-EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/usb
-
-check-local: $(check_PROGRAMS)
-	@mkdir -p $(EXEC_OUTPUT_DIR)
-	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
-
-clean-local:
-	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
 
 # Like src/unit_tests/ddc/dw/dynvcp, usb/*.c files cross-reference the
 # rest of the ddcutil core (i2c, vcp, base, util) extensively, so there is
@@ -47,17 +35,17 @@ if USE_LIBDRM_COND
 EXTRA_SYSLIBS += $(LIBDRM_LIBS)
 endif
 
-check_PROGRAMS = test_usb_base test_usb_displays test_usb_services
-TESTS = test_usb_base test_usb_displays test_usb_services
+check_PROGRAMS = ../../unit_test_executables/usb/test_usb_base ../../unit_test_executables/usb/test_usb_displays ../../unit_test_executables/usb/test_usb_services
+TESTS = ../../unit_test_executables/usb/test_usb_base ../../unit_test_executables/usb/test_usb_displays ../../unit_test_executables/usb/test_usb_services
 
-test_usb_base_SOURCES  = test_usb_base.c
-test_usb_base_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_usb_base_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_test_usb_base_SOURCES  = test_usb_base.c
+______unit_test_executables_usb_test_usb_base_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_test_usb_base_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_usb_displays_SOURCES  = test_usb_displays.c
-test_usb_displays_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_usb_displays_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_test_usb_displays_SOURCES  = test_usb_displays.c
+______unit_test_executables_usb_test_usb_displays_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_test_usb_displays_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_usb_services_SOURCES  = test_usb_services.c
-test_usb_services_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_usb_services_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_usb_test_usb_services_SOURCES  = test_usb_services.c
+______unit_test_executables_usb_test_usb_services_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_usb_test_usb_services_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm

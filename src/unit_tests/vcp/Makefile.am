@@ -12,18 +12,6 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
-# Copy the built test executables to src/unit_test_executables/vcp
-# after `make check` builds them here, so the compiled binaries land
-# in a directory separate from these sources. Does not change how or
-# where compilation/linking itself happens.
-EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/vcp
-
-check-local: $(check_PROGRAMS)
-	@mkdir -p $(EXEC_OUTPUT_DIR)
-	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
-
-clean-local:
-	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
 
 # Unit tests link the internal libvcp/libbase/libutil convenience
 # libraries directly, since these symbols are not exported from libddcutil.
@@ -39,27 +27,27 @@ if USE_X11_COND
 EXTRA_SYSLIBS += $(LIBX11_LIBS) $(XEXT_LIBS) $(XRANDR_LIBS)
 endif
 
-check_PROGRAMS = test_vcp_feature_values test_parsed_capabilities_feature \
-  test_parse_capabilities test_persistent_capabilities test_vcp_feature_codes
-TESTS = test_vcp_feature_values test_parsed_capabilities_feature \
-  test_parse_capabilities test_persistent_capabilities test_vcp_feature_codes
+check_PROGRAMS = ../../unit_test_executables/vcp/test_vcp_feature_values ../../unit_test_executables/vcp/test_parsed_capabilities_feature \
+  ../../unit_test_executables/vcp/test_parse_capabilities ../../unit_test_executables/vcp/test_persistent_capabilities ../../unit_test_executables/vcp/test_vcp_feature_codes
+TESTS = ../../unit_test_executables/vcp/test_vcp_feature_values ../../unit_test_executables/vcp/test_parsed_capabilities_feature \
+  ../../unit_test_executables/vcp/test_parse_capabilities ../../unit_test_executables/vcp/test_persistent_capabilities ../../unit_test_executables/vcp/test_vcp_feature_codes
 
-test_vcp_feature_values_SOURCES  = test_vcp_feature_values.c
-test_vcp_feature_values_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_vcp_feature_values_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_vcp_test_vcp_feature_values_SOURCES  = test_vcp_feature_values.c
+______unit_test_executables_vcp_test_vcp_feature_values_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_vcp_test_vcp_feature_values_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_parsed_capabilities_feature_SOURCES  = test_parsed_capabilities_feature.c
-test_parsed_capabilities_feature_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_parsed_capabilities_feature_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_vcp_test_parsed_capabilities_feature_SOURCES  = test_parsed_capabilities_feature.c
+______unit_test_executables_vcp_test_parsed_capabilities_feature_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_vcp_test_parsed_capabilities_feature_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_parse_capabilities_SOURCES  = test_parse_capabilities.c
-test_parse_capabilities_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_parse_capabilities_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_vcp_test_parse_capabilities_SOURCES  = test_parse_capabilities.c
+______unit_test_executables_vcp_test_parse_capabilities_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_vcp_test_parse_capabilities_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_persistent_capabilities_SOURCES  = test_persistent_capabilities.c
-test_persistent_capabilities_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_persistent_capabilities_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_vcp_test_persistent_capabilities_SOURCES  = test_persistent_capabilities.c
+______unit_test_executables_vcp_test_persistent_capabilities_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_vcp_test_persistent_capabilities_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_vcp_feature_codes_SOURCES  = test_vcp_feature_codes.c
-test_vcp_feature_codes_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_vcp_feature_codes_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_vcp_test_vcp_feature_codes_SOURCES  = test_vcp_feature_codes.c
+______unit_test_executables_vcp_test_vcp_feature_codes_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_vcp_test_vcp_feature_codes_LDADD    = $(LIBVCP) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm

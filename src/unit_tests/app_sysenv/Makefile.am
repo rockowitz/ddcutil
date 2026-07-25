@@ -12,18 +12,6 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
-# Copy the built test executables to src/unit_test_executables/app_sysenv
-# after `make check` builds them here, so the compiled binaries land
-# in a directory separate from these sources. Does not change how or
-# where compilation/linking itself happens.
-EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/app_sysenv
-
-check-local: $(check_PROGRAMS)
-	@mkdir -p $(EXEC_OUTPUT_DIR)
-	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
-
-clean-local:
-	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
 
 # Like src/unit_tests/app_ddcutil, app_sysenv/*.c files cross-reference the
 # rest of the ddcutil core extensively, so there is no small per-directory
@@ -48,23 +36,23 @@ if USE_LIBDRM_COND
 EXTRA_SYSLIBS += $(LIBDRM_LIBS)
 endif
 
-check_PROGRAMS = test_query_sysenv_base test_query_sysenv_sysfs_common \
-  test_query_sysenv_xref test_query_sysenv_final_analysis
-TESTS = test_query_sysenv_base test_query_sysenv_sysfs_common \
-  test_query_sysenv_xref test_query_sysenv_final_analysis
+check_PROGRAMS = ../../unit_test_executables/app_sysenv/test_query_sysenv_base ../../unit_test_executables/app_sysenv/test_query_sysenv_sysfs_common \
+  ../../unit_test_executables/app_sysenv/test_query_sysenv_xref ../../unit_test_executables/app_sysenv/test_query_sysenv_final_analysis
+TESTS = ../../unit_test_executables/app_sysenv/test_query_sysenv_base ../../unit_test_executables/app_sysenv/test_query_sysenv_sysfs_common \
+  ../../unit_test_executables/app_sysenv/test_query_sysenv_xref ../../unit_test_executables/app_sysenv/test_query_sysenv_final_analysis
 
-test_query_sysenv_base_SOURCES  = test_query_sysenv_base.c
-test_query_sysenv_base_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_query_sysenv_base_LDADD    = $(LIBAPP) $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_app_sysenv_test_query_sysenv_base_SOURCES  = test_query_sysenv_base.c
+______unit_test_executables_app_sysenv_test_query_sysenv_base_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_app_sysenv_test_query_sysenv_base_LDADD    = $(LIBAPP) $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_query_sysenv_sysfs_common_SOURCES  = test_query_sysenv_sysfs_common.c
-test_query_sysenv_sysfs_common_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_query_sysenv_sysfs_common_LDADD    = $(LIBAPP) $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_app_sysenv_test_query_sysenv_sysfs_common_SOURCES  = test_query_sysenv_sysfs_common.c
+______unit_test_executables_app_sysenv_test_query_sysenv_sysfs_common_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_app_sysenv_test_query_sysenv_sysfs_common_LDADD    = $(LIBAPP) $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_query_sysenv_xref_SOURCES  = test_query_sysenv_xref.c
-test_query_sysenv_xref_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_query_sysenv_xref_LDADD    = $(LIBAPP) $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_app_sysenv_test_query_sysenv_xref_SOURCES  = test_query_sysenv_xref.c
+______unit_test_executables_app_sysenv_test_query_sysenv_xref_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_app_sysenv_test_query_sysenv_xref_LDADD    = $(LIBAPP) $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
-test_query_sysenv_final_analysis_SOURCES  = test_query_sysenv_final_analysis.c
-test_query_sysenv_final_analysis_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_query_sysenv_final_analysis_LDADD    = $(LIBAPP) $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+______unit_test_executables_app_sysenv_test_query_sysenv_final_analysis_SOURCES  = test_query_sysenv_final_analysis.c
+______unit_test_executables_app_sysenv_test_query_sysenv_final_analysis_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_app_sysenv_test_query_sysenv_final_analysis_LDADD    = $(LIBAPP) $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm

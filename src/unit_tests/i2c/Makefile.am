@@ -12,18 +12,6 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
-# Copy the built test executables to src/unit_test_executables/i2c
-# after `make check` builds them here, so the compiled binaries land
-# in a directory separate from these sources. Does not change how or
-# where compilation/linking itself happens.
-EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/i2c
-
-check-local: $(check_PROGRAMS)
-	@mkdir -p $(EXEC_OUTPUT_DIR)
-	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
-
-clean-local:
-	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
 
 # Unit tests link the internal libi2c/libbase/libutil convenience libraries
 # directly, since these symbols are not exported from libddcutil. Run by
@@ -41,37 +29,37 @@ if USE_X11_COND
 EXTRA_SYSLIBS += $(LIBX11_LIBS) $(XEXT_LIBS) $(XRANDR_LIBS)
 endif
 
-check_PROGRAMS = test_i2c_bus_collections test_i2c_bus_core \
-  test_i2c_bus_selector test_i2c_edid test_i2c_execute test_i2c_services \
-  test_i2c_strategy_dispatcher
-TESTS = test_i2c_bus_collections test_i2c_bus_core \
-  test_i2c_bus_selector test_i2c_edid test_i2c_execute test_i2c_services \
-  test_i2c_strategy_dispatcher
+check_PROGRAMS = ../../unit_test_executables/i2c/test_i2c_bus_collections ../../unit_test_executables/i2c/test_i2c_bus_core \
+  ../../unit_test_executables/i2c/test_i2c_bus_selector ../../unit_test_executables/i2c/test_i2c_edid ../../unit_test_executables/i2c/test_i2c_execute ../../unit_test_executables/i2c/test_i2c_services \
+  ../../unit_test_executables/i2c/test_i2c_strategy_dispatcher
+TESTS = ../../unit_test_executables/i2c/test_i2c_bus_collections ../../unit_test_executables/i2c/test_i2c_bus_core \
+  ../../unit_test_executables/i2c/test_i2c_bus_selector ../../unit_test_executables/i2c/test_i2c_edid ../../unit_test_executables/i2c/test_i2c_execute ../../unit_test_executables/i2c/test_i2c_services \
+  ../../unit_test_executables/i2c/test_i2c_strategy_dispatcher
 
-test_i2c_bus_collections_SOURCES  = test_i2c_bus_collections.c
-test_i2c_bus_collections_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_i2c_bus_collections_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_i2c_test_i2c_bus_collections_SOURCES  = test_i2c_bus_collections.c
+______unit_test_executables_i2c_test_i2c_bus_collections_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_i2c_test_i2c_bus_collections_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_i2c_bus_core_SOURCES  = test_i2c_bus_core.c
-test_i2c_bus_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_i2c_bus_core_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_i2c_test_i2c_bus_core_SOURCES  = test_i2c_bus_core.c
+______unit_test_executables_i2c_test_i2c_bus_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_i2c_test_i2c_bus_core_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_i2c_bus_selector_SOURCES  = test_i2c_bus_selector.c
-test_i2c_bus_selector_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_i2c_bus_selector_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_i2c_test_i2c_bus_selector_SOURCES  = test_i2c_bus_selector.c
+______unit_test_executables_i2c_test_i2c_bus_selector_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_i2c_test_i2c_bus_selector_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_i2c_edid_SOURCES  = test_i2c_edid.c
-test_i2c_edid_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_i2c_edid_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_i2c_test_i2c_edid_SOURCES  = test_i2c_edid.c
+______unit_test_executables_i2c_test_i2c_edid_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_i2c_test_i2c_edid_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_i2c_execute_SOURCES  = test_i2c_execute.c
-test_i2c_execute_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_i2c_execute_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_i2c_test_i2c_execute_SOURCES  = test_i2c_execute.c
+______unit_test_executables_i2c_test_i2c_execute_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_i2c_test_i2c_execute_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_i2c_services_SOURCES  = test_i2c_services.c
-test_i2c_services_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_i2c_services_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_i2c_test_i2c_services_SOURCES  = test_i2c_services.c
+______unit_test_executables_i2c_test_i2c_services_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_i2c_test_i2c_services_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
-test_i2c_strategy_dispatcher_SOURCES  = test_i2c_strategy_dispatcher.c
-test_i2c_strategy_dispatcher_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-test_i2c_strategy_dispatcher_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+______unit_test_executables_i2c_test_i2c_strategy_dispatcher_SOURCES  = test_i2c_strategy_dispatcher.c
+______unit_test_executables_i2c_test_i2c_strategy_dispatcher_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_i2c_test_i2c_strategy_dispatcher_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
