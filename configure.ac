@@ -97,6 +97,7 @@ AC_CONFIG_FILES([
 	src/unit_tests/dynvcp/Makefile
 	src/unit_tests/libmain/Makefile
 	src/unit_tests/usb_util/Makefile
+	src/unit_tests/usb/Makefile
 	man/Makefile 
 	data/Makefile 
 	docs/Makefile
