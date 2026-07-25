@@ -32,7 +32,7 @@ extern bool force_failure_i2c_open;
 extern int  pause_after_resume_ms;
 extern int  max_eacces_retry_ms;
 extern int  max_eacces_retry_ct;
-extern bool rate_limit_eacces_diagnostics;
+extern int  rate_limit_eacces_diagnostics_interval_sec;
 extern bool edid_exists_checks_drm_status;
 extern bool primitive_sysfs;
 

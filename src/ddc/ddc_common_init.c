@@ -492,8 +492,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       use_eventfd = true;    // watch thread blocks in poll() instead of timed polling loops
    if (parsed_cmd->flags2 & CMD_FLAG2_F33)
       split_sleep_eventfd = true;    // dw_split_sleep() performs a single poll() wait
-   if (parsed_cmd->flags2 & CMD_FLAG2_F34)
-      rate_limit_eacces_diagnostics = true;    // throttle expensive EACCES diagnostics
    if (parsed_cmd->flags2 & CMD_FLAG2_F35)
       edid_exists_checks_drm_status = true;    // skip device open if DRM connector disconnected
    if (parsed_cmd->flags2 & CMD_FLAG2_F36)
@@ -521,6 +519,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       max_eacces_retry_ms  = parsed_cmd->i11;
    if (parsed_cmd->flags2 & CMD_FLAG2_I12_SET)
       max_eacces_retry_ct  = parsed_cmd->i12;
+   if (parsed_cmd->flags2 & CMD_FLAG2_I13_SET)
+      rate_limit_eacces_diagnostics_interval_sec = parsed_cmd->i13;
 }
 
 #ifdef USER_BUSNO_CONNECTOR
