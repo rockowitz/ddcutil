@@ -59,6 +59,8 @@ typedef struct usb_monitor_vcp_rec {
 } Usb_Monitor_Vcp_Rec;
 
 
+Usb_Monitor_Vcp_Rec * create_usb_monitor_vcp_rec(Byte feature_code);
+Usb_Monitor_Info * create_usb_monitor_info(const char * hiddev_name);
 void        dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth);
 Usb_Monitor_Info *
             usb_find_monitor_by_dh(Display_Handle * dh);
