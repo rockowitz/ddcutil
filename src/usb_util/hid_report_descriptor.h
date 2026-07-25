@@ -107,6 +107,10 @@ typedef struct parsed_hid_descriptor {
 } Parsed_Hid_Descriptor;
 
 
+const char * hid_report_type_name(Byte report_type);
+char * interpret_item_flags_r(uint16_t data, char * buffer, int bufsz);
+uint32_t extended_usage(uint16_t usage_page, uint32_t usage, int usage_bsize);
+
 void free_parsed_hid_descriptor(Parsed_Hid_Descriptor * phd);
 
 Parsed_Hid_Descriptor * parse_hid_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head);
@@ -117,6 +121,8 @@ void summarize_parsed_hid_report(Parsed_Hid_Report * hr, int depth);
 void dbgrpt_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth);
 
 bool is_monitor_by_parsed_hid_report_descriptor(Parsed_Hid_Descriptor * phd);
+
+Parsed_Hid_Report * find_hid_report(Parsed_Hid_Collection * col, Byte report_type, uint16_t report_id);
 
 // TODO: use same bit values as item type?   will that work?
 // TODO: poor names
