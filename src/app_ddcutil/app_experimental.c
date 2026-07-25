@@ -84,7 +84,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(31, "fail_i2c_all_relevant_i2c_buses_rw");
    REPORT_FLAG_OPTION(32, "use_eventfd: eventfd-based blocking waits in watch thread");
    REPORT_FLAG_OPTION(33, "split_sleep_eventfd: single poll() wait in dw_split_sleep()");
-   REPORT_FLAG_OPTION(34, "rate_limit_eacces_diagnostics: throttle expensive EACCES diagnostics");
+   REPORT_FLAG_OPTION(34, "Unused");
    REPORT_FLAG_OPTION(35, "edid_exists_checks_drm_status: skip device open if DRM connector disconnected");
    REPORT_FLAG_OPTION(36, "rescan_on_eacces: rescan display change scan while EACCES is seen");
    REPORT_FLAG_OPTION(37, "Unused");
@@ -108,7 +108,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i10:         Pause after resume from sleep ms (default = %d)", DEFAULT_PAUSE_AFTER_RESUME_MS);
    rpt_vstring(depth+1, "Utility option --i11:         Max after EACCES retry ms (default=%d", DEFAULT_MAX_EACCES_RETRY_MS);
    rpt_vstring(depth+1, "Utility option --i12:         Max after EACCES retry ct (default=%d)", DEFAULT_STD_EACCES_RETRY_CT);
-   rpt_vstring(depth+1, "Utility option --i13:         Unused");
+   rpt_vstring(depth+1, "Utility option --i13:         EACCES diagnostic interval seconds (default=%d)", DEFAULT_EACCES_DIAGNOSTIC_iNETERVAL_SEC);
    rpt_vstring(depth+1, "Utility option --i14:         Unused");
    rpt_vstring(depth+1, "Utility option --i15:         Unused");
    rpt_vstring(depth+1, "Utility option --i16:         Unused");

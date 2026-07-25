@@ -76,7 +76,7 @@ bool primitive_sysfs = false;
 // If true, the expensive EACCES diagnostics in i2c_open_bus_basic() (traced
 // function stack dump, open failure diagnosis) are emitted at most once per
 // interval instead of once per open call.
-bool rate_limit_eacces_diagnostics = false;
+int rate_limit_eacces_diagnostics_interval_sec = DEFAULT_EACCES_DIAGNOSTIC_iNETERVAL_SEC;
 // If true, i2c_edid_exists() does not open the device when the DRM connector
 // for the bus reports status "disconnected".
 bool edid_exists_checks_drm_status = false;
@@ -302,13 +302,14 @@ retry:
          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", err->detail);
          if (eacces_retry_ct == 0) {
             bool emit_diagnostics = true;
-            if (rate_limit_eacces_diagnostics) {
+            if (rate_limit_eacces_diagnostics_interval_sec > 0) {
                // During the post-resume EACCES window every bus open fails, and
                // stabilization rescans multiply the failures.  Emit the expensive
                // diagnostics (traced function stack dump, open failure diagnosis)
                // at most once per interval, not once per open call.
                static _Atomic(uint64_t) last_eacces_diagnostics_ns = 0;
-               const uint64_t eacces_diagnostics_interval_ns = 10 * (uint64_t)1000000000;  // 10 seconds
+               const uint64_t eacces_diagnostics_interval_ns =
+                     rate_limit_eacces_diagnostics_interval_sec * (uint64_t)1000000000;  // convert to nanoeconds
                uint64_t diag_now_ns = cur_realtime_nanosec();
                emit_diagnostics =
                      (diag_now_ns - last_eacces_diagnostics_ns > eacces_diagnostics_interval_ns);
