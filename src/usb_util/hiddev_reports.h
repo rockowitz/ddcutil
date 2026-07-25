@@ -16,6 +16,11 @@ void init_hiddev_reports();
 void dbgrpt_hiddev_devinfo(struct hiddev_devinfo * devinfo, bool lookup_names, int depth);
 void dbgrpt_hiddev_device_by_fd(int fd, int depth);
 
+char * interpret_collection_type(__u32 type);
+void report_hiddev_collection_info(struct hiddev_collection_info * cinfo, int depth);
+void report_hiddev_string_descriptor(struct hiddev_string_descriptor * desc, int depth);
+char * interpret_field_bits(__u32 flags);
+
 void dbgrpt_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth);
 void dbgrpt_hiddev_usage_ref_multi(struct hiddev_usage_ref_multi * uref_multi, int depth);
 
