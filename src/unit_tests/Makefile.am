@@ -1,7 +1,7 @@
 # File src/unit_tests/Makefile.am
 # Parent directory for standalone unit tests of internal (non-exported) modules.
 
-SUBDIRS = base util i2c sysfs cmdline vcp ddc dynvcp
+SUBDIRS = base util i2c sysfs cmdline vcp ddc dynvcp app_ddcutil
 if WATCH_DISPLAYS_COND
 SUBDIRS += dw
 endif

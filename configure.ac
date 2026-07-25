@@ -98,7 +98,8 @@ AC_CONFIG_FILES([
 	src/unit_tests/libmain/Makefile
 	src/unit_tests/usb_util/Makefile
 	src/unit_tests/usb/Makefile
-	man/Makefile 
+	src/unit_tests/app_ddcutil/Makefile
+	man/Makefile
 	data/Makefile 
 	docs/Makefile
 	docs/doxygen/Makefile
