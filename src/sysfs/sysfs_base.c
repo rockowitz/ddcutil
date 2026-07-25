@@ -1488,9 +1488,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
       if (!ignorable) {
          uint32_t class = get_i2c_device_sysfs_class(busno);
          DBGF(debug, "get_i2c_device_sysfs_class(%d) returned 0x%08x ", busno, class);
-         if (class == 0)
-            ignorable = true;
-         else {
+         if (class) {
             DBGF(debug, "   class = 0x%08x", class);
             uint32_t cl2 = class & 0xffff0000;
             DBGF(debug, "   cl2 = 0x%08x", cl2);
