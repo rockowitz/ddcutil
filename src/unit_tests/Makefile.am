@@ -5,3 +5,6 @@ SUBDIRS = base util i2c sysfs cmdline vcp ddc dynvcp
 if WATCH_DISPLAYS_COND
 SUBDIRS += dw
 endif
+if ENABLE_SHARED_LIB_COND
+SUBDIRS += libmain
+endif
