@@ -55,6 +55,13 @@ dyn_create_feature_set(
       DDCA_Display_Ref    dref,
       Feature_Set_Flags   flags);
 
+bool test_show_feature(
+      VCP_Feature_Subset    subset_id,
+      Feature_Set_Flags     feature_set_flags,
+      gushort               vcp_spec_groups,
+      DDCA_Feature_Flags    feature_flags,
+      VCP_Feature_Subset    vcp_subsets);
+
 Dyn_Feature_Set *
 create_dyn_feature_set_from_feature_set_ref(
    Feature_Set_Ref *         fsref,
