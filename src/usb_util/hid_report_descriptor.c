@@ -119,7 +119,7 @@ void free_parsed_hid_collection_func(gpointer data);   // forward ref
 void free_parsed_hid_collection(Parsed_Hid_Collection * phc) {
    if (phc) {
       if (phc->reports) {
-         g_ptr_array_set_free_func(phc->reports,(GDestroyNotify) free_parsed_hid_field);
+         g_ptr_array_set_free_func(phc->reports,(GDestroyNotify) free_parsed_hid_report);
          g_ptr_array_free(phc->reports, true);
       }
       if (phc->child_collections) {
