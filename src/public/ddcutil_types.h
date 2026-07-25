@@ -343,10 +343,9 @@ typedef struct {
 #define DDCA_DRM_CONNECTOR_FIELD_SIZE 32
 
 typedef enum {
-   DDCA_DRM_CONNECTOR_NOT_FOUND,
+   DDCA_DRM_CONNECTOR_NOT_FOUND,        ///< also used if specified by user
    DDCA_DRM_CONNECTOR_FOUND_BY_BUSNO,
    DDCA_DRM_CONNECTOR_FOUND_BY_EDID,
-   // DDCA_DRM_CONNECTOR_FOUND_BY_USER  // FUTURE
 } DDCA_Drm_Connector_Found_By;
 
 
