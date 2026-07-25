@@ -10,7 +10,12 @@
 #ifndef API_FEATURE_ACCESS_INTERNAL_H_
 #define API_FEATURE_ACCESS_INTERNAL_H_
 
+#include "public/ddcutil_types.h"
+
 // here because there's no api_feature_access.h
 void init_api_feature_access();
+
+// not published
+void dbgrpt_any_vcp_value(DDCA_Any_Vcp_Value * valrec, int depth);
 
 #endif /* API_FEATURE_ACCESS_INTERNAL_H_ */
