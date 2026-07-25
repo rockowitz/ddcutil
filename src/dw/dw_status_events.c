@@ -238,8 +238,15 @@ DDCA_Status dw_unregister_display_status_callback(DDCA_Display_Status_Callback_F
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
    g_mutex_lock(&callbacks_mutex);
-   DDCA_Status result = generic_unregister_callback(display_detection_callbacks, func);
+   bool found = generic_unregister_callback(display_detection_callbacks, func);
    g_mutex_unlock(&callbacks_mutex);
+   // generic_unregister_callback() returns true/false (found or not), which
+   // must be translated to the DDCRC_OK/DDCRC_NOT_FOUND status code
+   // documented above -- DDCRC_OK is 0, so assigning the bool directly
+   // reported success (1) when the callback WAS found and removed, and
+   // DDCRC_OK (0) when it was NOT found, exactly inverted from both this
+   // comment and every caller's expectation of the DDCA_Status convention.
+   DDCA_Status result = found ? DDCRC_OK : DDCRC_NOT_FOUND;
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
