@@ -106,6 +106,7 @@ sysfs_is_ignorable_i2c_device(
 
 int search_all_businfo_records_by_connector_name(char *connector_name);
 
+bool sysfs_is_soc_system();
 
 void init_i2c_sysfs_base();
 

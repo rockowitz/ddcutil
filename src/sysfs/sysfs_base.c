@@ -1455,6 +1455,26 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
 }
 
 
+/** Checks if this is a System On A Chip (SOC) system.
+ *
+ * @return true/false
+ *
+ *  @remark
+ *  This is a cheap function, but if it turns out to be widely used
+ *  the result can be cached.
+ */
+bool sysfs_is_soc_system() {
+   bool debug = false;
+
+   bool result = false;
+   int depth = (debug) ? 1 : -1;
+   result = RPT_ATTR_SINGLE_SUBDIR(depth, NULL, str_starts_with, "soc", "/sys/devices","platform");
+
+   DBGMSF(debug, "is_soc_system() returning %s", sbool(result));
+   return result;
+}
+
+
 /** Checks if an I2C bus cannot be a DDC/CI connected monitor
  *  and therefore can be ignored, e.g. if it is an SMBus device.
  *
@@ -1488,8 +1508,10 @@ sysfs_is_ignorable_i2c_device(int busno) {
       if (!ignorable) {
          uint32_t class = get_i2c_device_sysfs_class(busno);
          DBGF(debug, "get_i2c_device_sysfs_class(%d) returned 0x%08x ", busno, class);
-         if (class == 0)
-            ignorable = true;
+         if (class == 0) {
+            if (!sysfs_is_soc_system())
+               ignorable = true;
+         }
          else {
             DBGF(debug, "   class = 0x%08x", class);
             uint32_t cl2 = class & 0xffff0000;
