@@ -49,6 +49,12 @@ docs/ddcutil-c-api
 # Executable
 /src/ddcutil
 
+# Compiled unit test executables (built alongside their .c sources; see
+# src/unit_test_executables for the canonical copies used for running them)
+src/unit_tests/*/test_*
+!src/unit_tests/*/test_*.c
+/src/unit_test_executables/
+
 # Experimental API implementations
 *.typelib
 *.gir

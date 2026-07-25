@@ -12,6 +12,19 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
+# Copy the built test executables to src/unit_test_executables/ddc
+# after `make check` builds them here, so the compiled binaries land
+# in a directory separate from these sources. Does not change how or
+# where compilation/linking itself happens.
+EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/ddc
+
+check-local: $(check_PROGRAMS)
+	@mkdir -p $(EXEC_OUTPUT_DIR)
+	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
+
+clean-local:
+	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
+
 # Unlike the other src/unit_tests/* directories, ddc/*.c files
 # cross-reference each other and the rest of the ddcutil core (i2c,
 # dynvcp, sysfs, vcp, base, util, and conditionally usb/dw) extensively,

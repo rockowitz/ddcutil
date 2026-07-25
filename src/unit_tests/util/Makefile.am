@@ -12,6 +12,19 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
+# Copy the built test executables to src/unit_test_executables/util
+# after `make check` builds them here, so the compiled binaries land
+# in a directory separate from these sources. Does not change how or
+# where compilation/linking itself happens.
+EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/util
+
+check-local: $(check_PROGRAMS)
+	@mkdir -p $(EXEC_OUTPUT_DIR)
+	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
+
+clean-local:
+	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
+
 # Unit tests link the internal util convenience library directly, since these
 # symbols are not exported from libddcutil. Run by "make check".
 LIBUTIL = $(top_builddir)/src/util/libutil.la

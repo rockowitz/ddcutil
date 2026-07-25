@@ -12,6 +12,19 @@ AM_CPPFLAGS =    \
 
 AM_CFLAGS = -Wall -fPIC
 
+# Copy the built test executables to src/unit_test_executables/libmain
+# after `make check` builds them here, so the compiled binaries land
+# in a directory separate from these sources. Does not change how or
+# where compilation/linking itself happens.
+EXEC_OUTPUT_DIR = $(top_builddir)/src/unit_test_executables/libmain
+
+check-local: $(check_PROGRAMS)
+	@mkdir -p $(EXEC_OUTPUT_DIR)
+	@for p in $(check_PROGRAMS); do cp -f $$p $(EXEC_OUTPUT_DIR)/; done
+
+clean-local:
+	@for p in $(check_PROGRAMS); do rm -f $(EXEC_OUTPUT_DIR)/$$p; done
+
 # src/libmain builds the intermediate library libsharedlib.la, which
 # (together with libcommon.la) becomes libddcutil.so -- see
 # libddcutil_la_LIBADD in the top-level src/Makefile.am, which this
