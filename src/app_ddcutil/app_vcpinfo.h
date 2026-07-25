@@ -13,9 +13,13 @@
 #include <stdio.h>
 
 #include "cmdline/parsed_cmd.h"
+#include "vcp/vcp_feature_codes.h"
 
 void
 app_listvcp(FILE * fh);
+
+void
+report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth);
 
 bool
 app_vcpinfo(Parsed_Cmd * parsed_cmd);
