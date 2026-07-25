@@ -8,3 +8,6 @@ endif
 if ENABLE_SHARED_LIB_COND
 SUBDIRS += libmain
 endif
+if ENABLE_USB_COND
+SUBDIRS += usb_util
+endif
