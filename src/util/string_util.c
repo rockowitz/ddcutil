@@ -229,6 +229,22 @@ int exactly_matches_any(const char * s, const char ** match_list) {
 }
 
 
+/** Tests if a string exactly matches any string in a null-terminated
+ *  array of strings.  (Null_Terminated_String_Array).
+ *
+ *  The match is case-insensitive.
+ *
+ *  @param  s           string to test for
+ *  @param  match_list  null terminated array of pointers to strings
+ *
+ *  @retval >= 0  index of matching array entry
+ *  @retval -1    no match
+ */
+int exactly_matches_any_case(const char * s, const char ** match_list) {
+   return matches_by_func(s, match_list, streqcase);
+}
+
+
 /** Finds the first entry in a null terminated array of strings
  *  that is the initial portion of a specified string.
  *

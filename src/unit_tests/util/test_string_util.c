@@ -204,6 +204,13 @@ static void test_match(void) {
    CK_INT(exactly_matches_any("grape", list), -1);
    CK_INT(exactly_matches_any("BANANA", list), -1);   // case sensitive
 
+   CK_INT(exactly_matches_any_case("banana", list), 1);
+   CK_INT(exactly_matches_any_case("BANANA", list), 1);   // case insensitive
+   CK_INT(exactly_matches_any_case("Apple", list), 0);
+   CK_INT(exactly_matches_any_case("grape", list), -1);
+   CK_INT(exactly_matches_any_case("apples", list), -1);  // not exact (extra char)
+   CK_INT(exactly_matches_any_case("app", list), -1);     // not exact (prefix only)
+
    const char * prefixes[] = {"xy", "ab", "qr", NULL};
    CK_INT(starts_with_any("abcdef", prefixes), 1);
    CK_INT(starts_with_any("zzz", prefixes), -1);
