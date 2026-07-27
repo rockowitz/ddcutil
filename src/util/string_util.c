@@ -223,6 +223,9 @@ int matches_by_func(const char * s, const char ** match_list, String_Comp_Func c
  *
  *  @retval >= 0  index of matching array entry
  *  @retval -1    no match
+ *
+ *  @remark
+ *  Returns -1 if empty match list
  */
 int exactly_matches_any(const char * s, const char ** match_list) {
    return matches_by_func(s, match_list, streq);
@@ -239,6 +242,9 @@ int exactly_matches_any(const char * s, const char ** match_list) {
  *
  *  @retval >= 0  index of matching argument (0 based)
  *  @retval -1    no match
+ *
+ *  @remark
+ *  Returns -1 if empty match list
  */
 int exactly_matches_anyv(const char * s, ...) {
    int result = -1;
@@ -268,6 +274,9 @@ int exactly_matches_anyv(const char * s, ...) {
  *
  *  @retval >= 0  index of matching array entry
  *  @retval -1    no match
+ *
+ *  @remark
+ *  Returns -1 if empty match list
  */
 int exactly_matches_any_case(const char * s, const char ** match_list) {
    return matches_by_func(s, match_list, streqcase);
