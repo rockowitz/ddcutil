@@ -6,9 +6,24 @@
 - **ddca_elapsed_nanosec()**: number of nanoseconds since the library was
   initialized.
 - Utility options ***--F33*** .. ***--F40***, 
-- Added a suite of standalone unit tests for the utility functions in directories
-  src/util and src/base. The tests live in the new **src/unit_tests** tree and
-  are run via **make check**.
+- ***--bus-drm-connector***: lets the user explicitly specify the I2C bus
+  number/DRM connector name pairing for a display, for cases where ddcutil's
+  usual EDID-based association fails (issue #608, modified/non-unique EDIDs).
+  Internally the association is recorded as
+  **DRM_CONNECTOR_FOUND_BY_USER**; to avoid a non-backward-compatible change
+  to the public **DDCA_Drm_Connector_Found_By** enum, this is reported
+  externally as **DDCA_DRM_CONNECTOR_NOT_FOUND**.
+- Added a suite of standalone unit tests covering most of the C source tree:
+  **src/util**, **src/base**, **src/i2c**, **src/sysfs**, **src/cmdline**,
+  **src/vcp**, **src/ddc**, **src/dw**, **src/dynvcp**, **src/libmain**,
+  **src/usb_util**, **src/usb**, **src/app_ddcutil**, and **src/app_sysenv**
+  each now have a corresponding directory of tests under the new
+  **src/unit_tests** tree, run via **make check**. The tests target each
+  module's pure, hardware-independent logic (parsing, data structures,
+  report formatting, etc.); modules that are essentially all direct
+  hardware/file I/O are only covered where a genuinely pure helper exists.
+  Writing the tests surfaced numerous real bugs, now fixed (see Fixed,
+  below).
 
 <!--
  ***--f25*** (select the recheck algorithm at runtime),
@@ -72,16 +87,28 @@
   watch thread's periodic wakeups (up to 10 per second in Xevent mode), which
   degrade idle power residency when libddcutil is embedded in a long-running
   process such as KDE PowerDevil.
-- Experimental, off by default: mitigations for the transient EACCES window
-  after resume from sleep, during which the /dev/i2c devices exist but udev
-  has not yet reapplied uaccess ACLs so open() fails (KDE bug 522329, reported
-  as 100% single-core CPU and desktop lag on wake): global
-  **rate_limit_eacces_diagnostics** (***--f34***) emits the expensive EACCES
-  diagnostics at most once per 10 seconds instead of once per bus open;
+- Mitigations for the transient EACCES window after resume from sleep, during
+  which the /dev/i2c devices exist but udev has not yet reapplied uaccess ACLs
+  so open() fails (KDE bug 522329, reported as 100% single-core CPU and
+  desktop lag on wake): rate-limiting the expensive EACCES diagnostics (traced
+  function stack dump, open failure diagnosis) is now **on by default**,
+  emitting them at most once per **DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC**
+  (10) seconds instead of once per bus open; the interval is configurable via
+  ***--i13*** (0 disables rate limiting). ***--f34*** no longer has any
+  effect. Still experimental, off by default:
   **edid_exists_checks_drm_status** (***--f35***) skips opening an i2c device
   whose DRM connector reports "disconnected"; **rescan_on_eacces**
   (***--f36***) defers display change processing until the window passes
   instead of treating every monitor as disconnected.
+- EDID reads now first attempt a single combined **I2C_RDWR** ioctl
+  transaction (write the EDID block-read command and read the response as
+  one multi-message transaction) before falling back to the previous separate
+  write-then-read calls, reducing I2C bus round trips.
+- Retuned **i2c_detect_x37()**'s VCP feature x37 slave-address detection
+  retries (issue #607): retry interval is now 200ms for most drivers (was
+  400ms) and 1000ms for the nvidia driver (was a flat 2000ms); max tries
+  dropped from 3 to 2, but is increased by 2 more if an attempt fails with
+  EBUSY; added trace messages.
 
 - Removed vestigial **swig**, **cffi**, and **cython** references from the build
   files, along with their archived source trees.
@@ -127,6 +154,9 @@
   the clocktime algorithm.
 - **i2c_detect_x37()**: a typo that broke compilation, and a missing driver
   argument.
+- **sysfs_is_ignorable_i2c_device()**: no longer returns **true** (device
+  ignorable) merely because the device class could not be determined on SOC
+  systems; added **sysfs_is_soc_system()**.
 - Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
   Pull request #613.
   - Build: added a missing **backtrace.h** include in **failsim.c**, which failed
@@ -149,6 +179,42 @@
     - Traced function stack (debug/trace output): guarded a use-after-free of the
       thread-local stack pointer after it is freed, and corrected an inverted
       ordering that reversed the stack across nested callbacks.
+    - **tokenize_options_line()**: a memory leak when **wordexp()** fails, and
+      (found via **test_ddcutil_config_file**) a segfault in the same error
+      path — the error handler unconditionally calls **wordfree()**, but on
+      some **wordexp()** syntax errors (e.g. an unterminated quote) glibc
+      leaves its output struct uninitialized, so **wordfree()** dereferenced
+      garbage; the struct is now zero-initialized so **wordfree()** on it is
+      always safe.
+    - **simple_dbgmsg()** was missing the trailing newline on its output line.
+
+- Extending unit tests to the rest of the source tree (see Added, above)
+  found and fixed further bugs:
+    - **set_persistent_capabilites()**: crashed on a NULL capabilities hash.
+    - **generic_model_name()**: its hardcoded list of known-generic model
+      names (e.g. "LG IPS FULLHD") used the raw, unsanitized EDID spelling,
+      but every **Monitor_Model_Key** has already had spaces and other
+      non-alphanumeric characters replaced with '_'; the comparison could
+      therefore never match, so the non-unique-model protection for these
+      models silently never triggered.
+    - **ddc_store_displays_cache()**: an **fwrite()** size/nmemb argument swap
+      meant the byte count written was always compared against the wrong
+      value, so the function reported write failure even on success.
+    - **dw_unregister_display_status_callback()**: returned the inverted
+      **DDCA_Status** (success and not-found were swapped).
+    - **ddca_dbgrpt_display_ref()**: in **NUMERIC_DDCA_DISPLAY_REF** builds,
+      cast the opaque **DDCA_Display_Ref** handle directly to a
+      **Display_Ref \*** instead of resolving it via
+      **dref_from_published_ddca_dref()**, unlike its sibling functions.
+    - **free_parsed_hid_collection()**: used the wrong **GDestroyNotify** for
+      a **Parsed_Hid_Report \*** array, freeing each entry as though it were a
+      **Parsed_Hid_Field \***; corrupted the heap and crashed when freeing any
+      USB HID report descriptor with more than one report.
+    - **VID_PID_VALUE_TO_PID()**: masked with **0xff** instead of **0xffff**,
+      truncating the high byte of the product id wherever the macro is used
+      (the **--ignored-usb-vid-pids** debug report).
+    - **sysfs_find_adapter()**: crashed calling **strlen(NULL)** while walking
+      up a nonexistent sysfs path.
 
 - The default recheck thread declared DDC enabled, and emitted
   **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
