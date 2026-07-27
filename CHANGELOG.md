@@ -1,4 +1,4 @@
-## [2.2.8] 2026-07-17   COLLECTED NOTES, NOT YET EDITED
+## [2.2.8] 2026-07-28   COLLECTED NOTES, NOT YET EDITED
 
 
 #### Added
@@ -13,6 +13,8 @@
   **DRM_CONNECTOR_FOUND_BY_USER**; to avoid a non-backward-compatible change
   to the public **DDCA_Drm_Connector_Found_By** enum, this is reported
   externally as **DDCA_DRM_CONNECTOR_NOT_FOUND**.
+- ***setvcp***: the relative-value markers can now also be spelled
+  ***PLUS***/***MINUS*** (case-insensitive), in addition to ***+***/***-***.
 - Added a suite of standalone unit tests covering most of the C source tree:
   **src/util**, **src/base**, **src/i2c**, **src/sysfs**, **src/cmdline**,
   **src/vcp**, **src/ddc**, **src/dw**, **src/dynvcp**, **src/libmain**,
@@ -215,6 +217,13 @@
       (the **--ignored-usb-vid-pids** debug report).
     - **sysfs_find_adapter()**: crashed calling **strlen(NULL)** while walking
       up a nonexistent sysfs path.
+    - **parse_setvcp_args()**: the check recognizing the ***+***/***-***/
+      ***PLUS***/***MINUS*** relative-value markers treated
+      **EXACTLY_MATCHES_ANYV()**'s return value (a match index, not a
+      boolean) as a plain boolean; since -1 (no match) is truthy and a
+      match at index 0 (the first candidate, "+") is falsy, a plain
+      absolute value like "50" was wrongly treated as relative, while a
+      literal "+" was wrongly treated as an absolute value.
 
 - The default recheck thread declared DDC enabled, and emitted
   **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
