@@ -128,7 +128,7 @@ static void test_dw_emit_or_queue_display_status_event_queued(void) {
 }
 
 
-static _Atomic(int) callback_invocation_count = 0;
+static _Atomic int callback_invocation_count = 0;
 static DDCA_Display_Status_Event captured_event;
 
 static void counting_callback(DDCA_Display_Status_Event evt) {

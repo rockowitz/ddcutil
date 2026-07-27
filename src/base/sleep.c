@@ -34,9 +34,9 @@
 // slightly different moments in its individual fields; for accumulated
 // statistics that is inconsequential.
 
-static _Atomic(int)      total_sleep_calls = 0;
-static _Atomic(int)      requested_sleep_milliseconds = 0;
-static _Atomic(uint64_t) actual_sleep_nanos = 0;
+static _Atomic int      total_sleep_calls = 0;
+static _Atomic int      requested_sleep_milliseconds = 0;
+static _Atomic uint64_t actual_sleep_nanos = 0;
 
 /** Sets all sleep statistics to 0. */
 void init_sleep_stats() {

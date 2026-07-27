@@ -204,7 +204,7 @@ typedef struct _display_ref {
    char *                   usb_hiddev_name;
    DDCA_MCCS_Version_Spec   vcp_version_xdf;
    DDCA_MCCS_Version_Spec   vcp_version_cmdline;
-   _Atomic(Dref_Flags)      flags;
+   _Atomic Dref_Flags      flags;
    bool                     disconnected;
    char *                   capabilities_string;   // added 4/2017, private copy
    Parsed_Edid *            pedid;                 // added 4/2017

@@ -664,7 +664,7 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 // entries whose keys are the external DDCA_Display_Ref and whose values
 // are pointers to the internal Display_Ref.
 
-static _Atomic(uint) max_dref_id = 0;
+static _Atomic uint max_dref_id = 0;
 static GHashTable * published_dref_hash = NULL;
 static GMutex dref_hash_mutex;
 

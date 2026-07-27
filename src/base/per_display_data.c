@@ -61,8 +61,8 @@ void dbgrpt_per_display_data_locks(int depth) {
 // pdd_cross_thread_operation_active and pdd_cross_thread_operation_owner are atomic
 // because pdd_cross_display_operation_block() reads them, and spins on
 // pdd_cross_thread_operation_active, without holding the mutex.
-static _Atomic(bool)     pdd_cross_thread_operation_active = false;
-static _Atomic(intmax_t) pdd_cross_thread_operation_owner = 0;
+static _Atomic bool     pdd_cross_thread_operation_active = false;
+static _Atomic intmax_t pdd_cross_thread_operation_owner = 0;
 // Nesting depth of the recursive mutex.  Mutated only while the mutex is
 // held, so no additional protection is needed.
 static int               pdd_cross_thread_operation_depth = 0;

@@ -17,14 +17,14 @@
 #include "dw_xevent.h"
 #endif
 
-extern _Atomic(uint16_t)  initial_stabilization_millisec;
-extern _Atomic(uint16_t)  stabilization_poll_millisec;
-extern _Atomic(uint16_t)  udev_watch_loop_millisec;
-extern _Atomic(uint16_t)  poll_watch_loop_millisec;
-extern _Atomic(uint16_t)  xevent_watch_loop_millisec;
-extern _Atomic(bool)      terminate_watch_thread;
-extern _Atomic(bool)      terminate_using_x11_event;
-extern _Atomic(bool)      dw_event_processing_pending;
+extern _Atomic uint16_t  initial_stabilization_millisec;
+extern _Atomic uint16_t  stabilization_poll_millisec;
+extern _Atomic uint16_t  udev_watch_loop_millisec;
+extern _Atomic uint16_t  poll_watch_loop_millisec;
+extern _Atomic uint16_t  xevent_watch_loop_millisec;
+extern _Atomic bool      terminate_watch_thread;
+extern _Atomic bool      terminate_using_x11_event;
+extern _Atomic bool      dw_event_processing_pending;
 extern GMutex             master_dw_mutex;
 extern GMutex             process_event_mutex;
 extern bool               use_drm_connector_states;
@@ -33,10 +33,10 @@ extern bool               rescan_on_eacces;
 
 // If true, blocking waits in the watch thread poll() the relevant fd together
 // with terminate_watch_thread_fd instead of sleeping in timed polling loops.
-extern _Atomic(bool)      use_eventfd;
+extern _Atomic bool      use_eventfd;
 // If true, dw_split_sleep() performs a single poll() on
 // terminate_watch_thread_fd instead of sleeping in 200 ms segments.
-extern _Atomic(bool)      split_sleep_eventfd;
+extern _Atomic bool      split_sleep_eventfd;
 // eventfd signaled when watch thread termination is requested, -1 if not created
 extern int                terminate_watch_thread_fd;
 

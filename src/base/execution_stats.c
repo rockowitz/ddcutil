@@ -40,8 +40,8 @@ typedef struct {
    const char *       desc;
    // atomic so that the counters can be updated in the I/O hot path
    // without a mutex
-   _Atomic(uint64_t)  call_nanosec;
-   _Atomic(int)       call_count;
+   _Atomic uint64_t  call_nanosec;
+   _Atomic int       call_count;
 } IO_Event_Type_Stats;
 
 
@@ -66,7 +66,7 @@ typedef struct {
 //
 
 static uint64_t             program_start_timestamp;   // set once at startup
-static _Atomic(uint64_t)    resettable_start_timestamp;
+static _Atomic uint64_t    resettable_start_timestamp;
 static Status_Code_Counts * primary_error_code_counts = NULL;
 static Status_Code_Counts * retryable_error_code_counts = NULL;
 static GMutex               status_code_counts_mutex;   // guards the Status_Code_Counts hash tables
@@ -539,8 +539,8 @@ const char * sleep_event_name(Sleep_Event_Type event_type) {
 }
 
 // atomic so that counters can be updated in the sleep hot path without a mutex
-static _Atomic(int) sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
-static _Atomic(int) total_sleep_event_ct = 0;
+static _Atomic int sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
+static _Atomic int total_sleep_event_ct = 0;
 
 
 void reset_sleep_event_counts() {

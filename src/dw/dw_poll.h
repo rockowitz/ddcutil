@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 extern int  nonudev_poll_loop_millisec;
-extern _Atomic(uint16_t)  retry_thread_sleep_factor_millisec;
+extern _Atomic uint16_t  retry_thread_sleep_factor_millisec;
 extern bool stabilize_added_buses_w_edid;
 extern bool recheck_thread_active;   // ?? needed?
 

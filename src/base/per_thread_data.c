@@ -51,9 +51,9 @@ void dbgrpt_per_thread_data_locks(int depth) {
 // ptd_cross_thread_operation_active and ptd_cross_thread_operation_owner are atomic
 // because ptd_cross_thread_operation_block() reads them, and spins on
 // ptd_cross_thread_operation_active, without holding the mutex.
-static _Atomic(bool)     ptd_cross_thread_operation_active = false;
+static _Atomic bool     ptd_cross_thread_operation_active = false;
 static GRecMutex         ptd_cross_thread_operation_mutex;
-static _Atomic(intmax_t) ptd_cross_thread_operation_owner = 0;
+static _Atomic intmax_t ptd_cross_thread_operation_owner = 0;
 // Nesting depth of the recursive mutex.  Mutated only while the mutex is
 // held, so no additional protection is needed.
 static int               ptd_cross_thread_operation_depth = 0;

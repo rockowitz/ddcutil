@@ -96,7 +96,7 @@ static bool dsa_detail_stats;
 // increment/decrement_active_api_calls().  The mutex still serializes the
 // check-and-bump against the quiesce protocol; the atomic just makes those
 // unlocked reads well defined.
-static _Atomic(int) active_calls = 0;
+static _Atomic int active_calls = 0;
 static int    max_active_calls = 0;
 static GMutex active_calls_mutex;
 static bool   api_quiesced = false;
