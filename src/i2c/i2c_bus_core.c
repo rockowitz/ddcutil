@@ -79,7 +79,7 @@ bool primitive_sysfs = false;
 int rate_limit_eacces_diagnostics_interval_sec = DEFAULT_EACCES_DIAGNOSTIC_iNETERVAL_SEC;
 // If true, i2c_edid_exists() does not open the device when the DRM connector
 // for the bus reports status "disconnected".
-bool edid_exists_checks_drm_status = false;
+bool edid_exists_checks_drm_status = true;
 
 
 #ifdef OUT

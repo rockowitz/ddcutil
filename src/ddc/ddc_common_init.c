@@ -493,7 +493,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F33)
       split_sleep_eventfd = false;    // dw_split_sleep() uses the old segmented sleeps instead of a single poll() wait
    if (parsed_cmd->flags2 & CMD_FLAG2_F35)
-      edid_exists_checks_drm_status = true;    // skip device open if DRM connector disconnected
+      edid_exists_checks_drm_status = false;    // always open device, do not consult DRM connector status first
    if (parsed_cmd->flags2 & CMD_FLAG2_F36)
       rescan_on_eacces = true;    // rescan display change scan while EACCES is seen
 
