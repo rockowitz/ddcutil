@@ -13,7 +13,8 @@
  *  recognition and abbreviation, the argument-count and error-reporting
  *  paths (unrecognized command, no command, missing/extra arguments),
  *  getvcp's feature-code-or-subset argument, setvcp's feature/value
- *  (including the "+"/"-" relative-value forms), the --display/--bus
+ *  (including the "+"/"-"/"PLUS"/"MINUS" relative-value forms, the latter
+ *  two case-insensitive), the --display/--bus
  *  display-selection options, and a small sample of plain boolean options
  *  (--verify/--noverify, mutual exclusivity) and a callback-based option
  *  (--stats).
@@ -184,10 +185,86 @@ static void test_setvcp_args(void) {
       free_parsed_cmd(pc);
    }
 
+   // relative value form: setvcp <code> - <value>
+   char * argv_minus[] = {"ddcutil", "setvcp", "10", "-", "5", NULL};
+   pc = parse(argv_minus, 5, NULL);
+   CK(pc != NULL);
+   if (pc) {
+      CK_INT(pc->setvcp_values->len, 1);
+      if (pc->setvcp_values->len == 1) {
+         Parsed_Setvcp_Args * a = &g_array_index(pc->setvcp_values, Parsed_Setvcp_Args, 0);
+         CK(a->feature_value_type == VALUE_TYPE_RELATIVE_MINUS);
+         CK_STR(a->feature_value, "5");
+      }
+      free_parsed_cmd(pc);
+   }
+
+   // word forms "PLUS"/"MINUS" are also accepted, case-insensitively
+   char * argv_plus_word[] = {"ddcutil", "setvcp", "10", "PLUS", "5", NULL};
+   pc = parse(argv_plus_word, 5, NULL);
+   CK(pc != NULL);
+   if (pc) {
+      CK_INT(pc->setvcp_values->len, 1);
+      if (pc->setvcp_values->len == 1) {
+         Parsed_Setvcp_Args * a = &g_array_index(pc->setvcp_values, Parsed_Setvcp_Args, 0);
+         CK(a->feature_value_type == VALUE_TYPE_RELATIVE_PLUS);
+         CK_STR(a->feature_value, "5");
+      }
+      free_parsed_cmd(pc);
+   }
+
+   char * argv_minus_word_lc[] = {"ddcutil", "setvcp", "10", "minus", "5", NULL};
+   pc = parse(argv_minus_word_lc, 5, NULL);
+   CK(pc != NULL);
+   if (pc) {
+      CK_INT(pc->setvcp_values->len, 1);
+      if (pc->setvcp_values->len == 1) {
+         Parsed_Setvcp_Args * a = &g_array_index(pc->setvcp_values, Parsed_Setvcp_Args, 0);
+         CK(a->feature_value_type == VALUE_TYPE_RELATIVE_MINUS);
+         CK_STR(a->feature_value, "5");
+      }
+      free_parsed_cmd(pc);
+   }
+
+   char * argv_plus_word_mixed[] = {"ddcutil", "setvcp", "10", "Plus", "5", NULL};
+   pc = parse(argv_plus_word_mixed, 5, NULL);
+   CK(pc != NULL);
+   if (pc) {
+      CK_INT(pc->setvcp_values->len, 1);
+      if (pc->setvcp_values->len == 1) {
+         Parsed_Setvcp_Args * a = &g_array_index(pc->setvcp_values, Parsed_Setvcp_Args, 0);
+         CK(a->feature_value_type == VALUE_TYPE_RELATIVE_PLUS);
+         CK_STR(a->feature_value, "5");
+      }
+      free_parsed_cmd(pc);
+   }
+
+   // a feature value that merely starts with "+"/"plus" etc. is not treated
+   // as a relative marker: EXACTLY_MATCHES_ANYV() requires an exact match
+   char * argv_plusvalue[] = {"ddcutil", "setvcp", "10", "+5", NULL};
+   pc = parse(argv_plusvalue, 4, NULL);
+   CK(pc != NULL);
+   if (pc) {
+      CK_INT(pc->setvcp_values->len, 1);
+      if (pc->setvcp_values->len == 1) {
+         Parsed_Setvcp_Args * a = &g_array_index(pc->setvcp_values, Parsed_Setvcp_Args, 0);
+         CK(a->feature_value_type == VALUE_TYPE_ABSOLUTE);
+         CK_STR(a->feature_value, "+5");
+      }
+      free_parsed_cmd(pc);
+   }
+
    // missing value after feature code
    char * bad_argv[] = {"ddcutil", "setvcp", "10", NULL};
    GPtrArray * errmsgs;
    pc = parse(bad_argv, 3, &errmsgs);
+   CK(pc == NULL);
+   CK(errmsgs->len > 0);
+   g_ptr_array_free(errmsgs, true);
+
+   // missing value after a relative marker
+   char * bad_argv2[] = {"ddcutil", "setvcp", "10", "+", NULL};
+   pc = parse(bad_argv2, 4, &errmsgs);
    CK(pc == NULL);
    CK(errmsgs->len > 0);
    g_ptr_array_free(errmsgs, true);
