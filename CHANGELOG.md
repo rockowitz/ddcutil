@@ -43,10 +43,10 @@
 
 - **dw_stop_watch_displays()** now always waits for the watch thread to
   terminate.
-- Experimental, off by default: the display watch thread can block in poll()
-  on the watched fd plus a termination eventfd instead of sleeping in timed
-  polling loops (global **use_eventfd**, settable with ***--f32***; global
-  **split_sleep_eventfd**, settable with ***--f33***, similarly converts the
+- The display watch thread now blocks in poll() on the watched fd plus a
+  termination eventfd, instead of sleeping in timed polling loops, by
+  default (global **use_eventfd**, disabled with ***--f32***; global
+  **split_sleep_eventfd**, disabled with ***--f33***, similarly converts the
   segmented sleeps of **dw_split_sleep()** to a single wait). Eliminates the
   watch thread's periodic wakeups (up to 10 per second in Xevent mode), which
   degrade idle power residency when libddcutil is embedded in a long-running
@@ -60,11 +60,11 @@
   emitting them at most once per **DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC**
   (10) seconds instead of once per bus open; the interval is configurable via
   ***--i13*** (0 disables rate limiting). ***--f34*** no longer has any
-  effect. Still experimental, off by default:
-  **edid_exists_checks_drm_status** (***--f35***) skips opening an i2c device
-  whose DRM connector reports "disconnected"; **rescan_on_eacces**
-  (***--f36***) defers display change processing until the window passes
-  instead of treating every monitor as disconnected.
+  effect. **edid_exists_checks_drm_status** (skips opening an i2c device
+  whose DRM connector reports "disconnected") is also now on by default,
+  disabled with ***--f35***. Still experimental, off by default:
+  **rescan_on_eacces** (***--f36***) defers display change processing until
+  the window passes instead of treating every monitor as disconnected.
 - EDID reads now first attempt to use a single combined **I2C_RDWR** ioctl
   transaction (write the EDID block-read command and read the response as
   one multi-message transaction) before falling back to the previous separate
@@ -176,7 +176,11 @@
       up a nonexistent sysfs path.
     - **parse_setvcp_args()**: the check recognizing the +/-/
       ***PLUS***/***MINUS*** relative-value markers treated
-
+      **EXACTLY_MATCHES_ANYV()**'s return value (a match index, not a
+      boolean) as a plain boolean; since -1 (no match) is truthy and a
+      match at index 0 (the first candidate, "+") is falsy, a plain
+      absolute value like "50" was wrongly treated as relative, while a
+      literal "+" was wrongly treated as an absolute value.
 
 - The default recheck thread declared DDC enabled, and emitted
   **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
@@ -191,20 +195,24 @@
 
 #### Building
 
-- Added a suite of standalone unit tests in directory src/unit_tests, covering
-  most of the C source tree.
+- Added a suite of standalone unit tests, covering most of the C source tree.
   - The tests target each module's pure, hardware-independent logic (parsing, 
     data structures, report formatting, etc.); modules that are essentially all
     direct hardware/file I/O are only covered where a genuinely pure helper exists.
-  - The executable tests are built in subdirectory src/unit_tests. 
-  - They are built, in subdirectory src/unit_test_executables, and executed when 
-    ddcutil is built with **make check**.
+  - Test sources live in directory src/unit_tests; the corresponding
+    executables are built (and, on **make check**, run) directly into
+    parallel directory src/unit_test_executables, keeping compiled binaries
+    out of the source directory.
 - Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
   Pull request #613.
 - Build: added a missing **backtrace.h** include in **failsim.c**, which failed
   to compile under **--enable-failsim** with modern GCC.
 - Added explicit #include statements for header files that had previously 
   relied on indirect inclusion.
+- Changed **_Atomic(type) var** declarations to **_Atomic type var**
+  throughout: Eclipse's indexer resolves variables declared with the latter
+  form but not the former. (The two forms differ for pointer types, but
+  every converted declaration atomic-qualifies a plain scalar type.)
 
 
 ## [2.2.7] 2025-05-08
