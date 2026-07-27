@@ -529,6 +529,7 @@ STATIC void init_busno_connector_table(
       GPtrArray * errinfo_accumulator)
 {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,"");
 
    if (parsed_cmd->bus_drm_connectors) {
       for (int ndx = 0; parsed_cmd->bus_drm_connectors[ndx]; ndx++) {
@@ -570,7 +571,10 @@ STATIC void init_busno_connector_table(
          add_busno_connector(busno, connector_name);
       }
    }
-   dbgrpt_busno_connector_table(0);
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+      dbgrpt_busno_connector_table(0);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 #endif
 
