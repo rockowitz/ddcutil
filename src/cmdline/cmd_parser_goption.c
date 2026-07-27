@@ -704,9 +704,9 @@ static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
          break;
       }
       psv.feature_value_type = VALUE_TYPE_ABSOLUTE;
-      if ( streq(parsed_cmd->args[argpos], "+") || streq(parsed_cmd->args[argpos], "-") )
-      {
-         if ( streq(parsed_cmd->args[argpos], "+") )
+      char * arg_uc = strdup_uc(parsed_cmd->args[argpos]);
+      if (EXACTLY_MATCHES_ANYV(arg_uc, "+", "PLUS", "-", "MINUS") >= 0) {
+         if ( streq(arg_uc, "+") || streq(arg_uc, "PLUS") )
             psv.feature_value_type = VALUE_TYPE_RELATIVE_PLUS;
          else
             psv.feature_value_type = VALUE_TYPE_RELATIVE_MINUS;
@@ -717,6 +717,7 @@ static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
             break;
          }
       }
+      free(arg_uc);
       psv.feature_value = g_strdup(parsed_cmd->args[argpos]);
       g_array_append_val(parsed_cmd->setvcp_values, psv);
       argpos++;
