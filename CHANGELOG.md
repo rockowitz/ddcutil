@@ -5,62 +5,25 @@
 
 - **ddca_elapsed_nanosec()**: number of nanoseconds since the library was
   initialized.
-- Utility options ***--F33*** .. ***--F40***, 
-- ***--bus-drm-connector***: lets the user explicitly specify the I2C bus
-  number/DRM connector name pairing for a display, for cases where ddcutil's
-  usual EDID-based association fails (issue #608, modified/non-unique EDIDs).
-  Internally the association is recorded as
-  **DRM_CONNECTOR_FOUND_BY_USER**; to avoid a non-backward-compatible change
-  to the public **DDCA_Drm_Connector_Found_By** enum, this is reported
-  externally as **DDCA_DRM_CONNECTOR_NOT_FOUND**.
-- ***setvcp***: the relative-value markers can now also be spelled
-  ***PLUS***/***MINUS*** (case-insensitive), in addition to ***+***/***-***.
-- Added a suite of standalone unit tests covering most of the C source tree:
-  **src/util**, **src/base**, **src/i2c**, **src/sysfs**, **src/cmdline**,
-  **src/vcp**, **src/ddc**, **src/dw**, **src/dynvcp**, **src/libmain**,
-  **src/usb_util**, **src/usb**, **src/app_ddcutil**, and **src/app_sysenv**
-  each now have a corresponding directory of tests under the new
-  **src/unit_tests** tree, run via **make check**. The tests target each
-  module's pure, hardware-independent logic (parsing, data structures,
-  report formatting, etc.); modules that are essentially all direct
-  hardware/file I/O are only covered where a genuinely pure helper exists.
-  Writing the tests surfaced numerous real bugs, now fixed (see Fixed,
-  below).
+- Option ***--bus-drm-connector***: lets the user explicitly specify the I2C bus
+  number/DRM connector name pairing for a display, for cases where the sysfs 
+  card-connector directory does not record the bus number and ddcutil's alternative
+  EDID-based association fails (issue #608, modified/non-unique EDIDs).
+  Internally the association is recorded as **DRM_CONNECTOR_FOUND_BY_USER**, but
+  to avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
+  this is reported externally as **DDCA_DRM_CONNECTOR_NOT_FOUND**.
+- ***setvcp***: the relative-value markers can now also be specified as PLUS/MINUS 
+  (case-insensitive), in addition to +/-, e.g. **ddcutil setvcp 10 plus 5**. 
 
-<!--
- ***--f25*** (select the recheck algorithm at runtime),
-  ***--f29*** (force a recheck when a display is added), and ***--f32***
-  through ***--f36*** (see Changed, below). ***--f33*** through ***--f40***
-  are now defined as utility flags; most remain unused.
--->
 
-<!--
-- Added a suite of standalone unit tests for the utility functions in
-  **src/util** (**string_util**, **glib_util**, **data_structures**,
-  **timestamp**, **file_util_base**, **msg_util**, **report_util**, the traced
-  function stack, **ddcutil_config_file**, **dbus_util**, **acl_util**,
-  **drm_card_connector_util**, **device_id_util**, **error_info**, **edid**,
-  **glib_string_util**, **file_util**, **failsim**, **i2c_util**,
-  **libdrm_util**, **libdrm_aux_util**, **linux_basic_util**, **linux_util**,
-  **regex_util**, **multi_level_map**, **pnp_ids**, **simple_ini_file**,
-  **subprocess_util**, **sysfs_filter_functions**, **sysfs_util**,
-  **sysfs_i2c_util**, **systemd_util**, **udev_i2c_util**, **udev_util**,
-  **udev_usb_util**, **utilrpt**, **xdg_util**, **x11_util**, and **backtrace**;
-  every .c file in **src/util** now has a unit test), plus tests for
-  the **src/base** modules (every .c file in **src/base** now has a unit test
-  as well). The tests live in
-  the new **src/unit_tests** tree (**src/unit_tests/util** and
-  **src/unit_tests/base**) and are run via **make check**.
--->
 
 
 #### Changed
 
-- Public API: const-qualified string input parameters (and some return values),
+- Public API cleanup: const-qualified string input parameters (and some return values),
   added explicit **void** to empty parameter lists, and documented that the
   caller is responsible for freeing the result of **ddca_get_display_refs()**
   and **ddca_end_capture()**.
-
 - Reworked detection and handling of resume from sleep. Resume is detected via
   the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
   comparing CLOCK_BOOTTIME and CLOCK_MONOTONIC. Pauses are inserted before
@@ -71,7 +34,6 @@
   subsystem (**src/dw**) and the I2C bus modules (**i2c_bus_base.c** split into
   **i2c_bus_aux.c** and **i2c_bus_collections.c**). Access to the shared display
   and bus tables is now serialized against the watch thread.
-
 - Reduce duplicated messages in the system log when trace output is redirected
   to the system log.
 <!--
@@ -88,7 +50,8 @@
   segmented sleeps of **dw_split_sleep()** to a single wait). Eliminates the
   watch thread's periodic wakeups (up to 10 per second in Xevent mode), which
   degrade idle power residency when libddcutil is embedded in a long-running
-  process such as KDE PowerDevil.
+  process such as KDE PowerDevil. Addresses issue #617: ddcutil wakes up every 
+  100ms to check for monitors even when nothing connected
 - Mitigations for the transient EACCES window after resume from sleep, during
   which the /dev/i2c devices exist but udev has not yet reapplied uaccess ACLs
   so open() fails (KDE bug 522329, reported as 100% single-core CPU and
@@ -102,7 +65,7 @@
   whose DRM connector reports "disconnected"; **rescan_on_eacces**
   (***--f36***) defers display change processing until the window passes
   instead of treating every monitor as disconnected.
-- EDID reads now first attempt a single combined **I2C_RDWR** ioctl
+- EDID reads now first attempt to use a single combined **I2C_RDWR** ioctl
   transaction (write the EDID block-read command and read the response as
   one multi-message transaction) before falling back to the previous separate
   write-then-read calls, reducing I2C bus round trips.
@@ -144,25 +107,19 @@
   setting, the active API-call count, and the display-lock owner fields — and
   closed a check-then-act (lock evasion) window when discarding detected
   displays.
-- Memory leaks: command-line argv on a config-file error, persistent
-  capabilities file lines, USB monitor detail on a denied path, directory
-  filenames on an **opendir()** failure, and a hash table created without
-  destroy functions in failsim.
+- Plugged numerous memory leaks
 
-    - NULL dereferences:       reporting a USB display that has no bus info.
+- NULL dereferences:       reporting a USB display that has no bus info.
 - Wrong array used in three I2C bus-info search functions in
   **i2c_bus_base.c**.
 - Resume-from-sleep detection: inverted grace window and integer narrowing in
   the clocktime algorithm.
-- **i2c_detect_x37()**: a typo that broke compilation, and a missing driver
-  argument.
 - **sysfs_is_ignorable_i2c_device()**: no longer returns **true** (device
   ignorable) merely because the device class could not be determined on SOC
-  systems; added **sysfs_is_soc_system()**.
-- Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
-  Pull request #613.
-  - Build: added a missing **backtrace.h** include in **failsim.c**, which failed
-  to compile under **--enable-failsim** with modern GCC.
+  systems; added function **sysfs_is_soc_system()**.
+  Addresses pull request #619: Do not ignore sysfs class bein zero
+
+
 
 - Fixed numerous minor bugs to utility functions that were identified by 
   unit testing;
@@ -217,13 +174,9 @@
       (the **--ignored-usb-vid-pids** debug report).
     - **sysfs_find_adapter()**: crashed calling **strlen(NULL)** while walking
       up a nonexistent sysfs path.
-    - **parse_setvcp_args()**: the check recognizing the ***+***/***-***/
+    - **parse_setvcp_args()**: the check recognizing the +/-/
       ***PLUS***/***MINUS*** relative-value markers treated
-      **EXACTLY_MATCHES_ANYV()**'s return value (a match index, not a
-      boolean) as a plain boolean; since -1 (no match) is truthy and a
-      match at index 0 (the first candidate, "+") is falsy, a plain
-      absolute value like "50" was wrongly treated as relative, while a
-      literal "+" was wrongly treated as an absolute value.
+
 
 - The default recheck thread declared DDC enabled, and emitted
   **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
@@ -235,6 +188,23 @@
 
 - Numerous additional logic errors, code smells, and latent NULL-dereference
   and leak issues identified by static analysis.
+
+#### Building
+
+- Added a suite of standalone unit tests in directory src/unit_tests, covering
+  most of the C source tree.
+  - The tests target each module's pure, hardware-independent logic (parsing, 
+    data structures, report formatting, etc.); modules that are essentially all
+    direct hardware/file I/O are only covered where a genuinely pure helper exists.
+  - The executable tests are built in subdirectory src/unit_tests. 
+  - They are built, in subdirectory src/unit_test_executables, and executed when 
+    ddcutil is built with **make check**.
+- Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
+  Pull request #613.
+- Build: added a missing **backtrace.h** include in **failsim.c**, which failed
+  to compile under **--enable-failsim** with modern GCC.
+- Added explicit #include statements for header files that had previously 
+  relied on indirect inclusion.
 
 
 ## [2.2.7] 2025-05-08
