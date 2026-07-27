@@ -64,7 +64,7 @@ _Atomic(uint16_t)  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MI
 
 _Atomic(bool)  terminate_watch_thread    = false;
 _Atomic(bool)  terminate_using_x11_event = false;
-_Atomic(bool)  use_eventfd               = false;
+_Atomic(bool)  use_eventfd               = true;
 _Atomic(bool)  split_sleep_eventfd       = false;
 int            terminate_watch_thread_fd = -1;
 // True while the watch thread has a screen change event waiting for, or being

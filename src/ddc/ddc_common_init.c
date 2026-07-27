@@ -489,7 +489,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F31)
       force_failure_i2c_all_relevant_i2c_buses_rw = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F32)
-      use_eventfd = true;    // watch thread blocks in poll() instead of timed polling loops
+      use_eventfd = false;    // watch thread uses old time polling loops instead of blocking
    if (parsed_cmd->flags2 & CMD_FLAG2_F33)
       split_sleep_eventfd = true;    // dw_split_sleep() performs a single poll() wait
    if (parsed_cmd->flags2 & CMD_FLAG2_F35)
