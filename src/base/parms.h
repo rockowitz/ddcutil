@@ -137,8 +137,9 @@
 #define CHECK_OPEN_BUS_ALIVE_MAX_TRIES 2
 
 // During bus detection, retry interval and max tries for X37 detection
-#define DETECT_X37_MAX_TRIES 3
-#define DETECT_X37_RETRY_MILLISEC 400
+#define DETECT_X37_MAX_TRIES 2
+#define DETECT_X37_NORMAL_RETRY_MS   200
+#define DETECT_X37_NVIDIA_RETRY_MS  1000
 
 //
 //  EACCES error recovery

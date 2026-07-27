@@ -888,13 +888,19 @@ i2c_detect_x37(int fd, char * driver) {
    //   avoided by never calling this function for an eDP screen
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
-   Status_Errno_DDC rc = 0;
+   Status_Errno_DDC rc = -1;
    int max_tries =  DETECT_X37_MAX_TRIES;  // 3;
-   int poll_wait_millisec = DETECT_X37_RETRY_MILLISEC;  // 400;
+   int poll_wait_millisec = DETECT_X37_NORMAL_RETRY_MS;
    if (streq(driver, "nvidia"))
-      poll_wait_millisec = 2000;
+      poll_wait_millisec = DETECT_X37_NVIDIA_RETRY_MS;
    int loopctr;
-   for (loopctr = 0; loopctr < max_tries; loopctr++) {  // retries seem to give no benefit
+   for (loopctr = 0; loopctr < max_tries && rc != 0; loopctr++) {  // retries seem to give no benefit
+      if (loopctr > 0) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "driver=%s, sleeping for %d millisec",
+                                driver, poll_wait_millisec);
+         SLEEP_MILLIS_WITH_SYSLOG(poll_wait_millisec, "Extra x37 sleep");
+      }
+
       // regard either a successful write() or a read() as indication slave address is valid
       Byte writebuf = 0x00;
       rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
@@ -906,12 +912,18 @@ i2c_detect_x37(int fd, char * driver) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                    "invoke_i2c_reader() for slave address x37 returned %s", psc_name_code(rc));
       }
-      if (rc == 0)
-         break;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "driver=%s, sleeping for %d millisec",
-                             driver, poll_wait_millisec);
-      SLEEP_MILLIS_WITH_SYSLOG(poll_wait_millisec, "Extra x37 sleep");
+
+      if (rc == -EBUSY) {
+         DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP, "X37 detection encountered EBUSY error");
+         max_tries = DETECT_X37_MAX_TRIES + 2;
+      }
+
    }
+
+   if (rc == 0 && loopctr > 1) {
+      DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP, "X37 detection succeeded on try %d", loopctr);
+   }
+
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"loopctr=%d", loopctr);
    return rc;
