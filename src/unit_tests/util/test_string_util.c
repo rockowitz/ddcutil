@@ -214,6 +214,24 @@ static void test_match(void) {
    const char * prefixes[] = {"xy", "ab", "qr", NULL};
    CK_INT(starts_with_any("abcdef", prefixes), 1);
    CK_INT(starts_with_any("zzz", prefixes), -1);
+
+   CK_INT(exactly_matches_anyv("banana", "apple", "banana", "cherry", NULL), 1);
+   CK_INT(exactly_matches_anyv("apple",  "apple", "banana", "cherry", NULL), 0);
+   CK_INT(exactly_matches_anyv("grape",  "apple", "banana", "cherry", NULL), -1);
+   CK_INT(exactly_matches_anyv("BANANA", "apple", "banana", "cherry", NULL), -1);  // case sensitive
+   CK_INT(exactly_matches_anyv("apples", "apple", "banana", "cherry", NULL), -1);  // not exact
+   CK_INT(exactly_matches_anyv("only",   "only", NULL), 0);       // single candidate
+   CK_INT(exactly_matches_anyv("nope",   NULL), -1);              // no candidates
+
+   // EXACTLY_MATCHES_ANYV() is a macro: no terminating NULL is supplied,
+   // it is appended automatically.
+   CK_INT(EXACTLY_MATCHES_ANYV("banana", "apple", "banana", "cherry"), 1);
+   CK_INT(EXACTLY_MATCHES_ANYV("apple",  "apple", "banana", "cherry"), 0);
+   CK_INT(EXACTLY_MATCHES_ANYV("grape",  "apple", "banana", "cherry"), -1);
+   CK_INT(EXACTLY_MATCHES_ANYV("BANANA", "apple", "banana", "cherry"), -1);  // case sensitive
+   CK_INT(EXACTLY_MATCHES_ANYV("apples", "apple", "banana", "cherry"), -1);  // not exact
+   CK_INT(EXACTLY_MATCHES_ANYV("only",   "only"), 0);       // single candidate
+   CK_INT(EXACTLY_MATCHES_ANYV("nope"), -1);                // no candidates
 }
 
 static void test_numeric(void) {

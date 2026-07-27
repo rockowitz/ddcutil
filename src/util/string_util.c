@@ -229,6 +229,35 @@ int exactly_matches_any(const char * s, const char ** match_list) {
 }
 
 
+/** Tests if a string exactly matches any of a variable number of strings.
+ *
+ *  The match is case-sensitive.  The variable argument list must be
+ *  terminated by a NULL.
+ *
+ *  @param  s  string to test for
+ *  @param  ...  candidate strings to compare against, NULL terminated
+ *
+ *  @retval >= 0  index of matching argument (0 based)
+ *  @retval -1    no match
+ */
+int exactly_matches_anyv(const char * s, ...) {
+   int result = -1;
+   int ndx = 0;
+   va_list args;
+   va_start(args, s);
+   const char * candidate;
+   while ( (candidate = va_arg(args, const char *)) != NULL) {
+      if (streq(s, candidate)) {
+         result = ndx;
+         break;
+      }
+      ndx++;
+   }
+   va_end(args);
+   return result;
+}
+
+
 /** Tests if a string exactly matches any string in a null-terminated
  *  array of strings.  (Null_Terminated_String_Array).
  *

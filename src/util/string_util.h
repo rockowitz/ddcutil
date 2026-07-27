@@ -64,6 +64,11 @@ int    indirect_strcmp(const void * a, const void * b);
 typedef bool (*String_Comp_Func)(const char * a, const char * b);
 int matches_by_func(    const char * word, const char ** match_list, String_Comp_Func  comp_func);
 int exactly_matches_any(const char * word, const char ** match_list);
+int exactly_matches_anyv(const char * word, ...);
+// Like exactly_matches_anyv(), but the caller does not supply a
+// terminating NULL; it is appended automatically.
+#define EXACTLY_MATCHES_ANYV(word, ...) \
+   exactly_matches_anyv(word, ##__VA_ARGS__, NULL)
 int exactly_matches_any_case(
                         const char * word, const char ** match_list);
 int starts_with_any(    const char * word, const char ** match_list);
