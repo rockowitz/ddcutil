@@ -495,7 +495,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F35)
       edid_exists_checks_drm_status = false;    // always open device, do not consult DRM connector status first
    if (parsed_cmd->flags2 & CMD_FLAG2_F36)
-      rescan_on_eacces = true;    // rescan display change scan while EACCES is seen
+      rescan_on_eacces = false;    // treat affected monitors as disconnected instead of rescanning while EACCES is seen
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;

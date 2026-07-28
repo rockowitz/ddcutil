@@ -80,7 +80,7 @@ bool      force_recheck                  = false;
 // If true, dw_process_screen_change_event() rescans when a bus open failed
 // with EACCES (e.g. the post-resume window before udev reapplies device ACLs)
 // instead of treating the affected monitors as disconnected.
-bool      rescan_on_eacces               = false;
+bool      rescan_on_eacces               = true;
 
 
 /** Creates the eventfd used to wake blocking waits in the watch thread
