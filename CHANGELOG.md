@@ -4,45 +4,21 @@
 #### Added
 
 - **ddca_elapsed_nanosec()**: number of nanoseconds since the library was
-  initialized.
+  initialized. Enables adjusting the client timestamps to match those from
+  **libddcutil**. 
 - Option ***--bus-drm-connector***: lets the user explicitly specify the I2C bus
   number/DRM connector name pairing for a display, for cases where the sysfs 
   card-connector directory does not record the bus number and ddcutil's alternative
-  EDID-based association fails (issue #608, modified/non-unique EDIDs).
+  EDID-based association fails.
+  Addresses issue #608:modified/non-unique EDIDs.
+
   Internally the association is recorded as **DRM_CONNECTOR_FOUND_BY_USER**, but
   to avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
   this is reported externally as **DDCA_DRM_CONNECTOR_NOT_FOUND**.
-- ***setvcp***: the relative-value markers can now also be specified as PLUS/MINUS 
-  (case-insensitive), in addition to +/-, e.g. **ddcutil setvcp 10 plus 5**. 
 
 
+#### Performance Changes
 
-
-#### Changed
-
-- Public API cleanup: const-qualified string input parameters (and some return values),
-  added explicit **void** to empty parameter lists, and documented that the
-  caller is responsible for freeing the result of **ddca_get_display_refs()**
-  and **ddca_end_capture()**.
-- Reworked detection and handling of resume from sleep. Resume is detected via
-  the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
-  comparing CLOCK_BOOTTIME and CLOCK_MONOTONIC. Pauses are inserted before
-  opening a /dev/i2c device and in the display watch loop for a short interval
-  after a resume, and a burst of udev events following a resume is coalesced to
-  avoid a storm of redundant bus rescans.
-- Substantial refactoring and thread-safety hardening of the display watch
-  subsystem (**src/dw**) and the I2C bus modules (**i2c_bus_base.c** split into
-  **i2c_bus_aux.c** and **i2c_bus_collections.c**). Access to the shared display
-  and bus tables is now serialized against the watch thread.
-- Reduce duplicated messages in the system log when trace output is redirected
-  to the system log.
-<!--
-- System log messaging reworked: **DECORATED_SYSLOG()** and the **DUAL_MSG()**
-  macro family replace **SYSLOG2()**, reducing duplicate messages.
--->
-
-- **dw_stop_watch_displays()** now always waits for the watch thread to
-  terminate.
 - The display watch thread now blocks in poll() on the watched fd plus a
   termination eventfd, instead of sleeping in timed polling loops, by
   default (global **use_eventfd**, disabled with ***--f32***; global
@@ -52,6 +28,23 @@
   degrade idle power residency when libddcutil is embedded in a long-running
   process such as KDE PowerDevil. Addresses issue #617: ddcutil wakes up every 
   100ms to check for monitors even when nothing connected
+
+- Retuned **i2c_detect_x37()**'s VCP feature x37 slave-address detection
+  retries. The retry interval is now 200ms for most drivers (was
+  400ms) and 1000ms for the nvidia driver (was a flat 2000ms); max tries
+  dropped from 3 to 2, but is increased by 2 more if an attempt fails with
+  EBUSY. Addresses issue #607.
+
+
+#### EACCESS Errors
+
+ Reworked detection and handling of resume from sleep. Resume is detected via
+  the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
+  comparing CLOCK_BOOTTIME and CLOCK_MONOTONIC. Pauses are inserted before
+  opening a /dev/i2c device and in the display watch loop for a short interval
+  after a resume, and a burst of udev events following a resume is coalesced to
+  avoid a storm of redundant bus rescans.
+
 - Mitigations for the transient EACCES window after resume from sleep, during
   which the /dev/i2c devices exist but udev has not yet reapplied uaccess ACLs
   so open() fails (KDE bug 522329, reported as 100% single-core CPU and
@@ -65,15 +58,37 @@
   disabled with ***--f35***. Still experimental, off by default:
   **rescan_on_eacces** (***--f36***) defers display change processing until
   the window passes instead of treating every monitor as disconnected.
+
+
+
+#### Miscellaneous Changes
+
+- Command ***setvcp***: Relative value changes can now also be specified as PLUS/MINUS 
+  (case-insensitive), in addition to +/-. e.g. **ddcutil setvcp 10 plus 5**. 
+
+- Public API cleanup: const-qualified string input parameters (and some return values),
+  added explicit **void** to empty parameter lists, and documented that the
+  caller is responsible for freeing the result of **ddca_get_display_refs()**
+  and **ddca_end_capture()**.
+-
+- Substantial refactoring and thread-safety hardening of the display watch
+  subsystem (**src/dw**)
+. Access to the shared display and bus tables is now serialized against the watch thread.
+- Reduce duplicated messages in the system log when trace output is redirected
+  to the system log.
+<!--
+- System log messaging reworked: **DECORATED_SYSLOG()** and the **DUAL_MSG()**
+  macro family replace **SYSLOG2()**, reducing duplicate messages.
+-->
+
+- **dw_stop_watch_displays()** now always waits for the watch thread to
+  terminate.
+
+
 - EDID reads now first attempt to use a single combined **I2C_RDWR** ioctl
   transaction (write the EDID block-read command and read the response as
   one multi-message transaction) before falling back to the previous separate
   write-then-read calls, reducing I2C bus round trips.
-- Retuned **i2c_detect_x37()**'s VCP feature x37 slave-address detection
-  retries (issue #607): retry interval is now 200ms for most drivers (was
-  400ms) and 1000ms for the nvidia driver (was a flat 2000ms); max tries
-  dropped from 3 to 2, but is increased by 2 more if an attempt fails with
-  EBUSY; added trace messages.
 
 - Removed vestigial **swig**, **cffi**, and **cython** references from the build
   files, along with their archived source trees.
@@ -82,6 +97,14 @@
 
 
 #### Fixed
+- The default recheck thread declared DDC enabled, and emitted
+  **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
+  even if DDC communication was not yet working. In releases through 2.2.6,
+  combined with an incorrect constant in event construction (fixed in 2.2.7),
+  this produced DDCA_EVENT_DDC_ENABLED events reporting ddc working: false
+  (KDE bug 517290). The event is now emitted only when DDC communication is
+  confirmed working; otherwise the recheck is requeued.
+
 - **XInitThreads()** is now called at library-initialization time, before the
   first Xlib call.
 - Thread safety: fixed a double free crash caused by unsynchronized lazy
@@ -109,7 +132,15 @@
   displays.
 - Plugged numerous memory leaks
 
-- NULL dereferences:       reporting a USB display that has no bus info.
+-     - **dw_unregister_display_status_callback()**: returned the inverted
+      **DDCA_Status** (success and not-found were swapped).
+    - **ddca_dbgrpt_display_ref()**: in **NUMERIC_DDCA_DISPLAY_REF** builds,
+      cast the opaque **DDCA_Display_Ref** handle directly to a
+      **Display_Ref \*** instead of resolving it via
+      **dref_from_published_ddca_dref()**, unlike its sibling functions.
+
+
+- NULL dereferences: reporting a USB display that has no bus info.
 - Wrong array used in three I2C bus-info search functions in
   **i2c_bus_base.c**.
 - Resume-from-sleep detection: inverted grace window and integer narrowing in
@@ -118,8 +149,6 @@
   ignorable) merely because the device class could not be determined on SOC
   systems; added function **sysfs_is_soc_system()**.
   Addresses pull request #619: Do not ignore sysfs class bein zero
-
-
 
 - Fixed numerous minor bugs to utility functions that were identified by 
   unit testing;
@@ -159,12 +188,7 @@
     - **ddc_store_displays_cache()**: an **fwrite()** size/nmemb argument swap
       meant the byte count written was always compared against the wrong
       value, so the function reported write failure even on success.
-    - **dw_unregister_display_status_callback()**: returned the inverted
-      **DDCA_Status** (success and not-found were swapped).
-    - **ddca_dbgrpt_display_ref()**: in **NUMERIC_DDCA_DISPLAY_REF** builds,
-      cast the opaque **DDCA_Display_Ref** handle directly to a
-      **Display_Ref \*** instead of resolving it via
-      **dref_from_published_ddca_dref()**, unlike its sibling functions.
+
     - **free_parsed_hid_collection()**: used the wrong **GDestroyNotify** for
       a **Parsed_Hid_Report \*** array, freeing each entry as though it were a
       **Parsed_Hid_Field \***; corrupted the heap and crashed when freeing any
@@ -174,21 +198,8 @@
       (the **--ignored-usb-vid-pids** debug report).
     - **sysfs_find_adapter()**: crashed calling **strlen(NULL)** while walking
       up a nonexistent sysfs path.
-    - **parse_setvcp_args()**: the check recognizing the +/-/
-      ***PLUS***/***MINUS*** relative-value markers treated
-      **EXACTLY_MATCHES_ANYV()**'s return value (a match index, not a
-      boolean) as a plain boolean; since -1 (no match) is truthy and a
-      match at index 0 (the first candidate, "+") is falsy, a plain
-      absolute value like "50" was wrongly treated as relative, while a
-      literal "+" was wrongly treated as an absolute value.
+    
 
-- The default recheck thread declared DDC enabled, and emitted
-  **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
-  even if DDC communication was not yet working. In releases through 2.2.6,
-  combined with an incorrect constant in event construction (fixed in 2.2.7),
-  this produced DDCA_EVENT_DDC_ENABLED events reporting ddc working: false
-  (KDE bug 517290). The event is now emitted only when DDC communication is
-  confirmed working; otherwise the recheck is requeued.
 
 - Numerous additional logic errors, code smells, and latent NULL-dereference
   and leak issues identified by static analysis.
@@ -205,14 +216,11 @@
     out of the source directory.
 - Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
   Pull request #613.
-- Build: added a missing **backtrace.h** include in **failsim.c**, which failed
-  to compile under **--enable-failsim** with modern GCC.
 - Added explicit #include statements for header files that had previously 
   relied on indirect inclusion.
-- Changed **_Atomic(type) var** declarations to **_Atomic type var**
-  throughout: Eclipse's indexer resolves variables declared with the latter
-  form but not the former. (The two forms differ for pointer types, but
-  every converted declaration atomic-qualifies a plain scalar type.)
+  In particular, added a missing **backtrace.h** include in **failsim.c**, which failed
+  to compile under **--enable-failsim** with modern GCC.
+
 
 
 ## [2.2.7] 2025-05-08
