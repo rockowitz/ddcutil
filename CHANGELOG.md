@@ -35,60 +35,64 @@
   dropped from 3 to 2, but is increased by 2 more if an attempt fails with
   EBUSY. Addresses issue #607.
 
+- A burst of udev events, common following a resume, is coalesced to
+  avoid a storm of redundant bus rescans.
+
+- Do not try to open a /dev/i2c device whose DRM connector reports "disconnected".
+  (Symbolic constant **edid_exists_checks_drm_status**). 
+  Currently ***--f35*** disables this acceleration.
+
+
 
 #### EACCESS Errors
-
- Reworked detection and handling of resume from sleep. Resume is detected via
-  the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
-  comparing CLOCK_BOOTTIME and CLOCK_MONOTONIC. Pauses are inserted before
-  opening a /dev/i2c device and in the display watch loop for a short interval
-  after a resume, and a burst of udev events following a resume is coalesced to
-  avoid a storm of redundant bus rescans.
 
 - Mitigations for the transient EACCES window after resume from sleep, during
   which the /dev/i2c devices exist but udev has not yet reapplied uaccess ACLs
   so open() fails (KDE bug 522329, reported as 100% single-core CPU and
-  desktop lag on wake): rate-limiting the expensive EACCES diagnostics (traced
-  function stack dump, open failure diagnosis) is now **on by default**,
-  emitting them at most once per **DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC**
-  (10) seconds instead of once per bus open; the interval is configurable via
-  ***--i13*** (0 disables rate limiting). ***--f34*** no longer has any
-  effect. **edid_exists_checks_drm_status** (skips opening an i2c device
-  whose DRM connector reports "disconnected") is also now on by default,
-  disabled with ***--f35***. Still experimental, off by default:
-  **rescan_on_eacces** (***--f36***) defers display change processing until
-  the window passes instead of treating every monitor as disconnected.
+  desktop lag on wake)
+  - Reworked detection and handling of resume from sleep. Resume is detected via
+    the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
+    comparing CLOCK_BOOTTIME and CLOCK_MONOTONIC. Pauses are inserted before
+    opening a /dev/i2c device and in the display watch loop for a short interval
+    after a resume. 
+  - Rate-limit the expensive EACCES diagnostics. Diagnostics are emitted at most
+    once per 10 seconds (set by parm **DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC** 
+    in parms.h), instead of once per bus open.  (Currently configured using
+    ***--i13***  - 0 disables rate limiting). 
 
+- Defer display change processing unitl the post-EACESS window passes, to 
+  avoid briefly treating every monitor as disconnected.  
+  (Currently, ***--f36*** disables this enhancement.)
 
 
 #### Miscellaneous Changes
 
-- Command ***setvcp***: Relative value changes can now also be specified as PLUS/MINUS 
-  (case-insensitive), in addition to +/-. e.g. **ddcutil setvcp 10 plus 5**. 
+- Command ***setvcp***: Relative value changes can now also be specified as 
+  PLUS/MINUS (case-insensitive), in addition to +/-. 
+  e.g. **ddcutil setvcp 10 plus 5**. 
 
-- Public API cleanup: const-qualified string input parameters (and some return values),
-  added explicit **void** to empty parameter lists, and documented that the
-  caller is responsible for freeing the result of **ddca_get_display_refs()**
-  and **ddca_end_capture()**.
+- API cleanup: 
+  - const-qualify string input parameters (and some return values),
+  - added explicit **void** to empty parameter lists
+  - documented that the caller is responsible for freeing the result of 
+    **ddca_get_display_refs()** and **ddca_end_capture()**.
 -
 - Substantial refactoring and thread-safety hardening of the display watch
-  subsystem (**src/dw**)
-. Access to the shared display and bus tables is now serialized against the watch thread.
+  subsystem (**src/dw**) Access to the shared display and bus tables is now
+  serialized against the watch thread.
 - Reduce duplicated messages in the system log when trace output is redirected
   to the system log.
-<!--
-- System log messaging reworked: **DECORATED_SYSLOG()** and the **DUAL_MSG()**
-  macro family replace **SYSLOG2()**, reducing duplicate messages.
--->
 
 - **dw_stop_watch_displays()** now always waits for the watch thread to
   terminate.
 
-
 - EDID reads now first attempt to use a single combined **I2C_RDWR** ioctl
   transaction (write the EDID block-read command and read the response as
-  one multi-message transaction) before falling back to the previous separate
-  write-then-read calls, reducing I2C bus round trips.
+  one multi-message transaction), as is done in kernel DRM processing, 
+  before falling back to the previous separate write-then-read calls, thus 
+  (a) enable reading the EDID on certain monitors that are not otherwise 
+      readable. addresses issue #6xx:
+  (b) reducing I2C bus round trips, 
 
 - Removed vestigial **swig**, **cffi**, and **cython** references from the build
   files, along with their archived source trees.
@@ -150,70 +154,72 @@
   systems; added function **sysfs_is_soc_system()**.
   Addresses pull request #619: Do not ignore sysfs class bein zero
 
-- Fixed numerous minor bugs to utility functions that were identified by 
-  unit testing;
-    - **trim_in_place()** corrupted strings that began with whitespace, in some
-      cases returning only the first character. 
-    - **rpt_hex_dump()** advanced the data pointer instead of the loop index,
-      mis-formatting the dump.
-    - **ini_file_load()** Corret passing of the message text to the error message
-    - Memory errors and a false success return in **string_util.c**
-    - Double-free in **csb_free()** when the circular string buffer had wrapped.
-    - NULL dereferences: **ini_file_dump()** error path in simple_ini_file.c, 
-       **errinfo_summary()** in errof_info.c
-    - Off-by-one errors in **str_contains()** and in the ignored VID/PID parsing
-      loop in pnp_ids.c
-    - Several errors in rarely exercised **data_structures.c** code paths.
-    - Traced function stack (debug/trace output): guarded a use-after-free of the
-      thread-local stack pointer after it is freed, and corrected an inverted
-      ordering that reversed the stack across nested callbacks.
-    - **tokenize_options_line()**: a memory leak when **wordexp()** fails, and
-      (found via **test_ddcutil_config_file**) a segfault in the same error
-      path — the error handler unconditionally calls **wordfree()**, but on
-      some **wordexp()** syntax errors (e.g. an unterminated quote) glibc
-      leaves its output struct uninitialized, so **wordfree()** dereferenced
-      garbage; the struct is now zero-initialized so **wordfree()** on it is
-      always safe.
-    - **simple_dbgmsg()** was missing the trailing newline on its output line.
 
-- Extending unit tests to the rest of the source tree (see Added, above)
-  found and fixed further bugs:
-    - **set_persistent_capabilites()**: crashed on a NULL capabilities hash.
-    - **generic_model_name()**: its hardcoded list of known-generic model
-      names (e.g. "LG IPS FULLHD") used the raw, unsanitized EDID spelling,
-      but every **Monitor_Model_Key** has already had spaces and other
-      non-alphanumeric characters replaced with '_'; the comparison could
-      therefore never match, so the non-unique-model protection for these
-      models silently never triggered.
-    - **ddc_store_displays_cache()**: an **fwrite()** size/nmemb argument swap
-      meant the byte count written was always compared against the wrong
-      value, so the function reported write failure even on success.
-
-    - **free_parsed_hid_collection()**: used the wrong **GDestroyNotify** for
-      a **Parsed_Hid_Report \*** array, freeing each entry as though it were a
-      **Parsed_Hid_Field \***; corrupted the heap and crashed when freeing any
-      USB HID report descriptor with more than one report.
-    - **VID_PID_VALUE_TO_PID()**: masked with **0xff** instead of **0xffff**,
-      truncating the high byte of the product id wherever the macro is used
-      (the **--ignored-usb-vid-pids** debug report).
-    - **sysfs_find_adapter()**: crashed calling **strlen(NULL)** while walking
-      up a nonexistent sysfs path.
-    
 
 
 - Numerous additional logic errors, code smells, and latent NULL-dereference
   and leak issues identified by static analysis.
 
-#### Building
+
+#### Unit Tests
 
 - Added a suite of standalone unit tests, covering most of the C source tree.
   - The tests target each module's pure, hardware-independent logic (parsing, 
     data structures, report formatting, etc.); modules that are essentially all
     direct hardware/file I/O are only covered where a genuinely pure helper exists.
   - Test sources live in directory src/unit_tests; the corresponding
-    executables are built (and, on **make check**, run) directly into
-    parallel directory src/unit_test_executables, keeping compiled binaries
-    out of the source directory.
+    executables are built in parallel directory src/unit_test_executables. 
+    They are built and run by **make check**.
+
+- Fixed numerous minor bugs to utility functions that were identified by unit
+  testing;
+  - **trim_in_place()** corrupted strings that began with whitespace, in some
+    cases returning only the first character. 
+  - **rpt_hex_dump()** advanced the data pointer instead of the loop index,
+    mis-formatting the dump.
+  - **ini_file_load()** Correct passing of the message text to the error message
+  - Memory errors and a false success return in **string_util.c**
+  - Double-free in **csb_free()** when the circular string buffer had wrapped.
+  - NULL dereferences: **ini_file_dump()** error path in simple_ini_file.c, 
+     **errinfo_summary()** in errof_info.c
+  - Off-by-one errors in **str_contains()** and in the ignored VID/PID parsing
+    loop in pnp_ids.c
+  - Several errors in rarely exercised **data_structures.c** code paths.
+  - Traced function stack (debug/trace output): guarded a use-after-free of the
+    thread-local stack pointer after it is freed, and corrected an inverted
+    ordering that reversed the stack across nested callbacks.
+  - **tokenize_options_line()**: a memory leak when **wordexp()** fails, and
+    a segfault in the same error path — the error handler unconditionally calls 
+    **wordfree()**, but on some **wordexp()** syntax errors (e.g. an unterminated
+    quote) glibc leaves its output struct uninitialized, so **wordfree()** 
+    dereferenced garbage; the struct is now zero-initialized so **wordfree()** 
+    on it is always safe.
+  - **simple_dbgmsg()** was missing the trailing newline on its output line.
+
+- Fixed bugs identified by unit tests in the rest of the source tree:
+  - **set_persistent_capabilites()**: crashed on a NULL capabilities hash.
+  - **generic_model_name()**: its hardcoded list of known-generic model
+    names (e.g. "LG IPS FULLHD") used the raw, unsanitized EDID spelling,
+    but every **Monitor_Model_Key** has already had spaces and other
+    non-alphanumeric characters replaced with underscrore. The comparison could
+    therefore never match, so the non-unique-model protection for these models 
+    silently never triggered.
+  - **ddc_store_displays_cache()**: an **fwrite()** size/nmemb argument swap
+    meant the byte count written was always compared against the wrong
+    value, so the function reported write failure even on success.
+  - **free_parsed_hid_collection()**: used the wrong **GDestroyNotify** for a
+    **Parsed_Hid_Report \*** array, freeing each entry as though it were a
+    **Parsed_Hid_Field \***; corrupted the heap and crashed when freeing any
+    USB HID report descriptor with more than one report.
+  - **VID_PID_VALUE_TO_PID()**: masked with **0xff** instead of **0xffff**,
+    truncating the high byte of the product id wherever the macro is used
+    (the **--ignored-usb-vid-pids** debug report).
+  - **sysfs_find_adapter()**: crashed calling **strlen(NULL)** while walking
+      up a nonexistent sysfs path.
+    
+
+#### Building
+
 - Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
   Pull request #613.
 - Added explicit #include statements for header files that had previously 
