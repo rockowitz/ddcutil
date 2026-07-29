@@ -104,7 +104,7 @@ init_recheck_queue() {
 
 
 static void destroy_recheck_queue() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_EXECUTED(debug, TRACE_GROUP,"recheck_queue=%p", recheck_queue);
    if (recheck_queue) {
       Recheck_Queue_Entry * rqe;
@@ -648,7 +648,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
 
 
 void init_dw_recheck() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_EXECUTED(debug, TRACE_GROUP, "");
    init_recheck_queue();
    RTTI_ADD_FUNC(dw_put_recheck_queue);
