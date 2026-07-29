@@ -81,7 +81,7 @@ STATIC void dw_process_screen_change_event(
    BS256 bs_old_buses_w_edid   = *p_bs_buses_w_edid;
    assert(bs256_is_subset(bs_old_buses_w_edid, bs_old_attached_buses));
 
-   // Mutes for next 2 assignments?
+   // Mutex for next 2 assignments?
    // Guarantee: bs_new_buses_w_edid is a subset of bs_new_attached_buses
    BS256 bs_new_attached_buses = i2c_detect_attached_buses_as_bitset();
    // eacces_seen remains false unless rescan_on_eacces is set, so the rescan
