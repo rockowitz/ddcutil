@@ -75,7 +75,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(22, "Force sysfs reliable");
    REPORT_FLAG_OPTION(23, "Set global primitive_sysfs");
    REPORT_FLAG_OPTION(24, "Write detect to status if nvidia driver");
-   REPORT_FLAG_OPTION(25, "Use new recheck algorithm");
+   REPORT_FLAG_OPTION(25, "Use old recheck algorithm");
    REPORT_FLAG_OPTION(26, "Traced function stack errors are fatal");
    REPORT_FLAG_OPTION(27, "Disable dw_start() check that all relevant I2C buses rw");
    REPORT_FLAG_OPTION(28, "Disable ddci_init() check that all relevant i2c buses rw");

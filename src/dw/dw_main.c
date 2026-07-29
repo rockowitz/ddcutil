@@ -54,7 +54,7 @@ bool            enable_watch_displays = true;
 bool            enable_dw_start_check_dev_i2c_devices_rw = DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS;
 int             dw_start_watch_delay_ms = START_WATCH_DELAY_MILLISEC;
 DDC_Watch_Mode  watch_displays_mode = DEFAULT_WATCH_MODE;
-bool            use_new_recheck_algorithm = false;
+bool            use_new_recheck_algorithm = true;
 
 static GThread * watch_thread = NULL;
 static GThread * recheck_thread = NULL;
