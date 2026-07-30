@@ -701,15 +701,9 @@ ddca_open_display2(
 {
    bool debug = false;
    free_thread_error_detail();
-#ifdef NUMERIC_DDCA_DISPLAY_REF
    API_PROLOGX(debug, RESPECT_QUIESCE,
            "ddca_dref=%d, wait=%s, dh_loc=%p, on thread %d",
            ddca_dref, SBOOL(wait), dh_loc, get_thread_id());
-#else
-   API_PROLOGX(debug, RESPECT_QUIESCE,
-           "ddca_dref=%p, wait=%s, dh_loc=%p, on thread %d",
-           ddca_dref, SBOOL(wait), dh_loc, get_thread_id());
-#endif
    API_PRECOND_W_EPILOG(dh_loc);
 
    Error_Info * err = ddci_open_display3(ddca_dref,

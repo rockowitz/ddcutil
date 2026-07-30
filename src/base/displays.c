@@ -811,10 +811,9 @@ Display_Ref * dref_id_to_ptr(guint dref_id) {
 Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref = %p", ddca_dref);
+   // if (debug)
+   //    dbgrpt_published_dref_hash(__func__, 1);
 
-#ifdef NUMERIC_DDCA_DISPLAY_REF
-    // if (debug)
-    //    dbgrpt_published_dref_hash(__func__, 1);
    guint id = GPOINTER_TO_UINT(ddca_dref);
    Display_Ref * dref = g_hash_table_lookup(published_dref_hash, GUINT_TO_POINTER(id));
 
@@ -824,30 +823,19 @@ Display_Ref * dref_from_published_ddca_dref(DDCA_Display_Ref ddca_dref) {
          dbgrpt_display_ref(dref, true, 2);
       assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
    }
-#else
-   Display_Ref * dref = (Display_Ref*) ddca_dref;
-   if (dref) {
-      if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0)
-         dref = NULL;
-   }
-#endif
 
-   if (dref)
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning %p -> %s", ddca_dref, dref, dref_reprx_t(dref));
-   else
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning %p", ddca_dref, dref);
+   // n. dref_repr_t() handles null dref
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "ddca_dref=%p, returning %p -> %s",
+                                     ddca_dref, dref, dref_reprx_t(dref));
    return dref;
 }
+
 
 DDCA_Display_Ref dref_to_ddca_dref(Display_Ref * dref) {
    bool debug = false;
    DDCA_Display_Ref ddca_dref = (DDCA_Display_Ref*) GUINT_TO_POINTER(0);
    if (dref) {
-#ifdef NUMERIC_DDCA_DISPLAY_REF
       ddca_dref = (DDCA_Display_Ref*) GUINT_TO_POINTER(dref->dref_id);
-#else
-      ddca_dref = (void*) dref;
-#endif
       DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "dref=%p, dref->dref_id=%d, returning %p",
                                             dref, dref->dref_id, ddca_dref);
    }
@@ -1296,24 +1284,22 @@ char * dref_reprx_t(Display_Ref * dref) {
    return buf;
 }
 
+
+/** Thread safe function that returns a string representation of a
+ *  #DDCA_Display_Ref, suitable for diagnostic messages.
+ *
+ *  The returned value is valid until the next call to this function on
+ *  the current thread.
+ *
+ *  \param  ddca_ddref  external display reference (integer)
+ *  \return string representation
+ */
 char * ddci_dref_repr_t(DDCA_Display_Ref * ddca_dref) {
    static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
-#ifdef NUMERIC_DDCA_DISPLAY_REF
    g_snprintf(buf, 100, "DDCA_Display_Ref[%d]", GPOINTER_TO_INT(ddca_dref));
-#else
-   if (ddca_dref) {
-      Display_Ref * dref = (Display_Ref*) ddca_dref;
-#ifdef WITH_ADDR
-      g_snprintf(buf, 100, "DDCA_Display_Ref[%s @%p]", dpath_short_name_t(&dref->io_path), (void*)dref);
-#else
-      g_snprintf(buf, 100, "DDCA_Display_Ref[%s]", dpath_short_name_t(&dref->io_path));
-   }
-#endif
-   else
-      strcpy(buf, "DDCA_Display_Ref[NULL]");
-#endif
+
    return buf;
 }
 

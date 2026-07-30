@@ -15,10 +15,6 @@
 // *** Build options that are not otherwise set
 //
 
-// if defined, DDCA_Display_Ref contains display ref id number instead of Display_Ref *
-#define NUMERIC_DDCA_DISPLAY_REF
-// #undef NUMERIC_DDCA_DISPLAY_REF
-
 // STATIC_FUNCTIONS_VISIBLE defined in config.h
 // If defined, remove static function qualifier on many functions to
 // make them visible to asan, valgrind, backtrace
