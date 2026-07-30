@@ -215,6 +215,11 @@ typedef void * DDCA_Display_Identifier;
  * A #DDCA_Display_Ref can be obtained in 2 ways:
  * - From the DDCA_Display_List returned by #ddca_get_display_info_list2()
  * - Searching based on #DDCA_Display_Identifier using #ddca_get_display_ref()
+ * @remark
+ * If a monitor is disconnected and then reconnected, a new #DDCA_Display_Ref is created
+ * @remark
+ * #DDCA_Display_Ref is an integer value, but is declared as a pointer for
+ * backward compatibility
  *
  * @ingroup api_display_spec
  */
