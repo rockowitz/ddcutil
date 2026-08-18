@@ -1,130 +1,53 @@
-## [2.2.8] 2026-07-28   COLLECTED NOTES, NOT YET EDITED
-
+## [2.2.8] 2026-07-30   NOT YET FULLY EDITED
 
 #### Added
 
-- **ddca_elapsed_nanosec()**: number of nanoseconds since the library was
-  initialized. Enables adjusting the client timestamps to match those from
-  **libddcutil**. 
 - Option ***--bus-drm-connector***: lets the user explicitly specify the I2C bus
   number/DRM connector name pairing for a display, for cases where the sysfs 
   card-connector directory does not record the bus number and ddcutil's alternative
-  EDID-based association fails.
-  Addresses issue #608:modified/non-unique EDIDs.
-
-  Internally the association is recorded as **DRM_CONNECTOR_FOUND_BY_USER**, but
-  to avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
-  this is reported externally as **DDCA_DRM_CONNECTOR_NOT_FOUND**.
-
+  EDID-based association fails. Addresses issue #608:modified/non-unique EDIDs.
+  - To avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
+    the value **DDCA_DRM_CONNECTOR_NOT_FOUND** is used externally for this situation.
+- Added a suite of standalone unit tests, covering most of the C source tree.
+  - The tests target each module's pure, hardware-independent logic (parsing, 
+    data structures, report formatting, etc.); modules that are essentially all
+    direct hardware/file I/O are only covered where a genuinely pure helper exists.
+  - Test sources live in directory src/unit_tests; the corresponding
+    executables are built in parallel directory src/unit_test_executables. 
+    They are built and run by **make check**.
 
 #### Performance Changes
 
-- The display watch thread now blocks in poll() on the watched fd plus a
-  termination eventfd, instead of sleeping in timed polling loops, by
-  default (global **use_eventfd**, disabled with ***--f32***; global
-  **split_sleep_eventfd**, disabled with ***--f33***, similarly converts the
-  segmented sleeps of **dw_split_sleep()** to a single wait). Eliminates the
-  watch thread's periodic wakeups (up to 10 per second in Xevent mode), which
-  degrade idle power residency when libddcutil is embedded in a long-running
-  process such as KDE PowerDevil. Addresses issue #617: ddcutil wakes up every 
-  100ms to check for monitors even when nothing connected
-
-- Retuned **i2c_detect_x37()**'s VCP feature x37 slave-address detection
-  retries. The retry interval is now 200ms for most drivers (was
-  400ms) and 1000ms for the nvidia driver (was a flat 2000ms); max tries
-  dropped from 3 to 2, but is increased by 2 more if an attempt fails with
-  EBUSY. Addresses issue #607.
-
-- A burst of udev events, common following a resume, is coalesced to
-  avoid a storm of redundant bus rescans.
-
-- Do not try to open a /dev/i2c device whose DRM connector reports "disconnected".
-  (Symbolic constant **edid_exists_checks_drm_status**). 
-  Currently ***--f35*** disables this acceleration.
-
-
-
-#### EACCESS Errors
-
-- Mitigations for the transient EACCES window after resume from sleep, during
-  which the /dev/i2c devices exist but udev has not yet reapplied uaccess ACLs
-  so open() fails (KDE bug 522329, reported as 100% single-core CPU and
-  desktop lag on wake)
-  - Reworked detection and handling of resume from sleep. Resume is detected via
-    the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
-    comparing CLOCK_BOOTTIME and CLOCK_MONOTONIC. Pauses are inserted before
-    opening a /dev/i2c device and in the display watch loop for a short interval
-    after a resume. 
-  - Rate-limit the expensive EACCES diagnostics. Diagnostics are emitted at most
-    once per 10 seconds (set by parm **DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC** 
-    in parms.h), instead of once per bus open.  (Currently configured using
-    ***--i13***  - 0 disables rate limiting). 
-
-- Defer display change processing unitl the post-EACESS window passes, to 
-  avoid briefly treating every monitor as disconnected.  
-  (Currently, ***--f36*** disables this enhancement.)
-
+- Retuned slave-address x37 detection. The retry interval is now 200ms for most
+  drivers (was 400ms) and 1000ms for the nvidia driver (was a flat 2000ms). 
+  Max tries dropped from 3 to 2, but is increased to 4 if an attempt fails 
+  with status EBUSY. Addresses issue #607.
 
 #### Miscellaneous Changes
 
 - Command ***setvcp***: Relative value changes can now also be specified as 
-  PLUS/MINUS (case-insensitive), in addition to +/-. 
-  e.g. **ddcutil setvcp 10 plus 5**. 
-
-- API cleanup: 
-  - const-qualify string input parameters (and some return values),
-  - added explicit **void** to empty parameter lists
-  - documented that the caller is responsible for freeing the result of 
-    **ddca_get_display_refs()** and **ddca_end_capture()**.
--
-- Substantial refactoring and thread-safety hardening of the display watch
-  subsystem (**src/dw**) Access to the shared display and bus tables is now
-  serialized against the watch thread.
+  PLUS/MINUS (case-insensitive), in addition to +/-. e.g. **ddcutil setvcp 10 plus 5**. 
 - Reduce duplicated messages in the system log when trace output is redirected
   to the system log.
-
-- **dw_stop_watch_displays()** now always waits for the watch thread to
-  terminate.
-
 - EDID reads now first attempt to use a single combined **I2C_RDWR** ioctl
   transaction (write the EDID block-read command and read the response as
   one multi-message transaction), as is done in kernel DRM processing, 
   before falling back to the previous separate write-then-read calls, thus 
   (a) enable reading the EDID on certain monitors that are not otherwise 
-      readable. addresses issue #6xx:
+      readable. based on pull request #621: Try a single combined I2C_RDWR 
+      transaction when reading the EDID
   (b) reducing I2C bus round trips, 
 
-- Removed vestigial **swig**, **cffi**, and **cython** references from the build
-  files, along with their archived source trees.
-
-
-
-
 #### Fixed
-- The default recheck thread declared DDC enabled, and emitted
-  **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
-  even if DDC communication was not yet working. In releases through 2.2.6,
-  combined with an incorrect constant in event construction (fixed in 2.2.7),
-  this produced DDCA_EVENT_DDC_ENABLED events reporting ddc working: false
-  (KDE bug 517290). The event is now emitted only when DDC communication is
-  confirmed working; otherwise the recheck is requeued.
 
-- **XInitThreads()** is now called at library-initialization time, before the
-  first Xlib call.
+- Do not ignore /dev/i2c devices on SOC systems whose adapter class cannot be
+  read because the display adapter is not found. 
+  Addresses pull request #619: Do not ignore sysfs class being zero
+
 - Thread safety: fixed a double free crash caused by unsynchronized lazy
   initialization of the PNP manufacturer id table in **pnp_name()**. It could
   occur when multiple threads first resolved EDID manufacturer names
   concurrently, e.g. reporting displays from several threads.
-- Thread safety: fixed a use-after-free crash caused by unsynchronized access
-  to the per-thread data table in **ptd_get_per_thread_data()**, which could
-  occur under concurrent libddcutil API calls.
-- **ddca_report_displays()** now respects API quiescing. Previously, calling it
-  concurrently with **ddca_redetect_displays()** could crash by dereferencing
-  display references freed by the redetection.
-- Segfault (reported under KDE) when a display disconnected while in use, caused
-  by a NULL **dref->detail** in **i2c_check_open_bus_alive()**. Reads of
-  **dref->detail** are now guarded against concurrent disconnect in several
-  functions.
 - Additional data races fixed: a TOCTOU race on **dref->flags** in the recheck
   worker thread, a race on **retry_thread_sleep_factor_millisec**, and a TOCTOU
   race in **compile_and_eval_regex()**.
@@ -136,40 +59,12 @@
   displays.
 - Plugged numerous memory leaks
 
--     - **dw_unregister_display_status_callback()**: returned the inverted
-      **DDCA_Status** (success and not-found were swapped).
-    - **ddca_dbgrpt_display_ref()**: in **NUMERIC_DDCA_DISPLAY_REF** builds,
-      cast the opaque **DDCA_Display_Ref** handle directly to a
-      **Display_Ref \*** instead of resolving it via
-      **dref_from_published_ddca_dref()**, unlike its sibling functions.
 
 
 - NULL dereferences: reporting a USB display that has no bus info.
 - Wrong array used in three I2C bus-info search functions in
   **i2c_bus_base.c**.
-- Resume-from-sleep detection: inverted grace window and integer narrowing in
-  the clocktime algorithm.
-- **sysfs_is_ignorable_i2c_device()**: no longer returns **true** (device
-  ignorable) merely because the device class could not be determined on SOC
-  systems; added function **sysfs_is_soc_system()**.
-  Addresses pull request #619: Do not ignore sysfs class bein zero
 
-
-
-
-- Numerous additional logic errors, code smells, and latent NULL-dereference
-  and leak issues identified by static analysis.
-
-
-#### Unit Tests
-
-- Added a suite of standalone unit tests, covering most of the C source tree.
-  - The tests target each module's pure, hardware-independent logic (parsing, 
-    data structures, report formatting, etc.); modules that are essentially all
-    direct hardware/file I/O are only covered where a genuinely pure helper exists.
-  - Test sources live in directory src/unit_tests; the corresponding
-    executables are built in parallel directory src/unit_test_executables. 
-    They are built and run by **make check**.
 
 - Fixed numerous minor bugs to utility functions that were identified by unit
   testing;
@@ -224,9 +119,98 @@
   Pull request #613.
 - Added explicit #include statements for header files that had previously 
   relied on indirect inclusion.
-  In particular, added a missing **backtrace.h** include in **failsim.c**, which failed
-  to compile under **--enable-failsim** with modern GCC.
+  In particular, added a missing **backtrace.h** include in **failsim.c**, 
+  which failed to compile under **--enable-failsim** with modern GCC.
+- Removed vestigial **swig**, **cffi**, and **cython** references from the
+  build files, along with their archived source trees.
 
+### Shared Library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.5.1. (VERIFY)
+
+#### Added
+
+- **ddca_elapsed_nanosec()**: number of nanoseconds since the library was
+  initialized. Enables adjusting the client timestamps to match those from
+  **libddcutil**. 
+
+#### Performance Changes
+
+- The display watch thread now blocks in poll() on the watched fd plus a
+  termination eventfd, instead of sleeping in timed polling loops
+- Interruptible sleep execution is reimplemented using a termination event
+  instead of looping over multiple short sleep operations. Eliminates the watch
+  thread's periodic wakeups (up to 10 per second) which degrade idle power 
+  residency when libddcutil is embedded in a long-running process such as 
+  KDE PowerDevil. Addresses issue #617: ddcutil wakes up every 
+  100ms to check for monitors even when nothing connected
+- A burst of udev events, common following a resume, is coalesced to
+  avoid a storm of redundant bus rescans.
+- Do not try to open a /dev/i2c device whose DRM connector reports "disconnected".
+
+#### EACCESS Errors
+
+- Mitigations for the transient EACCES window after resume from sleep, during
+  which the /dev/i2c devices exist but udev has not yet reapplied uaccess ACLs
+  so open() failed (KDE bug 522329, reported as 100% single-core CPU and
+  desktop lag on wake)
+  - Reworked detection and handling of resume from sleep. Resume is detected via
+    the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
+    comparing CLOCK_BOOTTIME and CLOCK_MONOTONIC. Pauses are inserted before
+    opening a /dev/i2c device and in the display watch loop for a short interval
+    after a resume. 
+  - Rate-limit the expensive EACCES diagnostics. Diagnostics are emitted at most
+    once per 10 seconds (set by parm **DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC** 
+    in parms.h), instead of once per bus open.  
+- Defer display change processing until the EACESS window passes, to avoid 
+  briefly treating every monitor as disconnected.   
+
+#### Miscellaneous Changes
+
+- API cleanup: 
+  - const-qualify string input parameters (and some return values),
+  - added explicit **void** to empty parameter lists
+  - documented that the caller is responsible for freeing the result of 
+    **ddca_get_display_refs()** and **ddca_end_capture()**.
+-
+- Substantial refactoring and thread-safety hardening of the display watch
+  subsystem (**src/dw**) Access to the shared display and bus tables is now
+  serialized against the watch thread.
+
+ - **dw_stop_watch_displays()** now always waits for the watch thread to
+  terminate.
+
+
+#### Fixed
+- The default recheck thread declared DDC enabled, and emitted
+  **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
+  even if DDC communication was not yet working. In releases through 2.2.6,
+  combined with an incorrect constant in event construction (fixed in 2.2.7),
+  this produced DDCA_EVENT_DDC_ENABLED events reporting ddc working: false
+  (KDE bug 517290). The event is now emitted only when DDC communication is
+  confirmed working; otherwise the recheck is requeued.
+
+- **XInitThreads()** is now called at library-initialization time, before the
+  first Xlib call.
+
+- Thread safety: fixed a use-after-free crash caused by unsynchronized access
+  to the per-thread data table in **ptd_get_per_thread_data()**, which could
+  occur under concurrent libddcutil API calls.
+- **ddca_report_displays()** now respects API quiescing. Previously, calling it
+  concurrently with **ddca_redetect_displays()** could crash by dereferencing
+  display references freed by the redetection.
+- Segfault (reported under KDE) when a display disconnected while in use, caused
+  by a NULL **dref->detail** in **i2c_check_open_bus_alive()**. Reads of
+  **dref->detail** are now guarded against concurrent disconnect in several
+  functions.
+
+- **ddca_unregister_display_status_callback()**: Status codes for success
+  and not-found were swapped.
+- **ddca_dbgrpt_display_ref()**: The opaque **DDCA_Display_Ref** was being
+  cast directly to an internal **Display_Ref** instead of being resolved 
+  by lookup.
 
 
 ## [2.2.7] 2025-05-08
