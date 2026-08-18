@@ -51,6 +51,10 @@
 
 #### Fixed
 
+- **i2c_open_bus_basic()**: after an EACCES failure the system log always
+  reported "Current user has group i2c perms on /dev/i2c-N", even when the
+  user did not have those permissions, directly contradicting the failure
+  diagnostics emitted just before it.
 - Do not ignore /dev/i2c devices on SOC systems whose adapter class cannot be
   read because the display adapter is not found. 
   Addresses pull request #619: Do not ignore sysfs class being zero

@@ -334,7 +334,8 @@ retry:
             if (!likely_transient) {
                DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "User ACL is not RW");
                bool has_group_perms = cur_user_has_group_i2c_perms(filename);
-               DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Current user has group i2c perms on %s", filename);
+               DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Current user %s group i2c perms on %s",
+                     (has_group_perms) ? "has" : "does not have", filename);
                if (has_group_perms)
                   likely_transient = true;
             }
