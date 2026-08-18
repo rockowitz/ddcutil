@@ -5,9 +5,13 @@
  *  The sleep-watch thread and D-Bus signal handling require a live system bus
  *  and cannot be exercised here.  What can be tested deterministically is the
  *  prepare-for-sleep callback registry (register / unregister / invoke) and the
- *  resume-timestamp bookkeeping used by ldbus_elapsed_since_resume_from_sleep_ns()
- *  and ldbus_pause_if_recent_return_from_sleep().  Those touch internal,
- *  non-static symbols that are not in the public header, declared below.
+ *  resume-timestamp bookkeeping used by ldbus_elapsed_since_resume_from_sleep_ns().
+ *  Those touch internal, non-static symbols that are not in the public header,
+ *  declared below.
+ *
+ *  The checks of ldbus_pause_if_recent_return_from_sleep() are #ifdef UNUSED,
+ *  as is the function itself.  It was superseded by
+ *  recently_resumed_from_sleep() in linux_util.c.
  *
  *  Prints one line per failing check and a summary; exit status is 0 if all
  *  checks pass, 1 otherwise.
@@ -87,6 +91,7 @@ static void test_resume_timing(void) {
    uint64_t elapsed = ldbus_elapsed_since_resume_from_sleep_ns();
    CK(elapsed < 1000ULL * 1000 * 1000);        // < 1 second
 
+#ifdef UNUSED
    // a just-marked resume with a zero minimum requires no pause
    CK_INT(ldbus_pause_if_recent_return_from_sleep(0), 0);
 
@@ -98,6 +103,7 @@ static void test_resume_timing(void) {
    // a resume far in the past requires no pause
    last_resume_from_sleep_ns = 0;              // epoch of the boot clock, long ago
    CK_INT(ldbus_pause_if_recent_return_from_sleep(500), 0);
+#endif
 }
 
 int main(int argc, char ** argv) {

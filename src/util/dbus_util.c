@@ -97,7 +97,12 @@ _Atomic uint64_t last_resume_from_sleep_ns = 0;
  *  The window just after boot/login has the same transient EACCES race on
  *  /dev/i2c-N opens as the window just after resume (udev rules apply device
  *  permissions shortly after the nodes appear), so the first opens get the
- *  same settling pause from ldbus_pause_if_recent_return_from_sleep().
+ *  same settling pause from recently_resumed_from_sleep().
+ *
+ *  @remark
+ *  This is the reason the dbus method cannot simply be replaced by the
+ *  clocktime resume detector, which reports nothing at program start
+ *  because no sleep has accumulated.  See recently_resumed_from_sleep().
  */
 void ldbus_elapsed_since_resume_from_sleep_mark_start() {
    bool debug = false;
@@ -131,12 +136,19 @@ uint64_t ldbus_elapsed_since_resume_from_sleep_ns() {
 }
 
 
+#ifdef UNUSED
 /** If the elapsed time since the most recent return from sleep occurred
  *  is less than the specified value, sleep for the time remaining until
  *  the specified time value has elapsed.
  *
  *  @param  minimum_ms
  *  @return number of milliseconds slept
+ *
+ *  @remark
+ *  Superseded by recently_resumed_from_sleep() in linux_util.c, which
+ *  combines this dbus timestamp with the clocktime resume detector and
+ *  leaves the pause to the caller.  The dbus contribution is now
+ *  ldbus_elapsed_since_resume_from_sleep_ns().
  */
 int ldbus_pause_if_recent_return_from_sleep(int minimum_ms) {
    bool debug = false;
@@ -169,6 +181,7 @@ int ldbus_pause_if_recent_return_from_sleep(int minimum_ms) {
    DBGF(debug, "Done.   Returning: %"PRIu64" millisec", remaining_ms);
    return remaining_ms;
 }
+#endif
 
 
 static DBusHandlerResult

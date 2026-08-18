@@ -859,6 +859,9 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
         int delay_ms = (int) ((uint64_t) min_interval_ms - since_resume_ms);
         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
               "Recently resumed from sleep, pausing for %d millisec", delay_ms);
+        // dw_split_sleep() rather than LOGGABLE_SLEEP(), which the dbus
+        // variant of this function formerly used: the pause runs on the watch
+        // thread, and a split sleep is interruptible at shutdown.
         dw_split_sleep(delay_ms);
         slept_millisec = delay_ms;
      }

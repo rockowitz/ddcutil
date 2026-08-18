@@ -419,6 +419,13 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
          formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
 #endif
 
+   // n.b. this reporting call mutates the clocktime detector's per-thread
+   // state: it consumes the detection and opens the 5 second grace window.
+   // Harmless in the current call path, since i2c_open_bus_basic() consults
+   // recently_resumed_from_sleep() before attempting any open, so by the time
+   // a failure is diagnosed the detection has already been acted on and this
+   // call only extends a window that is already open.  Do not rely on that
+   // ordering elsewhere.
    bool recent =  recently_resumed_from_sleep_by_clocktime();
    G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep() returned %s", sbool(recent));
 
