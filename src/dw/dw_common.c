@@ -845,6 +845,10 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
      // Syslog only when a pause is actually taken.  This function runs on
      // every pass of the watch loop in poll mode, so an unconditional message
      // would flood the log with one line per poll interval.
+
+     // Consulted on every call, so that the detector's baseline stays current
+     // even when the dbus branch below handles the resume.
+     bool resumed_by_clocktime = recently_resumed_from_sleep_by_clocktime();
 #ifdef USE_DBUS
      uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
      uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
@@ -864,8 +868,12 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
         slept_millisec = remaining_sleep_ms;
         free(msg);
      }
-#else
-     if (recently_resumed_from_sleep_by_clocktime()) {
+#endif
+
+     // The dbus PrepareForSleep(false) signal can be delivered after the watch
+     // thread has already reacted to the resume, so the clocktime detector is
+     // also consulted in a dbus build, not just as its alternative.
+     if (slept_millisec == 0 && resumed_by_clocktime) {
         // Sleep only the time remaining until min_interval_ms has elapsed
         // since the resume was detected. The detector's grace window keeps
         // reporting "recently resumed" for 5 seconds, so sleeping the full
@@ -874,14 +882,13 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
         // already taken in dw_udev_watch() for an add event.
         uint64_t since_detect_ms = millisec_since_resume_detected_by_clocktime();
         if (since_detect_ms < (uint64_t) min_interval_ms) {
-           int delay_ms = (int) ((uint64_t) pause_after_resume_ms - since_detect_ms);
+           int delay_ms = (int) ((uint64_t) min_interval_ms - since_detect_ms);
            DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
                  "Recently resumed from sleep, pausing for %d millisec", delay_ms);
            dw_split_sleep(delay_ms);
            slept_millisec = delay_ms;
         }
      }
-#endif
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d slept_millisec", slept_millisec);
    return slept_millisec;
