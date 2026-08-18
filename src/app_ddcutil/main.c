@@ -453,10 +453,32 @@ STATIC bool
 master_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    DBGF(debug, "Starting ...");
+
    bool ok = false;
    Error_Info * submaster_errs = submaster_initializer(parsed_cmd);  // shared with libddcutil
    if (submaster_errs) {
+      submaster_errs = errinfo_squash(submaster_errs);
       errinfo_report_details(submaster_errs, 0);
+#ifdef OLD
+      if (submaster_errs->cause_ct == 0) {
+         if (submaster_errs->detail)
+            fprintf(stderr, "%s\n", submaster_errs->detail);
+         else
+            fprintf(stderr, "Error %s in %s\n", psc_desc(submaster_errs->status_code), submaster_errs->func);
+      }
+      else {
+         for (int ndx = 0; ndx < submaster_errs->cause_ct; ndx++) {
+            Error_Info * err = submaster_errs->causes[ndx];
+            if (err->detail)
+               fprintf(stderr, "%s\n", err->detail);
+            else
+               fprintf(stderr, "Error %s in %s\n", psc_desc(err->status_code), err->func);
+         }
+      }
+#endif
+
+
+
       ERRINFO_FREE(submaster_errs);
       goto bye;
    }
