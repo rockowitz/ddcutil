@@ -1844,8 +1844,13 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
 /** Returns the name of a #DDCA_Display_Event_Class
  *
  *  @param  event_class event class id
- *  @return             printable name
+ *  @return             printable name, NULL if **event_class** is not a
+ *                      single recognized class id
  *
+ *  @remark
+ *  NULL is returned for a combination of class ids, e.g.
+ *  **DDCA_EVENT_CLASS_ALL**, or the value returned by
+ *  #ddca_get_active_watch_classes(). Only individual class ids are named.
  *  @remark
  *  The value returned exists in an internal ddcutil table.
  *  Caller should not free.
@@ -1853,7 +1858,7 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
  *  @since 2.1.0
  */
 const char *
-   ddca_display_event_class_name(DDCA_Display_Event_Class event_class);
+ddca_display_event_class_name(DDCA_Display_Event_Class event_class);
 
 /** Returns the name of a #DDCA_Display_Event_Type
  *
@@ -1867,7 +1872,7 @@ const char *
  *  @since 2.1.0
  */
 const char *
-   ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
+ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
 
 
 /** Start the threads watching for display status changes.
