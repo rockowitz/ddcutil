@@ -1005,3 +1005,40 @@ errinfo_summary(Error_Info * erec) {
    free(buf1);
    return buf;
 }
+
+
+/** Moves subcauses into the list of causes
+ *
+ *  @param original  instance to squash
+ *  @return newly allocated squashed copy
+ *
+ *  The original instance is freed.
+ */
+Error_Info * errinfo_squash(Error_Info * original) {
+   bool debug = false;
+   DBGF(debug, "Starting.  original=%p", original);
+
+   Error_Info * squashed = NULL;
+   if (original) {
+      squashed = errinfo_new(original->status_code,
+                                          original->func,
+                                          strdup(original->detail));
+      if (original->cause_ct > 0) {
+         for (int ndx = 0; ndx < original->cause_ct; ndx++) {
+            Error_Info * suberror = original->causes[ndx];
+            if (suberror->cause_ct == 0) {
+               errinfo_add_cause(squashed, errinfo_copy(suberror));
+            }
+            else {
+               for (int subctr = 0; subctr < suberror->cause_ct; subctr++) {
+                  errinfo_add_cause(squashed, errinfo_copy(suberror->causes[subctr]));
+               }
+            }
+         }
+      }
+      errinfo_free(original);
+   }
+
+   DBGF(debug, "Done.    Returning %p", squashed);
+   return squashed;
+}

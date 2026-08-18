@@ -9,7 +9,7 @@
  *  error is retained for use by higher levels in the call stack.
  */
 
-// Copyright (C) 2017-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -157,6 +157,9 @@ void errinfo_report_details(
 
 char * errinfo_summary(
       Error_Info *   erec);
+
+Error_Info * errinfo_squash(
+      Error_Info * original);
 
 #ifdef __cplusplus
 }    // extern "C"
