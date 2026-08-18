@@ -1,4 +1,4 @@
-## [2.2.8] 2026-07-30   NOT YET FULLY EDITED
+## [2.2.8] 2026-08-18   NOT YET FULLY EDITED
 
 #### Added
 
@@ -6,6 +6,8 @@
   number/DRM connector name pairing for a display, for cases where the sysfs 
   card-connector directory does not record the bus number and ddcutil's alternative
   EDID-based association fails. Addresses issue #608:modified/non-unique EDIDs.
+  The option argument is a quoted string specifying the i2c bus number and connector name, 
+  e.g. ***--bus-drm-connector "5 card1-DP-1"***.
   - To avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
     the value **DDCA_DRM_CONNECTOR_NOT_FOUND** is used externally for this situation.
 - Added a suite of standalone unit tests, covering most of the C source tree.
