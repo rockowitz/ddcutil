@@ -1639,6 +1639,16 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func) 
 
 
 const char *
+   ddca_display_event_class_name(DDCA_Display_Event_Class event_class) {
+#ifdef WATCH_DISPLAYS
+      return dw_display_event_class_name(event_class);
+#else
+      return NULL;
+#endif
+}
+
+
+const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type) {
 #ifdef WATCH_DISPLAYS
       return dw_display_event_type_name(event_type);
