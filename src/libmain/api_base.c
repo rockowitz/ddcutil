@@ -754,7 +754,7 @@ DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name) {
 }
 
 
-void report_parse_errors0(Error_Info * erec, int depth, int max_depth) {
+STATIC void report_parse_errors0(Error_Info * erec, int depth, int max_depth) {
    char * edesc = psc_text(erec->status_code);
 
    if (depth == 0)  {
@@ -774,7 +774,7 @@ void report_parse_errors0(Error_Info * erec, int depth, int max_depth) {
 }
 
 
-void report_parse_errors(Error_Info * erec) {
+STATIC void report_parse_errors(Error_Info * erec) {
    if (erec) {
       rpt_push_output_dest(ferr());
       report_parse_errors0(erec, 0, 3);
@@ -809,7 +809,7 @@ ddci_init(const char *      libopts,
    Parsed_Cmd * parsed_cmd = NULL;
    Error_Info * master_error = NULL;
    DDCA_Status ddcrc = 0;
-   enable_init_msgs = opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS;
+   enable_init_msgs = (opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS) || stdout_stderr_redirected;
    // enable_init_msgs = true;  // *** TEMP ***
    DBGF(debug, "enable_init_msgs=%s", SBOOL(enable_init_msgs));
 
@@ -846,10 +846,12 @@ ddci_init(const char *      libopts,
          // use tracing output for syslog for these functions:
          // add_traced_function("ddca_get_non_table_vcp_value");
          // add_traced_function("ddci_set_non_table_vcp_value_verify");
-         add_traced_function("dw_start_watch_displays");
-         add_traced_function("dw_stop_watch_displays");
-         add_traced_function("dw_hotplug_change_handler");
-         add_traced_function("dw_emit_display_status_record");
+
+         // add_traced_function("dw_start_watch_displays");
+         // add_traced_function("dw_stop_watch_displays");
+         // add_traced_function("dw_hotplug_change_handler");
+         // add_traced_function("dw_emit_display_status_record");
+
          // add_traced_function("i2c_open_bus_basic");
       }
    }
@@ -929,6 +931,7 @@ ddci_init(const char *      libopts,
    assert(master_error || parsed_cmd);  // avoid null-dereference warning
 
    if (master_error) {
+      master_error = errinfo_squash(master_error);
       syslog(LOG_CRIT, "Library initialization failed: %s", psc_desc(master_error->status_code));
       for (int ndx = 0; ndx < master_error->cause_ct; ndx++) {
          syslog(LOG_CRIT, "%s", master_error->causes[ndx]->detail);
