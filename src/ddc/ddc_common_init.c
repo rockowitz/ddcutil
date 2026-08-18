@@ -535,7 +535,11 @@ STATIC void init_busno_connector_table(
          char * entry = parsed_cmd->bus_drm_connectors[ndx];
          char busno_str[40];
          char connector_name[80];
-         if (sscanf(entry, "%39s %79s", busno_str, connector_name) != 2) {
+         char excess[10];
+         // reading a third token detects trailing garbage, e.g. "3 card1-DP-1 foo"
+         if (sscanf(entry, "%39s %79s %9s", busno_str, connector_name, excess) != 2) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "--bus-drm-connector: invalid argument: \"%s\"", entry);
             g_ptr_array_add(errinfo_accumulator,
                   ERRINFO_NEW(DDCRC_CONFIG_ERROR,
                         "--bus-drm-connector: invalid argument: \"%s\"", entry));
@@ -557,22 +561,33 @@ STATIC void init_busno_connector_table(
          }
          if (!i2c_device_exists(busno)) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "--bus-drm-connector: bus /dev/i2c-%d does not exist",
-                  busno);
+                  "--bus-drm-connector: bus /dev/i2c-%d does not exist (from \"%s\")",
+                  busno, entry);
             g_ptr_array_add(errinfo_accumulator,
                   ERRINFO_NEW(DDCRC_CONFIG_ERROR,
-                        "--bus-drm-connector: bus /dev/i2c-%d does not exist",
-                        busno));
+                        "--bus-drm-connector: bus /dev/i2c-%d does not exist (from \"%s\")",
+                        busno, entry));
             continue;
          }
          if (!is_valid_drm_connector_name(connector_name)) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "--bus-drm-connector: invalid DRM connector name: %s",
-                   connector_name);
+                  "--bus-drm-connector: invalid DRM connector name: %s (from \"%s\")",
+                   connector_name, entry);
             g_ptr_array_add(errinfo_accumulator,
                   ERRINFO_NEW(DDCRC_CONFIG_ERROR,
-                        "--bus-drm-connector: invalid DRM connector name: %s",
-                        connector_name));
+                        "--bus-drm-connector: invalid DRM connector name: %s (from \"%s\")",
+                        connector_name, entry));
+            continue;
+         }
+         const char * existing_connector = user_drm_connector_for_busno(busno);
+         if (existing_connector) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "--bus-drm-connector: bus /dev/i2c-%d already associated with connector %s (from \"%s\")",
+                  busno, existing_connector, entry);
+            g_ptr_array_add(errinfo_accumulator,
+                  ERRINFO_NEW(DDCRC_CONFIG_ERROR,
+                        "--bus-drm-connector: bus /dev/i2c-%d already associated with connector %s (from \"%s\")",
+                        busno, existing_connector, entry));
             continue;
          }
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding busno=%d, connector=%s", busno, connector_name);

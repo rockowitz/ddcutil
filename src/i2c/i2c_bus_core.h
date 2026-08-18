@@ -75,7 +75,9 @@ bool             is_valid_drm_connector_name(const char * connector_name);
 void             subinit_i2c_bus_core();
 void             init_i2c_bus_core();
 
+// User specified I2C bus/DRM connector associations, i.e. --bus-drm-connector
 void             add_busno_connector(int busno, const char * connector_name);
+const char *     user_drm_connector_for_busno(int busno);
 void             dbgrpt_busno_connector_table(int depth);
 
 #endif /* I2C_BUS_CORE_H_ */

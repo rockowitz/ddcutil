@@ -1659,6 +1659,8 @@ parse_command(
                                "\n",
                                trcfile_multiple_call_option_help,
                                "\n",
+                               bus_drm_connector_multiple_call_option_help,
+                               "\n",
                                stats_multiple_call_option_help,
                                "\n",
                                maxtries_option_help,

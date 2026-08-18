@@ -1585,12 +1585,12 @@ bool is_valid_drm_connector_name(const char * connector_name) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_name=|%s|", connector_name);
 
-   char fq_name[40];
-   g_snprintf(fq_name, 40, "/sys/class/drm/%s", connector_name);
+   char * fq_name = g_strdup_printf("/sys/class/drm/%s", connector_name);
    bool result = directory_exists(fq_name);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Connector_name=|%s|, fq_name=|%s|, returning %s",
          connector_name, fq_name, sbool(result));
+   free(fq_name);
    return result;
 }
 
@@ -1666,7 +1666,7 @@ bool is_valid_drm_connector_name(const char * connector_name) {
     char * drm_connector_name;
  } Busno_Connector_Table_Entry;
 
- void free_busno_connector_table_entry (void * ptr) {
+ static void free_busno_connector_table_entry (void * ptr) {
     Busno_Connector_Table_Entry * entry = (Busno_Connector_Table_Entry *) ptr;
     if (entry) {
        free(entry->drm_connector_name);  // ok if null
@@ -1674,7 +1674,31 @@ bool is_valid_drm_connector_name(const char * connector_name) {
     free(entry);
  }
 
- GPtrArray * user_busno_connector_table;
+ static GPtrArray * user_busno_connector_table;
+
+
+/** Returns the DRM connector name that the user has associated with an I2C bus
+ *  number, using option --bus-drm-connector.
+ *
+ *  @param  busno  I2C bus number
+ *  @return connector name, NULL if the bus number is not in the table
+ *
+ *  @remark
+ *  The returned value belongs to the table.  Do not free.
+ */
+const char * user_drm_connector_for_busno(int busno) {
+   const char * result = NULL;
+   if (user_busno_connector_table) {
+      for (int ndx = 0; ndx < user_busno_connector_table->len; ndx++) {
+         Busno_Connector_Table_Entry * entry = g_ptr_array_index(user_busno_connector_table, ndx);
+         if (entry->busno == busno) {
+            result = entry->drm_connector_name;
+            break;
+         }
+      }
+   }
+   return result;
+}
 
 
 void add_busno_connector(int busno, const char * connector_name) {
@@ -1707,11 +1731,10 @@ void dbgrpt_busno_connector_table(int depth) {
  *  @return true if found, false if not
  *
  *  @remark
- *  Writes to the system and (possibly) to the terminal if the instance is
- *  not found.
+ *  The connector name was validated when the table was built, i.e. when
+ *  option --bus-drm-connector was processed.
  */
-// static
-bool set_connector_for_businfo_using_user_bus_connector_table(
+static bool set_connector_for_businfo_using_user_bus_connector_table(
       I2C_Bus_Info * businfo)
 {
    bool debug  = false;
@@ -1721,28 +1744,18 @@ bool set_connector_for_businfo_using_user_bus_connector_table(
 
    bool result = false;
    businfo->drm_connector_name = NULL;
-   if (user_busno_connector_table) {
-      for (int ndx = 0; ndx < user_busno_connector_table->len; ndx++) {
-         Busno_Connector_Table_Entry * entry = g_ptr_array_index(user_busno_connector_table, ndx);
-         if (entry->busno == businfo->busno) {
-            if (!is_valid_drm_connector_name(entry->drm_connector_name)) {
-               SEVEREMSG("Invalid DRM connector name %s for busno %d in busno_connector_table",
-                     entry->drm_connector_name, entry->busno);
-               break;
-            }
-            businfo->drm_connector_name = strdup(entry->drm_connector_name);
-            businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_USER;
-            int connector_id = 0;   // attribute is not set by all drivers
-            if (GET_ATTR_INT(&connector_id, "/sys/class/drm",
-                             businfo->drm_connector_name, "connector_id"))
-               businfo->drm_connector_id = connector_id;
-            result = true;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "Found connector name for /dev/i2c-%d using busno_connector_table: %s",
-                   businfo->busno, businfo->drm_connector_name);
-            break;
-         }
-      }
+   const char * connector_name = user_drm_connector_for_busno(businfo->busno);
+   if (connector_name) {
+      businfo->drm_connector_name = strdup(connector_name);
+      businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_USER;
+      int connector_id = 0;   // attribute is not set by all drivers
+      if (GET_ATTR_INT(&connector_id, "/sys/class/drm",
+                       businfo->drm_connector_name, "connector_id"))
+         businfo->drm_connector_id = connector_id;
+      result = true;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "Found connector name for /dev/i2c-%d using busno_connector_table: %s",
+             businfo->busno, businfo->drm_connector_name);
    }
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "drm_connector_name=%s",
