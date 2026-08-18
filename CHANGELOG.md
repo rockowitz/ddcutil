@@ -11,6 +11,12 @@
   - A user specified pairing is an override. It takes precedence over ddcutil's own
     bus number and EDID based association, which for non-unique EDIDs can silently 
     choose the wrong connector.
+  - The option can be specified multiple times, once per I2C bus. The bus number 
+    and the connector name are validated when options are processed. Specifying 
+    the same bus number more than once is an error.
+  - The DRM connector id is read from sysfs, so a user specified pairing is 
+    reported, and participates in display change detection, in the same way as 
+    one that ddcutil determines on its own.
   - To avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
     the value **DDCA_DRM_CONNECTOR_NOT_FOUND** is used externally for this situation.
 - Added a suite of standalone unit tests, covering most of the C source tree.
