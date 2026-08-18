@@ -320,8 +320,6 @@ char i2c_dev_status_by_boot_config_file() {
 }
 
 
-
-
 /** Report processes that have a file open
  *
  *  The report is written to the current output destination.
@@ -383,7 +381,6 @@ GPtrArray* rpt_lsof_collect0(const char * fqfn, GPtrArray * collector) {
 GPtrArray* rpt_lsof_collect(const char * fqfn) {
    return rpt_lsof_collect0(fqfn, NULL);
 }
-
 
 
 /** Collects information regarding an unexpected open() failure, and
