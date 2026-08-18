@@ -37,4 +37,5 @@ void       install_segv_handler(void);
 void       init_accumulated_sleep();
 bool       recently_resumed_from_sleep_by_clocktime();
 uint64_t   millisec_since_resume_detected_by_clocktime();
+bool       recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc);
 #endif /* LINUX_UTIL_H_ */

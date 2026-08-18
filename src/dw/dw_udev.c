@@ -222,11 +222,12 @@ bool dw_udev_watch(int watch_loop_millisec) {
       if (add_event_detected) {
          int pause_after_add_ms = pause_after_resume_ms;   // ??
 
-         // Run the clocktime resume detector before pausing, so its detection
-         // timestamp precedes this sleep and dw_pause_if_recently_resumed_from_sleep()
-         // below counts this sleep toward pause_after_resume_ms instead of
-         // pausing again in full. No-op if a resume did not recently occur.
-         recently_resumed_from_sleep_by_clocktime();
+         // Run the resume detection before pausing, so that its clocktime
+         // reference point precedes this sleep and
+         // dw_pause_if_recently_resumed_from_sleep() below counts this sleep
+         // toward pause_after_resume_ms instead of pausing again in full.
+         // No-op if a resume did not recently occur.
+         recently_resumed_from_sleep(pause_after_resume_ms, NULL);
          LOGGABLE_SLEEP(pause_after_add_ms, SLEEP_OPT_TRACEABLE,DDCA_SYSLOG_NOTICE,
                "Pausing %d millisec after UDEV add event", pause_after_add_ms);
          already_paused_ms = pause_after_add_ms;

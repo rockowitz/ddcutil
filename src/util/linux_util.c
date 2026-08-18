@@ -754,3 +754,83 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
       return UINT64_MAX;
    return NANOS2MILLIS(cur_boot_time_nanosec()) - most_recent_reset_ms;
 }
+
+
+/** Determines whether the system recently resumed from sleep, consulting
+ *  every available detection method.
+ *
+ *  @param  within_ms           interval that defines "recently"
+ *  @param  millisec_since_loc  if non-NULL, where to return the number of
+ *                              milliseconds since the resume, UINT64_MAX if
+ *                              no recent resume
+ *  @return true if a resume from sleep occurred within the past **within_ms**
+ *
+ *  @remark
+ *  Callers pause for the time remaining in their own interval, rather than
+ *  this function pausing, because each has its own sleep and logging needs.
+ *
+ *  ddcutil detects a resume from sleep two ways.  They are complementary,
+ *  not redundant, and neither alone is sufficient.
+ *
+ *  The **dbus** method (dbus_util.c) records when the logind
+ *  **PrepareForSleep(false)** signal is received.  It is precise, it is
+ *  process wide, and it covers three cases the clock method cannot:
+ *   - **Program start.**  ldbus_elapsed_since_resume_from_sleep_mark_start()
+ *     deliberately treats the start of the sleep watch thread like a resume,
+ *     because the window just after boot or login has the same transient
+ *     EACCES race on /dev/i2c opens that the window after resume does.  The
+ *     clock method reports nothing at startup: no sleep has accumulated.
+ *   - **Short suspends.**  The clock method needs more than 1 second of
+ *     accumulated sleep before it reports a resume at all.
+ *   - **Shared timing.**  last_resume_from_sleep_ns is a single process wide
+ *     value, so every thread computes the same elapsed time and pauses only
+ *     the remainder of the interval.  The clock method's state is per thread,
+ *     so threads detect independently and each starts its own pause from its
+ *     own first look, which can multiply the pauses taken.
+ *  Its weakness is latency.  The signal is delivered asynchronously, and the
+ *  display watch thread can be woken by udev and begin reopening buses before
+ *  the dbus thread has processed it.  That interval is exactly when udev has
+ *  not yet reapplied the /dev/i2c ACLs, so relying on dbus alone mistakes a
+ *  transient permission failure for a permanent one.
+ *
+ *  The **clock** method (recently_resumed_from_sleep_by_clocktime()) compares
+ *  CLOCK_BOOTTIME against CLOCK_MONOTONIC.  It cannot be late: the divergence
+ *  is already present the instant the thread runs again, and no signal
+ *  delivery is involved.  Its weaknesses mirror the strengths above.  It is
+ *  coarse, per thread, silent at startup, and its reference point is when a
+ *  thread happened to look, not when the resume occurred.
+ *
+ *  When both report a resume, the smaller elapsed time wins, i.e. the more
+ *  recent reference point, so that a caller pausing for the remainder of an
+ *  interval pauses the longer, safer time.
+ */
+bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
+   bool debug = false;
+   bool resumed = false;
+   uint64_t millisec_since = UINT64_MAX;
+
+#ifdef USE_DBUS
+   uint64_t dbus_elapsed_ms = NANOS2MILLIS(ldbus_elapsed_since_resume_from_sleep_ns());
+   if (dbus_elapsed_ms < (uint64_t) within_ms) {
+      resumed = true;
+      millisec_since = dbus_elapsed_ms;
+   }
+#endif
+
+   // Called even when dbus has already answered, so that this thread's
+   // baseline stays current.  Otherwise the first call on a thread where dbus
+   // always won the race would report a resume that was long since handled.
+   if (recently_resumed_from_sleep_by_clocktime()) {
+      uint64_t clock_elapsed_ms = millisec_since_resume_detected_by_clocktime();
+      if (clock_elapsed_ms < (uint64_t) within_ms && clock_elapsed_ms < millisec_since) {
+         resumed = true;
+         millisec_since = clock_elapsed_ms;
+      }
+   }
+
+   if (millisec_since_loc)
+      *millisec_since_loc = millisec_since;
+   DBGF(debug, "within_ms=%d, millisec_since=%"PRIu64", returning %s",
+               within_ms, millisec_since, sbool(resumed));
+   return resumed;
+}

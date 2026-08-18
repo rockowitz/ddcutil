@@ -251,38 +251,15 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    int limit_eacces_retry_ct = 4;
    bool recently_resumed = false;
 
-   // Consulted on every call, so that the detector's baseline stays current
-   // even when the dbus branch below handles the resume.
-   bool resumed_by_clocktime = recently_resumed_from_sleep_by_clocktime();
-
-#ifdef USE_DBUS
-   int paused_ms = 0;
-   paused_ms = ldbus_pause_if_recent_return_from_sleep(pause_after_resume_ms);
-   if (paused_ms > 0) {
-      recently_resumed = true;
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "ldbus_pause_if_recent_return_from_sleep() paused for %d millisec", paused_ms);
-      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
-            "paused for %d millisec at start of i2c_open_bus_basic()", paused_ms);
-   }
-#endif
-
-   // The dbus PrepareForSleep(false) signal can be delivered after the watch
-   // thread has already begun reopening buses, i.e. during the very window in
-   // which udev has not yet reapplied the /dev/i2c ACLs.  The clocktime
-   // detector does not depend on signal delivery latency, so it is also
-   // consulted in a dbus build, not just as its alternative.
-   if (!recently_resumed && resumed_by_clocktime) {
-      recently_resumed = true;
-      // As in the dbus branch, sleep only the time remaining until
-      // pause_after_resume_ms has elapsed since the resume was detected,
-      // not the full amount on every open within the detector's 5 second
-      // grace window: a post-resume rescan opens many buses in succession.
-      uint64_t since_detect_ms = millisec_since_resume_detected_by_clocktime();
-      if (since_detect_ms < (uint64_t) pause_after_resume_ms) {
-         int delay_ms = (int) ((uint64_t) pause_after_resume_ms - since_detect_ms);
-         SLEEP_MILLIS_WITH_SYSLOG(delay_ms, "Pausing for recent resume by clocktime");
-      }
+   uint64_t since_resume_ms = UINT64_MAX;
+   recently_resumed = recently_resumed_from_sleep(pause_after_resume_ms, &since_resume_ms);
+   if (recently_resumed && since_resume_ms < (uint64_t) pause_after_resume_ms) {
+      // Sleep only the time remaining until pause_after_resume_ms has elapsed
+      // since the resume, not the full amount on every open: a post-resume
+      // rescan opens many buses in succession.
+      int delay_ms = (int) ((uint64_t) pause_after_resume_ms - since_resume_ms);
+      SLEEP_MILLIS_WITH_SYSLOG(delay_ms,
+            "paused for %d millisec at start of i2c_open_bus_basic()", delay_ms);
    }
 
 retry:
