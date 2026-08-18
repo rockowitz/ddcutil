@@ -547,6 +547,9 @@ STATIC void init_busno_connector_table(
              sscanf(busno_str, "i2c-%d", &busno) != 1 &&
              sscanf(busno_str, "%d", &busno) != 1)
          {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "--bus-drm-connector: invalid bus number \"%s\" in \"%s\"",
+                  busno_str, entry);
             g_ptr_array_add(errinfo_accumulator,
                   ERRINFO_NEW(DDCRC_CONFIG_ERROR,
                         "--bus-drm-connector: invalid bus number \"%s\" in \"%s\"",
@@ -554,20 +557,26 @@ STATIC void init_busno_connector_table(
             continue;
          }
          if (!i2c_device_exists(busno)) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "--bus-drm-connector: bus /dev/i2c-%d does not exist",
+                  busno);
             g_ptr_array_add(errinfo_accumulator,
                   ERRINFO_NEW(DDCRC_CONFIG_ERROR,
-                        "--bus-drm-connector: bus /dev/i2c-%d does not exist (from \"%s\")",
-                        busno, entry));
+                        "--bus-drm-connector: bus /dev/i2c-%d does not exist",
+                        busno));
             continue;
          }
          if (!is_valid_drm_connector_name(connector_name)) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "--bus-drm-connector: invalid DRM connector name: %s",
+                   connector_name);
             g_ptr_array_add(errinfo_accumulator,
                   ERRINFO_NEW(DDCRC_CONFIG_ERROR,
-                        "--bus-drm-connector: invalid DRM connector name \"%s\" (from \"%s\")",
-                        connector_name, entry));
+                        "--bus-drm-connector: invalid DRM connector name: %s",
+                        connector_name));
             continue;
          }
-         DBGMSF(debug, "Adding busno=%d, connector=%s", busno, connector_name);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding busno=%d, connector=%s", busno, connector_name);
          add_busno_connector(busno, connector_name);
       }
    }
@@ -745,5 +754,6 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 void init_ddc_common_init() {
    RTTI_ADD_FUNC(submaster_initializer);
    RTTI_ADD_FUNC(init_performance_options);
+   RTTI_ADD_FUNC(init_busno_connector_table);
 }
 
