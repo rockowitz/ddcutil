@@ -1732,6 +1732,11 @@ bool set_connector_for_businfo_using_user_bus_connector_table(
             }
             businfo->drm_connector_name = strdup(entry->drm_connector_name);
             businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_USER;
+            int connector_id = 0;   // attribute is not set by all drivers
+            if (GET_ATTR_INT(&connector_id, "/sys/class/drm",
+                             businfo->drm_connector_name, "connector_id"))
+               businfo->drm_connector_id = connector_id;
+            result = true;
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                   "Found connector name for /dev/i2c-%d using busno_connector_table: %s",
                    businfo->busno, businfo->drm_connector_name);
@@ -1741,7 +1746,7 @@ bool set_connector_for_businfo_using_user_bus_connector_table(
    }
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "drm_connector_name=%s",
-         result, businfo->drm_connector_name ? businfo->drm_connector_name : "NULL");
+         businfo->drm_connector_name ? businfo->drm_connector_name : "NULL");
    return result;
 }
 
@@ -1974,13 +1979,20 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    if (is_sysfs_reliable_for_busno(businfo->busno))
       businfo->flags |= I2C_BUS_SYSFS_KNOWN_RELIABLE;
 
-   // *** Try to find the drm connector by bus number
+   // *** Try to find the drm connector, first from the user supplied table,
+   // *** then by bus number
 
    if (!businfo->drm_connector_name) {  // i.e. this is not a recheck
       //assert(businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_CHECKED ||
       //       businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_FOUND);
       businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_CHECKED;
-      if (drm_card_connector_directories_exist) {
+
+      // A user supplied bus/connector association is an override, not a fallback.
+      // It must be checked before the busno and EDID based searches, which can
+      // silently choose the wrong connector when EDIDs are not unique.
+      set_connector_for_businfo_using_user_bus_connector_table(businfo);
+
+      if (!businfo->drm_connector_name && drm_card_connector_directories_exist) {
          // n. will fail for MST
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                "Finding DRM connector name for bus %s using busno", dev_name);
@@ -2004,9 +2016,13 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
 
    // *** Possibly try to get the EDID from sysfs
    bool checked_connector_for_edid = false;
-   if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO
-      // assert(businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO);
-      if ((try_get_edid_from_sysfs_first && businfo->flags&I2C_BUS_SYSFS_KNOWN_RELIABLE)  ||
+   if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO or _BY_USER
+      // The sysfs shortcut is taken only if the connector was found by busno.
+      // If the association was supplied by the user, it is because sysfs does not
+      // properly record it for this bus, so read the EDID from the bus itself.
+      if ((try_get_edid_from_sysfs_first &&
+            businfo->flags&I2C_BUS_SYSFS_KNOWN_RELIABLE &&
+            businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO)  ||
             (businfo->flags&I2C_BUS_DISPLAYLINK))   // X50 can't be read for DisplayLink, must use sysfs
       {
          Parsed_Edid * edid = get_parsed_edid_for_businfo_using_sysfs(businfo);
@@ -2062,11 +2078,6 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
 
    if (!businfo->drm_connector_name && businfo->edid && drm_card_connector_directories_exist) {
       set_connector_for_businfo_using_edid(businfo);
-   }
-
-   // if all else fails, consult the user override table
-   if (!businfo->drm_connector_name && businfo->edid && drm_card_connector_directories_exist) {
-      set_connector_for_businfo_using_user_bus_connector_table(businfo);
    }
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bus %s: connector_name=%s, found by: %s",

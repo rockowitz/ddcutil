@@ -5,9 +5,12 @@
 - Option ***--bus-drm-connector***: lets the user explicitly specify the I2C bus
   number/DRM connector name pairing for a display, for cases where the sysfs 
   card-connector directory does not record the bus number and ddcutil's alternative
-  EDID-based association fails. Addresses issue #608:modified/non-unique EDIDs.
+  EDID-based association fails or is ambiguous. Addresses issue #608:modified/non-unique EDIDs.
   The option argument is a quoted string specifying the i2c bus number and connector name, 
   e.g. ***--bus-drm-connector "5 card1-DP-1"***.
+  - A user specified pairing is an override. It takes precedence over ddcutil's own
+    bus number and EDID based association, which for non-unique EDIDs can silently 
+    choose the wrong connector.
   - To avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
     the value **DDCA_DRM_CONNECTOR_NOT_FOUND** is used externally for this situation.
 - Added a suite of standalone unit tests, covering most of the C source tree.

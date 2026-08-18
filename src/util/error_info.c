@@ -1020,9 +1020,11 @@ Error_Info * errinfo_squash(Error_Info * original) {
 
    Error_Info * squashed = NULL;
    if (original) {
-      squashed = errinfo_new(original->status_code,
-                                          original->func,
-                                          strdup(original->detail));
+      // n.b. errinfo_new() interprets its detail argument as a format string,
+      // so pass the already formatted detail as a substitution value
+      squashed = (original->detail)
+            ? errinfo_new(original->status_code, original->func, "%s", original->detail)
+            : errinfo_new(original->status_code, original->func, NULL);
       if (original->cause_ct > 0) {
          for (int ndx = 0; ndx < original->cause_ct; ndx++) {
             Error_Info * suberror = original->causes[ndx];
