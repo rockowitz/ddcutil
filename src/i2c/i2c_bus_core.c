@@ -1583,11 +1583,14 @@ static Byte * get_connector_edid(const char * connector_name) {
 
 bool is_valid_drm_connector_name(const char * connector_name) {
    bool debug = false;
-   char fq_name[20];
-   g_snprintf(fq_name, 20, "/sys/class/drm/%s", connector_name);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "connector_name=|%s|", connector_name);
+
+   char fq_name[40];
+   g_snprintf(fq_name, 40, "/sys/class/drm/%s", connector_name);
    bool result = directory_exists(fq_name);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Connector_name=|BG|,. returning %s",
-         connector_name, sbool(result));
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Connector_name=|%s|, fq_name=|%s|, returning %s",
+         connector_name, fq_name, sbool(result));
    return result;
 }
 
@@ -1754,7 +1757,7 @@ bool set_connector_for_businfo_using_user_bus_connector_table(
   *  Note that this function presumes that the video driver for the I2C bus
   *  supports DRM. This is not the case for older drivers, particularly Nvidia.
   *  @remark
-  *  Writes to the system and (possibly) to the terminal if the instance is
+  *  Writes to the system log and (possibly) to the terminal if the instance is
   *  not found.
   */
 static void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
@@ -2058,8 +2061,14 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
 
    // If there's an EDID on the bus and we don't yet have the connector name
    // based on a busno match, try EDID match
+
    if (!businfo->drm_connector_name && businfo->edid && drm_card_connector_directories_exist) {
       set_connector_for_businfo_using_edid(businfo);
+   }
+
+   // if all else fails, consult the user override table
+   if (!businfo->drm_connector_name && businfo->edid && drm_card_connector_directories_exist) {
+      set_connector_for_businfo_using_user_bus_connector_table(businfo);
    }
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bus %s: connector_name=%s, found by: %s",
@@ -2074,7 +2083,6 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    if (businfo->edid && !(businfo->flags&I2C_BUS_DISPLAYLINK)) {
       is_laptop = is_laptop_for_businfo(businfo);
    }
-
 
    // *** Check x37
    if (is_laptop) {
@@ -2522,6 +2530,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(check_edids);
    RTTI_ADD_FUNC(compare_edid_read_methods);
 #endif
+   RTTI_ADD_FUNC(is_valid_drm_connector_name);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
    RTTI_ADD_FUNC(get_connector_edid);
    RTTI_ADD_FUNC(i2c_edid_exists);
