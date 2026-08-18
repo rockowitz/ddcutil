@@ -64,9 +64,7 @@ typedef enum {
    DRM_CONNECTOR_NOT_FOUND      = 1,
    DRM_CONNECTOR_FOUND_BY_BUSNO = 2,
    DRM_CONNECTOR_FOUND_BY_EDID  = 3,
-#ifdef USER_BUSNO_CONNECTOR
    DRM_CONNECTOR_FOUND_BY_USER  = 4
-#endif
 } Drm_Connector_Found_By;
 
 const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by);

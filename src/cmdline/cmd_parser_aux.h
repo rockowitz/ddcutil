@@ -59,9 +59,7 @@ extern char * tracing_comma_separated_option_help;
 extern char * tracing_multiple_call_option_help;
 extern char * trcfunc_multiple_call_option_help;
 extern char * trcfile_multiple_call_option_help;
-#ifdef USER_BUSNO_CONNECTOR
 extern char * bus_drm_connector_multiple_call_option_help;
-#endif
 extern char * stats_multiple_call_option_help;
 extern char * maxtries_option_help;
 

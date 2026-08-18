@@ -1661,7 +1661,6 @@ bool is_valid_drm_connector_name(const char * connector_name) {
  }
 #endif
 
-#ifdef USER_BUSNO_CONNECTOR
  typedef struct {
     int    busno;
     char * drm_connector_name;
@@ -1745,7 +1744,6 @@ bool set_connector_for_businfo_using_user_bus_connector_table(
          result, businfo->drm_connector_name ? businfo->drm_connector_name : "NULL");
    return result;
 }
-#endif
 
 
  /** Sets the card-connector related fields in a #I2C_Bus_Info instance,
@@ -2541,9 +2539,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(get_drm_connector_names);
    RTTI_ADD_FUNC(drm_connectors_exist);
 #endif
-#ifdef USER_BUSNO_CONNECTOR
    RTTI_ADD_FUNC(set_connector_for_businfo_using_user_bus_connector_table);
-#endif
    RTTI_ADD_FUNC(set_connector_for_businfo_using_edid);
    RTTI_ADD_FUNC(is_laptop_for_businfo);
    RTTI_ADD_FUNC(check_x37_for_businfo);

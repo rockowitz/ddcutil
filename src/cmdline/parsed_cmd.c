@@ -159,9 +159,7 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
       ntsa_free(parsed_cmd->backtraced_functions, true);
       ntsa_free(parsed_cmd->traced_calls, true);
       ntsa_free(parsed_cmd->traced_api_calls, true);
-#ifdef USER_BUSNO_CONNECTOR
       ntsa_free(parsed_cmd->bus_drm_connectors, true);
-#endif
       ntsa_free(parsed_cmd->ddc_disabled,true);
       g_array_free(parsed_cmd->setvcp_values, true);
       free(parsed_cmd->s1);
@@ -368,9 +366,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       dbgrpt_ntsa(d1, "traced_files", parsed_cmd->traced_files);
       dbgrpt_ntsa(d1, "traced_api_calls", parsed_cmd->traced_api_calls);
       dbgrpt_ntsa(d1, "traced_calls", parsed_cmd->traced_calls);
-#ifdef USER_BUSNO_CONNECTOR
       dbgrpt_ntsa(d1, "bus_drm_connectors", parsed_cmd->bus_drm_connectors);
-#endif
       rpt_str ("library trace file", NULL, parsed_cmd->trace_destination,                       d1);
       rpt_bool("trace to syslog only", NULL, parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY, d1);
 

@@ -523,7 +523,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       rate_limit_eacces_diagnostics_interval_sec = parsed_cmd->i13;
 }
 
-#ifdef USER_BUSNO_CONNECTOR
 STATIC void init_busno_connector_table(
       Parsed_Cmd * parsed_cmd,
       GPtrArray * errinfo_accumulator)
@@ -585,7 +584,6 @@ STATIC void init_busno_connector_table(
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
-#endif
 
 
 /** Initialization code common to the standalone program ddcutil and
@@ -616,9 +614,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    init_failsim(parsed_cmd, errinfo_accumulator);
    init_ignored_display_models(parsed_cmd, errinfo_accumulator);
-#ifdef USER_BUSNO_CONNECTOR
    init_busno_connector_table(parsed_cmd, errinfo_accumulator);
-#endif
 
    edp_always_laptop = parsed_cmd->flags&CMD_FLAG_EDP_ALWAYS_LAPTOP;
 
