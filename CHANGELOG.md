@@ -51,6 +51,16 @@
 
 #### Fixed
 
+- Displays could fail to reappear on the first scan after resume from sleep on
+  systems where /dev/i2c permissions come from the logind ACL rather than group
+  **i2c** membership. Resume was recognized only from the dbus 
+  **PrepareForSleep** signal, which can be delivered after the display watch 
+  thread has already reacted to the resume and begun reopening buses. During 
+  that interval, which is exactly when udev has not yet reapplied the ACLs, the
+  transient EACCES open failures were treated as permanent and given a single
+  100 ms retry instead of the intended retry budget, forcing a rescan. ddcutil's
+  clock based resume detection, previously used only when built without dbus 
+  support, is now used in addition to the dbus signal.
 - **i2c_open_bus_basic()**: after an EACCES failure the system log always
   reported "Current user has group i2c perms on /dev/i2c-N", even when the
   user did not have those permissions, directly contradicting the failure
