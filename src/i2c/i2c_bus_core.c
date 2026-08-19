@@ -1674,6 +1674,10 @@ bool is_valid_drm_connector_name(const char * connector_name) {
  *  The returned value belongs to the table.  Do not free.
  */
 const char * user_drm_connector_for_busno(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, user_busno_connector_table=%p",
+                                         busno, user_busno_connector_table);
+
    const char * result = NULL;
    if (user_busno_connector_table) {
       for (int ndx = 0; ndx < user_busno_connector_table->len; ndx++) {
@@ -1684,6 +1688,8 @@ const char * user_drm_connector_for_busno(int busno) {
          }
       }
    }
+
+   DBGTRC_RET_STRING(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
 
@@ -2056,12 +2062,6 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", businfo->busno);
    businfo->flags |= I2C_BUS_ACCESSIBLE;
    businfo->functionality = i2c_get_functionality_flags_by_fd(fd);  // is this really needed?
-#ifdef TEST_EDID_SMBUS
-             if (EDID_Read_Uses_Smbus) {
-                // for the smbus hack
-                assert(businfo->functionality & I2C_FUNC_SMBUS_READ_BYTE_DATA);
-             }
-#endif
    if (!checked_connector_for_edid) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, calling i2c_get_parsed_edid", businfo->busno);
       assert(!businfo->edid);
@@ -2079,7 +2079,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    }
 
    // If there's an EDID on the bus and we don't yet have the connector name
-   // based on a busno match, try EDID match
+   // based on a busno match or user busno-connector match, try EDID match
 
    if (!businfo->drm_connector_name && businfo->edid && drm_card_connector_directories_exist) {
       set_connector_for_businfo_using_edid(businfo);
@@ -2557,6 +2557,7 @@ static void init_i2c_bus_core_func_name_table() {
 #endif
    RTTI_ADD_FUNC(set_connector_for_businfo_using_user_bus_connector_table);
    RTTI_ADD_FUNC(set_connector_for_businfo_using_edid);
+   RTTI_ADD_FUNC(user_drm_connector_for_busno);
    RTTI_ADD_FUNC(is_laptop_for_businfo);
    RTTI_ADD_FUNC(check_x37_for_businfo);
    RTTI_ADD_FUNC(i2c_check_bus);
