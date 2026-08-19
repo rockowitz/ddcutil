@@ -1986,13 +1986,14 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
       //assert(businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_CHECKED ||
       //       businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_FOUND);
       businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_CHECKED;
-
+#ifdef NOT_HERE
       // A user supplied bus/connector association is an override, not a fallback.
       // It must be checked before the busno and EDID based searches, which can
       // silently choose the wrong connector when EDIDs are not unique.
       set_connector_for_businfo_using_user_bus_connector_table(businfo);
+#endif
 
-      if (!businfo->drm_connector_name && drm_card_connector_directories_exist) {
+      if (drm_card_connector_directories_exist) {
          // n. will fail for MST
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                "Finding DRM connector name for bus %s using busno", dev_name);
@@ -2011,6 +2012,10 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                   "DRM connector not found by busno %d", businfo->busno);
          }
+         
+         if (!businfo->drm_connector_name) {
+            set_connector_for_businfo_using_user_bus_connector_table(businfo);
+         }   
       }
    }
 
