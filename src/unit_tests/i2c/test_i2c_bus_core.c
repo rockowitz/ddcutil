@@ -32,6 +32,7 @@
 #include "base/execution_stats.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_bus_sysfs.h"
 
 static int total = 0;
 static int failed = 0;

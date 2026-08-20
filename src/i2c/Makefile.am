@@ -24,6 +24,7 @@ libi2c_la_SOURCES =       \
 i2c_bus_collections.c     \
 i2c_bus_core.c            \
 i2c_bus_selector.c        \
+i2c_bus_sysfs.c           \
 i2c_edid.c                \
 i2c_execute.c             \
 i2c_services.c            \
