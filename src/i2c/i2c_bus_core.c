@@ -208,6 +208,7 @@ static bool cur_user_has_group_i2c_perms(const char * filename) {
 
 
 /** Opens a I2C device specified by its file name, without further checks
+ * 
  *  @param  filename   name of file to open
  *  @param  callopts   if bit CALLOPT_RDONLY set, open RO, otherwise open RW
  *  @param  fd_loc     address which to return file descriptor, -1 if failure
