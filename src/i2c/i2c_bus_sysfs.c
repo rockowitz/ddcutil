@@ -83,10 +83,15 @@ bool is_displaylink_device(int busno) {
 }
 
 
-void free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec) {
-   free(rec.connector_name);
-}
+//
+// Locating the card-connector directory for an i2c bus
+//
 
+/** Emit debug report of a #Found_Sys_Drm_Connector struct
+ *
+ *  @param val    struct to report
+ *  @param depth  logical indentation depth
+ */
 static void dbgrpt_found_sys_drm_connector(Found_Sys_Drm_Connector val, int depth) {
    rpt_vstring(depth, "Found_Sys_Drm_Connector:");
    rpt_vstring(depth+1, "connector_name:   %s", val.connector_name);
@@ -95,15 +100,28 @@ static void dbgrpt_found_sys_drm_connector(Found_Sys_Drm_Connector val, int dept
 }
 
 
+/** Free the contents of a Found_Sys_Drm_Connector.
+ *
+ *  Since Found_Sys_Drm_Connector is passed on the stack and never
+ *  malloc'd, all that needs to be free's is what the instance points to,
+ *  i.e. the connector name.
+ *
+ *  @param rec Found_Sys_Drm_Connector value, not pointer to the struct
+ */
+void free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec) {
+   free(rec.connector_name);
+}
+
+
 /** Locates a drm-card-connector directory using either an
  *  I2C bus number or EDID value.
  *
  *  @param  busno      (-1 for not set)
  *  @param  edid_bytes pointer to 128 byte edid
- *  @return #DRM
+ *  @return Found_Sys_Drm_Connector struct
  *
  *  @remark
- *  Either one of busno edid_bytes should be set.  Having both parameters
+ *  Either one of busno or edid_bytes should be set.  Having both parameters
  *  avoids having 2 separate functions, one for bus number and one for EDID,
  *  with essentially the same logic.
  *  @remark
@@ -290,8 +308,6 @@ bool is_adapter_class_display_controller(const char * adapter_class) {
 }
 
 
- // probably belongs elsewhere
-
 /** Determines whether a DRM connector name is that of an existing
  *  card-connector directory in /sys/class/drm.
  *
@@ -378,15 +394,19 @@ bool is_valid_drm_connector_name(const char * connector_name) {
  }
 #endif
 
+ 
 //
 // I2C bus / DRM connector associations supplied by the user,
 // i.e. option --bus-drm-connector
 //
 
+ static GPtrArray * user_busno_connector_table;
+
  typedef struct {
     int    busno;
     char * drm_connector_name;
  } Busno_Connector_Table_Entry;
+
 
  static void free_busno_connector_table_entry (void * ptr) {
     Busno_Connector_Table_Entry * entry = (Busno_Connector_Table_Entry *) ptr;
@@ -395,8 +415,6 @@ bool is_valid_drm_connector_name(const char * connector_name) {
     }
     free(entry);
  }
-
- static GPtrArray * user_busno_connector_table;
 
 
 /** Returns the DRM connector name that the user has associated with an I2C bus
@@ -454,11 +472,6 @@ void dbgrpt_busno_connector_table(int depth) {
 
 /** Module initialization */
 void init_i2c_bus_sysfs() {
-#ifdef UNUSED
-   RTTI_ADD_FUNC(add_one_drm_connector_name);
-   RTTI_ADD_FUNC(get_drm_connector_names);
-   RTTI_ADD_FUNC(drm_connectors_exist);
-#endif
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
    RTTI_ADD_FUNC(get_connector_edid);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
