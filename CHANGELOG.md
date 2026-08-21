@@ -51,6 +51,15 @@
 
 #### Fixed
 
+- False detection of resume from sleep. Resume is detected by watching for an
+  increase in the difference between CLOCK_BOOTTIME and CLOCK_MONOTONIC. Because
+  the two clocks are sampled separately, that difference jitters by a few
+  microseconds and is not monotonic, and an unsigned subtraction of the larger
+  from the smaller wrapped to nearly 2**64, exceeding the one second threshold
+  that indicates a resume. Roughly a third of checks reported a resume that had
+  not occurred, each one imposing the post resume settling pause on subsequent
+  /dev/i2c opens, and each opening a five second window in which further checks
+  also reported a resume.
 - Displays could fail to reappear on the first scan after resume from sleep on
   systems where /dev/i2c permissions come from the logind ACL rather than group
   **i2c** membership. Resume was recognized only from the dbus 

@@ -716,19 +716,33 @@ bool recently_resumed_from_sleep_by_clocktime() {
                   ? global_initial_accumulated_sleep_ns
                   : current_accumulated_sleep_ns;
       }
-      uint64_t sleep_increase_ns = current_accumulated_sleep_ns - previous_accumulated_sleep_ns;
+      // Accumulated sleep is the difference of two separately sampled clocks,
+      // so successive values jitter by the interval between the two reads,
+      // a few microseconds, and are not monotonic.  Subtracting unsigned when
+      // the newer value is the smaller wraps to nearly 2**64, which passes the
+      // threshold test below and reports a resume that never occurred.  Guard
+      // the subtraction, and on a decrease take the lower value as the new
+      // baseline so that a high sample is not latched, leaving every
+      // subsequent sample looking like a decrease.
+      uint64_t sleep_increase_ns = 0;
+      if (current_accumulated_sleep_ns > previous_accumulated_sleep_ns)
+         sleep_increase_ns = current_accumulated_sleep_ns - previous_accumulated_sleep_ns;
+      else
+         previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
+
       // Compare in uint64_t nanoseconds throughout -- narrowing to int
       // milliseconds before comparing would overflow for a suspend
       // longer than ~24.8 days (INT_MAX ms).
       if (sleep_increase_ns > UINT64_C(1000000000)) {
          // Accumulated sleep grew by > 1 sec since previous => we resumed.
          resumed = true;
+         uint64_t prior_accumulated_sleep_ns = previous_accumulated_sleep_ns;
          previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
          SIMPLE_STD_FUNC_SYSLOG(LOG_INFO,
-               "Resume from sleep detected by BOOTTIME/MONOTONIC, sleep increase=%"PRIu64" ms,"
+               "Resume from sleep detected by BOOTTIME/MONOTONIC, sleep increase=%"PRIu64" ms, "
                "previous=%"PRIu64" ms, current=%"PRIu64" ms",
                NANOS2MILLIS(sleep_increase_ns),
-               NANOS2MILLIS(previous_accumulated_sleep_ns),
+               NANOS2MILLIS(prior_accumulated_sleep_ns),
                NANOS2MILLIS(current_accumulated_sleep_ns));
          most_recent_reset_ms = cur_boottime_ms;
       }
