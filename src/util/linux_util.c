@@ -703,7 +703,7 @@ bool recently_resumed_from_sleep_by_clocktime() {
    // only marks when this grace window should end.
    if ((cur_boottime_ms - most_recent_reset_ms) < 5000) {
       resumed = true;
-      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Called within 5 sec of reset");
+      SIMPLE_STD_FUNC_SYSLOG(LOG_DEBUG, "Called within 5 sec of reset");
    }
    else {
       uint64_t current_accumulated_sleep_ns  = get_accumulated_sleep_ns();
