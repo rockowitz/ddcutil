@@ -37,7 +37,7 @@
 #include "i2c_bus_sysfs.h"
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
+// static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 
 // quick and dirty for debugging
