@@ -173,42 +173,31 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "businfo=%p, include_sysinfo=%s", businfo, SBOOL(include_sysinfo));
    assert(businfo);
+   int d0 = depth;
+   int d1 = d0+1;
 
-   rpt_structure_loc("I2C_Bus_Info", businfo, depth);
-   rpt_vstring(depth, "removed:                 %s", sbool(businfo->removed));
-   rpt_vstring(depth, "Flags:                   %s", i2c_interpret_bus_flags_t(businfo->flags));
-   rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", businfo->busno, sbool(businfo->flags&I2C_BUS_EXISTS));
+   rpt_structure_loc("I2C_Bus_Info", businfo, d0);
+   rpt_vstring(d1, "bus:                     /dev/i2c-%d", businfo->busno);
+   rpt_vstring(d1, "removed:                 %s", sbool(businfo->removed));
+   rpt_vstring(d1, "Flags:                   %s", i2c_interpret_bus_flags_t(businfo->flags));
+   rpt_vstring(d1, "Bus /dev/i2c-%d found:   %s", businfo->busno, sbool(businfo->flags&I2C_BUS_EXISTS));
 
-   rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", businfo->busno, sbool(businfo->flags&I2C_BUS_PROBED ));
+   rpt_vstring(d1, "Bus /dev/i2c-%d probed:  %s", businfo->busno, sbool(businfo->flags&I2C_BUS_PROBED ));
    if ( businfo->flags & I2C_BUS_PROBED ) {
-#ifdef OUT
-      rpt_vstring(depth, "Driver:                  %s", businfo->driver);
-      rpt_vstring(depth, "Bus accessible:          %s", sbool(businfo->flags&I2C_BUS_ACCESSIBLE ));
-      rpt_vstring(depth, "Bus is eDP:              %s", sbool(businfo->flags&I2C_BUS_EDP ));
-      rpt_vstring(depth, "Bus is LVDS:             %s", sbool(businfo->flags&I2C_BUS_LVDS));
-      rpt_vstring(depth, "Valid bus name checked:  %s", sbool(businfo->flags & I2C_BUS_VALID_NAME_CHECKED));
-      rpt_vstring(depth, "I2C bus has valid name:  %s", sbool(businfo->flags & I2C_BUS_HAS_VALID_NAME));
-#ifdef DETECT_SLAVE_ADDRS
-      rpt_vstring(depth, "Address 0x30 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_X30));
-#endif
-      rpt_vstring(depth, "Address 0x37 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_X37));
-      rpt_vstring(depth, "Address 0x50 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
-      rpt_vstring(depth, "Device busy:             %s", sbool(businfo->flags & I2C_BUS_BUSY));
-#endif
-      rpt_vstring(depth, "errno for open:          %s", psc_desc(businfo->open_errno));
-
-//      rpt_vstring(depth, "Connector name checked:  %s", sbool(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
-      rpt_vstring(depth, "drm_connector_found_by:  %s (%d)",
+      rpt_vstring(d1, "Driver:                  %s", businfo->driver);
+      rpt_vstring(d1, "errno for open:          %s", psc_desc(businfo->open_errno));
+//    rpt_vstring(d1, "Connector name checked:  %s", sbool(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
+      rpt_vstring(d1, "drm_connector_found_by:  %s (%d)",
          drm_connector_found_by_name(businfo->drm_connector_found_by), businfo->drm_connector_found_by);
       if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED) {
-         rpt_vstring(depth, "drm_connector_name:      %s", businfo->drm_connector_name);
-         rpt_vstring(depth, "drm_connector_id:        %d", businfo->drm_connector_id);
+         rpt_vstring(d1, "drm_connector_name:      %s", businfo->drm_connector_name);
+         rpt_vstring(d1, "drm_connector_id:        %d", businfo->drm_connector_id);
          if (businfo->drm_connector_name) {
             // possibly_write_detect_to_status_by_businfo(businfo); // in i2c/i2c_sysfs_base.h
-            rpt_label(depth, "Current /sys attributes:");
-            RPT_ATTR_TEXT(depth+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "enabled");
-            RPT_ATTR_TEXT(depth+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "status");
-            RPT_ATTR_TEXT(depth+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "dpms");
+            rpt_label(d1, "Current /sys attributes:");
+            RPT_ATTR_TEXT(d1+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "enabled");
+            RPT_ATTR_TEXT(d1+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "status");
+            RPT_ATTR_TEXT(d1+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "dpms");
             // RPT_ATTR_EDID(depth+1, NULL, "/sys/class/drm", businfo->drm_connector_name, "edid");
             bool edid_found = GET_ATTR_EDID(NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
             rpt_vstring(depth, "/sys/class/drm/%s/edid:                                  %s",
@@ -225,7 +214,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
 #ifndef TARGET_BSD
    if (include_sysinfo) {
       I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
-      dbgrpt_i2c_sys_info(info, depth);
+      dbgrpt_i2c_sys_info(info, d1);
       free_i2c_sys_info(info);
    }
 #endif
