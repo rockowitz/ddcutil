@@ -71,7 +71,7 @@ bool force_failure_i2c_open = false;
 
 int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;
 int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;
-int  max_eacces_retry_ct = DEFAULT_STD_EACCES_RETRY_CT;
+int  max_eacces_retry_ct = DEFAULT_MAX_EACCES_RETRY_CT;
 bool primitive_sysfs = false;
 
 // If true, the expensive EACCES diagnostics in i2c_open_bus_basic() (traced
@@ -224,25 +224,17 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
          "filename=%s, callopts=0x%02x, fd_loc=%p, force_i2c_open_failure=%s",
          filename, callopts, fd_loc, sbool(force_failure_i2c_open));
 
+   // No pause is taken before the first open.  The transient condition this
+   // function contends with, udev not yet having reapplied the /dev/i2c
+   // uaccess ACL after a resume from sleep or at login, announces itself as
+   // EACCES, and is waited out by the retry loop below.  Pausing beforehand
+   // instead charges every open for a condition most of them do not encounter,
+   // and does not shorten the wait for the ones that do.
+
    Error_Info * err = NULL;
    int eacces_retry_ct = 0;
-   bool likely_transient = false;
    int total_eacces_retry_ms = 0;
-   int limit_eacces_retry_ms = 3000;
-   int eacces_retry_interval_ms = 200;
-   int limit_eacces_retry_ct = 4;
-   bool recently_resumed = false;
-
-   uint64_t since_resume_ms = UINT64_MAX;
-   recently_resumed = recently_resumed_from_sleep(pause_after_resume_ms, &since_resume_ms);
-   if (recently_resumed && since_resume_ms < (uint64_t) pause_after_resume_ms) {
-      // Sleep only the time remaining until pause_after_resume_ms has elapsed
-      // since the resume, not the full amount on every open: a post-resume
-      // rescan opens many buses in succession.
-      int delay_ms = (int) ((uint64_t) pause_after_resume_ms - since_resume_ms);
-      SLEEP_MILLIS_WITH_SYSLOG(delay_ms,
-            "paused for %d millisec at start of i2c_open_bus_basic()", delay_ms);
-   }
+   int eacces_retry_interval_ms = EACCES_RETRY_INITIAL_INTERVAL_MS;
 
 retry:
    RECORD_IO_EVENT(
@@ -288,9 +280,7 @@ retry:
                current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
                diagnose_open_failure_to_syslog(filename, err->detail);
             }
-            DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
-                                "open() EACCES failure, recently resumed from sleep: %s",
-                                sbool(recently_resumed));
+            DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "open() EACCES failure");
 #ifdef OUT
          uint64_t now_ns   = cur_realtime_nanosec();
          bool should_retry1 = false;
@@ -298,35 +288,32 @@ retry:
          bool should_retry3 = false;
 #endif
          
-            likely_transient = is_cur_user_acl_rw(filename);
-            if (!likely_transient) {
+            // Reported to explain the failure if the retries do not succeed.
+            // Neither condition alters the retry budget: a permission that is
+            // absent because udev has not yet reapplied the ACL is
+            // indistinguishable, at this point, from one that is absent
+            // because the user lacks access altogether.
+            if (!is_cur_user_acl_rw(filename)) {
                DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "User ACL is not RW");
                bool has_group_perms = cur_user_has_group_i2c_perms(filename);
                DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Current user %s group i2c perms on %s",
                      (has_group_perms) ? "has" : "does not have", filename);
-               if (has_group_perms)
-                  likely_transient = true;
-            }
-            if (likely_transient || recently_resumed)  {
-               limit_eacces_retry_ms = max_eacces_retry_ms;
-               limit_eacces_retry_ct = 999;      //i.e. limit is max_eacces_retry_ms
-               eacces_retry_interval_ms = max_eacces_retry_ms/5;
-            }
-            else {
-               limit_eacces_retry_ct = max_eacces_retry_ct;
-               limit_eacces_retry_ms = 10000;    // i.e. limit is limit_eacces_retry_ct
-               eacces_retry_interval_ms = 100;
             }
          }
 
-         if (eacces_retry_ct      < limit_eacces_retry_ct &&
-            total_eacces_retry_ms < limit_eacces_retry_ms )
+         if (eacces_retry_ct       < max_eacces_retry_ct &&
+             total_eacces_retry_ms < max_eacces_retry_ms )
          {
             errinfo_free(err);
             err = NULL;
             total_eacces_retry_ms += eacces_retry_interval_ms;
             eacces_retry_ct++;
             SLEEP_MILLIS_WITH_SYSLOG(eacces_retry_interval_ms, "EACCES retry_ct=%d", eacces_retry_ct);
+            // Back off, so that a momentary gap is waited out quickly while a
+            // longer one does not consume the budget in short retries.
+            eacces_retry_interval_ms *= 2;
+            if (eacces_retry_interval_ms > EACCES_RETRY_MAX_INTERVAL_MS)
+               eacces_retry_interval_ms = EACCES_RETRY_MAX_INTERVAL_MS;
             goto retry;
          }
       }

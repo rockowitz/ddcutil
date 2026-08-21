@@ -51,6 +51,19 @@
 
 #### Fixed
 
+- Recovery from the transient loss of /dev/i2c permissions after resume from
+  sleep, or at login, is now entirely by retry after an EACCES open failure.
+  Previously a settling pause was also taken before opening a bus whenever a
+  recent resume was detected. That charged every open for a condition most of
+  them do not encounter, while not shortening the wait for the ones that do,
+  and it made recovery depend on resume detection rather than on the failure
+  itself. The retry budget no longer varies with whether the user appears to
+  hold permissions or a resume was detected: an EACCES failure is now retried
+  at increasing intervals, 100 ms doubling to a maximum of 800 ms, until either
+  **--i11** milliseconds have elapsed (default 3000) or **--i12** retries have
+  been made (default raised from 1 to 8, so that elapsed time is normally the
+  effective limit).
+
 - False detection of resume from sleep. Resume is detected by watching for an
   increase in the difference between CLOCK_BOOTTIME and CLOCK_MONOTONIC. Because
   the two clocks are sampled separately, that difference jitters by a few

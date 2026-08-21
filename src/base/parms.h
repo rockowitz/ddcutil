@@ -143,7 +143,11 @@
 
 #define DEFAULT_PAUSE_AFTER_RESUME_MS   500
 #define DEFAULT_MAX_EACCES_RETRY_MS    3000
-#define DEFAULT_STD_EACCES_RETRY_CT       1
+// n. the count is a backstop.  With the intervals below, the elapsed time
+// limit above is what normally ends the retries.
+#define DEFAULT_MAX_EACCES_RETRY_CT       8
+#define EACCES_RETRY_INITIAL_INTERVAL_MS 100
+#define EACCES_RETRY_MAX_INTERVAL_MS     800
 #define DEFAULT_EACCES_DIAGNOSTIC_iNETERVAL_SEC 10
 
 #define DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS  true
