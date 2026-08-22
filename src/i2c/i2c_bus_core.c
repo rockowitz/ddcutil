@@ -617,12 +617,6 @@ i2c_close_bus(int busno, int fd, Call_Options callopts) {
 
 
 //
-// I2C Bus Inspection - Slave Addresses
-//
-
-
-
-//
 // Check display status
 //
 
@@ -809,16 +803,11 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    bool edid_exists = false;
    int tryctr = 0;
    for (; !edid_exists && tryctr < CHECK_OPEN_BUS_ALIVE_MAX_TRIES; tryctr++) {
-      if (tryctr > 0) {
-         // DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-         //       "!!! (A) Retrying i2c_check_edid_exists, busno=%d, tryctr=%d, dh=%s",
-         //       businfo->busno, tryctr, dh_repr(dh));
-         // SYSLOG2(DDCA_SYSLOG_WARNING,
-         //       "!!! (B) Retrying i2c_check_edid_exists_by_dh, tryctr=%d, dh=%s", tryctr, dh_repr(dh));
+      if (tryctr > 0)
          SLEEP_MILLIS_WITH_SYSLOG2(DDCA_SYSLOG_WARNING, CHECK_OPEN_BUS_ALIVE_RETRY_MILLISEC,
                           "Retrying i2c_check_edid_exists_by_dh() tryctr=%d, dh=%s",
                           tryctr, dh_repr(dh));
-      }
+
 #ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
       if (businfo->drm_connector_name) {
          edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
