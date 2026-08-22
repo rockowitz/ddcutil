@@ -228,7 +228,7 @@ ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_remove
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning array of size %d", result->len);
    if (debug || IS_TRACING()) {
-      ddc_dbgrpt_drefs("Display_Refs:", result, 2);
+      --("Display_Refs:", result, 2);
    }
    return result;
 }
@@ -969,6 +969,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_displays_already_detected);
    RTTI_ADD_FUNC(ddc_ensure_displays_detected);
    RTTI_ADD_FUNC(ddc_get_all_display_refs);
+   RTTI_ADD_FUNC(ddc_get_filtered_display_refs);
    RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(ddc_validate_display_ref2);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
