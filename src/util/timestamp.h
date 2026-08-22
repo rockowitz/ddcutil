@@ -61,6 +61,14 @@ static inline uint64_t MILLIS2MICROS(uint64_t _millisec) {
    return _millisec * (uint64_t) 1000;
 }
 
+static inline uint64_t SECS2NANOS(uint64_t _sec) {
+   return _sec * (uint64_t) 1000000000;
+}
+
+static inline uint64_t SECS2MILLIS(uint64_t _sec) {
+   return _sec * (uint64_t) 1000;
+}
+
 uint64_t cur_monotonic_time_nanosec();  // time since boot, excluding sleep time
 uint64_t cur_boot_time_nanosec();       // time since boot, including sleep time
 
