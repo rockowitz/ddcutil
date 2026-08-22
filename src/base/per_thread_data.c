@@ -666,7 +666,7 @@ static void ptd_report_one_func0(Per_Thread_Function_Stats * pts, void * arg) {
    // DBGMSF(debug, "pts=%p, pts->total_millisec=%d", pts, pts->total_millisec);
    // DBGMSF(debug, "pts=%p, pts->function=%p", pts, pts->function);
    rpt_vstring(depth, "%5d  %8"PRIu64"  %s",
-         pts->total_calls, (pts->total_nanosec+500)/1000, pts->function);
+         pts->total_calls, NANOS2MICROS(pts->total_nanosec), pts->function);
 }
 
 static void ptd_report_one_func(gpointer key, gpointer value, gpointer user_data) {

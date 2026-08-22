@@ -269,7 +269,7 @@ retry:
                // at most once per interval, not once per open() call.
                static _Atomic uint64_t last_eacces_diagnostics_ns = 0;
                const uint64_t eacces_diagnostics_interval_ns =
-                     rate_limit_eacces_diagnostics_interval_sec * (uint64_t)1000000000;  // convert to nanoseconds
+                     SECS2NANOS(rate_limit_eacces_diagnostics_interval_sec);
                uint64_t diag_now_ns = cur_realtime_nanosec();
                emit_diagnostics =
                      (diag_now_ns - last_eacces_diagnostics_ns > eacces_diagnostics_interval_ns);
