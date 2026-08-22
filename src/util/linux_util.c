@@ -47,6 +47,9 @@
 
 #include "linux_util.h"
 
+//
+// Miscellaneous
+//
 
 /** Tests whether a file is readable by trying to read from it, as opposed to
   * considering all the rules re permissions, file type, links, etc.
@@ -68,6 +71,73 @@ bool is_readable_file(const char * filename) {
    return result;
 }
 
+
+/** Report processes that have a file open
+ *
+ *  The report is written to the current output destination.
+ *
+ *  @param  fqfn  file name
+ *  @param  depth logical indentation depth
+ */
+void rpt_lsof(const char * fqfn, int depth) {
+   // rpt_vstring(depth, "Programs with %s open:");
+   char cmd[PATH_MAX+20];
+   g_snprintf(cmd, PATH_MAX+20, "lsof %s", fqfn);
+   execute_shell_cmd_rpt(cmd, depth);
+}
+
+
+/** Collects information about processes that have a file open,
+ *  and returns it as an array of lines.
+ *
+ *  @param  fqfn  file name
+ *  @param  collector - if NULL, allocate new GPtrArray
+ *  @return GPtrArray of lines
+ */
+// converge with show_lsof() in flock.c
+// to do: tailor the output to what is useful
+GPtrArray* rpt_lsof_collect0(const char * fqfn, GPtrArray * collector) {
+   if (!collector)
+      collector = g_ptr_array_new_with_free_func(g_free);
+
+   char cmd[PATH_MAX+20];
+   g_snprintf(cmd, PATH_MAX+20, "lsof %s", fqfn);
+   char * emsg_loc = NULL;
+   GPtrArray* conflicts = execute_shell_cmd_collect1(cmd, NULL, &emsg_loc);
+   if (emsg_loc) {
+      g_ptr_array_add(collector, emsg_loc);
+   }
+   if (conflicts) {
+      if (conflicts->len  > 0) {
+         g_ptr_array_add(collector,  g_strdup_printf("file %s also open by:", fqfn));
+         for (int ndx = 0; ndx < conflicts->len; ndx++) {
+            g_ptr_array_add(collector,
+                  g_strdup_printf("   %s", (char*)g_ptr_array_index(conflicts, ndx)));
+         }
+      }
+      else
+         g_ptr_array_add(collector, g_strdup_printf("No open conflicts found for %s", fqfn));
+      g_ptr_array_free(conflicts, true);
+   }
+
+   return collector;
+}
+
+
+/** Collects information about processes that have a file open,
+ *  and returns it as a newly allocated array of lines.
+ *
+ *  @param  fqfn  file name
+ *  @return GPtrArray of lines
+ */
+GPtrArray* rpt_lsof_collect(const char * fqfn) {
+   return rpt_lsof_collect0(fqfn, NULL);
+}
+
+
+//
+// Checking for kernel module i2c-dev existence and status
+//
 
 /** Gets the value of a kernel configuration parameter from file
   * /boot/config-KERNEL_RELEASE", where KERNEL_RELEASE is the kernel release name.
@@ -320,68 +390,9 @@ char i2c_dev_status_by_boot_config_file() {
 }
 
 
-/** Report processes that have a file open
- *
- *  The report is written to the current output destination.
- *
- *  @param  fqfn  file name
- *  @param  depth logical indentation depth
- */
-void rpt_lsof(const char * fqfn, int depth) {
-   // rpt_vstring(depth, "Programs with %s open:");
-   char cmd[PATH_MAX+20];
-   g_snprintf(cmd, PATH_MAX+20, "lsof %s", fqfn);
-   execute_shell_cmd_rpt(cmd, depth);
-}
-
-
-/** Collects information about processes that have a file open,
- *  and returns it as an array of lines.
- *
- *  @param  fqfn  file name
- *  @param  collector  if NULL, allocate new GPtrArray
- *  @return GPtrArray of lines
- */
-// converge with show_lsof() in flock.c
-// to do: tailor the output to what is useful
-GPtrArray* rpt_lsof_collect0(const char * fqfn, GPtrArray * collector) {
-   if (!collector)
-      collector = g_ptr_array_new_with_free_func(g_free);
-
-   char cmd[PATH_MAX+20];
-   g_snprintf(cmd, PATH_MAX+20, "lsof %s", fqfn);
-   char * emsg_loc = NULL;
-   GPtrArray* conflicts = execute_shell_cmd_collect1(cmd, NULL, &emsg_loc);
-   if (emsg_loc) {
-      g_ptr_array_add(collector, emsg_loc);
-   }
-   if (conflicts) {
-      if (conflicts->len  > 0) {
-         g_ptr_array_add(collector,  g_strdup_printf("file %s also open by:", fqfn));
-         for (int ndx = 0; ndx < conflicts->len; ndx++) {
-            g_ptr_array_add(collector,
-                  g_strdup_printf("   %s", (char*)g_ptr_array_index(conflicts, ndx)));
-         }
-      }
-      else
-         g_ptr_array_add(collector, g_strdup_printf("No open conflicts found for %s", fqfn));
-      g_ptr_array_free(conflicts, true);
-   }
-
-   return collector;
-}
-
-
-/** Collects information about processes that have a file open,
- *  and returns it as a newly allocated array of lines.
- *
- *  @param  fqfn  file name
- *  @return GPtrArray of lines
- */
-GPtrArray* rpt_lsof_collect(const char * fqfn) {
-   return rpt_lsof_collect0(fqfn, NULL);
-}
-
+//
+// Diagnose open() failure
+//
 
 /** Collects information regarding an unexpected open() failure, and
  *  returns it as an array of lines.
@@ -613,17 +624,20 @@ void install_segv_handler(void) {
 
 
 //
-// Detect resume from sleep
+// Detect resume from sleep using CLOCK_BOOTTIME and CLOCK_MONOTONIC.
 //
 // Detects if resume from sleep has occurred by detecting changes in the
 // accumulated sleep time, by using CLOCK_BOOTTIME and CLOCK_MONOTONIC.
 // BOOTTIME advances during sleep; MONOTONIC does not.
 // Their difference = cumulative time spent asleep since the algorithm was
-// An increase in the cumulative time asleep since vs the previous value
-// indicates a resume occurred.
+// Started. An increase in the cumulative time asleep since vs the previous
+// value indicates a resume occurred.
 //
 // This is a cruder mechanism than watching for dbus PrepareForSleep
-// signals, but does not require dbus.
+// signals, but does not require dbus.  It also has the advantage that
+// this algorithm will indicate that a sleep has occurred if immediately
+// executed after resume, whereas there is a sliver of time between
+// when execution resumed and the arrival of the of dbus message.
 
 /** Global baseline set at startup by #init_baseline_accumulated_sleep_ns().
  *  UINT64_MAX means not yet initialized.
@@ -631,12 +645,18 @@ void install_segv_handler(void) {
 static uint64_t global_initial_accumulated_sleep_ns = UINT64_MAX;
 
 /** Per-thread baseline, initialized from the global on each thread's first call.
- * UINT64_MAX means this thread has not yet initialized its baseline.
+ *  UINT64_MAX means this thread has not yet initialized its baseline.
  */
 static _Thread_local uint64_t previous_accumulated_sleep_ns = UINT64_MAX;
-// End time (CLOCK_BOOTTIME ms) of the 5-sec "recently resumed" grace window
-// after the most recent detected resume. See recently_resumed_from_sleep_by_clocktime().
-static _Thread_local uint64_t most_recent_reset_ms = 0;
+
+/** End time (CLOCK_BOOTTIME ms) of the 5-sec "recently resumed" grace window
+ * after the most recent detected resume. See recently_resumed_from_sleep_by_clocktime().
+ *
+ * UINT64_MAX, not 0, means no resume has yet been detected on this thread.
+ * 0 is a valid CLOCK_BOOTTIME value, and using it as the sentinel put every
+ * thread inside the grace window for the first 5 seconds after boot.
+ */
+static _Thread_local uint64_t most_recent_reset_ms = UINT64_MAX;
 
 
 /** Gets the current accumulated sleep time. 
@@ -648,18 +668,19 @@ static uint64_t get_accumulated_sleep_ns() {
    struct timespec mt;
    clock_gettime(CLOCK_BOOTTIME,  &bt);  // advances during sleep
    clock_gettime(CLOCK_MONOTONIC, &mt);  // does not advance during sleep
-   uint64_t boottime_ns = (uint64_t)bt.tv_sec * UINT64_C(1000000000) + bt.tv_nsec;
-   uint64_t mono_ns     = (uint64_t)mt.tv_sec * UINT64_C(1000000000) + mt.tv_nsec;
+   uint64_t boottime_ns = SECS2NANOS(bt.tv_sec) + bt.tv_nsec;
+   uint64_t mono_ns     = SECS2NANOS(mt.tv_sec) + mt.tv_nsec;
    uint64_t accumulated_sleep_ns = boottime_ns - mono_ns;
    return accumulated_sleep_ns;
 }
 
+
 /** Records the current accumulated sleep time as the global baseline.
  *
- *  Must be called once at program startup before any threads are created.
- *  Each thread's per-thread baseline is seeded from this value on its first
- *  call to recently_resumed_from_sleep(), so all threads can detect resumes
- *  that occur after this baseline was recorded.
+ *  Must be called once at program startup before any additional threads are
+ *  created. Each thread's per-thread baseline is seeded from this value on its
+ *  first call to #recently_resumed_from_sleep(), so all threads can detect
+ *  resumes that occur after this baseline was recorded.
  */
 void init_accumulated_sleep() {
    global_initial_accumulated_sleep_ns = get_accumulated_sleep_ns();
@@ -667,7 +688,7 @@ void init_accumulated_sleep() {
 
 #ifdef UNUSED
 void reset_recently_resumed_by_clocktime_cache() {
-   most_recent_reset_ms = 0;
+   most_recent_reset_ms = UINT64_MAX;   // i.e. no resume yet detected
 }
 #endif
 
@@ -688,6 +709,13 @@ bool recently_resumed_from_sleep_by_clocktime() {
    bool resumed = false;
 
    uint64_t cur_boottime_ms = NANOS2MILLIS( cur_boot_time_nanosec());
+
+   // !!! TODO RE-REVIEW Claude removed the initial grace window branch
+   // !!! Then cautioned because it wasn't there:
+   // initial one-shot detection would let dw_udev.c:230's priming call
+   // consume the detection so dw_pause_if_recently_resumed_from_sleep()
+   // at line 239 would never pause.
+   
    // Grace window: keep reporting "recently resumed" for 5 sec after the
    // resume was actually detected below. This branch is redundant for
    // *suppressing* false repeats -- the delta check in the else branch
@@ -701,7 +729,10 @@ bool recently_resumed_from_sleep_by_clocktime() {
    // misleading name for what it does here: it doesn't reset the resume
    // detector's baseline (previous_accumulated_sleep_ns does that) -- it
    // only marks when this grace window should end.
-   if ((cur_boottime_ms - most_recent_reset_ms) < 5000) {
+
+   if (most_recent_reset_ms != UINT64_MAX &&
+       (cur_boottime_ms - most_recent_reset_ms) < 5000)
+   {
       resumed = true;
       SIMPLE_STD_FUNC_SYSLOG(LOG_DEBUG, "Called within 5 sec of reset");
    }
@@ -724,17 +755,19 @@ bool recently_resumed_from_sleep_by_clocktime() {
       // the subtraction, and on a decrease take the lower value as the new
       // baseline so that a high sample is not latched, leaving every
       // subsequent sample looking like a decrease.
+
+      // Compare in uint64_t nanoseconds throughout -- narrowing to int
+      // milliseconds before comparing would overflow for a suspend
+      // longer than ~24.8 days (INT_MAX ms).
       uint64_t sleep_increase_ns = 0;
       if (current_accumulated_sleep_ns > previous_accumulated_sleep_ns)
          sleep_increase_ns = current_accumulated_sleep_ns - previous_accumulated_sleep_ns;
       else
          previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
-
-      // Compare in uint64_t nanoseconds throughout -- narrowing to int
-      // milliseconds before comparing would overflow for a suspend
-      // longer than ~24.8 days (INT_MAX ms).
-      if (sleep_increase_ns > UINT64_C(1000000000)) {
-         // Accumulated sleep grew by > 1 sec since previous => we resumed.
+      const uint64_t detection_threshold_secs = 1;
+      const uint64_t detection_threshold_ns =  SECS2NANOS(detection_threshold_secs);
+      if (sleep_increase_ns > detection_threshold_ns) {
+         // Accumulated sleep grew by > detection_threshold_secs since previous => we resumed.
          resumed = true;
          uint64_t prior_accumulated_sleep_ns = previous_accumulated_sleep_ns;
          previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
@@ -768,11 +801,15 @@ bool recently_resumed_from_sleep_by_clocktime() {
  *          UINT64_MAX if no resume has been detected on this thread
  */
 uint64_t millisec_since_resume_detected_by_clocktime() {
-   if (most_recent_reset_ms == 0)
+   if (most_recent_reset_ms == UINT64_MAX)
       return UINT64_MAX;
    return NANOS2MILLIS(cur_boot_time_nanosec()) - most_recent_reset_ms;
 }
 
+
+//
+// Combined CLOCKTIME/BOOTTIME and dbus algorithm
+//
 
 /** Determines whether the system recently resumed from sleep, consulting
  *  every available detection method.
