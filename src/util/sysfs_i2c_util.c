@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <linux/limits.h>
 #include <glib-2.0/glib.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -182,7 +183,7 @@ GPtrArray * get_video_adapter_devices() {
    // 41 millisec
    char * cmd = "find /sys/devices -name class | xargs grep x03 -l | sed 's|class||'";
    GPtrArray * result = execute_shell_cmd_collect(cmd);
-   DBGF(debug, "find command tool %jd microsec", NANOS2MICROS( cur_realtime_nanosec() - t0));
+   DBGF(debug, "find command tool %"PRIu64" microsec", NANOS2MICROS( cur_realtime_nanosec() - t0));
    // g_ptr_array_set_free_func(result, g_free);  // redundant
 #endif
 
@@ -190,7 +191,7 @@ GPtrArray * get_video_adapter_devices() {
    GPtrArray* devices = NULL;
    devices = get_video_adapter_devices3();
    if (debug) {
-      DBG("get_video_adapter_devices3() took %jd microsec", NANOS2MICROS( cur_realtime_nanosec() - t0));
+      DBG("get_video_adapter_devices3() took %"PRIu64" microsec", NANOS2MICROS( cur_realtime_nanosec() - t0));
       DBG("get_video_adapter_devices3() returned %d directories:", devices->len);
       for (int ndx = 0; ndx < devices->len; ndx++)
          rpt_vstring(2, "%s", (char*) g_ptr_array_index(devices, ndx));
@@ -200,7 +201,7 @@ GPtrArray * get_video_adapter_devices() {
    // 1 millisec
    devices = get_video_adapter_devices2();
    if (debug) {
-      DBG("get_video_adapter_devices2() took %jd microsec", NANOS2MICROS( cur_realtime_nanosec() - t0));
+      DBG("get_video_adapter_devices2() took %"PRIu64" microsec", NANOS2MICROS( cur_realtime_nanosec() - t0));
       DBG("get_video_adapter_devices2() returned %d directories:", devices->len);
       for (int ndx = 0; ndx < devices->len; ndx++)
          rpt_vstring(2, "%s", (char*) g_ptr_array_index(devices, ndx));

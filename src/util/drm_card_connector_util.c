@@ -171,7 +171,7 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
    }
    if (debug) {
      t1 = cur_realtime_nanosec();
-     DBG("elapsed: %jd microsec",  NANOS2MICROS(t1-t0));
+     DBG("elapsed: %"PRIu64" microsec",  NANOS2MICROS(t1-t0));
    }
    DBGF(debug, "Done.     Returning %s", sbool(result));
    return result;
@@ -196,17 +196,17 @@ bool check_all_video_adapters_implement_drm() {
    uint64_t t1 = cur_realtime_nanosec();
    // DBGF(debug, "t1=%"PRIu64, t1);
    // DBGF(debug, "t1-t0=%"PRIu64, t1-t0);
-   DBGF(debug, "get_video_adapter_devices() took %jd microseconds", NANOS2MICROS(t1-t0));
+   DBGF(debug, "get_video_adapter_devices() took %"PRIu64" microseconds", NANOS2MICROS(t1-t0));
 
    bool all_drm = check_video_adapters_list_implements_drm(devices);
    uint64_t t2 = cur_realtime_nanosec();
    // DBGF(debug, "t2=%"PRIu64, t2);
    // DBGF(debug, "t2-t1=%"PRIu64, t2-t1);
-   DBGF(debug, "check_video_adapters_list_implements_drm() took %jd microseconds", NANOS2MICROS(t2-t1));
+   DBGF(debug, "check_video_adapters_list_implements_drm() took %"PRIu64" microseconds", NANOS2MICROS(t2-t1));
    g_ptr_array_free(devices, true);
 
    // DBGF(debug, "t2-t0=%"PRIu64, t2-t0);
-   DBGF(debug, "Done.  Returning %s.  elapsed=%jd microsec", sbool(all_drm), NANOS2MICROS(t2-t0));
+   DBGF(debug, "Done.  Returning %s.  elapsed=%"PRIu64" microsec", sbool(all_drm), NANOS2MICROS(t2-t0));
    return all_drm;
 }
 
