@@ -698,7 +698,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F12)
       all_video_adapters_implement_drm = false;
 
-   subinit_i2c_bus_core();
+   // subinit_i2c_bus_core();
 
    // rpt_nl();
    // get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
