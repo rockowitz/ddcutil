@@ -1019,7 +1019,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
  /** Checks if an I2C bus has an EDID
   *
   *  @param  busno
-  *  @param  eacces_loc  if non-NULL, set to true if the device could not be
+  *  @param  eacces_loc  if non-NULL, is set to true if the device could not be
   *                      opened due to EACCES; never set to false, so a caller
   *                      can accumulate over multiple buses
   *  @return true/false
@@ -1264,6 +1264,7 @@ static void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE,"");
 }
+
 
 bool edp_always_laptop = true;
 
