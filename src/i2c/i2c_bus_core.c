@@ -261,44 +261,27 @@ retry:
       if (err->status_code == -EACCES) {
          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", err->detail);
          if (eacces_retry_ct == 0) {
-            bool emit_diagnostics = true;
-            if (rate_limit_eacces_diagnostics_interval_sec > 0) {
-               // During the post-resume EACCES window every bus open fails, and
-               // stabilization rescans multiply the failures.  Emit the expensive
-               // diagnostics (traced function stack dump, open failure diagnosis)
-               // at most once per interval, not once per open() call.
-               static _Atomic uint64_t last_eacces_diagnostics_ns = 0;
-               const uint64_t eacces_diagnostics_interval_ns =
-                     SECS2NANOS(rate_limit_eacces_diagnostics_interval_sec);
-               uint64_t diag_now_ns = cur_realtime_nanosec();
-               emit_diagnostics =
-                     (diag_now_ns - last_eacces_diagnostics_ns > eacces_diagnostics_interval_ns);
-               if (emit_diagnostics)
-                  last_eacces_diagnostics_ns = diag_now_ns;
-            }
-            if (emit_diagnostics) {
-               current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
-               diagnose_open_failure_to_syslog(filename, err->detail);
-            }
+            // During the post-resume EACCES window every bus open fails, and
+            // stabilization rescans multiply the failures.  Emit the expensive
+            // diagnostics (traced function stack dump, open failure diagnosis)
+            // at most once.
             DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "open() EACCES failure");
-#ifdef OUT
-         uint64_t now_ns   = cur_realtime_nanosec();
-         bool should_retry1 = false;
-         bool should_retry2 = false;
-         bool should_retry3 = false;
-#endif
-         
+            current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
+            diagnose_open_failure_to_syslog(filename, err->detail);
+
             // Reported to explain the failure if the retries do not succeed.
             // Neither condition alters the retry budget: a permission that is
             // absent because udev has not yet reapplied the ACL is
             // indistinguishable, at this point, from one that is absent
             // because the user lacks access altogether.
+#ifdef REDUNDANT_WITH_DIAGNOSE_OPEN_FAILURE
             if (!is_cur_user_acl_rw(filename)) {
                DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "User ACL is not RW");
                bool has_group_perms = cur_user_has_group_i2c_perms(filename);
                DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Current user %s group i2c perms on %s",
                      (has_group_perms) ? "has" : "does not have", filename);
             }
+#endif
          }
 
          if (eacces_retry_ct       < max_eacces_retry_ct &&
@@ -323,11 +306,13 @@ retry:
       DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "open() failed with %d EACCES errors, total retry ms = %d",
             eacces_retry_ct, total_eacces_retry_ms);
    if (!err && eacces_retry_ct > 0)
-      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "open() succeeded with %d retries after %d millisec",
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "open() succeeded with %d EACCES retries after %d millisec",
             eacces_retry_ct, total_eacces_retry_ms);
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p", *fd_loc);
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p, eacces_retry_ct=%d", *fd_loc. eacces_retry_ct);
    return err;
 }
+
 
 /** Opens a /dev/i2c device specified by its bus number, without further checks
  *  @param  busno      I2C bus number
