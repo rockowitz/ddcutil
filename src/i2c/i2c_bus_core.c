@@ -1981,32 +1981,20 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 
 
 static void init_i2c_bus_core_func_name_table() {
-#ifdef ALT_LOCK_RECORD
-   RTTI_ADD_FUNC(lock_display_by_businfo);
-   RTTI_ADD_FUNC(unlock_display_by_businfo);
-#endif
    RTTI_ADD_FUNC(simple_rw_test);
    RTTI_ADD_FUNC(i2c_open_bus_basic);
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_close_bus_basic);
    RTTI_ADD_FUNC(i2c_close_bus);
    RTTI_ADD_FUNC(i2c_check_edid_exists_by_dh);
-#ifdef UNUSED
-   RTTI_ADD_FUNC(i2c_check_edid_exists_by_businfo);
-#endif
    RTTI_ADD_FUNC(i2c_detect_x37);
    RTTI_ADD_FUNC(i2c_check_open_bus_alive);
-#ifdef UNUSED
-   RTTI_ADD_FUNC(check_edids);
-   RTTI_ADD_FUNC(compare_edid_read_methods);
-#endif
    RTTI_ADD_FUNC(i2c_edid_exists);
    RTTI_ADD_FUNC(set_connector_for_businfo_using_user_bus_connector_table);
    RTTI_ADD_FUNC(set_connector_for_businfo_using_edid);
    RTTI_ADD_FUNC(is_laptop_for_businfo);
    RTTI_ADD_FUNC(check_x37_for_businfo);
    RTTI_ADD_FUNC(i2c_check_bus);
-
    RTTI_ADD_FUNC(i2c_get_and_check_bus_info);
    RTTI_ADD_FUNC(i2c_report_active_bus);
 }
