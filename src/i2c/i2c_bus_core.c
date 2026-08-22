@@ -180,6 +180,7 @@ unlock_display_by_businfo(I2C_Bus_Info * businfo) {
 #endif
 
 
+#ifdef UNUSED
 static bool cur_user_has_group_i2c_perms(const char * filename) {
    bool has_group_perms = false;
    if (!group_i2c_exists()) {
@@ -205,7 +206,7 @@ static bool cur_user_has_group_i2c_perms(const char * filename) {
    }
    return has_group_perms;
 }
-
+#endif
 
 /** Opens a I2C device specified by its file name, without further checks
  * 
@@ -309,7 +310,7 @@ retry:
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "open() succeeded with %d EACCES retries after %d millisec",
             eacces_retry_ct, total_eacces_retry_ms);
 
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p, eacces_retry_ct=%d", *fd_loc. eacces_retry_ct);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p, eacces_retry_ct=%d", *fd_loc, eacces_retry_ct);
    return err;
 }
 
@@ -619,61 +620,6 @@ i2c_close_bus(int busno, int fd, Call_Options callopts) {
 // I2C Bus Inspection - Slave Addresses
 //
 
-#ifdef UNUSED
-#define IS_EDP_DEVICE(_busno) is_laptop_drm_connector(_busno, "-eDP-")
-#define IS_LVDS_DEVICE(_busno) is_laptop_drm_connector(_busno, "-LVDS-")
-
-
-/** Checks whether a /dev/i2c-n device represents an eDP or LVDS device,
- *  i.e. a laptop display.
- *
- *  @param  busno   i2c bus number
- *  #param  drm_name_fragment  string to look for
- *  @return true/false
- *
- *  @remark Works only for DRM displays, therefore use only
- *          informationally.
- */
-// Attempting to recode using opendir() and readdir() produced
-// a complicated mess.  Using execute_shell_cmd_collect() is simple.
-// Simplicity has its virtues.
-static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
-   bool debug = false;
-   // DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, drm_name_fragment=|%s|", busno, drm_name_fragment);
-   bool result = false;
-
-   char cmd[100];
-   snprintf(cmd, 100, "ls -d /sys/class/drm/card*/card*/"I2C"-%d", busno);
-   // DBGMSG("cmd: %s", cmd);
-
-   GPtrArray * lines = execute_shell_cmd_collect(cmd);
-   if (lines)  {    // command should never fail, but just in case
-      for (int ndx = 0; ndx < lines->len; ndx++) {
-         char * s = g_ptr_array_index(lines, ndx);
-         if (strstr(s, drm_name_fragment)) {
-            result = true;
-            break;
-         }
-      }
-      g_ptr_array_free(lines, true);
-   }
-
-   DBGTRC_EXECUTED(debug, TRACE_GROUP, "busno=%d, drm_name_fragment |%s|, Returning: %s",
-                              busno, drm_name_fragment, sbool(result));
-   return result;
-}
-
-#endif
-
-
-STATIC bool
-is_laptop_drm_connector_name(const char * connector_name) {
-   bool debug = false;
-   bool result = strstr(connector_name, "-eDP-") ||
-                 strstr(connector_name, "-LVDS-");
-   DBGF(debug, "connector_name=|%s|, returning %s", connector_name, sbool(result));
-   return result;
-}
 
 
 //
