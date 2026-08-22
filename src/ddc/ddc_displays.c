@@ -228,7 +228,7 @@ ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_remove
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning array of size %d", result->len);
    if (debug || IS_TRACING()) {
-      --("Display_Refs:", result, 2);
+      ddc_dbgrpt_drefs("Display_Refs:", result, 2);
    }
    return result;
 }
