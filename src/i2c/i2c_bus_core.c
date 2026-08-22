@@ -317,65 +317,6 @@ retry:
             goto retry;
          }
       }
-
-#ifdef OUT
-#ifdef USE_DBUS
-         static uint64_t max_elapsed_ms = 1000;
-         uint64_t elapsed_ns = ldbus_elapsed_since_resume_from_sleep_ns();
-         uint64_t elapsed_ms = NANOS2MILLIS(elapsed_ns);
-         char * resume_msg = g_strdup_printf(
-               "Time since last return from sleep = %"PRIu64" ns = %"PRIu64" ms",
-               elapsed_ns, elapsed_ms);
-         DBGTRC(debug, TRACE_GROUP, "open() EACCES failure, %s", resume_msg);
-         SIMPLE_STD_FUNC_SYSLOG(LOG_WARNING, "open() EACCES failure, %s", resume_msg);
-         free(resume_msg);
-         if (elapsed_ms <= max_elapsed_ms)
-            should_retry1 = true;
-#endif
-         if (recently_resumed)
-            syslog(LOG_WARNING, "EACCES failure, recently resumed from sleep");
-         static int max_retries = 4;
-         if (eacces_retry_ct == 0)
-            should_retry3 = true;
-         if (recently_resumed && eacces_retry_ct < max_retries)
-            should_retry2 = true;
-
-         bool should_retry = should_retry1 || should_retry2 || should_retry3;
-
-
-         if (eacces_retry_ct >= max_retries && !should_retry1) {
-            syslog(LOG_ERR, "Reached max retries = %d and no remaining time", max_retries);
-            should_retry = false;
-         }
-
-         if (should_retry) {
-            // Shared-sleep: first device in a 600ms cycle sleeps 100ms;
-            // subsequent devices within the same window retry immediately.
-            bool do_sleep = false;
-            uint64_t first = first_eacces_open_ns;
-            uint64_t cycle_age_ms = (first > 0) ? NANOS2MILLIS(now_ns - first) : UINT64_MAX;
-            if (cycle_age_ms > 600) {
-               first_eacces_open_ns = now_ns;
-               do_sleep = true;
-            }
-            eacces_retry_ct++;
-            errinfo_free(err);
-            err = NULL;
-            if (do_sleep) {
-               char * smsg = g_strdup_printf(
-                     "Sleeping for 100 ms and retrying (attempt %d)...", eacces_retry_ct);
-               syslog(LOG_WARNING, "%s", smsg);
-               DBGTRC(debug, DDCA_TRC_NONE, "%s", smsg);
-               LOGGABLE_SLEEP(100, SLEEP_OPT_TRACEABLE, DDCA_SYSLOG_WARNING, "%s", smsg);
-               free(smsg);
-            } else {
-               syslog(LOG_WARNING,
-                     "Retrying immediately (cycle sleep already done, attempt %d)...", eacces_retry_ct);
-            }
-            goto retry;
-         }
-      }
-#endif   // OUT
    }
 
    if ( ERRINFO_STATUS(err) == -EACCES)
