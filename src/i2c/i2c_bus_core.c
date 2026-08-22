@@ -126,12 +126,12 @@ static GMutex  open_failures_mutex;
 static Bit_Set_256 open_failures_reported;
 
 
+#ifdef DETERMINED_UNUSED
 /** Adds a set of bus numbers to the set of bus numbers
  *  whose open failure has already been reported.
  *
  *  @param failures   set of bus numbers
  */
-#ifdef DETERMINED_UNUSED
 void
 i2c_add_open_failures_reported(Bit_Set_256 failures) {
    g_mutex_lock(&open_failures_mutex);
@@ -224,12 +224,12 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
          "filename=%s, callopts=0x%02x, fd_loc=%p, force_i2c_open_failure=%s",
          filename, callopts, fd_loc, sbool(force_failure_i2c_open));
 
-   // No pause is taken before the first open.  The transient condition this
-   // function contends with, udev not yet having reapplied the /dev/i2c
-   // uaccess ACL after a resume from sleep or at login, announces itself as
-   // EACCES, and is waited out by the retry loop below.  Pausing beforehand
-   // instead charges every open for a condition most of them do not encounter,
-   // and does not shorten the wait for the ones that do.
+   // Previously, a pause was taken before the first open. The transient
+   // condition this function contends with, udev not yet having reapplied the
+   // /dev/i2c uaccess ACL after a resume from sleep or at login, announces
+   // itself as EACCES, and is waited out by the retry loop below.
+   // Pausing beforehand instead charged every open for a condition most of
+   // them do not encounter, and does not shorten the wait for the ones that do.
 
    Error_Info * err = NULL;
    int eacces_retry_ct = 0;
@@ -266,7 +266,7 @@ retry:
                // During the post-resume EACCES window every bus open fails, and
                // stabilization rescans multiply the failures.  Emit the expensive
                // diagnostics (traced function stack dump, open failure diagnosis)
-               // at most once per interval, not once per open call.
+               // at most once per interval, not once per open() call.
                static _Atomic uint64_t last_eacces_diagnostics_ns = 0;
                const uint64_t eacces_diagnostics_interval_ns =
                      rate_limit_eacces_diagnostics_interval_sec * (uint64_t)1000000000;  // convert to nanoeconds
