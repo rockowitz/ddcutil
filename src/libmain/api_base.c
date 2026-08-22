@@ -10,6 +10,7 @@
 
 #include <dlfcn.h>     // _GNU_SOURCE for dladdr()
 #include <errno.h>
+#include <inttypes.h>
 #include <glib-2.0/glib.h>
 #include <signal.h>
 #include <string.h>
@@ -324,8 +325,8 @@ void quiesce_api() {
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_API,
-         "Terminating with %d active API calls outstanding. Waited %d millisec",
-         final_active_calls, slept_microsec/1000);
+         "Terminating with %d active API calls outstanding. Waited %"PRIu64" millisec",
+         final_active_calls, MICROS2MILLIS(slept_microsec));
 }
 
 

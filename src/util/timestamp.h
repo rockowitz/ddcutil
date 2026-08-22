@@ -53,6 +53,13 @@ static inline uint64_t NANOS2MILLIS(uint64_t _nanosec) {
    return _nanosec/1000000 + ((_nanosec % 1000000 >= 500000) ? 1 : 0);
 }
 
+/** Converts microseconds to milliseconds, rounded to nearest.
+ *  See #NANOS2MICROS() regarding the order of division and rounding.
+ */
+static inline uint64_t MICROS2MILLIS(uint64_t _microsec) {
+   return _microsec/1000 + ((_microsec % 1000 >= 500) ? 1 : 0);
+}
+
 static inline uint64_t MILLIS2NANOS(uint64_t _millisec) {
    return _millisec * (uint64_t) 1000000;
 }

@@ -177,7 +177,7 @@ uint32_t dw_split_sleep(int watch_loop_millisec) {
          }
          // interrupted by a signal: sleep the remainder
          uint64_t elapsed_us = g_get_monotonic_time() - start_us;
-         remaining_millisec = watch_loop_millisec - elapsed_us/1000;
+         remaining_millisec = watch_loop_millisec - MICROS2MILLIS(elapsed_us);
       }
       slept = g_get_monotonic_time() - start_us;
       if (slept > max_sleep_microsec)
@@ -192,7 +192,7 @@ uint32_t dw_split_sleep(int watch_loop_millisec) {
          usleep(sleep_step_microsec);
    }
 
-   return slept/1000;
+   return MICROS2MILLIS(slept);
 }
 
 
