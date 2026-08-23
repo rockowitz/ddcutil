@@ -229,8 +229,12 @@ static bool cur_user_has_group_i2c_perms(const char * filename) {
 // failure in between starts a new episode with a fresh budget, so the
 // transient window after the next resume is again waited out in full.  An
 // open that succeeds after retrying ends the episode: the condition was
-// transient and has cleared.  Plain atomics; the races between concurrent
-// opens are benign, costing at worst one extra full ladder.
+// transient and has cleared.  Plain atomics, no mutex.  The reset is two
+// separate stores, so a concurrent failure can see the episode start already
+// cleared while last seen is not; that is why a zero episode start begins a
+// new episode below rather than being differenced, which would deny the open
+// its retries entirely.  The remaining interleavings cost at worst one extra
+// full ladder.
 static _Atomic uint64_t eacces_episode_start_ns = 0;   // 0 = no episode
 static _Atomic uint64_t eacces_last_seen_ns     = 0;   // last EACCES failure
 
@@ -285,10 +289,18 @@ retry:
             DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "open() EACCES failure");
 
             // Establish this call's retry budget from the process-wide episode.
-            if (prior_last_seen_ns == 0 ||
+            // Read the episode start once, into a local: a concurrent open
+            // that succeeded on retry may clear it at any point, and a zero
+            // read must start a new episode rather than be differenced, which
+            // would yield an epoch-sized elapsed time and a budget of zero.
+            uint64_t episode_start_ns = eacces_episode_start_ns;
+            if (prior_last_seen_ns == 0 || episode_start_ns == 0 ||
                 now_ns - prior_last_seen_ns > MILLIS2NANOS(EACCES_NEW_EPISODE_QUIET_MS))
-               eacces_episode_start_ns = now_ns;    // new episode
-            uint64_t episode_elapsed_ms = NANOS2MILLIS(now_ns - eacces_episode_start_ns);
+            {
+               episode_start_ns = now_ns;           // new episode
+               eacces_episode_start_ns = now_ns;
+            }
+            uint64_t episode_elapsed_ms = NANOS2MILLIS(now_ns - episode_start_ns);
             eacces_budget_ms = (episode_elapsed_ms >= (uint64_t) max_eacces_retry_ms)
                   ? 0
                   : max_eacces_retry_ms - (int) episode_elapsed_ms;
@@ -365,7 +377,7 @@ retry:
       eacces_last_seen_ns = 0;
    }
 
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p, eacces_retry_ct=%d", *fd_loc, eacces_retry_ct);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%d, eacces_retry_ct=%d", *fd_loc, eacces_retry_ct);
    return err;
 }
 

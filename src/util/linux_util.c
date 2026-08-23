@@ -429,11 +429,13 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
 
    // n.b. this reporting call mutates the clocktime detector's per-thread
    // state: it consumes the detection and opens the 5 second grace window.
-   // Harmless in the current call path, since i2c_open_bus_basic() consults
-   // recently_resumed_from_sleep() before attempting any open, so by the time
-   // a failure is diagnosed the detection has already been acted on and this
-   // call only extends a window that is already open.  Do not rely on that
-   // ordering elsewhere.
+   // It was formerly harmless because i2c_open_bus_basic() paused, and so
+   // consulted the detector, before attempting any open; that pre-open pause
+   // has since been removed in favor of retrying after EACCES, so on the
+   // EACCES path this may now be the first call on the thread and may open
+   // the window rather than extend one.  Still harmless, because the window
+   // only makes a subsequent caller pause the remainder of its interval, but
+   // a diagnostic should not be deciding that.  Do not rely on the ordering.
    bool recent =  recently_resumed_from_sleep_by_clocktime();
    G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep() returned %s", sbool(recent));
 
@@ -731,8 +733,12 @@ bool recently_resumed_from_sleep_by_clocktime() {
    // call sites on one thread cannot coexist.  Concretely: the priming
    // call in dw_udev_watch(), made before the post-add-event sleep
    // precisely so that its reference point precedes that sleep, would
-   // swallow the detection, and dw_pause_if_recently_resumed_from_sleep()
-   // would never see it and never pause.  With the window, "recently
+   // swallow the detection, and the call to
+   // dw_pause_if_recently_resumed_from_sleep() on the next iteration of
+   // the watch loop would never see it and never pause.  (Not the same
+   // iteration: an add event makes that iteration's guard false.)  Both
+   // run on the watch thread, and the detector's state is per thread.
+   // With the window, "recently
    // resumed" is a state that any number of callers can query for a
    // bounded period.  The cost is that true is returned for the whole
    // window, so a caller acting on the bare boolean would act repeatedly;
