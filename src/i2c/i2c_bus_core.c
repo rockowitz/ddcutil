@@ -218,6 +218,22 @@ static bool cur_user_has_group_i2c_perms(const char * filename) {
  *  @remark
  *  Common error codes: -ENOENT, -EACCES
  */
+// Process-wide EACCES episode state, shared across all opens.  The full
+// retry ladder is charged once per episode, not once per open: the first
+// open to fail with EACCES starts an episode and retries for up to
+// max_eacces_retry_ms; an open failing later in the episode retries only
+// for the remainder of that budget, which is soon nothing.  Without this,
+// each of the N inaccessible buses of a scan paid the full ladder, turning
+// a fast failure for a user with no permissions at all into N x 3 seconds.
+// A failure occurring after EACCES_NEW_EPISODE_QUIET_MS with no EACCES
+// failure in between starts a new episode with a fresh budget, so the
+// transient window after the next resume is again waited out in full.  An
+// open that succeeds after retrying ends the episode: the condition was
+// transient and has cleared.  Plain atomics; the races between concurrent
+// opens are benign, costing at worst one extra full ladder.
+static _Atomic uint64_t eacces_episode_start_ns = 0;   // 0 = no episode
+static _Atomic uint64_t eacces_last_seen_ns     = 0;   // last EACCES failure
+
 Error_Info *
 i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    bool debug = false;
@@ -236,6 +252,7 @@ i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc) {
    int eacces_retry_ct = 0;
    int total_eacces_retry_ms = 0;
    int eacces_retry_interval_ms = EACCES_RETRY_INITIAL_INTERVAL_MS;
+   int eacces_budget_ms = max_eacces_retry_ms;   // reduced below by episode state
 
 retry:
    RECORD_IO_EVENT(
@@ -261,8 +278,23 @@ retry:
 
       if (err->status_code == -EACCES) {
          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", err->detail);
+         uint64_t now_ns = cur_realtime_nanosec();
+         uint64_t prior_last_seen_ns = eacces_last_seen_ns;
+         eacces_last_seen_ns = now_ns;
          if (eacces_retry_ct == 0) {
             DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "open() EACCES failure");
+
+            // Establish this call's retry budget from the process-wide episode.
+            if (prior_last_seen_ns == 0 ||
+                now_ns - prior_last_seen_ns > MILLIS2NANOS(EACCES_NEW_EPISODE_QUIET_MS))
+               eacces_episode_start_ns = now_ns;    // new episode
+            uint64_t episode_elapsed_ms = NANOS2MILLIS(now_ns - eacces_episode_start_ns);
+            eacces_budget_ms = (episode_elapsed_ms >= (uint64_t) max_eacces_retry_ms)
+                  ? 0
+                  : max_eacces_retry_ms - (int) episode_elapsed_ms;
+            if (eacces_budget_ms == 0)
+               DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
+                     "Retry budget for the current EACCES episode already exhausted, not retrying");
 
             // During the post-resume EACCES window every bus open fails, and
             // stabilization rescans multiply the failures.  Emit the expensive
@@ -304,7 +336,7 @@ retry:
          }
 
          if (eacces_retry_ct       < max_eacces_retry_ct &&
-             total_eacces_retry_ms < max_eacces_retry_ms )
+             total_eacces_retry_ms < eacces_budget_ms )
          {
             errinfo_free(err);
             err = NULL;
@@ -324,9 +356,14 @@ retry:
    if ( ERRINFO_STATUS(err) == -EACCES)
       DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "open() failed with %d EACCES errors, total retry ms = %d",
             eacces_retry_ct, total_eacces_retry_ms);
-   if (!err && eacces_retry_ct > 0)
+   if (!err && eacces_retry_ct > 0) {
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "open() succeeded with %d EACCES retries after %d millisec",
             eacces_retry_ct, total_eacces_retry_ms);
+      // The transient condition cleared; end the episode so that the next
+      // EACCES failure, whenever it comes, gets a fresh retry budget.
+      eacces_episode_start_ns = 0;
+      eacces_last_seen_ns = 0;
+   }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*fd_loc=%p, eacces_retry_ct=%d", *fd_loc, eacces_retry_ct);
    return err;

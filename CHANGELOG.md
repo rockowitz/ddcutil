@@ -63,6 +63,13 @@
   **--i11** milliseconds have elapsed (default 3000) or **--i12** retries have
   been made (default raised from 1 to 8, so that elapsed time is normally the
   effective limit).
+  The time budget is charged per EACCES episode, process wide, not per open:
+  the first open to fail starts the episode and waits out the full budget;
+  opens failing later in the episode fail quickly. So a user with no
+  /dev/i2c permissions at all sees one bus's wait, not one per bus, while
+  the transient window after a resume is still waited out in full. An
+  episode ends when a retried open succeeds, or after 10 seconds with no
+  EACCES failure.
 
 - False detection of resume from sleep. Resume is detected by watching for an
   increase in the difference between CLOCK_BOOTTIME and CLOCK_MONOTONIC. Because

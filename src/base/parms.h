@@ -148,6 +148,9 @@
 #define DEFAULT_MAX_EACCES_RETRY_CT       8
 #define EACCES_RETRY_INITIAL_INTERVAL_MS 100
 #define EACCES_RETRY_MAX_INTERVAL_MS     800
+// After this long without any EACCES open failure, a new failure starts a
+// new episode with a fresh retry budget.  See i2c_open_bus_basic().
+#define EACCES_NEW_EPISODE_QUIET_MS    10000
 #define DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC 10
 
 #define DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS  true
