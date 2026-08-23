@@ -35,6 +35,7 @@ void       diagnose_open_failure_to_syslog(const char * fqfn, const char * msg);
 void       install_segv_handler(void);
 
 void       init_accumulated_sleep();
+bool       recently_resumed_from_sleep_by_clocktime0(bool no_mutate, bool * detected_now_loc);
 bool       recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc);
 uint64_t   millisec_since_resume_detected_by_clocktime();
 bool       recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc);

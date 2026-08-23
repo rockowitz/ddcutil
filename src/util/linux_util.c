@@ -427,16 +427,13 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
          formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
 #endif
 
-   // n.b. this reporting call mutates the clocktime detector's per-thread
-   // state: it consumes the detection and opens the 5 second grace window.
-   // It was formerly harmless because i2c_open_bus_basic() paused, and so
-   // consulted the detector, before attempting any open; that pre-open pause
-   // has since been removed in favor of retrying after EACCES, so on the
-   // EACCES path this may now be the first call on the thread and may open
-   // the window rather than extend one.  Still harmless, because the window
-   // only makes a subsequent caller pause the remainder of its interval, but
-   // a diagnostic should not be deciding that.  Do not rely on the ordering.
-   bool recent =  recently_resumed_from_sleep_by_clocktime(NULL);
+   // no_mutate: this is a report, and must not consume the detection or open
+   // the grace window.  It formerly did, which was harmless only while
+   // i2c_open_bus_basic() consulted the detector before every open; once
+   // that pre-open pause gave way to retrying after EACCES, this call could
+   // be the first on the thread and so decide, from a diagnostic, whether a
+   // later caller pauses.
+   bool recent =  recently_resumed_from_sleep_by_clocktime0(true, NULL);
    G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep_by_clocktime() returned %s",
                                      sbool(recent));
 
@@ -719,10 +716,18 @@ void reset_recently_resumed_by_clocktime_cache() {
  *          another source may not have processed the corresponding event
  *          either.  Within the grace window that is no longer true, the
  *          resume having been observed at least once already.
+ *  @param  no_mutate  if true, answer without touching any state: the
+ *          detection is neither consumed nor recorded, the grace window is
+ *          neither opened nor extended, and nothing is written to the system
+ *          log.  For an observer, such as a diagnostic report, that must not
+ *          alter what a subsequent real caller will see.  Note that a
+ *          detection observed this way is still pending: the next call
+ *          without no_mutate will report it again, and will be the one to
+ *          consume it.
  *  @return true if a resume from sleep was detected on this call, or was
  *          detected on this thread within the past 5 seconds
  */
-bool recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc) {
+bool recently_resumed_from_sleep_by_clocktime0(bool no_mutate, bool * detected_now_loc) {
    bool debug = false;
    bool resumed = false;
    bool detected_now = false;
@@ -766,11 +771,14 @@ bool recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc) {
    // never been seen at all.
    uint64_t current_accumulated_sleep_ns  = get_accumulated_sleep_ns();
 
-   if (previous_accumulated_sleep_ns == UINT64_MAX) {
+   // Work on a copy of the per-thread baseline, written back only when
+   // mutation is allowed.  Seeding it is itself a mutation, so an observer
+   // must not do that either.
+   uint64_t previous_ns = previous_accumulated_sleep_ns;
+   if (previous_ns == UINT64_MAX) {
       // First call on this thread: seed from the global baseline if available,
       // otherwise fall back to current value (no resume detectable this call).
-      previous_accumulated_sleep_ns =
-            (global_initial_accumulated_sleep_ns != UINT64_MAX)
+      previous_ns = (global_initial_accumulated_sleep_ns != UINT64_MAX)
                ? global_initial_accumulated_sleep_ns
                : current_accumulated_sleep_ns;
    }
@@ -787,10 +795,10 @@ bool recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc) {
    // milliseconds before comparing would overflow for a suspend
    // longer than ~24.8 days (INT_MAX ms).
    uint64_t sleep_increase_ns = 0;
-   if (current_accumulated_sleep_ns > previous_accumulated_sleep_ns)
-      sleep_increase_ns = current_accumulated_sleep_ns - previous_accumulated_sleep_ns;
+   if (current_accumulated_sleep_ns > previous_ns)
+      sleep_increase_ns = current_accumulated_sleep_ns - previous_ns;
    else
-      previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
+      previous_ns = current_accumulated_sleep_ns;
    const uint64_t detection_threshold_secs = 1;
    const uint64_t detection_threshold_ns =  SECS2NANOS(detection_threshold_secs);
 
@@ -802,32 +810,55 @@ bool recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc) {
       // Accumulated sleep grew by > detection_threshold_secs since previous => we resumed.
       resumed = true;
       detected_now = true;
-      uint64_t prior_accumulated_sleep_ns = previous_accumulated_sleep_ns;
-      previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
-      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO,
-            "Resume from sleep detected by BOOTTIME/MONOTONIC, sleep increase=%"PRIu64" ms, "
-            "previous=%"PRIu64" ms, current=%"PRIu64" ms",
-            NANOS2MILLIS(sleep_increase_ns),
-            NANOS2MILLIS(prior_accumulated_sleep_ns),
-            NANOS2MILLIS(current_accumulated_sleep_ns));
-      most_recent_detection_ms = cur_boottime_ms;
+      uint64_t prior_ns = previous_ns;
+      previous_ns = current_accumulated_sleep_ns;
+      if (!no_mutate) {
+         // Not logged by an observer: it has not consumed the detection, so
+         // the next real call will detect and log it again, and one resume
+         // would appear in the log twice.
+         SIMPLE_STD_FUNC_SYSLOG(LOG_INFO,
+               "Resume from sleep detected by BOOTTIME/MONOTONIC, sleep increase=%"PRIu64" ms, "
+               "previous=%"PRIu64" ms, current=%"PRIu64" ms",
+               NANOS2MILLIS(sleep_increase_ns),
+               NANOS2MILLIS(prior_ns),
+               NANOS2MILLIS(current_accumulated_sleep_ns));
+         most_recent_detection_ms = cur_boottime_ms;
+      }
    }
    else if (most_recent_detection_ms != UINT64_MAX &&
             (cur_boottime_ms - most_recent_detection_ms) < 5000)
    {
       resumed = true;
-      SIMPLE_STD_FUNC_SYSLOG(LOG_DEBUG, "Called within 5 sec of reset");
+      if (!no_mutate)
+         SIMPLE_STD_FUNC_SYSLOG(LOG_DEBUG, "Called within 5 sec of reset");
    }
 
-   DBGF(debug, "previous_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64
+   if (!no_mutate)
+      previous_accumulated_sleep_ns = previous_ns;
+
+   DBGF(debug, "no_mutate=%s, previous_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64
                ", detected_now=%s, returning %s",
-               NANOS2MILLIS(previous_accumulated_sleep_ns),
+               sbool(no_mutate),
+               NANOS2MILLIS(previous_ns),
                NANOS2MILLIS(current_accumulated_sleep_ns),
                sbool(detected_now), sbool(resumed));
 
    if (detected_now_loc)
       *detected_now_loc = detected_now;
    return resumed;
+}
+
+
+/** Detects whether the system has resumed from sleep, updating the detector's
+ *  per-thread state.  Equivalent to recently_resumed_from_sleep_by_clocktime0()
+ *  with no_mutate false.
+ *
+ *  @param  detected_now_loc  see recently_resumed_from_sleep_by_clocktime0()
+ *  @return true if a resume from sleep was detected on this call, or was
+ *          detected on this thread within the past 5 seconds
+ */
+bool recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc) {
+   return recently_resumed_from_sleep_by_clocktime0(false, detected_now_loc);
 }
 
 
