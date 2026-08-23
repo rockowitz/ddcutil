@@ -282,7 +282,17 @@ retry:
 
       if (err->status_code == -EACCES) {
          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", err->detail);
-         uint64_t now_ns = cur_realtime_nanosec();
+         // CLOCK_BOOTTIME, not the CLOCK_REALTIME used for the timings
+         // elsewhere in the tree.  This is control flow, not measurement: a
+         // forward step of the wall clock by 3 to 10 seconds inside a live
+         // episode would make the budget look spent while leaving the quiet
+         // gap below unreached, denying every retry until 10 seconds pass
+         // without a failure.  CLOCK_MONOTONIC is not a substitute: it does
+         // not advance across suspend, so an episode opened before a long
+         // suspend would still look live on resume and the first open after
+         // it would inherit that stale budget, which is exactly the case
+         // this retry ladder exists to serve.
+         uint64_t now_ns = cur_boot_time_nanosec();
          uint64_t prior_last_seen_ns = eacces_last_seen_ns;
          eacces_last_seen_ns = now_ns;
          if (eacces_retry_ct == 0) {
@@ -318,12 +328,20 @@ retry:
             // inaccessible bus.  An interval of 0 disables the limit.
             bool emit_diagnostics = true;
             if (rate_limit_eacces_diagnostics_interval_sec > 0) {
+               // 0 means not yet emitted, and must be tested explicitly.
+               // Differencing against it worked only while this used
+               // CLOCK_REALTIME, whose magnitude always exceeds the interval.
+               // Under CLOCK_BOOTTIME, chosen for the same reason as above,
+               // the first 10 seconds after boot fall inside the interval,
+               // which would suppress the diagnostics for the EACCES window
+               // at login that they are most wanted for.
                static _Atomic uint64_t last_eacces_diagnostics_ns = 0;
                const uint64_t interval_ns =
                      SECS2NANOS(rate_limit_eacces_diagnostics_interval_sec);
-               uint64_t diag_now_ns = cur_realtime_nanosec();
-               emit_diagnostics =
-                     (diag_now_ns - last_eacces_diagnostics_ns > interval_ns);
+               uint64_t diag_now_ns = cur_boot_time_nanosec();
+               uint64_t prior_diag_ns = last_eacces_diagnostics_ns;
+               emit_diagnostics = (prior_diag_ns == 0) ||
+                                  (diag_now_ns - prior_diag_ns > interval_ns);
                if (emit_diagnostics)
                   last_eacces_diagnostics_ns = diag_now_ns;
             }
