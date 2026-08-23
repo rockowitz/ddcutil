@@ -262,13 +262,31 @@ retry:
       if (err->status_code == -EACCES) {
          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", err->detail);
          if (eacces_retry_ct == 0) {
+            DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "open() EACCES failure");
+
             // During the post-resume EACCES window every bus open fails, and
             // stabilization rescans multiply the failures.  Emit the expensive
-            // diagnostics (traced function stack dump, open failure diagnosis)
-            // at most once.
-            DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "open() EACCES failure");
-            current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
-            diagnose_open_failure_to_syslog(filename, err->detail);
+            // diagnostics (traced function stack dump, open failure diagnosis,
+            // which forks getfacl and lsof) at most once per
+            // rate_limit_eacces_diagnostics_interval_sec (option --i13),
+            // process wide, not once per failing open: a single rescan of
+            // this machine's buses would otherwise produce one full dump per
+            // inaccessible bus.  An interval of 0 disables the limit.
+            bool emit_diagnostics = true;
+            if (rate_limit_eacces_diagnostics_interval_sec > 0) {
+               static _Atomic uint64_t last_eacces_diagnostics_ns = 0;
+               const uint64_t interval_ns =
+                     SECS2NANOS(rate_limit_eacces_diagnostics_interval_sec);
+               uint64_t diag_now_ns = cur_realtime_nanosec();
+               emit_diagnostics =
+                     (diag_now_ns - last_eacces_diagnostics_ns > interval_ns);
+               if (emit_diagnostics)
+                  last_eacces_diagnostics_ns = diag_now_ns;
+            }
+            if (emit_diagnostics) {
+               current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
+               diagnose_open_failure_to_syslog(filename, err->detail);
+            }
 
             // Reported to explain the failure if the retries do not succeed.
             // Neither condition alters the retry budget: a permission that is
