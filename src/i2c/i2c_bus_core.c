@@ -235,6 +235,21 @@ static bool cur_user_has_group_i2c_perms(const char * filename) {
 // new episode below rather than being differenced, which would deny the open
 // its retries entirely.  The remaining interleavings cost at worst one extra
 // full ladder.
+//
+// Known limitation.  The budget is shared by every bus, so whichever bus
+// fails first spends it.  If a permanently inaccessible bus and a
+// transiently inaccessible one fail within the same episode, the permanent
+// one can consume the whole window and the transient one, scanned later,
+// gets no retry at all and its display is missed for that scan.  Not
+// reachable in the ordinary case: SMBus and other non-display nodes are
+// excluded by sysfs_is_ignorable_i2c_device() before any open is attempted,
+// and the shipped udev rule grants uaccess to exactly the class 0x03 buses
+// scanned here, so those buses share one permission fate.  It needs an
+// unusual layout, a class 0x0a docking station adapter or multi-seat ACL
+// ownership, and the watch path's EACCES rescan plus the episode reset on a
+// retried success recover most of what is lost.  Were it to need fixing, the
+// cheap form is to record which busno opened the episode and let a bus that
+// has not itself failed during it take at least one retry.
 static _Atomic uint64_t eacces_episode_start_ns = 0;   // 0 = no episode
 static _Atomic uint64_t eacces_last_seen_ns     = 0;   // last EACCES failure
 
