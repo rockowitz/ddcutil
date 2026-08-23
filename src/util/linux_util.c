@@ -437,7 +437,8 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    // only makes a subsequent caller pause the remainder of its interval, but
    // a diagnostic should not be deciding that.  Do not rely on the ordering.
    bool recent =  recently_resumed_from_sleep_by_clocktime(NULL);
-   G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep() returned %s", sbool(recent));
+   G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep_by_clocktime() returned %s",
+                                     sbool(recent));
 
    int uid  = (int) getuid();
    int euid = (int) geteuid();
