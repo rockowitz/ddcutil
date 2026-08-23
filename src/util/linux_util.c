@@ -895,9 +895,8 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
  *  coarse, per thread, silent at startup, and its reference point is when a
  *  thread happened to look, not when the resume occurred.
  *
- *  dbus is therefore preferred when it has seen a resume within the interval,
- *  and the clock method is the fallback for the case dbus cannot cover, the
- *  one in which the signal has not yet been delivered.
+ *  dbus is therefore preferred where it is trustworthy, and the clock method
+ *  covers the case it cannot: the signal not yet delivered.
  *
  *  Neither elapsed time can simply be trusted over the other:
  *   - Taking whichever is smaller prefers the clock method systematically,
