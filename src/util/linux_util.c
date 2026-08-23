@@ -693,16 +693,20 @@ void reset_recently_resumed_by_clocktime_cache() {
 #endif
 
 
-/** Detects whether the system has resumed from sleep since the prior
- *  call to this function.
+/** Detects whether the system has resumed from sleep.
  *
  *  Uses the difference between CLOCK_BOOTTIME (advances during sleep) and
  *  CLOCK_MONOTONIC (does not advance during sleep) to measure cumulative
- *  sleep time.  Returns true once per resume event per thread: on the first
- *  call after a resume is detected the baseline is updated, so subsequent
- *  calls return false until the next resume.
+ *  sleep time.  An increase since the prior call on this thread indicates
+ *  that a resume occurred.
  *
- *  @return true if a resume from sleep was detected, false otherwise
+ *  Once a resume is detected, calls on the same thread within the following
+ *  5 seconds (the grace window) also return true, so that multiple call
+ *  sites on a thread can each observe the resume.  See the discussion of
+ *  the tradeoffs in the function body.
+ *
+ *  @return true if a resume from sleep was detected on this call, or was
+ *          detected on this thread within the past 5 seconds
  */
 bool recently_resumed_from_sleep_by_clocktime() {
    bool debug = false;
@@ -710,25 +714,31 @@ bool recently_resumed_from_sleep_by_clocktime() {
 
    uint64_t cur_boottime_ms = NANOS2MILLIS( cur_boot_time_nanosec());
 
-   // !!! TODO RE-REVIEW Claude removed the initial grace window branch
-   // !!! Then cautioned because it wasn't there:
-   // initial one-shot detection would let dw_udev.c:230's priming call
-   // consume the detection so dw_pause_if_recently_resumed_from_sleep()
-   // at line 239 would never pause.
-   
-   // Grace window: keep reporting "recently resumed" for 5 sec after the
-   // resume was actually detected below. This branch is redundant for
-   // *suppressing* false repeats -- the delta check in the else branch
-   // already self-resets, since previous_accumulated_sleep_ns is updated
-   // to current_accumulated_sleep_ns the moment a resume is detected, so
-   // sleep_increase_ns on the very next call is ~0 (just real elapsed
-   // time) and naturally evaluates to "not resumed" without this branch's
-   // help. Its only real effect is *extending* the true result for 5 sec
-   // past the single detecting call, for callers that want a longer
-   // "just resumed" allowance than one call. most_recent_reset_ms is a
-   // misleading name for what it does here: it doesn't reset the resume
-   // detector's baseline (previous_accumulated_sleep_ns does that) -- it
-   // only marks when this grace window should end.
+   // Grace window vs one-shot detection.
+   //
+   // The delta check in the else branch below is inherently one-shot: it
+   // updates previous_accumulated_sleep_ns the moment it detects a resume,
+   // so on the very next call the increase is ~0 and it reports no resume.
+   // This branch converts that single observation into a state: for 5
+   // seconds after a detection, every call on this thread reports
+   // "recently resumed".  most_recent_reset_ms does not reset the
+   // detector's baseline (previous_accumulated_sleep_ns does that); it
+   // only marks when the window ends.
+   //
+   // The tradeoff.  One-shot, i.e. this function without this branch, is
+   // the simpler contract, with no window length to choose, but the
+   // observation is consumed by whichever caller asks first, so multiple
+   // call sites on one thread cannot coexist.  Concretely: the priming
+   // call in dw_udev_watch(), made before the post-add-event sleep
+   // precisely so that its reference point precedes that sleep, would
+   // swallow the detection, and dw_pause_if_recently_resumed_from_sleep()
+   // would never see it and never pause.  With the window, "recently
+   // resumed" is a state that any number of callers can query for a
+   // bounded period.  The cost is that true is returned for the whole
+   // window, so a caller acting on the bare boolean would act repeatedly;
+   // callers must consult millisec_since_resume_detected_by_clocktime()
+   // and act only on the remainder of their own interval, as
+   // dw_pause_if_recently_resumed_from_sleep() does.
 
    if (most_recent_reset_ms != UINT64_MAX &&
        (cur_boottime_ms - most_recent_reset_ms) < 5000)
