@@ -855,14 +855,25 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
  *  coarse, per thread, silent at startup, and its reference point is when a
  *  thread happened to look, not when the resume occurred.
  *
- *  When both report a resume, the smaller elapsed time wins, i.e. the more
- *  recent reference point, so that a caller pausing for the remainder of an
- *  interval pauses the longer, safer time.
+ *  dbus is therefore preferred when it has seen a resume within the interval,
+ *  and the clock method is the fallback for the case dbus cannot cover, the
+ *  one in which the signal has not yet been delivered.  Taking whichever
+ *  elapsed time is the smaller would instead prefer the clock method
+ *  systematically, since its reference point is the later one whenever
+ *  detection lags the resume, and would pause for the full interval well
+ *  after the resume:  resume at T, dbus signal at T+50 ms, first call on this
+ *  thread at T+3000 ms, elapsed reported as 0 rather than 3000.
  */
 bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    bool debug = false;
    bool resumed = false;
    uint64_t millisec_since = UINT64_MAX;
+
+   // Called on every invocation, whatever dbus reports, so that this thread's
+   // baseline stays current and its grace window opens when the resume is
+   // first observed here.  Otherwise the first call on a thread where dbus
+   // always won the race would report a resume that was long since handled.
+   bool resumed_by_clocktime = recently_resumed_from_sleep_by_clocktime();
 
 #ifdef USE_DBUS
    uint64_t dbus_elapsed_ms = NANOS2MILLIS(ldbus_elapsed_since_resume_from_sleep_ns());
@@ -872,12 +883,11 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    }
 #endif
 
-   // Called even when dbus has already answered, so that this thread's
-   // baseline stays current.  Otherwise the first call on a thread where dbus
-   // always won the race would report a resume that was long since handled.
-   if (recently_resumed_from_sleep_by_clocktime()) {
+   // Fallback, for the case dbus cannot cover: the signal has not yet been
+   // delivered, or the build has no dbus support.
+   if (!resumed && resumed_by_clocktime) {
       uint64_t clock_elapsed_ms = millisec_since_resume_detected_by_clocktime();
-      if (clock_elapsed_ms < (uint64_t) within_ms && clock_elapsed_ms < millisec_since) {
+      if (clock_elapsed_ms < (uint64_t) within_ms) {
          resumed = true;
          millisec_since = clock_elapsed_ms;
       }
