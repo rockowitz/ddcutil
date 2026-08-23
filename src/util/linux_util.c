@@ -436,7 +436,7 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    // the window rather than extend one.  Still harmless, because the window
    // only makes a subsequent caller pause the remainder of its interval, but
    // a diagnostic should not be deciding that.  Do not rely on the ordering.
-   bool recent =  recently_resumed_from_sleep_by_clocktime();
+   bool recent =  recently_resumed_from_sleep_by_clocktime(NULL);
    G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep() returned %s", sbool(recent));
 
    int uid  = (int) getuid();
@@ -707,12 +707,21 @@ void reset_recently_resumed_by_clocktime_cache() {
  *  sites on a thread can each observe the resume.  See the discussion of
  *  the tradeoffs in the function body.
  *
+ *  @param  detected_now_loc  if non-NULL, set to true if THIS call detected
+ *          the resume, false if it answered from the grace window or found
+ *          no resume.  A caller weighing this detector against another
+ *          source needs the distinction: a detection on this call means
+ *          sleep accumulated that this thread had not yet accounted for, so
+ *          another source may not have processed the corresponding event
+ *          either.  Within the grace window that is no longer true, the
+ *          resume having been observed at least once already.
  *  @return true if a resume from sleep was detected on this call, or was
  *          detected on this thread within the past 5 seconds
  */
-bool recently_resumed_from_sleep_by_clocktime() {
+bool recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc) {
    bool debug = false;
    bool resumed = false;
+   bool detected_now = false;
 
    uint64_t cur_boottime_ms = NANOS2MILLIS( cur_boot_time_nanosec());
 
@@ -746,62 +755,74 @@ bool recently_resumed_from_sleep_by_clocktime() {
    // and act only on the remainder of their own interval, as
    // dw_pause_if_recently_resumed_from_sleep() does.
 
-   if (most_recent_reset_ms != UINT64_MAX &&
-       (cur_boottime_ms - most_recent_reset_ms) < 5000)
+   // Sample on every call, including inside the grace window.  Returning
+   // early from the window without sampling would leave the baseline stale,
+   // so a second suspend beginning during the window went undetected: the
+   // window would expire measured from the FIRST resume while the second had
+   // never been seen at all.
+   uint64_t current_accumulated_sleep_ns  = get_accumulated_sleep_ns();
+
+   if (previous_accumulated_sleep_ns == UINT64_MAX) {
+      // First call on this thread: seed from the global baseline if available,
+      // otherwise fall back to current value (no resume detectable this call).
+      previous_accumulated_sleep_ns =
+            (global_initial_accumulated_sleep_ns != UINT64_MAX)
+               ? global_initial_accumulated_sleep_ns
+               : current_accumulated_sleep_ns;
+   }
+   // Accumulated sleep is the difference of two separately sampled clocks,
+   // so successive values jitter by the interval between the two reads,
+   // a few microseconds, and are not monotonic.  Subtracting unsigned when
+   // the newer value is the smaller wraps to nearly 2**64, which passes the
+   // threshold test below and reports a resume that never occurred.  Guard
+   // the subtraction, and on a decrease take the lower value as the new
+   // baseline so that a high sample is not latched, leaving every
+   // subsequent sample looking like a decrease.
+
+   // Compare in uint64_t nanoseconds throughout -- narrowing to int
+   // milliseconds before comparing would overflow for a suspend
+   // longer than ~24.8 days (INT_MAX ms).
+   uint64_t sleep_increase_ns = 0;
+   if (current_accumulated_sleep_ns > previous_accumulated_sleep_ns)
+      sleep_increase_ns = current_accumulated_sleep_ns - previous_accumulated_sleep_ns;
+   else
+      previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
+   const uint64_t detection_threshold_secs = 1;
+   const uint64_t detection_threshold_ns =  SECS2NANOS(detection_threshold_secs);
+
+   // n.b. the increase is sleep accumulated since this thread's baseline was
+   // last written, not the duration of the most recent suspend.  A suspend
+   // shorter than the threshold does not update the baseline, so its sleep
+   // remains in the sum.  Do not read this value as one suspend's length.
+   if (sleep_increase_ns > detection_threshold_ns) {
+      // Accumulated sleep grew by > detection_threshold_secs since previous => we resumed.
+      resumed = true;
+      detected_now = true;
+      uint64_t prior_accumulated_sleep_ns = previous_accumulated_sleep_ns;
+      previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
+      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO,
+            "Resume from sleep detected by BOOTTIME/MONOTONIC, sleep increase=%"PRIu64" ms, "
+            "previous=%"PRIu64" ms, current=%"PRIu64" ms",
+            NANOS2MILLIS(sleep_increase_ns),
+            NANOS2MILLIS(prior_accumulated_sleep_ns),
+            NANOS2MILLIS(current_accumulated_sleep_ns));
+      most_recent_reset_ms = cur_boottime_ms;
+   }
+   else if (most_recent_reset_ms != UINT64_MAX &&
+            (cur_boottime_ms - most_recent_reset_ms) < 5000)
    {
       resumed = true;
       SIMPLE_STD_FUNC_SYSLOG(LOG_DEBUG, "Called within 5 sec of reset");
    }
-   else {
-      uint64_t current_accumulated_sleep_ns  = get_accumulated_sleep_ns();
 
-      if (previous_accumulated_sleep_ns == UINT64_MAX) {
-         // First call on this thread: seed from the global baseline if available,
-         // otherwise fall back to current value (no resume detectable this call).
-         previous_accumulated_sleep_ns =
-               (global_initial_accumulated_sleep_ns != UINT64_MAX)
-                  ? global_initial_accumulated_sleep_ns
-                  : current_accumulated_sleep_ns;
-      }
-      // Accumulated sleep is the difference of two separately sampled clocks,
-      // so successive values jitter by the interval between the two reads,
-      // a few microseconds, and are not monotonic.  Subtracting unsigned when
-      // the newer value is the smaller wraps to nearly 2**64, which passes the
-      // threshold test below and reports a resume that never occurred.  Guard
-      // the subtraction, and on a decrease take the lower value as the new
-      // baseline so that a high sample is not latched, leaving every
-      // subsequent sample looking like a decrease.
+   DBGF(debug, "previous_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64
+               ", detected_now=%s, returning %s",
+               NANOS2MILLIS(previous_accumulated_sleep_ns),
+               NANOS2MILLIS(current_accumulated_sleep_ns),
+               sbool(detected_now), sbool(resumed));
 
-      // Compare in uint64_t nanoseconds throughout -- narrowing to int
-      // milliseconds before comparing would overflow for a suspend
-      // longer than ~24.8 days (INT_MAX ms).
-      uint64_t sleep_increase_ns = 0;
-      if (current_accumulated_sleep_ns > previous_accumulated_sleep_ns)
-         sleep_increase_ns = current_accumulated_sleep_ns - previous_accumulated_sleep_ns;
-      else
-         previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
-      const uint64_t detection_threshold_secs = 1;
-      const uint64_t detection_threshold_ns =  SECS2NANOS(detection_threshold_secs);
-      if (sleep_increase_ns > detection_threshold_ns) {
-         // Accumulated sleep grew by > detection_threshold_secs since previous => we resumed.
-         resumed = true;
-         uint64_t prior_accumulated_sleep_ns = previous_accumulated_sleep_ns;
-         previous_accumulated_sleep_ns = current_accumulated_sleep_ns;
-         SIMPLE_STD_FUNC_SYSLOG(LOG_INFO,
-               "Resume from sleep detected by BOOTTIME/MONOTONIC, sleep increase=%"PRIu64" ms, "
-               "previous=%"PRIu64" ms, current=%"PRIu64" ms",
-               NANOS2MILLIS(sleep_increase_ns),
-               NANOS2MILLIS(prior_accumulated_sleep_ns),
-               NANOS2MILLIS(current_accumulated_sleep_ns));
-         most_recent_reset_ms = cur_boottime_ms;
-      }
-
-      DBGF(debug, "previous_accumulated_sleep_ns=%"PRIu64", current_accumulated_sleep_ns=%"PRIu64
-                  ", returning %s",
-                  NANOS2MILLIS(previous_accumulated_sleep_ns),
-                  NANOS2MILLIS(current_accumulated_sleep_ns),
-                  sbool(resumed));
-   }
+   if (detected_now_loc)
+      *detected_now_loc = detected_now;
    return resumed;
 }
 
@@ -873,12 +894,28 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
  *
  *  dbus is therefore preferred when it has seen a resume within the interval,
  *  and the clock method is the fallback for the case dbus cannot cover, the
- *  one in which the signal has not yet been delivered.  Taking whichever
- *  elapsed time is the smaller would instead prefer the clock method
- *  systematically, since its reference point is the later one whenever
- *  detection lags the resume, and would pause for the full interval well
- *  after the resume:  resume at T, dbus signal at T+50 ms, first call on this
- *  thread at T+3000 ms, elapsed reported as 0 rather than 3000.
+ *  one in which the signal has not yet been delivered.
+ *
+ *  Neither elapsed time can simply be trusted over the other:
+ *   - Taking whichever is smaller prefers the clock method systematically,
+ *     since its reference point is the later one whenever detection lags the
+ *     resume, and pauses for the full interval well after the resume: resume
+ *     at T, dbus signal at T+50 ms, first call on this thread at T+3000 ms,
+ *     elapsed reported as 0 rather than 3000.
+ *   - Taking dbus whenever it is within the interval lets a timestamp that
+ *     predates the suspend, from an earlier resume or from
+ *     ldbus_elapsed_since_resume_from_sleep_mark_start(), mask a detection
+ *     that is genuinely fresh, and pauses too little.
+ *
+ *  The tie is broken on whether the clock method detected the resume on this
+ *  very call, which it reports through its out parameter.  A detection now
+ *  means this thread had not yet accounted for the sleep, so dbus may not
+ *  have processed the signal either and its timestamp may predate the
+ *  suspend; the clock is preferred.  Inside the grace window the resume has
+ *  already been observed once, dbus has had time to catch up, and it is the
+ *  more accurate of the two.  See the body for why the two errors are not
+ *  symmetric.  Note that the decision deliberately does not depend on
+ *  within_ms, which is tunable and must not determine correctness.
  */
 bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    bool debug = false;
@@ -889,11 +926,31 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    // baseline stays current and its grace window opens when the resume is
    // first observed here.  Otherwise the first call on a thread where dbus
    // always won the race would report a resume that was long since handled.
-   bool resumed_by_clocktime = recently_resumed_from_sleep_by_clocktime();
+   bool clock_detected_now = false;
+   bool resumed_by_clocktime = recently_resumed_from_sleep_by_clocktime(&clock_detected_now);
 
 #ifdef USE_DBUS
    uint64_t dbus_elapsed_ms = NANOS2MILLIS(ldbus_elapsed_since_resume_from_sleep_ns());
-   if (dbus_elapsed_ms < (uint64_t) within_ms) {
+
+   // A detection on THIS call means sleep accumulated that this thread had
+   // not yet accounted for, so dbus may not have processed the corresponding
+   // signal either; its timestamp can predate the suspend, and measuring
+   // from it would pause far too little.  The clock is preferred in that
+   // case.  Within the grace window the resume has been observed at least
+   // once already, dbus has had time to catch up, and its timestamp is the
+   // more accurate of the two, so it is preferred there.
+   //
+   // The two errors are not symmetric, which is what settles the direction.
+   // Preferring the clock when dbus was in fact current costs one interval
+   // of extra pause, latency and nothing more.  Preferring dbus when its
+   // timestamp is stale reopens the buses while udev has not yet reapplied
+   // the ACLs, which costs the whole EACCES retry ladder, up to
+   // max_eacces_retry_ms, plus a diagnostic dump in the system log.
+   //
+   // Deliberately not decided by comparing the two elapsed times, nor by
+   // comparing either against within_ms: within_ms is tunable and must not
+   // be what determines correctness.
+   if (!clock_detected_now && dbus_elapsed_ms < (uint64_t) within_ms) {
       resumed = true;
       millisec_since = dbus_elapsed_ms;
    }
