@@ -311,8 +311,6 @@ retry:
          uint64_t prior_last_seen_ns = eacces_last_seen_ns;
          eacces_last_seen_ns = now_ns;
          if (eacces_retry_ct == 0) {
-            DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "open() EACCES failure");
-
             // Establish this call's retry budget from the process-wide episode.
             // Read the episode start once, into a local: a concurrent open
             // that succeeded on retry may clear it at any point, and a zero
@@ -365,12 +363,12 @@ retry:
                diagnose_open_failure_to_syslog(filename, err->detail);
             }
 
+#ifdef REDUNDANT_WITH_DIAGNOSE_OPEN_FAILURE
             // Reported to explain the failure if the retries do not succeed.
             // Neither condition alters the retry budget: a permission that is
             // absent because udev has not yet reapplied the ACL is
             // indistinguishable, at this point, from one that is absent
             // because the user lacks access altogether.
-#ifdef REDUNDANT_WITH_DIAGNOSE_OPEN_FAILURE
             if (!is_cur_user_acl_rw(filename)) {
                DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "User ACL is not RW");
                bool has_group_perms = cur_user_has_group_i2c_perms(filename);
