@@ -651,14 +651,17 @@ static uint64_t global_initial_accumulated_sleep_ns = UINT64_MAX;
  */
 static _Thread_local uint64_t previous_accumulated_sleep_ns = UINT64_MAX;
 
-/** End time (CLOCK_BOOTTIME ms) of the 5-sec "recently resumed" grace window
- * after the most recent detected resume. See recently_resumed_from_sleep_by_clocktime().
+/** CLOCK_BOOTTIME ms at which this thread most recently DETECTED a resume,
+ * i.e. the start of the 5-sec "recently resumed" grace window, not its end.
+ * The window runs until this value plus 5 sec, and
+ * millisec_since_resume_detected_by_clocktime() measures from it.
+ * See recently_resumed_from_sleep_by_clocktime().
  *
  * UINT64_MAX, not 0, means no resume has yet been detected on this thread.
  * 0 is a valid CLOCK_BOOTTIME value, and using it as the sentinel put every
  * thread inside the grace window for the first 5 seconds after boot.
  */
-static _Thread_local uint64_t most_recent_reset_ms = UINT64_MAX;
+static _Thread_local uint64_t most_recent_detection_ms = UINT64_MAX;
 
 
 /** Gets the current accumulated sleep time. 
@@ -690,7 +693,7 @@ void init_accumulated_sleep() {
 
 #ifdef UNUSED
 void reset_recently_resumed_by_clocktime_cache() {
-   most_recent_reset_ms = UINT64_MAX;   // i.e. no resume yet detected
+   most_recent_detection_ms = UINT64_MAX;   // i.e. no resume yet detected
 }
 #endif
 
@@ -732,9 +735,9 @@ bool recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc) {
    // so on the very next call the increase is ~0 and it reports no resume.
    // This branch converts that single observation into a state: for 5
    // seconds after a detection, every call on this thread reports
-   // "recently resumed".  most_recent_reset_ms does not reset the
+   // "recently resumed".  most_recent_detection_ms does not reset the
    // detector's baseline (previous_accumulated_sleep_ns does that); it
-   // only marks when the window ends.
+   // records when the window opened.
    //
    // The tradeoff.  One-shot, i.e. this function without this branch, is
    // the simpler contract, with no window length to choose, but the
@@ -806,10 +809,10 @@ bool recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc) {
             NANOS2MILLIS(sleep_increase_ns),
             NANOS2MILLIS(prior_accumulated_sleep_ns),
             NANOS2MILLIS(current_accumulated_sleep_ns));
-      most_recent_reset_ms = cur_boottime_ms;
+      most_recent_detection_ms = cur_boottime_ms;
    }
-   else if (most_recent_reset_ms != UINT64_MAX &&
-            (cur_boottime_ms - most_recent_reset_ms) < 5000)
+   else if (most_recent_detection_ms != UINT64_MAX &&
+            (cur_boottime_ms - most_recent_detection_ms) < 5000)
    {
       resumed = true;
       SIMPLE_STD_FUNC_SYSLOG(LOG_DEBUG, "Called within 5 sec of reset");
@@ -838,9 +841,9 @@ bool recently_resumed_from_sleep_by_clocktime(bool * detected_now_loc) {
  *          UINT64_MAX if no resume has been detected on this thread
  */
 uint64_t millisec_since_resume_detected_by_clocktime() {
-   if (most_recent_reset_ms == UINT64_MAX)
+   if (most_recent_detection_ms == UINT64_MAX)
       return UINT64_MAX;
-   return NANOS2MILLIS(cur_boot_time_nanosec()) - most_recent_reset_ms;
+   return NANOS2MILLIS(cur_boot_time_nanosec()) - most_recent_detection_ms;
 }
 
 
