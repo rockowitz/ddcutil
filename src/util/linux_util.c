@@ -90,6 +90,8 @@ void rpt_lsof(const char * fqfn, int depth) {
 /** Collects information about processes that have a file open,
  *  and returns it as an array of lines.
  *
+ *  Shell command lsof is used to collect the information.
+ *
  *  @param  fqfn  file name
  *  @param  collector - if NULL, allocate new GPtrArray
  *  @return GPtrArray of lines
@@ -433,7 +435,7 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    // that pre-open pause gave way to retrying after EACCES, this call could
    // be the first on the thread and so decide, from a diagnostic, whether a
    // later caller pauses.
-   bool recent =  recently_resumed_from_sleep_by_clocktime0(true, NULL);
+   bool recent =  recently_resumed_from_sleep_by_clocktime0(/*no_modify=*/true, NULL);
    G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep_by_clocktime() returned %s",
                                      sbool(recent));
 
@@ -480,6 +482,7 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    else
       G_PTR_ARRAY_ADD_STRING(collector, "faccessat(%s) succeeded", fqfn);
 
+#ifdef REDUNDANT_AND_EXPENSIVE
    g_ptr_array_add(collector, strdup("Using command getfacl: "));
    char cmd[PATH_MAX+20];
    g_snprintf(cmd, PATH_MAX+20, "getfacl %s  --all-effective" , fqfn);
@@ -489,34 +492,19 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
       g_ptr_array_add(collector, errmsg);
       fprintf(stderr, "%s   (A)\n", errmsg);
    }
+#endif
 
    g_ptr_array_add(collector, strdup( "Using acl api:"));
    rpt_facl_collect0(fqfn, collector, depth);
+#ifdef REDUNDANT
    g_ptr_array_add(collector, strdup( "Using low level acl api:"));
    rpt_facl_collect1(fqfn, collector, depth);
-   rpt_lsof_collect0(fqfn, collector);
+#endif
+   rpt_lsof_collect0(fqfn, collector);  // uses command lsof
 
    char * sacl = get_user_acl(fqfn, uid);
    G_PTR_ARRAY_ADD_STRING(collector, "acl for user %d: %s", uid, sacl);
    free(sacl);
-
-
-#ifdef USE_DBUS
-#ifdef WRONG
-  uint64_t interval_millis = 5000;
-  uint64_t resumed_millisec = millisec_since_resumed_from_sleep();
-
-  char * s0 = g_strdup_printf("millisec_since_returned_from_sleep(): %"PRIu64, resumed_millisec);
-  DBGF(debug, "%s", s0);
-  g_ptr_array_add(collector, s0);
-  bool recently_returned =  (resumed_millisec < interval_millis);
-  char * s1 = g_strdup_printf("interval_millis: %"PRIu64", recently returned = %s",
-        interval_millis, SBOOL(recently_returned));
-  DBGF(debug, s1);
-  g_ptr_array_add(collector, s1);
-  free(s1);
-#endif
-#endif
 
    DBGF(debug, "Done.    returning collector = %p", collector);
    return collector;
