@@ -847,9 +847,12 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
      // would flood the log with one line per poll interval.
 
      uint64_t since_resume_ms = UINT64_MAX;
-     if (recently_resumed_from_sleep(min_interval_ms, &since_resume_ms) &&
-         since_resume_ms < (uint64_t) min_interval_ms)
-     {
+     if (recently_resumed_from_sleep(min_interval_ms, &since_resume_ms)) {
+        // recently_resumed_from_sleep() reports a resume only when the elapsed
+        // time is less than the interval it was passed, so the subtraction
+        // below cannot wrap.
+        assert(since_resume_ms < (uint64_t) min_interval_ms);
+
         // Sleep only the time remaining until min_interval_ms has elapsed
         // since the resume. The clocktime detector's grace window keeps
         // reporting "recently resumed" for 5 seconds, so sleeping the full
