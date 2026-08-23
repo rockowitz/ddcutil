@@ -1,4 +1,4 @@
-## [2.2.8] 2026-08-18   NOT YET FULLY EDITED
+## [2.2.8] 2026-08-22   NOT YET FULLY EDITED
 
 #### Added
 
