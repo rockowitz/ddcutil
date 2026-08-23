@@ -875,9 +875,6 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
 
 
 void init_dw_common() {
-#ifdef WATCH_ASLEEP
-   RTTI_ADD_FUNC(ddc_i2c_check_bus_asleep);
-#endif
    RTTI_ADD_FUNC(dw_stabilized_buses_bs);
    RTTI_ADD_FUNC(dw_emit_deferred_events);
    RTTI_ADD_FUNC(dw_hotplug_change_handler);
