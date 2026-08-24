@@ -436,8 +436,10 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    if (prepare_elapsed_ns != UINT64_MAX)
       G_PTR_ARRAY_ADD_STRING(collector,
          "Sleep cycle open: PrepareForSleep(true) received %s seconds ago, "
-         "matching PrepareForSleep(false) not yet received",
-         formatted_time_t(prepare_elapsed_ns));
+         "matching PrepareForSleep(false) not yet received%s",
+         formatted_time_t(prepare_elapsed_ns),
+         ldbus_in_open_sleep_cycle()
+               ? "" : ", abandoned: process seen running too long since");
 #endif
 
    // no_mutate: this is a report, and must not consume the detection or open
@@ -934,7 +936,10 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
  *  its counterpart means this process is somewhere inside a suspend, and any
  *  thread running there is treated as having just resumed.  It covers what
  *  neither of the others can: a suspend that stopped this process without
- *  accumulating sleep the clock method can see.  See the body.
+ *  accumulating sleep the clock method can see.  Its weakness is that it
+ *  depends on the closing signal to know the cycle is over; the sleep watch
+ *  thread's heartbeat bounds what happens when that signal never arrives.
+ *  See the body and ldbus_in_open_sleep_cycle().
  *
  *  Neither elapsed time can simply be trusted over the other:
  *   - Taking whichever is smaller prefers the clock method systematically,
@@ -1001,13 +1006,11 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    // keeps the watch thread from opening buses while the GPU is being torn
    // down, which is no worse a place to be idle.
    //
-   // The rule holds until the matching signal arrives.  Were it never to
-   // arrive, the connection to the bus having been lost between the two
-   // signals, callers would keep pausing until the sleep watch thread is
-   // restarted.  Each pause is bounded and interruptible, so the cost is a
-   // sluggish watch thread rather than a stall.
-   bool sleep_cycle_open =
-         ldbus_elapsed_since_pending_prepare_for_sleep_ns() != UINT64_MAX;
+   // The rule holds until the matching signal arrives, or, should it never
+   // arrive, until the sleep watch thread's heartbeat shows the process has
+   // been running too long for the cycle to still be real.  See
+   // ldbus_in_open_sleep_cycle().
+   bool sleep_cycle_open = ldbus_in_open_sleep_cycle();
 
    // within_ms 0 asks whether a resume occurred within no time at all, and the
    // answer must remain no: callers subtract millisec_since from within_ms.

@@ -14,6 +14,7 @@
 
 uint64_t ldbus_elapsed_since_resume_from_sleep_ns();
 uint64_t ldbus_elapsed_since_pending_prepare_for_sleep_ns();
+bool     ldbus_in_open_sleep_cycle();
 #ifdef UNUSED
 int      ldbus_pause_if_recent_return_from_sleep(int minimum_ms);
 #endif

@@ -91,6 +91,37 @@ static GThread * sleep_watch_thread = NULL;
 _Atomic uint64_t last_prepare_for_sleep_ns = 0;
 _Atomic uint64_t last_resume_from_sleep_ns = 0;
 
+/** Poll interval of the sleep watch thread's dispatch loop, and so the
+ *  interval at which it records its heartbeat.
+ */
+#define SLEEP_WATCH_LOOP_TIMEOUT_MS 500
+
+/** CLOCK_BOOTTIME at the top of the sleep watch thread's most recent dispatch
+ *  loop iteration, 0 before the thread first runs.
+ *
+ *  The thread completes an iteration at least every
+ *  SLEEP_WATCH_LOOP_TIMEOUT_MS while the process is running, and completes
+ *  none at all while the process is frozen, so the age of this timestamp
+ *  distinguishes the two.  That is the only way to tell that a suspend
+ *  stopped this process, given that a suspend need not leave any trace in the
+ *  clocks.  See ldbus_in_open_sleep_cycle().
+ */
+_Atomic uint64_t sleep_watch_heartbeat_ns = 0;
+
+/** A heartbeat older than this means the process was not running until a
+ *  moment ago.  Several loop iterations, so that ordinary scheduling delay on
+ *  a loaded system is not read as a freeze.
+ */
+#define SLEEP_WATCH_FREEZE_EVIDENCE_MS (4 * SLEEP_WATCH_LOOP_TIMEOUT_MS)
+
+/** An open sleep cycle is abandoned once the sleep watch thread has been seen
+ *  running this long since the PrepareForSleep(true) signal without the
+ *  matching PrepareForSleep(false) having arrived.  Well beyond any plausible
+ *  interval between the signal and the freeze, which logind bounds by
+ *  InhibitDelayMaxSec, 5 seconds by default.
+ */
+#define OPEN_SLEEP_CYCLE_MAX_RUNNING_MS 60000
+
 
 /** Seeds the resume timestamps with the current time at sleep-watch thread
  *  startup, deliberately treating program start like a resume from sleep.
@@ -101,6 +132,8 @@ _Atomic uint64_t last_resume_from_sleep_ns = 0;
  *
  *  Both timestamps are set to the same value, so that no sleep cycle is open
  *  at program start.  See ldbus_elapsed_since_pending_prepare_for_sleep_ns().
+ *  The heartbeat is seeded here as well: this function is called by the sleep
+ *  watch thread as it begins, which is exactly what the heartbeat records.
  *
  *  @remark
  *  This is the reason the dbus method cannot simply be replaced by the
@@ -110,7 +143,8 @@ _Atomic uint64_t last_resume_from_sleep_ns = 0;
 void ldbus_elapsed_since_resume_from_sleep_mark_start() {
    bool debug = false;
 
-   last_resume_from_sleep_ns = last_prepare_for_sleep_ns = cur_boot_time_nanosec();
+   last_resume_from_sleep_ns = last_prepare_for_sleep_ns =
+         sleep_watch_heartbeat_ns = cur_boot_time_nanosec();
 
    DBGF(debug, "Executed.  set last_resume_from_sleep_ns = last_prepare_for_sleep_ns =%"PRIu64,
          last_resume_from_sleep_ns);
@@ -178,6 +212,68 @@ uint64_t ldbus_elapsed_since_pending_prepare_for_sleep_ns() {
                ", Returning %"PRIu64" ns",
                prepare_ns, resume_ns, elapsed_ns);
    return elapsed_ns;
+}
+
+
+/** Reports whether this process is inside a sleep cycle that is still open,
+ *  i.e. whether a **PrepareForSleep(true)** signal is outstanding and is still
+ *  to be believed.
+ *
+ *  An open cycle is closed by its matching **PrepareForSleep(false)**.  Were
+ *  that signal never to arrive -- the connection to the bus lost between the
+ *  two -- the cycle would otherwise stay open for the life of the process, and
+ *  every caller of recently_resumed_from_sleep() would pause indefinitely.
+ *  The sleep watch thread's heartbeat bounds that: an open cycle is abandoned
+ *  once the thread has been observed running OPEN_SLEEP_CYCLE_MAX_RUNNING_MS
+ *  since the prepare signal.
+ *
+ *  Observed running time is the right measure, rather than elapsed time, and
+ *  it is what makes the heartbeat necessary.  Elapsed time since the prepare
+ *  signal spans the suspend, so it cannot distinguish a cycle that is stuck
+ *  from one whose system simply slept for an hour.  The heartbeat does not
+ *  advance while the process is frozen, since the thread writing it is frozen
+ *  too, so a suspend of any length leaves it at its pre-freeze value and the
+ *  cycle is still honored on the far side.
+ *
+ *  A heartbeat older than SLEEP_WATCH_FREEZE_EVIDENCE_MS overrides the
+ *  abandonment: the process was demonstrably not running until a moment ago,
+ *  so whatever else is true, it has just been thawed.  This covers a system
+ *  configured with an InhibitDelayMaxSec long enough that the interval between
+ *  the signal and the freeze exhausts the running-time allowance on its own.
+ *
+ *  @return true if a sleep cycle is open, false if none is or the open one has
+ *          been abandoned
+ */
+bool ldbus_in_open_sleep_cycle() {
+   bool debug = false;
+   bool result = false;
+
+   // Read the prepare timestamp first, per
+   // ldbus_elapsed_since_pending_prepare_for_sleep_ns(), and the current time
+   // last, so that no difference taken below can wrap.
+   uint64_t prepare_ns   = last_prepare_for_sleep_ns;
+   uint64_t resume_ns    = last_resume_from_sleep_ns;
+   uint64_t heartbeat_ns = sleep_watch_heartbeat_ns;
+   uint64_t now_ns       = cur_boot_time_nanosec();
+
+   uint64_t running_since_prepare_ns = 0;
+   uint64_t heartbeat_age_ns         = 0;
+   if (prepare_ns > resume_ns) {
+      running_since_prepare_ns =
+            (heartbeat_ns > prepare_ns) ? heartbeat_ns - prepare_ns : 0;
+      heartbeat_age_ns = (now_ns > heartbeat_ns) ? now_ns - heartbeat_ns : 0;
+
+      result =
+         running_since_prepare_ns < MILLIS2NANOS(OPEN_SLEEP_CYCLE_MAX_RUNNING_MS) ||
+         heartbeat_age_ns         > MILLIS2NANOS(SLEEP_WATCH_FREEZE_EVIDENCE_MS);
+   }
+
+   DBGF(debug, "last_prepare_for_sleep_ns=%"PRIu64", last_resume_from_sleep_ns=%"PRIu64
+               ", running_since_prepare=%"PRIu64" ms, heartbeat_age=%"PRIu64" ms,"
+               " Returning %s",
+               prepare_ns, resume_ns, NANOS2MILLIS(running_since_prepare_ns),
+               NANOS2MILLIS(heartbeat_age_ns), sbool(result));
+   return result;
 }
 
 
@@ -295,10 +391,20 @@ gpointer ldbus_watch_sleep_events_thread(gpointer data) {
    DBGF(debug,"Listening for PrepareForSleep...");
 
    ldbus_elapsed_since_resume_from_sleep_mark_start();
-   int timeout_ms = 500;    // - = never
    while (!quit_sleep_watch_thread) {
-       dbus_connection_read_write_dispatch(dcd->conn, timeout_ms);
+       // Recorded before the dispatch rather than after it, so that a freeze
+       // during the dispatch -- where this thread spends all of its time --
+       // leaves the heartbeat at its pre-freeze value.
+       sleep_watch_heartbeat_ns = cur_boot_time_nanosec();
+       dbus_connection_read_write_dispatch(dcd->conn, SLEEP_WATCH_LOOP_TIMEOUT_MS);
    }
+
+   // Nothing is left to receive the matching PrepareForSleep(false), so an open
+   // cycle could never close.  Close it here, using the prepare timestamp
+   // rather than the current time: the cycle is over, but no resume has
+   // occurred and none should be reported.
+   if (last_prepare_for_sleep_ns > last_resume_from_sleep_ns)
+      last_resume_from_sleep_ns = last_prepare_for_sleep_ns;
 
    dbus_connection_remove_filter(dcd->conn, ldbus_handle_message, NULL);
    dbus_connection_unref(dcd->conn);

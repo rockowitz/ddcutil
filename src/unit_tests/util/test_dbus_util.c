@@ -39,6 +39,9 @@ extern void invoke_prepare_for_sleep_callbacks(bool preparing);
 extern void ldbus_elapsed_since_resume_from_sleep_mark_start(void);
 extern _Atomic uint64_t last_resume_from_sleep_ns;
 extern _Atomic uint64_t last_prepare_for_sleep_ns;
+extern _Atomic uint64_t sleep_watch_heartbeat_ns;
+
+#define SECOND_NS (1000ULL * 1000 * 1000)
 
 static int total = 0;
 static int failed = 0;
@@ -138,10 +141,49 @@ static void test_pending_prepare_for_sleep(void) {
    CK(ldbus_elapsed_since_pending_prepare_for_sleep_ns() == UINT64_MAX);
 }
 
+// Whether an open cycle is believed depends on the sleep watch thread's
+// heartbeat, which advances only while the process is running.  The states
+// below are reached by setting the three timestamps directly; the thread that
+// would ordinarily write them is not running here.
+static void test_open_sleep_cycle_bounds(void) {
+   uint64_t now = cur_boot_time_nanosec();
+
+   // no cycle open
+   last_resume_from_sleep_ns = now;
+   last_prepare_for_sleep_ns = now - SECOND_NS;
+   sleep_watch_heartbeat_ns  = now;
+   CK(ldbus_in_open_sleep_cycle() == false);
+
+   // cycle just opened, heartbeat current: the interval between the signal and
+   // the freeze
+   last_prepare_for_sleep_ns = now;
+   last_resume_from_sleep_ns = now - 3600 * SECOND_NS;
+   sleep_watch_heartbeat_ns  = now;
+   CK(ldbus_in_open_sleep_cycle() == true);
+
+   // an hour asleep: the heartbeat stopped with the process at the moment of
+   // the freeze, so the cycle is still believed on the far side
+   last_prepare_for_sleep_ns = now - 3600 * SECOND_NS;
+   last_resume_from_sleep_ns = now - 7200 * SECOND_NS;
+   sleep_watch_heartbeat_ns  = last_prepare_for_sleep_ns + SECOND_NS;
+   CK(ldbus_in_open_sleep_cycle() == true);
+
+   // same, but the process has since been running for well over the allowance
+   // with no matching signal: the cycle is abandoned
+   sleep_watch_heartbeat_ns = now;
+   CK(ldbus_in_open_sleep_cycle() == false);
+
+   // unless the heartbeat is itself stale, which says the process was frozen
+   // until a moment ago whatever the running time suggests
+   sleep_watch_heartbeat_ns = now - 30 * SECOND_NS;
+   CK(ldbus_in_open_sleep_cycle() == true);
+}
+
 int main(int argc, char ** argv) {
    test_callbacks();
    test_resume_timing();
    test_pending_prepare_for_sleep();
+   test_open_sleep_cycle_bounds();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

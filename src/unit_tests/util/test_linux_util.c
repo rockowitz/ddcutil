@@ -39,6 +39,7 @@
 // Internal symbols of dbus_util.c, non-static but not declared in its header.
 extern _Atomic uint64_t last_resume_from_sleep_ns;
 extern _Atomic uint64_t last_prepare_for_sleep_ns;
+extern _Atomic uint64_t sleep_watch_heartbeat_ns;
 #endif
 
 static int total = 0;
@@ -66,6 +67,10 @@ static void write_tmpfile(char * path_out, const char * content) {
 // run, so what the checks below see is the sleep-cycle rule alone.
 static void test_open_sleep_cycle(void) {
    uint64_t ms = 0;
+
+   // a current heartbeat, as while the sleep watch thread is running.  Which
+   // open cycles it causes to be believed is checked in test_dbus_util.
+   sleep_watch_heartbeat_ns = cur_boot_time_nanosec();
 
    // no cycle open, last resume long past: not a recent resume
    last_resume_from_sleep_ns = 1;                  // ~boot, long ago
