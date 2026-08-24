@@ -102,11 +102,12 @@
   dropped and reapplied around the cycle as usual.
   A cycle that is never closed, because the connection to the bus was lost
   between the two signals, would otherwise leave every caller pausing for the
-  life of the process. The dbus sleep watch thread now records a heartbeat on
-  each pass of its dispatch loop, and an open cycle is abandoned once that
-  heartbeat shows the process running a minute past the prepare signal with no
-  matching signal received. The heartbeat stops while the process is frozen, so
-  a suspend of any length is still recognized on the far side.
+  life of the process. The dbus sleep watch thread, whose dispatch loop
+  completes a pass every half second while the process is running and none at
+  all while it is frozen, accumulates its own running time since the prepare
+  signal and retires a cycle still open after a minute of it. Time the process
+  spent frozen does not count, so a suspend of any length is still recognized
+  on the far side.
 - **i2c_open_bus_basic()**: after an EACCES failure the system log always
   reported "Current user has group i2c perms on /dev/i2c-N", even when the
   user did not have those permissions, directly contradicting the failure

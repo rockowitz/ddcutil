@@ -428,18 +428,19 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
          "Time since last resume from sleep: %s seconds = %"PRIu64" millisec (%"PRIu64 "nanosec)",
          formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
 
-   // Reported only when a cycle is open, so that the usual report is unchanged.
-   // It is the one line that distinguishes a permission failure occurring
-   // inside a suspend, where the ACLs are expected to be transiently gone,
-   // from one occurring at any other time.
-   uint64_t prepare_elapsed_ns = ldbus_elapsed_since_pending_prepare_for_sleep_ns();
+   // Reported only when a prepare signal is unmatched, so that the usual
+   // report is unchanged.  It is the one line that distinguishes a permission
+   // failure occurring inside a suspend, where the ACLs are expected to be
+   // transiently gone, from one occurring at any other time.  One call, so
+   // that the verdict and the elapsed time describe the same instant.
+   uint64_t prepare_elapsed_ns = UINT64_MAX;
+   bool cycle_open = ldbus_in_open_sleep_cycle(&prepare_elapsed_ns);
    if (prepare_elapsed_ns != UINT64_MAX)
       G_PTR_ARRAY_ADD_STRING(collector,
          "Sleep cycle open: PrepareForSleep(true) received %s seconds ago, "
          "matching PrepareForSleep(false) not yet received%s",
          formatted_time_t(prepare_elapsed_ns),
-         ldbus_in_open_sleep_cycle()
-               ? "" : ", abandoned: process seen running too long since");
+         cycle_open ? "" : ", retired: no longer treated as a resume");
 #endif
 
    // no_mutate: this is a report, and must not consume the detection or open
@@ -938,8 +939,8 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
  *  neither of the others can: a suspend that stopped this process without
  *  accumulating sleep the clock method can see.  Its weakness is that it
  *  depends on the closing signal to know the cycle is over; the sleep watch
- *  thread's heartbeat bounds what happens when that signal never arrives.
- *  See the body and ldbus_in_open_sleep_cycle().
+ *  thread's own running time bounds what happens when that signal never
+ *  arrives.  See the body and ldbus_in_open_sleep_cycle().
  *
  *  Neither elapsed time can simply be trusted over the other:
  *   - Taking whichever is smaller prefers the clock method systematically,
@@ -1007,10 +1008,10 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    // down, which is no worse a place to be idle.
    //
    // The rule holds until the matching signal arrives, or, should it never
-   // arrive, until the sleep watch thread's heartbeat shows the process has
-   // been running too long for the cycle to still be real.  See
+   // arrive, until the sleep watch thread has run long enough since the
+   // prepare signal to conclude it is not coming.  See
    // ldbus_in_open_sleep_cycle().
-   bool sleep_cycle_open = ldbus_in_open_sleep_cycle();
+   bool sleep_cycle_open = ldbus_in_open_sleep_cycle(NULL);
 
    // within_ms 0 asks whether a resume occurred within no time at all, and the
    // answer must remain no: callers subtract millisec_since from within_ms.

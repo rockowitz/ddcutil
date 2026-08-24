@@ -39,7 +39,7 @@
 // Internal symbols of dbus_util.c, non-static but not declared in its header.
 extern _Atomic uint64_t last_resume_from_sleep_ns;
 extern _Atomic uint64_t last_prepare_for_sleep_ns;
-extern _Atomic uint64_t sleep_watch_heartbeat_ns;
+extern _Atomic uint64_t retired_prepare_for_sleep_ns;
 #endif
 
 static int total = 0;
@@ -68,9 +68,9 @@ static void write_tmpfile(char * path_out, const char * content) {
 static void test_open_sleep_cycle(void) {
    uint64_t ms = 0;
 
-   // a current heartbeat, as while the sleep watch thread is running.  Which
-   // open cycles it causes to be believed is checked in test_dbus_util.
-   sleep_watch_heartbeat_ns = cur_boot_time_nanosec();
+   // no cycle has been retired.  Which cycles the sleep watch thread retires
+   // is checked in test_dbus_util.
+   retired_prepare_for_sleep_ns = 0;
 
    // no cycle open, last resume long past: not a recent resume
    last_resume_from_sleep_ns = 1;                  // ~boot, long ago
@@ -96,6 +96,12 @@ static void test_open_sleep_cycle(void) {
    // and once that timestamp is old, no resume is reported
    last_resume_from_sleep_ns = 1;
    last_prepare_for_sleep_ns = 0;
+   CK(recently_resumed_from_sleep(500, &ms) == false);
+
+   // a retired cycle is not a resume either: the prepare signal is still
+   // unmatched, but the thread has concluded its counterpart is not coming
+   last_prepare_for_sleep_ns    = cur_boot_time_nanosec();
+   retired_prepare_for_sleep_ns = last_prepare_for_sleep_ns;
    CK(recently_resumed_from_sleep(500, &ms) == false);
 }
 #endif

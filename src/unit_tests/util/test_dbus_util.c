@@ -6,7 +6,7 @@
  *  and cannot be exercised here.  What can be tested deterministically is the
  *  prepare-for-sleep callback registry (register / unregister / invoke) and the
  *  sleep-cycle timestamp bookkeeping used by ldbus_elapsed_since_resume_from_sleep_ns()
- *  and ldbus_elapsed_since_pending_prepare_for_sleep_ns().
+ *  and ldbus_in_open_sleep_cycle().
  *  Those touch internal, non-static symbols that are not in the public header,
  *  declared below.
  *
@@ -39,7 +39,7 @@ extern void invoke_prepare_for_sleep_callbacks(bool preparing);
 extern void ldbus_elapsed_since_resume_from_sleep_mark_start(void);
 extern _Atomic uint64_t last_resume_from_sleep_ns;
 extern _Atomic uint64_t last_prepare_for_sleep_ns;
-extern _Atomic uint64_t sleep_watch_heartbeat_ns;
+extern _Atomic uint64_t retired_prepare_for_sleep_ns;
 
 #define SECOND_NS (1000ULL * 1000 * 1000)
 
@@ -112,78 +112,61 @@ static void test_resume_timing(void) {
 #endif
 }
 
-// The two timestamps recorded from PrepareForSleep bracket a sleep cycle:
-// the cycle is open when the prepare is the later of the two.  The signals
+// The two timestamps recorded from PrepareForSleep bracket a sleep cycle: it
+// is open when the prepare is the later of the two, and stays open until the
+// resume signal closes it or the sleep watch thread retires it.  The signals
 // themselves need a live bus, but the bookkeeping they drive does not.
-static void test_pending_prepare_for_sleep(void) {
+//
+// Only the ordering of the three timestamps matters to the predicate, so the
+// states below are built from small boot-clock values rather than offsets from
+// the current time, which would underflow on a host of short uptime.
+static void test_open_sleep_cycle(void) {
+   uint64_t elapsed = 0;
+
    // program start is not an open cycle: mark_start sets both timestamps alike
    ldbus_elapsed_since_resume_from_sleep_mark_start();
-   CK(ldbus_elapsed_since_pending_prepare_for_sleep_ns() == UINT64_MAX);
+   retired_prepare_for_sleep_ns = 0;
+   CK(ldbus_in_open_sleep_cycle(&elapsed) == false);
+   CK(elapsed == UINT64_MAX);
 
    // PrepareForSleep(true) opens a cycle, elapsed measured from the signal
    last_prepare_for_sleep_ns = cur_boot_time_nanosec();
-   uint64_t elapsed = ldbus_elapsed_since_pending_prepare_for_sleep_ns();
+   CK(ldbus_in_open_sleep_cycle(&elapsed) == true);
    CK(elapsed != UINT64_MAX);
-   CK(elapsed < 1000ULL * 1000 * 1000);        // < 1 second
+   CK(elapsed < SECOND_NS);
 
-   // the cycle stays open however long the suspend lasts.  A resume recorded
-   // before the prepare -- an earlier cycle's, or the mark at program start --
-   // does not close it.
-   last_prepare_for_sleep_ns = last_resume_from_sleep_ns + 1;
-   CK(ldbus_elapsed_since_pending_prepare_for_sleep_ns() != UINT64_MAX);
+   // the cycle stays open however long the suspend lasts, and the elapsed time
+   // it reports spans that suspend.  A resume recorded before the prepare --
+   // an earlier cycle's, or the mark at program start -- does not close it.
+   last_resume_from_sleep_ns = 1;             // ~boot, long ago
+   last_prepare_for_sleep_ns = 2;
+   CK(ldbus_in_open_sleep_cycle(&elapsed) == true);
+   CK(elapsed > SECOND_NS);                   // i.e. the whole uptime
+
+   // retiring the cycle leaves the prepare signal unmatched, and so still
+   // reported, but no longer treated as a resume
+   retired_prepare_for_sleep_ns = last_prepare_for_sleep_ns;
+   CK(ldbus_in_open_sleep_cycle(&elapsed) == false);
+   CK(elapsed != UINT64_MAX);
+
+   // retirement applies to that cycle alone: the next prepare opens a new one
+   last_prepare_for_sleep_ns = 3;
+   CK(ldbus_in_open_sleep_cycle(&elapsed) == true);
 
    // the matching PrepareForSleep(false) closes it
    last_resume_from_sleep_ns = cur_boot_time_nanosec();
-   CK(ldbus_elapsed_since_pending_prepare_for_sleep_ns() == UINT64_MAX);
+   CK(ldbus_in_open_sleep_cycle(&elapsed) == false);
+   CK(elapsed == UINT64_MAX);
 
    // equal timestamps are not an open cycle
    last_prepare_for_sleep_ns = last_resume_from_sleep_ns;
-   CK(ldbus_elapsed_since_pending_prepare_for_sleep_ns() == UINT64_MAX);
-}
-
-// Whether an open cycle is believed depends on the sleep watch thread's
-// heartbeat, which advances only while the process is running.  The states
-// below are reached by setting the three timestamps directly; the thread that
-// would ordinarily write them is not running here.
-static void test_open_sleep_cycle_bounds(void) {
-   uint64_t now = cur_boot_time_nanosec();
-
-   // no cycle open
-   last_resume_from_sleep_ns = now;
-   last_prepare_for_sleep_ns = now - SECOND_NS;
-   sleep_watch_heartbeat_ns  = now;
-   CK(ldbus_in_open_sleep_cycle() == false);
-
-   // cycle just opened, heartbeat current: the interval between the signal and
-   // the freeze
-   last_prepare_for_sleep_ns = now;
-   last_resume_from_sleep_ns = now - 3600 * SECOND_NS;
-   sleep_watch_heartbeat_ns  = now;
-   CK(ldbus_in_open_sleep_cycle() == true);
-
-   // an hour asleep: the heartbeat stopped with the process at the moment of
-   // the freeze, so the cycle is still believed on the far side
-   last_prepare_for_sleep_ns = now - 3600 * SECOND_NS;
-   last_resume_from_sleep_ns = now - 7200 * SECOND_NS;
-   sleep_watch_heartbeat_ns  = last_prepare_for_sleep_ns + SECOND_NS;
-   CK(ldbus_in_open_sleep_cycle() == true);
-
-   // same, but the process has since been running for well over the allowance
-   // with no matching signal: the cycle is abandoned
-   sleep_watch_heartbeat_ns = now;
-   CK(ldbus_in_open_sleep_cycle() == false);
-
-   // unless the heartbeat is itself stale, which says the process was frozen
-   // until a moment ago whatever the running time suggests
-   sleep_watch_heartbeat_ns = now - 30 * SECOND_NS;
-   CK(ldbus_in_open_sleep_cycle() == true);
+   CK(ldbus_in_open_sleep_cycle(&elapsed) == false);
 }
 
 int main(int argc, char ** argv) {
    test_callbacks();
    test_resume_timing();
-   test_pending_prepare_for_sleep();
-   test_open_sleep_cycle_bounds();
+   test_open_sleep_cycle();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);
