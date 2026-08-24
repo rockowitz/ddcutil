@@ -277,6 +277,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
  */
 int dw_udev_drain() {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    int drained_ct = 0;
    if (monitor_fd < 0)
@@ -295,19 +296,19 @@ int dw_udev_drain() {
       if (!dev2)
          break;
 
-      if (debug || report_udev_events) {
+      bool debug_drain_detail = IS_DBGTRC(debug, DDCA_TRC_NONE) || report_udev_events;
+      if (debug_drain_detail) {
          Udev_Event_Detail * detail = collect_udev_event_detail(dev2);
          if (exclude_event(detail))
-            DBGMSG("Draining event that would be excluded anyway");
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Draining event that would be excluded anyway");
          else
-            DBGMSG("Draining event that would not otherwise be excluded");
-         DBGMSG("Detail for drained event");
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Draining event that would not otherwise be excluded");
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Detail for drained event");
          dbgrpt_udev_event_basic_detail(detail,1);   // apparently does only to terminal
 
          GPtrArray* collector = udev_event_detail_to_collector(detail, NULL);  // allocates collector
          g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
          g_ptr_array_free(collector, true);
-
 
          free_udev_event_detail(detail);
       }
@@ -315,9 +316,9 @@ int dw_udev_drain() {
       udev_device_unref(dev2);
       drained_ct++;
    }
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Drained %d additional queued udev event(s)", drained_ct);
-   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Drained %d additional queued udev event(s)", drained_ct);
 
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Drained %d additional queued udev event(s)", drained_ct);
+   DBGTRC_DONE(debug, TRACE_GROUP, , "Drained %d additional queued udev event(s)", drained_ct);
    return drained_ct;
 }
 
