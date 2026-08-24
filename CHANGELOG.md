@@ -1,4 +1,4 @@
-## [2.2.8] 2026-08-22   NOT YET FULLY EDITED
+## [2.2.8] 2026-08-24   NOT YET FULLY EDITED
 
 #### Added
 
@@ -90,6 +90,16 @@
   100 ms retry instead of the intended retry budget, forcing a rescan. ddcutil's
   clock based resume detection, previously used only when built without dbus 
   support, is now used in addition to the dbus signal.
+  A third method covers what neither of those can: the timestamp of the
+  **PrepareForSleep(true)** signal is now recorded as well, and while it has no
+  matching **PrepareForSleep(false)** the system is taken to be inside a sleep
+  cycle, so any thread running there is treated as having just resumed. The
+  clock method needs more than a second of accumulated sleep to report anything,
+  and user space is frozen before the kernel suspends timekeeping and thawed
+  after it resumes it. A suspend that is aborted, or whose device callbacks are
+  slow, can therefore stop ddcutil for ten seconds or more while the clocks stay
+  in lockstep and no sleep is detected, even though the /dev/i2c ACLs were
+  dropped and reapplied around the cycle as usual.
 - **i2c_open_bus_basic()**: after an EACCES failure the system log always
   reported "Current user has group i2c perms on /dev/i2c-N", even when the
   user did not have those permissions, directly contradicting the failure

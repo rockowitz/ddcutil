@@ -5,7 +5,8 @@
  *  The sleep-watch thread and D-Bus signal handling require a live system bus
  *  and cannot be exercised here.  What can be tested deterministically is the
  *  prepare-for-sleep callback registry (register / unregister / invoke) and the
- *  resume-timestamp bookkeeping used by ldbus_elapsed_since_resume_from_sleep_ns().
+ *  sleep-cycle timestamp bookkeeping used by ldbus_elapsed_since_resume_from_sleep_ns()
+ *  and ldbus_elapsed_since_pending_prepare_for_sleep_ns().
  *  Those touch internal, non-static symbols that are not in the public header,
  *  declared below.
  *
@@ -31,11 +32,13 @@
 #include <stdlib.h>
 
 #include "util/dbus_util.h"
+#include "util/timestamp.h"
 
 // Internal symbols of dbus_util.c, non-static but not declared in the header.
 extern void invoke_prepare_for_sleep_callbacks(bool preparing);
 extern void ldbus_elapsed_since_resume_from_sleep_mark_start(void);
 extern _Atomic uint64_t last_resume_from_sleep_ns;
+extern _Atomic uint64_t last_prepare_for_sleep_ns;
 
 static int total = 0;
 static int failed = 0;
@@ -106,9 +109,39 @@ static void test_resume_timing(void) {
 #endif
 }
 
+// The two timestamps recorded from PrepareForSleep bracket a sleep cycle:
+// the cycle is open when the prepare is the later of the two.  The signals
+// themselves need a live bus, but the bookkeeping they drive does not.
+static void test_pending_prepare_for_sleep(void) {
+   // program start is not an open cycle: mark_start sets both timestamps alike
+   ldbus_elapsed_since_resume_from_sleep_mark_start();
+   CK(ldbus_elapsed_since_pending_prepare_for_sleep_ns() == UINT64_MAX);
+
+   // PrepareForSleep(true) opens a cycle, elapsed measured from the signal
+   last_prepare_for_sleep_ns = cur_boot_time_nanosec();
+   uint64_t elapsed = ldbus_elapsed_since_pending_prepare_for_sleep_ns();
+   CK(elapsed != UINT64_MAX);
+   CK(elapsed < 1000ULL * 1000 * 1000);        // < 1 second
+
+   // the cycle stays open however long the suspend lasts.  A resume recorded
+   // before the prepare -- an earlier cycle's, or the mark at program start --
+   // does not close it.
+   last_prepare_for_sleep_ns = last_resume_from_sleep_ns + 1;
+   CK(ldbus_elapsed_since_pending_prepare_for_sleep_ns() != UINT64_MAX);
+
+   // the matching PrepareForSleep(false) closes it
+   last_resume_from_sleep_ns = cur_boot_time_nanosec();
+   CK(ldbus_elapsed_since_pending_prepare_for_sleep_ns() == UINT64_MAX);
+
+   // equal timestamps are not an open cycle
+   last_prepare_for_sleep_ns = last_resume_from_sleep_ns;
+   CK(ldbus_elapsed_since_pending_prepare_for_sleep_ns() == UINT64_MAX);
+}
+
 int main(int argc, char ** argv) {
    test_callbacks();
    test_resume_timing();
+   test_pending_prepare_for_sleep();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

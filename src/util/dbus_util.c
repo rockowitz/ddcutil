@@ -99,6 +99,9 @@ _Atomic uint64_t last_resume_from_sleep_ns = 0;
  *  permissions shortly after the nodes appear), so the first opens get the
  *  same settling pause from recently_resumed_from_sleep().
  *
+ *  Both timestamps are set to the same value, so that no sleep cycle is open
+ *  at program start.  See ldbus_elapsed_since_pending_prepare_for_sleep_ns().
+ *
  *  @remark
  *  This is the reason the dbus method cannot simply be replaced by the
  *  clocktime resume detector, which reports nothing at program start
@@ -132,6 +135,48 @@ uint64_t ldbus_elapsed_since_resume_from_sleep_ns() {
    DBGF(debug,
          "last_resume_from_sleep_ns=%"PRIu64", Returning %"PRIu64" ns = %"PRIu64" ms",
          last_resume_from_sleep_ns, elapsed_ns, NANOS2MILLIS(elapsed_ns));
+   return elapsed_ns;
+}
+
+
+/** Returns the number of nanoseconds since a **PrepareForSleep(true)** signal
+ *  that has not yet been matched by a **PrepareForSleep(false)**, i.e. since
+ *  the start of a sleep cycle that is still open.
+ *
+ *  logind emits PrepareForSleep(true) before suspending and
+ *  PrepareForSleep(false) after the suspend attempt returns, successful or
+ *  not, so the later of the two timestamps says whether a cycle is open.
+ *  Program start is not an open cycle:
+ *  ldbus_elapsed_since_resume_from_sleep_mark_start() sets both to the same
+ *  value.
+ *
+ *  Note that the elapsed time is measured from the start of the cycle, not
+ *  from a resume.  For a cycle that is still open it spans however long the
+ *  system was suspended.  It is a diagnostic; what the resume detector uses
+ *  is only whether a cycle is open.  See recently_resumed_from_sleep().
+ *
+ *  @return nanoseconds since the unmatched PrepareForSleep(true),
+ *          UINT64_MAX if no sleep cycle is open
+ */
+uint64_t ldbus_elapsed_since_pending_prepare_for_sleep_ns() {
+   bool debug = false;
+
+   // Read the prepare timestamp first.  Should PrepareForSleep(false) be
+   // recorded between the two reads, the resume value read here is the older
+   // one and the cycle is reported as still open.  That is the safe
+   // direction: the resume so missed occurred this very instant.
+   uint64_t prepare_ns = last_prepare_for_sleep_ns;
+   uint64_t resume_ns  = last_resume_from_sleep_ns;
+
+   uint64_t elapsed_ns = UINT64_MAX;
+   if (prepare_ns > resume_ns)
+      // Sampled after prepare_ns was read, and both are CLOCK_BOOTTIME,
+      // so the subtraction cannot wrap.
+      elapsed_ns = cur_boot_time_nanosec() - prepare_ns;
+
+   DBGF(debug, "last_prepare_for_sleep_ns=%"PRIu64", last_resume_from_sleep_ns=%"PRIu64
+               ", Returning %"PRIu64" ns",
+               prepare_ns, resume_ns, elapsed_ns);
    return elapsed_ns;
 }
 
@@ -201,6 +246,9 @@ ldbus_handle_message(DBusConnection *conn, DBusMessage *msg, void *user_data)
               DBUS_TYPE_BOOLEAN, &preparing,
               DBUS_TYPE_INVALID)) {
           DBGF(debug, "PrepareForSleep: %s", preparing ? "true (prepare)" : "false (resume)");
+          // The two timestamps also bracket the sleep cycle: recording the
+          // prepare opens it, recording the resume closes it.  See
+          // ldbus_elapsed_since_pending_prepare_for_sleep_ns().
           uint64_t mono_ns = cur_boot_time_nanosec();
           if (preparing)
              last_prepare_for_sleep_ns = mono_ns;

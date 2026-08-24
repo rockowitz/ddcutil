@@ -427,6 +427,17 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
       G_PTR_ARRAY_ADD_STRING(collector,
          "Time since last resume from sleep: %s seconds = %"PRIu64" millisec (%"PRIu64 "nanosec)",
          formatted_time_t(elapsed_ns), NANOS2MILLIS(elapsed_ns), elapsed_ns);
+
+   // Reported only when a cycle is open, so that the usual report is unchanged.
+   // It is the one line that distinguishes a permission failure occurring
+   // inside a suspend, where the ACLs are expected to be transiently gone,
+   // from one occurring at any other time.
+   uint64_t prepare_elapsed_ns = ldbus_elapsed_since_pending_prepare_for_sleep_ns();
+   if (prepare_elapsed_ns != UINT64_MAX)
+      G_PTR_ARRAY_ADD_STRING(collector,
+         "Sleep cycle open: PrepareForSleep(true) received %s seconds ago, "
+         "matching PrepareForSleep(false) not yet received",
+         formatted_time_t(prepare_elapsed_ns));
 #endif
 
    // no_mutate: this is a report, and must not consume the detection or open
@@ -883,8 +894,8 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
  *  Callers pause for the time remaining in their own interval, rather than
  *  this function pausing, because each has its own sleep and logging needs.
  *
- *  ddcutil detects a resume from sleep two ways.  They are complementary,
- *  not redundant, and neither alone is sufficient.
+ *  ddcutil detects a resume from sleep three ways.  They are complementary,
+ *  not redundant, and none alone is sufficient.
  *
  *  The **dbus** method (dbus_util.c) records when the logind
  *  **PrepareForSleep(false)** signal is received.  It is precise, it is
@@ -916,6 +927,14 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
  *
  *  dbus is therefore preferred where it is trustworthy, and the clock method
  *  covers the case it cannot: the signal not yet delivered.
+ *
+ *  The **open sleep cycle** method uses the other logind signal,
+ *  **PrepareForSleep(true)**, whose timestamp dbus_util.c records alongside
+ *  the resume timestamp.  A cycle opened by that signal and not yet closed by
+ *  its counterpart means this process is somewhere inside a suspend, and any
+ *  thread running there is treated as having just resumed.  It covers what
+ *  neither of the others can: a suspend that stopped this process without
+ *  accumulating sleep the clock method can see.  See the body.
  *
  *  Neither elapsed time can simply be trusted over the other:
  *   - Taking whichever is smaller prefers the clock method systematically,
@@ -951,6 +970,52 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    bool resumed_by_clocktime = recently_resumed_from_sleep_by_clocktime(&clock_detected_now);
 
 #ifdef USE_DBUS
+   // An open sleep cycle, i.e. a PrepareForSleep(true) not yet matched by a
+   // PrepareForSleep(false), is reported as a resume whatever the clocks say.
+   //
+   // Once the kernel has frozen user space this process cannot run again until
+   // it is thawed, so a thread executing inside an open cycle has either been
+   // thawed already or is in the interval between the signal and the freeze.
+   // Neither other source covers the first case:
+   //  - dbus has not yet dispatched PrepareForSleep(false).  That is the
+   //    latency described above, and the resume timestamp it would report
+   //    still predates the suspend.
+   //  - the clock method needs more than a second of accumulated sleep, which
+   //    the cycle need never have produced.  Freezing user space precedes
+   //    timekeeping_suspend() and thawing follows timekeeping_resume(), so a
+   //    suspend that is aborted, or whose device callbacks are slow (hybrid
+   //    graphics, notably), can stop this process for ten seconds while
+   //    BOOTTIME and MONOTONIC stay in lockstep and nothing is detected.  The
+   //    /dev/i2c ACLs are dropped and reapplied around the whole cycle, not
+   //    around its sleeping part, so the EACCES window is there regardless.
+   //
+   // Reported as elapsed 0, so the caller pauses its full interval.  While the
+   // cycle is open there is no better reference point: the prepare timestamp
+   // marks the start of the cycle, not the resume, and measuring from it would
+   // count the entire suspend as already elapsed and pause not at all.
+   //
+   // Before the freeze this reports a resume that has not occurred.  That
+   // costs one interval per call over a window logind bounds by
+   // InhibitDelayMaxSec, 5 seconds by default, and ddcutil holds no delay
+   // inhibitor, so the freeze normally follows the signal promptly.  It also
+   // keeps the watch thread from opening buses while the GPU is being torn
+   // down, which is no worse a place to be idle.
+   //
+   // The rule holds until the matching signal arrives.  Were it never to
+   // arrive, the connection to the bus having been lost between the two
+   // signals, callers would keep pausing until the sleep watch thread is
+   // restarted.  Each pause is bounded and interruptible, so the cost is a
+   // sluggish watch thread rather than a stall.
+   bool sleep_cycle_open =
+         ldbus_elapsed_since_pending_prepare_for_sleep_ns() != UINT64_MAX;
+
+   // within_ms 0 asks whether a resume occurred within no time at all, and the
+   // answer must remain no: callers subtract millisec_since from within_ms.
+   if (sleep_cycle_open && within_ms > 0) {
+      resumed = true;
+      millisec_since = 0;
+   }
+
    uint64_t dbus_elapsed_ms = NANOS2MILLIS(ldbus_elapsed_since_resume_from_sleep_ns());
 
    // A detection on THIS call means sleep accumulated that this thread had
@@ -971,7 +1036,10 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    // Deliberately not decided by comparing the two elapsed times, nor by
    // comparing either against within_ms: within_ms is tunable and must not
    // be what determines correctness.
-   if (!clock_detected_now && dbus_elapsed_ms < (uint64_t) within_ms) {
+   //
+   // Not consulted when the cycle is open: its timestamp is then known to
+   // predate the suspend, and 0 is already the conservative answer.
+   if (!resumed && !clock_detected_now && dbus_elapsed_ms < (uint64_t) within_ms) {
       resumed = true;
       millisec_since = dbus_elapsed_ms;
    }
