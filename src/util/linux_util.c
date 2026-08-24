@@ -438,7 +438,6 @@ GPtrArray* diagnose_open_failure_collect(const char * fqfn,
    bool recent =  recently_resumed_from_sleep_by_clocktime0(/*no_modify=*/true, NULL);
    G_PTR_ARRAY_ADD_STRING(collector, "recently_returned_from_sleep_by_clocktime() returned %s",
                                      sbool(recent));
-
    int uid  = (int) getuid();
    int euid = (int) geteuid();
    int gid  = (int) getgid();
@@ -568,7 +567,7 @@ void diagnose_open_failure_to_syslog(const char * fqfn, const char * msg) {
 static struct sigaction old_segv;
 
 /** Handler for segmentation faults.  Logs the fault and dumps the traced function
- *  stack syslog, then invokes the previous handler.
+ *  stack to syslog, then invokes the previous handler.
  *
  *  @param sig      signal number (should be SIGSEGV)
  *  @param info     pointer to siginfo_t structure with details about the signal
