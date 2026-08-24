@@ -27,6 +27,7 @@
 #include "msg_util.h"
 #include "report_util.h"
 #include "string_util.h"
+#include "syslog_util.h"
 #include "timestamp.h"
 
 #include "dbus_util.h"
@@ -387,12 +388,26 @@ gpointer ldbus_watch_sleep_events_thread(gpointer data) {
           retired_prepare_for_sleep_ns = prepare_ns;
        }
 
-       dbus_connection_read_write_dispatch(dcd->conn, SLEEP_WATCH_LOOP_TIMEOUT_MS);
+       if (!dbus_connection_read_write_dispatch(dcd->conn, SLEEP_WATCH_LOOP_TIMEOUT_MS)) {
+          // False means the connection has closed and its Disconnected message
+          // has been dispatched.  Every subsequent call then returns false at
+          // once, without honoring the timeout, so continuing to call it would
+          // spin on a core for the life of the process.  Nothing else ends the
+          // loop: exit_on_disconnect is deliberately false for this
+          // connection, so that losing the bus does not take down a client.
+          SIMPLE_STD_FUNC_SYSLOG(LOG_WARNING,
+                "System bus connection closed. No longer watching for sleep and "
+                "resume events. Resume from sleep will be detected by clock "
+                "comparison only.");
+          break;
+       }
    }
 
-   // Nothing will be left to receive the matching PrepareForSleep(false), so
-   // an open cycle could never close.  Retire it rather than move the resume
-   // timestamp forward, which would report a resume that never occurred.
+   // Nothing will be left to receive the matching PrepareForSleep(false),
+   // whether the loop ended at shutdown or because the bus connection closed,
+   // so an open cycle could never close.  Retire it rather than move the
+   // resume timestamp forward, which would report a resume that never
+   // occurred.
    uint64_t final_prepare_ns = last_prepare_for_sleep_ns;
    if (final_prepare_ns > last_resume_from_sleep_ns)
       retired_prepare_for_sleep_ns = final_prepare_ns;

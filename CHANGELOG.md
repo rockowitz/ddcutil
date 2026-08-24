@@ -108,6 +108,14 @@
   signal and retires a cycle still open after a minute of it. Time the process
   spent frozen does not count, so a suspend of any length is still recognized
   on the far side.
+- The dbus sleep watch thread spun at 100% CPU for the life of the process if
+  the connection to the system bus closed, e.g. because dbus-daemon was
+  restarted. Its loop ignored the return value of
+  **dbus_connection_read_write_dispatch()**, which once the connection has
+  closed returns false immediately instead of waiting out its timeout, and
+  nothing else ended the loop: the connection deliberately does not exit the
+  process on disconnect. The thread now ends, with a message to the system log,
+  leaving resume detection to the clock comparison.
 - **i2c_open_bus_basic()**: after an EACCES failure the system log always
   reported "Current user has group i2c perms on /dev/i2c-N", even when the
   user did not have those permissions, directly contradicting the failure
