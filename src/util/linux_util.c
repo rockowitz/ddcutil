@@ -13,7 +13,7 @@
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
-#include <signal.h>        // for segv handler
+#include <signal.h>        // for fatal signal handlers
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -575,19 +575,63 @@ void diagnose_open_failure_to_syslog(const char * fqfn, const char * msg) {
 
 
 //
-// SEGFAULT handler
+// Fatal signal handlers
 //
 
-static struct sigaction old_segv;
+// Signals whose default action terminates the process abruptly, running
+// neither the library destructor that logs "libddcutil terminating." nor any
+// atexit function, so that the system log shows the process simply ceasing.
+// SIGSEGV, SIGBUS, SIGILL and SIGFPE are faults; SIGABRT is what assert() and
+// glib's fatal paths raise.  SIGBUS is the one that catches a shared library
+// replaced while a process still has it mapped, a common accident when
+// installing a rebuilt libddcutil under a running client.
+//
+// SIGTERM and SIGINT are deliberately absent.  They are the client program's
+// to handle, and a library claiming them changes how that program responds to
+// an ordinary request to stop.  The signals here are ones no correct program
+// continues from, and the previous handler is chained to in every case, so
+// installing them does not alter what the client does with them.
+static const int    fatal_signals[]      = {SIGSEGV,   SIGBUS,   SIGILL,   SIGFPE,   SIGABRT};
+static const char * fatal_signal_names[] = {"SIGSEGV", "SIGBUS", "SIGILL", "SIGFPE", "SIGABRT"};
+_Static_assert(ARRAY_SIZE(fatal_signals) == ARRAY_SIZE(fatal_signal_names),
+               "fatal_signals and fatal_signal_names must correspond");
 
-/** Handler for segmentation faults.  Logs the fault and dumps the traced function
- *  stack to syslog, then invokes the previous handler.
- *
- *  @param sig      signal number (should be SIGSEGV)
- *  @param info     pointer to siginfo_t structure with details about the signal
- *  @param ucontext pointer to ucontext_t structure with context at time of signal
+/** Disposition of each signal in #fatal_signals before this module installed
+ *  its own, saved per signal so that the handler can chain to the right one.
  */
-static void segv_handler(int sig, siginfo_t *info, void *ucontext) {
+static struct sigaction old_fatal_actions[ARRAY_SIZE(fatal_signals)];
+
+
+/** Returns the index of a signal within #fatal_signals.
+ *
+ *  @param  sig  signal number
+ *  @return index, -1 if this module did not install a handler for it
+ */
+static int fatal_signal_ndx(int sig) {
+   for (unsigned int ndx = 0; ndx < ARRAY_SIZE(fatal_signals); ndx++) {
+      if (fatal_signals[ndx] == sig)
+         return ndx;
+   }
+   return -1;
+}
+
+
+/** Handler for the signals in #fatal_signals.  Logs the signal and dumps the
+ *  traced function stack to syslog, then chains to the handler that was
+ *  previously installed.
+ *
+ *  @param sig      signal number
+ *  @param info     details about the signal
+ *  @param ucontext context at the time of the signal
+ *
+ *  @remark
+ *  syslog() and the message formatting are not async-signal-safe.  That is the
+ *  usual trade for a crash handler that has to say something useful, and it is
+ *  what the SIGSEGV handler this generalizes always did, but a fault taken
+ *  inside malloc() can deadlock here instead of logging.  Only the signal name
+ *  lookup was kept off that path, being a table rather than strsignal().
+ */
+static void fatal_signal_handler(int sig, siginfo_t *info, void *ucontext) {
 #ifdef BACKTRACE
    // Show backtrace
    void *frames[32];
@@ -595,32 +639,56 @@ static void segv_handler(int sig, siginfo_t *info, void *ucontext) {
    backtrace_symbols_fd(frames, n, STDERR_FILENO);
 #endif
 
-   SIMPLE_STD_SYSLOG(LOG_ERR, "Segmentation fault (signal %d)", sig);
+   int ndx = fatal_signal_ndx(sig);
+   // si_code and si_addr locate the fault.  For SIGBUS in particular they are
+   // what distinguishes its causes: si_code BUS_ADRERR at an address within a
+   // mapped file is the signature of that file having been truncated or
+   // replaced underneath the process.
+   SIMPLE_STD_SYSLOG(LOG_ERR, "Fatal signal %d (%s), si_code=%d, si_addr=%p",
+         sig,
+         (ndx >= 0) ? fatal_signal_names[ndx] : "unrecognized",
+         (info) ? info->si_code : 0,
+         (info) ? info->si_addr : NULL);
    current_traced_function_stack_to_syslog(LOG_ERR, TFS_MOST_RECENT_LAST);
 
-   sigaction(SIGSEGV, &old_segv, NULL);
+   if (ndx < 0)   // no handler installed here, so nothing saved to chain to
+      return;
 
-   if (old_segv.sa_flags & SA_SIGINFO) {
-       old_segv.sa_sigaction(sig, info, ucontext);
-   } else if (old_segv.sa_handler == SIG_DFL) {
-       raise(SIGSEGV);
-   } else if (old_segv.sa_handler != SIG_IGN) {
-       old_segv.sa_handler(sig);
+   struct sigaction old = old_fatal_actions[ndx];
+   // Restore the previous disposition before chaining, so that a fault
+   // repeated by the handler chained to is not caught here a second time.
+   sigaction(sig, &old, NULL);
+
+   if (old.sa_flags & SA_SIGINFO) {
+       old.sa_sigaction(sig, info, ucontext);
+   } else if (old.sa_handler == SIG_DFL) {
+       // The signal is blocked while this handler runs, so it becomes pending
+       // and terminates the process when the handler returns.
+       raise(sig);
+   } else if (old.sa_handler != SIG_IGN) {
+       old.sa_handler(sig);
    }
 }
 
 
-/** Installs a SIGSEGV handler that logs the fault and traced function stack
- *  to syslog before re-raising the signal to invoke the previous handler.
+/** Installs a handler for each signal in #fatal_signals, logging the signal
+ *  and the traced function stack to syslog before chaining to whatever
+ *  handler was in place.
+ *
+ *  Called during initialization of both the command line program and the
+ *  shared library.
  */
-void install_segv_handler(void) {
+void install_fatal_signal_handlers(void) {
    struct sigaction sa;
    memset(&sa, 0, sizeof sa);
-   sa.sa_sigaction = segv_handler;
+   sa.sa_sigaction = fatal_signal_handler;
    sa.sa_flags = SA_SIGINFO;
    sigemptyset(&sa.sa_mask);
-   sigaction(SIGSEGV, NULL, &old_segv);
-   sigaction(SIGSEGV, &sa, NULL);
+
+   for (unsigned int ndx = 0; ndx < ARRAY_SIZE(fatal_signals); ndx++) {
+      sigaction(fatal_signals[ndx], NULL, &old_fatal_actions[ndx]);
+      sigaction(fatal_signals[ndx], &sa, NULL);
+   }
 }
 
 

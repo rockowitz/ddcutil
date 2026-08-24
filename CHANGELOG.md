@@ -38,6 +38,31 @@
 
 - Command ***setvcp***: Relative value changes can now also be specified as 
   PLUS/MINUS (case-insensitive), in addition to +/-. e.g. **ddcutil setvcp 10 plus 5**. 
+- The handler that writes a crash to the system log, previously **SIGSEGV**
+  only, now also covers **SIGBUS**, **SIGILL**, **SIGFPE** and **SIGABRT**, and
+  reports the signal name together with **si_code** and **si_addr**. The
+  default action for all of these terminates the process without running the
+  library destructor that logs "libddcutil terminating.", so a client such as
+  powerdevil appeared in the system log simply to stop, with nothing to say why
+  or where. SIGBUS is what a process receives when a shared library it has
+  mapped is replaced or truncated, as happens when a rebuilt libddcutil is
+  installed under a running client; **si_code** 2 (BUS_ADRERR) together with an
+  address inside the mapping distinguishes that from a signal sent by **kill**.
+  As before, the handler chains to whatever handler was previously installed,
+  so a client's own handling of these signals is unaffected. SIGTERM and SIGINT
+  are deliberately not caught: they belong to the client program, and a library
+  claiming them would change how that program responds to a request to stop.
+  This is deliberately not part of **make check**. Exercising a crash handler
+  means terminating child processes by real faults, and what happens then
+  depends on the host: where **core_pattern** pipes to a handler such as
+  systemd-coredump, a crashing child blocks in the kernel until that handler
+  drains the dump, whatever **ulimit -c** says, unless the child first makes
+  itself non-dumpable. Too machine-dependent for the test suite. The handlers
+  were instead verified out of tree, by a program that forks a child per
+  signal and confirms that each signal still terminates the process with that
+  same signal, that a handler the client installed beforehand still runs, and
+  that a genuine SIGBUS, provoked by mapping a file and then truncating it, is
+  logged with **si_code** 2 and the faulting address.
 - Reduce duplicated messages in the system log when trace output is redirected
   to the system log.
 - EDID reads now first attempt to use a single combined **I2C_RDWR** ioctl

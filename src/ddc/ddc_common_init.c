@@ -616,7 +616,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    Error_Info * final_result = NULL;
    GPtrArray * errinfo_accumulator = g_ptr_array_new_with_free_func((GDestroyNotify) errinfo_free);
 
-   install_segv_handler();
+   install_fatal_signal_handlers();
    // DBGMSF(true, "forcing a segfault to test handler...");
    // *(volatile int *)0 = 1;
 
