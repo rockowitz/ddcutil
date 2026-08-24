@@ -67,6 +67,7 @@ static void write_tmpfile(char * path_out, const char * content) {
 // run, so what the checks below see is the sleep-cycle rule alone.
 static void test_open_sleep_cycle(void) {
    uint64_t ms = 0;
+   Resume_Detection detection = RESUME_DETECTED_NONE;
 
    // no cycle has been retired.  Which cycles the sleep watch thread retires
    // is checked in test_dbus_util.
@@ -75,34 +76,40 @@ static void test_open_sleep_cycle(void) {
    // no cycle open, last resume long past: not a recent resume
    last_resume_from_sleep_ns = 1;                  // ~boot, long ago
    last_prepare_for_sleep_ns = 0;
-   CK(recently_resumed_from_sleep(500, &ms) == false);
+   CK(recently_resumed_from_sleep(500, &ms, &detection) == false);
    CK(ms == UINT64_MAX);
+   CK(detection == RESUME_DETECTED_NONE);
 
    // an open cycle is reported as a resume that just occurred, whatever the
    // stale resume timestamp says
    last_prepare_for_sleep_ns = cur_boot_time_nanosec();
-   CK(recently_resumed_from_sleep(500, &ms) == true);
+   CK(recently_resumed_from_sleep(500, &ms, &detection) == true);
    CK(ms == 0);
+   // reported as a sleep cycle, not as a resume: the system need not have
+   // slept yet, and dw_pause_if_recently_resumed_from_sleep() says so in the
+   // system log
+   CK(detection == RESUME_DETECTED_IN_SLEEP_CYCLE);
 
    // within_ms 0 asks whether a resume occurred within no time at all
-   CK(recently_resumed_from_sleep(0, &ms) == false);
+   CK(recently_resumed_from_sleep(0, &ms, NULL) == false);
 
    // closing the cycle hands the answer back to the resume timestamp, which
    // is now current
    last_resume_from_sleep_ns = cur_boot_time_nanosec();
-   CK(recently_resumed_from_sleep(500, &ms) == true);
+   CK(recently_resumed_from_sleep(500, &ms, &detection) == true);
    CK(ms < 500);
+   CK(detection == RESUME_DETECTED_BY_DBUS);
 
    // and once that timestamp is old, no resume is reported
    last_resume_from_sleep_ns = 1;
    last_prepare_for_sleep_ns = 0;
-   CK(recently_resumed_from_sleep(500, &ms) == false);
+   CK(recently_resumed_from_sleep(500, &ms, NULL) == false);
 
    // a retired cycle is not a resume either: the prepare signal is still
    // unmatched, but the thread has concluded its counterpart is not coming
    last_prepare_for_sleep_ns    = cur_boot_time_nanosec();
    retired_prepare_for_sleep_ns = last_prepare_for_sleep_ns;
-   CK(recently_resumed_from_sleep(500, &ms) == false);
+   CK(recently_resumed_from_sleep(500, &ms, NULL) == false);
 }
 #endif
 

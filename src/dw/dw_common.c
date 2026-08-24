@@ -847,7 +847,8 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
      // would flood the log with one line per poll interval.
 
      uint64_t since_resume_ms = UINT64_MAX;
-     if (recently_resumed_from_sleep(min_interval_ms, &since_resume_ms)) {
+     Resume_Detection detection = RESUME_DETECTED_NONE;
+     if (recently_resumed_from_sleep(min_interval_ms, &since_resume_ms, &detection)) {
         // recently_resumed_from_sleep() reports a resume only when the elapsed
         // time is less than the interval it was passed, so the subtraction
         // below cannot wrap.
@@ -860,8 +861,13 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
         // event batch in a post-resume udev burst, and again after the pause
         // already taken in dw_udev_watch() for an add event.
         int delay_ms = (int) ((uint64_t) min_interval_ms - since_resume_ms);
-        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
-              "Recently resumed from sleep, pausing for %d millisec", delay_ms);
+        // Worded from what was detected rather than fixed text.  A pause taken
+        // inside an open sleep cycle can precede the suspend itself, so a
+        // message asserting a resume would contradict the machine's state in
+        // the log; and when a resume did occur, naming the method that saw it
+        // is what makes a log of this subsystem readable.
+        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s, pausing for %d millisec",
+              resume_detection_description(detection), delay_ms);
         // dw_split_sleep() rather than LOGGABLE_SLEEP(), which the dbus
         // variant of this function formerly used: the pause runs on the watch
         // thread, and a split sleep is interruptible at shutdown.

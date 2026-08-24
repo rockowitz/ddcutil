@@ -891,6 +891,11 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
  *  @param  millisec_since_loc  if non-NULL, where to return the number of
  *                              milliseconds since the resume, UINT64_MAX if
  *                              no recent resume
+ *  @param  detection_loc       if non-NULL, where to return which method
+ *                              answered.  A caller that reports the pause it
+ *                              takes needs this: only two of the three
+ *                              methods establish that the system has actually
+ *                              slept.  See resume_detection_description().
  *  @return true if a resume from sleep occurred within the past **within_ms**
  *
  *  @remark
@@ -963,10 +968,13 @@ uint64_t millisec_since_resume_detected_by_clocktime() {
  *  symmetric.  Note that the decision deliberately does not depend on
  *  within_ms, which is tunable and must not determine correctness.
  */
-bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
+bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc,
+                                 Resume_Detection * detection_loc)
+{
    bool debug = false;
    bool resumed = false;
    uint64_t millisec_since = UINT64_MAX;
+   Resume_Detection detection = RESUME_DETECTED_NONE;
 
    // Called on every invocation, whatever dbus reports, so that this thread's
    // baseline stays current and its grace window opens when the resume is
@@ -1018,6 +1026,7 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    if (sleep_cycle_open && within_ms > 0) {
       resumed = true;
       millisec_since = 0;
+      detection = RESUME_DETECTED_IN_SLEEP_CYCLE;
    }
 
    uint64_t dbus_elapsed_ms = NANOS2MILLIS(ldbus_elapsed_since_resume_from_sleep_ns());
@@ -1046,6 +1055,7 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
    if (!resumed && !clock_detected_now && dbus_elapsed_ms < (uint64_t) within_ms) {
       resumed = true;
       millisec_since = dbus_elapsed_ms;
+      detection = RESUME_DETECTED_BY_DBUS;
    }
 #endif
 
@@ -1056,12 +1066,44 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc) {
       if (clock_elapsed_ms < (uint64_t) within_ms) {
          resumed = true;
          millisec_since = clock_elapsed_ms;
+         detection = RESUME_DETECTED_BY_CLOCKTIME;
       }
    }
 
    if (millisec_since_loc)
       *millisec_since_loc = millisec_since;
-   DBGF(debug, "within_ms=%d, millisec_since=%"PRIu64", returning %s",
-               within_ms, millisec_since, sbool(resumed));
+   if (detection_loc)
+      *detection_loc = detection;
+   DBGF(debug, "within_ms=%d, millisec_since=%"PRIu64", detection=%s, returning %s",
+               within_ms, millisec_since, resume_detection_description(detection),
+               sbool(resumed));
    return resumed;
+}
+
+
+/** Returns a description of how a resume from sleep was detected, phrased as
+ *  the opening clause of a message reporting it.
+ *
+ *  An open sleep cycle is deliberately not described as a resume.  The pause
+ *  it causes may be taken before the system has slept at all, in the interval
+ *  between PrepareForSleep(true) and the freeze, and a message claiming a
+ *  resume there would contradict the machine's state in the system log at
+ *  exactly the point where this subsystem is diagnosed from it.
+ *
+ *  @param  detection  value reported by #recently_resumed_from_sleep()
+ *  @return description, valid for the life of the program
+ */
+const char * resume_detection_description(Resume_Detection detection) {
+   char * result = "Unrecognized resume detection";
+   switch(detection) {
+   case RESUME_DETECTED_NONE:
+      result = "No recent resume from sleep";                       break;
+   case RESUME_DETECTED_BY_DBUS:
+      result = "Recently resumed from sleep, per dbus signal";      break;
+   case RESUME_DETECTED_BY_CLOCKTIME:
+      result = "Recently resumed from sleep, per clock comparison"; break;
+   case RESUME_DETECTED_IN_SLEEP_CYCLE:
+      result = "Sleep cycle in progress";                           break;
+   }
+   return result;
 }

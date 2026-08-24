@@ -230,7 +230,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
          // call below: an add event sets already_paused_ms to the full
          // interval, so the guard below is false whenever this branch ran.
          // No-op if a resume did not recently occur.
-         recently_resumed_from_sleep(pause_after_resume_ms, NULL);
+         recently_resumed_from_sleep(pause_after_resume_ms, NULL, NULL);
          LOGGABLE_SLEEP(pause_after_add_ms, SLEEP_OPT_TRACEABLE,DDCA_SYSLOG_NOTICE,
                "Pausing %d millisec after UDEV add event", pause_after_add_ms);
          already_paused_ms = pause_after_add_ms;
