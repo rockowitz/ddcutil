@@ -529,6 +529,11 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       max_eacces_retry_ct  = parsed_cmd->i12;
    if (parsed_cmd->flags2 & CMD_FLAG2_I13_SET)
       rate_limit_eacces_diagnostics_interval_sec = parsed_cmd->i13;
+   // Separate from --i10 although the two default alike: this settles a device
+   // node udev has just created, that one settles a resume from sleep.  They
+   // are tuned from different evidence.
+   if (parsed_cmd->flags2 & CMD_FLAG2_I14_SET)
+      pause_after_add_ms = parsed_cmd->i14;
 #endif
 }
 

@@ -142,6 +142,11 @@
 //
 
 #define DEFAULT_PAUSE_AFTER_RESUME_MS   500
+// Settling time after a udev add event, while udev applies permissions to the
+// device node it has just created.  Separate from the pause after resume,
+// which answers the same question for a different event and is tuned from
+// different evidence, though the two values start out alike.
+#define DEFAULT_PAUSE_AFTER_ADD_MS      500
 #define DEFAULT_MAX_EACCES_RETRY_MS    3000
 // n. the count is a backstop.  With the intervals below, the elapsed time
 // limit above is what normally ends the retries.

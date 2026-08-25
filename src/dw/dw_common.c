@@ -58,6 +58,7 @@ static const int Dbgtrc_Dbgrpt_Depth = 4;  // most closely matches dbgtrc indent
 // Timing globals are atomic to handle concurrent reads in watch
 // thread and writes by ddca_set_display_settings()
 _Atomic uint16_t  initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
+_Atomic uint16_t  pause_after_add_ms              = DEFAULT_PAUSE_AFTER_ADD_MS;
 _Atomic uint16_t  stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
 _Atomic uint16_t  udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
 _Atomic uint16_t  poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
@@ -833,11 +834,35 @@ int  active_callback_thread_ct() {
  */
 #define PAUSE_SUSPENDED_SLACK_MS 1000
 
-/** Bound on how many times the settling pause is retaken after being spent by
- *  a suspend.  More than one repeat means a second suspend began while
- *  settling from the first.
+
+/** Sleeps, and reports whether a suspend spent the sleep rather than the sleep
+ *  being served.
+ *
+ *  A settling pause exists to put time between some event and the work that
+ *  follows it, most often while udev applies permissions to device nodes.  A
+ *  pause begun before the kernel freezes user space does not do that.  The
+ *  freeze consumes it: the sleep's deadline expires while the process is not
+ *  running, and the call returns the instant the process is thawed, so the
+ *  caller believes it has waited when no time has passed on the far side.
+ *  Callers that must actually settle retake the pause when this reports true.
+ *
+ *  Measured on CLOCK_BOOTTIME, which advances across a true suspend as well as
+ *  across a freeze that never reaches the point of suspending timekeeping;
+ *  CLOCK_MONOTONIC would see only the latter.  dw_split_sleep()'s return value
+ *  cannot serve: it is clamped to the requested duration, and its non-eventfd
+ *  form is not a measurement at all.
+ *
+ *  @param  millisec  milliseconds to sleep, > 0
+ *  @return true if the sleep overran far enough to have been spent by a suspend
  */
-#define MAX_SETTLING_PAUSE_ATTEMPTS 3
+bool dw_sleep_spent_by_suspend(int millisec) {
+   uint64_t start_ns = cur_boot_time_nanosec();
+   // dw_split_sleep() rather than LOGGABLE_SLEEP(): these pauses run on the
+   // watch thread, and a split sleep is interruptible at shutdown.
+   dw_split_sleep(millisec);
+   uint64_t elapsed_ms = NANOS2MILLIS(cur_boot_time_nanosec() - start_ns);
+   return elapsed_ms > (uint64_t) millisec + PAUSE_SUSPENDED_SLACK_MS;
+}
 
 
 /** Pause execution if recently resumed from sleep. Permissions are assigned
@@ -878,11 +903,9 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
      // whenever a pause is taken inside an open sleep cycle, i.e. from a
      // PrepareForSleep(true) whose freeze has not happened yet.
      //
-     // So measure the pause and take it again if it overran.  Measured on
-     // CLOCK_BOOTTIME, which advances across a true suspend as well as across
-     // a freeze that never reaches the point of suspending timekeeping;
-     // CLOCK_MONOTONIC would see only the latter.  Re-testing rather than
-     // simply repeating lets the second pass use whatever is known by then:
+     // So measure the pause and take it again if it overran; see
+     // dw_sleep_spent_by_suspend().  Re-testing rather than simply repeating
+     // lets the second pass use whatever is known by then:
      // the resume signal has usually arrived, so the wait becomes the
      // remainder of the interval measured from the resume itself.
      for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
@@ -908,27 +931,16 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s, pausing for %d millisec",
               resume_detection_description(detection), delay_ms);
 
-        uint64_t start_ns = cur_boot_time_nanosec();
-        // dw_split_sleep() rather than LOGGABLE_SLEEP(), which the dbus
-        // variant of this function formerly used: the pause runs on the watch
-        // thread, and a split sleep is interruptible at shutdown.  Its return
-        // value cannot serve as the measurement below: it is clamped to the
-        // requested duration, and in its non-eventfd form is not a measurement
-        // at all.
-        dw_split_sleep(delay_ms);
+        suspended_during_pause = dw_sleep_spent_by_suspend(delay_ms);
         slept_millisec += delay_ms;
-        uint64_t elapsed_ms = NANOS2MILLIS(cur_boot_time_nanosec() - start_ns);
 
-        suspended_during_pause =
-              elapsed_ms > (uint64_t) delay_ms + PAUSE_SUSPENDED_SLACK_MS;
         if (!suspended_during_pause)   // the pause followed the resume, as intended
            break;
         if (terminate_watch_thread)    // shutting down, do not pause again
            break;
         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
-              "Pause of %d millisec took %"PRIu64" millisec: the process was suspended "
-              "during it, so the pause preceded the resume rather than following it",
-              delay_ms, elapsed_ms);
+              "Pause of %d millisec was spent by a suspend, so it preceded the resume "
+              "rather than following it.  Pausing again.", delay_ms);
      }
      if (suspended_during_pause && !terminate_watch_thread)
         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,

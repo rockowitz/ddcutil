@@ -220,20 +220,34 @@ bool dw_udev_watch(int watch_loop_millisec) {
       int already_paused_ms = 0;
 
       if (add_event_detected) {
-         int pause_after_add_ms = pause_after_resume_ms;   // ??
-
          // Run the resume detection before pausing, so that its clocktime
          // reference point precedes this sleep and
          // dw_pause_if_recently_resumed_from_sleep() counts this sleep toward
-         // pause_after_resume_ms instead of pausing again in full.  That
-         // credit is taken on a later iteration of the watch loop, not by the
-         // call below: an add event sets already_paused_ms to the full
-         // interval, so the guard below is false whenever this branch ran.
+         // pause_after_resume_ms instead of pausing again in full.  Whether
+         // that credit is enough to skip the guard below now depends on how
+         // pause_after_add_ms compares with pause_after_resume_ms: they are
+         // separately tunable, and equal only by default.  When the add pause
+         // is the shorter, the guard runs and tops up the settling time,
+         // measured from the resume itself, which is what it should do.
          // No-op if a resume did not recently occur.
          recently_resumed_from_sleep(pause_after_resume_ms, NULL, NULL);
-         LOGGABLE_SLEEP(pause_after_add_ms, SLEEP_OPT_TRACEABLE,DDCA_SYSLOG_NOTICE,
-               "Pausing %d millisec after UDEV add event", pause_after_add_ms);
-         already_paused_ms = pause_after_add_ms;
+
+         // Retaken if a suspend spends it rather than it being served; see
+         // dw_sleep_spent_by_suspend().  An add event can arrive in the
+         // interval between PrepareForSleep(true) and the freeze, and a pause
+         // consumed there leaves the device node no more settled than before.
+         for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
+            DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "Pausing %d millisec after UDEV add event",
+                  pause_after_add_ms);
+            already_paused_ms += pause_after_add_ms;
+            if (!dw_sleep_spent_by_suspend(pause_after_add_ms))
+               break;
+            if (terminate_watch_thread)
+               break;
+            DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
+                  "Pause of %d millisec after UDEV add event was spent by a suspend. "
+                  "Pausing again.", pause_after_add_ms);
+         }
       }
 
       if (already_paused_ms < pause_after_resume_ms) {

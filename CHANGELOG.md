@@ -154,7 +154,17 @@
   buses at exactly the moment the ACLs are still missing. A pause overrunning
   its requested duration by more than a second is taken to have been spent that
   way. It is measured on CLOCK_BOOTTIME, so that both a true suspend and a
-  freeze that never reaches the point of suspending timekeeping are seen.
+  freeze that never reaches the point of suspending timekeeping are seen. The
+  pause taken after a udev **add** event, which settles a device node udev has
+  just created, is retaken on the same terms and for the same reason.
+- The pause after a udev **add** event is no longer governed by ***--i10***,
+  the pause after resume from sleep. It has its own setting, ***--i14***,
+  defaulting to the same 500 ms, so behavior is unchanged unless one of the two
+  is set. The two answer the same question — how long udev takes to apply
+  permissions to a device node — but for different events, and are tuned from
+  different evidence; sharing one value meant that raising the pause after
+  resume, to suit a machine slow to restore /dev/i2c ACLs, silently delayed
+  every display hotplug by the same amount.
 - The dbus sleep watch thread spun at 100% CPU for the life of the process if
   the connection to the system bus closed, e.g. because dbus-daemon was
   restarted. Its loop ignored the return value of

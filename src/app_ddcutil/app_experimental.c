@@ -109,7 +109,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i11:         Max after EACCES retry ms (default=%d", DEFAULT_MAX_EACCES_RETRY_MS);
    rpt_vstring(depth+1, "Utility option --i12:         Max after EACCES retry ct (default=%d)", DEFAULT_MAX_EACCES_RETRY_CT);
    rpt_vstring(depth+1, "Utility option --i13:         EACCES diagnostic interval seconds (default=%d)", DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC);
-   rpt_vstring(depth+1, "Utility option --i14:         Unused");
+   rpt_vstring(depth+1, "Utility option --i14:         Pause after udev add event ms (default = %d)", DEFAULT_PAUSE_AFTER_ADD_MS);
    rpt_vstring(depth+1, "Utility option --i15:         Unused");
    rpt_vstring(depth+1, "Utility option --i16:         Unused");
 

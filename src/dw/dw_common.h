@@ -18,6 +18,7 @@
 #endif
 
 extern _Atomic uint16_t  initial_stabilization_millisec;
+extern _Atomic uint16_t  pause_after_add_ms;
 extern _Atomic uint16_t  stabilization_poll_millisec;
 extern _Atomic uint16_t  udev_watch_loop_millisec;
 extern _Atomic uint16_t  poll_watch_loop_millisec;
@@ -117,6 +118,13 @@ void record_active_callback_thread(GThread* thread);
 void remove_active_callback_thread(GThread* thread);
 int  active_callback_thread_ct();
 
+/** Bound on how many times a settling pause is retaken after being spent by a
+ *  suspend.  More than one repeat means a second suspend began while settling
+ *  from the first.
+ */
+#define MAX_SETTLING_PAUSE_ATTEMPTS 3
+
+bool dw_sleep_spent_by_suspend(int millisec);
 int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms);
 
 
