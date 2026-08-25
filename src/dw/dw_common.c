@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
+#include <inttypes.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -825,6 +826,20 @@ int  active_callback_thread_ct() {
 }
 
 
+/** A pause overrunning its requested duration by more than this was not merely
+ *  delayed by scheduling: for the difference, this process was not running at
+ *  all, i.e. it was frozen for a suspend.  Well above the jitter of a loaded
+ *  system, well below the length of any suspend cycle.
+ */
+#define PAUSE_SUSPENDED_SLACK_MS 1000
+
+/** Bound on how many times the settling pause is retaken after being spent by
+ *  a suspend.  More than one repeat means a second suspend began while
+ *  settling from the first.
+ */
+#define MAX_SETTLING_PAUSE_ATTEMPTS 3
+
+
 /** Pause execution if recently resumed from sleep. Permissions are assigned
  *  by udev after the /dev/i2c devices ara creaetd.
  *
@@ -836,6 +851,9 @@ int  active_callback_thread_ct() {
  *  is less than **min_iterval_ms**, sleep for the difference
  *  between the difference between of milliseconds since resume
  *  and **min_interval_ms**.
+ *
+ *  The pause measures itself, and is taken again if it was spent by a suspend
+ *  rather than served after the resume.  See the body.
  */
 int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
      bool debug = false;
@@ -848,7 +866,28 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
 
      uint64_t since_resume_ms = UINT64_MAX;
      Resume_Detection detection = RESUME_DETECTED_NONE;
-     if (recently_resumed_from_sleep(min_interval_ms, &since_resume_ms, &detection)) {
+     bool suspended_during_pause = false;
+
+     // The pause exists to sit between the resume and the first bus open,
+     // while udev reapplies the /dev/i2c ACLs.  A pause begun before the
+     // kernel freezes user space does not do that: the freeze consumes it, the
+     // sleep's deadline expires while the process is not running, and the call
+     // returns the instant the process is thawed.  The caller then believes it
+     // has served its settling interval and opens buses immediately, which is
+     // exactly the moment the ACLs are still missing.  This is reachable
+     // whenever a pause is taken inside an open sleep cycle, i.e. from a
+     // PrepareForSleep(true) whose freeze has not happened yet.
+     //
+     // So measure the pause and take it again if it overran.  Measured on
+     // CLOCK_BOOTTIME, which advances across a true suspend as well as across
+     // a freeze that never reaches the point of suspending timekeeping;
+     // CLOCK_MONOTONIC would see only the latter.  Re-testing rather than
+     // simply repeating lets the second pass use whatever is known by then:
+     // the resume signal has usually arrived, so the wait becomes the
+     // remainder of the interval measured from the resume itself.
+     for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
+        if (!recently_resumed_from_sleep(min_interval_ms, &since_resume_ms, &detection))
+           break;
         // recently_resumed_from_sleep() reports a resume only when the elapsed
         // time is less than the interval it was passed, so the subtraction
         // below cannot wrap.
@@ -868,12 +907,33 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
         // is what makes a log of this subsystem readable.
         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s, pausing for %d millisec",
               resume_detection_description(detection), delay_ms);
+
+        uint64_t start_ns = cur_boot_time_nanosec();
         // dw_split_sleep() rather than LOGGABLE_SLEEP(), which the dbus
         // variant of this function formerly used: the pause runs on the watch
-        // thread, and a split sleep is interruptible at shutdown.
+        // thread, and a split sleep is interruptible at shutdown.  Its return
+        // value cannot serve as the measurement below: it is clamped to the
+        // requested duration, and in its non-eventfd form is not a measurement
+        // at all.
         dw_split_sleep(delay_ms);
-        slept_millisec = delay_ms;
+        slept_millisec += delay_ms;
+        uint64_t elapsed_ms = NANOS2MILLIS(cur_boot_time_nanosec() - start_ns);
+
+        suspended_during_pause =
+              elapsed_ms > (uint64_t) delay_ms + PAUSE_SUSPENDED_SLACK_MS;
+        if (!suspended_during_pause)   // the pause followed the resume, as intended
+           break;
+        if (terminate_watch_thread)    // shutting down, do not pause again
+           break;
+        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
+              "Pause of %d millisec took %"PRIu64" millisec: the process was suspended "
+              "during it, so the pause preceded the resume rather than following it",
+              delay_ms, elapsed_ms);
      }
+     if (suspended_during_pause && !terminate_watch_thread)
+        DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
+              "Settling pause interrupted by a suspend %d times, continuing without it",
+              MAX_SETTLING_PAUSE_ATTEMPTS);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d slept_millisec", slept_millisec);
    return slept_millisec;

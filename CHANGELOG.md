@@ -139,6 +139,15 @@
   suspend itself, so a message asserting a resume there would contradict the
   machine's state in the log at exactly the point where this subsystem is
   diagnosed from it.
+  The settling pause also measures itself, and is taken again if it was spent
+  by the suspend instead of served after the resume. A pause begun before the
+  kernel freezes user space does not do the job it exists for: the sleep's
+  deadline expires while the process is not running, the call returns the
+  instant the process is thawed, and the caller, believing it has waited, opens
+  buses at exactly the moment the ACLs are still missing. A pause overrunning
+  its requested duration by more than a second is taken to have been spent that
+  way. It is measured on CLOCK_BOOTTIME, so that both a true suspend and a
+  freeze that never reaches the point of suspending timekeeping are seen.
 - The dbus sleep watch thread spun at 100% CPU for the life of the process if
   the connection to the system bus closed, e.g. because dbus-daemon was
   restarted. Its loop ignored the return value of
