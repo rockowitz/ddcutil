@@ -38,6 +38,13 @@
 
 - Command ***setvcp***: Relative value changes can now also be specified as 
   PLUS/MINUS (case-insensitive), in addition to +/-. e.g. **ddcutil setvcp 10 plus 5**. 
+- Option ***--i6*** now sets the number of milliseconds the display watch
+  thread waits before its first scan. Default 0, i.e. no delay. Unlike
+  ***--i9***, which waits within **dw_start_watch_displays()** and so blocks
+  the client thread that called **ddca_start_watch_displays()**, this waits only
+  on the thread ddcutil owns. Note that the udev monitor is created by that
+  thread, after the wait, so a display connected during it produces no event,
+  although the baseline scan that follows records the resulting state.
 - The handler that writes a crash to the system log, previously **SIGSEGV**
   only, now also covers **SIGBUS**, **SIGILL**, **SIGFPE** and **SIGABRT**, and
   reports the signal name together with **si_code** and **si_addr**. The

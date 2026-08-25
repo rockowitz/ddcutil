@@ -12,6 +12,7 @@
 extern int  nonudev_poll_loop_millisec;
 extern _Atomic uint16_t  retry_thread_sleep_factor_millisec;
 extern bool stabilize_added_buses_w_edid;
+extern int  display_watch_thread_initial_delay;
 extern bool recheck_thread_active;   // ?? needed?
 
 gpointer dw_watch_display_connections(gpointer data);

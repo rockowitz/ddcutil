@@ -62,7 +62,7 @@ int  nonudev_poll_loop_millisec = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;   // 2000;
 _Atomic uint16_t  retry_thread_sleep_factor_millisec = WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC;
 bool stabilize_added_buses_w_edid = false;  // if set, stabilize when displays added as well as removed
 bool recheck_thread_active = false;
-
+int  display_watch_thread_initial_delay = 0;
 
 STATIC void dw_process_screen_change_event(
       BS256*      p_bs_attached_buses,
@@ -306,6 +306,12 @@ gpointer dw_watch_display_connections(gpointer data) {
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Watching for dpms events: %s",
           sbool(wdd->event_classes & DDCA_EVENT_CLASS_DPMS));
 #endif
+
+   if (display_watch_thread_initial_delay > 0) {
+      DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "Waiting an extra %d ms at start of function",
+            display_watch_thread_initial_delay);
+      SLEEP_MILLIS_WITH_STATS(display_watch_thread_initial_delay);
+   }
 
    // may need to wait on startup
    while (!all_i2c_buses) {

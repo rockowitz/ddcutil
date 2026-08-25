@@ -512,6 +512,13 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       else
          rpt_label(0, "--i5 value must be greater than 1");
    }
+#ifdef WATCH_DISPLAYS
+   // Unlike --i9, which delays within dw_start_watch_displays() and so blocks
+   // the client thread that called ddca_start_watch_displays(), this delays the
+   // watch thread itself, before its first scan.  The udev monitor is created
+   // by that thread, so events occurring during the delay are not queued.
+   if (parsed_cmd->flags2 & CMD_FLAG2_I6_SET)
+        display_watch_thread_initial_delay = parsed_cmd->i6;
    if (parsed_cmd->flags2 & CMD_FLAG2_I9_SET)
         dw_start_watch_delay_ms  = parsed_cmd->i9;
    if (parsed_cmd->flags2 & CMD_FLAG2_I10_SET)
@@ -522,7 +529,9 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       max_eacces_retry_ct  = parsed_cmd->i12;
    if (parsed_cmd->flags2 & CMD_FLAG2_I13_SET)
       rate_limit_eacces_diagnostics_interval_sec = parsed_cmd->i13;
+#endif
 }
+
 
 STATIC void init_busno_connector_table(
       Parsed_Cmd * parsed_cmd,
