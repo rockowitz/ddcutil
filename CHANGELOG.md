@@ -537,8 +537,8 @@ file is libddcutil.so.5.5.0.
 
 #### Added
 
-- Added API function **ddca_get_non_table_vcp_value2()**. Unlike 
-  **ddca_get_non_table_vcp_value()**, which is now deprecated, the new function
+- Added API function **ddca_set_non_table_vcp_value2()**. Unlike 
+  **ddca_set_non_table_vcp_value()**, which is now deprecated, the new function
   never performs verification. 
 
 #### Changed 
