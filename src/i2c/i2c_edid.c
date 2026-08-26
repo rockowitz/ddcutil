@@ -540,7 +540,7 @@ retry:
                }
             }
             if (rc == 0) {
-               DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP,
+               DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
                   "%s() succeeded after i2c_get_edid_bytes_using_single_ioctl() failed.",
                   called_func_name);
             }

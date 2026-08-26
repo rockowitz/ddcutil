@@ -160,7 +160,7 @@ read_unsupported_feature(
       }
       else {
          if (!dynamic_sleep_was_active) {
-            DUAL_MSGXV(DDCA_SYSLOG_ERROR, TRACE_GROUP,
+            DUAL_MSGXV(debug, DDCA_SYSLOG_ERROR, TRACE_GROUP,
                   "busno=%d, sleep-multiplier=%5.2f,"
                   " Testing for unsupported feature 0x%02x returned %s",
                   businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
@@ -169,10 +169,10 @@ read_unsupported_feature(
          if (pdd_is_dynamic_sleep_active(pdd) ) {
             dynamic_sleep_was_active = true;
             ERRINFO_FREE(ddc_excp);
-            DUAL_MSGX(DDCA_SYSLOG_ERROR, TRACE_GROUP, "Turning off dynamic sleep and retrying");
+            DUAL_MSGX(debug, DDCA_SYSLOG_ERROR, TRACE_GROUP, "Turning off dynamic sleep and retrying");
             pdd_set_dynamic_sleep_active(pdd, false);
             ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
-            DUAL_MSGXV(DDCA_SYSLOG_ERROR, TRACE_GROUP,
+            DUAL_MSGXV(debug, DDCA_SYSLOG_ERROR, TRACE_GROUP,
                   "busno=%d, sleep-multiplier=%5.2f,"
                   " Retesting for unsupported feature 0x%02x returned %s",
                   businfo->busno,   pdd_get_adjusted_sleep_multiplier(pdd),
@@ -329,7 +329,7 @@ check_supported_feature(Display_Handle *      dh,
 #endif
 
    if (ddc_excp) {
-      DUAL_MSGXV(DDCA_SYSLOG_NOTICE, TRACE_GROUP,
+      DUAL_MSGXV(debug, DDCA_SYSLOG_NOTICE, TRACE_GROUP,
             "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
                         businfo->busno,
                         pdd_get_adjusted_sleep_multiplier(pdd),
@@ -367,7 +367,7 @@ check_supported_feature(Display_Handle *      dh,
                }
 
                dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-               DUAL_MSGXV( (ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_NOTICE, TRACE_GROUP,
+               DUAL_MSGXV(debug, (ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_NOTICE, TRACE_GROUP,
                      "busno=%d, sleep-multiplier=%5.2f."
                      " Retesting for supported feature 0x%02x returned %s",
                      businfo->busno,
@@ -624,7 +624,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added) {
                       DREF_DDC_COMMUNICATION_WORKING |
                       DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED);
       dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
-      DUAL_MSGXV(DDCA_SYSLOG_NOTICE, TRACE_GROUP, "dref=%s, skipping initial ddc checks", dref_reprx_t(dref));
+      DUAL_MSGXV(debug, DDCA_SYSLOG_NOTICE, TRACE_GROUP, "dref=%s, skipping initial ddc checks", dref_reprx_t(dref));
       result = true;
    }
    else {

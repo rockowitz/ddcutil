@@ -677,7 +677,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // char * distributor_id = execute_shell_cmd_one_line_result("lsb_release -s -i");  // e.g. Ubuntu, Raspbian
 
    if (ntsa_find(expected_architectures, architecture) < 0)
-      DUAL_MSGXV(DDCA_SYSLOG_ERROR, DDCA_TRC_DDC, "Unexpected architecture %s.", architecture);
+      DUAL_MSGXV(debug, DDCA_SYSLOG_ERROR, DDCA_TRC_DDC, "Unexpected architecture %s.", architecture);
 
   // bool is_raspbian = distributor_id && streq(distributor_id, "Raspbian");
    bool is_arm      = architecture   &&

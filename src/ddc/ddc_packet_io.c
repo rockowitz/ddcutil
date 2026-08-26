@@ -291,7 +291,7 @@ ddc_open_display(
    if (dref->disconnected) {
       char * s = g_strdup_printf("Attempting to open disconnected display reference %s",
             dref_repr_t(dref));
-      DUAL_MSGNV(DDCA_SYSLOG_ERROR, "%s", s);
+      DUAL_MSGNV(debug, DDCA_SYSLOG_ERROR, "%s", s);
       err = ERRINFO_NEW(DDCRC_DISCONNECTED, "%s", s);
       free(s);
       goto bye;
@@ -302,7 +302,7 @@ ddc_open_display(
    if (!dref_detail) {
       char * s = g_strdup_printf( "Display_Ref.detail == NULL, but DREF_DISCONNECTED not set, dref=%s",
             dref_repr_t(dref));
-      DUAL_MSGNV(DDCA_SYSLOG_ERROR,"%s", s);
+      DUAL_MSGNV(debug, DDCA_SYSLOG_ERROR,"%s", s);
       dbgrpt_current_traced_function_stack(true, true, 1);
       current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
       // mark_display_ref_disconnected(dref);  // don't call - double lock
@@ -331,7 +331,7 @@ ddc_open_display(
             tryct++;
             goto retry_status;
          }
-         DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP,
+         DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
                "%s still disconnected after 1 second delay and retry", dref_reprx_t(dref));
          err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
       }
@@ -910,7 +910,7 @@ ddc_write_read_with_retry(
       try_errors[tryctr] = cur_excp;
 
       if (psc == 0 && ddcrc_null_response_ct > 0) {
-         DUAL_MSGXV(DDCA_SYSLOG_DEBUG, TRACE_GROUP | DDCA_TRC_RETRY,
+         DUAL_MSGXV(debug, DDCA_SYSLOG_DEBUG, TRACE_GROUP | DDCA_TRC_RETRY,
                "%s, expected_subtype=0x%02x, sleep-multiplier=%5.2f, ddc_write_read() succeeded"
                " after %d sleep and retry for DDC Null Response",
                dh_repr(dh),

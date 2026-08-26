@@ -135,7 +135,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
       else if (rc < 0) {
          // DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "poll() failed, errno=%d", errno);
          // DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,  "poll() failed, errno=%d", errno);
-         DUAL_MSGXV(DDCA_SYSLOG_ERROR,  DDCA_TRC_NONE, "poll() failed, errno=%d", errno);
+         DUAL_MSGXV(debug, DDCA_SYSLOG_ERROR,  DDCA_TRC_NONE, "poll() failed, errno=%d", errno);
       }
       else {
          if (fds[0].revents&POLLIN) {
@@ -143,7 +143,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
             if (dev) {
                // DBGTRC(debug, DDCA_TRC_NONE, "Udev event detected");
                // DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Udev event detected");
-               DUAL_MSGX(DDCA_SYSLOG_NOTICE, DDCA_TRC_NONE, "udev event detected");
+               DUAL_MSGX(debug, DDCA_SYSLOG_NOTICE, DDCA_TRC_NONE, "udev event detected");
 
                Udev_Event_Detail * detail = collect_udev_event_detail(dev);
                if (!exclude_event(detail)) {   // currently never excludes
@@ -209,7 +209,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
             else {
                // DBGTRC(true, DDCA_TRC_NONE, "udev_monitor_receive_device() failed");
                // DECORATED_SYSLOG(DDCA_SYSLOG_ERROR,  "udev_monitor_receive_device() failed");
-               DUAL_MSGX(DDCA_SYSLOG_ERROR, DDCA_TRC_NONE,  "udev_monitor_receive_device() failed");
+               DUAL_MSGX(debug, DDCA_SYSLOG_ERROR, DDCA_TRC_NONE,  "udev_monitor_receive_device() failed");
             }
          }
          else {
@@ -240,7 +240,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
             // interval between PrepareForSleep(true) and the freeze, and a pause
             // consumed there leaves the device node no more settled than before.
             for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
-               DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "Pausing %d millisec after UDEV add event",
+               DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, "Pausing %d millisec after UDEV add event",
                      pause_after_add_ms);
                already_paused_ms += pause_after_add_ms;
                if (!dw_sleep_spent_by_suspend(pause_after_add_ms))

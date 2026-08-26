@@ -309,14 +309,14 @@ gpointer dw_watch_display_connections(gpointer data) {
 #endif
 
    if (display_watch_thread_initial_delay > 0) {
-      DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "Waiting an extra %d ms at start of function",
+      DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, "Waiting an extra %d ms at start of function",
             display_watch_thread_initial_delay);
       SLEEP_MILLIS_WITH_STATS(display_watch_thread_initial_delay);
    }
 
    // may need to wait on startup
    while (!all_i2c_buses) {
-      DUAL_MSGN(DDCA_SYSLOG_NOTICE, "Waiting 500 ms for all_i2c_buses");
+      DUAL_MSGN(debug, DDCA_SYSLOG_NOTICE, "Waiting 500 ms for all_i2c_buses");
       SLEEP_MILLIS_WITH_STATS(500);
    }
 

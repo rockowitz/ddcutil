@@ -757,32 +757,32 @@ do { \
 // DUAL_MSGN() variants
 //
 
-#define DUAL_MSGN(_ddca_syslog_level, _msgbuf) \
+#define DUAL_MSGN(_debug, _ddca_syslog_level, _msgbuf) \
    do { \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,"%s", _msgbuf); \
+         DBGTRC_NOPREFIX(_debug, DDCA_TRC_NONE,"%s", _msgbuf); \
       DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
    } while (0)
 
-#define DUAL_MSGNV(_ddca_syslog_level, format, ...) \
+#define DUAL_MSGNV(_debug, _ddca_syslog_level, format, ...) \
    do { \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, format, ##__VA_ARGS__); \
+         DBGTRC_NOPREFIX(_debug, DDCA_TRC_NONE, format, ##__VA_ARGS__); \
       DECORATED_SYSLOG(_ddca_syslog_level, format, ##__VA_ARGS__); \
    } while (0)
 
 
-#define DUAL_MSGX(_ddca_syslog_level, _trace_group, _msgbuf) \
+#define DUAL_MSGX(_debug, _ddca_syslog_level, _trace_group, _msgbuf) \
    do { \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
-         DBGTRC_NOPREFIX(debug, _trace_group,"%s", _msgbuf); \
+         DBGTRC_NOPREFIX(_debug, _trace_group,"%s", _msgbuf); \
       DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
    } while (0)
 
-#define DUAL_MSGXV(_ddca_syslog_level, _trace_group, format, ...) \
+#define DUAL_MSGXV(_debug, _ddca_syslog_level, _trace_group, format, ...) \
    do { \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
-         DBGTRC_NOPREFIX(debug, _trace_group, format, ##__VA_ARGS__); \
+         DBGTRC_NOPREFIX(_debug, _trace_group, format, ##__VA_ARGS__); \
       DECORATED_SYSLOG(_ddca_syslog_level, format, ##__VA_ARGS__); \
    } while (0)
 

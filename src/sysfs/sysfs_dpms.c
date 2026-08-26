@@ -94,7 +94,7 @@ bool dpms_is_x11_asleep() {
          result = (state && (power_level != DPMSModeOn) );
       }
       else {
-         DUAL_MSGN(DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed.");
+         DUAL_MSGN(debug, DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed.");
       }
    }
 #endif
@@ -204,7 +204,7 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
                  "is_sysfs_reliable_for_busno(%d) returned false and session_type = X11. "
                  "Using X11 to determine if display is asleep",
                   businfo->busno);
-      DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP, "%s", s);
+      DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP, "%s", s);
       free(s);
       asleep = dpms_is_x11_asleep();
    }
@@ -229,7 +229,7 @@ bool dpms_check_drm_asleep_by_businfo(I2C_Bus_Info * businfo) {
          char * s = g_strdup_printf(
                "is_sysfs_reliable_for_busno(%d) returned false and session type != X11. Assuming not asleep",
                businfo->busno);
-         DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP, "%s", s);
+         DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP, "%s", s);
          free(s);
       }
       else {

@@ -203,7 +203,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    }
 
    skip_resume_from_pauses_sleeps = i2c_all_relevant_buses_rw_by_inode();
-   DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "skip_resume_from_sleep_pauses = %s",
+   DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, "skip_resume_from_sleep_pauses = %s",
                                         sbool(skip_resume_from_pauses_sleeps));
 
 
@@ -217,7 +217,7 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    }
 
    if (!enable_dw_start_check_dev_i2c_devices_rw) {
-      DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
+      DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, "Suppressing call to i2c_all_relevant_i2c_buses_rw()");
    }
    else {
       Error_Info * erec = i2c_all_relevant_i2c_buses_rw();
@@ -255,12 +255,12 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "calc_watch_loop_millisec() returned %d", calculated_watch_loop_millisec);
    char * msg = g_strdup_printf("Watching for display connection changes, resolved watch mode = %s, poll loop interval = %d millisec",
          watch_mode_name(resolved_watch_mode), calculated_watch_loop_millisec);
-   DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "%s", msg);
+   DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, "%s", msg);
    free(msg);
    msg = g_strdup_printf(
          "                                         initial_stabilization_millisec: %d,  stabilization_poll_millisec: %d",
          initial_stabilization_millisec, stabilization_poll_millisec);
-   DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "%s", msg);
+   DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, "%s", msg);
    free(msg);
 
    g_mutex_lock(&watch_thread_mutex);

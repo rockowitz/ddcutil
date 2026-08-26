@@ -69,7 +69,7 @@ static void emit_recheck_debug_msg(
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", buffer);
    SYSLOG2(syslog_level, "%s", buffer);
 #endif
-   DUAL_MSGNV(syslog_level, "%s", buffer);
+   DUAL_MSGNV(debug, syslog_level, "%s", buffer);
 }
 
 
@@ -616,7 +616,7 @@ gpointer dw_recheck_displays_func(gpointer data) {
    }
 
    if (terminate_watch_thread) {
-      DUAL_MSGN(DDCA_SYSLOG_NOTICE, "recheck thread terminating because watch thread terminated");
+      DUAL_MSGN(debug, DDCA_SYSLOG_NOTICE, "recheck thread terminating because watch thread terminated");
 
       // free what's left on the queues
       while (g_queue_get_length(to_check_again) > 0) {

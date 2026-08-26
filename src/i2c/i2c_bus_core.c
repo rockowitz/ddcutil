@@ -834,14 +834,14 @@ i2c_detect_x37(int fd, char * driver) {
       }
 
       if (rc == -EBUSY) {
-         DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP, "X37 detection encountered EBUSY error");
+         DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP, "X37 detection encountered EBUSY error");
          max_tries = DETECT_X37_MAX_TRIES + 2;
       }
 
    }
 
    if (rc == 0 && loopctr > 1) {
-      DUAL_MSGXV(DDCA_SYSLOG_WARNING, TRACE_GROUP, "X37 detection succeeded on try %d", loopctr);
+      DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP, "X37 detection succeeded on try %d", loopctr);
    }
 
 
