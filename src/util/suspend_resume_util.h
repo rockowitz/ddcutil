@@ -33,7 +33,8 @@ typedef enum {
 } Resume_Detection;
 
 const char * resume_detection_description(Resume_Detection detection);
-bool       recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc,
-                                       Resume_Detection * detection_loc);
+bool         recently_resumed_from_sleep(int                within_ms,
+                                         uint64_t *         millisec_since_loc,
+                                         Resume_Detection * detection_loc);
 
 #endif /* SUSPEND_RESUME_UTIL_H_ */
