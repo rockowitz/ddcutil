@@ -18,6 +18,7 @@
 /** \endcond */
 
 #include "util/data_structures.h"
+#include "util/linux_basic_util.h"
 #include "util/error_info.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -65,6 +66,44 @@ i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
    }
    return bva;
 }
+
+
+/** Checks that all /dev/i2c buses that might be associated with a display
+ *  are in group i2c and the and have group RW permission bits set.
+ *
+ *  @return true if all pass the check, false otherwise
+ */
+bool i2c_all_relevant_buses_group_i2c_rw() {
+   bool debug = false;
+   Byte_Value_Array bva = i2c_get_devices_by_existence_test(false);
+   bool result = true;
+   for (int ndx = 0; ndx < bva_length(bva); ndx++) {
+      uint8_t busno = bva_get(bva, ndx);
+      char buf[20];
+      snprintf(buf, 20, "/dev/i2c-%d",busno);
+      if (!is_file_group_i2c(buf)) {
+         result = false;
+         break;
+      }
+      if (!is_file_group_perm_rw(buf)) {
+         result = false;
+         break;
+      }
+   }
+   bva_free(bva);
+   DBGMSF(debug, "Returning: %s", sbool(result));
+   return result;
+}
+
+
+bool i2c_all_relevant_buses_rw_by_inode()  {
+   bool debug = true;
+   bool result =  cur_user_in_group_i2c() &&
+                  i2c_all_relevant_buses_group_i2c_rw();
+   DBGMSF(debug, "Returning %s", sbool(result));
+   return result;
+}
+
 
 
 /** Checks that all /dev/i2c buses that might possibly be used for DDC

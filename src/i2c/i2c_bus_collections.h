@@ -40,6 +40,8 @@ Error_Info *     i2c_all_relevant_i2c_buses_rw();
 #ifdef UNUSED
 Error_Info *     i2c_all_edids_readable_using_i2c();
 #endif
+bool             i2c_all_relevant_buses_group_i2c_rw();
+bool             i2c_all_relevant_buses_rw_by_inode();
 
 void init_i2c_bus_collections();
 
