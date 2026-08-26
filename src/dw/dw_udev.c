@@ -30,6 +30,7 @@
 
 #include "sysfs/sysfs_sys_drm_connector.h"
 
+#include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
 /** \endcond */
 
@@ -220,41 +221,43 @@ bool dw_udev_watch(int watch_loop_millisec) {
    if (!terminate_watch_thread) {
       int already_paused_ms = 0;
 
-      if (add_event_detected) {
-         // Run the resume detection before pausing, so that its clocktime
-         // reference point precedes this sleep and
-         // dw_pause_if_recently_resumed_from_sleep() counts this sleep toward
-         // pause_after_resume_ms instead of pausing again in full.  Whether
-         // that credit is enough to skip the guard below now depends on how
-         // pause_after_add_ms compares with pause_after_resume_ms: they are
-         // separately tunable, and equal only by default.  When the add pause
-         // is the shorter, the guard runs and tops up the settling time,
-         // measured from the resume itself, which is what it should do.
-         // No-op if a resume did not recently occur.
-         recently_resumed_from_sleep(pause_after_resume_ms, NULL, NULL);
+      if (!skip_resume_from_sleep_pauses ) {
+         if (add_event_detected) {
+            // Run the resume detection before pausing, so that its clocktime
+            // reference point precedes this sleep and
+            // dw_pause_if_recently_resumed_from_sleep() counts this sleep toward
+            // pause_after_resume_ms instead of pausing again in full.  Whether
+            // that credit is enough to skip the guard below now depends on how
+            // pause_after_add_ms compares with pause_after_resume_ms: they are
+            // separately tunable, and equal only by default.  When the add pause
+            // is the shorter, the guard runs and tops up the settling time,
+            // measured from the resume itself, which is what it should do.
+            // No-op if a resume did not recently occur.
+            recently_resumed_from_sleep(pause_after_resume_ms, NULL, NULL);
 
-         // Retaken if a suspend spends it rather than it being served; see
-         // dw_sleep_spent_by_suspend().  An add event can arrive in the
-         // interval between PrepareForSleep(true) and the freeze, and a pause
-         // consumed there leaves the device node no more settled than before.
-         for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
-            DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "Pausing %d millisec after UDEV add event",
-                  pause_after_add_ms);
-            already_paused_ms += pause_after_add_ms;
-            if (!dw_sleep_spent_by_suspend(pause_after_add_ms))
-               break;
-            if (terminate_watch_thread)
-               break;
-            DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
-                  "Pause of %d millisec after UDEV add event was spent by a suspend. "
-                  "Pausing again.", pause_after_add_ms);
+            // Retaken if a suspend spends it rather than it being served; see
+            // dw_sleep_spent_by_suspend().  An add event can arrive in the
+            // interval between PrepareForSleep(true) and the freeze, and a pause
+            // consumed there leaves the device node no more settled than before.
+            for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
+               DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "Pausing %d millisec after UDEV add event",
+                     pause_after_add_ms);
+               already_paused_ms += pause_after_add_ms;
+               if (!dw_sleep_spent_by_suspend(pause_after_add_ms))
+                  break;
+               if (terminate_watch_thread)
+                  break;
+               DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
+                     "Pause of %d millisec after UDEV add event was spent by a suspend. "
+                     "Pausing again.", pause_after_add_ms);
+            }
          }
-      }
 
-      if (already_paused_ms < pause_after_resume_ms) {
-         // n. returns the milliseconds actually slept, usually 0 if no recent resume;
-         // do not credit the full interval, o.w. the coalesce pause below never runs
-         already_paused_ms += dw_pause_if_recently_resumed_from_sleep(pause_after_resume_ms);
+         if (already_paused_ms < pause_after_resume_ms) {
+            // n. returns the milliseconds actually slept, usually 0 if no recent resume;
+            // do not credit the full interval, o.w. the coalesce pause below never runs
+            already_paused_ms += dw_pause_if_recently_resumed_from_sleep(pause_after_resume_ms);
+         }
       }
 
       int drain_pause_ms = 200;    // ??
