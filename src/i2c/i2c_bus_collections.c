@@ -97,7 +97,7 @@ bool i2c_all_relevant_buses_group_i2c_rw() {
 
 
 bool i2c_all_relevant_buses_rw_by_inode()  {
-   bool debug = true;
+   bool debug = false;
    bool result =  cur_user_in_group_i2c() &&
                   i2c_all_relevant_buses_group_i2c_rw();
    DBGMSF(debug, "Returning %s", sbool(result));
