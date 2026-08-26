@@ -232,6 +232,33 @@ bool get_file_owner_group_ids(const char * fqfn, uid_t* uid_loc, gid_t* gid_loc)
 }
 
 
+/** Checks that a file has group permission bits RW set.
+ *
+ *  @param  fqfn      name of file to check
+ *  @return true if bits are set, false if not
+ *
+ *  @remark
+ *  Note that this function checks the bits recorded in the inode. which do not
+ *  account for an ACL granting access beyond them, as udev does for
+ *  /dev/i2c devices.  See is_cur_user_acl_rw() in acl_util.c.
+ */
+bool is_file_group_perm_rw(const char * fqfn) {
+   bool debug = true;
+
+   bool result = false;
+   struct stat st;
+   if (stat(fqfn, &st) == 0) {
+      bool group_read  = (st.st_mode & S_IRGRP) != 0;
+      bool group_write = (st.st_mode & S_IWGRP) != 0;
+      if (group_read && group_write)
+         result = true;
+   }
+
+   DBGF(debug, "File %s, returning %s", fqfn, sbool(result));
+   return result;
+}
+
+
 bool is_file_group_i2c(const char * fqfn) {
    bool result = false;
    uid_t uid;

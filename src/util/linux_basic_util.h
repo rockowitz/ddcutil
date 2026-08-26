@@ -23,6 +23,7 @@ bool       group_i2c_exists();
 bool       check_group_i2c_collect(GPtrArray* collector);
 bool       cur_user_in_group_i2c();
 bool       get_file_owner_group_ids(const char * fqfn, uid_t* uid_loc, gid_t* gid_loc);
+bool       is_file_group_perm_rw(const char * fqfn);
 bool       is_file_group_i2c(const char * fqfn);
 
 #endif /* LINUX_BASIC_UTIL_H_ */
