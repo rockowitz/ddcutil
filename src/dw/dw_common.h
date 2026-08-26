@@ -31,7 +31,7 @@ extern GMutex             process_event_mutex;
 extern bool               use_drm_connector_states;
 extern bool               force_recheck;
 extern bool               rescan_on_eacces;
-extern bool               skip_resume_from_sleep_pauses;
+extern bool               skip_resume_from_pauses_sleeps;
 
 // If true, blocking waits in the watch thread poll() the relevant fd together
 // with terminate_watch_thread_fd instead of sleeping in timed polling loops.

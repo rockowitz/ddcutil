@@ -221,7 +221,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
    if (!terminate_watch_thread) {
       int already_paused_ms = 0;
 
-      if (!skip_resume_from_sleep_pauses ) {
+      if (!skip_resume_from_pauses_sleeps ) {
          if (add_event_detected) {
             // Run the resume detection before pausing, so that its clocktime
             // reference point precedes this sleep and

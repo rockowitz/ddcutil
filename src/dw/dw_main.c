@@ -202,9 +202,9 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       goto bye;
    }
 
-   skip_resume_from_sleep_pauses = i2c_all_relevant_buses_rw_by_inode();
+   skip_resume_from_pauses_sleeps = i2c_all_relevant_buses_rw_by_inode();
    DUAL_MSGNV(DDCA_SYSLOG_NOTICE, "skip_resume_from_sleep_pauses = %s",
-                                        sbool(skip_resume_from_sleep_pauses));
+                                        sbool(skip_resume_from_pauses_sleeps));
 
 
    DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "Time since library initialized: %s seconds",

@@ -408,7 +408,7 @@ gpointer dw_watch_display_connections(gpointer data) {
       }
 #endif
 
-      if (!skip_resume_from_sleep_pauses &&
+      if (!skip_resume_from_pauses_sleeps &&
             wdd->watch_mode != Watch_Mode_Udev) {  // for Udev mode, pause occurs in dw_udev_watch()
          dw_pause_if_recently_resumed_from_sleep(pause_after_resume_ms);
       }

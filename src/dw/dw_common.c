@@ -84,7 +84,7 @@ bool      force_recheck                  = false;
 // with EACCES (e.g. the post-resume window before udev reapplies device ACLs)
 // instead of treating the affected monitors as disconnected.
 bool      rescan_on_eacces               = true;
-bool      skip_resume_from_sleep_pauses  = false;
+bool      skip_resume_from_pauses_sleeps  = false;
 
 
 /** Creates the eventfd used to wake blocking waits in the watch thread
