@@ -243,7 +243,7 @@ bool get_file_owner_group_ids(const char * fqfn, uid_t* uid_loc, gid_t* gid_loc)
  *  /dev/i2c devices.  See is_cur_user_acl_rw() in acl_util.c.
  */
 bool is_file_group_perm_rw(const char * fqfn) {
-   bool debug = true;
+   bool debug = false;
 
    bool result = false;
    struct stat st;
