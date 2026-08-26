@@ -1,9 +1,9 @@
 /** @file test_linux_basic_util.c
  *
  *  Standalone unit tests for src/util/linux_basic_util.c: the thread/process id
- *  accessors and validity check, uid/gid name lookups, and the file owner/group
- *  id accessor.  The group-i2c helpers depend on the host's group configuration
- *  and are not exercised.
+ *  accessors and validity check, uid/gid name lookups, the file owner/group id
+ *  accessor, and the group RW permission check.  The group-i2c helpers depend
+ *  on the host's group configuration and are not exercised.
  *
  *  Prints one line per failing check and a summary; exit status is 0 if all
  *  checks pass, 1 otherwise.
@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -96,6 +97,25 @@ int main(int argc, char ** argv) {
    CK(get_file_owner_group_ids(path, &uid, &gid) == true);
    CK_INT(uid, getuid());
    CK_INT(gid, getgid());
+
+   // group RW permission bits, whatever the umask was at creation.  Both bits
+   // are required, so each one alone is false.
+   CK_INT(chmod(path, 0660), 0);
+   CK(is_file_group_perm_rw(path) == true);
+
+   CK_INT(chmod(path, 0640), 0);          // group read only
+   CK(is_file_group_perm_rw(path) == false);
+
+   CK_INT(chmod(path, 0620), 0);          // group write only
+   CK(is_file_group_perm_rw(path) == false);
+
+   CK_INT(chmod(path, 0600), 0);          // no group access
+   CK(is_file_group_perm_rw(path) == false);
+
+   // owner and other bits do not stand in for the group bits
+   CK_INT(chmod(path, 0606), 0);
+   CK(is_file_group_perm_rw(path) == false);
+
    unlink(path);
 
    // nonexistent file -> false
@@ -103,6 +123,9 @@ int main(int argc, char ** argv) {
    bool ok = get_file_owner_group_ids("/no/such/file", &uid, &gid);
    unmute_stderr();
    CK(ok == false);
+
+   // a failed stat() is likewise reported as no group RW permission
+   CK(is_file_group_perm_rw("/no/such/file") == false);
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);
