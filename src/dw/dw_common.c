@@ -24,6 +24,7 @@
 #include "util/dbus_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
+#include "util/suspend_resume_util.h"
 #include "util/timestamp.h"
 #include "util/traced_function_stack.h"
 

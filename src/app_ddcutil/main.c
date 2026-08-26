@@ -38,6 +38,7 @@
 #include "util/simple_ini_file.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/suspend_resume_util.h"
 #include "util/sysfs_filter_functions.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"

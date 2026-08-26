@@ -3,12 +3,12 @@
  *  Standalone unit tests for host-independent functions in src/util/linux_util.c.
  *
  *  is_readable_file() is checked against temporary files (it returns true only
- *  when at least one byte can actually be read).  millisec_since_resume_detected_
- *  by_clocktime() returns UINT64_MAX until a resume reset occurs, which is the
- *  state at program start.  recently_resumed_from_sleep() is driven through the
- *  logind sleep timestamps that dbus_util.c records, which needs no bus.  The
- *  kernel-config, module, and lsof helpers depend on the host and are not
- *  exercised.
+ *  when at least one byte can actually be read).  The kernel-config, module,
+ *  and lsof helpers depend on the host and are not exercised.
+ *
+ *  The suspend and resume detection functions that formerly lived here moved
+ *  to src/util/suspend_resume_util.c; their checks are in
+ *  test_suspend_resume_util.c.
  *
  *  Prints one line per failing check and a summary; exit status is 0 if all
  *  checks pass, 1 otherwise.
@@ -22,25 +22,13 @@
 
 #include "config.h"
 
-#include <glib-2.0/glib.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "util/linux_util.h"
-#ifdef USE_DBUS
-#include <stdatomic.h>
-#include "util/dbus_util.h"
-#include "util/timestamp.h"
-
-// Internal symbols of dbus_util.c, non-static but not declared in its header.
-extern _Atomic uint64_t last_resume_from_sleep_ns;
-extern _Atomic uint64_t last_prepare_for_sleep_ns;
-extern _Atomic uint64_t retired_prepare_for_sleep_ns;
-#endif
 
 static int total = 0;
 static int failed = 0;
@@ -59,64 +47,7 @@ static void write_tmpfile(char * path_out, const char * content) {
    close(fd);
 }
 
-#ifdef USE_DBUS
-// recently_resumed_from_sleep() reports a resume for the duration of an open
-// sleep cycle, i.e. a PrepareForSleep(true) whose PrepareForSleep(false) has
-// not arrived.  Driving it through the two timestamps needs no bus, and the
-// clocktime detector reports nothing here: no sleep accumulates during a test
-// run, so what the checks below see is the sleep-cycle rule alone.
-static void test_open_sleep_cycle(void) {
-   uint64_t ms = 0;
-   Resume_Detection detection = RESUME_DETECTED_NONE;
-
-   // no cycle has been retired.  Which cycles the sleep watch thread retires
-   // is checked in test_dbus_util.
-   retired_prepare_for_sleep_ns = 0;
-
-   // no cycle open, last resume long past: not a recent resume
-   last_resume_from_sleep_ns = 1;                  // ~boot, long ago
-   last_prepare_for_sleep_ns = 0;
-   CK(recently_resumed_from_sleep(500, &ms, &detection) == false);
-   CK(ms == UINT64_MAX);
-   CK(detection == RESUME_DETECTED_NONE);
-
-   // an open cycle is reported as a resume that just occurred, whatever the
-   // stale resume timestamp says
-   last_prepare_for_sleep_ns = cur_boot_time_nanosec();
-   CK(recently_resumed_from_sleep(500, &ms, &detection) == true);
-   CK(ms == 0);
-   // reported as a sleep cycle, not as a resume: the system need not have
-   // slept yet, and dw_pause_if_recently_resumed_from_sleep() says so in the
-   // system log
-   CK(detection == RESUME_DETECTED_IN_SLEEP_CYCLE);
-
-   // within_ms 0 asks whether a resume occurred within no time at all
-   CK(recently_resumed_from_sleep(0, &ms, NULL) == false);
-
-   // closing the cycle hands the answer back to the resume timestamp, which
-   // is now current
-   last_resume_from_sleep_ns = cur_boot_time_nanosec();
-   CK(recently_resumed_from_sleep(500, &ms, &detection) == true);
-   CK(ms < 500);
-   CK(detection == RESUME_DETECTED_BY_DBUS);
-
-   // and once that timestamp is old, no resume is reported
-   last_resume_from_sleep_ns = 1;
-   last_prepare_for_sleep_ns = 0;
-   CK(recently_resumed_from_sleep(500, &ms, NULL) == false);
-
-   // a retired cycle is not a resume either: the prepare signal is still
-   // unmatched, but the thread has concluded its counterpart is not coming
-   last_prepare_for_sleep_ns    = cur_boot_time_nanosec();
-   retired_prepare_for_sleep_ns = last_prepare_for_sleep_ns;
-   CK(recently_resumed_from_sleep(500, &ms, NULL) == false);
-}
-#endif
-
 int main(int argc, char ** argv) {
-   // no resume reset has occurred at program start
-   CK(millisec_since_resume_detected_by_clocktime() == UINT64_MAX);
-
    // a file with content is readable
    char path[64];
    write_tmpfile(path, "hello");
@@ -133,10 +64,6 @@ int main(int argc, char ** argv) {
 
    // a nonexistent file cannot be opened -> false
    CK(is_readable_file("/no/such/file/anywhere") == false);
-
-#ifdef USE_DBUS
-   test_open_sleep_cycle();
-#endif
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

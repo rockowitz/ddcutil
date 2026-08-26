@@ -47,6 +47,7 @@ simple_ini_file.c          \
 string_util.c              \
 sysfs_util.c               \
 subprocess_util.c          \
+suspend_resume_util.c      \
 timestamp.c                \
 traced_function_stack.c    \
 utilrpt.c                  \

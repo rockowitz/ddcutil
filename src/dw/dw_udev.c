@@ -21,6 +21,7 @@
 #include "util/debug_util.h"
 #include "util/linux_util.h"
 #include "util/string_util.h"
+#include "util/suspend_resume_util.h"
 #include "util/udev_util.h"
 
 #include "base/core.h"
