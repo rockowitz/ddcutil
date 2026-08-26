@@ -69,7 +69,7 @@ i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
 
 
 /** Checks that all /dev/i2c buses that might be associated with a display
- *  are in group i2c and the and have group RW permission bits set.
+ *  are in group i2c and have the group RW permission bits set.
  *
  *  @return true if all pass the check, false otherwise
  */
