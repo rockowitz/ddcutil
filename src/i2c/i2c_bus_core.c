@@ -1286,7 +1286,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
     buffer_free(rawedidbuf, NULL);
 
     DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
-     i2c_close_bus(busno, fd, CALLOPT_ERR_MSG);
+    i2c_close_bus(busno, fd, CALLOPT_ERR_MSG);
 
  bye:
     free(drm_connector_name);
