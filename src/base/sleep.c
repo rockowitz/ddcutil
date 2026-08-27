@@ -123,13 +123,6 @@ void loggable_sleep(
    if (syslog_level > DDCA_SYSLOG_NEVER) {
       // Alternatively, use syslog() instead of SYSLOG2() to ensure that msg is
       // written to system log no matter what ddcutil log level cutoff is in effect
-#ifdef OLD
-#ifdef W_TID
-      SYSLOG2(syslog_level, "[%d](%s) Sleeping for %d milliseconds: %s", tid(), func, millisec, message);
-#else
-      SYSLOG2(syslog_level, "(%s) %s: Sleeping for %d milliseconds", func, message, millisec);
-#endif
-#endif
       DECORATED_SYSLOGX(syslog_level, func, "%s: Sleeping for %d milliseconds", message, millisec);
    }
 
