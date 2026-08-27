@@ -1151,7 +1151,7 @@ bool is_sysfs_reliable() {
    else if (nvidia_connectors_exist)
       result = nvidia_connectors_reliable;
 
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "Returning %s", SBOOL(result));
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
 
