@@ -6,7 +6,7 @@
  * tracing and and maintain sleep statistics.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_SLEEP_H_
@@ -25,7 +25,7 @@ typedef struct {
 void         init_sleep_stats();
 Sleep_Stats  get_sleep_stats();
 void         report_sleep_stats(int depth);
-
+void         init_sleep();
 
 // Perform sleep
 

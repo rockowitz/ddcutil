@@ -23,6 +23,7 @@
 #include "public/ddcutil_types.h"
 
 #include "base/core.h"
+#include "base/rtti.h"
 #include "base/sleep.h"
 
 
@@ -102,7 +103,7 @@ void loggable_sleep(
       const char *           format, ...)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. millisec=%d, opts=0x%02x", millisec, opts);
+   DBGTRC_STARTING(debug, DDCA_TRC_SLEEP, "millisec=%d, opts=0x%02x", millisec, opts);
 
    char * message = NULL;
 
@@ -115,7 +116,7 @@ void loggable_sleep(
 
    bool only_syslog = syslog_level > DDCA_SYSLOG_NEVER && dbgtrc_trace_to_syslog_only;
    if (opts & SLEEP_OPT_TRACEABLE && !only_syslog) {
-      DBGTRC_EXECUTED(debug, DDCA_TRC_SLEEP,
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_SLEEP,
                       "Sleeping for %d milliseconds. %s", millisec, message);
    }
 
@@ -149,7 +150,7 @@ void loggable_sleep(
       }
    }
 
-   DBGMSF(debug, "Done");
+   DBGTRC_DONE(debug, DDCA_TRC_SLEEP, "");
 }
 
 
@@ -225,3 +226,7 @@ void sleep_millis_with_syslog(DDCA_Syslog_Level level,
 }
 
 #endif
+
+void init_sleep() {
+   RTTI_ADD_FUNC(loggable_sleep);
+}

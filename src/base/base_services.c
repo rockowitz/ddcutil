@@ -3,7 +3,7 @@
  *  Initialize and release base services.
  */
 
-// Copyright (C) 2014-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -41,6 +41,7 @@ void init_base_services() {
 
    errinfo_init(psc_name, psc_desc);
    init_core();
+   init_sleep();
    init_monitor_model_key();
    init_base_dynamic_features();
    init_ddc_packets();
