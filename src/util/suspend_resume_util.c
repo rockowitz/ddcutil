@@ -8,6 +8,9 @@
  *  an open() attempted in the window just after resume can fail with EACCES
  *  though nothing is permanently wrong.
  *
+ *  Note that this problem does not affect the group id and permissions bits
+ *  in the device file's inode.
+ *
  *  Three detection methods are used.  They are complementary, not redundant,
  *  and none alone is sufficient; see the comment block preceding
  *  #recently_resumed_from_sleep() for the full account.
