@@ -298,8 +298,10 @@ int dw_udev_drain() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    int drained_ct = 0;
-   if (monitor_fd < 0)
-      return drained_ct;
+   if (monitor_fd < 0) {
+      DUAL_MSGX(debug, TRACE_GROUP, DDCA_SYSLOG_ERROR, "monitor_fd mpt set");
+      goto bye;
+   }
 
    struct pollfd fds;
    fds.fd = monitor_fd;
@@ -335,6 +337,7 @@ int dw_udev_drain() {
       drained_ct++;
    }
 
+bye:
    DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Drained %d additional queued udev event(s)", drained_ct);
    DBGTRC_DONE(debug, TRACE_GROUP, , "Drained %d additional queued udev event(s)", drained_ct);
    return drained_ct;
