@@ -359,18 +359,21 @@ I2C_Bus_Info * deserialize_one_i2c_bus(json_t* jbus) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "jbus=%p", jbus);
    json_t* jtmp = NULL;
    json_t* busno_node = json_object_get(jbus, "busno");
+   // Declared before the goto below, which would otherwise jump over its
+   // initialization and leave it indeterminate at bye:.
+   I2C_Bus_Info * businfo = NULL;
    if (!(busno_node && json_is_integer(busno_node))) {
       if (busno_node)
          SEVEREMSG("error: busno is not an integer\n");
       else
          SEVEREMSG("member busno not found");
       // json_decref(jbus);
-      return NULL;
+      goto bye;
    }
    int busno = json_integer_value(busno_node);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d", busno);
 
-   I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
+   businfo = i2c_new_bus_info(busno);
 
    businfo->functionality = json_integer_value(json_object_get(jbus, "functionality"));
 
@@ -390,6 +393,7 @@ I2C_Bus_Info * deserialize_one_i2c_bus(json_t* jbus) {
 
    businfo->drm_connector_found_by = json_integer_value(json_object_get(jbus, "drm_connector_found_by"));
 
+bye:
    DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, I2C_Bus_Info, i2c_dbgrpt_bus_info, businfo);
    return businfo;
 }

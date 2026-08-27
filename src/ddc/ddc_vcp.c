@@ -221,7 +221,8 @@ ddc_get_nontable_vcp_value_full(
       Error_Info * mock_errinfo = mock_get_nontable_vcp_value(feature_code, parsed_response_loc);
       if (mock_errinfo || *parsed_response_loc) {
          DBGMSF(debug, "Returning mock response for feature 0x%02x", feature_code);
-         return mock_errinfo;
+         excp = mock_errinfo;
+         goto bye;
       }
    }
 
