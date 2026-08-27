@@ -38,16 +38,11 @@
 
 - Command ***setvcp***: Relative value changes can now also be specified as 
   PLUS/MINUS (case-insensitive), in addition to +/-. e.g. **ddcutil setvcp 10 plus 5**. 
-- Option ***--i6*** now sets the number of milliseconds the display watch
-  thread waits before its first scan. Default 0, i.e. no delay. Unlike
-  ***--i9***, which waits within **dw_start_watch_displays()** and so blocks
-  the client thread that called **ddca_start_watch_displays()**, this waits only
-  on the thread ddcutil owns. Note that the udev monitor is created by that
-  thread, after the wait, so a display connected during it produces no event,
-  although the baseline scan that follows records the resulting state.
+
+  ==== TMI:
 - The handler that writes a crash to the system log, previously **SIGSEGV**
-  only, now also covers **SIGBUS**, **SIGILL**, **SIGFPE** and **SIGABRT**, and
-  reports the signal name together with **si_code** and **si_addr**. The
+  only, now also covers **SIGBUS**, **SIGILL**, **SIGFPE** and **SIGABRT**. 
+  It  reports the signal name together with **si_code** and **si_addr**. The
   default action for all of these terminates the process without running the
   library destructor that logs "libddcutil terminating.", so a client such as
   powerdevil appeared in the system log simply to stop, with nothing to say why
@@ -59,17 +54,8 @@
   so a client's own handling of these signals is unaffected. SIGTERM and SIGINT
   are deliberately not caught: they belong to the client program, and a library
   claiming them would change how that program responds to a request to stop.
-  This is deliberately not part of **make check**. Exercising a crash handler
-  means terminating child processes by real faults, and what happens then
-  depends on the host: where **core_pattern** pipes to a handler such as
-  systemd-coredump, a crashing child blocks in the kernel until that handler
-  drains the dump, whatever **ulimit -c** says, unless the child first makes
-  itself non-dumpable. Too machine-dependent for the test suite. The handlers
-  were instead verified out of tree, by a program that forks a child per
-  signal and confirms that each signal still terminates the process with that
-  same signal, that a handler the client installed beforehand still runs, and
-  that a genuine SIGBUS, provoked by mapping a file and then truncating it, is
-  logged with **si_code** 2 and the faulting address.
+ 
+
 - Reduce duplicated messages in the system log when trace output is redirected
   to the system log.
 - EDID reads now first attempt to use a single combined **I2C_RDWR** ioctl
@@ -82,6 +68,8 @@
   (b) reducing I2C bus round trips, 
 
 #### Fixed
+
+
 
 - Recovery from the transient loss of /dev/i2c permissions after resume from
   sleep, or at login, is now entirely by retry after an EACCES open failure.
@@ -194,9 +182,32 @@
   setting, the active API-call count, and the display-lock owner fields — and
   closed a check-then-act (lock evasion) window when discarding detected
   displays.
+
+
+- **i2c_open_bus_basic()**: after an EACCES failure the system log always
+  reported "Current user has group i2c perms on /dev/i2c-N", even when the
+  user did not have those permissions, directly contradicting the failure
+  diagnostics emitted just before it.
+
+- Do not ignore /dev/i2c devices on SOC systems whose adapter class cannot be
+  read because the display adapter is not found. 
+  Addresses pull request #619: Do not ignore sysfs class being zero
+
+- Thread safety: fixed a double free crash caused by unsynchronized lazy
+  initialization of the PNP manufacturer id table in **pnp_name()**. It could
+  occur when multiple threads first resolved EDID manufacturer names
+  concurrently, e.g. reporting displays from several threads.
+- Additional data races fixed: a TOCTOU race on **dref->flags** in the recheck
+  worker thread, a race on **retry_thread_sleep_factor_millisec**, and a TOCTOU
+  race in **compile_and_eval_regex()**.
+
+- Thread safety (found by Coverity static analysis): serialized several
+  unsynchronized reads of shared global state that is written under a mutex —
+  the detected-display list and bus-open-error list, the retry **maxtries**
+  setting, the active API-call count, and the display-lock owner fields — and
+  closed a check-then-act (lock evasion) window when discarding detected
+  displays.
 - Plugged numerous memory leaks
-
-
 
 - NULL dereferences: reporting a USB display that has no bus info.
 - Wrong array used in three I2C bus-info search functions in
