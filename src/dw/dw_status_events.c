@@ -132,7 +132,7 @@ STATIC gpointer dw_callback_displays_func(gpointer data) {
    //clean up queue
    dw_free_callback_displays_data(cdd);
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "terminating callback thread execution");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "terminating callback thread execution");
    // g_thread_exit(NULL);   // not needed
    return NULL;   // avoid compiler warning
 }

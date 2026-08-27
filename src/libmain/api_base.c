@@ -1402,7 +1402,7 @@ ddca_get_default_sleep_multiplier()
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "");
    double result = pdd_get_default_sleep_multiplier_factor();
-   DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
+   DBGTRC_RETURNING(debug, DDCA_TRC_API, "Returning %6.3f", result);
    return result;
 }
 
@@ -1420,7 +1420,6 @@ ddca_get_global_sleep_multiplier()
    return ddca_get_default_sleep_multiplier();
 }
 #endif
-
 
 
 // for display on current thread
