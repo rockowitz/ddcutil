@@ -592,6 +592,7 @@ void diagnose_open_failure_to_syslog(const char * fqfn, const char * msg) {
 // an ordinary request to stop.  The signals here are ones no correct program
 // continues from, and the previous handler is chained to in every case, so
 // installing them does not alter what the client does with them.
+
 static const int    fatal_signals[]      = {SIGSEGV,   SIGBUS,   SIGILL,   SIGFPE,   SIGABRT};
 static const char * fatal_signal_names[] = {"SIGSEGV", "SIGBUS", "SIGILL", "SIGFPE", "SIGABRT"};
 _Static_assert(ARRAY_SIZE(fatal_signals) == ARRAY_SIZE(fatal_signal_names),
