@@ -1207,13 +1207,37 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
 
     // *** Possibly check the DRM connector status before resorting to opening the device
 
-    // Even where the sysfs EDID is not trusted (e.g. nvidia, for which
-    // is_sysfs_reliable_for_busno() returns false), the connector status
-    // attribute is meaningful.  If the connector reports "disconnected" there
-    // is no monitor, hence no EDID to read: skip opening the device, which is
-    // comparatively expensive and, in the post-resume EACCES window, can block
-    // for seconds in open retries.  Status "unknown" falls through to the
-    // device open.
+    // If the connector reports "disconnected" there is no monitor, hence no
+    // EDID to read: skip opening the device, which is comparatively expensive
+    // and, in the post-resume EACCES window, can block for seconds in open
+    // retries.  Status "unknown", an unreadable attribute, and no connector
+    // found for the bus all fall through to the device open.
+    //
+    // Which buses reach here.  Two conditions must both hold: the connector
+    // was found by bus number just above, and the sysfs EDID shortcut was not
+    // taken.  That excludes more than it may appear:
+    //  - nvidia never arrives here.  The lookup above passes a NULL EDID, so
+    //    it resolves by bus number alone, which is expected to fail for nvidia;
+    //    the connector is instead matched by EDID later, on another path.
+    //    drm_connector_name is therefore NULL and this block is skipped.  Do
+    //    not read this code as covering the case where the sysfs EDID is
+    //    untrusted because the driver is nvidia -- it does not.
+    //  - The drivers in known_reliable_driver() normally take the shortcut and
+    //    goto bye before reaching here, since try_get_edid_from_sysfs_first
+    //    defaults true.  They arrive only when that is turned off, or under
+    //    primitive_sysfs.
+    // What is left is mainly a driver that populates the bus number linkage
+    // but is absent from known_reliable_driver(), which is an allowlist: its
+    // absence means unknown, not known bad.  Trusting status there is an
+    // optimistic assumption.  It is a reasonable one -- populating that
+    // linkage suggests an ordinary in-tree driver, whose hotplug path does
+    // refresh connector->status -- but it is an assumption, not a verified
+    // property, and it is the one worth revisiting if a display goes missing.
+    //
+    // Note that status_show() in the kernel returns the cached
+    // connector->status and never calls the driver's detect hook, so this
+    // reads whatever the last probe left behind.  The value is only as fresh
+    // as that probe.
     if (edid_exists_checks_drm_status && drm_connector_name) {
        char * status = NULL;
        GET_ATTR_TEXT(&status, "/sys/class/drm", drm_connector_name, "status");
