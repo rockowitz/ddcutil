@@ -13,6 +13,7 @@
 /** \endcond */
 
 extern bool report_udev_events;
+extern bool report_udev_watch_stats;
 
 void dw_udev_setup();
 void dw_udev_teardown();

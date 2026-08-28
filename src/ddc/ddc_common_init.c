@@ -401,6 +401,8 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
       udev_watch_loop_millisec = parsed_cmd->i8;
    if (parsed_cmd->flags2 & CMD_FLAG2_F18)
       report_udev_events = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F37)
+      report_udev_watch_stats = true;    // dw_udev_watch() emits execution statistics
    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)
       initial_stabilization_millisec = parsed_cmd->i1;
    if (parsed_cmd->i7 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I7_SET))

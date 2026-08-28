@@ -46,6 +46,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 // globals
 bool    report_udev_events = false;
+bool    report_udev_watch_stats = false;   // --f37
 
 static struct udev* udev = NULL;
 static struct udev_monitor *mon = NULL;
@@ -156,15 +157,19 @@ bool dw_udev_watch(int watch_loop_millisec) {
    bool add_event_detected = false;
 
    while(!found && !terminate_watch_thread) {
-      // Report statistics on the first pass, then no oftener than every
+      // Off unless --f37 asks for it: a full statistics dump per udev event
+      // burst is diagnostic output, not something every libddcutil client
+      // should find in its journal.  When on, report on the first pass, then
+      // no oftener than every
       // UDEV_WATCH_STATS_REPORT_INTERVAL_SEC seconds.  Reaching this point
       // again requires a udev event, so the interval is a floor rather than a
       // period; see the comment on that constant.  Timed on CLOCK_BOOTTIME so
       // a suspend counts toward the interval: the elapsed wall time is what
       // makes the report readable in the log.
       uint64_t cur_ns = cur_boot_time_nanosec();
-      if (last_stats_report_ns == 0 ||
-          cur_ns - last_stats_report_ns >= SECS2NANOS(UDEV_WATCH_STATS_REPORT_INTERVAL_SEC))
+      if (report_udev_watch_stats &&
+          (last_stats_report_ns == 0 ||
+           cur_ns - last_stats_report_ns >= SECS2NANOS(UDEV_WATCH_STATS_REPORT_INTERVAL_SEC)))
       {
          last_stats_report_ns = cur_ns;
          ddc_report_stats_main(DDCA_STATS_ALL,
