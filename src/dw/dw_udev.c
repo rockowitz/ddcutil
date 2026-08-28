@@ -46,7 +46,24 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 // globals
 bool    report_udev_events = false;
-bool    report_udev_watch_stats = false;   // --f37
+
+/** Minimum seconds between execution statistics reports from #dw_udev_watch(),
+ *  0 to report nothing.  Set by --i15.
+ *
+ *  A floor, not a period.  The check sits at the top of the poll loop, and
+ *  with use_eventfd set -- the default, see dw_common.c -- poll() is given a
+ *  timeout of -1 and blocks until a udev event arrives or termination is
+ *  signaled.  The loop therefore reaches the top once at entry and then only
+ *  when a display actually changes, so reports come at whatever rate udev
+ *  events do, never oftener than this interval.  On an idle system with no
+ *  display activity, the report at entry is the only one.
+ *
+ *  Accepted rather than fixed: capping the poll timeout at the interval would
+ *  make it a true period, but would reintroduce the periodic wakeup that the
+ *  eventfd path (--f32) exists to eliminate, and idle power residency matters
+ *  more here than report cadence.
+ */
+int     udev_watch_stats_interval_sec = DEFAULT_UDEV_WATCH_STATS_INTERVAL_SEC;
 
 static struct udev* udev = NULL;
 static struct udev_monitor *mon = NULL;
@@ -96,30 +113,13 @@ STATIC bool exclude_event( Udev_Event_Detail * detail) {
 }
 
 
-/** Minimum interval between statistics reports by #dw_udev_watch().
- *
- *  A floor, not a period.  The check sits at the top of the poll loop, and
- *  with use_eventfd set -- the default, see dw_common.c -- poll() is given a
- *  timeout of -1 and blocks until a udev event arrives or termination is
- *  signaled.  The loop therefore reaches the top once at entry and then only
- *  when a display actually changes, so reports come at whatever rate udev
- *  events do, never oftener than this interval.  On an idle system with no
- *  display activity, the report at entry is the only one.
- *
- *  Accepted rather than fixed: capping the poll timeout at this interval would
- *  give a true 30 second period, but would reintroduce the periodic wakeup
- *  that the eventfd path (--f30) exists to eliminate, and idle power residency
- *  matters more here than report cadence.
- */
-#define UDEV_WATCH_STATS_REPORT_INTERVAL_SEC 30
-
 /** CLOCK_BOOTTIME nanoseconds at which #dw_udev_watch() last reported
- *  statistics, 0 if it has not yet reported.
+ *  execution statistics, 0 if it has not yet reported.
  *
  *  File scope rather than local to the function: dw_udev_watch() returns each
  *  time an event is detected and is immediately re-entered by the watch loop
  *  in dw_poll.c, so a local would treat every display change as a first pass
- *  and report then, rather than on the intended 30 second cadence.
+ *  and report then, rather than on the requested interval.
  */
 static uint64_t last_stats_report_ns = 0;
 
@@ -157,19 +157,18 @@ bool dw_udev_watch(int watch_loop_millisec) {
    bool add_event_detected = false;
 
    while(!found && !terminate_watch_thread) {
-      // Off unless --f37 asks for it: a full statistics dump per udev event
-      // burst is diagnostic output, not something every libddcutil client
-      // should find in its journal.  When on, report on the first pass, then
-      // no oftener than every
-      // UDEV_WATCH_STATS_REPORT_INTERVAL_SEC seconds.  Reaching this point
-      // again requires a udev event, so the interval is a floor rather than a
-      // period; see the comment on that constant.  Timed on CLOCK_BOOTTIME so
-      // a suspend counts toward the interval: the elapsed wall time is what
-      // makes the report readable in the log.
+      // Off unless --i15 sets an interval: a full statistics dump per udev
+      // event burst is diagnostic output, not something every libddcutil
+      // client should find in its journal.  When on, report on the first pass,
+      // then no oftener than udev_watch_stats_interval_sec.  Reaching this
+      // point again requires a udev event, so the interval is a floor rather
+      // than a period; see the comment on that global.  Timed on
+      // CLOCK_BOOTTIME so a suspend counts toward the interval: the elapsed
+      // wall time is what makes the report readable in the log.
       uint64_t cur_ns = cur_boot_time_nanosec();
-      if (report_udev_watch_stats &&
+      if (udev_watch_stats_interval_sec > 0 &&
           (last_stats_report_ns == 0 ||
-           cur_ns - last_stats_report_ns >= SECS2NANOS(UDEV_WATCH_STATS_REPORT_INTERVAL_SEC)))
+           cur_ns - last_stats_report_ns >= SECS2NANOS(udev_watch_stats_interval_sec)))
       {
          last_stats_report_ns = cur_ns;
          ddc_report_stats_main(DDCA_STATS_ALL,

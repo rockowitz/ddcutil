@@ -87,7 +87,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(34, "Unused");
    REPORT_FLAG_OPTION(35, "Disable skipping device open when DRM connector reports disconnected (edid_exists_checks_drm_status");
    REPORT_FLAG_OPTION(36, "Do not disable display change scan while EACCES is seen (rescan_on_eacces)");
-   REPORT_FLAG_OPTION(37, "Emit execution statistics from the udev watch loop (report_udev_watch_stats)");
+   REPORT_FLAG_OPTION(37, "Unused");
    REPORT_FLAG_OPTION(38, "Unused");
    REPORT_FLAG_OPTION(39, "Unused");
    REPORT_FLAG_OPTION(40, "Unused");
@@ -110,7 +110,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i12:         Max after EACCES retry ct (default=%d)", DEFAULT_MAX_EACCES_RETRY_CT);
    rpt_vstring(depth+1, "Utility option --i13:         EACCES diagnostic interval seconds (default=%d)", DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC);
    rpt_vstring(depth+1, "Utility option --i14:         Pause after udev add event ms (default = %d)", DEFAULT_PAUSE_AFTER_ADD_MS);
-   rpt_vstring(depth+1, "Utility option --i15:         Unused");
+   rpt_vstring(depth+1, "Utility option --i15:         Udev watch execution statistics interval seconds, 0=off (default=%d)", DEFAULT_UDEV_WATCH_STATS_INTERVAL_SEC);
    rpt_vstring(depth+1, "Utility option --i16:         Unused");
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");

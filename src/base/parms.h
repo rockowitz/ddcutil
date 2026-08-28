@@ -157,6 +157,10 @@
 // new episode with a fresh retry budget.  See i2c_open_bus_basic().
 #define EACCES_NEW_EPISODE_QUIET_MS    10000
 #define DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC 10
+// Minimum seconds between execution statistics reports from the udev watch
+// loop.  0 disables the report, which is the default: it is diagnostic output,
+// not something every libddcutil client should find in its journal.
+#define DEFAULT_UDEV_WATCH_STATS_INTERVAL_SEC   0
 
 #define DEFAULT_ENABLE_EARLY_PERMISSION_CHECKS  true
 // #define ENABLE_DDCI_INIT_CHECK_DEV_I2C_DEVICES_RW false
