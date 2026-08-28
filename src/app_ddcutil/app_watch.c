@@ -245,7 +245,7 @@ app_read_changes_usb(Display_Handle * dh) {
    int rc = ioctl(fd, HIDIOCSFLAG, &flaguref);
    if (rc < 0) {
       REPORT_IOCTL_ERROR("HIDIOCSFLAG", errno);
-      return;
+      goto bye;
    }
 
    ssize_t ct = read(fd, &uref, sizeof(uref));
@@ -267,6 +267,9 @@ app_read_changes_usb(Display_Handle * dh) {
    else {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "tick");
    }
+
+bye:
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 #endif
 
