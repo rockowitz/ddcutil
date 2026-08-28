@@ -637,7 +637,7 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    if (businfo->drm_connector_name)
       DBGTRC_DONE(debug, TRACE_GROUP, "Returning: SYS_Drm_Connector for %s", businfo->drm_connector_name);
    else
-      DBGTRC_RETURNING_STRING(debug, TRACE_GROUP, NULL, "");
+      DBGTRC_RET_STRING(debug, TRACE_GROUP, NULL, "");
    return drm_connector;
 }
 #endif

@@ -970,7 +970,7 @@ Bit_Set_256 check_edids(GPtrArray * buses) {
       if (ok)
          bs256_insert(result, businfo->busno);
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, "%s", bs256_to_string(result, "", ", "));
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, bs256_to_string_t(result, "", ", "), "");
    return result;
 }
 #endif
