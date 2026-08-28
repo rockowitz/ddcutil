@@ -174,9 +174,30 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
       //dbgrpt_per_thread_data_locks(depth+1);
    }
 
-   if (ptd_api_profiling_enabled) {
-      ptd_profile_report_all_threads(0);
-      ptd_profile_report_stats_summary(0);
+   // Reported unconditionally, unlike the per-display section above.  Which
+   // threads exist is not a tuning detail the caller opts into; it is context
+   // for everything else in the report, and is what makes a stats dump taken
+   // from a background thread -- e.g. the periodic one in dw_udev_watch() --
+   // interpretable in the system log.  The function profile stats below need
+   // profiling to have been enabled to hold anything.
+   //
+   // Per_Thread_Data records are created on demand, in practice only by
+   // ptd_profile_function_start(), so the table is empty for an ordinary CLI
+   // run and populated under libddcutil with --profile-api.  Say so in one
+   // line rather than emitting a section heading with nothing beneath it.
+   if (per_thread_data_hash && g_hash_table_size(per_thread_data_hash) > 0) {
+      rpt_label(depth, "PER-THREAD EXECUTION STATISTICS");
+      rpt_nl();
+      ptd_list_threads(depth);
+
+      if (ptd_api_profiling_enabled) {
+         ptd_profile_report_all_threads(depth);
+         ptd_profile_report_stats_summary(depth);
+      }
+   }
+   else {
+      rpt_label(depth, "No per-thread statistics to report");
+      rpt_nl();
    }
 
    if (stats_to_syslog_only) {

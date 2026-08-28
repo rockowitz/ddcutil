@@ -95,7 +95,21 @@ STATIC bool exclude_event( Udev_Event_Detail * detail) {
 }
 
 
-/** Interval at which #dw_udev_watch() reports statistics. */
+/** Minimum interval between statistics reports by #dw_udev_watch().
+ *
+ *  A floor, not a period.  The check sits at the top of the poll loop, and
+ *  with use_eventfd set -- the default, see dw_common.c -- poll() is given a
+ *  timeout of -1 and blocks until a udev event arrives or termination is
+ *  signaled.  The loop therefore reaches the top once at entry and then only
+ *  when a display actually changes, so reports come at whatever rate udev
+ *  events do, never oftener than this interval.  On an idle system with no
+ *  display activity, the report at entry is the only one.
+ *
+ *  Accepted rather than fixed: capping the poll timeout at this interval would
+ *  give a true 30 second period, but would reintroduce the periodic wakeup
+ *  that the eventfd path (--f30) exists to eliminate, and idle power residency
+ *  matters more here than report cadence.
+ */
 #define UDEV_WATCH_STATS_REPORT_INTERVAL_SEC 30
 
 /** CLOCK_BOOTTIME nanoseconds at which #dw_udev_watch() last reported
@@ -142,10 +156,12 @@ bool dw_udev_watch(int watch_loop_millisec) {
    bool add_event_detected = false;
 
    while(!found && !terminate_watch_thread) {
-      // Report statistics on the first pass, then every
-      // UDEV_WATCH_STATS_REPORT_INTERVAL_SEC seconds.  Timed on CLOCK_BOOTTIME
-      // so a suspend counts toward the interval: the elapsed wall time is what
-      // makes a periodic report readable in the log.
+      // Report statistics on the first pass, then no oftener than every
+      // UDEV_WATCH_STATS_REPORT_INTERVAL_SEC seconds.  Reaching this point
+      // again requires a udev event, so the interval is a floor rather than a
+      // period; see the comment on that constant.  Timed on CLOCK_BOOTTIME so
+      // a suspend counts toward the interval: the elapsed wall time is what
+      // makes the report readable in the log.
       uint64_t cur_ns = cur_boot_time_nanosec();
       if (last_stats_report_ns == 0 ||
           cur_ns - last_stats_report_ns >= SECS2NANOS(UDEV_WATCH_STATS_REPORT_INTERVAL_SEC))
