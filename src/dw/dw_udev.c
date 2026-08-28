@@ -22,6 +22,7 @@
 #include "util/linux_util.h"
 #include "util/string_util.h"
 #include "util/suspend_resume_util.h"
+#include "util/timestamp.h"
 #include "util/udev_util.h"
 
 #include "base/core.h"
@@ -32,6 +33,8 @@
 
 #include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
+
+#include "ddc/ddc_services.h"
 /** \endcond */
 
 #include "dw_common.h"
@@ -92,6 +95,20 @@ STATIC bool exclude_event( Udev_Event_Detail * detail) {
 }
 
 
+/** Interval at which #dw_udev_watch() reports statistics. */
+#define UDEV_WATCH_STATS_REPORT_INTERVAL_SEC 30
+
+/** CLOCK_BOOTTIME nanoseconds at which #dw_udev_watch() last reported
+ *  statistics, 0 if it has not yet reported.
+ *
+ *  File scope rather than local to the function: dw_udev_watch() returns each
+ *  time an event is detected and is immediately re-entered by the watch loop
+ *  in dw_poll.c, so a local would treat every display change as a first pass
+ *  and report then, rather than on the intended 30 second cadence.
+ */
+static uint64_t last_stats_report_ns = 0;
+
+
 /** Poll udev to watch for display connection/disconnection
  *
  *  @param  watch_loop_millisec
@@ -125,6 +142,22 @@ bool dw_udev_watch(int watch_loop_millisec) {
    bool add_event_detected = false;
 
    while(!found && !terminate_watch_thread) {
+      // Report statistics on the first pass, then every
+      // UDEV_WATCH_STATS_REPORT_INTERVAL_SEC seconds.  Timed on CLOCK_BOOTTIME
+      // so a suspend counts toward the interval: the elapsed wall time is what
+      // makes a periodic report readable in the log.
+      uint64_t cur_ns = cur_boot_time_nanosec();
+      if (last_stats_report_ns == 0 ||
+          cur_ns - last_stats_report_ns >= SECS2NANOS(UDEV_WATCH_STATS_REPORT_INTERVAL_SEC))
+      {
+         last_stats_report_ns = cur_ns;
+         ddc_report_stats_main(DDCA_STATS_ALL,
+                               /*report_per_display=*/  false,
+                               /*include_dsa_stats=*/   false,
+                               /*stats_to_syslog_only=*/true,
+                               /*depth=*/               0);
+      }
+
       int j = ++pollctr%100;
       if (j == 1)
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling poll()...(%d)", pollctr);
