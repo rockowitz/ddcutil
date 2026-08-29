@@ -26,6 +26,9 @@
 #include "util/udev_util.h"
 
 #include "base/core.h"
+#ifdef PROFILE_UDEV_WATCH_THREAD
+#include "base/per_thread_data.h"
+#endif
 #include "base/rtti.h"
 #include "base/sleep.h"
 
@@ -133,6 +136,26 @@ static uint64_t last_stats_report_ns = 0;
 bool dw_udev_watch(int watch_loop_millisec) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_loop_millisec=%d", watch_loop_millisec);
+
+#ifdef PROFILE_UDEV_WATCH_THREAD
+   // Profiling this function both registers the watch thread in
+   // per_thread_data_hash -- ptd_profile_function_start() creates the record --
+   // and gives it one set of function stats.  Without it the thread has no
+   // Per_Thread_Data at all, since the only other creator is the API entry
+   // macro and the watch thread crosses no API boundary, so the report emitted
+   // below lists the client's calling thread and omits the one thread it is
+   // about.  Gated as the API prologs are, so profiling stays a single switch.
+   //
+   // Backed out because what it records is not worth reading: the elapsed time
+   // is almost entirely time blocked in poll() awaiting a udev event, so the
+   // figure says how long the watch waited, not what it cost, and the call
+   // count is just the number of events seen -- which the event log already
+   // shows.  Retained in case the thread needs to appear in the per-thread
+   // section for some other reason.  See also the end of this function.
+   if (ptd_api_profiling_enabled)
+      ptd_profile_function_start(__func__);
+#endif
+
    int poll_timeout_millisec = watch_loop_millisec;
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       poll_timeout_millisec = 5000;
@@ -323,6 +346,12 @@ bool dw_udev_watch(int watch_loop_millisec) {
 
       dw_udev_drain();
    }
+
+#ifdef PROFILE_UDEV_WATCH_THREAD
+   // See the matching block at the top of this function.
+   if (ptd_api_profiling_enabled)
+      ptd_profile_function_end(__func__);
+#endif
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, terminate_watch_thread, "");
    return terminate_watch_thread;
