@@ -1158,12 +1158,18 @@ bus_open_errors_to_syslog(const char * api_func) {
       for (int ndx = 0; ndx < errs->len; ndx++) {
          Bus_Open_Error * cur = g_ptr_array_index(errs, ndx);
          if (cur->io_mode == DDCA_IO_I2C) {
-            // syslog(LOG_ERR, "   Error %s opening /dev/i2c-%d", psc_desc(cur->error), cur->devno);
-            UNDECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_ERROR, "   Error %s opening /dev/i2c-%d", psc_desc(cur->error), cur->devno);
+            // syslog(LOG_ERR, "   Error %s opening /dev/i2c-%d",
+            //                 psc_desc(cur->error), cur->devno);
+            UNDECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_ERROR,
+                               "   Error %s opening /dev/i2c-%d",
+                               psc_desc(cur->error), cur->devno);
          }
          else {
-            // syslog(LOG_ERR, "   Error %s opening /dev/usb/hiddev%d %s", psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
-            UNDECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_ERROR, "   Error %s opening /dev/usb/hiddev%d %s", psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
+            // syslog(LOG_ERR, "   Error %s opening /dev/usb/hiddev%d %s",
+            //                 psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
+            UNDECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_ERROR,
+                               "   Error %s opening /dev/usb/hiddev%d %s",
+                               psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
          }
       }
    }
