@@ -518,7 +518,8 @@ void unlock_all_distinct_displays() {
 void
 dbgrpt_display_locks(int depth) {
    bool saved_reports_to_syslog = redirect_reports_to_syslog;
-   syslog(LOG_DEBUG, "redirect_reports_to_syslog=%s", sbool(redirect_reports_to_syslog));
+   DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "redirect_reports_to_syslog=%s",
+                    sbool(redirect_reports_to_syslog));
    redirect_reports_to_syslog = true;
 
    rpt_vstring(depth, "lock_records@%p", lock_records);
