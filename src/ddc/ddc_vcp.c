@@ -855,7 +855,8 @@ ddc_set_vcp_value(
                : g_strdup_printf( "Feature 0x%02x does not support verification", vrec->opcode);
 
          f0printf(verbose_msg_dest, "%s\n", s);
-         SIMPLE_STD_SYSLOGF(true, LOG_WARNING, "%s", s);
+         // SIMPLE_STD_SYSLOGF(true, LOG_WARNING, "%s", s);
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", s);
          free(s);
 
 #ifdef OLD

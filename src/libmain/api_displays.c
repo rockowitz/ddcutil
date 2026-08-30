@@ -1153,16 +1153,17 @@ STATIC void
 bus_open_errors_to_syslog(const char * api_func) {
    GPtrArray * errs = ddc_get_bus_open_errors();
    if (errs && errs->len > 0) {
-      SIMPLE_STD_SYSLOG(LOG_ERR, "Error(s) opening ddc devices");
+      // SIMPLE_STD_SYSLOG(LOG_ERR, "Error(s) opening ddc devices");
+      DECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_ERROR, "Error(s) opening ddc devices");
       for (int ndx = 0; ndx < errs->len; ndx++) {
          Bus_Open_Error * cur = g_ptr_array_index(errs, ndx);
          if (cur->io_mode == DDCA_IO_I2C) {
-            syslog(LOG_ERR, "   Error %s opening /dev/i2c-%d",
-                                             psc_desc(cur->error), cur->devno);
+            // syslog(LOG_ERR, "   Error %s opening /dev/i2c-%d", psc_desc(cur->error), cur->devno);
+            UNDECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_ERROR, "   Error %s opening /dev/i2c-%d", psc_desc(cur->error), cur->devno);
          }
          else {
-            syslog(LOG_ERR, "   Error %s opening /dev/usb/hiddev%d %s",
-                  psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
+            // syslog(LOG_ERR, "   Error %s opening /dev/usb/hiddev%d %s", psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
+            UNDECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_ERROR, "   Error %s opening /dev/usb/hiddev%d %s", psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
          }
       }
    }
@@ -1215,12 +1216,15 @@ ddca_get_display_refs(
    assert(*drefs_loc);
 
    if (!IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
-      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Called with include_invalid_displays=%s", SBOOL(include_invalid_displays));
-      SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Returning DDCA_Display_Ref list: ");
+      // SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Called with include_invalid_displays=%s", SBOOL(include_invalid_displays));
+      // SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Returning DDCA_Display_Ref list: ");
+      DECORATED_SYSLOG(LOG_INFO, "Called with include_invalid_displays=%s", SBOOL(include_invalid_displays));
+      DECORATED_SYSLOG(LOG_INFO, "Returning DDCA_Display_Ref list: ");
       cur_ddca_dref = result_list;
       while (*cur_ddca_dref) {
          Display_Ref * dref = dref_from_published_ddca_dref(*cur_ddca_dref);
-         SIMPLE_STD_SYSLOG(LOG_INFO, "   DDCA_Display_Ref %s", dref_reprx_t(dref));
+         // SIMPLE_STD_SYSLOG(LOG_INFO, "   DDCA_Display_Ref %s", dref_reprx_t(dref));
+         DECORATED_SYSLOG(LOG_INFO, "   DDCA_Display_Ref %s", dref_reprx_t(dref));
          cur_ddca_dref++;
       }
       bus_open_errors_to_syslog(__func__);

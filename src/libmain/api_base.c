@@ -989,7 +989,8 @@ bye:
    if (parsed_cmd)
       free_parsed_cmd(parsed_cmd);
    if (master_error) {
-      SIMPLE_STD_FUNC_SYSLOG(LOG_ERR, "Returning %s", psc_name(master_error->status_code));
+      // SIMPLE_STD_FUNC_SYSLOG(LOG_ERR, "Returning %s", psc_name(master_error->status_code));
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Returning %s", psc_name(master_error->status_code));
       errinfo_report_to_syslog(LOG_ERR, master_error, 2);
       ddcrc = master_error->status_code;
       DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
