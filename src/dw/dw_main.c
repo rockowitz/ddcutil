@@ -226,9 +226,9 @@ dw_start_watch_displays(DDCA_Display_Event_Class event_classes) {
       if (erec) {
          DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
                "EDID(s) readable from /sys but not using I2C. Display change detection disabled.");
-         syslog(LOG_WARNING, "%s", erec->detail);
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", erec->detail);
          for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-            syslog(LOG_WARNING, "   %s", erec->causes[ndx]->detail);
+            DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "   %s", erec->causes[ndx]->detail);
          }
 
          err = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "Requires EDIDs readable using I2C");
