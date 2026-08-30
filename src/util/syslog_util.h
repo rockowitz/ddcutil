@@ -78,12 +78,14 @@ do { \
 } while(0)
 
 
-#define BARE_STD_SYSLOG(_syslog_priority, _msg) \
+#define BARE_STD_SYSLOGV(_syslog_priority, _format, ...) \
 do { \
       char prefix[100] = {0}; \
       get_msg_decoration(prefix, 100, true); \
       int prefix_len = strlen(prefix); \
-      syslog(_syslog_priority, "%*s%s%s", prefix_len, "", _msg, (tag_output) ? " (N)" : ""  ); \
+      char * body = g_strdup_printf(_format, ##__VA_ARGS__); \
+      syslog(_syslog_priority, "%*s%s%s", prefix_len, "", body, (tag_output) ? " (N)" : ""  ); \
+      g_free(body); \
 } while(0)
 
 
