@@ -635,7 +635,6 @@ void core_errmsg_emitter(
 //
 
 extern bool msg_to_syslog_only;
-
 extern bool enable_syslog;
 extern DDCA_Syslog_Level syslog_level;
 
@@ -657,7 +656,22 @@ extern const char * valid_syslog_levels_string;
  *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
  *  @param  fmt                message format
  *  @param  ...                message arguments
- *
+ */
+
+#define DECORATED_SYSLOG(_ddcutil_severity, format, ...) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+         BASIC_STD_FUNC_SYSLOG(syslog_priority, body); \
+         free(body); \
+      } \
+   } \
+} while(0)
+
+#ifdef OLD
+/*
  *  @remark
  *  The function name field is pre-formatted with g_strdup_printf() rather than
  *  using a dynamic width specifier (%-*s) directly in the syslog() call.
@@ -680,6 +694,8 @@ do { \
       } \
    } \
 } while(0)
+#endif
+
 
 
 /** Variant of DECORATED_SYSLOG that does not include function name.
@@ -695,13 +711,52 @@ do { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+         BASIC_STD_SYSLOG(syslog_priority, body); \
+         free(body); \
+      } \
+   } \
+} while(0)
+
+#ifdef OLD
+#define DECORATED_SYSLOG_NOFUNC(_ddcutil_severity, format, ...) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
          char prefix[100] = {0}; \
             get_msg_decoration(prefix, 100, true); \
          syslog(syslog_priority, "%s %s%s", prefix, body, (tag_output) ? " (N)" : ""  ); \
          free(body); \
       } \
    } \
+}
+#endif
+
+
+
+/** Variant of DECORATED_SYSLOG that does not include function name.
+ *  Has spaces instead of ornamentation
+ *
+ *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
+ *  @param  fmt                message format
+ *  @param  ...                message arguments
+ *
+ */
+#define UNDECORATED_SYSLOG_NOFUNC(_ddcutil_severity, format, ...) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+         BARE_STD_SYSLOG(syslog_priority, body); \
+         free(body); \
+      } \
+   } \
 } while(0)
+
+
+
 
 
 
@@ -727,6 +782,19 @@ do { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
+         BASIC_STD_SYSLOGX(syslog_priority, func, body); \
+         free(body); \
+      } \
+   } \
+} while(0)
+
+#ifdef OLD
+#define DECORATED_SYSLOGX(_ddcutil_severity, _func, format, ...) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         char * body = g_strdup_printf(format, ##__VA_ARGS__); \
          char prefix[100] = {0}; \
             get_msg_decoration(prefix, 100, true); \
          char * funcname_field = g_strdup_printf("%-*s", funcname_field_size, _func); \
@@ -736,6 +804,8 @@ do { \
       } \
    } \
 } while(0)
+#endif
+
 
 
 #ifdef OLD
@@ -864,8 +934,7 @@ do { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
          char * msg = g_strdup_printf(_format, ##__VA_ARGS__); \
-         /* syslog(syslog_priority, PRItid" %s%s", (intmax_t) tid(), body, (tag_output) ? " (R)" : "" ); */  \
-         SIMPLE_STD_SYSLOG(syslog_priority, "%s%s", msg, (tag_output) ? " (R)" : "" ); \
+         DECORATED_SYSLOG_NOFUNC(_ddcutil_severity, "%s%s", msg, (tag_output) ? " (R)" : "" ); \
          free(msg); \
          if (traced_function_stack_enabled) \
             current_traced_function_stack_to_syslog(syslog_priority, true); \
@@ -874,6 +943,10 @@ do { \
       } \
    } \
 } while(0)
+
+  // was:
+  //         SIMPLE_STD_SYSLOG(syslog_priority, "%s%s", msg, (tag_output) ? " (R)" : "" );
+  //         syslog(syslog_priority, PRItid" %s%s", (intmax_t) tid(), body, (tag_output) ? " (R)" : "" ); */
 
 
 
