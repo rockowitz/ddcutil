@@ -213,7 +213,7 @@ ddca_create_dispno_display_identifier(
 {
    free_thread_error_detail();
    if (traced_function_stack_enabled)
-     reset_current_traced_function_stack();
+      reset_current_traced_function_stack();
    // assert(did_loc);
    API_PRECOND(did_loc);
    Display_Identifier* did = create_dispno_display_identifier(dispno);
