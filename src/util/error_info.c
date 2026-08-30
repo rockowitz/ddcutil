@@ -28,6 +28,7 @@
 #include "msg_util.h"
 #include "report_util.h"
 #include "string_util.h"
+#include "syslog_util.h"
 #include "traced_function_stack.h"
 
 #include "error_info.h"
@@ -927,7 +928,8 @@ errinfo_report_to_syslog(int syslog_priority, Error_Info * erec, int depth) {
    errinfo_report_collect(erec, collector, depth);
    for (int ndx = 0; ndx < collector->len; ndx++) {
       char * line = g_ptr_array_index(collector, ndx);
-      syslog(syslog_priority, "%s", line);
+      // syslog(syslog_priority, "%s", line);
+      BARE_STD_SYSLOGV(syslog_priority, "%s", line);
    }
    g_ptr_array_free(collector, true);
 }
