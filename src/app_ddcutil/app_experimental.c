@@ -88,7 +88,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(35, "Disable skipping device open when DRM connector reports disconnected (edid_exists_checks_drm_status");
    REPORT_FLAG_OPTION(36, "Do not disable display change scan while EACCES is seen (rescan_on_eacces)");
    REPORT_FLAG_OPTION(37, "Unused");
-   REPORT_FLAG_OPTION(38, "Unused");
+   REPORT_FLAG_OPTION(38, "Open device even when no DRM connector names the bus (edid_exists_skips_unmapped_bus)");
    REPORT_FLAG_OPTION(39, "Unused");
    REPORT_FLAG_OPTION(40, "Unused");
 

@@ -81,6 +81,9 @@ int rate_limit_eacces_diagnostics_interval_sec = DEFAULT_EACCES_DIAGNOSTIC_INTER
 // If true, i2c_edid_exists() does not open the device when the DRM connector
 // for the bus reports status "disconnected".
 bool edid_exists_checks_drm_status = true;
+// If true, i2c_edid_exists() does not open the device when no DRM connector
+// names the bus, on a machine whose driver publishes that mapping.  --f38
+bool edid_exists_skips_unmapped_bus = true;
 
 
 #ifdef OUT
@@ -1176,6 +1179,41 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
        }
        else {
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DRM connector not found by busno %d", busno);
+
+          // No connector claims this bus.  On a machine whose driver publishes
+          // the bus/connector mapping at all, that is positive evidence the
+          // bus serves no connector and so can have no display -- the i915
+          // gmbus channels for ports nothing is wired to, which otherwise cost
+          // an I2C read apiece that takes tens of milliseconds to return
+          // ENXIO, on every scan.
+          //
+          // Three conditions, each load bearing:
+          //  - the driver is in known_reliable_driver(), so a connector's
+          //    absence reflects hardware rather than a driver that does not
+          //    maintain this part of sysfs;
+          //  - some connector does report a bus number, proving this driver on
+          //    this machine attaches DDC adapters.  Without this the rule would
+          //    skip every bus under a driver that never publishes the mapping,
+          //    nvidia being the standing example;
+          //  - the bus is not DPMST.  A display behind an MST hub has no
+          //    connector of its own, so its absence here says nothing.  That
+          //    was issue #585.
+          // DisplayLink is excluded for the same reason it is elsewhere: its
+          // EDID is only ever readable from sysfs.
+          if (edid_exists_skips_unmapped_bus && !is_displaylink) {
+             char * busname = get_i2c_device_sysfs_name(busno);
+             bool is_mst = streq(busname, "DPMST");     // streq() handles NULL
+             free(busname);
+             if (!is_mst &&
+                 is_sysfs_reliable_for_busno(busno) &&
+                 any_sys_drm_connector_has_busno())
+             {
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                      "No DRM connector serves bus %d and this driver publishes the "
+                      "mapping, not opening device", busno);
+                goto bye;
+             }
+          }
        }
 
        // *** Possibly try to get the EDID from sysfs

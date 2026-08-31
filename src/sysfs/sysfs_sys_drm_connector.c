@@ -455,6 +455,44 @@ find_sys_drm_connector_by_busno(int busno) {
 }
 
 
+/** Reports whether any DRM connector names the I2C bus that serves it.
+ *
+ *  The bus number comes from one of two artifacts the kernel creates only when
+ *  the driver attaches its DDC adapter to the connector: a ddc symlink,
+ *  <connector>/ddc/i2c-dev/i2c-N, or for DisplayPort an i2c-N subdirectory of
+ *  the connector's drm_dp_aux device.  Whether a driver does that is its own
+ *  implementation choice, not something guaranteed by DRM or implied by being
+ *  in the kernel tree.
+ *
+ *  The question this answers is therefore "does this machine's driver publish
+ *  the mapping at all", which is what makes the *absence* of a mapping for one
+ *  bus meaningful.  Without it, a driver that never attaches DDC adapters --
+ *  nvidia is the standing example -- would look identical to one where the bus
+ *  genuinely serves no connector.
+ *
+ *  @return true if at least one connector reports a bus number
+ */
+bool any_sys_drm_connector_has_busno() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "");
+
+   bool result = false;
+   GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
+   if (connectors) {
+      for (int ndx = 0; ndx < connectors->len; ndx++) {
+         Sys_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
+         if (cur->i2c_busno >= 0) {
+            result = true;
+            break;
+         }
+      }
+   }
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_I2C, result, "");
+   return result;
+}
+
+
 /** If the display has an open-source conformant driver,
  *  returns the connector name.
  *

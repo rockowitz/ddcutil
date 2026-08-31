@@ -55,6 +55,7 @@ char *              find_drm_connector_name_by_busno(int busno);
 char *              get_drm_connector_name_by_edid(Byte * edid_bytes);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
+bool                any_sys_drm_connector_has_busno();
 
 // Functions that access sysfs connector dirs directly, instead of using the
 // persistent array of Sys_Drm_Connector:

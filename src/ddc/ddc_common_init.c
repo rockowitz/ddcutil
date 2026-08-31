@@ -497,6 +497,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       split_sleep_eventfd = false;    // dw_split_sleep() uses the old segmented sleeps instead of a single poll() wait
    if (parsed_cmd->flags2 & CMD_FLAG2_F35)
       edid_exists_checks_drm_status = false;    // always open device, do not consult DRM connector status first
+   if (parsed_cmd->flags2 & CMD_FLAG2_F38)
+      edid_exists_skips_unmapped_bus = false;   // open the device even when no DRM connector names the bus
    if (parsed_cmd->flags2 & CMD_FLAG2_F36)
       rescan_on_eacces = false;    // treat affected monitors as disconnected instead of rescanning while EACCES is seen
 
