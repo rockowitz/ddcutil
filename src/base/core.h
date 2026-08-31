@@ -749,7 +749,7 @@ do { \
       int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
       if (syslog_priority >= 0) { \
          char * body = g_strdup_printf(format, ##__VA_ARGS__); \
-         BARE_STD_SYSLOG(syslog_priority, body); \
+         BASIC_STD_SYSLOG(syslog_priority, body); \
          free(body); \
       } \
    } \
