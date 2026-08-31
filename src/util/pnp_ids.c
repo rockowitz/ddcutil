@@ -2367,8 +2367,16 @@ static void load_pnp_ids_from_hwdata_file() {
             char * name = strtrim(s+3);
             bool new_key = g_hash_table_insert(ids_hash, id, name);
             if (!new_key) {
-               DBGF(debug, "g_hash_table_insert(%s,%s) returned true", id, name);
-               SIMPLE_STD_FUNC_SYSLOG(LOG_ERR, "g_hash_table_insert(%s,%s) returned true", id, name);
+               // g_hash_table_insert() returns false when the key was already
+               // present, so this branch means a duplicate id in the file, not
+               // a "returned true" as the messages formerly said.  In that case
+               // the table keeps its existing key and frees the one just passed,
+               // so id is dangling here -- take the id text from the line, which
+               // lines still owns.  name is the value now stored, the previous
+               // one having been freed, so it is valid.
+               DBGF(debug, "Duplicate pnp id %.3s, name replaced by %s", s, name);
+               SIMPLE_STD_FUNC_SYSLOG(LOG_ERR, "Duplicate pnp id %.3s in %s, name replaced by %s",
+                                      s, pnp_ids_fn, name);
             }
          }
          g_ptr_array_free(lines, true);
