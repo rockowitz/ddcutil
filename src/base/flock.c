@@ -290,7 +290,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
          show_flock(filename, false);
          // show_backtrace(0);
          dbgrpt_current_traced_function_stack(/*reverse*/ false, false, 0);
-         current_traced_function_stack_to_syslog(DDCA_SYSLOG_ERROR, /*reverse=*/ false);
+         TRACED_FUNCTION_STACK_TO_SYSLOG(DDCA_SYSLOG_ERROR, TFS_MOST_RECENT_FIRST);
       }
 
       DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "flock() for %s failed on %d calls", filename, flock_call_ctr);

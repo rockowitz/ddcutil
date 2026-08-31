@@ -359,7 +359,7 @@ retry:
                   last_eacces_diagnostics_ns = diag_now_ns;
             }
             if (emit_diagnostics) {
-               current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ true);
+               TRACED_FUNCTION_STACK_TO_SYSLOG(DDCA_SYSLOG_ERROR, TFS_MOST_RECENT_LAST);
                diagnose_open_failure_to_syslog(filename, err->detail);
             }
 
@@ -894,7 +894,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
          dbgrpt_current_traced_function_stack(false, true, 0);
       }
       syslog(LOG_DEBUG, "Traced function stack on entry to i2c_check_open_bus_alive()");
-      current_traced_function_stack_to_syslog(LOG_DEBUG, /*reverse*/ false);
+      TRACED_FUNCTION_STACK_TO_SYSLOG(DDCA_SYSLOG_DEBUG, TFS_MOST_RECENT_FIRST);
    }
 #endif
 

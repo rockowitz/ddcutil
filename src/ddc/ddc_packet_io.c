@@ -304,7 +304,7 @@ ddc_open_display(
             dref_repr_t(dref));
       DUAL_MSGNV(debug, DDCA_SYSLOG_ERROR,"%s", s);
       dbgrpt_current_traced_function_stack(true, true, 1);
-      current_traced_function_stack_to_syslog(LOG_ERR, /*reverse*/ false);
+      TRACED_FUNCTION_STACK_TO_SYSLOG(DDCA_SYSLOG_ERROR, TFS_MOST_RECENT_FIRST);
       // mark_display_ref_disconnected(dref);  // don't call - double lock
       dref->disconnected = true;
       dref->detail = NULL;
@@ -388,8 +388,7 @@ ddc_open_display(
             char * msg = g_strdup_printf("dref=%s, businfo->marker = |%.4s| = %s",
                       dref_reprx_t(dref), (char*)businfo, hexstring_t((unsigned char*) businfo->marker, 4));
             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
-            int syslog_priority = syslog_importance_from_ddcutil_syslog_level(DDCA_SYSLOG_ERROR);
-            current_traced_function_stack_to_syslog(syslog_priority, /*reverse=*/true);
+            TRACED_FUNCTION_STACK_TO_SYSLOG(DDCA_SYSLOG_ERROR, TFS_MOST_RECENT_LAST);
             published_dref_hash_to_syslog(DDCA_SYSLOG_ERROR, "In ddc_open_display() (3)");
 
 #define RECOVER_556

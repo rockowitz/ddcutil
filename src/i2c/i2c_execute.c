@@ -557,9 +557,9 @@ i2c_ioctl_reader1(
       char * msg = g_strdup_printf("Error in ioctl() read, rc=%d, errno=%s, device=%s",
             rc, psc_desc(-errsv), filename_for_fd_t(fd));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", msg);
-      DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "%s", msg);
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
       free(msg);
-      current_traced_function_stack_to_syslog(LOG_ERR,true);
+      TRACED_FUNCTION_STACK_TO_SYSLOG(DDCA_SYSLOG_ERROR, TFS_MOST_RECENT_LAST);
       if (IS_DBGTRC(debug, TRACE_GROUP)) {
          dbgrpt_traced_callstack_call_table(0);
       }

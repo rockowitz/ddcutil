@@ -756,6 +756,29 @@ do { \
 } while(0)
 
 
+/** Writes the current traced function stack to the system log.
+ *
+ *  Wraps #current_traced_function_stack_to_syslog(), which lives in
+ *  util/traced_function_stack.c and so takes a raw syslog priority: util is
+ *  below base and cannot see DDCA_Syslog_Level.  Callers here name a severity
+ *  as they do for every other message, and the dump becomes subject to the
+ *  same #test_emit_syslog() gate as the message it accompanies, rather than
+ *  being emitted unconditionally.
+ *
+ *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
+ *  @param _reverse            TFS_MOST_RECENT_FIRST or TFS_MOST_RECENT_LAST
+ */
+#define TRACED_FUNCTION_STACK_TO_SYSLOG(_ddcutil_severity, _reverse) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         current_traced_function_stack_to_syslog(syslog_priority, _reverse); \
+      } \
+   } \
+} while(0)
+
+
 
 
 
