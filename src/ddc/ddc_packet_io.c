@@ -388,7 +388,8 @@ ddc_open_display(
             char * msg = g_strdup_printf("dref=%s, businfo->marker = |%.4s| = %s",
                       dref_reprx_t(dref), (char*)businfo, hexstring_t((unsigned char*) businfo->marker, 4));
             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
-            current_traced_function_stack_to_syslog(LOG_ERR, /*reverse=*/true);
+            int syslog_priority = syslog_importance_from_ddcutil_syslog_level(DDCA_SYSLOG_ERROR);
+            current_traced_function_stack_to_syslog(syslog_priority, /*reverse=*/true);
             published_dref_hash_to_syslog(DDCA_SYSLOG_ERROR, "In ddc_open_display() (3)");
 
 #define RECOVER_556
