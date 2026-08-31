@@ -362,6 +362,16 @@ gpointer dw_watch_display_connections(gpointer data) {
    bool skip_next_sleep = false;
    int slept_millisec = 0;   // will contain length of final sleep
 
+   /** Set when the post-scan drain below took events off the udev queue.
+    *
+    *  Those events are held, not discarded: the next pass skips the wait in
+    *  dw_udev_watch() and scans directly, so every drained event is still
+    *  answered by a scan that reads hardware state after the event arrived.
+    *  Discarding them instead would lose a hotplug that occurred during the
+    *  preceding scan, which is why this is a flag rather than a plain drain.
+    */
+   bool rescan_without_waiting = false;
+
    while (!terminate_watch_thread) {
       if (deferred_events && deferred_events->len > 0) {
          dw_emit_deferred_events(deferred_events);
@@ -378,12 +388,24 @@ gpointer dw_watch_display_connections(gpointer data) {
       dw_terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
 
       if (wdd->watch_mode == Watch_Mode_Udev) {
-         // sem_wait(&sem);
-         // close the door behind us:
-         // sem_post(&sem);
-         dw_udev_watch(wdd->watch_loop_millisec);
-         if (terminate_watch_thread)
-            continue;
+         if (rescan_without_waiting) {
+            // Events are already in hand from the post-scan drain below.
+            // Waiting in poll() for another would be wrong -- those events
+            // would then never be answered -- and the coalesce pause inside
+            // dw_udev_watch() would be redundant, the drain having already
+            // collected the burst it exists to accumulate.
+            rescan_without_waiting = false;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "Scanning directly, events drained after the previous scan");
+         }
+         else {
+            // sem_wait(&sem);
+            // close the door behind us:
+            // sem_post(&sem);
+            dw_udev_watch(wdd->watch_loop_millisec);
+            if (terminate_watch_thread)
+               continue;
+         }
       }
 
 #ifdef USE_X11
@@ -415,6 +437,24 @@ gpointer dw_watch_display_connections(gpointer data) {
 
       dw_invoke_process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
             deferred_events, displays_to_recheck);
+
+      // A scan takes on the order of a second, and after a resume udev keeps
+      // emitting device re-registration events for longer than that, so events
+      // reliably arrive while the scan is running.  The coalesce pause in
+      // dw_udev_watch() cannot absorb them: it closes before the scan starts.
+      // Left queued, they wake the loop immediately -- in the logs, poll()
+      // returns about 30 ms after a scan completes -- and buy a second full
+      // pause and scan.
+      //
+      // Draining here collapses that burst into one iteration, and the flag is
+      // what keeps it safe: an event received while a scan was running may
+      // describe a change the scan read too early to see, so it must still be
+      // answered.  The next pass therefore scans rather than waits.  Nothing
+      // is discarded on the strength of a guess about what an event means.
+      if (wdd->watch_mode == Watch_Mode_Udev && !terminate_watch_thread) {
+         if (dw_udev_drain() > 0)
+            rescan_without_waiting = true;
+      }
    } // while()
 
    if (wdd->watch_mode == Watch_Mode_Udev) {
