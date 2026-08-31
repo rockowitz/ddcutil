@@ -30,7 +30,6 @@
 #include "base/per_thread_data.h"
 #endif
 #include "base/rtti.h"
-#include "base/sleep.h"
 
 #include "sysfs/sysfs_sys_drm_connector.h"
 
@@ -340,8 +339,32 @@ bool dw_udev_watch(int watch_loop_millisec) {
 
       int remaining_pause_ms = drain_pause_ms - already_paused_ms;
       if (remaining_pause_ms > 0) {
-         LOGGABLE_SLEEP(remaining_pause_ms, SLEEP_OPT_TRACEABLE, DDCA_SYSLOG_NOTICE,
-                        "Allowing time for events to coalesce");
+         // Retaken if a suspend spends it, as for the add event pause above.
+         // This pause exists so that events accumulate and dw_udev_drain()
+         // takes them as a batch.  A suspend beginning during it leaves the
+         // drain running the instant the process thaws, before the burst of
+         // device re-registration events that a resume produces has arrived:
+         // it drains the stale pre-suspend set, and every event of the burst
+         // is then handled individually -- precisely the spike the coalescing
+         // exists to prevent, at the moment it is largest.
+         //
+         // The sleep is measured on CLOCK_MONOTONIC, which does not advance
+         // while the system is suspended, so the pause is not merely delayed;
+         // it is served in full on the far side and buys nothing.  See
+         // dw_sleep_spent_by_suspend(), which times on CLOCK_BOOTTIME to tell
+         // the two apart.
+         for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
+            DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE,
+                  "Allowing time for events to coalesce: Sleeping for %d milliseconds",
+                  remaining_pause_ms);
+            if (!dw_sleep_spent_by_suspend(remaining_pause_ms))
+               break;
+            if (terminate_watch_thread)
+               break;
+            DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
+                  "Pause of %d millisec allowing events to coalesce was spent by a suspend. "
+                  "Pausing again.", remaining_pause_ms);
+         }
       }
 
       dw_udev_drain();

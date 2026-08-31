@@ -28,11 +28,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <glib-2.0/glib.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/syscall.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "base/displays.h"
@@ -127,6 +129,40 @@ static void test_dw_split_sleep_short_timed(void) {
 }
 
 
+// dw_sleep_spent_by_suspend() times its sleep on CLOCK_BOOTTIME and reports
+// true when the elapsed time exceeds the requested interval by more than
+// PAUSE_SUSPENDED_SLACK_MS -- the signature of a sleep the system froze rather
+// than served.  A SIGSTOP reproduces that signature: the process makes no
+// progress while BOOTTIME keeps advancing, exactly as during a suspend.  A
+// child does the stopping and the continuing, since a stopped process cannot
+// resume itself.
+static void test_dw_sleep_spent_by_suspend(void) {
+   split_sleep_eventfd = false;
+   terminate_watch_thread = false;
+
+   // undisturbed: the sleep is served, so not spent by a suspend
+   CK(dw_sleep_spent_by_suspend(200) == false);
+
+   pid_t parent = getpid();
+   pid_t child = fork();
+   if (child == 0) {
+      usleep(100 * 1000);            // let the parent enter its sleep
+      kill(parent, SIGSTOP);
+      usleep(1600 * 1000);           // longer than PAUSE_SUSPENDED_SLACK_MS (1000)
+      kill(parent, SIGCONT);
+      _exit(0);
+   }
+   CK(child > 0);
+   if (child > 0) {
+      // Stopped ~100ms into a 200ms sleep and resumed ~1.7s later, so BOOTTIME
+      // elapsed is ~1.8s against a 200ms request: well past the slack.
+      CK(dw_sleep_spent_by_suspend(200) == true);
+      int status;
+      waitpid(child, &status, 0);
+   }
+}
+
+
 static void test_dw_terminate_if_invalid_thread_or_process_valid(void) {
    pid_t cur_pid = getpid();
    pid_t cur_tid = (pid_t) syscall(SYS_gettid);
@@ -181,6 +217,7 @@ int main(int argc, char ** argv) {
    test_terminate_eventfd_lifecycle();
    test_dw_split_sleep_terminate_signaled();
    test_dw_split_sleep_short_timed();
+   test_dw_sleep_spent_by_suspend();
    test_dw_terminate_if_invalid_thread_or_process_valid();
    test_dw_free_watch_displays_data();
    test_active_callback_threads();
