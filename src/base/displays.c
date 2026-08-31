@@ -686,11 +686,11 @@ void dbgrpt_published_dref_hash(const char * msg, int depth) {
 }
 
 
-void published_dref_hash_to_syslog(int priority, const char * msg) {
+void published_dref_hash_to_syslog(DDCA_Syslog_Level severity, const char * msg) {
    if (msg)
-      syslog(priority, "%s: dref_hash_contents:", msg);
+      DECORATED_SYSLOG(severity, "%s: dref_hash_contents:", msg);
    else
-      syslog(priority, "dref_hash contents: ");
+      DECORATED_SYSLOG(severity, "dref_hash contents: ");
 
    GHashTableIter iter;
    gpointer key, value;
@@ -698,7 +698,7 @@ void published_dref_hash_to_syslog(int priority, const char * msg) {
    while (g_hash_table_iter_next (&iter, &key, &value)) {
       uint dref_id = GPOINTER_TO_UINT(key);
       Display_Ref * dref = (Display_Ref *) value;
-      syslog(priority, "dref_id %d -> %s", dref_id, dref_reprx_t(dref));
+      DECORATED_SYSLOG(severity, "dref_id %d -> %s", dref_id, dref_reprx_t(dref));
    }
 }
 

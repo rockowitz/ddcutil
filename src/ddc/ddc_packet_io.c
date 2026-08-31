@@ -389,7 +389,7 @@ ddc_open_display(
                       dref_reprx_t(dref), (char*)businfo, hexstring_t((unsigned char*) businfo->marker, 4));
             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
             current_traced_function_stack_to_syslog(LOG_ERR, /*reverse=*/true);
-            published_dref_hash_to_syslog(LOG_ERR, "In ddc_open_display() (3)");
+            published_dref_hash_to_syslog(DDCA_SYSLOG_ERROR, "In ddc_open_display() (3)");
 
 #define RECOVER_556
 #ifndef RECOVER_556
