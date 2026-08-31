@@ -24,6 +24,7 @@
 #include "file_util.h"
 #include "report_util.h"
 #include "string_util.h"
+#include "syslog_util.h"
 
 #include "pnp_ids.h"
 
@@ -2354,7 +2355,8 @@ static void load_pnp_ids_from_hwdata_file() {
       Error_Info * err = file_getlines_errinfo(pnp_ids_fn, lines);
       if (err) {
          DBGF(debug, "file_getlines_errinfo() for %s returned %d", pnp_ids_fn, err->status_code);
-         syslog(LOG_ERR, "file_getlines_errinfo() for %s returned %d", pnp_ids_fn, err->status_code);
+         SIMPLE_STD_FUNC_SYSLOG(LOG_ERR, "file_getlines_errinfo() for %s returned %d",
+                                pnp_ids_fn, err->status_code);
          pnp_ids_fn = NULL;
       }
       else {
@@ -2366,7 +2368,7 @@ static void load_pnp_ids_from_hwdata_file() {
             bool new_key = g_hash_table_insert(ids_hash, id, name);
             if (!new_key) {
                DBGF(debug, "g_hash_table_insert(%s,%s) returned true", id, name);
-               syslog(LOG_ERR, "g_hash_table_insert(%s,%s) returned true", id, name);
+               SIMPLE_STD_FUNC_SYSLOG(LOG_ERR, "g_hash_table_insert(%s,%s) returned true", id, name);
             }
          }
          g_ptr_array_free(lines, true);
