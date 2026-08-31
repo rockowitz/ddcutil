@@ -962,7 +962,7 @@ main(int argc, char *argv[]) {
             syslog(LOG_ERR, "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
          for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
             char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(config_file_errs, ndx));
-            f0printf(ferr(), s);
+            f0printf(ferr(), "%s", s);
             if (syslog_opened)
                syslog(LOG_ERR, "%s", s);
             free(s);
@@ -1026,7 +1026,7 @@ main(int argc, char *argv[]) {
       //    syslog(LOG_ERR, "Error(s) in ddcutil command:\n");
       for (int ndx = 0; ndx < parser_errmsgs->len; ndx++) {
          char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(parser_errmsgs, ndx));
-         f0printf(ferr(), s);
+         f0printf(ferr(), "%s", s);
          if (syslog_opened)
             syslog(LOG_ERR, "%s", s);
          free(s);

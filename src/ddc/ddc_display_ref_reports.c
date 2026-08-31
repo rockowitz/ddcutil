@@ -467,8 +467,10 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             case MQ_OTHER:
                msg = quirk->quirk_msg;
             }
+            // "%s": the MQ_OTHER case takes msg from the quirks table rather
+            // than a literal, so it must not be used as a format string.
             if (msg)
-               rpt_vstring(d1, msg);
+               rpt_vstring(d1, "%s", msg);
          }
       }
       if (output_level >= DDCA_OL_VERBOSE && !is_laptop) {
