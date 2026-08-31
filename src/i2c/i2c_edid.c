@@ -463,6 +463,7 @@ retry:
    // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
    //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
    int tryctr = 0;
+   int consecutive_eio_ct = 0;
 #ifdef TEST_EDID_SMBUS
    if (EDID_Read_Uses_Smbus) {
       read_bytewise = true;
@@ -553,6 +554,30 @@ retry:
          }
       }  // use local functions
       tryctr++;
+      // -EIO is deliberately absent from the break list below, having been
+      // removed 3/4/2021: unlike ENXIO, which means no device acknowledged, a
+      // single EIO can be transient bus trouble and is worth retrying.  Two in
+      // a row on the same bus is another matter.  Measured on a hybrid laptop
+      // after resume, each empty nvidia bus returned four consecutive EIOs at
+      // roughly 41 millisec per iteration -- a single ioctl attempt plus an
+      // i2c layer fallback -- while the one bus that had a display succeeded
+      // on its first single ioctl read and never reached a fallback.  Across
+      // that whole scan no fallback ever succeeded after a first failure: the
+      // ladder exists for monitors needing 128 vs 256 bytes or another
+      // transport, and none of that helps when nothing answers at 0x50.
+      //
+      // So retry once and stop, rather than restoring -EIO to the break list.
+      // That keeps the 2021 behavior for the transient case it was removed
+      // for, and halves the cost of a bus with nothing on it.
+      if (rc == -EIO) {
+         if (++consecutive_eio_ct >= 2) {
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                  "Second consecutive EIO, nothing responding at 0x50.  Not retrying.");
+            break;
+         }
+      }
+      else
+         consecutive_eio_ct = 0;
       if (rc == -ENXIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT ) {    // removed -EIO 3/4/2021, moved -EBUSY 7/24/2026
          // DBGMSG("breaking");
          break;
