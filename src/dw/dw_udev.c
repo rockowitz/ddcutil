@@ -374,8 +374,6 @@ bool dw_udev_watch(int watch_loop_millisec) {
          }
       }
 
-      int drain_pause_ms = 200;    // ??
-
       int remaining_pause_ms = drain_pause_ms - already_paused_ms;
       if (remaining_pause_ms > 0) {
          // This pause lets events accumulate so dw_udev_drain() takes them as

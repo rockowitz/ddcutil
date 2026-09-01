@@ -538,6 +538,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    // are tuned from different evidence.
    if (parsed_cmd->flags2 & CMD_FLAG2_I14_SET)
       pause_after_add_ms = parsed_cmd->i14;
+   if (parsed_cmd->i16 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I16_SET))
+      drain_pause_ms = parsed_cmd->i16;    // 0 = drain immediately, no coalescing
 #endif
 }
 

@@ -111,7 +111,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i13:         EACCES diagnostic interval seconds (default=%d)", DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC);
    rpt_vstring(depth+1, "Utility option --i14:         Pause after udev add event ms (default = %d)", DEFAULT_PAUSE_AFTER_ADD_MS);
    rpt_vstring(depth+1, "Utility option --i15:         Udev watch execution statistics interval seconds, 0=off (default=%d)", DEFAULT_UDEV_WATCH_STATS_INTERVAL_SEC);
-   rpt_vstring(depth+1, "Utility option --i16:         Unused");
+   rpt_vstring(depth+1, "Utility option --i16:         Pause allowing udev events to coalesce ms (default = %d)", DEFAULT_DRAIN_PAUSE_MS);
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");
    rpt_vstring(depth+1, "Utility option --s2:          Unused");

@@ -60,6 +60,7 @@ static const int Dbgtrc_Dbgrpt_Depth = 4;  // most closely matches dbgtrc indent
 // thread and writes by ddca_set_display_settings()
 _Atomic uint16_t  initial_stabilization_millisec = DEFAULT_INITIAL_STABILIZATION_MILLISEC;
 _Atomic uint16_t  pause_after_add_ms              = DEFAULT_PAUSE_AFTER_ADD_MS;
+_Atomic uint16_t  drain_pause_ms                 = DEFAULT_DRAIN_PAUSE_MS;
 _Atomic uint16_t  stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MILLISEC;
 _Atomic uint16_t  udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
 _Atomic uint16_t  poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;

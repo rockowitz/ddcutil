@@ -19,6 +19,7 @@
 
 extern _Atomic uint16_t  initial_stabilization_millisec;
 extern _Atomic uint16_t  pause_after_add_ms;
+extern _Atomic uint16_t  drain_pause_ms;
 extern _Atomic uint16_t  stabilization_poll_millisec;
 extern _Atomic uint16_t  udev_watch_loop_millisec;
 extern _Atomic uint16_t  poll_watch_loop_millisec;

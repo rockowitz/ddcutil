@@ -147,6 +147,13 @@
 // which answers the same question for a different event and is tuned from
 // different evidence, though the two values start out alike.
 #define DEFAULT_PAUSE_AFTER_ADD_MS      500
+// Time allowed after a udev event batch for further events to accumulate, so
+// dw_udev_drain() takes them together rather than each provoking its own scan.
+// Unlike the two pauses above this is not about permissions settling, so it is
+// taken whatever grants access to the device node.  With the post-resume scan
+// down to tens of milliseconds it is now the largest component of a resume,
+// which is why it is tunable: --i16.
+#define DEFAULT_DRAIN_PAUSE_MS          200
 #define DEFAULT_MAX_EACCES_RETRY_MS    3000
 // n. the count is a backstop.  With the intervals below, the elapsed time
 // limit above is what normally ends the retries.
