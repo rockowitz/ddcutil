@@ -388,8 +388,9 @@ bool dw_udev_watch(int watch_loop_millisec) {
       // route, 0 coalesce pauses and 2 settling pauses.
       //
       // Nothing is lost today -- a 500 ms settling pause gives events more time
-      // to accumulate than 200 ms of coalescing would -- but the coupling is
-      // implicit, and worth knowing before either value is tuned.
+      // to accumulate than DEFAULT_DRAIN_PAUSE_MS of coalescing would -- but the
+      // coupling is implicit, and worth knowing before either value is tuned.
+      // It holds only while the settling pauses remain the larger of the two.
       int remaining_pause_ms = drain_pause_ms - already_paused_ms;
       if (remaining_pause_ms > 0) {
          // This pause lets events accumulate so dw_udev_drain() takes them as

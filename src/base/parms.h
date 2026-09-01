@@ -156,7 +156,14 @@
 // n. reachable only when the settling pauses above do not run, since the
 // coalesce pause is their remainder and they are the larger.  See the comment
 // at the subtraction in dw_udev_watch().
-#define DEFAULT_DRAIN_PAUSE_MS          200
+// Was 200.  On a resume measured with --i16 50, 50 ms sufficed twice, taking
+// 18 events each time with a follow-up drain of 0, and a companion run with
+// --i16 0 bounded the straggle: the last events of the burst arrived no more
+// than 33 ms after the drain that took the first ones, and cost an extra scan
+// for want of a pause to absorb them.  100 ms leaves 2x margin over both
+// figures, since burst width grows with the number of connectors the driver
+// re-probes on thaw and the measurement is from a single laptop.
+#define DEFAULT_DRAIN_PAUSE_MS          100
 #define DEFAULT_MAX_EACCES_RETRY_MS    3000
 // n. the count is a backstop.  With the intervals below, the elapsed time
 // limit above is what normally ends the retries.
