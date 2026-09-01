@@ -470,7 +470,6 @@ get_parsed_libmain_config(const char * libopts_string,
             errinfo_add_cause(result,
                   errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, g_ptr_array_index(errmsgs, ndx)));
          }
-
       }
       // else if (apply_config_rc == -ENOENT) {
       //    result = errinfo_new(-ENOENT, __func__, "Configuration file not found");
@@ -894,6 +893,15 @@ ddci_init(const char *      libopts,
    DBGF(debug, "parsing complete");
 
    if (!master_error) {
+      if (parsed_cmd->syslog_level != DDCA_SYSLOG_NOT_SET) {
+         syslog_level = parsed_cmd->syslog_level;
+         DBGF(debug, "syslog_level set to %s", syslog_level_name(syslog_level));
+         if (syslog_level == DDCA_SYSLOG_NEVER) {
+            enable_syslog = false;
+            DBGF(debug, "enable_syslog set to false");
+         }
+      }
+
       if (parsed_cmd->trace_destination) {
          DBGF(debug, "Setting library trace file: %s", parsed_cmd->trace_destination);
          init_library_trace_file(parsed_cmd->trace_destination, debug);
@@ -919,6 +927,10 @@ ddci_init(const char *      libopts,
 #endif
 
    if (!master_error) {
+      if (parsed_cmd->syslog_level != DDCA_SYSLOG_NOT_SET) {
+         syslog_level = parsed_cmd->syslog_level;
+         DBGF(debug, "syslog_level set to %s", syslog_level_name(syslog_level));
+      }
       requested_stats = parsed_cmd->stats_types;
       ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
       per_display_stats = parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS;
