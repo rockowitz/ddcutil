@@ -113,7 +113,16 @@
 
 #define CHECK_ASYNC_NEVER 99
 /** Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
-#define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD CHECK_ASYNC_NEVER
+// Was CHECK_ASYNC_NEVER.  What the parallelism hides is the I2C EDID read on a
+// bus with nothing attached, which times out at roughly 65 ms.  Where those are
+// common the saving is most of detect: on a laptop with 17 buses of which 12 are
+// empty, i2c_check_bus() accounts for 849 ms of a 900 ms detect.  Where buses are
+// cheap to probe there is nothing to hide and the two paths measure the same --
+// on banner, 8 buses at ~10 ms each, 76.6 ms serial vs 77.1 ms threaded.  So the
+// threshold costs nothing where it does not help.  A floor of 3 avoids spawning
+// a thread to do one or two buses' work.  Set it to CHECK_ASYNC_NEVER during
+// development: a serial scan makes the trace far easier to follow.
+#define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD 3
 /** Parallelize DDC communication checks if at least this number of /dev/i2c devices have an EDID */
 // on workstation banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
 #define DEFAULT_DDC_CHECK_ASYNC_THRESHOLD 3
