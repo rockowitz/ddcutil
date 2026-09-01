@@ -115,6 +115,54 @@ STATIC bool exclude_event( Udev_Event_Detail * detail) {
 }
 
 
+/** Pauses, retaking the pause if a suspend spends it rather than serving it.
+ *
+ *  A sleep is measured on CLOCK_MONOTONIC, which does not advance while the
+ *  system is suspended.  A pause that a suspend begins during is therefore not
+ *  merely delayed: it is served in full on the far side and buys nothing,
+ *  leaving whatever it was waiting for no more settled than before.
+ *  #dw_sleep_spent_by_suspend() times on CLOCK_BOOTTIME and so can tell the
+ *  two apart.
+ *
+ *  Bounded by MAX_SETTLING_PAUSE_ATTEMPTS, and abandoned on shutdown.
+ *
+ *  The two messages are passed in whole rather than assembled from a name.
+ *  That is a clumsier signature than it might be, and deliberate: the wording
+ *  of these lines predates the helper and is what log analysis of this
+ *  subsystem greps for, so unifying the code must not quietly reword them.
+ *  Both formats take a single %d, the interval.  Both call sites pass string
+ *  literals -- they are not caller data, despite the shape.
+ *
+ *  @param  debug       caller's debug flag
+ *  @param  millisec    length of each attempt
+ *  @param  start_fmt   logged before each attempt, takes the interval
+ *  @param  retake_fmt  logged when an attempt was spent by a suspend
+ *  @return total milliseconds spent pausing, counting retaken attempts
+ */
+STATIC int dw_pause_retaking_if_suspended(
+      bool debug, int millisec, const char * start_fmt, const char * retake_fmt)
+{
+   // The messages are formatted here and passed as "%s" rather than handed to
+   // the macros as formats.  DBGTRC_NOPREFIX(), which DUAL_MSGNV() expands to,
+   // concatenates its prefix onto the format -- "          "format -- so the
+   // format must be a string literal.  A runtime format does not compile.
+   char msgbuf[200];
+   int paused_ms = 0;
+   for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
+      g_snprintf(msgbuf, sizeof(msgbuf), start_fmt, millisec);
+      DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, "%s", msgbuf);
+      paused_ms += millisec;
+      if (!dw_sleep_spent_by_suspend(millisec))
+         break;
+      if (terminate_watch_thread)
+         break;
+      g_snprintf(msgbuf, sizeof(msgbuf), retake_fmt, millisec);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msgbuf);
+   }
+   return paused_ms;
+}
+
+
 /** CLOCK_BOOTTIME nanoseconds at which #dw_udev_watch() last reported
  *  execution statistics, 0 if it has not yet reported.
  *
@@ -310,22 +358,13 @@ bool dw_udev_watch(int watch_loop_millisec) {
             // No-op if a resume did not recently occur.
             recently_resumed_from_sleep(pause_after_resume_ms, NULL, NULL);
 
-            // Retaken if a suspend spends it rather than it being served; see
-            // dw_sleep_spent_by_suspend().  An add event can arrive in the
-            // interval between PrepareForSleep(true) and the freeze, and a pause
-            // consumed there leaves the device node no more settled than before.
-            for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
-               DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, "Pausing %d millisec after UDEV add event",
-                     pause_after_add_ms);
-               already_paused_ms += pause_after_add_ms;
-               if (!dw_sleep_spent_by_suspend(pause_after_add_ms))
-                  break;
-               if (terminate_watch_thread)
-                  break;
-               DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
-                     "Pause of %d millisec after UDEV add event was spent by a suspend. "
-                     "Pausing again.", pause_after_add_ms);
-            }
+            // An add event can arrive in the interval between
+            // PrepareForSleep(true) and the freeze, so this pause is one a
+            // suspend can spend.
+            already_paused_ms += dw_pause_retaking_if_suspended(debug, pause_after_add_ms,
+                  "Pausing %d millisec after UDEV add event",
+                  "Pause of %d millisec after UDEV add event was spent by a suspend. "
+                  "Pausing again.");
          }
 
          if (already_paused_ms < pause_after_resume_ms) {
@@ -339,32 +378,17 @@ bool dw_udev_watch(int watch_loop_millisec) {
 
       int remaining_pause_ms = drain_pause_ms - already_paused_ms;
       if (remaining_pause_ms > 0) {
-         // Retaken if a suspend spends it, as for the add event pause above.
-         // This pause exists so that events accumulate and dw_udev_drain()
-         // takes them as a batch.  A suspend beginning during it leaves the
-         // drain running the instant the process thaws, before the burst of
-         // device re-registration events that a resume produces has arrived:
-         // it drains the stale pre-suspend set, and every event of the burst
-         // is then handled individually -- precisely the spike the coalescing
-         // exists to prevent, at the moment it is largest.
-         //
-         // The sleep is measured on CLOCK_MONOTONIC, which does not advance
-         // while the system is suspended, so the pause is not merely delayed;
-         // it is served in full on the far side and buys nothing.  See
-         // dw_sleep_spent_by_suspend(), which times on CLOCK_BOOTTIME to tell
-         // the two apart.
-         for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
-            DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE,
-                  "Allowing time for events to coalesce: Sleeping for %d milliseconds",
-                  remaining_pause_ms);
-            if (!dw_sleep_spent_by_suspend(remaining_pause_ms))
-               break;
-            if (terminate_watch_thread)
-               break;
-            DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
-                  "Pause of %d millisec allowing events to coalesce was spent by a suspend. "
-                  "Pausing again.", remaining_pause_ms);
-         }
+         // This pause lets events accumulate so dw_udev_drain() takes them as
+         // a batch.  A suspend that spends it leaves the drain running the
+         // instant the process thaws, before the burst of device
+         // re-registration events a resume produces has arrived: it drains the
+         // stale pre-suspend set, and every event of the burst is then handled
+         // individually -- the spike the coalescing exists to prevent, at the
+         // moment it is largest.
+         dw_pause_retaking_if_suspended(debug, remaining_pause_ms,
+               "Allowing time for events to coalesce: Sleeping for %d milliseconds",
+               "Pause of %d millisec allowing events to coalesce was spent by a suspend. "
+               "Pausing again.");
       }
 
       dw_udev_drain();
