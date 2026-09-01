@@ -130,8 +130,9 @@ STATIC bool exclude_event( Udev_Event_Detail * detail) {
  *  That is a clumsier signature than it might be, and deliberate: the wording
  *  of these lines predates the helper and is what log analysis of this
  *  subsystem greps for, so unifying the code must not quietly reword them.
- *  Both formats take a single %d, the interval.  Both call sites pass string
- *  literals -- they are not caller data, despite the shape.
+ *  Both formats take a single %d, the interval.  DUAL_MSGNV() and
+ *  DECORATED_SYSLOG() both accept a runtime format.  Both call sites pass
+ *  string literals -- they are not caller data, despite the shape.
  *
  *  @param  debug       caller's debug flag
  *  @param  millisec    length of each attempt
@@ -142,22 +143,15 @@ STATIC bool exclude_event( Udev_Event_Detail * detail) {
 STATIC int dw_pause_retaking_if_suspended(
       bool debug, int millisec, const char * start_fmt, const char * retake_fmt)
 {
-   // The messages are formatted here and passed as "%s" rather than handed to
-   // the macros as formats.  DBGTRC_NOPREFIX(), which DUAL_MSGNV() expands to,
-   // concatenates its prefix onto the format -- "          "format -- so the
-   // format must be a string literal.  A runtime format does not compile.
-   char msgbuf[200];
    int paused_ms = 0;
    for (int attempt = 1; attempt <= MAX_SETTLING_PAUSE_ATTEMPTS; attempt++) {
-      g_snprintf(msgbuf, sizeof(msgbuf), start_fmt, millisec);
-      DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, "%s", msgbuf);
+      DUAL_MSGNV(debug, DDCA_SYSLOG_NOTICE, start_fmt, millisec);
       paused_ms += millisec;
       if (!dw_sleep_spent_by_suspend(millisec))
          break;
       if (terminate_watch_thread)
          break;
-      g_snprintf(msgbuf, sizeof(msgbuf), retake_fmt, millisec);
-      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", msgbuf);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, retake_fmt, millisec);
    }
    return paused_ms;
 }

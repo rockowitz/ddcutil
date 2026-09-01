@@ -857,11 +857,31 @@ do { \
       DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
    } while (0)
 
+/** Variadic variant.  Unlike the non-variadic forms above, **format** may be a
+ *  runtime value rather than a string literal.
+ *
+ *  The message is built once and handed to both destinations as "%s".  That is
+ *  what allows a runtime format: DBGTRC_NOPREFIX() forms its own format by
+ *  literal concatenation, "          "format, so a variable there is not valid
+ *  C.  Passing the already formatted text sidesteps that.
+ *
+ *  Building once also fixes a second problem.  The earlier form expanded the
+ *  arguments twice, once per destination, so any argument with a side effect --
+ *  a function call, an increment -- happened twice whenever both destinations
+ *  were active.
+ *
+ *  The cost is that the message is formatted even when neither destination
+ *  ultimately emits it, where before dbgtrc() and DECORATED_SYSLOG each decided
+ *  first.  These macros report events and errors rather than sitting in hot
+ *  paths, so that is an acceptable trade for accepting a runtime format.
+ */
 #define DUAL_MSGNV(_debug, _ddca_syslog_level, format, ...) \
    do { \
+      char * _dual_msg_body = g_strdup_printf(format, ##__VA_ARGS__); \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
-         DBGTRC_NOPREFIX(_debug, DDCA_TRC_NONE, format, ##__VA_ARGS__); \
-      DECORATED_SYSLOG(_ddca_syslog_level, format, ##__VA_ARGS__); \
+         DBGTRC_NOPREFIX(_debug, DDCA_TRC_NONE, "%s", _dual_msg_body); \
+      DECORATED_SYSLOG(_ddca_syslog_level, "%s", _dual_msg_body); \
+      free(_dual_msg_body); \
    } while (0)
 
 
@@ -872,11 +892,17 @@ do { \
       DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
    } while (0)
 
+/** Variadic variant naming a trace group.  As for #DUAL_MSGNV(), **format** may
+ *  be a runtime value, the message being built once and passed to both
+ *  destinations as "%s".
+ */
 #define DUAL_MSGXV(_debug, _ddca_syslog_level, _trace_group, format, ...) \
    do { \
+      char * _dual_msg_body = g_strdup_printf(format, ##__VA_ARGS__); \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
-         DBGTRC_NOPREFIX(_debug, _trace_group, format, ##__VA_ARGS__); \
-      DECORATED_SYSLOG(_ddca_syslog_level, format, ##__VA_ARGS__); \
+         DBGTRC_NOPREFIX(_debug, _trace_group, "%s", _dual_msg_body); \
+      DECORATED_SYSLOG(_ddca_syslog_level, "%s", _dual_msg_body); \
+      free(_dual_msg_body); \
    } while (0)
 
 
