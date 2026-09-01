@@ -389,7 +389,8 @@ Error_Info* perform_parse(
 static inline void emit_parse_info_msg(const char * msg, GPtrArray* infomsgs) {
    if (infomsgs)
       g_ptr_array_add(infomsgs, g_strdup_printf("%s%s", "libddcutil: ", msg));
-   DECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_NOTICE,"%s", msg);
+   if (enable_init_msgs)
+      DECORATED_SYSLOG_NOFUNC(DDCA_SYSLOG_NOTICE,"%s", msg);
 }
 
 
@@ -810,13 +811,15 @@ ddci_init(const char *      libopts,
    Parsed_Cmd * parsed_cmd = NULL;
    Error_Info * master_error = NULL;
    DDCA_Status ddcrc = 0;
-   enable_init_msgs = (opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS) || stdout_stderr_redirected;
+   enable_init_msgs = ( (opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS) || stdout_stderr_redirected) &&
+                     (syslog_level_arg != DDCA_SYSLOG_NEVER);
    // enable_init_msgs = true;  // *** TEMP ***
    DBGF(debug, "enable_init_msgs=%s", SBOOL(enable_init_msgs));
 
    if (library_initialized) {
       master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil already initialized");
-      syslog(LOG_ERR, "libddcutil already initialized");
+      if (enable_init_msgs)
+         syslog(LOG_ERR, "libddcutil already initialized");
       goto bye;
    }
 
