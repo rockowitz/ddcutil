@@ -153,6 +153,9 @@
 // taken whatever grants access to the device node.  With the post-resume scan
 // down to tens of milliseconds it is now the largest component of a resume,
 // which is why it is tunable: --i16.
+// n. reachable only when the settling pauses above do not run, since the
+// coalesce pause is their remainder and they are the larger.  See the comment
+// at the subtraction in dw_udev_watch().
 #define DEFAULT_DRAIN_PAUSE_MS          200
 #define DEFAULT_MAX_EACCES_RETRY_MS    3000
 // n. the count is a backstop.  With the intervals below, the elapsed time
