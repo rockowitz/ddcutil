@@ -279,14 +279,36 @@ i2c_get_edid_bytes_using_single_ioctl(
    // A CEA 861 extension block where the base block belongs means the read
    // began at word offset 0x80 rather than 0, i.e. the word offset write above
    // did not take effect and this was a read at the current address.  See VESA
-   // E-DDC 1.2 sections 6.1 and 6.3, and the doc comment on
-   // i2c_reread_edid_after_current_address_read().
+   // E-DDC 1.2 sections 6.1 (Read at the Current Address) and 6.3 (DDC
+   // Sequential Read Operation).  The address space at 0x50 is 256 bytes, so a
+   // 256 byte read starting at 0x80 wraps and returns the extension block
+   // followed by the base block.
    //
-   // Recovering here rather than in the caller matters because with the default
-   // EDID_Read_Size this function runs first on every read and, per the local
-   // edid_read_size computed above, always asks for 128 bytes.  Left to the
-   // caller, the quirk costs two failed tries before a 256 byte read is even
-   // attempted.
+   // Three parked recoveries for this quirk exist, each under its own macro so
+   // that one can be enabled and evaluated without the others.  They are not
+   // variations on a single switch: two of them intercept in the read function
+   // itself, the third is a catch-all in the caller, and they use different
+   // means.  There is no reproducer for any of them.
+   //
+   //   RECOVER_CURRENT_ADDRESS_READ           this block.  Self-recursion,
+   //                                          repair inline.
+   //   RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER same, in
+   //                                          i2c_get_edid_bytes_using_i2c_layer().
+   //   RECOVER_CURRENT_ADDRESS_READ_BY_FD     catch-all in
+   //                                          i2c_get_raw_edid_by_fd(), after
+   //                                          whichever read path ran.  Calls a
+   //                                          helper and leans on that
+   //                                          function's existing 256 byte
+   //                                          repair rather than repairing
+   //                                          here.  Covers the direct ioctl
+   //                                          and fileio paths, which have no
+   //                                          in-function recovery.
+   //
+   // Recovering here rather than leaving it to the catch-all matters because
+   // with the default EDID_Read_Size this function runs first on every read
+   // and, per the local edid_read_size computed above, always asks for 128
+   // bytes.  Left to the caller, the quirk costs two failed tries before a 256
+   // byte read is even attempted.
    //
    // The re-read does not depend on the word offset write working the second
    // time.  It relies only on the wrap: the address space at 0x50 is 256 bytes,
@@ -502,7 +524,7 @@ i2c_get_edid_bytes_using_i2c_layer(
 }
 
 
-#ifdef RECOVER_CURRENT_ADDRESS_READ
+#ifdef RECOVER_CURRENT_ADDRESS_READ_BY_FD
 /** Re-reads the EDID after a read returned an extension block where the base
  *  block was expected.
  *
@@ -714,7 +736,7 @@ retry:
             if (is_valid_raw_cea861_extension_block(rawedid->bytes, rawedid->len)) {
                DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                                "EDID appears to start with a CEA 861 extension block");
-#ifdef RECOVER_CURRENT_ADDRESS_READ
+#ifdef RECOVER_CURRENT_ADDRESS_READ_BY_FD
                // A valid extension block where the base block belongs means the
                // read began at word offset 0x80, i.e. it was a read at the
                // current address.  Re-read 256 bytes so the wrap puts the base
@@ -722,10 +744,19 @@ retry:
                // Only worth doing if less than 256 bytes were read; at 256 the
                // base block is already present and that check handles it.
                //
-               // The single ioctl path earlier in this loop wants the same call
-               // where it sets DDCRC_INVALID_EDID.  With the default
-               // EDID_Read_Size it runs first and always reads 128, so leaving
-               // it out costs a wasted try before this site is reached.
+               // This is the catch-all of the three parked recoveries -- see the
+               // list in i2c_get_edid_bytes_using_single_ioctl().  It sits after
+               // whichever read path ran, so unlike the two in-function
+               // recoveries it also covers i2c_get_edid_bytes_directly_using_ioctl()
+               // and i2c_get_edid_bytes_directly_using_fileio(), neither of which
+               // has one.  It is the latest interception point and therefore the
+               // most expensive: by the time control reaches here the ladder has
+               // already spent a try.
+               //
+               // Independent of RECOVER_CURRENT_ADDRESS_READ by design.  If both
+               // are enabled they do not collide: the helper requests 256, so the
+               // in-function recovery's edid_read_size < 256 guard declines and
+               // the 256 bytes arrive here intact.
                if (rawedid->len < 256) {
                   Status_Errno_DDC reread_rc =
                         i2c_reread_edid_after_current_address_read(fd, rawedid);
