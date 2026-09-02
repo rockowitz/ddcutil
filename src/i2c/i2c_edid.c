@@ -275,6 +275,41 @@ i2c_get_edid_bytes_using_single_ioctl(
    }
    free(messages);
 
+#ifdef RECOVER_CURRENT_ADDRESS_READ
+   // A CEA 861 extension block where the base block belongs means the read
+   // began at word offset 0x80 rather than 0, i.e. the word offset write above
+   // did not take effect and this was a read at the current address.  See VESA
+   // E-DDC 1.2 sections 6.1 and 6.3, and the doc comment on
+   // i2c_reread_edid_after_current_address_read().
+   //
+   // Recovering here rather than in the caller matters because with the default
+   // EDID_Read_Size this function runs first on every read and, per the local
+   // edid_read_size computed above, always asks for 128 bytes.  Left to the
+   // caller, the quirk costs two failed tries before a 256 byte read is even
+   // attempted.
+   //
+   // The re-read does not depend on the word offset write working the second
+   // time.  It relies only on the wrap: the address space at 0x50 is 256 bytes,
+   // so a 256 byte read starting at 0x80 returns the extension block followed
+   // by the base block, whether it started there by accident or on purpose.
+   if (rc == 0 && edid_read_size < 256 &&
+         is_valid_raw_cea861_extension_block(rawedid->bytes, rawedid->len))
+   {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "Read returned a CEA 861 extension block, indicating a read at the"
+            " current address.  Re-reading 256 bytes.");
+      // Bounded to one level of recursion: the recursive call passes 256, which
+      // fails the edid_read_size < 256 test above.
+      rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, 256);
+      if (rc == 0 && is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "Base block found at offset 128.  Copying it down.");
+         memcpy(rawedid->bytes, rawedid->bytes+128, 128);
+         buffer_set_length(rawedid, 128);
+      }
+   }
+#endif
+
    if ( (debug || IS_TRACING()) && rc == 0) {
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
