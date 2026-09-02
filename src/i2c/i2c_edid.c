@@ -434,6 +434,53 @@ i2c_get_edid_bytes_using_i2c_layer(
 }
 
 
+#ifdef RECOVER_CURRENT_ADDRESS_READ
+/** Re-reads the EDID after a read returned an extension block where the base
+ *  block was expected.
+ *
+ *  A read issued without a preceding word offset write begins at the display's
+ *  current internal word offset, which auto increments across reads.  See VESA
+ *  E-DDC standard version 1.2, sections 6.1 (Read at the Current Address) and
+ *  6.3 (DDC Sequential Read Operation).  A prior 128 byte read of block 0
+ *  leaves that offset at 0x80, so a read whose word offset write does not take
+ *  effect starts there rather than at 0.  The address space at 0x50 is 256
+ *  bytes, so the read wraps 0xff -> 0x00 and a 256 byte read returns the first
+ *  extension block followed by the base block.
+ *
+ *  Re-reading 256 bytes makes that wrap visible.  The caller's existing check
+ *  for a valid base EDID at offset 128 then copies it down.
+ *
+ *  @param  fd       file descriptor for open /dev/i2c-n
+ *  @param  rawedid  buffer in which to return bytes of the EDID
+ *  @return status code
+ *
+ *  @remark
+ *  Untested.  Written from the reported symptom -- an unrequested extension
+ *  block at offset 0 with the base block at offset 128 -- not from a
+ *  reproducer.  Note the circularity: the adapters that provoke this, most
+ *  likely DP AUX to I2C emulation and MST hubs, are the ones least likely to
+ *  honor the word offset on the re-read either.  What makes the re-read work
+ *  anyway is that it does not depend on the offset write taking effect; it
+ *  relies only on the wrap, which puts the base block at offset 128 whether
+ *  the read starts at 0x80 by accident or on purpose.
+ */
+STATIC Status_Errno_DDC
+i2c_reread_edid_after_current_address_read(int fd, Buffer * rawedid)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s", fd, filename_for_fd_t(fd));
+   assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
+
+   Status_Errno_DDC rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, 256);
+   if (rc == 0 && rawedid->len != 256)
+      rc = DDCRC_INVALID_EDID;
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
+   return rc;
+}
+#endif
+
+
 /** Gets EDID bytes of a monitor on an open I2C device.
  *
  * @param  fd        file descriptor for open /dev/i2c-n
@@ -599,6 +646,26 @@ retry:
             if (is_valid_raw_cea861_extension_block(rawedid->bytes, rawedid->len)) {
                DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                                "EDID appears to start with a CEA 861 extension block");
+#ifdef RECOVER_CURRENT_ADDRESS_READ
+               // A valid extension block where the base block belongs means the
+               // read began at word offset 0x80, i.e. it was a read at the
+               // current address.  Re-read 256 bytes so the wrap puts the base
+               // block at offset 128, where the check just below recovers it.
+               // Only worth doing if less than 256 bytes were read; at 256 the
+               // base block is already present and that check handles it.
+               //
+               // The single ioctl path earlier in this loop wants the same call
+               // where it sets DDCRC_INVALID_EDID.  With the default
+               // EDID_Read_Size it runs first and always reads 128, so leaving
+               // it out costs a wasted try before this site is reached.
+               if (rawedid->len < 256) {
+                  Status_Errno_DDC reread_rc =
+                        i2c_reread_edid_after_current_address_read(fd, rawedid);
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                        "i2c_reread_edid_after_current_address_read() returned %s",
+                        psc_desc(reread_rc));
+               }
+#endif
             }
          }
          if (rawedid->len == 256) {
