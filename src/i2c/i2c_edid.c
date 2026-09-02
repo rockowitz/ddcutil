@@ -460,6 +460,39 @@ i2c_get_edid_bytes_using_i2c_layer(
       }
    }  // write succeeded
 
+#ifdef RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER
+   // The recovery performed by i2c_get_edid_bytes_using_single_ioctl() under
+   // RECOVER_CURRENT_ADDRESS_READ, applied to this transport.  Deliberately a
+   // separate macro so the two can be enabled independently: the two functions
+   // are susceptible for different reasons and there is no reproducer for
+   // either, so evidence gathered with one enabled should not be muddied by the
+   // other.
+   //
+   // This function is the more exposed of the two.  It issues the word offset
+   // write and the read as two separate I2C transactions rather than one
+   // combined transfer with a repeated START, so anything that intervenes
+   // between them can leave the read starting from the display's current word
+   // offset.  And the write is conditional on EDID_Write_Before_Read: when that
+   // is false every read here is by definition a read at the current address.
+   if (rc == 0 && edid_read_size < 256 &&
+         is_valid_raw_cea861_extension_block(rawedid->bytes, rawedid->len))
+   {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "Read returned a CEA 861 extension block, indicating a read at the"
+            " current address.  Re-reading 256 bytes.  write_before_read=%s",
+            sbool(write_before_read));
+      // Bounded to one level of recursion: the recursive call passes 256, which
+      // fails the edid_read_size < 256 test above.
+      rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256, read_bytewise);
+      if (rc == 0 && is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "Base block found at offset 128.  Copying it down.");
+         memcpy(rawedid->bytes, rawedid->bytes+128, 128);
+         buffer_set_length(rawedid, 128);
+      }
+   }
+#endif
+
    if ( (debug || IS_TRACING()) && rc == 0) {
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
