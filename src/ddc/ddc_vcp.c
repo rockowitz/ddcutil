@@ -920,7 +920,6 @@ ddc_set_verified_vcp_value_with_retry(
       erec = ddc_set_vcp_value(dh, vrec, newval_loc);
    }
 
-
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, erec, "");
    return erec;
 }
