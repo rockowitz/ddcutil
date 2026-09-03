@@ -514,7 +514,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       if (parsed_cmd->i5 >= 1)
          max_setvcp_verify_tries = parsed_cmd->i5;
       else
-         rpt_label(0, "--i5 value must be greater than 1");
+         rpt_label(0, "--i5 value must be at least 1");
    }
 #ifdef WATCH_DISPLAYS
    // Unlike --i9, which delays within dw_start_watch_displays() and so blocks
