@@ -199,7 +199,9 @@
 // *** Watching for display changes
 //
 
-#define REPORT_UDEV_EVENTS    true   // report relevant detected UDEV events
+// n. no REPORT_UDEV_EVENTS constant here.  One existed and was referenced
+// nowhere, while report_udev_events is initialized to false at dw_udev.c:50 --
+// so it also stated the opposite of the actual default.  Set by --f18.
 
 #define DEFAULT_WATCH_MODE Watch_Mode_Dynamic
 #define START_WATCH_DELAY_MILLISEC 0
