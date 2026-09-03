@@ -55,7 +55,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 // Globals
 //
 
-int max_setvcp_verify_tries = 1;
+int max_setvcp_verify_tries = DEFAULT_MAX_SETVCP_VERIFY_TRIES;
 bool setvcp_verify_default = DEFAULT_SETVCP_VERIFY;
 bool enable_mock_data = false;
 

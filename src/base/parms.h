@@ -103,6 +103,9 @@
 #define DEFAULT_ENABLE_DSA2 true
 #define DEFAULT_ENABLE_FLOCK true
 #define DEFAULT_SETVCP_VERIFY true
+// Attempts, not retries: 1 means verify once and do not try again.  See the
+// loop in ddc_set_verified_vcp_value_with_retry().  Set by --i5.
+#define DEFAULT_MAX_SETVCP_VERIFY_TRIES 1
 
 #define DEFAULT_DDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_WARNING
 #define DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_NOTICE

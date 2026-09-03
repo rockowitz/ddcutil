@@ -85,7 +85,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(32, "Disable eventfd-based blocking waits in watch thread (use_eventfd)");
    REPORT_FLAG_OPTION(33, "Disable single poll() wait in dw_split_sleep() (split_sleep_eventfd)");
    REPORT_FLAG_OPTION(34, "Unused");
-   REPORT_FLAG_OPTION(35, "Disable skipping device open when DRM connector reports disconnected (edid_exists_checks_drm_status");
+   REPORT_FLAG_OPTION(35, "Disable skipping device open when DRM connector reports disconnected (edid_exists_checks_drm_status)");
    REPORT_FLAG_OPTION(36, "Do not disable display change scan while EACCES is seen (rescan_on_eacces)");
    REPORT_FLAG_OPTION(37, "Unused");
    REPORT_FLAG_OPTION(38, "Open device even when no DRM connector names the bus (edid_exists_skips_unmapped_bus)");
@@ -96,7 +96,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
    rpt_vstring(depth+1, "Utility option --i3:          flock_poll_millisec (default = %d)", DEFAULT_FLOCK_POLL_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d)", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);
-   rpt_vstring(depth+1, "Utility option --i5:          Max retries for setvcp verification failure");
+   rpt_vstring(depth+1, "Utility option --i5:          Max tries for setvcp verification failure (default = %d)", DEFAULT_MAX_SETVCP_VERIFY_TRIES);
    rpt_vstring(depth+1, "Utility option --i6:          Display watch thread initial delay millisec (default = 0)");
    rpt_vstring(depth+1, "Utility option --i7:          Stabilization poll millisec (default=%d)", DEFAULT_STABILIZATION_POLL_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i8:          Display watch udev loop millisec (default = %d)", DEFAULT_UDEV_WATCH_LOOP_MILLISEC);
@@ -104,9 +104,9 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 // rpt_vstring(depth+1, "Utility option --i9:          Display watch non-udev polling loop millisec (default=%d)", DEFAULT_POLL_WATCH_LOOP_MILLISEC);
 // rpt_vstring(depth+1, "Utility option --i10:         Display watch xevent polling loop millisec (default=%d)", DEFAULT_XEVENT_WATCH_LOOP_MILLISEC);
 
-   rpt_vstring(depth+1, "Utility option --i9:          Delay_ddc_start_watch_display() millisec (default = 0");
+   rpt_vstring(depth+1, "Utility option --i9:          Delay_ddc_start_watch_display() millisec (default = 0)");
    rpt_vstring(depth+1, "Utility option --i10:         Pause after resume from sleep ms (default = %d)", DEFAULT_PAUSE_AFTER_RESUME_MS);
-   rpt_vstring(depth+1, "Utility option --i11:         Max after EACCES retry ms (default=%d", DEFAULT_MAX_EACCES_RETRY_MS);
+   rpt_vstring(depth+1, "Utility option --i11:         Max after EACCES retry ms (default=%d)", DEFAULT_MAX_EACCES_RETRY_MS);
    rpt_vstring(depth+1, "Utility option --i12:         Max after EACCES retry ct (default=%d)", DEFAULT_MAX_EACCES_RETRY_CT);
    rpt_vstring(depth+1, "Utility option --i13:         EACCES diagnostic interval seconds (default=%d)", DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC);
    rpt_vstring(depth+1, "Utility option --i14:         Pause after udev add event ms (default = %d)", DEFAULT_PAUSE_AFTER_ADD_MS);
