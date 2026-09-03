@@ -1,6 +1,6 @@
 /** \file display_retry_data.c
  *
- *  Maintains retry counts and max try settings on a per thread basis.
+ *  Maintains retry counts on a per display basis.
  */
 
 // Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -22,34 +22,11 @@
 
 #include "base/display_retry_data.h"
 
-//
-// Maxtries
-//
-
-// Initial values are ddcutil default values, then can be changed
-// to different user default values
-// But distinction not maxtries values do not vary by thread.!
-// duplicate of default_maxtries = ddc_try_stats.c, unify
-static int default_maxtries[] = {
-      INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES,
-      INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES,
-      INITIAL_MAX_MULTI_EXCHANGE_TRIES,
-      INITIAL_MAX_MULTI_EXCHANGE_TRIES };
-
-
-/** Sets the maxtries value to be used for a given retry type when creating
- * new #Per_Display_Data instances.
- *
- * \param  retry_type
- * \param  maxtries   value to set
- */
-void drd_set_default_max_tries(Retry_Operation rcls, uint16_t maxtries) {
-   bool debug = false;
-   DBGMSF(debug, "Executing. rcls = %s, new_maxtries=%d", retry_type_name(rcls), maxtries);
-
-   default_maxtries[rcls] = maxtries;
-}
-
+// n. this file no longer keeps maxtries values.  It had a default_maxtries[]
+// array, written by drd_set_default_max_tries() and never read -- its own
+// comment called it a duplicate to be unified.  The maxtries values live in
+// try_data[] in ddc/ddc_try_data.c, which is what try_data_get_maxtries()
+// reads at retry time.  Per_Display_Data holds only the try_stats[] counters.
 
 static void wrap_report_display_retry_data(Per_Display_Data * data, void * arg) {
    int depth = GPOINTER_TO_INT(arg);

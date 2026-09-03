@@ -29,7 +29,6 @@
 #include "util/traced_function_stack.h"
 
 #include "base/core.h"
-#include "base/display_retry_data.h"
 #include "base/dsa2.h"
 #ifdef USE_LIBDRM
 #include "base/drm_connector_state.h"
@@ -285,28 +284,16 @@ init_max_tries(Parsed_Cmd * parsed_cmd)
    if (parsed_cmd->max_tries[0] > 0) {
       // resets highest, lowest:
       try_data_init_retry_type(WRITE_ONLY_TRIES_OP, parsed_cmd->max_tries[0]);
-
-      // redundant
-      drd_set_default_max_tries(0, parsed_cmd->max_tries[0]);
-      // drd_set_initial_display_max_tries(0, parsed_cmd->max_tries[0]);
    }
 
    if (parsed_cmd->max_tries[1] > 0) {
       try_data_init_retry_type(WRITE_READ_TRIES_OP, parsed_cmd->max_tries[1]);
-
-      drd_set_default_max_tries(1, parsed_cmd->max_tries[1]);
-      // drd_set_initial_display_max_tries(1, parsed_cmd->max_tries[1]);
    }
 
+   // one option value seeds both multi-part types
    if (parsed_cmd->max_tries[2] > 0) {
       try_data_init_retry_type(MULTI_PART_READ_OP,  parsed_cmd->max_tries[2]);
       try_data_init_retry_type(MULTI_PART_WRITE_OP, parsed_cmd->max_tries[2]);
-
-      drd_set_default_max_tries(MULTI_PART_READ_OP, parsed_cmd->max_tries[2]);
-      // drd_set_initial_display_max_tries(2, parsed_cmd->max_tries[2]);
-      // impedance match
-      drd_set_default_max_tries(MULTI_PART_WRITE_OP, parsed_cmd->max_tries[2]);
-      // drd_set_initial_display_max_tries(3, parsed_cmd->max_tries[2]);
    }
 }
 
