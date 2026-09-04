@@ -133,12 +133,7 @@ void reset_recently_resumed_by_clocktime_cache() {
  *
  *  @param  detected_now_loc  if non-NULL, set to true if THIS call detected
  *          the resume, false if it answered from the grace window or found
- *          no resume.  A caller weighing this detector against another
- *          source needs the distinction: a detection on this call means
- *          sleep accumulated that this thread had not yet accounted for, so
- *          another source may not have processed the corresponding event
- *          either.  Within the grace window that is no longer true, the
- *          resume having been observed at least once already.
+ *          no resume.
  *  @param  no_mutate  if true, answer without touching any state: the
  *          detection is neither consumed nor recorded, the grace window is
  *          neither opened nor extended, and nothing is written to the system
@@ -149,6 +144,14 @@ void reset_recently_resumed_by_clocktime_cache() {
  *          consume it.
  *  @return true if a resume from sleep was detected on this call, or was
  *          detected on this thread within the past 5 seconds
+ *
+ *  @remark
+ *  Re **detected_now_loc**:  A caller weighing this detector against another
+ *  source needs the distinction: a detection on this call means sleep
+ *  accumulated that this thread had not yet accounted for, so another
+ *  source may not have processed the corresponding event either.
+ *  Within the grace window that is no longer true, the resume having been
+ *  observed at least once already.
  */
 bool recently_resumed_from_sleep_by_clocktime0(bool no_mutate, bool * detected_now_loc) {
    bool debug = false;
@@ -179,12 +182,13 @@ bool recently_resumed_from_sleep_by_clocktime0(bool no_mutate, bool * detected_n
    // the watch loop would never see it and never pause.  (Not the same
    // iteration: an add event makes that iteration's guard false.)  Both
    // run on the watch thread, and the detector's state is per thread.
-   // With the window, "recently
-   // resumed" is a state that any number of callers can query for a
-   // bounded period.  The cost is that true is returned for the whole
-   // window, so a caller acting on the bare boolean would act repeatedly;
-   // callers must consult millisec_since_resume_detected_by_clocktime()
-   // and act only on the remainder of their own interval, as
+
+   // With the window, "recently resumed" is a state that any number of
+   // callers can query for a bounded period. The cost is that true is
+   // returned for the whole window, so a caller acting on the bare boolean
+   // would act repeatedly; callers must consult
+   // millisec_since_resume_detected_by_clocktime() and act only on the
+   // remainder of their own interval, as does
    // dw_pause_if_recently_resumed_from_sleep() does.
 
    // Sample on every call, including inside the grace window.  Returning
