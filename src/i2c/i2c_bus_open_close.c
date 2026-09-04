@@ -99,7 +99,7 @@ static _Atomic uint64_t first_eacces_open_ns = 0;
  *  @return NULL if success, Error_Info struct if failure
  */
 Error_Info *
-simple_rw_test(int busno) {
+i2c_simple_rw_test(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
 
@@ -721,7 +721,7 @@ i2c_close_bus(int busno, int fd, Call_Options callopts) {
 void init_i2c_bus_open_close() {
    open_failures_reported = EMPTY_BIT_SET_256;
 
-   RTTI_ADD_FUNC(simple_rw_test);
+   RTTI_ADD_FUNC(i2c_simple_rw_test);
    RTTI_ADD_FUNC(i2c_open_bus_basic);
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_close_bus_basic);

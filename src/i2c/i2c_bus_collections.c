@@ -144,7 +144,7 @@ i2c_all_relevant_i2c_buses_rw() {
    Bit_Set_256_Iterator iter = bs256_iter_new(attached_buses);
    int busno = -1;
    while ( (busno = bs256_iter_next(iter)) >= 0) {
-      Error_Info * err = simple_rw_test(busno);
+      Error_Info * err = i2c_simple_rw_test(busno);
       if (err) {
          if (!err_accumulator)
             err_accumulator = g_ptr_array_new_with_free_func((void*)errinfo_free);
@@ -158,7 +158,7 @@ i2c_all_relevant_i2c_buses_rw() {
    i2c_get_device_numbers_using_udev(/*include_ignorable_devices*/ false);
    for (int ndx=0; ndx<bva_length(bva); ndx++) {
       int busno = bva_get(bva, ndx);
-      Error_Info * err = simple_rw_test(busno);
+      Error_Info * err = i2c_simple_rw_test(busno);
       if (err) {
          if (!err_accumulator)
             err_accumulator = g_ptr_array_new_with_free_func((void*)errinfo_free);

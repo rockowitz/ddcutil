@@ -54,7 +54,7 @@ static int failed = 0;
 
 
 static void test_simple_rw_test(void) {
-   Error_Info * err = simple_rw_test(NONEXISTENT_BUSNO);
+   Error_Info * err = i2c_simple_rw_test(NONEXISTENT_BUSNO);
    CK(err != NULL);
    if (err) {
       CK_INT(err->status_code, -ENOENT);

@@ -44,7 +44,7 @@ Status_Errno     i2c_close_bus_basic(int busno, int fd, Call_Options callopts);
 Status_Errno     i2c_close_bus(int busno, int fd, Call_Options callopts);
 
 // Tests that a /dev/i2c bus can be opened for reading and writing
-Error_Info *     simple_rw_test(int busno);
+Error_Info *     i2c_simple_rw_test(int busno);
 
 // Initialization
 void             init_i2c_bus_open_close();
