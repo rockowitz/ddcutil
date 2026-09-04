@@ -17,7 +17,8 @@ CLEANFILES = \
 noinst_LTLIBRARIES = libdw.la
 
 libdw_la_SOURCES =         \
-dw_status_events.c
+dw_status_events.c  \
+dw_suspend_resume.c
 
 if ENABLE_UDEV_COND
 libdw_la_SOURCES += \

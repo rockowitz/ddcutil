@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "util/suspend_resume_util.h"
+#include "dw/dw_suspend_resume.h"
 #ifdef USE_DBUS
 #include <stdatomic.h>
 #include "util/dbus_util.h"
