@@ -47,7 +47,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 // globals
-bool    report_udev_events = false;
+bool    report_udev_events = false;   // --f18
 
 /** Minimum seconds between execution statistics reports from #dw_udev_watch(),
  *  0 to report nothing.  Set by --i15.
@@ -65,7 +65,7 @@ bool    report_udev_events = false;
  *  eventfd path (--f32) exists to eliminate, and idle power residency matters
  *  more here than report cadence.
  */
-int     udev_watch_stats_interval_sec = DEFAULT_UDEV_WATCH_STATS_INTERVAL_SEC;
+int     udev_watch_stats_interval_sec = DEFAULT_UDEV_WATCH_STATS_INTERVAL_SEC;  // --i15
 
 static struct udev* udev = NULL;
 static struct udev_monitor *mon = NULL;
@@ -387,7 +387,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
       // group i2c, 6 coalesce pauses and 0 settling pauses; on the uaccess
       // route, 0 coalesce pauses and 2 settling pauses.
       //
-      // Nothing is lost today -- a 500 ms settling pause gives events more time
+      // Note that a 500 ms settling pause gives events more time
       // to accumulate than DEFAULT_DRAIN_PAUSE_MS of coalescing would -- but the
       // coupling is implicit, and worth knowing before either value is tuned.
       // It holds only while the settling pauses remain the larger of the two.
