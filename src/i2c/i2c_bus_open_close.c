@@ -64,8 +64,6 @@
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 
-#include "i2c/i2c_bus_core.h"
-
 #include "i2c/i2c_bus_open_close.h"
 
 // Trace class for this file
