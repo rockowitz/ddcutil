@@ -23,11 +23,8 @@
 /** \def I2C_SLAVE_ADDR_MAX Addresses on an I2C bus are 7 bits in size */
 #define I2C_SLAVE_ADDR_MAX 128
 
-
 extern bool try_get_edid_from_sysfs_first;
-
 extern bool edp_always_laptop;
-
 extern int  pause_after_resume_ms;
 extern bool edid_exists_checks_drm_status;
 extern bool edid_exists_skips_unmapped_bus;
