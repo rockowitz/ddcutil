@@ -67,18 +67,18 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 // Globals
-bool try_get_edid_from_sysfs_first = true;
+bool try_get_edid_from_sysfs_first = true;    // enable-try-get-edid-from-sysfs, disable-try-get-edid-from-sysfs
 
-int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;
-bool primitive_sysfs = false;
+int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;   // --pause-after-resume_ms 500
+bool primitive_sysfs = false;                 // logic and --f23
 
 // If true, i2c_edid_exists() does not open the device when the DRM connector
 // for the bus reports status "disconnected".
-bool edid_exists_checks_drm_status = true;
+bool edid_exists_checks_drm_status = true;    // --f35
 
 // If true, i2c_edid_exists() does not open the device when no DRM connector
 // names the bus, on a machine whose driver publishes that mapping.  --f38
-bool edid_exists_skips_unmapped_bus = true;
+bool edid_exists_skips_unmapped_bus = true;   // --f38
 
 
 //
@@ -790,7 +790,7 @@ static void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
 }
 
 
-bool edp_always_laptop = true;
+bool edp_always_laptop = true;   // edp-ambiguous
 
 static bool is_laptop_for_businfo(I2C_Bus_Info * businfo) {
    bool debug  = false;
