@@ -1019,9 +1019,6 @@ void query_sysenv(bool quick_env) {
 #ifdef ENABLE_UDEV
          probe_i2c_devices_using_udev();
 #endif
-         // temp
-         // get_i2c_smbus_devices_using_udev();
-
          probe_config_files(accumulator);
       }
 

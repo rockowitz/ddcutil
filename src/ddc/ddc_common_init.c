@@ -447,10 +447,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F17)
       force_failure_i2c_open = true;
 
-#ifdef TEST_EDID_SMBUS
-   if (parsed_cmd->flags & CMD_FLAG_F13)
-      EDID_Read_Uses_Smbus = true;
-#endif
 #ifdef GET_EDID_USING_SYSFS
    if (parsed_cmd->flags2 & CMD_FLAG2_F15)
       verify_sysfs_edid = true;

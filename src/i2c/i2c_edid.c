@@ -16,9 +16,6 @@
 #include <linux/i2c-dev.h>
 #include <util/coredefs_base.h>
 
-#ifdef TEST_EDID_SMBUG
-#include <i2c/smbus.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,9 +63,6 @@ bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 bool EDID_Read_Bytewise              = DEFAULT_EDID_READ_BYTEWISE;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 bool EDID_Write_Before_Read          = DEFAULT_EDID_WRITE_BEFORE_READ;
-#ifdef TEST_EDID_SMBUS
-bool EDID_Read_Uses_Smbus            = false;
-#endif
 
 static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_ioctl(
@@ -384,27 +378,11 @@ i2c_get_edid_bytes_directly_using_fileio(
       if (read_bytewise) {
          int ndx = 0;
          for (; ndx < edid_read_size && rc == 0; ndx++) {
-#ifdef TEST_EDID_SMBUS
-            if (EDID_Read_Uses_Smbus) {
-               // ndx 0 reads byte 1, why?
-               __s32 smbdata = i2c_smbus_read_byte_data(fd, ndx);
-               if (smbdata < 0) {
-                  rc = -errno;
-                  break;
-               }
-               assert((smbdata & 0xff) == smbdata);
-               rawedid->bytes[ndx] = smbdata;
-            }
-            else {
-#endif
-               RECORD_IO_EVENT(
-                   fd,
-                   IE_FILEIO_READ,
-                   ( rc = read(fd, &rawedid->bytes[ndx], 1) )
-                  );
-#ifdef TEST_EDID_SMBUS
-            }
-#endif
+            RECORD_IO_EVENT(
+                fd,
+                IE_FILEIO_READ,
+                ( rc = read(fd, &rawedid->bytes[ndx], 1) )
+               );
             if (rc < 0) {
                rc = -errno;
                break;
@@ -601,14 +579,6 @@ retry:
    //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
    int tryctr = 0;
    int consecutive_eio_ct = 0;
-#ifdef TEST_EDID_SMBUS
-   if (EDID_Read_Uses_Smbus) {
-      read_bytewise = true;
-      cur_strategy_id = I2C_IO_STRATEGY_FILEIO;
-      EDID_Read_Uses_I2C_Layer = false;
-   }
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "EDID_Read_Uses_Smbus = %s", sbool(EDID_Read_Uses_Smbus));
-   #endif
 
    while (tryctr < max_tries && rc != 0) {
       int edid_read_size = EDID_Read_Size;

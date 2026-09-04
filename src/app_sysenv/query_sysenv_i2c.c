@@ -80,12 +80,11 @@ Public_Status_Code try_single_getvcp_call(
       int           fh,
       int           busno,
       unsigned char vcp_feature_code,
-//    bool          use_smbus,
       int           depth)
 {
    bool debug = false;
    // rpt_nl();
-   // DBGMSF(true, "Starting. vcp_feature_code=0x%02x. use_smbus=%s", vcp_feature_code, sbool(use_smbus) );
+   // DBGMSF(true, "Starting. vcp_feature_code=0x%02x. vcp_feature_code) );
    rpt_vstring(depth, "%s: vcp_feature_code=0x%02x", __func__, vcp_feature_code );
 
    int ndx;
