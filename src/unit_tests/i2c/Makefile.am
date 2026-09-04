@@ -29,10 +29,10 @@ if USE_X11_COND
 EXTRA_SYSLIBS += $(LIBX11_LIBS) $(XEXT_LIBS) $(XRANDR_LIBS)
 endif
 
-check_PROGRAMS = ../../unit_test_executables/i2c/test_i2c_bus_collections ../../unit_test_executables/i2c/test_i2c_bus_core \
+check_PROGRAMS = ../../unit_test_executables/i2c/test_i2c_bus_collections ../../unit_test_executables/i2c/test_i2c_bus_core ../../unit_test_executables/i2c/test_i2c_bus_open_close \
   ../../unit_test_executables/i2c/test_i2c_bus_selector ../../unit_test_executables/i2c/test_i2c_edid ../../unit_test_executables/i2c/test_i2c_execute ../../unit_test_executables/i2c/test_i2c_services \
   ../../unit_test_executables/i2c/test_i2c_strategy_dispatcher
-TESTS = ../../unit_test_executables/i2c/test_i2c_bus_collections ../../unit_test_executables/i2c/test_i2c_bus_core \
+TESTS = ../../unit_test_executables/i2c/test_i2c_bus_collections ../../unit_test_executables/i2c/test_i2c_bus_core ../../unit_test_executables/i2c/test_i2c_bus_open_close \
   ../../unit_test_executables/i2c/test_i2c_bus_selector ../../unit_test_executables/i2c/test_i2c_edid ../../unit_test_executables/i2c/test_i2c_execute ../../unit_test_executables/i2c/test_i2c_services \
   ../../unit_test_executables/i2c/test_i2c_strategy_dispatcher
 
@@ -43,6 +43,10 @@ ______unit_test_executables_i2c_test_i2c_bus_collections_LDADD    = $(LIBI2C) $(
 ______unit_test_executables_i2c_test_i2c_bus_core_SOURCES  = test_i2c_bus_core.c
 ______unit_test_executables_i2c_test_i2c_bus_core_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 ______unit_test_executables_i2c_test_i2c_bus_core_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
+
+______unit_test_executables_i2c_test_i2c_bus_open_close_SOURCES  = test_i2c_bus_open_close.c
+______unit_test_executables_i2c_test_i2c_bus_open_close_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_i2c_test_i2c_bus_open_close_LDADD    = $(LIBI2C) $(LIBSYSFS) $(LIBBASE) $(LIBUTIL) $(GLIB_LIBS) $(EXTRA_SYSLIBS)
 
 ______unit_test_executables_i2c_test_i2c_bus_selector_SOURCES  = test_i2c_bus_selector.c
 ______unit_test_executables_i2c_test_i2c_bus_selector_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
