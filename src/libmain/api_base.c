@@ -1648,9 +1648,4 @@ void init_api_base() {
    RTTI_ADD_FUNC(unquiesce_api);
    RTTI_ADD_FUNC(increment_active_api_calls);
    RTTI_ADD_FUNC(decrement_active_api_calls);
-#ifdef REMOVED
-   RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
-   RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);
-#endif
 }
-
