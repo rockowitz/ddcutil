@@ -72,7 +72,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 // Globals, consumed only by the open/close path.  Set from options in
-// ddc_common_init.c; declared in i2c_bus_core.h with the rest of this
+// ddc_common_init.c; declared in i2c_bus_open_close.h with the rest of this
 // subsystem's externs.
 bool force_failure_i2c_open = false;                     // --f17
 int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;  // --i11
