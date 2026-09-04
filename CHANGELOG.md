@@ -1,6 +1,7 @@
-## [2.2.8] 2026-08-24   NOT YET FULLY EDITED
+## [2.2.8] 2026-09-04   NOT YET FULLY EDITED
 
 #### Added
+
 
 - Option ***--bus-drm-connector***: lets the user explicitly specify the I2C bus
   number/DRM connector name pairing for a display, for cases where the sysfs 
@@ -19,13 +20,6 @@
     one that ddcutil determines on its own.
   - To avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
     the value **DDCA_DRM_CONNECTOR_NOT_FOUND** is used externally for this situation.
-- Added a suite of standalone unit tests, covering most of the C source tree.
-  - The tests target each module's pure, hardware-independent logic (parsing, 
-    data structures, report formatting, etc.); modules that are essentially all
-    direct hardware/file I/O are only covered where a genuinely pure helper exists.
-  - Test sources live in directory src/unit_tests; the corresponding
-    executables are built in parallel directory src/unit_test_executables. 
-    They are built and run by **make check**.
 
 #### Performance Changes
 
@@ -38,27 +32,12 @@
 
 - Command ***setvcp***: Relative value changes can now also be specified as 
   PLUS/MINUS (case-insensitive), in addition to +/-. e.g. **ddcutil setvcp 10 plus 5**. 
-
-  ==== TMI:
-- The handler that writes a crash to the system log, previously **SIGSEGV**
-  only, now also covers **SIGBUS**, **SIGILL**, **SIGFPE** and **SIGABRT**. 
-  It  reports the signal name together with **si_code** and **si_addr**. The
-  default action for all of these terminates the process without running the
-  library destructor that logs "libddcutil terminating.", so a client such as
-  powerdevil appeared in the system log simply to stop, with nothing to say why
-  or where. SIGBUS is what a process receives when a shared library it has
-  mapped is replaced or truncated, as happens when a rebuilt libddcutil is
-  installed under a running client; **si_code** 2 (BUS_ADRERR) together with an
-  address inside the mapping distinguishes that from a signal sent by **kill**.
-  As before, the handler chains to whatever handler was previously installed,
-  so a client's own handling of these signals is unaffected. SIGTERM and SIGINT
-  are deliberately not caught: they belong to the client program, and a library
-  claiming them would change how that program responds to a request to stop.
- 
-
+- The handler that writes a crash report to the system log, which hitherto
+  handled **SIGSEGV** only, now also catches **SIGBUS**, **SIGILL**, **SIGFPE** 
+  and **SIGABRT**. 
 - Reduce duplicated messages in the system log when trace output is redirected
   to the system log.
-- EDID reads now first attempt to use a single combined **I2C_RDWR** ioctl
+- EDID reads now first attempts to use a single combined **I2C_RDWR** ioctl
   transaction (write the EDID block-read command and read the response as
   one multi-message transaction), as is done in kernel DRM processing, 
   before falling back to the previous separate write-then-read calls, thus 
@@ -69,134 +48,16 @@
 
 #### Fixed
 
-
-
-- Recovery from the transient loss of /dev/i2c permissions after resume from
-  sleep, or at login, is now entirely by retry after an EACCES open failure.
-  Previously a settling pause was also taken before opening a bus whenever a
-  recent resume was detected. That charged every open for a condition most of
-  them do not encounter, while not shortening the wait for the ones that do,
-  and it made recovery depend on resume detection rather than on the failure
-  itself. The retry budget no longer varies with whether the user appears to
-  hold permissions or a resume was detected: an EACCES failure is now retried
-  at increasing intervals, 100 ms doubling to a maximum of 800 ms, until either
-  **--i11** milliseconds have elapsed (default 3000) or **--i12** retries have
-  been made (default raised from 1 to 8, so that elapsed time is normally the
-  effective limit).
-  The time budget is charged per EACCES episode, process wide, not per open:
-  the first open to fail starts the episode and waits out the full budget;
-  opens failing later in the episode fail quickly. So a user with no
-  /dev/i2c permissions at all sees one bus's wait, not one per bus, while
-  the transient window after a resume is still waited out in full. An
-  episode ends when a retried open succeeds, or after 10 seconds with no
-  EACCES failure.
-
-- False detection of resume from sleep. Resume is detected by watching for an
-  increase in the difference between CLOCK_BOOTTIME and CLOCK_MONOTONIC. Because
-  the two clocks are sampled separately, that difference jitters by a few
-  microseconds and is not monotonic, and an unsigned subtraction of the larger
-  from the smaller wrapped to nearly 2**64, exceeding the one second threshold
-  that indicates a resume. Roughly a third of checks reported a resume that had
-  not occurred, each one imposing the post resume settling pause on subsequent
-  /dev/i2c opens, and each opening a five second window in which further checks
-  also reported a resume.
-- Displays could fail to reappear on the first scan after resume from sleep on
-  systems where /dev/i2c permissions come from the logind ACL rather than group
-  **i2c** membership. Resume was recognized only from the dbus 
-  **PrepareForSleep** signal, which can be delivered after the display watch 
-  thread has already reacted to the resume and begun reopening buses. During 
-  that interval, which is exactly when udev has not yet reapplied the ACLs, the
-  transient EACCES open failures were treated as permanent and given a single
-  100 ms retry instead of the intended retry budget, forcing a rescan. ddcutil's
-  clock based resume detection, previously used only when built without dbus 
-  support, is now used in addition to the dbus signal.
-  A third method covers what neither of those can: the timestamp of the
-  **PrepareForSleep(true)** signal is now recorded as well, and while it has no
-  matching **PrepareForSleep(false)** the system is taken to be inside a sleep
-  cycle, so any thread running there is treated as having just resumed. The
-  clock method needs more than a second of accumulated sleep to report anything,
-  and user space is frozen before the kernel suspends timekeeping and thawed
-  after it resumes it. A suspend that is aborted, or whose device callbacks are
-  slow, can therefore stop ddcutil for ten seconds or more while the clocks stay
-  in lockstep and no sleep is detected, even though the /dev/i2c ACLs were
-  dropped and reapplied around the cycle as usual.
-  A cycle that is never closed, because the connection to the bus was lost
-  between the two signals, would otherwise leave every caller pausing for the
-  life of the process. The dbus sleep watch thread, whose dispatch loop
-  completes a pass every half second while the process is running and none at
-  all while it is frozen, accumulates its own running time since the prepare
-  signal and retires a cycle still open after a minute of it. Time the process
-  spent frozen does not count, so a suspend of any length is still recognized
-  on the far side.
-  The system log message reporting a settling pause now names what was
-  detected: a resume seen by dbus signal, a resume seen by clock comparison, or
-  a sleep cycle in progress. A pause taken inside an open cycle can precede the
-  suspend itself, so a message asserting a resume there would contradict the
-  machine's state in the log at exactly the point where this subsystem is
-  diagnosed from it.
-  The settling pause also measures itself, and is taken again if it was spent
-  by the suspend instead of served after the resume. A pause begun before the
-  kernel freezes user space does not do the job it exists for: the sleep's
-  deadline expires while the process is not running, the call returns the
-  instant the process is thawed, and the caller, believing it has waited, opens
-  buses at exactly the moment the ACLs are still missing. A pause overrunning
-  its requested duration by more than a second is taken to have been spent that
-  way. It is measured on CLOCK_BOOTTIME, so that both a true suspend and a
-  freeze that never reaches the point of suspending timekeeping are seen. The
-  pause taken after a udev **add** event, which settles a device node udev has
-  just created, is retaken on the same terms and for the same reason.
-- The pause after a udev **add** event is no longer governed by ***--i10***,
-  the pause after resume from sleep. It has its own setting, ***--i14***,
-  defaulting to the same 500 ms, so behavior is unchanged unless one of the two
-  is set. The two answer the same question — how long udev takes to apply
-  permissions to a device node — but for different events, and are tuned from
-  different evidence; sharing one value meant that raising the pause after
-  resume, to suit a machine slow to restore /dev/i2c ACLs, silently delayed
-  every display hotplug by the same amount.
-- The dbus sleep watch thread spun at 100% CPU for the life of the process if
-  the connection to the system bus closed, e.g. because dbus-daemon was
-  restarted. Its loop ignored the return value of
-  **dbus_connection_read_write_dispatch()**, which once the connection has
-  closed returns false immediately instead of waiting out its timeout, and
-  nothing else ended the loop: the connection deliberately does not exit the
-  process on disconnect. The thread now ends, with a message to the system log,
-  leaving resume detection to the clock comparison.
-- **i2c_open_bus_basic()**: after an EACCES failure the system log always
-  reported "Current user has group i2c perms on /dev/i2c-N", even when the
-  user did not have those permissions, directly contradicting the failure
-  diagnostics emitted just before it.
 - Do not ignore /dev/i2c devices on SOC systems whose adapter class cannot be
   read because the display adapter is not found. 
   Addresses pull request #619: Do not ignore sysfs class being zero
+  and also issue #
 
 - Thread safety: fixed a double free crash caused by unsynchronized lazy
   initialization of the PNP manufacturer id table in **pnp_name()**. It could
   occur when multiple threads first resolved EDID manufacturer names
   concurrently, e.g. reporting displays from several threads.
-- Additional data races fixed: a TOCTOU race on **dref->flags** in the recheck
-  worker thread, a race on **retry_thread_sleep_factor_millisec**, and a TOCTOU
-  race in **compile_and_eval_regex()**.
-- Thread safety (found by Coverity static analysis): serialized several
-  unsynchronized reads of shared global state that is written under a mutex —
-  the detected-display list and bus-open-error list, the retry **maxtries**
-  setting, the active API-call count, and the display-lock owner fields — and
-  closed a check-then-act (lock evasion) window when discarding detected
-  displays.
 
-
-- **i2c_open_bus_basic()**: after an EACCES failure the system log always
-  reported "Current user has group i2c perms on /dev/i2c-N", even when the
-  user did not have those permissions, directly contradicting the failure
-  diagnostics emitted just before it.
-
-- Do not ignore /dev/i2c devices on SOC systems whose adapter class cannot be
-  read because the display adapter is not found. 
-  Addresses pull request #619: Do not ignore sysfs class being zero
-
-- Thread safety: fixed a double free crash caused by unsynchronized lazy
-  initialization of the PNP manufacturer id table in **pnp_name()**. It could
-  occur when multiple threads first resolved EDID manufacturer names
-  concurrently, e.g. reporting displays from several threads.
 - Additional data races fixed: a TOCTOU race on **dref->flags** in the recheck
   worker thread, a race on **retry_thread_sleep_factor_millisec**, and a TOCTOU
   race in **compile_and_eval_regex()**.
@@ -209,60 +70,21 @@
   displays.
 - Plugged numerous memory leaks
 
-- NULL dereferences: reporting a USB display that has no bus info.
-- Wrong array used in three I2C bus-info search functions in
-  **i2c_bus_base.c**.
+
+- Fixed numerous minor bugs identified by Claude unit tests and Coverity scan. 
 
 
-- Fixed numerous minor bugs to utility functions that were identified by unit
-  testing;
-  - **trim_in_place()** corrupted strings that began with whitespace, in some
-    cases returning only the first character. 
-  - **rpt_hex_dump()** advanced the data pointer instead of the loop index,
-    mis-formatting the dump.
-  - **ini_file_load()** Correct passing of the message text to the error message
-  - Memory errors and a false success return in **string_util.c**
-  - Double-free in **csb_free()** when the circular string buffer had wrapped.
-  - NULL dereferences: **ini_file_dump()** error path in simple_ini_file.c, 
-     **errinfo_summary()** in errof_info.c
-  - Off-by-one errors in **str_contains()** and in the ignored VID/PID parsing
-    loop in pnp_ids.c
-  - Several errors in rarely exercised **data_structures.c** code paths.
-  - Traced function stack (debug/trace output): guarded a use-after-free of the
-    thread-local stack pointer after it is freed, and corrected an inverted
-    ordering that reversed the stack across nested callbacks.
-  - **tokenize_options_line()**: a memory leak when **wordexp()** fails, and
-    a segfault in the same error path — the error handler unconditionally calls 
-    **wordfree()**, but on some **wordexp()** syntax errors (e.g. an unterminated
-    quote) glibc leaves its output struct uninitialized, so **wordfree()** 
-    dereferenced garbage; the struct is now zero-initialized so **wordfree()** 
-    on it is always safe.
-  - **simple_dbgmsg()** was missing the trailing newline on its output line.
-
-- Fixed bugs identified by unit tests in the rest of the source tree:
-  - **set_persistent_capabilites()**: crashed on a NULL capabilities hash.
-  - **generic_model_name()**: its hardcoded list of known-generic model
-    names (e.g. "LG IPS FULLHD") used the raw, unsanitized EDID spelling,
-    but every **Monitor_Model_Key** has already had spaces and other
-    non-alphanumeric characters replaced with underscrore. The comparison could
-    therefore never match, so the non-unique-model protection for these models 
-    silently never triggered.
-  - **ddc_store_displays_cache()**: an **fwrite()** size/nmemb argument swap
-    meant the byte count written was always compared against the wrong
-    value, so the function reported write failure even on success.
-  - **free_parsed_hid_collection()**: used the wrong **GDestroyNotify** for a
-    **Parsed_Hid_Report \*** array, freeing each entry as though it were a
-    **Parsed_Hid_Field \***; corrupted the heap and crashed when freeing any
-    USB HID report descriptor with more than one report.
-  - **VID_PID_VALUE_TO_PID()**: masked with **0xff** instead of **0xffff**,
-    truncating the high byte of the product id wherever the macro is used
-    (the **--ignored-usb-vid-pids** debug report).
-  - **sysfs_find_adapter()**: crashed calling **strlen(NULL)** while walking
-      up a nonexistent sysfs path.
     
 
 #### Building
 
+- Added a suite of standalone unit tests, covering most of the C source tree.
+  - The tests target each module's pure, hardware-independent logic (parsing, 
+    data structures, report formatting, etc.); modules that are essentially all
+    direct hardware/file I/O are only covered where a genuinely pure helper exists.
+  - Test sources live in directory src/unit_tests; the corresponding
+    executables are built in parallel directory src/unit_test_executables. 
+    They are built and run by **make check**.
 - Build: do not include **execinfo.h** on non-glibc (musl) Linux systems.
   Pull request #613.
 - Added explicit #include statements for header files that had previously 
@@ -274,9 +96,9 @@
 
 ### Shared Library
 
-The shared library **libddcutil** is backwardly compatible with the one in 
-ddcutil 2.2.1. The SONAME is unchanged as libddcutil.so.5. The released library
-file is libddcutil.so.5.5.1. (VERIFY)
+The shared library **libddcutil** is backwardly compatible with those in
+ddcutil 2.2.1 and later. The SONAME is unchanged as libddcutil.so.5. 
+The released library file is libddcutil.so.5.5.2. (VERIFY)
 
 #### Added
 
@@ -300,15 +122,14 @@ file is libddcutil.so.5.5.1. (VERIFY)
 
 #### EACCESS Errors
 
-- Mitigations for the transient EACCES window after resume from sleep, during
-  which the /dev/i2c devices exist but udev has not yet reapplied uaccess ACLs
-  so open() failed (KDE bug 522329, reported as 100% single-core CPU and
-  desktop lag on wake)
-  - Reworked detection and handling of resume from sleep. Resume is detected via
-    the D-Bus **PrepareForSleep** signal, or, when D-Bus is unavailable, by
-    comparing CLOCK_BOOTTIME and CLOCK_MONOTONIC. Pauses are inserted before
-    opening a /dev/i2c device and in the display watch loop for a short interval
-    after a resume. 
+- Recovery from the transient loss of /dev/i2c permissions (EACCES errors) 
+  when opening /dev/i2c devices after resume from sleep or at login is now
+  entirely by retry.
+- Mitigations for the transient EACCES errors opening /dev/i2c devices after
+  resume from sleep, There is a brief window during which the /dev/i2c devices
+  exist but udev has not yet reapplied uaccess ACLs, so open() fails.
+  (KDE bug 522329, reported as 100% single-core CPU and desktop lag on wake)
+  - Reworked detection and handling of resume from sleep.
   - Rate-limit the expensive EACCES diagnostics. Diagnostics are emitted at most
     once per 10 seconds (set by parm **DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC** 
     in parms.h), instead of once per bus open.  
@@ -322,12 +143,10 @@ file is libddcutil.so.5.5.1. (VERIFY)
   - added explicit **void** to empty parameter lists
   - documented that the caller is responsible for freeing the result of 
     **ddca_get_display_refs()** and **ddca_end_capture()**.
--
 - Substantial refactoring and thread-safety hardening of the display watch
   subsystem (**src/dw**) Access to the shared display and bus tables is now
   serialized against the watch thread.
-
- - **dw_stop_watch_displays()** now always waits for the watch thread to
+- **ddca_stop_watch_displays()** now always waits for the watch thread to
   terminate.
 
 
@@ -358,7 +177,9 @@ file is libddcutil.so.5.5.1. (VERIFY)
   and not-found were swapped.
 - **ddca_dbgrpt_display_ref()**: The opaque **DDCA_Display_Ref** was being
   cast directly to an internal **Display_Ref** instead of being resolved 
-  by lookup.
+  by lookup, causing a segfault.
+- Option ***--syslog*** passed in either the **ddca_init2()** libopts parm
+  or the config file was not recognized.
 
 
 ## [2.2.7] 2025-05-08
