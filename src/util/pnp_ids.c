@@ -8,7 +8,7 @@
  *  but now obtained from the UEFI web site is used.
  */
 
-// Copyright (C) 2022-2025 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
