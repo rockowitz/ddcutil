@@ -43,26 +43,27 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
-
+/** If at least this many buses found to check, perform checks asynchronously */
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
-bool force_failure_i2c_all_relevant_i2c_buses_rw = false;
-bool force_failure_i2c_all_edids_readable_using_i2c = false;
+
+bool force_failure_i2c_all_relevant_i2c_buses_rw = false;     // for testing
+bool force_failure_i2c_all_edids_readable_using_i2c = false;  // for testing
 
 /** Gets a list of all /dev/i2c devices by checking the file system
  *  if devices named /dev/i2c-N exist.
  *
+ *  @param  include_ignorable_devices  if true, include devices that are
+ *                                     unusable for DDC communication
  *  @return Byte_Value_Array containing the valid bus numbers
  */
 Byte_Value_Array
 i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
-      // if (!i2c_bus_is_ignored(busno)) { // done in i2c_device_exists()
-         if (i2c_device_exists(busno)) {
-            if (include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno))
-               bva_append(bva, busno);
-         }
-      // }
+      if (i2c_device_exists(busno)) {
+         if (include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno))
+            bva_append(bva, busno);
+      }
    }
    return bva;
 }
@@ -72,6 +73,8 @@ i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
  *  are in group i2c and have the group RW permission bits set.
  *
  *  @return true if all pass the check, false otherwise
+ *
+ *  The bus numbers are obtained by checking for existence.
  */
 bool i2c_all_relevant_buses_group_i2c_rw() {
    bool debug = false;
@@ -96,6 +99,14 @@ bool i2c_all_relevant_buses_group_i2c_rw() {
 }
 
 
+/** Checks that all buses that could possibly be used for DDDC communication
+ *  are in group i2c, that the group permission bits are RW, and the current
+ *  user is a member of that group.
+ *
+ *  @return true/false
+ *
+ *  The bus numbers are obtained by checking for existence.
+ */
 bool i2c_all_relevant_buses_rw_by_inode()  {
    bool debug = false;
    bool result =  cur_user_in_group_i2c() &&
@@ -105,9 +116,11 @@ bool i2c_all_relevant_buses_rw_by_inode()  {
 }
 
 
-
 /** Checks that all /dev/i2c buses that might possibly be used for DDC
- *  communication can be read and written.
+ *  communication can be read and written. The check is executed
+ *  by attempting an open()/close().
+ *
+ *  The bus numbers are obtained from udev.
  *
  *  @return Error_Info struct if one or more buses are inaccessible,
  *          NULL if no problem
@@ -152,7 +165,6 @@ i2c_all_relevant_i2c_buses_rw() {
       }
    }
    bva_free(bva);
-
 
    if (err_accumulator) {
       final_result = errinfo_new_with_causes_gptr(DDCRC_INVALID_OPERATION, err_accumulator, __func__,
@@ -211,6 +223,10 @@ i2c_all_edids_readable_using_i2c() {
 #endif
 
 
+/** Used when i2c_check_bus() is called asynchronously.
+ *
+ *  @param data pointer to I2C_Bus_Info struct of bus to check.
+ */
 STATIC void *
 i2c_threaded_initial_checks_by_businfo(gpointer data) {
    bool debug = false;
@@ -288,8 +304,6 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
 }
 
 
-
-
 //
 // Attached buses
 //
@@ -307,7 +321,6 @@ i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
          "include_ignorable_devices=%s", SBOOL(include_ignorable_devices));
 
    Byte_Value_Array bva = bva_create();
-
    GPtrArray * summaries = get_i2c_devices_using_udev();
    if (summaries) {
       for (int ndx = 0; ndx < summaries->len; ndx++) {
@@ -315,10 +328,8 @@ i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
          int busno = udev_i2c_device_summary_busno(summary);
          assert(busno >= 0);
          assert(busno <= 127);
-         // if (!i2c_bus_is_ignored(busno))  { // done by caller
-            if ( include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno) )
-               bva_append(bva, busno);
-         // }
+         if ( include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno) )
+            bva_append(bva, busno);
       }
       free_udev_device_summaries(summaries);
    }
@@ -333,7 +344,8 @@ i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
 
 
 /** Returns the bus numbers for /dev/i2c buses that could possibly be
- *  connected to a monitor.:
+ *  connected to a monitor. Buees that the user had indicated should
+ *  be ignored (option --ignore-bus) are not included.
  *
  *  @return array of bus numbers
  */
@@ -349,6 +361,8 @@ Byte_Value_Array i2c_detect_attached_buses() {
             i2c_get_devices_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
 
+   // filter out buses that user has indicated should be excluded using
+   // option --ignore_bus
    Byte_Value_Array bva = bva_filter(bva0, i2c_bus_is_not_excluded);
    bva_free(bva0);
 
@@ -360,7 +374,8 @@ Byte_Value_Array i2c_detect_attached_buses() {
 
 
 /** Returns the bus numbers for /dev/i2c buses that could possibly be
- *  connected to a monitor.
+ *  connected to a monitor as a bitset.  Does not include buses
+ *  that the user has requested be ignored.
  *
  *  @return bitset of bus numbers
  */
@@ -393,6 +408,10 @@ Bit_Set_256 i2c_filter_buses_w_edid_as_bitset(BS256 bs_all_buses, bool * eacces_
 }
 
 
+/** Returns a bitset indicating the I2C buses with an EDID.
+ *
+ * @return bitset of buses with an EDID
+ */
 Bit_Set_256 i2c_buses_w_edid_as_bitset() {
    BS256 bs_all_buses = i2c_detect_attached_buses_as_bitset();
    return i2c_filter_buses_w_edid_as_bitset(bs_all_buses, NULL);
@@ -477,7 +496,6 @@ GPtrArray * i2c_detect_buses0() {
 }
 
 
-
 /** Detect buses if not already detected.
  *
  *  Stores the result in global array all_i2c_buses and also
@@ -554,6 +572,7 @@ Bit_Set_256 i2c_buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool 
 }
 
 
+#ifdef UNUSED
 Bit_Set_256 i2c_nonlaptop_buses_bitset_from_businfo_array(
                 GPtrArray * businfo_array,
                 bool        only_connected)
@@ -576,13 +595,11 @@ Bit_Set_256 i2c_nonlaptop_buses_bitset_from_businfo_array(
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", bs256_to_string_decimal_t(result, "", ", "));
    return result;
 }
+#endif
 
 
 void init_i2c_bus_collections(void) {
    RTTI_ADD_FUNC(i2c_all_relevant_i2c_buses_rw);
-#ifdef UNUSED
-   RTTI_ADD_FUNC(i2c_all_edids_readable_using_i2c);
-#endif
    RTTI_ADD_FUNC(i2c_threaded_initial_checks_by_businfo);
    RTTI_ADD_FUNC(i2c_async_scan);
    RTTI_ADD_FUNC(i2c_non_async_scan);
@@ -594,5 +611,4 @@ void init_i2c_bus_collections(void) {
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_buses_bitset_from_businfo_array);
-   RTTI_ADD_FUNC(i2c_nonlaptop_buses_bitset_from_businfo_array);
 }
