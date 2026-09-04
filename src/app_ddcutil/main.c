@@ -82,6 +82,7 @@
 
 #include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_bus_open_close.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"

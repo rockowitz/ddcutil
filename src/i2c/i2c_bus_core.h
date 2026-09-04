@@ -28,28 +28,10 @@ extern bool try_get_edid_from_sysfs_first;
 
 extern bool edp_always_laptop;
 
-extern bool force_failure_i2c_open;
 extern int  pause_after_resume_ms;
-extern int  max_eacces_retry_ms;
-extern int  max_eacces_retry_ct;
-extern int  rate_limit_eacces_diagnostics_interval_sec;
 extern bool edid_exists_checks_drm_status;
 extern bool edid_exists_skips_unmapped_bus;
 extern bool primitive_sysfs;
-
-// Bus open and close
-#ifdef DETERMINED_UNUSED
-void             i2c_add_open_failures_reported(Bit_Set_256 failures);
-#endif
-void             i2c_include_open_failures_reported(int busno);
-Error_Info *     i2c_open_bus_basic(const char * filename,  Byte callopts, int* fd_loc);
-Error_Info *     i2c_open_bus_basic_by_busno(int busno,  Byte callopts, int* fd_loc);
-Error_Info *     i2c_open_bus(int busno, Byte callopts, int * fd_loc);
-#ifdef ALT_LOCK_REC
-Error_Info *     i2c_open_bus(int busno, Display_Lock_Record lockrec, Byte callopts, int * fd_loc);
-#endif
-Status_Errno     i2c_close_bus_basic(int busno, int fd, Call_Options callopts);
-Status_Errno     i2c_close_bus(int busno, int fd, Call_Options callopts);
 
 typedef enum {
    EDID_STATUS_UNKNOWN,
@@ -67,9 +49,6 @@ Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 
 // Reports
 void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
-
-// Miscellaneous
-Error_Info *     simple_rw_test(int busno);
 
 // Initialization
 void             subinit_i2c_bus_core();

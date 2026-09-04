@@ -37,6 +37,7 @@
 #include "sysfs/sysfs_conflicting_drivers.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_bus_open_close.h"
 
 #include "i2c/i2c_bus_collections.h"
 
