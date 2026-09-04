@@ -16,11 +16,6 @@ AM_CFLAGS = -Wall -fPIC
 # Unit tests link the internal util convenience library directly, since these
 # symbols are not exported from libddcutil. Run by "make check".
 LIBUTIL = $(top_builddir)/src/util/libutil.la
-# test_suspend_resume_util exercises dw/dw_suspend_resume.c, which lives in
-# libdw, not libutil, so it links the full common library as the tests in
-# unit_tests/dw do.
-LIBCOMMON = $(top_builddir)/src/libcommon.la
-EXTRA_SYSLIBS = $(ACL_LIBS) $(JANSSON_LIBS) $(UDEV_LIBS) $(LIBUSB_LIBS)
 
 check_PROGRAMS = ../../unit_test_executables/util/test_string_util ../../unit_test_executables/util/test_glib_util ../../unit_test_executables/util/test_debug_util ../../unit_test_executables/util/test_timestamp \
   ../../unit_test_executables/util/test_data_structures ../../unit_test_executables/util/test_file_util_base ../../unit_test_executables/util/test_traced_function_stack ../../unit_test_executables/util/test_msg_util \
@@ -31,7 +26,7 @@ check_PROGRAMS = ../../unit_test_executables/util/test_string_util ../../unit_te
   ../../unit_test_executables/util/test_linux_util ../../unit_test_executables/util/test_regex_util ../../unit_test_executables/util/test_multi_level_map ../../unit_test_executables/util/test_pnp_ids \
   ../../unit_test_executables/util/test_simple_ini_file ../../unit_test_executables/util/test_subprocess_util ../../unit_test_executables/util/test_sysfs_filter_functions \
   ../../unit_test_executables/util/test_sysfs_util ../../unit_test_executables/util/test_sysfs_i2c_util ../../unit_test_executables/util/test_systemd_util ../../unit_test_executables/util/test_utilrpt ../../unit_test_executables/util/test_xdg_util \
-  ../../unit_test_executables/util/test_backtrace ../../unit_test_executables/util/test_suspend_resume_util
+  ../../unit_test_executables/util/test_backtrace
 TESTS = ../../unit_test_executables/util/test_string_util ../../unit_test_executables/util/test_glib_util ../../unit_test_executables/util/test_debug_util ../../unit_test_executables/util/test_timestamp \
   ../../unit_test_executables/util/test_data_structures ../../unit_test_executables/util/test_file_util_base ../../unit_test_executables/util/test_traced_function_stack ../../unit_test_executables/util/test_msg_util \
   ../../unit_test_executables/util/test_report_util ../../unit_test_executables/util/test_ddcutil_config_file ../../unit_test_executables/util/test_dbus_util ../../unit_test_executables/util/test_acl_util \
@@ -41,7 +36,7 @@ TESTS = ../../unit_test_executables/util/test_string_util ../../unit_test_execut
   ../../unit_test_executables/util/test_linux_util ../../unit_test_executables/util/test_regex_util ../../unit_test_executables/util/test_multi_level_map ../../unit_test_executables/util/test_pnp_ids \
   ../../unit_test_executables/util/test_simple_ini_file ../../unit_test_executables/util/test_subprocess_util ../../unit_test_executables/util/test_sysfs_filter_functions \
   ../../unit_test_executables/util/test_sysfs_util ../../unit_test_executables/util/test_sysfs_i2c_util ../../unit_test_executables/util/test_systemd_util ../../unit_test_executables/util/test_utilrpt ../../unit_test_executables/util/test_xdg_util \
-  ../../unit_test_executables/util/test_backtrace ../../unit_test_executables/util/test_suspend_resume_util
+  ../../unit_test_executables/util/test_backtrace
 
 # The udev-based tests build only when the udev subsystem is enabled, since the
 # udev_* modules are then compiled into libutil.
@@ -133,10 +128,6 @@ ______unit_test_executables_util_test_linux_util_SOURCES        = test_linux_uti
 ______unit_test_executables_util_test_linux_util_CPPFLAGS       = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 ______unit_test_executables_util_test_linux_util_LDADD          = $(LIBUTIL) $(GLIB_LIBS) $(DBUS_LIBS) \
   $(LIBDRM_LIBS) $(ACL_LIBS)
-______unit_test_executables_util_test_suspend_resume_util_SOURCES  = test_suspend_resume_util.c
-______unit_test_executables_util_test_suspend_resume_util_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-______unit_test_executables_util_test_suspend_resume_util_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(DBUS_LIBS) \
-  $(LIBDRM_LIBS) $(EXTRA_SYSLIBS) -lm
 ______unit_test_executables_util_test_regex_util_SOURCES        = test_regex_util.c
 ______unit_test_executables_util_test_regex_util_CPPFLAGS       = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 ______unit_test_executables_util_test_regex_util_LDADD          = $(LIBUTIL) $(GLIB_LIBS)

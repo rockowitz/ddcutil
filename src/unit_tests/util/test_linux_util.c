@@ -7,8 +7,8 @@
  *  and lsof helpers depend on the host and are not exercised.
  *
  *  The suspend and resume detection functions that formerly lived here moved
- *  to src/util/suspend_resume_util.c; their checks are in
- *  test_suspend_resume_util.c.
+ *  to src/util/suspend_resume_util.c and src/dw/dw_suspend_resume.c; their
+ *  checks are in src/unit_tests/dw/test_dw_suspend_resume.c.
  *
  *  Prints one line per failing check and a summary; exit status is 0 if all
  *  checks pass, 1 otherwise.

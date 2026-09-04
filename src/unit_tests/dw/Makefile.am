@@ -35,8 +35,8 @@ if USE_LIBDRM_COND
 EXTRA_SYSLIBS += $(LIBDRM_LIBS)
 endif
 
-check_PROGRAMS = ../../unit_test_executables/dw/test_dw_common ../../unit_test_executables/dw/test_dw_dref ../../unit_test_executables/dw/test_dw_status_events
-TESTS = ../../unit_test_executables/dw/test_dw_common ../../unit_test_executables/dw/test_dw_dref ../../unit_test_executables/dw/test_dw_status_events
+check_PROGRAMS = ../../unit_test_executables/dw/test_dw_common ../../unit_test_executables/dw/test_dw_dref ../../unit_test_executables/dw/test_dw_status_events ../../unit_test_executables/dw/test_dw_suspend_resume
+TESTS = ../../unit_test_executables/dw/test_dw_common ../../unit_test_executables/dw/test_dw_dref ../../unit_test_executables/dw/test_dw_status_events ../../unit_test_executables/dw/test_dw_suspend_resume
 
 ______unit_test_executables_dw_test_dw_common_SOURCES  = test_dw_common.c
 ______unit_test_executables_dw_test_dw_common_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
@@ -49,3 +49,7 @@ ______unit_test_executables_dw_test_dw_dref_LDADD    = $(LIBCOMMON) $(GLIB_LIBS)
 ______unit_test_executables_dw_test_dw_status_events_SOURCES  = test_dw_status_events.c
 ______unit_test_executables_dw_test_dw_status_events_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 ______unit_test_executables_dw_test_dw_status_events_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
+
+______unit_test_executables_dw_test_dw_suspend_resume_SOURCES  = test_dw_suspend_resume.c
+______unit_test_executables_dw_test_dw_suspend_resume_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_dw_test_dw_suspend_resume_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm

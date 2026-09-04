@@ -1,7 +1,7 @@
-/** @file test_suspend_resume_util.c
+/** @file test_dw_suspend_resume.c
  *
  *  Standalone unit tests for host-independent functions in
- *  src/util/suspend_resume_util.c.
+ *  src/util/suspend_resume_util.c and src/dw/dw_suspend_resume.c.
  *
  *  millisec_since_resume_detected_by_clocktime() returns UINT64_MAX until a
  *  resume is detected, which is the state at program start.
