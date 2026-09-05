@@ -431,6 +431,7 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
    return vcpinfo_ok;
 }
 
+
 void init_app_vcpinfo() {
    RTTI_ADD_FUNC(app_vcpinfo);
 }
