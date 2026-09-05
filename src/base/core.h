@@ -670,6 +670,7 @@ do { \
    } \
 } while(0)
 
+
 #ifdef OLD
 /*
  *  @remark
@@ -697,7 +698,6 @@ do { \
 #endif
 
 
-
 /** Variant of DECORATED_SYSLOG that does not include function name.
  *
  *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
@@ -717,6 +717,7 @@ do { \
    } \
 } while(0)
 
+
 #ifdef OLD
 #define DECORATED_SYSLOG_NOFUNC(_ddcutil_severity, format, ...) \
 do { \
@@ -732,7 +733,6 @@ do { \
    } \
 }
 #endif
-
 
 
 /** Variant of DECORATED_SYSLOG that does not include function name.
@@ -779,10 +779,6 @@ do { \
 } while(0)
 
 
-
-
-
-
 /** Variant of DECORATED_SYSLOG() that accepts an explicit function name
  *  instead of using __func__.  Use when the caller wants to attribute the
  *  message to a function other than the one in which the macro is expanded,
@@ -811,6 +807,7 @@ do { \
    } \
 } while(0)
 
+
 #ifdef OLD
 #define DECORATED_SYSLOGX(_ddcutil_severity, _func, format, ...) \
 do { \
@@ -828,7 +825,6 @@ do { \
    } \
 } while(0)
 #endif
-
 
 
 #ifdef OLD
@@ -850,6 +846,7 @@ do { \
 // DUAL_MSGN() variants
 //
 
+// non-variadic form, trace group = DDCA__TRC_NONE
 #define DUAL_MSGN(_debug, _ddca_syslog_level, _msgbuf) \
    do { \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
@@ -857,6 +854,7 @@ do { \
       DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
    } while (0)
 
+// variadic form, iimplcit trace group DDCA_TRC_NONE
 /** Variadic variant.  Unlike the non-variadic forms above, **format** may be a
  *  runtime value rather than a string literal.
  *
@@ -885,6 +883,7 @@ do { \
    } while (0)
 
 
+// non-varidic form, explicit trace group
 #define DUAL_MSGX(_debug, _ddca_syslog_level, _trace_group, _msgbuf) \
    do { \
       if (!stdout_stderr_redirected || !test_emit_syslog(_ddca_syslog_level)) \
@@ -892,8 +891,9 @@ do { \
       DECORATED_SYSLOG(_ddca_syslog_level, "%s", _msgbuf); \
    } while (0)
 
-/** Variadic variant naming a trace group.  As for #DUAL_MSGNV(), **format** may
- *  be a runtime value, the message being built once and passed to both
+
+/** Variadic variant naming a trace group.  As with #DUAL_MSGNV(), **format**
+ * may be a runtime value, the message being built once and passed to both
  *  destinations as "%s".
  */
 #define DUAL_MSGXV(_debug, _ddca_syslog_level, _trace_group, format, ...) \
@@ -906,7 +906,9 @@ do { \
    } while (0)
 
 
-
+//
+// MSG_W_SYSLOG()
+//
 
 /** Writes a message to the current ferr() or fout() device and, depending on
  *  the specified ddcutil severity and current syslog level, to the system log.
