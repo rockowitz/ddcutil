@@ -795,5 +795,3 @@ void init_ddc_display_ref_reports() {
    RTTI_ADD_FUNC(record_i2c_edid_use);
    RTTI_ADD_FUNC(report_ambiguous_connector_for_edid);
 }
-
-
