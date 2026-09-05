@@ -116,6 +116,10 @@ bool pdd_cross_display_operation_start(const char * caller) {
 }
 
 
+/** Ends a cross display operation.
+ *
+ *  @param  caller  name of calling function, for debug messages
+ */
 void pdd_cross_display_operation_end(const char * caller) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
@@ -140,8 +144,9 @@ void pdd_cross_display_operation_end(const char * caller) {
 
 /** Block execution of single Per_Display_Data operations when an operation
  *  involving multiple Per_Thead_Data instances is active.
+ *
+ *  @param caller  name of calling function, for debug msgs (UNUSED)
  */
-
 void pdd_cross_display_operation_block(const char * caller) {
    // intmax_t cur_displayid = get_display_id();
    Thread_Output_Settings * thread_settings = get_thread_settings();
