@@ -642,6 +642,24 @@ init_library_trace_file(char * library_trace_file, bool debug) {
 
       rpt_set_default_output_dest(flog);    // for future threads
       rpt_push_output_dest(flog);           // for this thread
+
+      // What the user sees, and why this line is here.
+      //
+      // Without it, --libddcutil-trace-file produces a file containing only the
+      // "tracing started" header when the client is started by systemd -- which
+      // includes every desktop client, e.g. plasma-powerdevil.  Run the same
+      // client from a terminal and the file fills normally.  That difference is
+      // what this fixes.
+      //
+      // stdout_stderr_redirected is set in core.c by checking whether stdout is
+      // a socket, which it is under systemd, and it gates the trace write in
+      // dbgtrc() and the init messages below.  The intent is "our output goes
+      // somewhere we should not write traces to".  The three set_*() calls just
+      // above make that untrue: fout and ferr now name the trace file, which is
+      // a regular file and exactly where the caller asked the output to go.
+      // Leaving the flag set suppresses the output into the file the caller
+      // just requested.
+      stdout_stderr_redirected = false;
    }
    else {
       fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
