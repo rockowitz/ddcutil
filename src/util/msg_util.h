@@ -20,6 +20,7 @@ extern bool dbgtrc_trace_to_syslog_only;
 extern bool dbgtrc_trace_to_syslog;
 extern bool stdout_stderr_redirected;
 
+#ifdef FIX_LIBRARY_TRACE_FILE
 /** True once --libddcutil-trace-file has opened a trace file.
  *
  *  Makes the trace file a destination *choice*: trace output goes there
@@ -27,6 +28,7 @@ extern bool stdout_stderr_redirected;
  *  forces syslog output, so asking for both remains possible.
  */
 extern bool library_trace_file_active;
+#endif
 
 extern __thread bool msg_decoration_suspended;
 

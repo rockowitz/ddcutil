@@ -638,11 +638,16 @@ static bool vdbgtrc(
 #endif
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
+#ifdef FIX_LIBRARY_TRACE_FILE
          // A trace file replaces syslog as the trace destination unless
          // --trace-to-syslog explicitly asks for syslog as well.  See
-         // library_trace_file_active in msg_util.h.
+         // library_trace_file_active in msg_util.h.  Parked: with the macro
+         // undefined, trace output reaches syslog whatever the destination.
          if ((test_emit_syslog(DDCA_SYSLOG_DEBUG) && !library_trace_file_active)
                || dbgtrc_trace_to_syslog) {
+#else
+         if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog) {
+#endif
 #ifdef OLD
             char * syslog_msg = NULL;
             if (timestamp_in_syslog_debug_msgs) {

@@ -643,6 +643,14 @@ init_library_trace_file(char * library_trace_file, bool debug) {
       rpt_set_default_output_dest(flog);    // for future threads
       rpt_push_output_dest(flog);           // for this thread
 
+#ifdef FIX_LIBRARY_TRACE_FILE
+      // Parked, along with the syslog gate in core.c that reads
+      // library_trace_file_active.  Enabling FIX_LIBRARY_TRACE_FILE makes
+      // --libddcutil-trace-file behave as described below: the file is written
+      // under systemd, and trace output goes to it instead of the system log.
+      // With the macro undefined -- the shipped state -- neither happens, and
+      // trace output continues to reach syslog as before.
+      //
       // What the user sees, and why this line is here.
       //
       // Without it, --libddcutil-trace-file produces a file containing only the
@@ -667,6 +675,7 @@ init_library_trace_file(char * library_trace_file, bool debug) {
       // path that naming a file was meant to take it out of.  --trace-to-syslog
       // overrides, so asking for both is still possible.
       library_trace_file_active = true;
+#endif
    }
    else {
       fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
