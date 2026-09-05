@@ -478,9 +478,6 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
          }
       }
 #endif
-
-
-
       ERRINFO_FREE(submaster_errs);
       goto bye;
    }
@@ -495,7 +492,6 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
    if (!validate_environment())
       goto bye;
 #endif
-
    ok = true;
 
 bye:
