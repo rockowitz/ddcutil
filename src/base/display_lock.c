@@ -31,6 +31,12 @@
  * Given the imminent release of 2.0.0-rc1, such changes are left to a future release.
  */
 
+/* 9/2026 - analysis by Claude: 
+ * 
+ *  doable, has benefit
+ *  would go in businfo, not display ref and has "things that would bite"
+ */
+
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
