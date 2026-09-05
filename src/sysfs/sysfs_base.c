@@ -1589,6 +1589,7 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
    RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
+   RTTI_ADD_FUNC(get_sysfs_drm_connector_names);
    RTTI_ADD_FUNC(ignorable_i2c_device_sysfs_name);
    RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);
    RTTI_ADD_FUNC(is_sysfs_reliable);
