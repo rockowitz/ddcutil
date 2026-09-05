@@ -660,6 +660,13 @@ init_library_trace_file(char * library_trace_file, bool debug) {
       // Leaving the flag set suppresses the output into the file the caller
       // just requested.
       stdout_stderr_redirected = false;
+
+      // Trace output now goes to this file instead of the system log.  A user
+      // who names a trace file has chosen where the trace goes; sending it to
+      // both doubles the volume and, on a busy system, leaves syslog in the
+      // path that naming a file was meant to take it out of.  --trace-to-syslog
+      // overrides, so asking for both is still possible.
+      library_trace_file_active = true;
    }
    else {
       fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",

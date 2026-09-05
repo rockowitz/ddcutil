@@ -20,6 +20,14 @@ extern bool dbgtrc_trace_to_syslog_only;
 extern bool dbgtrc_trace_to_syslog;
 extern bool stdout_stderr_redirected;
 
+/** True once --libddcutil-trace-file has opened a trace file.
+ *
+ *  Makes the trace file a destination *choice*: trace output goes there
+ *  instead of the system log, rather than to both.  --trace-to-syslog still
+ *  forces syslog output, so asking for both remains possible.
+ */
+extern bool library_trace_file_active;
+
 extern __thread bool msg_decoration_suspended;
 
 void       set_funcname_field_size(int fieldsize);

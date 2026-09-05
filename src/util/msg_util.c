@@ -30,6 +30,7 @@ bool dbgtrc_show_process_id = false;  ///< include process id in debug/trace out
 bool dbgtrc_trace_to_syslog_only = false; ///< send trace output only to system log
 bool dbgtrc_trace_to_syslog = false;
 bool stdout_stderr_redirected = false;
+bool library_trace_file_active = false;
 
 bool __thread msg_decoration_suspended = false;
 
