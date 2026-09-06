@@ -40,7 +40,15 @@ typedef struct {
    char * status;
 } Sys_Drm_Connector;
 
-// Functions that use the persistent array of Sys_Drm_Connector:
+/* Functions that use the persistent array of Sys_Drm_Connector.
+ *
+ * The finders below return a pointer into that array.  It is valid only while
+ * sys_drm_connectors_mutex is held: removing a bus frees the instance for its
+ * connector, and a rebuild frees every instance.  A caller wanting a field
+ * must take the lock, copy what it needs, and release it -- which is what
+ * find_drm_connector_name_by_busno(), get_drm_connector_name_by_edid() and
+ * get_drm_connector_name_by_connector_id() do.  Prefer those.
+ */
 GPtrArray*          get_sys_drm_connectors(bool rescan);
 void                report_sys_drm_connectors(bool verbose, int depth);
 Sys_Drm_Connector * find_sys_drm_connector(int busno, Byte * raw_edid, const char * connector_name);
@@ -55,6 +63,7 @@ bool                all_sys_drm_connectors_have_connector_id(bool rescan);
 Bit_Set_256         buses_having_edid_from_sys_drm_connectors(bool rescan);
 char *              find_drm_connector_name_by_busno(int busno);
 char *              get_drm_connector_name_by_edid(Byte * edid_bytes);
+char *              get_drm_connector_name_by_connector_id(int connector_id);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
 bool                remove_sys_drm_connector_by_busno(int busno);

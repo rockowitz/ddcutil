@@ -272,17 +272,22 @@ bool dw_udev_watch(int watch_loop_millisec) {
                   char * connector_msg2 = NULL;
                   if (detail->prop_connector) {
                      I2C_Bus_Info * businfo = NULL;
-                     Sys_Drm_Connector * conn = NULL;
+                     char * conn_name = NULL;
                      int ival = 0;
                      bool valid_int = str_to_int(detail->prop_connector, &ival, 10);
                      if (valid_int) {
-                        // if this is used for more than informational purpose, need to
-                        // search sysfs directly, not rely on list that may have been made
-                        // invalid by an add or remove
-                        conn = find_sys_drm_connector_by_connector_id(ival);
-                        if (conn)
+                        // The name is copied out under the connector lock rather than
+                        // holding the Sys_Drm_Connector.  This runs on the watch thread,
+                        // which is itself what removes connectors, so the instance a
+                        // search returns can be freed at any point afterwards.
+                        //
+                        // The name can still be stale, the array being whatever the last
+                        // scan found.  That is tolerable here because it is only logged;
+                        // if it is ever used for more than that, search sysfs directly.
+                        conn_name = get_drm_connector_name_by_connector_id(ival);
+                        if (conn_name)
                             connector_msg2 = g_strdup_printf("prop_connector = %d -> %s",
-                                  ival, conn->connector_name);
+                                  ival, conn_name);
                         businfo = i2c_find_businfo_by_drm_connector_id(ival);
                         if (businfo) {
                            connector_msg = g_strdup_printf(
@@ -290,10 +295,11 @@ bool dw_udev_watch(int watch_loop_millisec) {
                                  ival, businfo->busno);
                         }
                      }
-                     if (!conn)
+                     if (!conn_name)
                         connector_msg2 = g_strdup_printf(
                               "Could not find DRM connector for connector id: %s",
                               detail->prop_connector);
+                     free(conn_name);
                      if (!businfo)
                         connector_msg = g_strdup_printf(
                               "Could not find I2C_Bus_Info for connector id: %s",

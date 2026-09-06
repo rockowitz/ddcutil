@@ -376,6 +376,10 @@ Bit_Set_256 buses_having_edid_from_sys_drm_connectors(bool rescan) {
 }
 
 
+/* The finders below return a pointer into sys_drm_connectors, valid only while
+ * sys_drm_connectors_mutex is held.  See the note in the header.
+ */
+
 /** Find a #Sys_Drm_Connector instance using one of the I2C bus number,
  *  EDID value, or DRM connector name.
  *
@@ -467,9 +471,14 @@ find_sys_drm_connector_by_connector_identifier(Drm_Connector_Identifier dci) {
 
 int sys_drm_get_busno_by_connector_name(const char * connector_name) {
    int result = -1;
+   // The lock is held across the search and the field read.  The pointer a
+   // finder returns is only valid while it is held: a bus removal can free
+   // the instance, and a rebuild frees every instance.
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
    Sys_Drm_Connector * sdc = find_sys_drm_connector(-1, NULL, connector_name);
    if (sdc)
       result = sdc->i2c_busno;
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
    return result;
 }
 
@@ -665,10 +674,15 @@ char * find_drm_connector_name_by_busno(int busno) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. busno = %d", busno);
    char * result = NULL;
+   // The lock is held across the search and the field read.  The pointer a
+   // finder returns is only valid while it is held: a bus removal can free
+   // the instance, and a rebuild frees every instance.
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(busno);
    if (drm_connector) {
       result = g_strdup(drm_connector->connector_name);
    }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
    DBGTRC_RET_STRING(debug, TRACE_GROUP, result, "");
    return result;
 }
@@ -697,10 +711,39 @@ char * get_drm_connector_name_by_edid(Byte * edid_bytes) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Finding connector by EDID...");
    char * result = NULL;
+   // The lock is held across the search and the field read.  The pointer a
+   // finder returns is only valid while it is held: a bus removal can free
+   // the instance, and a rebuild frees every instance.
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
    Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_edid(edid_bytes);
    if (connector_rec) {
       result = g_strdup(connector_rec->connector_name);
    }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
+   DBGTRC_RET_STRING(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+
+/** Returns the name of the DRM connector having a given connector id.
+ *
+ *  @param  connector_id  DRM connector id
+ *  @return connector name, caller must free; NULL if not found
+ *
+ *  @remark
+ *  Exists so that callers needing only the name never hold a
+ *  #Sys_Drm_Connector pointer of their own.  The name is copied while the
+ *  lock is held, so what comes back cannot be freed underneath the caller.
+ */
+char * get_drm_connector_name_by_connector_id(int connector_id) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "connector_id=%d", connector_id);
+   char * result = NULL;
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
+   Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_connector_id(connector_id);
+   if (connector_rec)
+      result = g_strdup(connector_rec->connector_name);
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
    DBGTRC_RET_STRING(debug, TRACE_GROUP, result, "");
    return result;
 }
@@ -857,6 +900,7 @@ void init_sysfs_sys_drm_connector() {
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);
    RTTI_ADD_FUNC(find_sys_drm_connector);
    RTTI_ADD_FUNC(find_drm_connector_name_by_busno);
+   RTTI_ADD_FUNC(get_drm_connector_name_by_connector_id);
 }
 
 
