@@ -24,7 +24,7 @@ typedef struct {
    Drm_Connector_Found_By found_by;
 } Found_Sys_Drm_Connector;
 
-extern bool      drm_connector_lookup_sysfs_only;   // utility option --f37
+extern bool      use_cached_connector_algorithm;   // utility option --f37
 extern bool      drm_connector_lookup_compare;      // utility option --f39
 
 bool             is_displaylink_device(int busno);

@@ -495,7 +495,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F34)
       drm_connector_removal_rebuild_only = true;   // drop it by rebuilding the array from sysfs, never deleting
    if (parsed_cmd->flags2 & CMD_FLAG2_F37)
-      drm_connector_lookup_sysfs_only = true;      // find the connector by walking sysfs, not by searching the array
+      use_cached_connector_algorithm = true;       // cached connector lookup, deduced bus numbers, hotplug refresh
    if (parsed_cmd->flags2 & CMD_FLAG2_F39)
       drm_connector_lookup_compare = true;         // run both connector lookups, log any disagreement
    if (parsed_cmd->flags2 & CMD_FLAG2_F40)

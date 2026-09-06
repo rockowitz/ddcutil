@@ -665,7 +665,12 @@ int i2c_detect_buses() {
       // against it.  Only inside this branch: on a driver that publishes the
       // mapping there is nothing to resolve, and repeating the search on the
       // calls that find all_i2c_buses already built would find nothing either.
-      extended_bus_detection();
+      //
+      // Part of the cached connector algorithm, so gated with it: the deduced
+      // bus numbers exist for the cached lookup to answer by bus number, and
+      // nothing else consumes them.  See use_cached_connector_algorithm.
+      if (use_cached_connector_algorithm)   // --f37
+         extended_bus_detection();
    }
    int result = all_i2c_buses->len;
 

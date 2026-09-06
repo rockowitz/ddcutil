@@ -87,7 +87,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(34, "Drop a removed bus's DRM connector by rebuilding the array from sysfs, never deleting");
    REPORT_FLAG_OPTION(35, "Disable skipping device open when DRM connector reports disconnected (edid_exists_checks_drm_status)");
    REPORT_FLAG_OPTION(36, "Do not disable display change scan while EACCES is seen (rescan_on_eacces)");
-   REPORT_FLAG_OPTION(37, "Find the DRM connector by walking sysfs, not by searching the connector array");
+   REPORT_FLAG_OPTION(37, "Use the cached DRM connector algorithm (array search, deduced bus numbers, hotplug refresh)");
    REPORT_FLAG_OPTION(38, "Open device even when no DRM connector names the bus (edid_exists_skips_unmapped_bus)");
    REPORT_FLAG_OPTION(39, "Run both DRM connector lookups, log any disagreement");
    REPORT_FLAG_OPTION(40, "Do not rebuild the DRM connector array on each hotplug pass");

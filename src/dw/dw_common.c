@@ -40,6 +40,7 @@
 #include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "i2c/i2c_bus_collections.h"
+#include "i2c/i2c_bus_sysfs.h"
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_displays.h"
@@ -511,7 +512,11 @@ bool dw_hotplug_change_handler(
     * that publishes no mapping -- which is exactly the case the deduction
     * exists for.
     */
-   if (refresh_connectors_on_hotplug) {   // --f40 disables
+   // Gated with the cached algorithm: the refresh exists to keep the cached
+   // array from naming a connector a display has left, and with the cached
+   // lookup off nothing reads it that way.  --f40 disables it independently,
+   // for testing the algorithm without it.
+   if (use_cached_connector_algorithm && refresh_connectors_on_hotplug) {   // --f37, --f40
       get_sys_drm_connectors(/*rescan=*/ true);
       extended_bus_detection();
    }

@@ -37,12 +37,28 @@
 
 #include "i2c_bus_sysfs.h"
 
-/* Select the connector lookup implementation, and whether to cross-check it.
- * Set from utility options --f37 and --f39.  See
- * find_sys_drm_connector_by_busno_or_edid().
+/* Selects between the two DRM connector algorithms, set from utility option
+ * --f37.  Default false, i.e. the original: find the connector by walking the
+ * /sys/class/drm directories on each lookup.  True selects the newer one: read
+ * the connector attributes once into the Sys_Drm_Connector array, deduce the
+ * bus numbers a driver does not publish, and search that array instead.
+ *
+ * One switch rather than three, because the parts are not independent.  The
+ * deduction exists to make the cached lookup answer by bus number, and the
+ * hotplug refresh exists to keep the cached array from going stale; with the
+ * cached lookup off, both are work with no consumer.  Gated at all three
+ * entry points: this file for the lookup, i2c_detect_buses() for the startup
+ * deduction, dw_hotplug_change_handler() for the refresh.
+ *
+ * Off by default because the measurements did not support it.  The stalls
+ * that motivated it proved to be suspend time; on udev-event-to-emit latency
+ * and on libddcutil startup the two are indistinguishable.  What the newer
+ * algorithm demonstrably reduces is sysfs work -- get_connector_bus_numbers
+ * calls fell from 2700 to 216 over an equivalent window -- on a path taken a
+ * few times a day.  Retained behind the option for further testing.
  */
-bool drm_connector_lookup_sysfs_only = false;
-bool drm_connector_lookup_compare    = false;
+bool use_cached_connector_algorithm = false;
+bool drm_connector_lookup_compare   = false;
 
 // Trace class for this file
 // static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
@@ -360,12 +376,18 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_cached(
 Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
                                  int busno, Byte * edid_bytes)
 {
-   if (drm_connector_lookup_sysfs_only)   // --f37
+   if (!use_cached_connector_algorithm && !drm_connector_lookup_compare)   // --f37
       return find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
 
-   Found_Sys_Drm_Connector result = find_sys_drm_connector_by_busno_or_edid_cached(busno, edid_bytes);
+   // The comparison needs both, and reports whichever the option selected as
+   // the answer, so that --f39 does not itself change behavior.
+   Found_Sys_Drm_Connector result = (use_cached_connector_algorithm)
+         ? find_sys_drm_connector_by_busno_or_edid_cached(busno, edid_bytes)
+         : find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
    if (drm_connector_lookup_compare) {    // --f39
-      Found_Sys_Drm_Connector alt = find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
+      Found_Sys_Drm_Connector alt = (use_cached_connector_algorithm)
+            ? find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes)
+            : find_sys_drm_connector_by_busno_or_edid_cached(busno, edid_bytes);
       if (!streq(result.connector_name, alt.connector_name) ||
            result.found_by     != alt.found_by ||
            result.connector_id != alt.connector_id)
