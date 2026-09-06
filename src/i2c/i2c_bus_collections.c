@@ -479,7 +479,7 @@ GPtrArray * i2c_detect_buses0() {
     * Nothing writes the array once it is built, so the per-bus threads that
     * i2c_async_scan() may start can read it concurrently without a lock.
     */
-   if (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_SNAPSHOT) {   // --i17 2
+   if (drm_connector_algorithm != DRM_CONNECTOR_ALGORITHM_CACHED) {   // --i17 2, the default
       get_sys_drm_connectors(/*rescan=*/ true);
       connector_snapshot_active = true;
    }

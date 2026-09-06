@@ -24,9 +24,8 @@ typedef struct {
    Drm_Connector_Found_By found_by;
 } Found_Sys_Drm_Connector;
 
-#define DRM_CONNECTOR_ALGORITHM_WALK      0   // walk sysfs on every lookup (default)
 #define DRM_CONNECTOR_ALGORITHM_CACHED    1   // maintained Sys_Drm_Connector array
-#define DRM_CONNECTOR_ALGORITHM_SNAPSHOT  2   // array built for detection, then discarded
+#define DRM_CONNECTOR_ALGORITHM_SNAPSHOT  2   // array built for detection, then discarded (default)
 
 extern int       drm_connector_algorithm;      // utility option --i17
 extern bool      connector_snapshot_active;    // algorithm 2, snapshot in use

@@ -37,36 +37,33 @@
 
 #include "i2c_bus_sysfs.h"
 
-/* Selects among three DRM connector algorithms, set from utility option --i17.
- *
- *   0  walk the /sys/class/drm directories on every lookup.  The original.
- *      Simple, and reads one connector's attributes per bus examined, so the
- *      sysfs work is buses x connectors.  This is what algorithm 2 falls back
- *      to once its snapshot is gone, so it remains in use whichever is
- *      selected.
+/* Selects between two DRM connector algorithms, set from utility option --i17.
  *
  *   1  read the connectors once into the Sys_Drm_Connector array, deduce the
  *      bus numbers a driver does not publish, search the array on every lookup,
- *      and maintain it as displays come and go.  Fewest sysfs reads, but the
- *      array is then shared mutable state: it needs a lock, it can name a
- *      connector a display has left, and the instances it frees can be held by
- *      a caller.  All three of those were defects found in testing.
+ *      and maintain it as displays come and go.  The array is then shared
+ *      mutable state: it needs a lock, it can name a connector a display has
+ *      left, and the instances it frees can be held by a caller.  All three of
+ *      those were defects found in testing.  Retained for the --f39 comparison.
  *
  *   2  read the connectors once at the start of display detection, use the
- *      array for the lookups that detection performs, then discard it.  One
- *      scan, like 1, but nothing maintains the array because it does not
- *      outlive the detection that built it: no lock is needed, since nothing
- *      writes it after construction; there is no staleness, since it is gone
- *      before anything can go stale; and no removal or refresh path exists.
- *      Hotplug is not covered and falls back to 0, which is where the cost is
- *      affordable -- display connection changes are rare.  The default.
+ *      array for the lookups detection performs, then discard it.  One scan,
+ *      like 1, but nothing maintains the array because it does not outlive the
+ *      detection that built it: no lock is needed, since nothing writes it
+ *      after construction; there is no staleness, since it is gone before
+ *      anything can go stale; and no removal or refresh path exists.  The
+ *      default, and anything other than 1 selects it.
  *
- * 2 is the default because it costs what 1 costs and needs none of what 1
- * needs.  Measured on nvidia, syscalls under /sys/class/drm for one detect:
- * 518 for algorithm 0, 182 for 1, 182 for 2, with all three resolving the same
- * connector names and ids.  Verified on hardware that the handoff is exact:
- * of 115 lookups across a detect and a hotplug, the 23 during detection went
- * to the snapshot and all 92 afterwards to the walk, with no deduction run.
+ * Lookups made when no snapshot is in use -- on the hotplug path, and from
+ * i2c_detect_single_bus() -- fall back to
+ * find_sys_drm_connector_by_busno_or_edid_sysfs(), which walks the
+ * /sys/class/drm directories.  That walk was itself a selectable algorithm
+ * until it became clear it had no reason to be one: it costs buses x
+ * connectors in sysfs reads where a snapshot costs one scan, for the same
+ * answers.  Measured, syscalls under /sys/class/drm for one detect: 380 on
+ * i915 and 518 on nvidia against 147 and 182.  It remains as the fallback
+ * above and as what --f39 compares against, which is where its simplicity is
+ * worth having and its cost is not paid per bus.
  *
  * Gated at the lookup here, at the startup deduction in i2c_detect_buses(),
  * and at the hotplug refresh in dw_hotplug_change_handler().
@@ -412,8 +409,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
                                  int busno, Byte * edid_bytes)
 {
    bool use_array = (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_CACHED) ||
-                    (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_SNAPSHOT &&
-                     connector_snapshot_active);
+                    connector_snapshot_active;
 
    if (!use_array && !drm_connector_lookup_compare)
       return find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
