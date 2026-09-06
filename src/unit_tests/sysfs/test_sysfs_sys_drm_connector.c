@@ -84,6 +84,7 @@ static Sys_Drm_Connector * make_connector(const char * name, int busno, int conn
 }
 
 
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 /** Replaces the global array with three fabricated connectors whose names no
  *  real driver produces, so a later check for one of them tells us whether the
  *  array survived or was rebuilt from sysfs.
@@ -188,6 +189,9 @@ static void test_removal_with_no_array(void) {
 }
 
 
+#endif
+
+
 int main(int argc, char ** argv) {
    Byte edid1[128];
    memset(edid1, 0xA1, sizeof(edid1));
@@ -269,6 +273,7 @@ int main(int argc, char ** argv) {
    free_sys_drm_connectors();   // frees c1, c2, c3 and the array; resets global to NULL
    CK(sys_drm_connectors == NULL);
 
+#ifdef MAINTAINED_CONNECTOR_ARRAY
    // Removal.  These come last: they replace and destroy the array, so the
    // c1/c2/c3 pointers above must be finished with before they run.
    test_remove_by_busno();
@@ -276,6 +281,7 @@ int main(int argc, char ** argv) {
    test_drop_falls_through_to_rebuild();
    test_recreate_reports_false_when_absent();
    test_removal_with_no_array();
+#endif
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

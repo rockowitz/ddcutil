@@ -20,9 +20,15 @@
 
 extern GPtrArray * sys_drm_connectors;
 extern GRecMutex   sys_drm_connectors_mutex;
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 extern bool        drm_connector_removal_delete_only;    // utility option --f30
+#endif
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 extern bool        drm_connector_removal_rebuild_only;   // utility option --f34
+#endif
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 extern bool        refresh_connectors_on_hotplug;        // disabled by utility option --f40
+#endif
 extern bool all_drm_connectors_have_connector_id;
 
 typedef struct {
@@ -69,9 +75,15 @@ char *              get_drm_connector_name_by_edid(Byte * edid_bytes);
 char *              get_drm_connector_name_by_connector_id(int connector_id);
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 bool                remove_sys_drm_connector_by_busno(int busno);
+#endif
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 bool                recreate_sys_drm_connectors_after_bus_removal(int busno);
+#endif
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 bool                drop_sys_drm_connector_for_removed_bus(int busno);
+#endif
 bool                any_sys_drm_connector_has_busno();
 
 // Functions that access sysfs connector dirs directly, instead of using the

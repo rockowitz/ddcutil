@@ -37,38 +37,25 @@
 
 #include "i2c_bus_sysfs.h"
 
-/* Selects between two DRM connector algorithms, set from utility option --i17.
+/* The DRM connectors are read once at the start of display detection, used for
+ * the lookups detection performs, and the array then discarded.  One scan,
+ * where walking /sys/class/drm per lookup costs buses x connectors: measured,
+ * syscalls under /sys/class/drm for one detect, 147 against 380 on i915 and
+ * 182 against 518 on nvidia, for the same connector names and ids.
  *
- *   1  read the connectors once into the Sys_Drm_Connector array, deduce the
- *      bus numbers a driver does not publish, search the array on every lookup,
- *      and maintain it as displays come and go.  The array is then shared
- *      mutable state: it needs a lock, it can name a connector a display has
- *      left, and the instances it frees can be held by a caller.  All three of
- *      those were defects found in testing.  Retained for the --f39 comparison.
- *
- *   2  read the connectors once at the start of display detection, use the
- *      array for the lookups detection performs, then discard it.  One scan,
- *      like 1, but nothing maintains the array because it does not outlive the
- *      detection that built it: no lock is needed, since nothing writes it
- *      after construction; there is no staleness, since it is gone before
- *      anything can go stale; and no removal or refresh path exists.  The
- *      default, and anything other than 1 selects it.
+ * Nothing maintains the array, because it does not outlive the detection that
+ * built it.  No lock is needed, since nothing writes it after construction; it
+ * cannot go stale, being discarded before anything could; and there is no
+ * removal or refresh path.  Every defect found while this code was being
+ * written came from maintaining an array that persisted -- see
+ * MAINTAINED_CONNECTOR_ARRAY, which parks that version for reference.
  *
  * Lookups made when no snapshot is in use -- on the hotplug path, and from
  * i2c_detect_single_bus() -- fall back to
- * find_sys_drm_connector_by_busno_or_edid_sysfs(), which walks the
- * /sys/class/drm directories.  That walk was itself a selectable algorithm
- * until it became clear it had no reason to be one: it costs buses x
- * connectors in sysfs reads where a snapshot costs one scan, for the same
- * answers.  Measured, syscalls under /sys/class/drm for one detect: 380 on
- * i915 and 518 on nvidia against 147 and 182.  It remains as the fallback
- * above and as what --f39 compares against, which is where its simplicity is
- * worth having and its cost is not paid per bus.
- *
- * Gated at the lookup here, at the startup deduction in i2c_detect_buses(),
- * and at the hotplug refresh in dw_hotplug_change_handler().
+ * find_sys_drm_connector_by_busno_or_edid_sysfs(), which walks the connector
+ * directories.  That is where its simplicity is worth having and its cost is
+ * not paid per bus.
  */
-int  drm_connector_algorithm = DRM_CONNECTOR_ALGORITHM_SNAPSHOT;
 
 /* True only while algorithm 2's snapshot is in use, i.e. between the scan at
  * the top of i2c_detect_buses0() and the discard at the bottom.  Tested rather
@@ -408,8 +395,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_cached(
 Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
                                  int busno, Byte * edid_bytes)
 {
-   bool use_array = (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_CACHED) ||
-                    connector_snapshot_active;
+   bool use_array = connector_snapshot_active;
 
    if (!use_array && !drm_connector_lookup_compare)
       return find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);

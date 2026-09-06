@@ -486,23 +486,18 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F36)
       rescan_on_eacces = false;    // treat affected monitors as disconnected instead of rescanning while EACCES is seen
 
-   // Select among the DRM connector variants.  Each defaults false, i.e. to the
-   // implementation meant for ordinary use; the others exist to be compared
-   // against it on hardware.  See dw_drop_sys_drm_connector() and
-   // find_sys_drm_connector_by_busno_or_edid().
+#ifdef MAINTAINED_CONNECTOR_ARRAY
+   // The removal variants and the hotplug refresh, all belonging to the
+   // persistent array.  See MAINTAINED_CONNECTOR_ARRAY.
    if (parsed_cmd->flags2 & CMD_FLAG2_F30)
-      drm_connector_removal_delete_only = true;    // drop a removed bus's connector by deleting it, never rebuilding
+      drm_connector_removal_delete_only = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F34)
-      drm_connector_removal_rebuild_only = true;   // drop it by rebuilding the array from sysfs, never deleting
-   // 1 maintained array, 2 snapshot for detection then discarded.  Anything
-   // else selects 2, the default.  See drm_connector_algorithm in
-   // i2c_bus_sysfs.c.
-   if (parsed_cmd->flags2 & CMD_FLAG2_I17_SET)
-      drm_connector_algorithm = parsed_cmd->i17;
+      drm_connector_removal_rebuild_only = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F40)
+      refresh_connectors_on_hotplug = false;
+#endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F39)
       drm_connector_lookup_compare = true;         // run both connector lookups, log any disagreement
-   if (parsed_cmd->flags2 & CMD_FLAG2_F40)
-      refresh_connectors_on_hotplug = false;       // do not rebuild the connector array on each hotplug pass
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;

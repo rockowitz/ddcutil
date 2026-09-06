@@ -433,6 +433,7 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
 #endif
 
 
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 /** Drops the #Sys_Drm_Connector for a bus that no longer exists.
  *
  *  By default this deletes the one instance naming the bus and rebuilds the
@@ -456,6 +457,7 @@ static void dw_drop_sys_drm_connector(int busno) {
    else
       drop_sys_drm_connector_for_removed_bus(busno);
 }
+#endif
 
 
 /** Updates persistent data structures for bus changes and either
@@ -496,31 +498,18 @@ bool dw_hotplug_change_handler(
    }
    // debug_current_traced_function_stack(false);   // ** TEMP **/
 
-   /* Refresh the DRM connector view before anything consults it.
-    *
-    * Connectors are created by hotplug -- an MST hub adds them -- and a display
-    * moved between ports lands on a different one, so the cached array can name
-    * a connector the display has left.  Observed on nvidia: an EDID lookup
-    * returned card1-DP-4 while sysfs said card1-DP-5, and again DP-5 against
-    * DP-7.  Nothing else refreshes the array on the watch path; before this it
-    * was corrected only as a side effect of update_sys_drm_connector_by_edid()
-    * failing its first attempt, which is luck rather than design.
-    *
-    * The rescan discards every i2c_busno this program deduced, so
-    * extended_bus_detection() re-derives them immediately.  Without that,
-    * lookups by bus number would fail for the rest of this handler on a driver
-    * that publishes no mapping -- which is exactly the case the deduction
-    * exists for.
+#ifdef MAINTAINED_CONNECTOR_ARRAY
+   /* Refresh the persistent connector array before anything consults it, and
+    * re-derive the deduced bus numbers the rebuild discards.  Needed only
+    * because that array outlives detection and can therefore name a connector
+    * a display has left.  The snapshot has no equivalent: it is built for
+    * detection and discarded, so there is nothing to refresh.
     */
-   // Gated with the cached algorithm: the refresh exists to keep the cached
-   // array from naming a connector a display has left, and with the cached
-   // lookup off nothing reads it that way.  --f40 disables it independently,
-   // for testing the algorithm without it.
-   if (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_CACHED &&
-       refresh_connectors_on_hotplug) {   // --i17 1, --f40
+   if (refresh_connectors_on_hotplug) {   // --f40 disables
       get_sys_drm_connectors(/*rescan=*/ true);
       extended_bus_detection();
    }
+#endif
 
    bool emitted = false;
    Error_Info * err = NULL;
@@ -596,10 +585,13 @@ bool dw_hotplug_change_handler(
          DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", s);
          free(s);
          i2c_remove_businfo_by_busno(busno);
+#ifdef MAINTAINED_CONNECTOR_ARRAY
          // The bus node exists only as long as the card connector it was
-         // attached to, so the connector is gone as well.  Not reached on any
-         // driver tested: see dw_drop_sys_drm_connector().
+         // attached to, so the connector is gone as well.  Only the persistent
+         // array needs telling; the snapshot does not outlive detection.  Not
+         // reached on any driver tested: see dw_drop_sys_drm_connector().
          dw_drop_sys_drm_connector(busno);
+#endif
       }
       else {
          // the bus is still there, only the display went away
@@ -621,7 +613,9 @@ bool dw_hotplug_change_handler(
           // if already handled, nothing to do
           if (!bs256_contains(bs_buses_w_edid_removed, busno)) {
              i2c_remove_businfo_by_busno(busno);
+#ifdef MAINTAINED_CONNECTOR_ARRAY
              dw_drop_sys_drm_connector(busno);
+#endif
           }
        }
        bs256_iter_free(iter2);
@@ -684,17 +678,19 @@ bool dw_hotplug_change_handler(
          i2c_add_businfo(businfo);
       }
 
-      // Keep the DRM connector view in step with the bus view, for both cases
-      // above: a display newly attached to a bus that already existed, and one
-      // on a bus that appeared with it.  Either way businfo->edid has just been
-      // read by i2c_check_bus() and the connector may not know its bus number.
+#ifdef MAINTAINED_CONNECTOR_ARRAY
+      // Keep the persistent connector array in step with the bus view, for both
+      // cases above: a display newly attached to a bus that already existed, and
+      // one on a bus that appeared with it.  Either way businfo->edid has just
+      // been read by i2c_check_bus() and the connector may not know its bus
+      // number.  On a driver that does not publish the bus/connector mapping,
+      // nvidia among them, it is -1 and stays that way.
       //
-      // On a driver that does not publish the bus/connector mapping, nvidia
-      // among them, that connector's i2c_busno is -1 and stays that way;
-      // filling it in here spares later lookups the fallback search that would
-      // otherwise be needed to find it.
+      // The snapshot needs none of this: it does not outlive the detection that
+      // built it, so there is no array here to keep in step.
       if (businfo && businfo->edid)
          update_sys_drm_connector_by_edid(businfo);
+#endif
 
       // Create display ref and emit
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Adding display ref for bus: %d", busno);

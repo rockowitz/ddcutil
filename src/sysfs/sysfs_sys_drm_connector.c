@@ -81,15 +81,19 @@ GRecMutex sys_drm_connectors_mutex;
  * Set from utility options --f30 and --f34; neither set means the hybrid.
  * Delete-only wins if both are set.  See dw_drop_sys_drm_connector().
  */
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 bool drm_connector_removal_delete_only  = false;
 bool drm_connector_removal_rebuild_only = false;
+#endif
 
+#ifdef MAINTAINED_CONNECTOR_ARRAY
 /* Rebuild the connector array at the start of each hotplug handler pass, and
  * re-derive the deduced bus numbers.  On by default; utility option --f40
  * turns it off, which restores the behavior in which the array was refreshed
  * only as a side effect of a failed EDID match.
  */
 bool refresh_connectors_on_hotplug = true;
+#endif
 bool all_drm_connectors_have_connector_id = false;
 
 /** Frees a Sys_Drm_Connector instance
@@ -513,6 +517,15 @@ find_sys_drm_connector_by_busno(int busno) {
 }
 
 
+#ifdef MAINTAINED_CONNECTOR_ARRAY
+/* Parked with the persistent connector array.  These drop a connector when its
+ * bus disappears, which only matters for an array that outlives detection: the
+ * snapshot is discarded before any bus removal could be seen.
+ *
+ * Never executed on hardware.  No driver tested removes an i2c bus -- see the
+ * remark on drop_sys_drm_connector_for_removed_bus() -- so the coverage is the
+ * unit tests in src/unit_tests/sysfs/test_sysfs_sys_drm_connector.c.
+ */
 /** Removes the #Sys_Drm_Connector instance for an I2C bus number, if any,
  *  from the persistent array pointed to by global sys_drm_connectors.
  *
@@ -653,6 +666,9 @@ drop_sys_drm_connector_for_removed_bus(int busno) {
    DBGTRC_RET_BOOL(debug, DDCA_TRC_I2C, removed, "busno=%d", busno);
    return removed;
 }
+
+
+#endif
 
 
 /** Reports whether any DRM connector names the I2C bus that serves it.
@@ -930,9 +946,15 @@ void init_sysfs_sys_drm_connector() {
    RTTI_ADD_FUNC(scan_sys_drm_connectors);
    RTTI_ADD_FUNC(report_sys_drm_connectors);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno);
+#ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(remove_sys_drm_connector_by_busno);
+#endif
+#ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(recreate_sys_drm_connectors_after_bus_removal);
+#endif
+#ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(drop_sys_drm_connector_for_removed_bus);
+#endif
    RTTI_ADD_FUNC(any_sys_drm_connector_has_busno);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_identifier);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_id);

@@ -479,7 +479,7 @@ GPtrArray * i2c_detect_buses0() {
     * Nothing writes the array once it is built, so the per-bus threads that
     * i2c_async_scan() may start can read it concurrently without a lock.
     */
-   if (drm_connector_algorithm != DRM_CONNECTOR_ALGORITHM_CACHED) {   // --i17 2, the default
+   {
       get_sys_drm_connectors(/*rescan=*/ true);
       connector_snapshot_active = true;
    }
@@ -521,6 +521,17 @@ GPtrArray * i2c_detect_buses0() {
 }
 
 
+#ifdef MAINTAINED_CONNECTOR_ARRAY
+/* Parked.  These maintain a Sys_Drm_Connector array that outlives display
+ * detection: update_sys_drm_connector_by_edid() fills in a connector's bus
+ * number when the watch attaches a display, extended_bus_detection() does the
+ * same in bulk at startup for connectors the driver left unresolved.  Both
+ * exist so that a persistent array can answer a lookup by bus number.
+ *
+ * Superseded by the snapshot, which is discarded after detection and so has
+ * nothing to keep current.  Retained for reference: the deduction is the part
+ * that would be wanted again if a persistent array ever were.
+ */
 /** Assigns a bus number to the DRM connector showing the same EDID as a bus,
  *  for use when the display watch has just attached one.
  *
@@ -674,6 +685,9 @@ void extended_bus_detection() {
  *
  *  @return number of i2c buses
  */
+#endif
+
+
 int i2c_detect_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "all_i2c_buses = %p", all_i2c_buses);
@@ -688,13 +702,13 @@ int i2c_detect_buses() {
       // mapping there is nothing to resolve, and repeating the search on the
       // calls that find all_i2c_buses already built would find nothing either.
       //
-      // Part of the maintained-array algorithm, so gated with it: the deduced
-      // bus numbers exist for its lookup to answer by bus number, and nothing
-      // else consumes them.  Algorithm 2 has no use for them either -- it
-      // populates the businfo records during detection and discards the array,
-      // so there is nothing left for a deduced number to serve.
-      if (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_CACHED)   // --i17 1
-         extended_bus_detection();
+#ifdef MAINTAINED_CONNECTOR_ARRAY
+      // Belongs to the persistent array: the deduced bus numbers exist so that
+      // its lookup can answer by bus number.  The snapshot has no use for them,
+      // populating the businfo records during detection and then discarding the
+      // array, so there is nothing left for a deduced number to serve.
+      extended_bus_detection();
+#endif
    }
    int result = all_i2c_buses->len;
 
@@ -793,8 +807,12 @@ void init_i2c_bus_collections(void) {
 #endif
    RTTI_ADD_FUNC(i2c_detect_attached_buses);
    RTTI_ADD_FUNC(i2c_detect_buses0);
+#ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(extended_bus_detection);
+#endif
+#ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(update_sys_drm_connector_by_edid);
+#endif
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_buses_bitset_from_businfo_array);
