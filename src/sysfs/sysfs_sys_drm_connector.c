@@ -84,9 +84,7 @@ GRecMutex sys_drm_connectors_mutex;
 #ifdef MAINTAINED_CONNECTOR_ARRAY
 bool drm_connector_removal_delete_only  = false;
 bool drm_connector_removal_rebuild_only = false;
-#endif
 
-#ifdef MAINTAINED_CONNECTOR_ARRAY
 /* Rebuild the connector array at the start of each hotplug handler pass, and
  * re-derive the deduced bus numbers.  On by default; utility option --f40
  * turns it off, which restores the behavior in which the array was refreshed
@@ -948,11 +946,7 @@ void init_sysfs_sys_drm_connector() {
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno);
 #ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(remove_sys_drm_connector_by_busno);
-#endif
-#ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(recreate_sys_drm_connectors_after_bus_removal);
-#endif
-#ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(drop_sys_drm_connector_for_removed_bus);
 #endif
    RTTI_ADD_FUNC(any_sys_drm_connector_has_busno);
