@@ -194,32 +194,6 @@ Sys_Basic_Drm_Connector * find_basic_drm_connector_by_edid(
 }
 
 
-/** Reports whether any connector names the I2C bus that serves it.
- *
- *  Callers ask this to learn whether the driver publishes the bus/connector
- *  mapping at all, so that the absence of a connector for a given bus can be
- *  read as evidence rather than as the driver being silent.  Every bus number
- *  here comes from get_connector_bus_numbers() reading sysfs, so a number
- *  present is by construction one the driver published.
- *
- *  @param  connectors  array to examine
- *  @return true if at least one connector reports a bus number
- */
-bool any_basic_drm_connector_has_busno(GPtrArray * connectors) {
-   bool result = false;
-   if (connectors) {
-      for (int ndx = 0; ndx < connectors->len; ndx++) {
-         Sys_Basic_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
-         if (cur->i2c_busno >= 0) {
-            result = true;
-            break;
-         }
-      }
-   }
-   return result;
-}
-
-
 void dbgrpt_basic_drm_connector(Sys_Basic_Drm_Connector * connector, int depth) {
    if (!connector) {
       rpt_label(depth, "Sys_Basic_Drm_Connector: NULL");

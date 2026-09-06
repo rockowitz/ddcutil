@@ -356,26 +356,36 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
 /** Reports whether any DRM connector names the I2C bus that serves it, i.e.
  *  whether this driver publishes the bus/connector mapping at all.
  *
- *  Answered from the snapshot while one is in use, which is what keeps this
- *  affordable: i2c_check_bus() asks it per bus, and detection is where that
- *  happens most.  Outside detection there is no snapshot, so a scan is taken
- *  and discarded -- the hotplug path checks few buses, and a basic scan reads
- *  three attributes per connector rather than the six a full one reads.
+ *  Walks the connector directories and stops at the first one that names a
+ *  bus.  No array is built: the question is a single bit, the answer usually
+ *  comes from the first connector examined, and a driver that publishes the
+ *  mapping publishes it for every connector, so the loop rarely runs twice.
+ *
+ *  Reads only the bus/connector artifacts get_connector_bus_numbers() consults
+ *  -- the ddc symlink, the i2c-N subdirectory, connector_id -- and not the
+ *  EDID or the status, which is what the callers of a full scan pay for and
+ *  what this question does not need.
  *
  *  @return true if at least one connector reports a bus number
  */
 bool any_drm_connector_has_busno() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
-   bool result;
-   if (connector_snapshot_active) {
-      result = any_basic_drm_connector_has_busno(connector_snapshot);
+
+   bool result = false;
+   Sysfs_Connector_Names cnames = get_sysfs_drm_connector_names();
+   for (int ndx = 0; ndx < cnames.all_connectors->len && !result; ndx++) {
+      char * cname = g_ptr_array_index(cnames.all_connectors, ndx);
+      Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
+      get_connector_bus_numbers("/sys/class/drm", cname, cbn);
+      if (cbn->i2c_busno >= 0) {
+         result = true;
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s names bus %d", cname, cbn->i2c_busno);
+      }
+      free_connector_bus_numbers(cbn);
    }
-   else {
-      GPtrArray * connectors = scan_basic_drm_connectors(-1);
-      result = any_basic_drm_connector_has_busno(connectors);
-      free_basic_drm_connectors(connectors);
-   }
+   free_sysfs_connector_names_contents(cnames);
+
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
