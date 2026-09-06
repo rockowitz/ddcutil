@@ -39,9 +39,11 @@
 
 /* Selects among three DRM connector algorithms, set from utility option --i17.
  *
- *   0  walk the /sys/class/drm directories on every lookup.  The original, and
- *      the default.  Simple, and reads one connector's attributes per bus
- *      examined, so the sysfs work is buses x connectors.
+ *   0  walk the /sys/class/drm directories on every lookup.  The original.
+ *      Simple, and reads one connector's attributes per bus examined, so the
+ *      sysfs work is buses x connectors.  This is what algorithm 2 falls back
+ *      to once its snapshot is gone, so it remains in use whichever is
+ *      selected.
  *
  *   1  read the connectors once into the Sys_Drm_Connector array, deduce the
  *      bus numbers a driver does not publish, search the array on every lookup,
@@ -57,12 +59,19 @@
  *      writes it after construction; there is no staleness, since it is gone
  *      before anything can go stale; and no removal or refresh path exists.
  *      Hotplug is not covered and falls back to 0, which is where the cost is
- *      affordable -- display connection changes are rare.
+ *      affordable -- display connection changes are rare.  The default.
+ *
+ * 2 is the default because it costs what 1 costs and needs none of what 1
+ * needs.  Measured on nvidia, syscalls under /sys/class/drm for one detect:
+ * 518 for algorithm 0, 182 for 1, 182 for 2, with all three resolving the same
+ * connector names and ids.  Verified on hardware that the handoff is exact:
+ * of 115 lookups across a detect and a hotplug, the 23 during detection went
+ * to the snapshot and all 92 afterwards to the walk, with no deduction run.
  *
  * Gated at the lookup here, at the startup deduction in i2c_detect_buses(),
  * and at the hotplug refresh in dw_hotplug_change_handler().
  */
-int  drm_connector_algorithm = DRM_CONNECTOR_ALGORITHM_WALK;
+int  drm_connector_algorithm = DRM_CONNECTOR_ALGORITHM_SNAPSHOT;
 
 /* True only while algorithm 2's snapshot is in use, i.e. between the scan at
  * the top of i2c_detect_buses0() and the discard at the bottom.  Tested rather
