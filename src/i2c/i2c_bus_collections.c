@@ -469,20 +469,10 @@ GPtrArray * i2c_detect_buses0() {
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "buses->len = %d, i2c_businfo_async_threhold=%d",
          buses->len, i2c_businfo_async_threshold);
-   /* Algorithm 2: take one snapshot of the DRM connectors for the detection
-    * below to look up against, then discard it.  Built before the scan rather
-    * than after, because i2c_check_bus() consults the connectors while
-    * deciding whether to open each device -- see edid_exists_skips_unmapped_bus
-    * in i2c_bus_core.c -- so an array built afterwards would be too late to be
-    * of use.
-    *
-    * Nothing writes the array once it is built, so the per-bus threads that
-    * i2c_async_scan() may start can read it concurrently without a lock.
-    */
-   {
-      get_sys_drm_connectors(/*rescan=*/ true);  // sets global sys_drm_connectors
-      connector_snapshot_active = true;
-   }
+   // One snapshot of the DRM connectors for the lookups below.  Why it is
+   // taken here and not after the scan, and why nothing needs to maintain it,
+   // are in take_connector_snapshot().
+   take_connector_snapshot();
 
    if (buses->len < i2c_businfo_async_threshold) {
       i2c_non_async_scan(buses);
@@ -491,12 +481,7 @@ GPtrArray * i2c_detect_buses0() {
       i2c_async_scan(buses);
    }
 
-   if (connector_snapshot_active) {
-      // The businfo records now carry whatever the connectors had to say, so
-      // the array has served its purpose and nothing needs to maintain it.
-      connector_snapshot_active = false;
-      free_sys_drm_connectors();
-   }
+   discard_connector_snapshot();
 
    if (debug) {
       for (int ndx = 0; ndx < buses->len; ndx++) {

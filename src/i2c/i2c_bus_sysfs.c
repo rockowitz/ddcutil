@@ -33,6 +33,7 @@
 #include "base/rtti.h"
 
 #include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_basic_drm_connector.h"
 #include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "i2c_bus_sysfs.h"
@@ -63,6 +64,55 @@
  * a rebuilt array is not the snapshot this algorithm reasons about.
  */
 bool connector_snapshot_active = false;
+
+/* The snapshot.  Read by find_sys_drm_connector_by_busno_or_edid_snapshot()
+ * and by nothing else, and written only by the two functions below, which
+ * bracket display detection.  Sys_Basic_Drm_Connector rather than
+ * Sys_Drm_Connector: what a lookup contributes to a bus record is the
+ * connector name and id, matched on bus number or EDID, and the ten further
+ * fields of the full record cost sysfs attributes to fill in that nothing here
+ * reads.
+ */
+static GPtrArray * connector_snapshot = NULL;
+
+
+/** Reads the DRM connectors once, for the lookups display detection is about
+ *  to perform.
+ *
+ *  Called before the per-bus scan rather than after: i2c_check_bus() consults
+ *  the connectors while deciding whether to open each device -- see
+ *  edid_exists_skips_unmapped_bus in i2c_bus_core.c -- so a snapshot taken
+ *  afterwards would be too late to be of use.
+ *
+ *  Nothing writes the array once it is built, so the per-bus threads that
+ *  i2c_async_scan() may start can read it concurrently without a lock.
+ */
+void take_connector_snapshot() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   if (connector_snapshot)          // defensive: a detection that did not discard
+      free_basic_drm_connectors(connector_snapshot);
+   connector_snapshot = scan_basic_drm_connectors(-1);
+   connector_snapshot_active = true;
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "%d connectors", connector_snapshot->len);
+}
+
+
+/** Discards the snapshot.
+ *
+ *  The bus records now carry whatever the connectors had to say, so the array
+ *  has served its purpose.  Discarding it is what spares this code a lock, a
+ *  refresh and a removal path: what does not outlive detection cannot go stale
+ *  and cannot be freed under a caller.
+ */
+void discard_connector_snapshot() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   connector_snapshot_active = false;
+   free_basic_drm_connectors(connector_snapshot);
+   connector_snapshot = NULL;
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+}
 
 bool drm_connector_lookup_compare   = false;
 
@@ -304,23 +354,21 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
 
 
 /** Same search as #find_sys_drm_connector_by_busno_or_edid_sysfs(), performed
- *  against the persistent array of #Sys_Drm_Connector rather than by walking
- *  the /sys/class/drm connector directories.
+ *  against the snapshot rather than by walking the connector directories.
  *
  *  Both bus number and EDID come from the same sysfs attributes either way,
- *  read once by scan_sys_drm_connectors() instead of once per call, so the
- *  answers agree whenever that array is current.  What is not carried over is
- *  the side effect: the sysfs version calls
+ *  read once by take_connector_snapshot() instead of once per call, so the
+ *  answers agree.  What is not carried over is the side effect: the walk calls
  *  possibly_write_detect_to_status_by_connector_name() before reading each
- *  edid attribute, forcing the driver to re-probe the connector.  This one
- *  reads what was already there.
+ *  edid attribute, forcing the driver to re-probe.  The snapshot makes that
+ *  call too, once per connector while it is being built.
  *
  *  @param  busno      (-1 for not set)
  *  @param  edid_bytes pointer to 128 byte edid
  *  @return Found_Sys_Drm_Connector struct, returned on the stack
  */
 // n. result returned on stack
-Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_cached(
+Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_snapshot(
                                  int busno, Byte * edid_bytes)
 {
    bool debug  = false;
@@ -336,37 +384,24 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_cached(
    result.found_by = DRM_CONNECTOR_NOT_FOUND;
    result.connector_id = 0;
 
-   // Held across the search, not just the fetch: this runs on API threads and
-   // on the per-bus threads i2c_check_bus_async() starts, while the display
-   // watch thread can be rebuilding the array or deleting from it.  The
-   // connector name is copied out under the lock, so the returned struct stays
-   // valid after it is released.
-   g_rec_mutex_lock(&sys_drm_connectors_mutex);
-   GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
-   if (connectors) {
-      for (int ndx = 0; ndx < connectors->len; ndx++) {
-         Sys_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
-         if (check_busno && cur->i2c_busno == busno) {
-            result.connector_name = strdup(cur->connector_name);
-            result.found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
-            result.connector_id = cur->connector_id;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "Found connector %s by i2c bus number match for bus i2c-%d",
-                  cur->connector_name, busno);
-            break;
-         }
-         if (check_edid && cur->edid_bytes && cur->edid_size >= 128 &&
-               memcmp(cur->edid_bytes, edid_bytes, 128) == 0) {
-            result.connector_name = strdup(cur->connector_name);
-            result.found_by = DRM_CONNECTOR_FOUND_BY_EDID;
-            result.connector_id = cur->connector_id;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "Found connector %s by EDID match", cur->connector_name);
-            break;
-         }
-      }
+   // Bus number first, as the walk does, so that found_by agrees between them.
+   Sys_Basic_Drm_Connector * hit = NULL;
+   if (check_busno) {
+      hit = find_basic_drm_connector_by_busno(connector_snapshot, busno);
+      if (hit)
+         result.found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
    }
-   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
+   if (!hit && check_edid) {
+      hit = find_basic_drm_connector_by_edid(connector_snapshot, edid_bytes);
+      if (hit)
+         result.found_by = DRM_CONNECTOR_FOUND_BY_EDID;
+   }
+   if (hit) {
+      result.connector_name = strdup(hit->connector_name);
+      result.connector_id   = hit->connector_id;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Found connector %s, found_by=%s",
+            hit->connector_name, drm_connector_found_by_name(result.found_by));
+   }
 
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       dbgrpt_found_sys_drm_connector(result, 1);
@@ -403,12 +438,12 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
    // The comparison needs both, and reports whichever the algorithm selected as
    // the answer, so that --f39 does not itself change behavior.
    Found_Sys_Drm_Connector result = (use_array)
-         ? find_sys_drm_connector_by_busno_or_edid_cached(busno, edid_bytes)
+         ? find_sys_drm_connector_by_busno_or_edid_snapshot(busno, edid_bytes)
          : find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
    if (drm_connector_lookup_compare) {    // --f39
       Found_Sys_Drm_Connector alt = (use_array)
             ? find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes)
-            : find_sys_drm_connector_by_busno_or_edid_cached(busno, edid_bytes);
+            : find_sys_drm_connector_by_busno_or_edid_snapshot(busno, edid_bytes);
       if (!streq(result.connector_name, alt.connector_name) ||
            result.found_by     != alt.found_by ||
            result.connector_id != alt.connector_id)
@@ -735,7 +770,7 @@ void dbgrpt_busno_connector_table(int depth) {
 void init_i2c_bus_sysfs() {
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_sysfs);
-   RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_cached);
+   RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_snapshot);
    RTTI_ADD_FUNC(get_connector_edid);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
    RTTI_ADD_FUNC(is_adapter_class_display_controller);

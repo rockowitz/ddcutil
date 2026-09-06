@@ -25,6 +25,9 @@ typedef struct {
 } Found_Sys_Drm_Connector;
 
 extern bool      connector_snapshot_active;    // snapshot in use, i.e. during detection
+
+void             take_connector_snapshot();
+void             discard_connector_snapshot();
 extern bool      drm_connector_lookup_compare;      // utility option --f39
 
 bool             is_displaylink_device(int busno);
@@ -35,7 +38,7 @@ Found_Sys_Drm_Connector
 Found_Sys_Drm_Connector
                  find_sys_drm_connector_by_busno_or_edid_sysfs(int busno, Byte * edid_bytes);
 Found_Sys_Drm_Connector
-                 find_sys_drm_connector_by_busno_or_edid_cached(int busno, Byte * edid_bytes);
+                 find_sys_drm_connector_by_busno_or_edid_snapshot(int busno, Byte * edid_bytes);
 void             free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec);
 
 Byte *           get_connector_edid(const char * connector_name);
