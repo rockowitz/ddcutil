@@ -22,6 +22,7 @@ noinst_LTLIBRARIES = libsysfs.la
 
 libsysfs_la_SOURCES =       \
 sysfs_base.c          \
+sysfs_basic_drm_connector.c \
 sysfs_conflicting_drivers.c \
 sysfs_dpms.c                \
 sysfs_i2c_info.c      \
