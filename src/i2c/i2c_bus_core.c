@@ -718,7 +718,7 @@ static bool set_connector_for_businfo_using_user_bus_connector_table(
           businfo->busno);
 
    bool result = false;
-   businfo->drm_connector_name = NULL;
+   FREE(businfo->drm_connector_name);   // may hold a name from an earlier pass
    const char * connector_name = user_drm_connector_for_busno(businfo->busno);
    if (connector_name) {
       businfo->drm_connector_name = strdup(connector_name);
@@ -758,7 +758,7 @@ static void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
           businfo->busno, SBOOL(sysfs_connector_directories_exist()));
    assert(businfo->edid);
 
-   businfo->drm_connector_name = NULL;
+   FREE(businfo->drm_connector_name);   // may hold a name from an earlier pass
    Found_Sys_Drm_Connector conres =    // n.b. struct returned on stack, not pointer
        find_sys_drm_connector_by_busno_or_edid(-1, businfo->edid->bytes);
    if (conres.connector_name) {
@@ -971,7 +971,12 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    // *** Try to find the drm connector, first from the user supplied table,
    // *** then by bus number
 
-   if (!businfo->drm_connector_name) {  // i.e. this is not a recheck
+   // i2c_reset_bus_info() frees and nulls drm_connector_name, so a recheck
+   // arrives here with it unset and the connector is determined afresh.  A
+   // display can move between connectors while its bus stays put, so the name
+   // found on an earlier pass is not to be trusted.  The test still skips the
+   // work when a caller has already established the name on this businfo.
+   if (!businfo->drm_connector_name) {
       //assert(businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_CHECKED ||
       //       businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_FOUND);
       businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_CHECKED;

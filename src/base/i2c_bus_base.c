@@ -515,7 +515,22 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
          free_parsed_edid(businfo->edid);
          businfo->edid = NULL;
       }
-      // free(businfo->drm_connector_name); // double free
+      /* Was commented out as "double free": the original used bare free(),
+       * which leaves the pointer dangling, and i2c_free_bus_info() then frees
+       * the same address.  FREE() nulls it, so both frees are safe and the
+       * name is no longer leaked when a later assignment overwrites it --
+       * i2c_bus_core.c sets this field to NULL at the top of both
+       * set_connector_for_businfo_using_edid() and
+       * set_connector_for_businfo_using_user_bus_connector_table(),
+       * discarding whatever a previous check left behind.
+       *
+       * Nulling it here also means i2c_check_bus() re-determines the connector
+       * on a recheck rather than keeping the name found the first time.  That
+       * is deliberate: a display can move between connectors while its bus
+       * stays put -- observed on nvidia migrating DP-4 -> DP-5 -> DP-7 -- and
+       * the name found before the move is then wrong.
+       */
+      FREE(businfo->drm_connector_name);
       if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Final businfo:");
          i2c_dbgrpt_bus_info(businfo, true, 2);
