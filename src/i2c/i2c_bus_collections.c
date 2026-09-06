@@ -499,30 +499,6 @@ GPtrArray * i2c_detect_buses0() {
 }
 
 
-/** Fills in the I2C bus number of DRM connectors that have an EDID but whose
- *  bus number sysfs did not report, by matching their EDID against the buses
- *  in #all_i2c_buses.
- *
- *  Some drivers, nvidia among them, do not publish the connector to bus
- *  mapping, so #Sys_Drm_Connector.i2c_busno stays -1 even for a connector with
- *  a display attached.  The EDID is the only thing the two views share, so it
- *  is what the match is made on.
- *
- *  Only connectors that have an EDID and lack a bus number are considered; a
- *  connector whose bus number sysfs did report is left alone, since that
- *  mapping came from the driver and is better evidence than a guess.
- *
- *  Two sources are consulted, in order of authority.  First the table the user
- *  supplied with --bus-drm-connector: that is an explicit statement about this
- *  machine and beats anything inferred.  Only if the connector is absent from
- *  it are the buses searched for a matching EDID.
- *
- *  @remark
- *  The first bus whose EDID matches wins.  Two connectors showing the same
- *  EDID is possible in principle -- the same monitor reachable by two cables --
- *  and there is nothing here to tell them apart, so the arbitrary choice is
- *  deliberate rather than overlooked.
- */
 /** Assigns a bus number to the DRM connector showing the same EDID as a bus,
  *  for use when the display watch has just attached one.
  *
@@ -582,6 +558,30 @@ bool update_sys_drm_connector_by_edid(I2C_Bus_Info * businfo) {
 }
 
 
+/** Fills in the I2C bus number of DRM connectors that have an EDID but whose
+ *  bus number sysfs did not report, by matching their EDID against the buses
+ *  in #all_i2c_buses.
+ *
+ *  Some drivers, nvidia among them, do not publish the connector to bus
+ *  mapping, so #Sys_Drm_Connector.i2c_busno stays -1 even for a connector with
+ *  a display attached.  The EDID is the only thing the two views share, so it
+ *  is what the match is made on.
+ *
+ *  Only connectors that have an EDID and lack a bus number are considered; a
+ *  connector whose bus number sysfs did report is left alone, since that
+ *  mapping came from the driver and is better evidence than a guess.
+ *
+ *  Two sources are consulted, in order of authority.  First the table the user
+ *  supplied with --bus-drm-connector: that is an explicit statement about this
+ *  machine and beats anything inferred.  Only if the connector is absent from
+ *  it are the buses searched for a matching EDID.
+ *
+ *  @remark
+ *  The first bus whose EDID matches wins.  Two connectors showing the same
+ *  EDID is possible in principle -- the same monitor reachable by two cables --
+ *  and there is nothing here to tell them apart, so the arbitrary choice is
+ *  deliberate rather than overlooked.
+ */
 void extended_bus_detection() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "");

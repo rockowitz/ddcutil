@@ -127,7 +127,8 @@ void report_one_sys_drm_connector(Sys_Drm_Connector * cur, bool detailed_edid, i
    int d1 = depth+1;
 
    rpt_vstring(d0, "Connector:    %s", cur->connector_name);
-   rpt_vstring(d1, "i2c_busno:    %d", cur->i2c_busno);
+   rpt_vstring(d1, "i2c_busno:    %d%s", cur->i2c_busno,
+         (cur->i2c_busno >= 0 && !cur->i2c_busno_from_driver) ? " (deduced)" : "");
    rpt_vstring(d1, "connector_id: %d", cur->connector_id);
    rpt_vstring(d1, "name:         %s", cur->name);
    // rpt_vstring(d1, "dev:          %s", cur->dev);
@@ -230,6 +231,7 @@ Sys_Drm_Connector * one_drm_connector0(
    get_connector_bus_numbers(dirname, fn, cbn);
    cur->base_busno = cbn->base_busno;
    cur->i2c_busno = cbn->i2c_busno;
+   cur->i2c_busno_from_driver = (cbn->i2c_busno >= 0);
    cur->connector_id = cbn->connector_id;
    free_connector_bus_numbers(cbn);
    possibly_write_detect_to_status_by_connector_name(fn);
@@ -632,7 +634,11 @@ bool any_sys_drm_connector_has_busno() {
    if (connectors) {
       for (int ndx = 0; ndx < connectors->len; ndx++) {
          Sys_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
-         if (cur->i2c_busno >= 0) {
+         // Only a bus number sysfs reported counts.  The callers of this
+         // function ask whether the driver publishes the mapping, and a
+         // number extended_bus_detection() or update_sys_drm_connector_by_-
+         // edid() deduced from an EDID match is not evidence that it does.
+         if (cur->i2c_busno >= 0 && cur->i2c_busno_from_driver) {
             result = true;
             break;
          }
@@ -845,6 +851,7 @@ void init_sysfs_sys_drm_connector() {
    RTTI_ADD_FUNC(remove_sys_drm_connector_by_busno);
    RTTI_ADD_FUNC(recreate_sys_drm_connectors_after_bus_removal);
    RTTI_ADD_FUNC(drop_sys_drm_connector_for_removed_bus);
+   RTTI_ADD_FUNC(any_sys_drm_connector_has_busno);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_identifier);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_id);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);

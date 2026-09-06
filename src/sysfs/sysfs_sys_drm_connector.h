@@ -26,6 +26,7 @@ typedef struct {
    char * connector_name;
    char * connector_path;
    int    i2c_busno;
+   bool   i2c_busno_from_driver;   // false if deduced here rather than read from sysfs
    int    connector_id;
    char * name;
    char * ddc_dir_path;
