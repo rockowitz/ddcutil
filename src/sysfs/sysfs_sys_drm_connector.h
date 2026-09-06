@@ -20,6 +20,8 @@
 
 extern GPtrArray * sys_drm_connectors;
 extern GRecMutex   sys_drm_connectors_mutex;
+extern bool        drm_connector_removal_delete_only;    // utility option --f30
+extern bool        drm_connector_removal_rebuild_only;   // utility option --f34
 extern bool all_drm_connectors_have_connector_id;
 
 typedef struct {

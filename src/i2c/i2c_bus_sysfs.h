@@ -24,6 +24,9 @@ typedef struct {
    Drm_Connector_Found_By found_by;
 } Found_Sys_Drm_Connector;
 
+extern bool      drm_connector_lookup_sysfs_only;   // utility option --f37
+extern bool      drm_connector_lookup_compare;      // utility option --f39
+
 bool             is_displaylink_device(int busno);
 bool             is_laptop_drm_connector_name(const char * connector_name);
 

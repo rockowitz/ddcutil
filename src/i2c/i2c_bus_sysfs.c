@@ -37,6 +37,13 @@
 
 #include "i2c_bus_sysfs.h"
 
+/* Select the connector lookup implementation, and whether to cross-check it.
+ * Set from utility options --f37 and --f39.  See
+ * find_sys_drm_connector_by_busno_or_edid().
+ */
+bool drm_connector_lookup_sysfs_only = false;
+bool drm_connector_lookup_compare    = false;
+
 // Trace class for this file
 // static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
@@ -337,12 +344,13 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_cached(
 /** Locates a drm-card-connector directory using either an I2C bus number or
  *  EDID value.
  *
- *  The search runs against the persistent #Sys_Drm_Connector array.  Defining
- *  SYSFS_CONNECTOR_LOOKUP_ONLY selects the original implementation, which
- *  walks the connector directories on every call.  Defining
- *  COMPARE_CONNECTOR_LOOKUPS runs both and writes a syslog warning wherever
- *  they disagree, which is how the replacement is meant to be validated on
- *  hardware this has not been tried on.  See claude_changes.txt.
+ *  The search runs against the persistent #Sys_Drm_Connector array.  Utility
+ *  option --f37 selects the original implementation, which walks the connector
+ *  directories on every call.  Utility option --f39 runs both and writes a
+ *  syslog warning wherever they disagree, which is how the replacement is
+ *  meant to be validated on hardware this has not been tried on.  --f37 wins
+ *  if both are given, the comparison having nothing to compare against.  See
+ *  claude_changes.txt.
  *
  *  @param  busno      (-1 for not set)
  *  @param  edid_bytes pointer to 128 byte edid
@@ -352,30 +360,29 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_cached(
 Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
                                  int busno, Byte * edid_bytes)
 {
-#if defined(SYSFS_CONNECTOR_LOOKUP_ONLY)
-   return find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
-#else
+   if (drm_connector_lookup_sysfs_only)   // --f37
+      return find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
+
    Found_Sys_Drm_Connector result = find_sys_drm_connector_by_busno_or_edid_cached(busno, edid_bytes);
-#ifdef COMPARE_CONNECTOR_LOOKUPS
-   Found_Sys_Drm_Connector alt = find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
-   if (!streq(result.connector_name, alt.connector_name) ||
-        result.found_by    != alt.found_by ||
-        result.connector_id != alt.connector_id)
-   {
-      DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
-            "Connector lookup mismatch for busno=%d, edid=%p."
-            " Cached: %s, found_by=%s, connector_id=%d."
-            " Sysfs: %s, found_by=%s, connector_id=%d.",
-            busno, edid_bytes,
-            (result.connector_name) ? result.connector_name : "NOT FOUND",
-            drm_connector_found_by_name(result.found_by), result.connector_id,
-            (alt.connector_name) ? alt.connector_name : "NOT FOUND",
-            drm_connector_found_by_name(alt.found_by), alt.connector_id);
+   if (drm_connector_lookup_compare) {    // --f39
+      Found_Sys_Drm_Connector alt = find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
+      if (!streq(result.connector_name, alt.connector_name) ||
+           result.found_by     != alt.found_by ||
+           result.connector_id != alt.connector_id)
+      {
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
+               "Connector lookup mismatch for busno=%d, edid=%p."
+               " Cached: %s, found_by=%s, connector_id=%d."
+               " Sysfs: %s, found_by=%s, connector_id=%d.",
+               busno, edid_bytes,
+               (result.connector_name) ? result.connector_name : "NOT FOUND",
+               drm_connector_found_by_name(result.found_by), result.connector_id,
+               (alt.connector_name) ? alt.connector_name : "NOT FOUND",
+               drm_connector_found_by_name(alt.found_by), alt.connector_id);
+      }
+      free_found_sys_drm_connector_result_contents(alt);
    }
-   free_found_sys_drm_connector_result_contents(alt);
-#endif
    return result;
-#endif
 }
 
 

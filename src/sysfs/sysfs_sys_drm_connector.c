@@ -76,6 +76,13 @@ GPtrArray * sys_drm_connectors = NULL;  // Sys_Drm_Connector
  * the lock.  See claude_changes.txt.
  */
 GRecMutex sys_drm_connectors_mutex;
+
+/* Select one of the three ways to drop a connector whose bus has gone away.
+ * Set from utility options --f30 and --f34; neither set means the hybrid.
+ * Delete-only wins if both are set.  See dw_drop_sys_drm_connector().
+ */
+bool drm_connector_removal_delete_only  = false;
+bool drm_connector_removal_rebuild_only = false;
 bool all_drm_connectors_have_connector_id = false;
 
 /** Frees a Sys_Drm_Connector instance

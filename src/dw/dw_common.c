@@ -426,20 +426,19 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
  *
  *  By default this deletes the one instance naming the bus and rebuilds the
  *  array from sysfs only if no instance names it.  Either half can be selected
- *  on its own for comparison, by defining REMOVE_SYS_DRM_CONNECTOR_ONLY or
- *  RECREATE_SYS_DRM_CONNECTORS.  The trade-offs that produced the combination,
- *  and the measurements behind them, are written up in claude_changes.txt.
+ *  on its own for comparison, with utility option --f30 or --f34.  The
+ *  trade-offs that produced the combination, and the measurements behind them,
+ *  are written up in claude_changes.txt.
  *
  *  @param  busno  I2C bus number of the removed bus
  */
 static void dw_drop_sys_drm_connector(int busno) {
-#if defined(REMOVE_SYS_DRM_CONNECTOR_ONLY)
-   remove_sys_drm_connector_by_busno(busno);
-#elif defined(RECREATE_SYS_DRM_CONNECTORS)
-   recreate_sys_drm_connectors_after_bus_removal(busno);
-#else
-   drop_sys_drm_connector_for_removed_bus(busno);
-#endif
+   if (drm_connector_removal_delete_only)         // --f30
+      remove_sys_drm_connector_by_busno(busno);
+   else if (drm_connector_removal_rebuild_only)   // --f34
+      recreate_sys_drm_connectors_after_bus_removal(busno);
+   else
+      drop_sys_drm_connector_for_removed_bus(busno);
 }
 
 

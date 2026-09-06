@@ -486,6 +486,19 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F36)
       rescan_on_eacces = false;    // treat affected monitors as disconnected instead of rescanning while EACCES is seen
 
+   // Select among the DRM connector variants.  Each defaults false, i.e. to the
+   // implementation meant for ordinary use; the others exist to be compared
+   // against it on hardware.  See dw_drop_sys_drm_connector() and
+   // find_sys_drm_connector_by_busno_or_edid().
+   if (parsed_cmd->flags2 & CMD_FLAG2_F30)
+      drm_connector_removal_delete_only = true;    // drop a removed bus's connector by deleting it, never rebuilding
+   if (parsed_cmd->flags2 & CMD_FLAG2_F34)
+      drm_connector_removal_rebuild_only = true;   // drop it by rebuilding the array from sysfs, never deleting
+   if (parsed_cmd->flags2 & CMD_FLAG2_F37)
+      drm_connector_lookup_sysfs_only = true;      // find the connector by walking sysfs, not by searching the array
+   if (parsed_cmd->flags2 & CMD_FLAG2_F39)
+      drm_connector_lookup_compare = true;         // run both connector lookups, log any disagreement
+
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
    if (parsed_cmd->flags2 & CMD_FLAG2_I3_SET)

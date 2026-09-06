@@ -80,16 +80,16 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(27, "Disable dw_start() check that all relevant I2C buses rw");
    REPORT_FLAG_OPTION(28, "Disable ddci_init() check that all relevant i2c buses rw");
    REPORT_FLAG_OPTION(29, "Force recheck when display added (force_recheck)");
-   REPORT_FLAG_OPTION(30, "Unused");
+   REPORT_FLAG_OPTION(30, "Drop a removed bus's DRM connector by deleting it, never rebuilding");
    REPORT_FLAG_OPTION(31, "fail_i2c_all_relevant_i2c_buses_rw");
    REPORT_FLAG_OPTION(32, "Disable eventfd-based blocking waits in watch thread (use_eventfd)");
    REPORT_FLAG_OPTION(33, "Disable single poll() wait in dw_split_sleep() (split_sleep_eventfd)");
-   REPORT_FLAG_OPTION(34, "Unused");
+   REPORT_FLAG_OPTION(34, "Drop a removed bus's DRM connector by rebuilding the array from sysfs, never deleting");
    REPORT_FLAG_OPTION(35, "Disable skipping device open when DRM connector reports disconnected (edid_exists_checks_drm_status)");
    REPORT_FLAG_OPTION(36, "Do not disable display change scan while EACCES is seen (rescan_on_eacces)");
-   REPORT_FLAG_OPTION(37, "Unused");
+   REPORT_FLAG_OPTION(37, "Find the DRM connector by walking sysfs, not by searching the connector array");
    REPORT_FLAG_OPTION(38, "Open device even when no DRM connector names the bus (edid_exists_skips_unmapped_bus)");
-   REPORT_FLAG_OPTION(39, "Unused");
+   REPORT_FLAG_OPTION(39, "Run both DRM connector lookups, log any disagreement");
    REPORT_FLAG_OPTION(40, "Unused");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_INITIAL_STABILIZATION_MILLISEC);
