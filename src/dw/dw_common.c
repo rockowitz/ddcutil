@@ -430,6 +430,11 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
  *  trade-offs that produced the combination, and the measurements behind them,
  *  are written up in claude_changes.txt.
  *
+ *  Defensive: no driver tested has ever removed an I2C bus, so neither this nor
+ *  either alternative has run on hardware, and --f30 and --f34 cannot be told
+ *  apart on such a machine.  See the remark on
+ *  #drop_sys_drm_connector_for_removed_bus() for what was tried.
+ *
  *  @param  busno  I2C bus number of the removed bus
  */
 static void dw_drop_sys_drm_connector(int busno) {
@@ -575,8 +580,9 @@ bool dw_hotplug_change_handler(
          DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", s);
          free(s);
          i2c_remove_businfo_by_busno(busno);
-         // the bus node exists only as long as the card connector it was
-         // attached to, so the connector is gone as well
+         // The bus node exists only as long as the card connector it was
+         // attached to, so the connector is gone as well.  Not reached on any
+         // driver tested: see dw_drop_sys_drm_connector().
          dw_drop_sys_drm_connector(busno);
       }
       else {

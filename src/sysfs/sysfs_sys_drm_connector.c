@@ -603,6 +603,29 @@ recreate_sys_drm_connectors_after_bus_removal(int busno) {
  *  A bus that never had a connector also reaches the rebuild, having nothing
  *  to find.  That costs a walk of /sys/class/drm and changes nothing.
  *
+ *  @remark
+ *  This whole path is defensive, and has never executed on hardware.  It runs
+ *  only when an I2C bus disappears, and on both drivers tested no bus ever did:
+ *
+ *    i915  (two machines)  13 buses held constant through a monitor unplug and
+ *                          a dock removed, reinserted, and moved to another port
+ *    nvidia                7 buses held constant through an MST hub inserted
+ *                          and removed, and a display moved card -> hub -> card
+ *
+ *  Both create one i2c adapter per connector when the driver initializes and
+ *  never unregister them; only the EDID comes and goes, and connectors are
+ *  added but never removed either (nvidia went from six to ten across the
+ *  tests and dropped none).  bs_attached_buses_removed was empty every time,
+ *  so dw_hotplug_change_handler() never entered the branch that calls this.
+ *
+ *  What keeps the cached array correct on those drivers is instead the rebuild
+ *  at the top of dw_hotplug_change_handler().  Reaching this code would need an
+ *  adapter that genuinely unregisters: a USB display adapter, a Thunderbolt
+ *  eGPU, or a driver unload.  Coverage therefore comes from the unit tests in
+ *  src/unit_tests/sysfs/test_sysfs_sys_drm_connector.c, which exercise both
+ *  branches against a fabricated array.  Treat any change here as unverified
+ *  by hardware.
+ *
  *  @param  busno  I2C bus number of the removed bus
  *  @return true if an instance was dropped, false if not
  */
