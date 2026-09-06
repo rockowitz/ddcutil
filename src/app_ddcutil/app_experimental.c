@@ -87,7 +87,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(34, "Drop a removed bus's DRM connector by rebuilding the array from sysfs, never deleting");
    REPORT_FLAG_OPTION(35, "Disable skipping device open when DRM connector reports disconnected (edid_exists_checks_drm_status)");
    REPORT_FLAG_OPTION(36, "Do not disable display change scan while EACCES is seen (rescan_on_eacces)");
-   REPORT_FLAG_OPTION(37, "Use the cached DRM connector algorithm (array search, deduced bus numbers, hotplug refresh)");
+   REPORT_FLAG_OPTION(37, "Unused");
    REPORT_FLAG_OPTION(38, "Open device even when no DRM connector names the bus (edid_exists_skips_unmapped_bus)");
    REPORT_FLAG_OPTION(39, "Run both DRM connector lookups, log any disagreement");
    REPORT_FLAG_OPTION(40, "Do not rebuild the DRM connector array on each hotplug pass");
@@ -106,6 +106,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 
    rpt_vstring(depth+1, "Utility option --i9:          Delay_ddc_start_watch_display() millisec (default = 0)");
    rpt_vstring(depth+1, "Utility option --i10:         Pause after resume from sleep ms (default = %d)", DEFAULT_PAUSE_AFTER_RESUME_MS);
+   rpt_vstring(depth+1, "Utility option --i17:         DRM connector algorithm: 0=walk sysfs per lookup (default), 1=maintained array, 2=snapshot during detection");
    rpt_vstring(depth+1, "Utility option --i11:         Max after EACCES retry ms (default=%d)", DEFAULT_MAX_EACCES_RETRY_MS);
    rpt_vstring(depth+1, "Utility option --i12:         Max after EACCES retry ct (default=%d)", DEFAULT_MAX_EACCES_RETRY_CT);
    rpt_vstring(depth+1, "Utility option --i13:         EACCES diagnostic interval seconds (default=%d)", DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC);

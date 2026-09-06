@@ -37,27 +37,40 @@
 
 #include "i2c_bus_sysfs.h"
 
-/* Selects between the two DRM connector algorithms, set from utility option
- * --f37.  Default false, i.e. the original: find the connector by walking the
- * /sys/class/drm directories on each lookup.  True selects the newer one: read
- * the connector attributes once into the Sys_Drm_Connector array, deduce the
- * bus numbers a driver does not publish, and search that array instead.
+/* Selects among three DRM connector algorithms, set from utility option --i17.
  *
- * One switch rather than three, because the parts are not independent.  The
- * deduction exists to make the cached lookup answer by bus number, and the
- * hotplug refresh exists to keep the cached array from going stale; with the
- * cached lookup off, both are work with no consumer.  Gated at all three
- * entry points: this file for the lookup, i2c_detect_buses() for the startup
- * deduction, dw_hotplug_change_handler() for the refresh.
+ *   0  walk the /sys/class/drm directories on every lookup.  The original, and
+ *      the default.  Simple, and reads one connector's attributes per bus
+ *      examined, so the sysfs work is buses x connectors.
  *
- * Off by default because the measurements did not support it.  The stalls
- * that motivated it proved to be suspend time; on udev-event-to-emit latency
- * and on libddcutil startup the two are indistinguishable.  What the newer
- * algorithm demonstrably reduces is sysfs work -- get_connector_bus_numbers
- * calls fell from 2700 to 216 over an equivalent window -- on a path taken a
- * few times a day.  Retained behind the option for further testing.
+ *   1  read the connectors once into the Sys_Drm_Connector array, deduce the
+ *      bus numbers a driver does not publish, search the array on every lookup,
+ *      and maintain it as displays come and go.  Fewest sysfs reads, but the
+ *      array is then shared mutable state: it needs a lock, it can name a
+ *      connector a display has left, and the instances it frees can be held by
+ *      a caller.  All three of those were defects found in testing.
+ *
+ *   2  read the connectors once at the start of display detection, use the
+ *      array for the lookups that detection performs, then discard it.  One
+ *      scan, like 1, but nothing maintains the array because it does not
+ *      outlive the detection that built it: no lock is needed, since nothing
+ *      writes it after construction; there is no staleness, since it is gone
+ *      before anything can go stale; and no removal or refresh path exists.
+ *      Hotplug is not covered and falls back to 0, which is where the cost is
+ *      affordable -- display connection changes are rare.
+ *
+ * Gated at the lookup here, at the startup deduction in i2c_detect_buses(),
+ * and at the hotplug refresh in dw_hotplug_change_handler().
  */
-bool use_cached_connector_algorithm = false;
+int  drm_connector_algorithm = DRM_CONNECTOR_ALGORITHM_WALK;
+
+/* True only while algorithm 2's snapshot is in use, i.e. between the scan at
+ * the top of i2c_detect_buses0() and the discard at the bottom.  Tested rather
+ * than the array's mere presence, because other callers rebuild it lazily and
+ * a rebuilt array is not the snapshot this algorithm reasons about.
+ */
+bool connector_snapshot_active = false;
+
 bool drm_connector_lookup_compare   = false;
 
 // Trace class for this file
@@ -389,16 +402,20 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_cached(
 Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
                                  int busno, Byte * edid_bytes)
 {
-   if (!use_cached_connector_algorithm && !drm_connector_lookup_compare)   // --f37
+   bool use_array = (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_CACHED) ||
+                    (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_SNAPSHOT &&
+                     connector_snapshot_active);
+
+   if (!use_array && !drm_connector_lookup_compare)
       return find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
 
-   // The comparison needs both, and reports whichever the option selected as
+   // The comparison needs both, and reports whichever the algorithm selected as
    // the answer, so that --f39 does not itself change behavior.
-   Found_Sys_Drm_Connector result = (use_cached_connector_algorithm)
+   Found_Sys_Drm_Connector result = (use_array)
          ? find_sys_drm_connector_by_busno_or_edid_cached(busno, edid_bytes)
          : find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
    if (drm_connector_lookup_compare) {    // --f39
-      Found_Sys_Drm_Connector alt = (use_cached_connector_algorithm)
+      Found_Sys_Drm_Connector alt = (use_array)
             ? find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes)
             : find_sys_drm_connector_by_busno_or_edid_cached(busno, edid_bytes);
       if (!streq(result.connector_name, alt.connector_name) ||

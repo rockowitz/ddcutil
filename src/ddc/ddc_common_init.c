@@ -494,8 +494,10 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       drm_connector_removal_delete_only = true;    // drop a removed bus's connector by deleting it, never rebuilding
    if (parsed_cmd->flags2 & CMD_FLAG2_F34)
       drm_connector_removal_rebuild_only = true;   // drop it by rebuilding the array from sysfs, never deleting
-   if (parsed_cmd->flags2 & CMD_FLAG2_F37)
-      use_cached_connector_algorithm = true;       // cached connector lookup, deduced bus numbers, hotplug refresh
+   // 0 walk sysfs per lookup (default), 1 maintained array, 2 snapshot for
+   // detection then discarded.  See drm_connector_algorithm in i2c_bus_sysfs.c.
+   if (parsed_cmd->flags2 & CMD_FLAG2_I17_SET)
+      drm_connector_algorithm = parsed_cmd->i17;
    if (parsed_cmd->flags2 & CMD_FLAG2_F39)
       drm_connector_lookup_compare = true;         // run both connector lookups, log any disagreement
    if (parsed_cmd->flags2 & CMD_FLAG2_F40)

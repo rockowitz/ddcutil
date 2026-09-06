@@ -191,6 +191,7 @@ typedef enum {
    CMD_FLAG2_I14_SET        = 0x20000000000000,
    CMD_FLAG2_I15_SET        = 0x40000000000000,
    CMD_FLAG2_I16_SET        = 0x80000000000000,
+   CMD_FLAG2_I17_SET        = 0x100000000000000,
    CMD_FLAG2_FL1_SET      = 0x1000000000000000,
    CMD_FLAG2_FL2_SET      = 0x2000000000000000,
 
@@ -303,6 +304,7 @@ struct {
    int                   i14;         // for temporary use
    int                   i15;         // for temporary use
    int                   i16;         // for temporary use
+   int                   i17;         // for temporary use
    char *                 s1;         // for temporary use
    char *                 s2;         // for temporary use
    char *                 s3;         // for temporary use

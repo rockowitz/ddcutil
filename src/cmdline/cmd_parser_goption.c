@@ -1138,6 +1138,7 @@ parse_command(
    char *   i14_work         = NULL;
    char *   i15_work         = NULL;
    char *   i16_work         = NULL;
+   char *   i17_work         = NULL;
    char *   fl1_work        = NULL;
    char *   fl2_work        = NULL;
    char *   failsim_fn_work = NULL;
@@ -1480,6 +1481,7 @@ parse_command(
       {"i14",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i14_work,        "Special integer 14", "decimal or hex number" },
       {"i15",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i15_work,        "Special integer 15", "decimal or hex number" },
       {"i16",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i16_work,        "Special integer 16", "decimal or hex number" },
+      {"i17",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i17_work,        "Special integer 17", "decimal or hex number" },
       {"fl1",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl1_work,        "Special floating point number 1", "floating point number" },
       {"fl2",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl2_work,        "Special floating point number 2", "floating point number" },
       {"f1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
@@ -2058,6 +2060,7 @@ parse_command(
    SET_CMDFLAG_I(14);
    SET_CMDFLAG_I(15);
    SET_CMDFLAG_I(16);
+   SET_CMDFLAG_I(17);
 
 #undef SET_CMDFLAG_I
 

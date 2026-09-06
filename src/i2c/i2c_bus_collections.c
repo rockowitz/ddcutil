@@ -469,11 +469,33 @@ GPtrArray * i2c_detect_buses0() {
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "buses->len = %d, i2c_businfo_async_threhold=%d",
          buses->len, i2c_businfo_async_threshold);
+   /* Algorithm 2: take one snapshot of the DRM connectors for the detection
+    * below to look up against, then discard it.  Built before the scan rather
+    * than after, because i2c_check_bus() consults the connectors while
+    * deciding whether to open each device -- see edid_exists_skips_unmapped_bus
+    * in i2c_bus_core.c -- so an array built afterwards would be too late to be
+    * of use.
+    *
+    * Nothing writes the array once it is built, so the per-bus threads that
+    * i2c_async_scan() may start can read it concurrently without a lock.
+    */
+   if (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_SNAPSHOT) {   // --i17 2
+      get_sys_drm_connectors(/*rescan=*/ true);
+      connector_snapshot_active = true;
+   }
+
    if (buses->len < i2c_businfo_async_threshold) {
       i2c_non_async_scan(buses);
    }
    else {
       i2c_async_scan(buses);
+   }
+
+   if (connector_snapshot_active) {
+      // The businfo records now carry whatever the connectors had to say, so
+      // the array has served its purpose and nothing needs to maintain it.
+      connector_snapshot_active = false;
+      free_sys_drm_connectors();
    }
 
    if (debug) {
@@ -666,10 +688,12 @@ int i2c_detect_buses() {
       // mapping there is nothing to resolve, and repeating the search on the
       // calls that find all_i2c_buses already built would find nothing either.
       //
-      // Part of the cached connector algorithm, so gated with it: the deduced
-      // bus numbers exist for the cached lookup to answer by bus number, and
-      // nothing else consumes them.  See use_cached_connector_algorithm.
-      if (use_cached_connector_algorithm)   // --f37
+      // Part of the maintained-array algorithm, so gated with it: the deduced
+      // bus numbers exist for its lookup to answer by bus number, and nothing
+      // else consumes them.  Algorithm 2 has no use for them either -- it
+      // populates the businfo records during detection and discards the array,
+      // so there is nothing left for a deduced number to serve.
+      if (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_CACHED)   // --i17 1
          extended_bus_detection();
    }
    int result = all_i2c_buses->len;

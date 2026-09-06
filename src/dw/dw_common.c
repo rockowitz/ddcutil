@@ -516,7 +516,8 @@ bool dw_hotplug_change_handler(
    // array from naming a connector a display has left, and with the cached
    // lookup off nothing reads it that way.  --f40 disables it independently,
    // for testing the algorithm without it.
-   if (use_cached_connector_algorithm && refresh_connectors_on_hotplug) {   // --f37, --f40
+   if (drm_connector_algorithm == DRM_CONNECTOR_ALGORITHM_CACHED &&
+       refresh_connectors_on_hotplug) {   // --i17 1, --f40
       get_sys_drm_connectors(/*rescan=*/ true);
       extended_bus_detection();
    }

@@ -24,7 +24,12 @@ typedef struct {
    Drm_Connector_Found_By found_by;
 } Found_Sys_Drm_Connector;
 
-extern bool      use_cached_connector_algorithm;   // utility option --f37
+#define DRM_CONNECTOR_ALGORITHM_WALK      0   // walk sysfs on every lookup (default)
+#define DRM_CONNECTOR_ALGORITHM_CACHED    1   // maintained Sys_Drm_Connector array
+#define DRM_CONNECTOR_ALGORITHM_SNAPSHOT  2   // array built for detection, then discarded
+
+extern int       drm_connector_algorithm;      // utility option --i17
+extern bool      connector_snapshot_active;    // algorithm 2, snapshot in use
 extern bool      drm_connector_lookup_compare;      // utility option --f39
 
 bool             is_displaylink_device(int busno);
