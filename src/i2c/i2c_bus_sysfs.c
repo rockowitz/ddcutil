@@ -266,8 +266,21 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
                    found = true;
                    result.connector_name = strdup(cname);
                    result.found_by = DRM_CONNECTOR_FOUND_BY_EDID;
+                   // The busno branch above sets connector_id from the Connector_Bus_Numbers
+                   // it reads; that read does not happen on this path, so take the attribute
+                   // directly.  Without this the field keeps the 0 it was initialized with,
+                   // which is invisible wherever the driver publishes the bus/connector
+                   // mapping -- there the busno branch succeeds -- and wrong wherever it does
+                   // not.  On nvidia every lookup resolves by EDID, so every
+                   // businfo->drm_connector_id was 0 and i2c_find_businfo_by_drm_connector_id()
+                   // could never match a display.
+                   //
+                   // Read only on a match, so it costs one attribute per hit rather than one
+                   // per connector examined.  Left at 0 if the driver does not publish it.
+                   RPT_ATTR_INT(d, &result.connector_id, "/sys/class/drm", cname, "connector_id");
                    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                         "Found connector %s by EDID match for bus i2c-%d", cname, busno);
+                         "Found connector %s by EDID match for bus i2c-%d, connector_id=%d",
+                         cname, busno, result.connector_id);
                 }
                 g_byte_array_free(edid_bytes_array, true);
             }
