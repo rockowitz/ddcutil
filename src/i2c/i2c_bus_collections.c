@@ -480,7 +480,7 @@ GPtrArray * i2c_detect_buses0() {
     * i2c_async_scan() may start can read it concurrently without a lock.
     */
    {
-      get_sys_drm_connectors(/*rescan=*/ true);
+      get_sys_drm_connectors(/*rescan=*/ true);  // sets global sys_drm_connectors
       connector_snapshot_active = true;
    }
 
@@ -809,8 +809,6 @@ void init_i2c_bus_collections(void) {
    RTTI_ADD_FUNC(i2c_detect_buses0);
 #ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(extended_bus_detection);
-#endif
-#ifdef MAINTAINED_CONNECTOR_ARRAY
    RTTI_ADD_FUNC(update_sys_drm_connector_by_edid);
 #endif
    RTTI_ADD_FUNC(i2c_detect_buses);
