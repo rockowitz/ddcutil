@@ -35,6 +35,7 @@
 static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SYSFS;
 
 
+/** Frees one instance.  Suitable as a #GDestroyNotify. */
 void free_basic_drm_connector(void * connector) {
    if (connector) {
       Sys_Basic_Drm_Connector * cur = connector;
@@ -45,6 +46,7 @@ void free_basic_drm_connector(void * connector) {
 }
 
 
+/** Frees an array returned by #scan_basic_drm_connectors(), and its contents. */
 void free_basic_drm_connectors(GPtrArray * connectors) {
    if (connectors)
       g_ptr_array_free(connectors, true);
@@ -111,6 +113,15 @@ static void one_basic_drm_connector(
 }
 
 
+/** Reads /sys/class/drm once and returns the connectors found.
+ *
+ *  The array is returned rather than held in a global: nothing maintains it,
+ *  and a caller that keeps one is responsible for its lifetime.  Free it with
+ *  #free_basic_drm_connectors().
+ *
+ *  @param  depth  logical indentation depth for reporting, -1 for none
+ *  @return array of #Sys_Basic_Drm_Connector, never NULL, possibly empty
+ */
 GPtrArray * scan_basic_drm_connectors(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
@@ -129,6 +140,13 @@ GPtrArray * scan_basic_drm_connectors(int depth) {
 }
 
 
+/** Finds the connector a bus number belongs to.
+ *
+ *  @param  connectors  array to search
+ *  @param  busno       I2C bus number
+ *  @return pointer into the array, NULL if no connector names that bus.
+ *          Valid only as long as the array is.
+ */
 Sys_Basic_Drm_Connector * find_basic_drm_connector_by_busno(
       GPtrArray * connectors, int busno)
 {
@@ -146,6 +164,17 @@ Sys_Basic_Drm_Connector * find_basic_drm_connector_by_busno(
 }
 
 
+/** Finds the connector showing an EDID.
+ *
+ *  @param  connectors  array to search
+ *  @param  edid_bytes  128 bytes to compare
+ *  @return pointer into the array, NULL if no connector shows it.
+ *          Valid only as long as the array is.
+ *
+ *  @remark
+ *  The first match wins.  Two connectors can show the same EDID -- one monitor
+ *  reachable by two cables -- and there is nothing here to tell them apart.
+ */
 Sys_Basic_Drm_Connector * find_basic_drm_connector_by_edid(
       GPtrArray * connectors, Byte * edid_bytes)
 {
