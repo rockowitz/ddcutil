@@ -12,10 +12,15 @@
  *  or takes rescan=false, so pre-populating the global and never passing
  *  rescan=true keeps the real scan from ever running.
  *
- *  Not exercised: scan_sys_drm_connectors()/get_sys_drm_connectors(true)
- *  themselves (the real /sys/class/drm scan), report_sys_drm_connectors()
- *  (reporting only), and i2c_check_businfo_connector() (in a #ifdef UNUSED
- *  block, not built).
+ *  The removal tests at the end are the exception.  The hybrid
+ *  drop_sys_drm_connector_for_removed_bus() rebuilds from sysfs when no
+ *  connector names the bus, and that branch is worth covering, so one real scan
+ *  does run.  It asserts only what holds on any host, and uses connector names
+ *  no driver produces, so a rebuild is detectable by those names disappearing.
+ *
+ *  Not exercised: scan_sys_drm_connectors() on its own, report_sys_drm_-
+ *  connectors() (reporting only), and i2c_check_businfo_connector() (in a
+ *  #ifdef UNUSED block, not built).
  *
  *  Prints one line per failing check and a summary; exit status is 0 if all
  *  checks pass, 1 otherwise.
@@ -34,6 +39,7 @@
 #include <string.h>
 
 #include "util/drm_card_connector_util.h"
+#include "util/string_util.h"
 
 #include "sysfs/sysfs_sys_drm_connector.h"
 
@@ -75,6 +81,110 @@ static Sys_Drm_Connector * make_connector(const char * name, int busno, int conn
       c->edid_size  = 128;
    }
    return c;
+}
+
+
+/** Replaces the global array with three fabricated connectors whose names no
+ *  real driver produces, so a later check for one of them tells us whether the
+ *  array survived or was rebuilt from sysfs.
+ */
+static void repopulate(void) {
+   if (sys_drm_connectors)
+      g_ptr_array_free(sys_drm_connectors, true);
+   sys_drm_connectors = g_ptr_array_new_with_free_func(free_sys_drm_connector);
+   g_ptr_array_add(sys_drm_connectors, make_connector("fabricated-A", 3, 10, NULL));
+   g_ptr_array_add(sys_drm_connectors, make_connector("fabricated-B", 5, 11, NULL));
+   g_ptr_array_add(sys_drm_connectors, make_connector("fabricated-C", 7, 12, NULL));
+}
+
+
+static bool array_has_name(const char * name) {
+   if (!sys_drm_connectors)
+      return false;
+   for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
+      Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
+      if (streq(cur->connector_name, name))
+         return true;
+   }
+   return false;
+}
+
+
+/** remove_sys_drm_connector_by_busno(): deletes the one instance naming the
+ *  bus, leaves everything else alone, and reports whether it found one.
+ */
+static void test_remove_by_busno(void) {
+   repopulate();
+   CK_INT(sys_drm_connectors->len, 3);
+
+   CK(remove_sys_drm_connector_by_busno(5));
+   CK_INT(sys_drm_connectors->len, 2);
+   CK(!array_has_name("fabricated-B"));
+   CK(array_has_name("fabricated-A"));      // the other entries are untouched
+   CK(array_has_name("fabricated-C"));
+
+   CK(!remove_sys_drm_connector_by_busno(5));    // already gone
+   CK_INT(sys_drm_connectors->len, 2);
+   CK(!remove_sys_drm_connector_by_busno(9999)); // never present
+   CK_INT(sys_drm_connectors->len, 2);
+}
+
+
+/** The hybrid takes the delete branch when a connector names the bus, and does
+ *  not rebuild.  The fabricated names surviving is what proves no rebuild
+ *  happened: a rebuild would replace them with whatever sysfs reports.
+ */
+static void test_drop_takes_delete_branch(void) {
+   repopulate();
+
+   CK(drop_sys_drm_connector_for_removed_bus(7));
+   CK_INT(sys_drm_connectors->len, 2);
+   CK(!array_has_name("fabricated-C"));
+   CK(array_has_name("fabricated-A"));
+   CK(array_has_name("fabricated-B"));
+}
+
+
+/** ... and falls through to the rebuild when nothing names the bus, which is
+ *  the case where i2c_busno was never established.
+ *
+ *  This is the one check here that reads real sysfs, so it asserts only what
+ *  holds on any host: the fabricated entries are gone, proving the rebuild ran,
+ *  and the array exists afterwards.  The return value is not asserted, since it
+ *  compares lengths across the rebuild and so depends on what the host has.
+ */
+static void test_drop_falls_through_to_rebuild(void) {
+   repopulate();
+
+   drop_sys_drm_connector_for_removed_bus(9999);
+   CK(sys_drm_connectors != NULL);
+   CK(!array_has_name("fabricated-A"));
+   CK(!array_has_name("fabricated-B"));
+   CK(!array_has_name("fabricated-C"));
+   CK(find_sys_drm_connector_by_busno(9999) == NULL);
+}
+
+
+/** recreate_sys_drm_connectors_after_bus_removal() reports false when no
+ *  connector named the bus before the rebuild, whatever the rebuild finds.
+ */
+static void test_recreate_reports_false_when_absent(void) {
+   repopulate();
+   CK(!recreate_sys_drm_connectors_after_bus_removal(9999));
+}
+
+
+/** With no array, the removal is a no-op and must not create one.  Every other
+ *  accessor in this file scans when the global is NULL; these deliberately do
+ *  not, so that dropping a connector cannot be the thing that builds the cache.
+ */
+static void test_removal_with_no_array(void) {
+   if (sys_drm_connectors) {
+      g_ptr_array_free(sys_drm_connectors, true);
+      sys_drm_connectors = NULL;
+   }
+   CK(!remove_sys_drm_connector_by_busno(3));
+   CK(sys_drm_connectors == NULL);
 }
 
 
@@ -158,6 +268,14 @@ int main(int argc, char ** argv) {
 
    free_sys_drm_connectors();   // frees c1, c2, c3 and the array; resets global to NULL
    CK(sys_drm_connectors == NULL);
+
+   // Removal.  These come last: they replace and destroy the array, so the
+   // c1/c2/c3 pointers above must be finished with before they run.
+   test_remove_by_busno();
+   test_drop_takes_delete_branch();
+   test_drop_falls_through_to_rebuild();
+   test_recreate_reports_false_when_absent();
+   test_removal_with_no_array();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);
