@@ -612,11 +612,13 @@ recreate_sys_drm_connectors_after_bus_removal(int busno) {
  *    nvidia                7 buses held constant through an MST hub inserted
  *                          and removed, and a display moved card -> hub -> card
  *
- *  Both create one i2c adapter per connector when the driver initializes and
- *  never unregister them; only the EDID comes and goes, and connectors are
- *  added but never removed either (nvidia went from six to ten across the
- *  tests and dropped none).  bs_attached_buses_removed was empty every time,
- *  so dw_hotplug_change_handler() never entered the branch that calls this.
+ *  Both fix their set of i2c adapters when the driver initializes and never
+ *  unregister one; only the EDID comes and goes.  The set is not per connector
+ *  and does not track them: on the nvidia machine it stayed at seven adapters
+ *  while connectors grew from six to ten, and /dev/i2c-0..11 was identical with
+ *  no hub attached, with a hub attached, and with a display connected to that
+ *  hub.  So bs_attached_buses_removed was empty every time, and
+ *  dw_hotplug_change_handler() never entered the branch that calls this.
  *
  *  What keeps the cached array correct on those drivers is instead the rebuild
  *  at the top of dw_hotplug_change_handler().  Reaching this code would need an
