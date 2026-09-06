@@ -353,6 +353,34 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
 }
 
 
+/** Reports whether any DRM connector names the I2C bus that serves it, i.e.
+ *  whether this driver publishes the bus/connector mapping at all.
+ *
+ *  Answered from the snapshot while one is in use, which is what keeps this
+ *  affordable: i2c_check_bus() asks it per bus, and detection is where that
+ *  happens most.  Outside detection there is no snapshot, so a scan is taken
+ *  and discarded -- the hotplug path checks few buses, and a basic scan reads
+ *  three attributes per connector rather than the six a full one reads.
+ *
+ *  @return true if at least one connector reports a bus number
+ */
+bool any_drm_connector_has_busno() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   bool result;
+   if (connector_snapshot_active) {
+      result = any_basic_drm_connector_has_busno(connector_snapshot);
+   }
+   else {
+      GPtrArray * connectors = scan_basic_drm_connectors(-1);
+      result = any_basic_drm_connector_has_busno(connectors);
+      free_basic_drm_connectors(connectors);
+   }
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   return result;
+}
+
+
 /** Same search as #find_sys_drm_connector_by_busno_or_edid_sysfs(), performed
  *  against the snapshot rather than by walking the connector directories.
  *
@@ -771,6 +799,7 @@ void init_i2c_bus_sysfs() {
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_sysfs);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_snapshot);
+   RTTI_ADD_FUNC(any_drm_connector_has_busno);
    RTTI_ADD_FUNC(get_connector_edid);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
    RTTI_ADD_FUNC(is_adapter_class_display_controller);

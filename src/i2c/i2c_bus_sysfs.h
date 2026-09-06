@@ -28,6 +28,7 @@ extern bool      connector_snapshot_active;    // snapshot in use, i.e. during d
 
 void             take_connector_snapshot();
 void             discard_connector_snapshot();
+bool             any_drm_connector_has_busno();
 extern bool      drm_connector_lookup_compare;      // utility option --f39
 
 bool             is_displaylink_device(int busno);

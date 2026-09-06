@@ -51,6 +51,8 @@ Sys_Basic_Drm_Connector * find_basic_drm_connector_by_busno(
 Sys_Basic_Drm_Connector * find_basic_drm_connector_by_edid(
       GPtrArray * connectors, Byte * edid_bytes);
 
+bool any_basic_drm_connector_has_busno(GPtrArray * connectors);
+
 void dbgrpt_basic_drm_connector(Sys_Basic_Drm_Connector * connector, int depth);
 void dbgrpt_basic_drm_connectors(GPtrArray * connectors, int depth);
 

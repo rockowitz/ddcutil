@@ -570,7 +570,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
              free(busname);
              if (!is_mst &&
                  is_sysfs_reliable_for_busno(busno) &&
-                 any_sys_drm_connector_has_busno())
+                 any_drm_connector_has_busno())
              {
                 DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                       "No DRM connector serves bus %d and this driver publishes the "

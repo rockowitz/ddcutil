@@ -76,7 +76,6 @@ bool                remove_sys_drm_connector_by_busno(int busno);
 bool                recreate_sys_drm_connectors_after_bus_removal(int busno);
 bool                drop_sys_drm_connector_for_removed_bus(int busno);
 #endif
-bool                any_sys_drm_connector_has_busno();
 
 // Functions that access sysfs connector dirs directly, instead of using the
 // persistent array of Sys_Drm_Connector:

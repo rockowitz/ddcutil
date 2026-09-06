@@ -669,48 +669,6 @@ drop_sys_drm_connector_for_removed_bus(int busno) {
 #endif
 
 
-/** Reports whether any DRM connector names the I2C bus that serves it.
- *
- *  The bus number comes from one of two artifacts the kernel creates only when
- *  the driver attaches its DDC adapter to the connector: a ddc symlink,
- *  <connector>/ddc/i2c-dev/i2c-N, or for DisplayPort an i2c-N subdirectory of
- *  the connector's drm_dp_aux device.  Whether a driver does that is its own
- *  implementation choice, not something guaranteed by DRM or implied by being
- *  in the kernel tree.
- *
- *  The question this answers is therefore "does this machine's driver publish
- *  the mapping at all", which is what makes the *absence* of a mapping for one
- *  bus meaningful.  Without it, a driver that never attaches DDC adapters --
- *  nvidia is the standing example -- would look identical to one where the bus
- *  genuinely serves no connector.
- *
- *  @return true if at least one connector reports a bus number
- */
-bool any_sys_drm_connector_has_busno() {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "");
-
-   bool result = false;
-   g_rec_mutex_lock(&sys_drm_connectors_mutex);
-   GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
-   if (connectors) {
-      for (int ndx = 0; ndx < connectors->len; ndx++) {
-         Sys_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
-         // Only a bus number sysfs reported counts.  The callers of this
-         // function ask whether the driver publishes the mapping, and a
-         // number extended_bus_detection() or update_sys_drm_connector_by_-
-         // edid() deduced from an EDID match is not evidence that it does.
-         if (cur->i2c_busno >= 0 && cur->i2c_busno_from_driver) {
-            result = true;
-            break;
-         }
-      }
-   }
-   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
-
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_I2C, result, "");
-   return result;
-}
 
 
 /** If the display has an open-source conformant driver,
@@ -949,7 +907,6 @@ void init_sysfs_sys_drm_connector() {
    RTTI_ADD_FUNC(recreate_sys_drm_connectors_after_bus_removal);
    RTTI_ADD_FUNC(drop_sys_drm_connector_for_removed_bus);
 #endif
-   RTTI_ADD_FUNC(any_sys_drm_connector_has_busno);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_identifier);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_id);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);
