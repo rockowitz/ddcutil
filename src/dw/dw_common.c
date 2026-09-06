@@ -86,7 +86,17 @@ bool      force_recheck                  = false;
 // with EACCES (e.g. the post-resume window before udev reapplies device ACLs)
 // instead of treating the affected monitors as disconnected.
 bool      rescan_on_eacces               = true;
-bool      skip_resume_from_pauses_sleeps  = false;
+/* Skip the settling pauses the watch thread would otherwise take: after a udev
+ * add event, and after a resume from sleep.  Both exist to let bus permissions
+ * come back before the buses are opened, so both can be skipped when the
+ * permissions never went away.  Set in dw_start_watch_displays() from
+ * i2c_all_relevant_buses_rw_by_inode(): where access is granted by inode rather
+ * than by ACLs that udev reapplies, a suspend does not disturb it.
+ *
+ * Named for what it gates rather than for the resume, since in udev mode the
+ * add-event pause is skipped along with it.
+ */
+bool      skip_settling_pauses  = false;
 
 
 /** Creates the eventfd used to wake blocking waits in the watch thread

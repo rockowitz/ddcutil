@@ -344,7 +344,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
    if (!terminate_watch_thread) {
       int already_paused_ms = 0;
 
-      if (!skip_resume_from_pauses_sleeps ) {
+      if (!skip_settling_pauses ) {
          if (add_event_detected) {
             // Run the resume detection before pausing, so that its clocktime
             // reference point precedes this sleep and
@@ -382,7 +382,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
       // The settling pauses default to 500 ms, well over drain_pause_ms, so
       // whenever one of them runs already_paused_ms exceeds the whole budget,
       // remaining_pause_ms is negative, and no coalescing happens at all.  And
-      // they run precisely when skip_resume_from_pauses_sleeps is false, i.e.
+      // they run precisely when skip_settling_pauses is false, i.e.
       // when access to /dev/i2c comes from the udev uaccess ACL rather than
       // from group i2c and the inode bits.  So on the uaccess route the
       // coalesce pause is unreachable, and --i16 has nothing to act on; on the
