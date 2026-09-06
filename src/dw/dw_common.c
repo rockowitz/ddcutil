@@ -37,6 +37,7 @@
 /** \endcond */
 
 #include "sysfs/sysfs_dpms.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
@@ -421,6 +422,27 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
 #endif
 
 
+/** Drops the #Sys_Drm_Connector for a bus that no longer exists.
+ *
+ *  By default this deletes the one instance naming the bus and rebuilds the
+ *  array from sysfs only if no instance names it.  Either half can be selected
+ *  on its own for comparison, by defining REMOVE_SYS_DRM_CONNECTOR_ONLY or
+ *  RECREATE_SYS_DRM_CONNECTORS.  The trade-offs that produced the combination,
+ *  and the measurements behind them, are written up in claude_changes.txt.
+ *
+ *  @param  busno  I2C bus number of the removed bus
+ */
+static void dw_drop_sys_drm_connector(int busno) {
+#if defined(REMOVE_SYS_DRM_CONNECTOR_ONLY)
+   remove_sys_drm_connector_by_busno(busno);
+#elif defined(RECREATE_SYS_DRM_CONNECTORS)
+   recreate_sys_drm_connectors_after_bus_removal(busno);
+#else
+   drop_sys_drm_connector_for_removed_bus(busno);
+#endif
+}
+
+
 /** Updates persistent data structures for bus changes and either
  *  emits change events or queues them for later processing.
  *
@@ -533,8 +555,12 @@ bool dw_hotplug_change_handler(
          DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "%s", s);
          free(s);
          i2c_remove_businfo_by_busno(busno);
+         // the bus node exists only as long as the card connector it was
+         // attached to, so the connector is gone as well
+         dw_drop_sys_drm_connector(busno);
       }
       else {
+         // the bus is still there, only the display went away
          i2c_reset_bus_info(businfo);
       }
    }
@@ -553,6 +579,7 @@ bool dw_hotplug_change_handler(
           // if already handled, nothing to do
           if (!bs256_contains(bs_buses_w_edid_removed, busno)) {
              i2c_remove_businfo_by_busno(busno);
+             dw_drop_sys_drm_connector(busno);
           }
        }
        bs256_iter_free(iter2);
@@ -614,6 +641,18 @@ bool dw_hotplug_change_handler(
          }
          i2c_add_businfo(businfo);
       }
+
+      // Keep the DRM connector view in step with the bus view, for both cases
+      // above: a display newly attached to a bus that already existed, and one
+      // on a bus that appeared with it.  Either way businfo->edid has just been
+      // read by i2c_check_bus() and the connector may not know its bus number.
+      //
+      // On a driver that does not publish the bus/connector mapping, nvidia
+      // among them, that connector's i2c_busno is -1 and stays that way;
+      // filling it in here spares later lookups the fallback search that would
+      // otherwise be needed to find it.
+      if (businfo && businfo->edid)
+         update_sys_drm_connector_by_edid(businfo);
 
       // Create display ref and emit
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Adding display ref for bus: %d", busno);

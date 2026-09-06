@@ -56,6 +56,26 @@ static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_SYSFS;
 // 9/28/2021 Requires hardening, testing on other than amdgpu, MST etc
 
 GPtrArray * sys_drm_connectors = NULL;  // Sys_Drm_Connector
+
+/* Guards sys_drm_connectors: the pointer, the array structure, and the
+ * i2c_busno field of the instances in it.  The display watch thread rebuilds
+ * and deletes from the array while API threads, and the per-bus threads that
+ * i2c_check_bus_async() starts, search it.
+ *
+ * Recursive because the public functions here legitimately compose:
+ * drop_sys_drm_connector_for_removed_bus() calls
+ * remove_sys_drm_connector_by_busno() and get_sys_drm_connectors(), and
+ * callers in other files hold the lock across calls to both.  The alternative,
+ * the "caller must hold" internal variants used for all_i2c_buses_mutex in
+ * base/i2c_bus_base.c, would have to be exported to serve those callers.
+ *
+ * Zero initialization in static storage is sufficient, as for GMutex.
+ *
+ * Note this serializes searching against rebuilding, but cannot protect a
+ * Sys_Drm_Connector pointer after the finder that returned it has released
+ * the lock.  See claude_changes.txt.
+ */
+GRecMutex sys_drm_connectors_mutex;
 bool all_drm_connectors_have_connector_id = false;
 
 /** Frees a Sys_Drm_Connector instance
@@ -87,9 +107,11 @@ void free_sys_drm_connector(void * display) {
  *  to by global sys_drm_connectors.
  */
 void free_sys_drm_connectors() {
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
    if (sys_drm_connectors)
       g_ptr_array_free(sys_drm_connectors, true);
    sys_drm_connectors = NULL;
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
 }
 
 
@@ -260,13 +282,16 @@ GPtrArray * scan_sys_drm_connectors(int depth) {
  *  scan the /sys/class/drm/<connector> directories
  */
 GPtrArray* get_sys_drm_connectors(bool rescan) {
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
    if (sys_drm_connectors && rescan) {
       g_ptr_array_free(sys_drm_connectors, true);
       sys_drm_connectors = NULL;
    }
    if (!sys_drm_connectors)
       sys_drm_connectors = scan_sys_drm_connectors(-1);
-   return sys_drm_connectors;
+   GPtrArray * result = sys_drm_connectors;
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
+   return result;
 }
 
 
@@ -294,9 +319,10 @@ void report_sys_drm_connectors(bool verbose, int depth) {
    int d1 = (debug) ? 2 : -1;
    rpt_nl();
    rpt_label(d0, "Display connectors reported by /sys:");
-   if (!sys_drm_connectors)
-     sys_drm_connectors = scan_sys_drm_connectors(d1);
-   GPtrArray * displays = sys_drm_connectors;
+   // Not locked.  Both callers are diagnostic -- the internal error dump in
+   // ddc_displays.c and the sysenv probe -- and this sorts the array, so
+   // locking it would mean blocking the watch thread for a report.
+   GPtrArray * displays = get_sys_drm_connectors(/*rescan=*/ false);
    if (!displays || displays->len == 0) {
       rpt_label(d1, "None");
    }
@@ -317,6 +343,8 @@ void report_sys_drm_connectors(bool verbose, int depth) {
 bool all_sys_drm_connectors_have_connector_id(bool rescan) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rescan=%s", SBOOL(rescan));
+   // Not locked: the only caller is ddc_common_init.c, during initialization,
+   // before any thread that could modify the array exists.
    GPtrArray * connectors = get_sys_drm_connectors(rescan);
    bool result = true;
    for (int ndx = 0; ndx < connectors->len; ndx++) {
@@ -332,6 +360,8 @@ bool all_sys_drm_connectors_have_connector_id(bool rescan) {
 Bit_Set_256 buses_having_edid_from_sys_drm_connectors(bool rescan) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rescan=%s", SBOOL(rescan));
+   // Not locked: no callers.  Add the lock if one appears on a thread that
+   // runs alongside display watch.
    GPtrArray * connectors = get_sys_drm_connectors(rescan);
    Bit_Set_256 result = EMPTY_BIT_SET_256;
    for (int ndx = 0; ndx < connectors->len; ndx++) {
@@ -358,12 +388,12 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d, edid=%p, connector_name=%s",
                                         busno, (void*)edid, connector_name);
-   if (!sys_drm_connectors)
-     sys_drm_connectors = scan_sys_drm_connectors(-1);
-   assert(sys_drm_connectors);
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
+   GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
+   assert(connectors);
    Sys_Drm_Connector * result = NULL;
-   for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
-      Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
+   for (int ndx = 0; ndx < connectors->len; ndx++) {
+      Sys_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
       // DBGMSG("cur->busno = %d", cur->i2c_busno);
       if (busno >= 0 && cur->i2c_busno == busno) {
          DBGTRC(debug, DDCA_TRC_NONE, "Matched by bus number");
@@ -381,6 +411,7 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
          break;
       }
    }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
    return result;
 }
@@ -390,12 +421,12 @@ Sys_Drm_Connector *
 find_sys_drm_connector_by_connector_id(int connector_id) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "connector_id=%d", connector_id);
-   if (!sys_drm_connectors)
-     sys_drm_connectors = scan_sys_drm_connectors(-1);
-   assert(sys_drm_connectors);
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
+   GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
+   assert(connectors);
    Sys_Drm_Connector * result = NULL;
-   for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
-      Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
+   for (int ndx = 0; ndx < connectors->len; ndx++) {
+      Sys_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
       if (cur->connector_id < 0)  // driver does not set connector number, need only check once
          break;
       if (cur->connector_id == connector_id) {
@@ -404,6 +435,7 @@ find_sys_drm_connector_by_connector_id(int connector_id) {
          break;
       }
    }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
    return result;
 }
@@ -413,18 +445,19 @@ Sys_Drm_Connector *
 find_sys_drm_connector_by_connector_identifier(Drm_Connector_Identifier dci) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "dci = %s",  dci_repr_t(dci));
-   if (!sys_drm_connectors)
-     sys_drm_connectors = scan_sys_drm_connectors(-1);
-   assert(sys_drm_connectors);
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
+   GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
+   assert(connectors);
    Sys_Drm_Connector * result = NULL;
-   for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
-      Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
+   for (int ndx = 0; ndx < connectors->len; ndx++) {
+      Sys_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
       Drm_Connector_Identifier cur_dci = parse_sys_drm_connector_name(cur->connector_name);
       if (dci_eq(dci, cur_dci)) {
          result = cur;
          break;
       }
    }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
    return result;
 }
@@ -455,6 +488,123 @@ find_sys_drm_connector_by_busno(int busno) {
 }
 
 
+/** Removes the #Sys_Drm_Connector instance for an I2C bus number, if any,
+ *  from the persistent array pointed to by global sys_drm_connectors.
+ *
+ *  Called when an I2C bus disappears.  The bus device node exists only for as
+ *  long as the card connector the driver attached it to, so a bus that is gone
+ *  implies its connector is gone as well.  Dropping the instance here keeps the
+ *  cached array in step with sysfs without the cost of a full rescan.
+ *
+ *  Does nothing if the array has not been created, and does not create it.
+ *
+ *  @param  busno  I2C bus number
+ *  @return true if an instance was removed, false if none named that bus
+ */
+bool
+remove_sys_drm_connector_by_busno(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
+   bool removed = false;
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
+   if (sys_drm_connectors) {
+      for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
+         Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
+         if (cur->i2c_busno == busno) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C, "Removing connector %s", cur->connector_name);
+            // the array owns its elements, g_ptr_array_remove_index() frees this one
+            g_ptr_array_remove_index(sys_drm_connectors, ndx);
+            removed = true;
+            break;
+         }
+      }
+   }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_I2C, removed, "busno=%d", busno);
+   return removed;
+}
+
+
+/** Alternative to #remove_sys_drm_connector_by_busno() that discards the
+ *  entire array and rebuilds it from sysfs, rather than deleting the one
+ *  instance that names the removed bus.
+ *
+ *  The result is whatever sysfs currently reports, so a connector that the
+ *  driver has in fact retained survives the call.  Two costs come with that:
+ *  the whole /sys/class/drm tree is walked and every EDID reparsed, and any
+ *  i2c_busno this program deduced rather than read from sysfs is discarded,
+ *  for every connector and not just the removed one.  See the comparison in
+ *  claude_changes.txt.
+ *
+ *  @param  busno  I2C bus number of the removed bus
+ *  @return true if no connector names that bus once the rebuild is done
+ *          and one did before, false otherwise
+ */
+bool
+recreate_sys_drm_connectors_after_bus_removal(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
+   bool removed = false;
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
+   if (sys_drm_connectors) {
+      bool existed = (find_sys_drm_connector_by_busno(busno) != NULL);
+      get_sys_drm_connectors(/*rescan=*/ true);
+      removed = existed && !find_sys_drm_connector_by_busno(busno);
+      if (existed && !removed)
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C,
+               "sysfs still reports a connector for bus %d", busno);
+   }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_I2C, removed, "busno=%d", busno);
+   return removed;
+}
+
+
+/** Drops the #Sys_Drm_Connector for a bus that no longer exists, combining
+ *  #remove_sys_drm_connector_by_busno() and
+ *  #recreate_sys_drm_connectors_after_bus_removal().
+ *
+ *  Deleting the one instance that names the bus is tried first.  It succeeds
+ *  only if i2c_busno is known for that connector, which is to say only if the
+ *  driver published the bus/connector mapping or this program deduced it.
+ *  Failing to find it is therefore not an ordinary miss, it is the signal that
+ *  the mapping was never established, and in that case sysfs is the only thing
+ *  that can identify the connector that went away.  So the array is rebuilt.
+ *
+ *  Taking the branches in this order keeps the deduced i2c_busno of every
+ *  other connector in the common case, since a rebuild discards all of them,
+ *  and still drops the connector on a driver that publishes no mapping at all.
+ *
+ *  A bus that never had a connector also reaches the rebuild, having nothing
+ *  to find.  That costs a walk of /sys/class/drm and changes nothing.
+ *
+ *  @param  busno  I2C bus number of the removed bus
+ *  @return true if an instance was dropped, false if not
+ */
+bool
+drop_sys_drm_connector_for_removed_bus(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
+   bool removed = remove_sys_drm_connector_by_busno(busno);
+   if (!removed && sys_drm_connectors) {
+      // i2c_busno was never established for the connector on this bus.
+      // Note that the return value of
+      // recreate_sys_drm_connectors_after_bus_removal() cannot be used here:
+      // it reports whether a connector naming the bus went away, and we are
+      // in this branch precisely because none names it.  Compare lengths.
+      guint before = sys_drm_connectors->len;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C,
+            "No connector names bus %d, rebuilding from sysfs", busno);
+      get_sys_drm_connectors(/*rescan=*/ true);
+      removed = sys_drm_connectors && sys_drm_connectors->len < before;
+   }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_I2C, removed, "busno=%d", busno);
+   return removed;
+}
+
+
 /** Reports whether any DRM connector names the I2C bus that serves it.
  *
  *  The bus number comes from one of two artifacts the kernel creates only when
@@ -477,6 +627,7 @@ bool any_sys_drm_connector_has_busno() {
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "");
 
    bool result = false;
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
    GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
    if (connectors) {
       for (int ndx = 0; ndx < connectors->len; ndx++) {
@@ -487,6 +638,7 @@ bool any_sys_drm_connector_has_busno() {
          }
       }
    }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_I2C, result, "");
    return result;
@@ -690,6 +842,9 @@ void init_sysfs_sys_drm_connector() {
    RTTI_ADD_FUNC(scan_sys_drm_connectors);
    RTTI_ADD_FUNC(report_sys_drm_connectors);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno);
+   RTTI_ADD_FUNC(remove_sys_drm_connector_by_busno);
+   RTTI_ADD_FUNC(recreate_sys_drm_connectors_after_bus_removal);
+   RTTI_ADD_FUNC(drop_sys_drm_connector_for_removed_bus);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_identifier);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_connector_id);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);

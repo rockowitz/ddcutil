@@ -33,6 +33,7 @@
 #include "base/rtti.h"
 
 #include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
 
 #include "i2c_bus_sysfs.h"
 
@@ -192,7 +193,7 @@ void free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec) {
  *  the heap, avoiding the need for the caller to free.
  */
 // n. result returned on stack
-Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
+Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
                                  int busno, Byte * edid_bytes)
 {
    bool debug  = false;
@@ -257,6 +258,124 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
    return result;
+}
+
+
+/** Same search as #find_sys_drm_connector_by_busno_or_edid_sysfs(), performed
+ *  against the persistent array of #Sys_Drm_Connector rather than by walking
+ *  the /sys/class/drm connector directories.
+ *
+ *  Both bus number and EDID come from the same sysfs attributes either way,
+ *  read once by scan_sys_drm_connectors() instead of once per call, so the
+ *  answers agree whenever that array is current.  What is not carried over is
+ *  the side effect: the sysfs version calls
+ *  possibly_write_detect_to_status_by_connector_name() before reading each
+ *  edid attribute, forcing the driver to re-probe the connector.  This one
+ *  reads what was already there.
+ *
+ *  @param  busno      (-1 for not set)
+ *  @param  edid_bytes pointer to 128 byte edid
+ *  @return Found_Sys_Drm_Connector struct, returned on the stack
+ */
+// n. result returned on stack
+Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_cached(
+                                 int busno, Byte * edid_bytes)
+{
+   bool debug  = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, " busno = %d, edid = %p" , busno, edid_bytes);
+   if (busno == 255)  // happens somehow
+      busno = -1;
+   bool check_busno = (busno != -1);
+   bool check_edid = edid_bytes;
+   assert(check_busno || check_edid);
+
+   Found_Sys_Drm_Connector result;
+   result.connector_name = NULL;
+   result.found_by = DRM_CONNECTOR_NOT_FOUND;
+   result.connector_id = 0;
+
+   // Held across the search, not just the fetch: this runs on API threads and
+   // on the per-bus threads i2c_check_bus_async() starts, while the display
+   // watch thread can be rebuilding the array or deleting from it.  The
+   // connector name is copied out under the lock, so the returned struct stays
+   // valid after it is released.
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
+   GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
+   if (connectors) {
+      for (int ndx = 0; ndx < connectors->len; ndx++) {
+         Sys_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
+         if (check_busno && cur->i2c_busno == busno) {
+            result.connector_name = strdup(cur->connector_name);
+            result.found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
+            result.connector_id = cur->connector_id;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "Found connector %s by i2c bus number match for bus i2c-%d",
+                  cur->connector_name, busno);
+            break;
+         }
+         if (check_edid && cur->edid_bytes && cur->edid_size >= 128 &&
+               memcmp(cur->edid_bytes, edid_bytes, 128) == 0) {
+            result.connector_name = strdup(cur->connector_name);
+            result.found_by = DRM_CONNECTOR_FOUND_BY_EDID;
+            result.connector_id = cur->connector_id;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "Found connector %s by EDID match", cur->connector_name);
+            break;
+         }
+      }
+   }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
+
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      dbgrpt_found_sys_drm_connector(result, 1);
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+   return result;
+}
+
+
+/** Locates a drm-card-connector directory using either an I2C bus number or
+ *  EDID value.
+ *
+ *  The search runs against the persistent #Sys_Drm_Connector array.  Defining
+ *  SYSFS_CONNECTOR_LOOKUP_ONLY selects the original implementation, which
+ *  walks the connector directories on every call.  Defining
+ *  COMPARE_CONNECTOR_LOOKUPS runs both and writes a syslog warning wherever
+ *  they disagree, which is how the replacement is meant to be validated on
+ *  hardware this has not been tried on.  See claude_changes.txt.
+ *
+ *  @param  busno      (-1 for not set)
+ *  @param  edid_bytes pointer to 128 byte edid
+ *  @return Found_Sys_Drm_Connector struct, returned on the stack
+ */
+// n. result returned on stack
+Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
+                                 int busno, Byte * edid_bytes)
+{
+#if defined(SYSFS_CONNECTOR_LOOKUP_ONLY)
+   return find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
+#else
+   Found_Sys_Drm_Connector result = find_sys_drm_connector_by_busno_or_edid_cached(busno, edid_bytes);
+#ifdef COMPARE_CONNECTOR_LOOKUPS
+   Found_Sys_Drm_Connector alt = find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
+   if (!streq(result.connector_name, alt.connector_name) ||
+        result.found_by    != alt.found_by ||
+        result.connector_id != alt.connector_id)
+   {
+      DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
+            "Connector lookup mismatch for busno=%d, edid=%p."
+            " Cached: %s, found_by=%s, connector_id=%d."
+            " Sysfs: %s, found_by=%s, connector_id=%d.",
+            busno, edid_bytes,
+            (result.connector_name) ? result.connector_name : "NOT FOUND",
+            drm_connector_found_by_name(result.found_by), result.connector_id,
+            (alt.connector_name) ? alt.connector_name : "NOT FOUND",
+            drm_connector_found_by_name(alt.found_by), alt.connector_id);
+   }
+   free_found_sys_drm_connector_result_contents(alt);
+#endif
+   return result;
+#endif
 }
 
 
@@ -480,6 +599,35 @@ bool is_valid_drm_connector_name(const char * connector_name) {
  }
 
 
+/** Returns the I2C bus number that the user has associated with a DRM connector
+ *  name, using option --bus-drm-connector.
+ *
+ *  The reverse of #user_drm_connector_for_busno().
+ *
+ *  @param  drm_connector_name  connector name, e.g. "card1-DP-2"
+ *  @return I2C bus number, -1 if the connector is not in the table
+ */
+int user_busno_for_drm_connector(const char * drm_connector_name) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "drm_connector_name=%s, user_busno_connector_table=%p",
+                                         drm_connector_name, user_busno_connector_table);
+
+   int result = -1;
+   if (drm_connector_name && user_busno_connector_table) {
+      for (int ndx = 0; ndx < user_busno_connector_table->len; ndx++) {
+         Busno_Connector_Table_Entry * entry = g_ptr_array_index(user_busno_connector_table, ndx);
+         if (streq(entry->drm_connector_name, drm_connector_name)) {
+            result = entry->busno;
+            break;
+         }
+      }
+   }
+
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "");
+   return result;
+}
+
+
 /** Returns the DRM connector name that the user has associated with an I2C bus
  *  number, using option --bus-drm-connector.
  *
@@ -536,9 +684,12 @@ void dbgrpt_busno_connector_table(int depth) {
 /** Module initialization */
 void init_i2c_bus_sysfs() {
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
+   RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_sysfs);
+   RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_cached);
    RTTI_ADD_FUNC(get_connector_edid);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
    RTTI_ADD_FUNC(is_adapter_class_display_controller);
    RTTI_ADD_FUNC(is_valid_drm_connector_name);
    RTTI_ADD_FUNC(user_drm_connector_for_busno);
+   RTTI_ADD_FUNC(user_busno_for_drm_connector);
 }

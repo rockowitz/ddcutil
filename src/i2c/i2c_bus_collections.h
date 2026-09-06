@@ -29,6 +29,8 @@ Byte_Value_Array i2c_detect_attached_buses();
 Bit_Set_256      i2c_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 Bit_Set_256      i2c_nonlaptop_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 GPtrArray *      i2c_detect_buses0();
+void        extended_bus_detection();
+bool        update_sys_drm_connector_by_edid(I2C_Bus_Info * businfo);
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
 

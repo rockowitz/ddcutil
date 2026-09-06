@@ -34,9 +34,11 @@
 
 #include "sysfs/sysfs_base.h"
 #include "sysfs/sysfs_i2c_info.h"
+#include "sysfs/sysfs_sys_drm_connector.h"
 #include "sysfs/sysfs_conflicting_drivers.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_bus_sysfs.h"
 #include "i2c/i2c_bus_open_close.h"
 
 #include "i2c/i2c_bus_collections.h"
@@ -497,6 +499,152 @@ GPtrArray * i2c_detect_buses0() {
 }
 
 
+/** Fills in the I2C bus number of DRM connectors that have an EDID but whose
+ *  bus number sysfs did not report, by matching their EDID against the buses
+ *  in #all_i2c_buses.
+ *
+ *  Some drivers, nvidia among them, do not publish the connector to bus
+ *  mapping, so #Sys_Drm_Connector.i2c_busno stays -1 even for a connector with
+ *  a display attached.  The EDID is the only thing the two views share, so it
+ *  is what the match is made on.
+ *
+ *  Only connectors that have an EDID and lack a bus number are considered; a
+ *  connector whose bus number sysfs did report is left alone, since that
+ *  mapping came from the driver and is better evidence than a guess.
+ *
+ *  Two sources are consulted, in order of authority.  First the table the user
+ *  supplied with --bus-drm-connector: that is an explicit statement about this
+ *  machine and beats anything inferred.  Only if the connector is absent from
+ *  it are the buses searched for a matching EDID.
+ *
+ *  @remark
+ *  The first bus whose EDID matches wins.  Two connectors showing the same
+ *  EDID is possible in principle -- the same monitor reachable by two cables --
+ *  and there is nothing here to tell them apart, so the arbitrary choice is
+ *  deliberate rather than overlooked.
+ */
+/** Assigns a bus number to the DRM connector showing the same EDID as a bus,
+ *  for use when the display watch has just attached one.
+ *
+ *  Matches #I2C_Bus_Info.edid against #Sys_Drm_Connector.edid_bytes and, on a
+ *  match, sets that connector's i2c_busno.  Connectors that already have a bus
+ *  number are left alone: that mapping came from the driver.
+ *
+ *  @param  businfo  newly attached bus, EDID already read
+ *  @return true if a connector was updated
+ *
+ *  @remark
+ *  Tries the cached connector array first and rescans /sys/class/drm only if
+ *  that fails.  The rescan matters: nothing in the watch path refreshes the
+ *  array, so for a display attached since the last scan the cached connector
+ *  has no EDID yet and the first attempt cannot succeed.  Trying cached-first
+ *  keeps a batch of several added buses from rescanning once per bus, which is
+ *  worth avoiding -- reading connector attributes is itself slow on some
+ *  drivers.
+ */
+bool update_sys_drm_connector_by_edid(I2C_Bus_Info * businfo) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", (businfo) ? businfo->busno : -1);
+
+   bool updated = false;
+   if (businfo && businfo->edid) {
+      // Held across the rescan and the write: the array must not be rebuilt
+      // between get_sys_drm_connectors() handing it over and cur->i2c_busno
+      // being set, and no other thread may see a half-updated array.
+      g_rec_mutex_lock(&sys_drm_connectors_mutex);
+      for (int attempt = 0; attempt < 2 && !updated; attempt++) {
+         // attempt 0 uses whatever is cached, attempt 1 rescans
+         GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ attempt > 0);
+         if (!connectors)
+            break;
+         for (int ndx = 0; ndx < connectors->len; ndx++) {
+            Sys_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
+            if (cur->i2c_busno >= 0)
+               continue;
+            if (!cur->edid_bytes || cur->edid_size < 128)
+               continue;
+            if (memcmp(cur->edid_bytes, businfo->edid->bytes, 128) == 0) {
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C,
+                     "Connector %s: setting i2c_busno = %d by EDID match%s",
+                     cur->connector_name, businfo->busno,
+                     (attempt > 0) ? " (after rescan)" : "");
+               cur->i2c_busno = businfo->busno;
+               updated = true;
+               break;
+            }
+         }
+      }
+      g_rec_mutex_unlock(&sys_drm_connectors_mutex);
+   }
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_I2C, updated, "busno=%d", (businfo) ? businfo->busno : -1);
+   return updated;
+}
+
+
+void extended_bus_detection() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "");
+
+   int         from_table = 0;   // resolved from --bus-drm-connector
+   int         from_edid  = 0;   // resolved by matching against all_i2c_buses
+
+   /* Both arrays are read and one is written, so both locks are held for the
+    * duration.  Order is all_i2c_buses_mutex then sys_drm_connectors_mutex,
+    * and it has to stay that way: nothing under sysfs/ calls the i2c_*bus*
+    * functions that take all_i2c_buses_mutex, so no path acquires them in the
+    * opposite order today.
+    *
+    * user_busno_for_drm_connector() reads the --bus-drm-connector table, which
+    * add_busno_connector() fills during initialization and nothing writes
+    * afterwards, so it needs no lock of its own.
+    */
+   g_mutex_lock(&all_i2c_buses_mutex);
+   g_rec_mutex_lock(&sys_drm_connectors_mutex);
+   GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
+
+   if (connectors && all_i2c_buses) {
+      for (int cndx = 0; cndx < connectors->len; cndx++) {
+         Sys_Drm_Connector * cur = g_ptr_array_index(connectors, cndx);
+         if (cur->i2c_busno >= 0)
+            continue;
+         if (!cur->edid_bytes || cur->edid_size < 128)
+            continue;
+
+         int user_busno = user_busno_for_drm_connector(cur->connector_name);
+         if (user_busno >= 0) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C,
+                  "Connector %s: setting i2c_busno = %d from --bus-drm-connector",
+                  cur->connector_name, user_busno);
+            cur->i2c_busno = user_busno;
+            from_table++;
+            continue;
+         }
+
+         for (int bndx = 0; bndx < all_i2c_buses->len; bndx++) {
+            I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, bndx);
+            if (!businfo->edid)
+               continue;
+            if (memcmp(businfo->edid->bytes, cur->edid_bytes, 128) == 0) {
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C,
+                     "Connector %s: setting i2c_busno = %d by EDID match",
+                     cur->connector_name, businfo->busno);
+               cur->i2c_busno = businfo->busno;
+               from_edid++;
+               break;
+            }
+         }
+      }
+   }
+   g_rec_mutex_unlock(&sys_drm_connectors_mutex);
+   g_mutex_unlock(&all_i2c_buses_mutex);
+
+   DBGTRC_DONE(debug, DDCA_TRC_I2C,
+         "Resolved %d connector(s) from --bus-drm-connector, %d by EDID match",
+         from_table, from_edid);
+}
+
+
 /** Detect buses if not already detected.
  *
  *  Stores the result in global array all_i2c_buses and also
@@ -609,6 +757,8 @@ void init_i2c_bus_collections(void) {
 #endif
    RTTI_ADD_FUNC(i2c_detect_attached_buses);
    RTTI_ADD_FUNC(i2c_detect_buses0);
+   RTTI_ADD_FUNC(extended_bus_detection);
+   RTTI_ADD_FUNC(update_sys_drm_connector_by_edid);
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_buses_bitset_from_businfo_array);

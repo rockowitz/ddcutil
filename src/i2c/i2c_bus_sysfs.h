@@ -29,6 +29,10 @@ bool             is_laptop_drm_connector_name(const char * connector_name);
 
 Found_Sys_Drm_Connector
                  find_sys_drm_connector_by_busno_or_edid(int busno, Byte * edid_bytes);
+Found_Sys_Drm_Connector
+                 find_sys_drm_connector_by_busno_or_edid_sysfs(int busno, Byte * edid_bytes);
+Found_Sys_Drm_Connector
+                 find_sys_drm_connector_by_busno_or_edid_cached(int busno, Byte * edid_bytes);
 void             free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec);
 
 Byte *           get_connector_edid(const char * connector_name);
@@ -40,6 +44,7 @@ bool             is_valid_drm_connector_name(const char * connector_name);
 // User specified I2C bus/DRM connector associations, i.e. --bus-drm-connector
 void             add_busno_connector(int busno, const char * connector_name);
 const char *     user_drm_connector_for_busno(int busno);
+int              user_busno_for_drm_connector(const char * drm_connector_name);
 void             dbgrpt_busno_connector_table(int depth);
 
 void             init_i2c_bus_sysfs();

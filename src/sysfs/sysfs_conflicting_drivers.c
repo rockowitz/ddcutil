@@ -179,6 +179,7 @@ GPtrArray * collect_conflicting_drivers(int busno, int depth) {
 GPtrArray * collect_conflicting_drivers_for_any_bus(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   // Not locked: the only caller is the sysenv probe.
    GPtrArray* all_connectors = get_sys_drm_connectors(false);
    GPtrArray * conflicting_drivers = g_ptr_array_new_with_free_func((GDestroyNotify) free_sys_conflicting_driver);
    for (int ndx = 0; ndx < all_connectors->len; ndx++) {
