@@ -659,6 +659,13 @@ int i2c_detect_buses() {
    if (!all_i2c_buses) {
       all_i2c_buses = i2c_detect_buses0();
       // g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
+
+      // The bus view is complete, so this is the first point at which a
+      // connector left without an i2c_busno by the driver can be resolved
+      // against it.  Only inside this branch: on a driver that publishes the
+      // mapping there is nothing to resolve, and repeating the search on the
+      // calls that find all_i2c_buses already built would find nothing either.
+      extended_bus_detection();
    }
    int result = all_i2c_buses->len;
 
