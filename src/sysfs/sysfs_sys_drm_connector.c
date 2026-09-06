@@ -83,6 +83,13 @@ GRecMutex sys_drm_connectors_mutex;
  */
 bool drm_connector_removal_delete_only  = false;
 bool drm_connector_removal_rebuild_only = false;
+
+/* Rebuild the connector array at the start of each hotplug handler pass, and
+ * re-derive the deduced bus numbers.  On by default; utility option --f40
+ * turns it off, which restores the behavior in which the array was refreshed
+ * only as a side effect of a failed EDID match.
+ */
+bool refresh_connectors_on_hotplug = true;
 bool all_drm_connectors_have_connector_id = false;
 
 /** Frees a Sys_Drm_Connector instance

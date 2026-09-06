@@ -498,6 +498,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       drm_connector_lookup_sysfs_only = true;      // find the connector by walking sysfs, not by searching the array
    if (parsed_cmd->flags2 & CMD_FLAG2_F39)
       drm_connector_lookup_compare = true;         // run both connector lookups, log any disagreement
+   if (parsed_cmd->flags2 & CMD_FLAG2_F40)
+      refresh_connectors_on_hotplug = false;       // do not rebuild the connector array on each hotplug pass
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;

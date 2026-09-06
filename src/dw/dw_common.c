@@ -480,6 +480,27 @@ bool dw_hotplug_change_handler(
    }
    // debug_current_traced_function_stack(false);   // ** TEMP **/
 
+   /* Refresh the DRM connector view before anything consults it.
+    *
+    * Connectors are created by hotplug -- an MST hub adds them -- and a display
+    * moved between ports lands on a different one, so the cached array can name
+    * a connector the display has left.  Observed on nvidia: an EDID lookup
+    * returned card1-DP-4 while sysfs said card1-DP-5, and again DP-5 against
+    * DP-7.  Nothing else refreshes the array on the watch path; before this it
+    * was corrected only as a side effect of update_sys_drm_connector_by_edid()
+    * failing its first attempt, which is luck rather than design.
+    *
+    * The rescan discards every i2c_busno this program deduced, so
+    * extended_bus_detection() re-derives them immediately.  Without that,
+    * lookups by bus number would fail for the rest of this handler on a driver
+    * that publishes no mapping -- which is exactly the case the deduction
+    * exists for.
+    */
+   if (refresh_connectors_on_hotplug) {   // --f40 disables
+      get_sys_drm_connectors(/*rescan=*/ true);
+      extended_bus_detection();
+   }
+
    bool emitted = false;
    Error_Info * err = NULL;
 

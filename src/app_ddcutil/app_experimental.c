@@ -90,7 +90,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(37, "Find the DRM connector by walking sysfs, not by searching the connector array");
    REPORT_FLAG_OPTION(38, "Open device even when no DRM connector names the bus (edid_exists_skips_unmapped_bus)");
    REPORT_FLAG_OPTION(39, "Run both DRM connector lookups, log any disagreement");
-   REPORT_FLAG_OPTION(40, "Unused");
+   REPORT_FLAG_OPTION(40, "Do not rebuild the DRM connector array on each hotplug pass");
 
    rpt_vstring(depth+1, "Utility option --i1:          Extra millisec to wait after apparent display disconnect (default = %d)", DEFAULT_INITIAL_STABILIZATION_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
