@@ -987,7 +987,7 @@ parse_command(
    char     resume_after_sleep_ms_expl[80];
    char     max_setvcp_and_verify_tries_expl[100];
    g_snprintf(max_setvcp_and_verify_tries_expl, 100,
-         "Maximum tries when setvcp verifies the value written. Minimum 1. Default=%d.",
+         "Max set/verify cycles for setvcp. Default=%d.",
          DEFAULT_MAX_SETVCP_VERIFY_TRIES);
    g_snprintf(resume_after_sleep_ms_expl, 80, "Pause after resume from sleep. Default=%d.",
          DEFAULT_PAUSE_AFTER_RESUME_MS);
@@ -2215,6 +2215,7 @@ parse_command(
    }
    else
       parsed_cmd->resume_after_sleep_ms = (int16_t) resume_after_sleep_ms_work;
+
    // -1 is the "not specified" sentinel, leaving the Parsed_Cmd default in place.
    // Any other value below 1 is rejected: setvcp must attempt the write at least once.
    if (max_setvcp_and_verify_tries_work != -1 && max_setvcp_and_verify_tries_work < 1) {
