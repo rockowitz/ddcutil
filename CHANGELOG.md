@@ -25,10 +25,9 @@
 
 #### Performance Changes
 
-- Retuned slave-address x37 detection. The retry interval is now 200ms for most
-  drivers (was 400ms) and 1000ms for the nvidia driver (was a flat 2000ms). 
-  Max tries dropped from 3 to 2, but is increased to 4 if an attempt fails 
-  with status EBUSY. Addresses issue #607.
+- Retuned slave-address x37 detection. The retry interval is now 100ms for all
+  drivers.  Max tries remains at 3, but is increased to 5 if an attempt fails 
+  with status EBUSY. Addresses issue #607, 
 
 #### Miscellaneous Changes
 
