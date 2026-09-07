@@ -196,9 +196,10 @@ dnl release 2.2.2, c:r:a = 9:0:4 -> libddcutil.so.5.4.0
 dnl release 2.2.5, c:r:a = 9:2:4 -> libddcutil.so.5.4.2
 dnl release 2.2.6, c:r:a =10:0:5 -> libddcutil.so.5.5.0
 dnl release 2.2.7, c:r:a =10:1:5 -> libddcutil.so.5.5.1
-LT_CURRENT=10
-LT_REVISION=1
-LT_AGE=5
+dnl release 2.2.8, c:r:a =11:0:6  = libddcutil.so.5.6.0   
+LT_CURRENT=11
+LT_REVISION=0
+LT_AGE=6
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
