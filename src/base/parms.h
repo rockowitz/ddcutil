@@ -122,30 +122,30 @@
 // Asynchronous Initialization
 //
 
-#define CHECK_ASYNC_NEVER 99
-/** Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
+// Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
 // Briefly set to 3, on the theory that i2c_async_scan() would overlap the I2C
 // EDID read on a bus with nothing attached, which times out at roughly 65 ms.
 // It does not.  The transactions serialize below ddcutil, in the adapter.
 //
-// Measured on p16, i915, 14 buses of which 11 are empty, with --thread-id: the
+// Measured on a Lenovo Thinkpad P16 using driver i915, 14 buses of which 11 are empty
 // five threaded EDID reads all issue their ioctl within 1.7 ms of each other,
 // then complete strictly in sequence 63 to 75 ms apart.  Scan phase 372 ms
 // threaded vs 358 ms serial; whole detect 0.42 s either way, output identical.
-// banner agrees at a smaller scale: 77.1 ms threaded vs 76.6 ms serial.
+// Intel i7-12700 using driver i915, agrees at a smaller scale: 77.1 ms threaded
+// vs 76.6 ms serial.
 //
 // So the threads are real and concurrent, and the hardware queues them anyway.
-// Restored to CHECK_ASYNC_NEVER: one GThread per bus buys nothing, and a serial
-// scan makes a trace far easier to follow.
-//
-// n. both machines measured are i915.  A driver exposing genuinely independent
-// per-connector I2C adapters could in principle parallelize, so this is a
-// statement about the hardware tested, not a proof for all of it.  Says nothing
-// about DEFAULT_DDC_CHECK_ASYNC_THRESHOLD below, which parallelizes DDC checks
-// on buses that do have displays -- a different and much smaller set.
-#define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD CHECK_ASYNC_NEVER
-/** Parallelize DDC communication checks if at least this number of /dev/i2c devices have an EDID */
-// on workstation banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
+// On the test systems, parallelization per bus buys nothing, and a serial
+// scan makes a trace far easier to follow. However, it is possible that with
+// with different hardware and drivers the result is different, so an explicit
+// value is used.
+#define CHECK_ASYNC_NEVER 99
+#define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD 4
+
+// Parallelize DDC communication checks if at least this number of /dev/i2c devices
+// have an EDID.
+// On a workstation with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec,
+// so a genuine benefit
 #define DEFAULT_DDC_CHECK_ASYNC_THRESHOLD 3
 
 
