@@ -271,6 +271,7 @@ struct {
 
    // EACCES error related
    int16_t                resume_after_sleep_ms;
+   int                    max_setvcp_and_verify_tries;  // default DEFAULT_MAX_SETVCP_VERIFY_TRIES, minimum 1
    int16_t                eacces_retry_ms;
 
    // Tracing and logging

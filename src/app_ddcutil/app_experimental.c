@@ -96,7 +96,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
    rpt_vstring(depth+1, "Utility option --i3:          flock_poll_millisec (default = %d)", DEFAULT_FLOCK_POLL_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i4:          flock_max_wait_millisec (default = %d)", DEFAULT_FLOCK_MAX_WAIT_MILLISEC);
-   rpt_vstring(depth+1, "Utility option --i5:          Max tries for setvcp verification failure (default = %d)", DEFAULT_MAX_SETVCP_VERIFY_TRIES);
+   rpt_vstring(depth+1, "Utility option --i5:          Unused");
    rpt_vstring(depth+1, "Utility option --i6:          Display watch thread initial delay millisec (default = 0)");
    rpt_vstring(depth+1, "Utility option --i7:          Stabilization poll millisec (default=%d)", DEFAULT_STABILIZATION_POLL_MILLISEC);
    rpt_vstring(depth+1, "Utility option --i8:          Display watch udev loop millisec (default = %d)", DEFAULT_UDEV_WATCH_LOOP_MILLISEC);

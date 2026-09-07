@@ -507,12 +507,9 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
         flock_max_wait_millisec = parsed_cmd->i4;
    // if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
    //     dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->fl1);
-   if (parsed_cmd->flags2 & CMD_FLAG2_I5_SET) {
-      if (parsed_cmd->i5 >= 1)
-         max_setvcp_verify_tries = parsed_cmd->i5;
-      else
-         rpt_label(0, "--i5 value must be at least 1");
-   }
+   // Validated by the parser, and defaulted to DEFAULT_MAX_SETVCP_VERIFY_TRIES in
+   // new_parsed_cmd(), so it can be assigned unconditionally.
+   max_setvcp_verify_tries = parsed_cmd->max_setvcp_and_verify_tries;
 #ifdef WATCH_DISPLAYS
    // Unlike --i9, which delays within dw_start_watch_displays() and so blocks
    // the client thread that called ddca_start_watch_displays(), this delays the

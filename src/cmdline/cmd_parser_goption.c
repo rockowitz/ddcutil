@@ -985,6 +985,10 @@ parse_command(
    g_snprintf(ddc_check_async_expl, 80, "Threshold for parallel examination of possible DDC devices. Default=%d.",
          DEFAULT_DDC_CHECK_ASYNC_THRESHOLD);
    char     resume_after_sleep_ms_expl[80];
+   char     max_setvcp_and_verify_tries_expl[100];
+   g_snprintf(max_setvcp_and_verify_tries_expl, 100,
+         "Maximum tries when setvcp verifies the value written. Minimum 1. Default=%d.",
+         DEFAULT_MAX_SETVCP_VERIFY_TRIES);
    g_snprintf(resume_after_sleep_ms_expl, 80, "Pause after resume from sleep. Default=%d.",
          DEFAULT_PAUSE_AFTER_RESUME_MS);
    char     eacces_retry_ms_expl[80];
@@ -1080,6 +1084,7 @@ parse_command(
    gint     poll_watch_loop_millis_work = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 #endif
    gint     resume_after_sleep_ms_work = -1;
+   gint     max_setvcp_and_verify_tries_work = -1;   // -1: not specified
    gint     eacces_retry_ms_work = -1;
 
    gboolean f1_flag         = false;
@@ -1284,6 +1289,9 @@ parse_command(
 
       {"pause-after-resume-ms",   '\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &resume_after_sleep_ms_work, resume_after_sleep_ms_expl, "milliseconds"},
+      {"max-setvcp-and-verify-tries", '\0', 0,
+                                         G_OPTION_ARG_INT, &max_setvcp_and_verify_tries_work,
+                                         max_setvcp_and_verify_tries_expl, "count"},
       {"max-eacces-retry-ms",     '\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &eacces_retry_ms_work, eacces_retry_ms_expl, NULL},
       {"i2c-bus-checks-async-min",'\0', G_OPTION_FLAG_HIDDEN,
@@ -2207,6 +2215,15 @@ parse_command(
    }
    else
       parsed_cmd->resume_after_sleep_ms = (int16_t) resume_after_sleep_ms_work;
+   // -1 is the "not specified" sentinel, leaving the Parsed_Cmd default in place.
+   // Any other value below 1 is rejected: setvcp must attempt the write at least once.
+   if (max_setvcp_and_verify_tries_work != -1 && max_setvcp_and_verify_tries_work < 1) {
+      EMIT_PARSER_ERROR(errmsgs,
+            "--max-setvcp-and-verify-tries must be at least 1: %d", max_setvcp_and_verify_tries_work);
+      parsing_ok = false;
+   }
+   else if (max_setvcp_and_verify_tries_work != -1)
+      parsed_cmd->max_setvcp_and_verify_tries = max_setvcp_and_verify_tries_work;
    if (eacces_retry_ms_work < -1) {
       EMIT_PARSER_ERROR(errmsgs,
             "--max-eacces-retry-ms not a valid value: %d", eacces_retry_ms_work);
