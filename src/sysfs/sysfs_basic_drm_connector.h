@@ -16,6 +16,7 @@
 
 #include "public/ddcutil_types.h"
 
+
 /** What a connector contributes to an #I2C_Bus_Info, and nothing else.
  *
  *  Three of the five fields are the answer -- connector_name and connector_id

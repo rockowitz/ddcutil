@@ -122,7 +122,7 @@ static void one_basic_drm_connector(
  *  @param  depth  logical indentation depth for reporting, -1 for none
  *  @return array of #Sys_Basic_Drm_Connector, never NULL, possibly empty
  */
-GPtrArray * scan_basic_drm_connectors(int depth) {
+GPtrArray * scan_basic_drm_connectors(int depth)  {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
 
