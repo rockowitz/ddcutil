@@ -1,17 +1,19 @@
-## [2.2.8] 2026-09-04   NOT YET FULLY EDITED
+## [2.2.8] 2026-09-07   NOT YET FULLY EDITED
 
 #### Added
 
-
-- Option ***--bus-drm-connector***: lets the user explicitly specify the I2C bus
-  number/DRM connector name pairing for a display, for cases where the sysfs 
-  card-connector directory does not record the bus number and ddcutil's alternative
-  EDID-based association fails or is ambiguous. Addresses issue #608:modified/non-unique EDIDs.
-  The option argument is a quoted string specifying the i2c bus number and connector name, 
-  e.g. ***--bus-drm-connector "5 card1-DP-1"***.
-  - A user specified pairing is an override. It takes precedence over ddcutil's own
-    bus number and EDID based association, which for non-unique EDIDs can silently 
-    choose the wrong connector.
+- Option ***--bus-drm-connector***: lets the user explicitly specify the I2C 
+  bus number/DRM connector name pairing for a display, for cases where the 
+  sysfs card-connector directory does not record the bus number and ddcutil's
+  alternative EDID-based association fails or is ambiguous. Addresses issue
+  #608: Failed to find connector name error with modified EDID
+  The option argumnt is a quoted string specifying the i2c bus number and 
+  connector name, e.g. ***--bus-drm-connector "5 card1-DP-1"***.
+  - A user specified pairing is an override. It applies when the bus number is
+    not available from the sysfs DRM card-connector directory, e.g. with the 
+    Nvidia proprietary driver. It takes precedence over ddcutil's matching the 
+    bus number to card-connector directory by EDID comparison, which can fail 
+    if EDIDs are not unique. 
   - The option can be specified multiple times, once per I2C bus. The bus number 
     and the connector name are validated when options are processed. Specifying 
     the same bus number more than once is an error.
@@ -40,11 +42,11 @@
 - EDID reads now first attempts to use a single combined **I2C_RDWR** ioctl
   transaction (write the EDID block-read command and read the response as
   one multi-message transaction), as is done in kernel DRM processing, 
-  before falling back to the previous separate write-then-read calls, thus 
-  (a) enable reading the EDID on certain monitors that are not otherwise 
-      readable. based on pull request #621: Try a single combined I2C_RDWR 
+  before falling back to the previous separate write-then-read calls. This
+  (a) enables reading the EDID on certain monitors that are not otherwise 
+      readable. Based on pull request #621: Try a single combined I2C_RDWR 
       transaction when reading the EDID
-  (b) reducing I2C bus round trips, 
+  (b) marginally improves perormance by reducing I2C bus round trips, 
 
 #### Fixed
 
@@ -52,26 +54,13 @@
   read because the display adapter is not found. 
   Addresses pull request #619: Do not ignore sysfs class being zero
   and also issue #
+- Thread safety: fixed a potential double free crash caused by unsynchronized
+  lazy initialization of the PNP manufacturer id table in **pnp_name()**. It 
+  could occur when multiple threads first resolved EDID manufacturer names
+- Fixed numerous minor bugs and memory leaks identified by Claude unit tests 
+  and Coverity scan. 
 
-- Thread safety: fixed a double free crash caused by unsynchronized lazy
-  initialization of the PNP manufacturer id table in **pnp_name()**. It could
-  occur when multiple threads first resolved EDID manufacturer names
-  concurrently, e.g. reporting displays from several threads.
-
-- Additional data races fixed: a TOCTOU race on **dref->flags** in the recheck
-  worker thread, a race on **retry_thread_sleep_factor_millisec**, and a TOCTOU
-  race in **compile_and_eval_regex()**.
-
-- Thread safety (found by Coverity static analysis): serialized several
-  unsynchronized reads of shared global state that is written under a mutex —
-  the detected-display list and bus-open-error list, the retry **maxtries**
-  setting, the active API-call count, and the display-lock owner fields — and
-  closed a check-then-act (lock evasion) window when discarding detected
-  displays.
-- Plugged numerous memory leaks
-
-
-- Fixed numerous minor bugs identified by Claude unit tests and Coverity scan. 
+BUG - ddcutil 2.2.5 causes KDE Plasma freeze due to excessive i2c permission checks #581
 
 
     
@@ -161,6 +150,22 @@ The released library file is libddcutil.so.5.5.2. (VERIFY)
 
 - **XInitThreads()** is now called at library-initialization time, before the
   first Xlib call.
+
+  concurrently, e.g. reporting displays from several threads.
+
+- Additional data races fixed: a TOCTOU (Time of Check to Time of Use) race on 
+  **dref->flags** in the recheck worker thread, a race on 
+  **retry_thread_sleep_factor_millisec**, and a TOCTOU race in **compile_and_eval_regex()**.
+
+- Thread safety (found by Coverity static analysis): serialized several
+  unsynchronized reads of shared global state that is written under a mutex —
+  the detected-display list and bus-open-error list, the retry **maxtries**
+  setting, the active API-call count, and the display-lock owner fields — and
+  closed a check-then-act (lock evasion) window when discarding detected
+  displays.
+
+
+
 
 - Thread safety: fixed a use-after-free crash caused by unsynchronized access
   to the per-thread data table in **ptd_get_per_thread_data()**, which could
