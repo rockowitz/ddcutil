@@ -308,16 +308,6 @@ void dw_emit_display_status_record(
    // debug_current_traced_function_stack(false);
    // show_backtrace(0);
    // dbgrpt_display_ref(dref0, true, 2);
-#ifdef OLD
-   if (display_detection_callbacks) {
-      traced_function_stack_suspended = true;
-      for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
-         DDCA_Display_Status_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
-         func(evt);
-      }
-      traced_function_stack_suspended = false;
-   }
-#endif
 
 #ifdef NEWER
    int callback_ct = (display_detection_callbacks) ? display_detection_callbacks->len : 0;
@@ -387,14 +377,6 @@ GMutex emit_or_queue_mutex;
  *  @param  io_path
  *  @param  queue       if non-null, append status event record
  */
-#ifdef OLD_OOC
-/*
-*  @param  dref        display reference, NULL if DDCA_EVENT_BUS_ATTACHED
-*                                              or DDCA_EVENT_BUS_DETACHED
-*  @param  io_path     for DDCA_EVENT_BUS_ATTACHED or DDCA_EVENT_BUS_DETACHED
-*/
-#endif
-
 void dw_emit_or_queue_display_status_event(
       DDCA_Display_Event_Type event_type,
       const char *            connector_name,
@@ -408,19 +390,6 @@ void dw_emit_or_queue_display_status_event(
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
             dref, dref_reprx_t(dref),
             event_type, dw_display_event_type_name(event_type));
-#ifdef OLD
-   if (dref) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, dispno=%d, disconnected=%s, event_type=%d=%s, connector_name=%s",
-         dref, dref_reprx_t(dref), dref->dispno, sbool(dref->disconnected),
-               event_type, dw_display_event_type_name(event_type), connector_name);
-   }
-   else {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, io_path=%s, event_type=%d=%s",
-            connector_name,
-            dpath_repr_t(&io_path),
-            event_type, dw_display_event_type_name(event_type));
-   }
-#endif
    // debug_current_traced_function_stack(false);   // ** TEMP **/
 
    DDCA_Display_Status_Event evt = dw_create_display_status_event(
