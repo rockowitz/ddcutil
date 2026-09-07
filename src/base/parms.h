@@ -15,8 +15,8 @@
 // *** Build options that are not otherwise set
 //
 
-// STATIC_FUNCTIONS_VISIBLE defined in config.h
-// If defined, remove static function qualifier on many functions to
+// Define STATIC_FUNCTIONS_VISIBLE in config.h
+// If defined, the static function qualifier is removed on many functions to
 // make them visible to asan, valgrind, backtrace
 #ifdef STATIC_FUNCTIONS_VISIBLE
 #define STATIC
@@ -24,6 +24,14 @@
 #define STATIC static
 #endif
 
+
+//
+// *** Diagnostic options
+//
+// Is the traced function stack diagnostic tool enabled?
+// Should be left "true" unless a problem is encountered with the facility.
+// Can be overridden by options --enable-traced-function-stack and
+// --disable-traced-function-stack.
 #define DEFAULT_ENABLE_TRACED_FUNCTION_STACK true
 
 
@@ -155,9 +163,8 @@
 #define CHECK_OPEN_BUS_ALIVE_MAX_TRIES 2
 
 // During bus detection, retry interval and max tries for X37 detection
-#define DETECT_X37_MAX_TRIES 2
-#define DETECT_X37_NORMAL_RETRY_MS   200
-#define DETECT_X37_NVIDIA_RETRY_MS  1000
+#define DETECT_X37_MAX_TRIES 3
+#define DETECT_X37_NORMAL_RETRY_MS   100
 
 //
 //  EACCES error recovery
