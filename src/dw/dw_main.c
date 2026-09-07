@@ -140,14 +140,22 @@ resolve_watch_mode(DDC_Watch_Mode initial_mode) {
       initial_mode = Watch_Mode_Dynamic;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After availability check, initial_mode = %s",
                                          watch_mode_name(initial_mode));
+   if (initial_mode == Watch_Mode_Xevent) {
+      // issue warning
+      MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "%s",
+            "Watch mode xevent not working properly, Consider mode udev");
+   }
 
    char * xdg_session_type = getenv("XDG_SESSION_TYPE");
    DDC_Watch_Mode resolved_watch_mode = Watch_Mode_Poll;   // always works, may be slow
    if (initial_mode == Watch_Mode_Dynamic) {
       if (streq(xdg_session_type, "x11")) {
+#ifdef MODE_XEVENT_NOT_WORKING_DONT_RESOLVE_TO_IT
          if ( is_watch_mode_x11_available())
             resolved_watch_mode = Watch_Mode_Xevent;
-         else if ( is_watch_mode_udev_available() )
+         else
+#endif
+            if ( is_watch_mode_udev_available() )
             resolved_watch_mode = Watch_Mode_Udev;
       }
       else if (streq(xdg_session_type, "wayland")) {
