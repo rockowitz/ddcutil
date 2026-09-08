@@ -11,15 +11,20 @@
  *  is_sysfs_reliable_for_driver()'s deterministic branches (known-good
  *  drivers, and any driver name other than "nvidia" that isn't one of
  *  them) plus its force_sysfs_reliable/force_sysfs_unreliable test hooks,
+ *  the same hooks applied to is_sysfs_reliable() and
+ *  is_sysfs_reliable_for_busno(), including that force_sysfs_unreliable wins
+ *  when both are set,
  *  and the driver/class/name lookup functions' handling of an I2C bus
  *  number that does not exist.
  *
  *  Not exercised: functions that depend on the actual DRM connectors and
  *  drivers present on the test host (get_sys_drm_connector_name_by_*(),
  *  all_sys_drm_connectors_have_connector_id_direct(),
- *  is_sysfs_reliable_for_driver("nvidia"), the possibly_write_detect_to_status_*()
- *  family), and search_all_businfo_records_by_connector_name() (requires
- *  the global all_i2c_buses array).
+ *  is_sysfs_reliable_for_driver("nvidia"), is_sysfs_reliable() with neither
+ *  force flag set, the possibly_write_detect_to_status_*() family), and
+ *  search_all_businfo_records_by_connector_name() (requires the global
+ *  all_i2c_buses array).  known_reliable_driver() is static, so it is reached
+ *  only through is_sysfs_reliable_for_driver() above.
  *
  *  Prints one line per failing check and a summary; exit status is 0 if all
  *  checks pass, 1 otherwise.
@@ -167,6 +172,52 @@ static void test_find_sysfs_drm_connector_name_by_edid_empty(void) {
 }
 
 
+/** is_sysfs_reliable() answers for the system rather than for one driver.
+ *
+ *  Only the override branches are deterministic: what it returns with neither
+ *  flag set depends on which drivers are present on the test host, so that is
+ *  not asserted.
+ */
+static void test_is_sysfs_reliable_overrides(void) {
+   force_sysfs_reliable = true;
+   CK(is_sysfs_reliable());
+   force_sysfs_reliable = false;
+
+   force_sysfs_unreliable = true;
+   CK(!is_sysfs_reliable());
+   force_sysfs_unreliable = false;
+
+   // Both set: unreliable is tested first and wins.
+   force_sysfs_unreliable = true;
+   force_sysfs_reliable = true;
+   CK(!is_sysfs_reliable());
+   CK(!is_sysfs_reliable_for_driver("i915"));
+   force_sysfs_unreliable = false;
+   force_sysfs_reliable = false;
+}
+
+
+/** is_sysfs_reliable_for_busno() resolves the bus to a driver and defers.
+ *
+ *  A bus that does not exist yields no driver, which is not a known-reliable
+ *  one, so the answer is false -- and true under the reliable override, which
+ *  shows the override is consulted before the driver name matters.
+ */
+static void test_is_sysfs_reliable_for_busno_overrides(void) {
+   CK(!is_sysfs_reliable_for_busno(NONEXISTENT_BUSNO));
+
+   force_sysfs_reliable = true;
+   CK(is_sysfs_reliable_for_busno(NONEXISTENT_BUSNO));
+   force_sysfs_reliable = false;
+
+   force_sysfs_unreliable = true;
+   CK(!is_sysfs_reliable_for_busno(NONEXISTENT_BUSNO));
+   force_sysfs_unreliable = false;
+
+   CK(!is_sysfs_reliable_for_busno(NONEXISTENT_BUSNO));   // flags restored
+}
+
+
 static void test_is_sysfs_reliable_for_driver(void) {
    CK(is_sysfs_reliable_for_driver("i915"));
    CK(is_sysfs_reliable_for_driver("amdgpu"));
@@ -189,7 +240,7 @@ static void test_is_sysfs_reliable_for_driver(void) {
 
 
 static void test_nonexistent_busno_lookups(void) {
-   char * driver = get_i2c_sysfs_driver_by_busno(NONEXISTENT_BUSNO);
+   char * driver = get_driver_for_busno(NONEXISTENT_BUSNO);
    CK(driver == NULL);
 
    char * name = get_i2c_device_sysfs_name(NONEXISTENT_BUSNO);
@@ -220,6 +271,8 @@ int main(int argc, char ** argv) {
    test_sysfs_connector_directories_exist_idempotent();
    test_find_sysfs_drm_connector_name_by_edid_empty();
    test_is_sysfs_reliable_for_driver();
+   test_is_sysfs_reliable_overrides();
+   test_is_sysfs_reliable_for_busno_overrides();
    test_nonexistent_busno_lookups();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
