@@ -319,7 +319,7 @@ void simple_report_one_connector0(
    char * status       = NULL;
    char * connector_id = NULL;
    char * enabled      = NULL;
-   possibly_write_detect_to_status_by_connector_name(simple_fn);
+   POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(simple_fn);
    GET_ATTR_TEXT(&connector_id,    dirname, simple_fn, "connector_id");
    GET_ATTR_TEXT(&status,          dirname, simple_fn, "status");
    GET_ATTR_TEXT(&enabled,         dirname, simple_fn, "enabled");
@@ -586,71 +586,6 @@ bool all_sys_drm_connectors_have_connector_id_direct() {
 // Driver inquiry functions
 //
 
-/** Given the sysfs path to an adapter of some sort, returns
- *  the name of its driver.
- *
- *  @param adapter_path
- *  @param depth        logical indentation depth
- *  @return name of driver module, NULL if not found
- *
- *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
- *  If depth >= 0, sysfs attributes are reported.
- *  If depth <  0, there is no output
- *
- *  Caller is responsible for freeing the returned value
- */
-char * get_driver_for_adapter(char * adapter_path, int depth) {
-   char * basename = NULL;
-   RPT_ATTR_REALPATH_BASENAME(depth, &basename, adapter_path, "driver", "module");
-   return basename;
-}
-
-
-/** Given a sysfs node, walk up the chain of device directory links
- *  until an adapter node is found, and return the name of its driver.
- *
- *  @param  path   e.g. /sys/bus/i2c/drivers/i2c-5
- *  @param  depth  logical indentation depth
- *  @return sysfs path to adapter
- *
- *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
- *  If depth >= 0, sysfs attributes are reported.
- *  If depth <  0, there is no output
- *
- *  Caller is responsible for freeing the returned value
- */
-char *
-find_adapter_and_get_driver(char * path, int depth) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "path=%s,  depth=%d", path, depth);
-   assert(path);
-   assert(strlen(path)>0);
-
-   char * result = NULL;
-   char * adapter_path = sysfs_find_adapter(path);
-   if (adapter_path) {
-      result = get_driver_for_adapter(adapter_path, depth);
-      free(adapter_path);
-   }
-
-   DBGTRC_DONE(debug, DDCA_TRC_NONE,"Returning: %s", result);
-   return result;
-}
-
-
-/** Returns the name of the video driver for an I2C bus.
- *
- * @param  busno   I2C bus number
- * @return driver name, NULL if can't determine
- *
- * Caller is responsible for freeing the returned string.
- */
-char * get_driver_for_busno(int busno) {
-   char path[PATH_MAX];
-   g_snprintf(path, PATH_MAX, "/sys/bus/i2c/devices/i2c-%d", busno);
-   char * result = find_adapter_and_get_driver(path, -1);
-   return result;
-}
 
 
 //
@@ -684,6 +619,9 @@ void possibly_write_detect_to_status(const char * driver, const char * connector
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "wrote detect to status: %s",
                SBOOL(wrote_detect_to_status));
 }
+
+
+
 
 
 void possibly_write_detect_to_status_by_connector_path(const char * connector_path) {
@@ -731,11 +669,12 @@ void possibly_write_detect_to_status_by_dref(Display_Ref * dref) {
       }
       else {
          if (dref->drm_connector) {
-            possibly_write_detect_to_status_by_connector_name(dref->drm_connector);
+            POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(dref->drm_connector);
          }
       }
    }
 }
+
 
 
 //
@@ -763,7 +702,7 @@ void get_sysfs_drm_add_one_connector_name(
    DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
 
    g_ptr_array_add(accum->all_connectors, strdup(simple_fn));
-   possibly_write_detect_to_status_by_connector_name(simple_fn);
+   POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(simple_fn);
    bool collect = GET_ATTR_EDID(NULL, dirname, simple_fn, "edid");
    if (collect) {
       g_ptr_array_add(accum->connectors_having_edid, g_strdup(simple_fn));
@@ -939,7 +878,7 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
       char * connector_name = g_ptr_array_index(connector_names, ndx);
       GByteArray * sysfs_edid;
       int depth = (debug) ? 1 : -1;
-      possibly_write_detect_to_status_by_connector_name(connector_name);
+      POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(connector_name);
       RPT_ATTR_EDID(depth, &sysfs_edid, "/sys/class/drm", connector_name, "edid");
       if (sysfs_edid) {
          if (sysfs_edid->len >= 128 && memcmp(sysfs_edid->data, edid, 128) == 0)
@@ -956,9 +895,8 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
 
 
 /* i915, amdgpu, radeon, nouveau and (likely) other video drivers that share
- * the kernel's DRM code can be relied on to maintain the edid,
- * status, and enabled attributes as displays are connected and
- * disconnected.
+ * the kernel's DRM code can be relied on to maintain the edid, status, and
+ * enabled attributes as displays are connected and disconnected.
  *
  * Unfortunately depending on version, the nvidia driver does not.
  * Attribute enabled is always "disabled".  It may be the case
@@ -969,15 +907,6 @@ char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * 
  * whether or not a monitor is connected.
  */
 
-typedef struct {
-   bool     known_good_driver_seen;
-   bool     other_driver_seen;
-   uint8_t  nvidia_connector_ct;
-   uint8_t  nvidia_connector_w_edid_ct;
-   uint8_t  nvidia_connector_w_edid_and_connected_ct;
-} Sysfs_Reliability_Accumulator;
-
-
 static
 bool known_reliable_driver(const char * driver) {
    return streq(driver, "i915")   ||
@@ -987,8 +916,49 @@ bool known_reliable_driver(const char * driver) {
           streq(driver, "nouveau");
 }
 
+bool is_driver_reliable(const char * driver_name) {
+   bool debug = false;
 
-static
+   bool result = false;
+   if (known_reliable_driver(driver_name))
+   {
+      result = true;
+   }
+   else if (streq(driver_name, "nvidia")) {
+      if (force_sysfs_reliable)
+         result = true;
+   }
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "driverr_name=%s, returning %s", driver_name, sbool(result));
+   return result;
+}
+
+
+
+bool is_connector_reliable(const char * connector_name) {
+   bool debug = true;
+   bool result = false;
+
+   char buf[PATH_MAX];
+   g_snprintf(buf, PATH_MAX, "/sys/ckass.drn/%s", connector_name);
+   char * driver = find_adapter_and_get_driver(buf, -1);
+   result = is_driver_reliable(driver);
+
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "connector_name=%s, returning %s", connector_name, sbool(result));
+   return result;
+}
+
+
+typedef struct {
+   bool     known_good_driver_seen;
+   bool     other_driver_seen;
+   uint8_t  nvidia_connector_ct;
+   uint8_t  nvidia_connector_w_edid_ct;
+   uint8_t  nvidia_connector_w_edid_and_connected_ct;
+} Sysfs_Reliability_Accumulator;
+
+
+
+// static
 void check_connector_reliability(
             const char *  dirname,
             const char *  fn,
@@ -1013,7 +983,7 @@ void check_connector_reliability(
       // does not guarantee that DRM connector is updated when a display is connected/disconnected
       accum->nvidia_connector_ct++;
       GByteArray * edid_byte_array = NULL;
-      possibly_write_detect_to_status_by_connector_name(fn);
+      POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(fn);
       RPT_ATTR_EDID(debug_depth, &edid_byte_array, dirname, fn, "edid");   // e.g. /sys/class/drm/card0-DP-1/edid
       // DBGMSG("edid_byte_array=%p", (void*)edid_byte_array);
       if (edid_byte_array) {
@@ -1043,7 +1013,7 @@ static bool other_drivers_seen = false;
 static bool nvidia_connectors_reliable = false;
 static bool nvidia_connectors_exist = false;
 
-static
+// static
 void check_sysfs_reliability() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
@@ -1183,6 +1153,25 @@ get_i2c_device_sysfs_name(int busno)
    return name;
 }
 
+/** Given the sysfs path to an adapter of some sort, returns
+ *  the name of its driver.
+ *
+ *  @param adapter_path
+ *  @param depth        logical indentation depth
+ *  @return name of driver module, NULL if not found
+ *
+ *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
+ *  If depth >= 0, sysfs attributes are reported.
+ *  If depth <  0, there is no output
+ *
+ *  Caller is responsible for freeing the returned value
+ */
+char * get_driver_for_adapter(char * adapter_path, int depth) {
+   char * basename = NULL;
+   RPT_ATTR_REALPATH_BASENAME(depth, &basename, adapter_path, "driver", "module");
+   return basename;
+}
+
 
 /** Given a sysfs node, walk up the chain of device directory links
  *  until an adapter node is found.
@@ -1231,6 +1220,38 @@ char * sysfs_find_adapter(char * path) {
 }
 
 
+/** Given a sysfs node, walk up the chain of device directory links
+ *  until an adapter node is found, and return the name of its driver.
+ *
+ *  @param  path   e.g. /sys/bus/i2c/drivers/i2c-5
+ *  @param  depth  logical indentation depth
+ *  @return sysfs path to adapter
+ *
+ *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
+ *  If depth >= 0, sysfs attributes are reported.
+ *  If depth <  0, there is no output
+ *
+ *  Caller is responsible for freeing the returned value
+ */
+char *
+find_adapter_and_get_driver(char * path, int depth) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "path=%s,  depth=%d", path, depth);
+   assert(path);
+   assert(strlen(path)>0);
+
+   char * result = NULL;
+   char * adapter_path = sysfs_find_adapter(path);
+   if (adapter_path) {
+      result = get_driver_for_adapter(adapter_path, depth);
+      free(adapter_path);
+   }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE,"Returning: %s", result);
+   return result;
+}
+
+
 #ifdef OLD
 char * sysfs_find_adapter_old(char * path) {
    bool debug = false;
@@ -1276,6 +1297,23 @@ char * sysfs_find_adapter_old(char * path) {
 #endif
 
 
+/** Returns the name of the video driver for an I2C bus.
+ *
+ * @param  busno   I2C bus number
+ * @return driver name, NULL if can't determine
+ *
+ * Caller is responsible for freeing the returned string.
+ */
+char * get_driver_for_busno(int busno) {
+   char path[PATH_MAX];
+   g_snprintf(path, PATH_MAX, "/sys/bus/i2c/devices/i2c-%d", busno);
+   char * result = find_adapter_and_get_driver(path, -1);
+   return result;
+}
+
+
+
+#ifdef DUPLICATIVE
 /** Gets the driver name of an I2C device,
  *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
  *
@@ -1317,6 +1355,7 @@ get_i2c_sysfs_driver_by_busno(int busno) {
    DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning %s", busno, driver_name);
    return driver_name;
 }
+#endif
 
 
 #ifdef UNUSED
@@ -1497,7 +1536,8 @@ sysfs_is_ignorable_i2c_device(int busno) {
 
    bool ignorable = false;
    char * name = get_i2c_device_sysfs_name(busno);
-   char * driver = get_i2c_sysfs_driver_by_busno(busno);
+   // char * driver = get_i2c_sysfs_driver_by_busno(busno);
+   char * driver = get_driver_for_busno(busno);
    if (!streq(name,"DPMST")) {      // streq() handles NULL
       if (name) {
          ignorable = ignorable_i2c_device_sysfs_name(name, driver);
@@ -1580,6 +1620,8 @@ int search_all_businfo_records_by_connector_name(char *connector_name) {
 
 /** Module initialization */
 void init_i2c_sysfs_base() {
+   RTTI_ADD_FUNC(is_connector_reliable);
+   RTTI_ADD_FUNC(is_driver_reliable);
    RTTI_ADD_FUNC(check_connector_reliability);
    RTTI_ADD_FUNC(check_sysfs_reliability);
    RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
@@ -1587,7 +1629,7 @@ void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
-   RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
+//   RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
    RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
    RTTI_ADD_FUNC(get_sysfs_drm_connector_names);
    RTTI_ADD_FUNC(ignorable_i2c_device_sysfs_name);

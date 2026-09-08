@@ -17,26 +17,6 @@ extern bool force_sysfs_unreliable;
 extern bool force_sysfs_reliable;
 extern bool enable_write_detect_to_status;
 
-// predicate functions
-// typedef Dir_Filter_Func
-bool        is_n_nnnn(const char * dirname, const char * simple_fn);
-
-GPtrArray * get_sys_video_devices();
-void        dbgrpt_sysfs_basic_connector_attributes(int depth);
-char *      get_sys_drm_connector_name_by_connector_id(int connector_id);
-char *      get_sys_drm_connector_name_by_busno(int busno);
-bool        all_sys_drm_connectors_have_connector_id_direct();
-
-char *      get_driver_for_adapter(char * adapter_path, int depth);
-// char *      find_adapter(char * path, int depth); // MOVED
-char *      find_adapter_and_get_driver(char * path, int depth);
-char *      get_driver_for_busno(int busno);
-
-void possibly_write_detect_to_status(const char * driver, const char * connector);
-void possibly_write_detect_to_status_by_connector_name(const char * connector);
-void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo);
-void possibly_write_detect_to_status_by_dref(Display_Ref * dref);
-void possibly_write_detect_to_status_by_connector_path(const char * path);
 
 
 typedef struct {
@@ -68,28 +48,77 @@ Sysfs_Connector_Names
             copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
 char *      find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
 
+bool        is_driver_reliable(const char * driver_name);
+bool        is_connector_reliable(const char * connector_name);
+
 bool        is_sysfs_reliable_for_driver(const char * driver);
 bool        is_sysfs_reliable_for_busno(int busno);
 bool        is_sysfs_reliable();
 
 
+
+// predicate functions
+// typedef Dir_Filter_Func
+bool        is_n_nnnn(const char * dirname, const char * simple_fn);
+
+GPtrArray * get_sys_video_devices();
+void        dbgrpt_sysfs_basic_connector_attributes(int depth);
+char *      get_sys_drm_connector_name_by_connector_id(int connector_id);
+char *      get_sys_drm_connector_name_by_busno(int busno);
+bool        all_sys_drm_connectors_have_connector_id_direct();
+
+
+
+
+void possibly_write_detect_to_status(const char * driver, const char * connector);
+void possibly_write_detect_to_status_by_connector_name(const char * connector);
+void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo);
+void possibly_write_detect_to_status_by_dref(Display_Ref * dref);
+void possibly_write_detect_to_status_by_connector_path(const char * path);
+
+#define WRITE_DETECT_TO_STATUS 1
+#ifdef WRITE_DETECT_TO_STATUS
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH possibly_write_detect_to_status_by_connector_path
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME possibly_write_detect_to_status_by_connector_name
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO        possibly_write_detect_to_status_by_businfo
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_DREF           possibly_write_detect_to_status_by_dref
+#else
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_DREF
+#endif
+
+
+
+
+
+
 // moved from sysfs_i2c_util.h:
 
+char *      find_adapter_and_get_driver(char * path, int depth);
+char *      get_driver_for_adapter(char * adapter_path, int depth);
+// char *      find_adapter(char * path, int depth); // MOVED
 char *
 sysfs_find_adapter(char * path);
 
+#ifdef DUPLICATIVE
 char *
 get_i2c_sysfs_driver_by_busno(
       int busno);
+#endif
+
+char *      get_driver_for_busno(int busno);
 
 char *
 get_i2c_sysfs_driver_by_device_name(
       char * device_name);
 
+#ifdef UNUSED
 char *
 get_i2c_sysfs_driver_by_fd(
       int fd);
-
+#endif
 uint32_t
 get_i2c_device_sysfs_class(
       int busno);
