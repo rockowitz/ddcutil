@@ -78,7 +78,7 @@ static Sys_Basic_Drm_Connector * one_basic_drm_connector0(
    // the drivers where that is needed and only when the user asked for it with
    // --f24.  Same call the full scan makes; skipping it would make this scan
    // quietly different rather than merely cheaper.
-   possibly_write_detect_to_status_by_connector_name(fn);
+   POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(fn);
 
    GByteArray * edid_byte_array = NULL;
    RPT_ATTR_EDID(d0, &edid_byte_array, dirname, fn, "edid");
