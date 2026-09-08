@@ -461,7 +461,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
 
       int depth = IS_DBGTRC(debug, DDCA_TRC_NONE) ? 1 : -1;
       if (businfo->drm_connector_name) {
-         possibly_write_detect_to_status_by_connector_name(businfo->drm_connector_name);
+         POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(businfo->drm_connector_name);
          if (depth > 0)
             rpt_label(0, "Current sysfs attributes:");
          RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "dpms");
