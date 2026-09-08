@@ -1,4 +1,11 @@
-/** @file sysfs_i2c_info.c */
+/** @file sysfs_i2c_info.c
+ *
+ *  Collects and reports information about I2C buses and their associated
+ *  drivers adapters, and conflicting drivers from the sysfs filesystem.
+ *
+ *  Used only for system exploration and debugging, not for normal ddcutil
+ *  operation.
+ * */
 
 // Copyright (C) 2020-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
