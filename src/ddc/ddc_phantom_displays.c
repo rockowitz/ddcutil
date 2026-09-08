@@ -81,7 +81,8 @@ is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
          if (ok) {
             result = true;
             char * attr_value = NULL;
-            possibly_write_detect_to_status_by_connector_path(invalid_rpath);
+            POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH(invalid_rpath);
+            // probably correct, but may not be if not a reliable driver
             ok = RPT_ATTR_TEXT(0, &attr_value, invalid_rpath, "status");
             if (!ok  || !streq(attr_value, "disconnected"))
                result = false;
