@@ -149,7 +149,8 @@ is_nvidia_einval_bug(
    bool debug = false;
    bool result = false;
    if ( rc == -EINVAL && strategy_id == I2C_IO_STRATEGY_IOCTL) {
-      char * driver_name = get_i2c_sysfs_driver_by_busno(busno);
+      // char * driver_name = get_i2c_sysfs_driver_by_busno(busno);
+      char * driver_name = get_driver_for_busno(busno);
       if (streq(driver_name, "nvidia")) {
          nvidia_einval_bug_encountered = true;
          i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
