@@ -279,7 +279,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          // char * drm_connector_name = i2c_get_drm_connector_name(businfo);
          char * drm_connector_name = businfo ? businfo->drm_connector_name : NULL;
          if (businfo) {
-            possibly_write_detect_to_status_by_businfo(businfo);
+            POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO(businfo);
             if (drm_connector_name) { // would be null for a non drm driver
                RPT_ATTR_TEXT(-1, &drm_dpms,    "/sys/class/drm", drm_connector_name, "dpms");
                RPT_ATTR_TEXT(-1, &drm_status,  "/sys/class/drm", drm_connector_name, "status");  // connected, disconnected
