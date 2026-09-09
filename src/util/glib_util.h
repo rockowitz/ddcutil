@@ -19,6 +19,17 @@
 extern "C" {
 #endif
 
+/** Documents the element type of a #GPtrArray.
+ *
+ *  Resolves to plain `GPtrArray`, so it is a comment the compiler will not let
+ *  drift out of the declaration -- it records what the array holds, nothing
+ *  more.  There is no type checking: the elements remain `gpointer`, and
+ *  assigning a GPTRARRAY(A) to a GPTRARRAY(B) is not an error.
+ *
+ *  @param  _type  element type the array holds, e.g. GPTRARRAY(Sys_Drm_Connector) *
+ */
+#define GPTRARRAY(_type) GPtrArray
+
 gpointer *
 g_list_to_g_array(
       GList * glist,
