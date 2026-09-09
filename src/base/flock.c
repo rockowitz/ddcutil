@@ -296,7 +296,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
       DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "flock() for %s failed on %d calls", filename, flock_call_ctr);
       DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Flock diagnostics:");
       show_flock(filename, true);
-      backtrace_to_syslog(LOG_ERR, 0);
+      // backtrace_to_syslog(LOG_ERR, 0);
    }
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE,flockrc, "filename=%s", filename);
    return flockrc;
