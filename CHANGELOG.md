@@ -1,4 +1,6 @@
-## [2.2.8] 2026-09-07   NOT YET FULLY EDITED
+## [2.2.8] 2026-09-09   DRAFT
+
+### Gemeral
 
 #### Added
 
@@ -22,12 +24,17 @@
     one that ddcutil determines on its own.
   - To avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
     the value **DDCA_DRM_CONNECTOR_NOT_FOUND** is used externally for this situation.
+- Option ***--max-setvcp-and-verify-tries***: Specifies the maximum number of 
+  set-then-verify cycles executed by command **setvcp --verify**. Work around for 
+  issue #626: Set VCP write is ignored on an LG display when initial DDC checks 
+  are skipped.
 
 #### Performance Changes
 
-- Retuned slave-address x37 detection. The retry interval is now 100ms for all
-  drivers.  Max tries remains at 3, but is increased to 5 if an attempt fails 
-  with status EBUSY. Addresses issue #607, 
+- Adjusted the tuning of slave-address x37 detection. The retry interval is now 100ms 
+  for all drivers.  Max tries remains at 3, but is increased to 5 if an attempt fails 
+  with status EBUSY. Addresses issue #607,
+- Reduce command initialization time. 
 
 #### Miscellaneous Changes
 
@@ -36,11 +43,11 @@
 - The handler that writes a crash report to the system log, which hitherto
   handled **SIGSEGV** only, now also catches **SIGBUS**, **SIGILL**, **SIGFPE** 
   and **SIGABRT**. 
-- Reduce duplicated messages in the system log when trace output is redirected
+- Reduce duplicative messages in the system log when trace output is redirected
   to the system log.
-- EDID reads now first attempts to use a single combined **I2C_RDWR** ioctl
-  transaction (write the EDID block-read command and read the response as
-  one multi-message transaction), as is done in kernel DRM processing, 
+- When reading EDID using I2C, first attempts to use a single combined 
+  **I2C_RDWR** ioctl transaction (write the EDID block-read command and read the
+  response as one multi-message transaction), as is done in kernel DRM processing, 
   before falling back to the previous separate write-then-read calls. This
   (a) enables reading the EDID on certain monitors that are not otherwise 
       readable. Based on pull request #621: Try a single combined I2C_RDWR 
@@ -49,22 +56,22 @@
 
 #### Fixed
 
+- The test that ddcutil was using to determine the reliability of sysfs drm
+  attributes edid, status, and connected was itself unreliable.  By default, 
+  ddcutil only regards drivers that are part of the kernel, e.g. i915, amdgpu, 
+  nouveau, as reliable in this regard.  In particular, the proprietary nvidia
+  video driver is not. Accelerations that rely on these attributes are by 
+  default available only to reliable drivers. For nvidia, reliability is 
+  only an issue if displays are connected and disconnected after boot. Option 
+  ***--force-sysfs-reliable*** forces all drivers, in particula nvidia, 
+  to be regarded as reliable.
 - Do not ignore /dev/i2c devices on SOC systems whose adapter class cannot be
-  read because the display adapter is not found. 
-  Addresses pull request #619: Do not ignore sysfs class being zero
-  and also issue #
-- Thread safety: fixed a potential double free crash caused by unsynchronized
-  lazy initialization of the PNP manufacturer id table in **pnp_name()**. It 
-  could occur when multiple threads first resolved EDID manufacturer names
+  read because the display adapter is not found. Addresses pull request #619: 
+  Do not ignore sysfs class being zero.
 - Fixed numerous minor bugs and memory leaks identified by Claude unit tests 
   and Coverity scan. 
-
-BUG - ddcutil 2.2.5 causes KDE Plasma freeze due to excessive i2c permission checks #581
-
-
-    
-
-#### Building
+  
+### Building
 
 - Added a suite of standalone unit tests, covering most of the C source tree.
   - The tests target each module's pure, hardware-independent logic (parsing, 
@@ -86,7 +93,7 @@ BUG - ddcutil 2.2.5 causes KDE Plasma freeze due to excessive i2c permission che
 
 The shared library **libddcutil** is backwardly compatible with those in
 ddcutil 2.2.1 and later. The SONAME is unchanged as libddcutil.so.5. 
-The released library file is libddcutil.so.5.5.2. (VERIFY)
+The released library file is libddcutil.so.5.6.0.
 
 #### Added
 
@@ -107,8 +114,16 @@ The released library file is libddcutil.so.5.5.2. (VERIFY)
 - A burst of udev events, common following a resume, is coalesced to
   avoid a storm of redundant bus rescans.
 - Do not try to open a /dev/i2c device whose DRM connector reports "disconnected".
+  Applies only to in kernel video drivers (e.g. amdgpu, i915, nouveau), not to
+  the proprietary Nvidia driver, for which the status attribute is unreliable.
 
-#### EACCESS Errors
+#### EACCES Errors
+
+Further work to reduce the impact of EACCES errors that can occur when opening 
+/dev/i2c devices immediately after initiailzation and after resume from sleep.
+The cause is udev not having yet applied permissions specified by uaccess.
+In particular, adddresses issue #581:ddcutil 2.2.5 causes KDE Plasma freeze due 
+to excessive i2c permission checks
 
 - Recovery from the transient loss of /dev/i2c permissions (EACCES errors) 
   when opening /dev/i2c devices after resume from sleep or at login is now
@@ -150,8 +165,6 @@ The released library file is libddcutil.so.5.5.2. (VERIFY)
 - **XInitThreads()** is now called at library-initialization time, before the
   first Xlib call.
 
-  concurrently, e.g. reporting displays from several threads.
-
 - Additional data races fixed: a TOCTOU (Time of Check to Time of Use) race on 
   **dref->flags** in the recheck worker thread, a race on 
   **retry_thread_sleep_factor_millisec**, and a TOCTOU race in **compile_and_eval_regex()**.
@@ -162,9 +175,6 @@ The released library file is libddcutil.so.5.5.2. (VERIFY)
   setting, the active API-call count, and the display-lock owner fields — and
   closed a check-then-act (lock evasion) window when discarding detected
   displays.
-
-
-
 
 - Thread safety: fixed a use-after-free crash caused by unsynchronized access
   to the per-thread data table in **ptd_get_per_thread_data()**, which could
