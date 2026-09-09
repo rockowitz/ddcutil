@@ -1,7 +1,7 @@
 /** @file test_sysfs_i2c_info.c
  *
  *  Standalone unit tests for src/sysfs/sysfs_i2c_info.c:
- *  get_i2c_driver_info()/get_basic_i2c_driver_info() for a bus number that
+ *  get_i2c_driver_info() and get_basic_i2c_info() for a bus number that
  *  does not exist, the lifecycle function, and smoke tests of the
  *  whole-system scan functions (get_all_sysfs_i2c_info(),
  *  get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info()) -- these scan
@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "sysfs/sysfs_base.h"
 #include "sysfs/sysfs_i2c_info.h"
 
 static int total = 0;
@@ -53,12 +54,12 @@ static void test_get_i2c_driver_info_nonexistent_bus(void) {
       free_sysfs_i2c_info(info);
    }
 
-   info = get_basic_i2c_driver_info(NONEXISTENT_BUSNO);
-   CK(info != NULL);
-   if (info) {
-      CK(info->adapter_path == NULL);
-      free_sysfs_i2c_info(info);
-   }
+   // get_basic_i2c_info() returns by value, and reads only driver and
+   // adapter class, both NULL when there is no adapter behind the bus
+   Sysfs_Basic_I2C_Info basic = get_basic_i2c_info(NONEXISTENT_BUSNO);
+   CK(basic.driver == NULL);
+   CK(basic.adapter_class == NULL);
+   free_sysfs_basic_i2c_info_contents(basic);   // must not crash on NULL fields
 }
 
 

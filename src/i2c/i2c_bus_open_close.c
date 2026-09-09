@@ -51,7 +51,6 @@
 
 #include "sysfs/sysfs_base.h"
 #include "sysfs/sysfs_dpms.h"
-#include "sysfs/sysfs_i2c_info.h"
 #include "sysfs/sysfs_sys_drm_connector.h"
 
 #ifdef TARGET_BSD

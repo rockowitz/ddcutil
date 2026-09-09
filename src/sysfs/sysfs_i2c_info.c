@@ -168,16 +168,6 @@ Sysfs_I2C_Info *  get_i2c_driver_info(int busno, int depth) {
 }
 
 
-/** Returns adapter information for a bus without reporting, i.e.
- *  #get_i2c_driver_info() at depth -1.
- *
- *  @param  busno  I2C bus number
- *  @return newly allocated #Sysfs_I2C_Info struct, never NULL.
- *          Caller frees using #free_sysfs_i2c_info().
- */
-Sysfs_I2C_Info * get_basic_i2c_driver_info(int busno) {
-   return get_i2c_driver_info(busno, -1);
-}
 
 
 

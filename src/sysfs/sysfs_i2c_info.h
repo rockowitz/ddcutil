@@ -30,7 +30,6 @@ typedef struct {
 
 void             free_sysfs_i2c_info(Sysfs_I2C_Info * info);
 Sysfs_I2C_Info * get_i2c_driver_info(int busno, int depth);
-Sysfs_I2C_Info * get_basic_i2c_driver_info(int busno);
 GPTRARRAY(Sysfs_I2C_Info)*
                  get_all_sysfs_i2c_info(bool rescan, int depth);  // returns array of pointers to Sysfs_I2C_Info
 void             dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth);

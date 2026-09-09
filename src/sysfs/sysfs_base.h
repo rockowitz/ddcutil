@@ -56,29 +56,35 @@ char *      get_sys_drm_connector_name_by_connector_id(int connector_id);
 char *      get_sys_drm_connector_name_by_busno(int busno);
 bool        all_sys_drm_connectors_have_connector_id_direct();
 
-
-
-
-
-
-
-
-// moved from sysfs_i2c_util.h:
-
-
-
-char *
-get_i2c_sysfs_driver_by_device_name(
-      char * device_name);
+char *      get_i2c_sysfs_driver_by_device_name(char * device_name);
 
 #ifdef UNUSED
 char *
 get_i2c_sysfs_driver_by_fd(
       int fd);
 #endif
-// moved from dw_udev.h:
 
 int search_all_businfo_records_by_connector_name(char *connector_name);
+
+/** What #i2c_check_bus() needs from sysfs about an I2C bus, and nothing else.
+ *
+ *  **driver** becomes I2C_Bus_Info.driver, and is what every later reliability
+ *  decision branches on.  **adapter_class** is tested for a display
+ *  controller; a bus whose adapter is not one is rejected outright.
+ *
+ *  #Sysfs_I2C_Info carries five further fields -- busno, name, adapter_path,
+ *  driver_version, conflicting_driver_names -- that this path never reads.
+ *  Two of them cost a sysfs attribute read apiece, and collecting
+ *  conflicting_driver_names costs two directory walks per bus, so a collector
+ *  filling only this struct is cheaper than one filling the full record.
+ */
+typedef struct {
+   char * driver;
+   char * adapter_class;
+} Sysfs_Basic_I2C_Info;
+
+Sysfs_Basic_I2C_Info get_basic_i2c_info(int busno);
+void                 free_sysfs_basic_i2c_info_contents(Sysfs_Basic_I2C_Info info);
 
 void init_i2c_sysfs_base();
 

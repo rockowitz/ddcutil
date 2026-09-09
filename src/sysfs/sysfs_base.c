@@ -717,11 +717,61 @@ bool is_sysfs_reliable() {
 
 
 /** Module initialization */
+
+
+
+/** Frees the strings a #Sysfs_Basic_I2C_Info holds.
+ *
+ *  @param  info  struct whose contents are to be freed
+ *
+ *  @remark
+ *  Frees the contents, not the struct, which is returned by value rather than
+ *  allocated.  The caller's copy holds the freed pointers afterward.
+ */
+void free_sysfs_basic_i2c_info_contents(Sysfs_Basic_I2C_Info info) {
+   free(info.driver);
+   free(info.adapter_class);
+}
+
+
+/** Returns just the driver and adapter class for an I2C bus.
+ *
+ *  Reads only the two attributes #i2c_check_bus() uses, where
+ *  #get_i2c_driver_info() also reads the bus name and the driver version and
+ *  retains the adapter path.  Emits no report.
+ *
+ *  @param  busno  I2C bus number
+ *  @return #Sysfs_Basic_I2C_Info, returned by value.  Either field is NULL if
+ *          the attribute could not be read, which is the normal outcome for a
+ *          bus with no adapter behind it.  Caller frees the contents using
+ *          #free_sysfs_basic_i2c_info_contents().
+ */
+Sysfs_Basic_I2C_Info get_basic_i2c_info(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
+
+   Sysfs_Basic_I2C_Info result = {NULL, NULL};
+   char bus_path[40];
+   g_snprintf(bus_path, 40, "/sys/bus/i2c/devices/i2c-%d", busno);
+   char * adapter_path = sysfs_find_adapter(bus_path);
+   if (adapter_path) {
+      RPT_ATTR_TEXT(             -1, &result.adapter_class, adapter_path, "class");
+      RPT_ATTR_REALPATH_BASENAME(-1, &result.driver,        adapter_path, "driver");
+      free(adapter_path);   // not retained, unlike in get_i2c_driver_info()
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "driver=%s, adapter_class=%s",
+         result.driver, result.adapter_class);
+   return result;
+}
+
+
 void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(check_connector_reliability);
    RTTI_ADD_FUNC(check_sysfs_reliability);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_sysfs_drm_connector_names);
+   RTTI_ADD_FUNC(get_basic_i2c_info);
    RTTI_ADD_FUNC(is_connector_reliable);
    RTTI_ADD_FUNC(is_driver_reliable);
    RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);

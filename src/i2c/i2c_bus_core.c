@@ -48,7 +48,6 @@
 #include "sysfs/sysfs_base.h"
 #include "sysfs/sysfs_simple.h"
 #include "sysfs/sysfs_dpms.h"
-#include "sysfs/sysfs_i2c_info.h"
 #include "sysfs/sysfs_sys_drm_connector.h"
 
 #ifdef TARGET_BSD
@@ -932,17 +931,15 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
 
    if (!primitive_sysfs) {
       if (!businfo->driver) {
-         Sysfs_I2C_Info * driver_info = get_i2c_driver_info(businfo->busno, -1);
-         businfo->driver = g_strdup(driver_info->driver);  // ** LEAKY
-         // perhaps save businfo->driver_version
-         // assert(driver_info->adapter_class);
-         if (driver_info->adapter_class && 
-             !is_adapter_class_display_controller(driver_info->adapter_class) ) 
+         Sysfs_Basic_I2C_Info driver_info = get_basic_i2c_info(businfo->busno);
+         businfo->driver = g_strdup(driver_info.driver);
+         if (driver_info.adapter_class &&
+             !is_adapter_class_display_controller(driver_info.adapter_class) )
          {
                master_err = ERRINFO_NEW(DDCRC_OTHER, "Display controller for bus %d has class %s",
-                   businfo->busno, driver_info->adapter_class);
+                   businfo->busno, driver_info.adapter_class);
          }
-         free_sysfs_i2c_info(driver_info);
+         free_sysfs_basic_i2c_info_contents(driver_info);
          if (master_err) {
             goto bye;
          }
