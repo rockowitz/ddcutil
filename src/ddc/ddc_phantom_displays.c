@@ -16,6 +16,7 @@
 #include "base/rtti.h"
 
 #include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_simple.h"
 
 #include "ddc_phantom_displays.h"
 

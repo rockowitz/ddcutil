@@ -41,6 +41,7 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
+#include "sysfs/sysfs_simple.h"
 #include "sysfs/sysfs_dpms.h"
 #include "sysfs/sysfs_base.h"
 

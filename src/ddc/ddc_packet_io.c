@@ -47,6 +47,7 @@
 #include "base/tuned_sleep.h"
 #include "base/per_display_data.h"
 
+#include "sysfs/sysfs_simple.h"
 #include "sysfs/sysfs_base.h"
 #include "sysfs/sysfs_dpms.h"
 

@@ -33,6 +33,7 @@
 #include "base/rtti.h"
 
 #include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_simple.h"
 #include "sysfs/sysfs_i2c_info.h"
 #include "sysfs/sysfs_sys_drm_connector.h"
 #include "sysfs/sysfs_conflicting_drivers.h"

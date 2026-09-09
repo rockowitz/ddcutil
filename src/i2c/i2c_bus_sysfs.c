@@ -32,6 +32,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
+#include "sysfs/sysfs_simple.h"
 #include "sysfs/sysfs_base.h"
 #include "sysfs/sysfs_basic_drm_connector.h"
 #include "sysfs/sysfs_sys_drm_connector.h"
