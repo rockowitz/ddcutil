@@ -36,7 +36,7 @@ void consolidated_i2c_sysfs_report(int depth) {
    rpt_nl();
 
    rpt_label(d0, "*** Sysfs I2C devices possibly associated with displays ***");
-   Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info();
+   Bit_Set_256 buses = get_possible_ddc_bus_numbers_using_sysfs_i2c_info();
    rpt_vstring(d0, "I2C buses to check: %s", bs256_to_string_t(buses, "x", " "));
    rpt_nl();
 
