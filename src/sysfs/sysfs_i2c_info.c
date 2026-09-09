@@ -61,6 +61,11 @@ static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_SYSFS;
 // Sysfs_I2C_Info
 //
 
+/** Reports the contents of one #Sysfs_I2C_Info instance.
+ *
+ *  @param  info   instance to report
+ *  @param  depth  logical indentation depth
+ */
 void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Sysfs_I2C_Info", info, depth);
@@ -81,6 +86,11 @@ void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
 }
 
 
+/** Reports an array of #Sysfs_I2C_Info instances.
+ *
+ *  @param  infos  array of pointers to #Sysfs_I2C_Info, may be NULL or empty
+ *  @param  depth  logical indentation depth
+ */
 void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth) {
    rpt_vstring(depth, "All Sysfs_I2C_Info records");
    if (infos && infos->len > 0) {
@@ -92,9 +102,15 @@ void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth) {
 }
 
 
-static GPtrArray * all_i2c_info = NULL;
+static GPTRARRAY(Sysfs_I2C_Info) * all_i2c_info = NULL;
 
 
+/** Frees a #Sysfs_I2C_Info instance and everything it points to.
+ *
+ *  NULL safe, and so suitable as a #GDestroyNotify.
+ *
+ *  @param  info  instance to free
+ */
 void free_sysfs_i2c_info(Sysfs_I2C_Info * info) {
    if (info) {
       free(info->name);
@@ -109,49 +125,23 @@ void free_sysfs_i2c_info(Sysfs_I2C_Info * info) {
 }
 
 
-char * best_driver_name_for_n_nnnn(const char * dirname, const char * fn, int depth) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=%s", dirname, fn);
-
-   char * best_name = NULL;
-   char * attr = "name";
-   RPT_ATTR_TEXT(depth, &best_name, dirname, fn, attr);
-   if (!best_name) {
-      // N.  subdirectory driver does not always exist, e.g. for ddcci N-0037
-      attr = "driver/module";
-      RPT_ATTR_REALPATH_BASENAME(depth, &best_name, dirname, fn, attr);
-      if (!best_name) {
-         attr = "modalias";
-         RPT_ATTR_TEXT(depth, &best_name, dirname, fn, attr);
-      }
-   }
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "using attr=%s, returning: %s",
-                 attr, best_name);
-   return best_name;
-}
-
-
-// typedef Dir_Foreach_Func
-void simple_one_n_nnnn(
-      const char * dir_name,  // e.g. /sys/bus/i2c/devices/i2c-4
-      const char * fn,        // e.g. 4-0037
-      void *       accumulator,
-      int          depth)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=%s, depth=%d", dir_name, fn, depth);
-
-   char * best_name = best_driver_name_for_n_nnnn(dir_name, fn, depth);
-   if (best_name) {
-      gaux_unique_string_ptr_array_include(accumulator,best_name );
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "appending: |%s|", best_name);
-      free(best_name);
-   }
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-
-
+/** Returns a newly allocated #Sysfs_I2C_Info struct describing the adapter
+ *  behind a /sys/bus/i2c/devices/i2c-N instance: its name, and the path,
+ *  class, driver, and driver version of the adapter.
+ *
+ *  Field **conflicting_driver_names** is left NULL.  Collecting it means
+ *  scanning for the slave devices on the bus, which costs a directory walk
+ *  apiece; #get_i2c_info() is the entry point that pays for it.
+ *
+ *  @param  busno  I2C bus number
+ *  @param  depth  logical indentation depth, if < 0 do not emit report
+ *  @return newly allocated #Sysfs_I2C_Info struct, never NULL.
+ *          Caller frees using #free_sysfs_i2c_info().
+ *
+ *  @remark
+ *  If tracing is enabled and **depth** is < 0, it is forced to 2, so a traced
+ *  run reports the attributes it reads even when the caller asked for silence.
+ */
 Sysfs_I2C_Info *  get_i2c_driver_info(int busno, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, depth=%d", busno, depth);
@@ -178,19 +168,117 @@ Sysfs_I2C_Info *  get_i2c_driver_info(int busno, int depth) {
 }
 
 
+/** Returns adapter information for a bus without reporting, i.e.
+ *  #get_i2c_driver_info() at depth -1.
+ *
+ *  @param  busno  I2C bus number
+ *  @return newly allocated #Sysfs_I2C_Info struct, never NULL.
+ *          Caller frees using #free_sysfs_i2c_info().
+ */
 Sysfs_I2C_Info * get_basic_i2c_driver_info(int busno) {
    return get_i2c_driver_info(busno, -1);
 }
 
 
-/** Returns a newly allocated #Sysfs_I2c_Info struct describing
+
+//  get_all_sysfs_i2c_info collector tree.
+//
+// Collection of functions that performs sysfs tree traversal to create
+// an array of #Sysfs_I2C_Info structs with information about each
+// /dev/i2c device.
+//
+// The top level primary collector is get_all_sysfs_i2c_info()
+
+
+/** Returns the most informative name available for an I2C slave device
+ *  directory, i.e. one named D-00hh.
+ *
+ *  This is a helper function called by leaf function #simple_one_n_nnnn().
+ *
+ *  Three attributes are tried in order of how well they identify the device:
+ *  **name**, then the basename of **driver/module**, then **modalias**.  The
+ *  fallbacks are needed because subdirectory driver does not always exist --
+ *  ddcci N-0037 is one case where it does not.
+ *
+ *  @param  dirname  directory containing the device directory
+ *  @param  fn       device directory name, e.g. 4-0037
+ *  @param  depth    logical indentation depth, -1 for no reporting
+ *  @return name found, NULL if none of the three attributes exists.
+ *          Caller is responsible for freeing.
+ */
+static
+char * best_driver_name_for_n_nnnn(const char * dirname, const char * fn, int depth) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=%s", dirname, fn);
+
+   char * best_name = NULL;
+   char * attr = "name";
+   RPT_ATTR_TEXT(depth, &best_name, dirname, fn, attr);
+   if (!best_name) {
+      // N.  subdirectory driver does not always exist, e.g. for ddcci N-0037
+      attr = "driver/module";
+      RPT_ATTR_REALPATH_BASENAME(depth, &best_name, dirname, fn, attr);
+      if (!best_name) {
+         attr = "modalias";
+         RPT_ATTR_TEXT(depth, &best_name, dirname, fn, attr);
+      }
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "using attr=%s, returning: %s",
+                 attr, best_name);
+   return best_name;
+}
+
+
+/** Terminal collector, called for each I2C slave device directory of the form
+ *  D-00hh.  Adds the device's best available name to the accumulating array.
+ *
+ *  Serves both walks in #get_i2c_info(), over different directories but into
+ *  the same accumulator -- which is why the names are deduplicated.
+ *
+ *  Names already present are not added again, so the array a run of these
+ *  calls produces holds each name once.
+ *
+ *  @param  dir_name     directory being scanned, e.g. /sys/bus/i2c/devices/i2c-4
+ *  @param  fn           device directory name, e.g. 4-0037
+ *  @param  accumulator  #GPtrArray of char * to which the name is appended
+ *  @param  depth        logical indentation depth, -1 for no reporting
+ */
+// typedef Dir_Foreach_Func
+static
+void simple_one_n_nnnn(
+      const char * dir_name,  // e.g. /sys/bus/i2c/devices/i2c-4
+      const char * fn,        // e.g. 4-0037
+      void *       accumulator,
+      int          depth)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=%s, depth=%d", dir_name, fn, depth);
+
+   char * best_name = best_driver_name_for_n_nnnn(dir_name, fn, depth);
+   if (best_name) {
+      gaux_unique_string_ptr_array_include(accumulator,best_name );
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "appending: |%s|", best_name);
+      free(best_name);
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+/** Returns a newly allocated #Sysfs_I2C_Info struct describing
  *  a /sys/bus/i2c/devices/i2c-N instance, and optionally reports the
  *  result of examining the instance
  *
+ *  Intermediate collector.  Reached from #get_single_i2c_info(), and runs two
+ *  traversals of its own -- over /sys/bus/i2c/devices and over the bus's own
+ *  directory -- both feeding the single accumulator
+ *  **result->conflicting_driver_names**.
+ *
  *  @param  busno  i2c bus number
  *  @param  depth  logical indentation depth, if < 0 do not emit report
- *  @return newly allocated #Sys_I2c_Info struct
+ *  @return newly allocated #Sysfs_I2C_Info struct
  */
+static
 Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, depth=%d", busno, depth);
@@ -241,8 +329,8 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
 }
 
 
-/** Function of typedef Dir_Foreach_Func, called from #get_all_i2c_info()
- *  for each i2c-N device in /sys/bus/i2c/devices
+/** Terminal collector of of the walk in  #get_all_sysfs_i2c_info(),
+ *  called once for each i2c-N device in  /sys/bus/i2c/devices.
  *
  *  @param  dir_name     always /sys/bus/i2c/devices
  *  @param  fn           i2c-N
@@ -250,6 +338,7 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
  *                       instance
  */
 // typedef Dir_Foreach_Func
+static
 void get_single_i2c_info(
       const char * dir_name,  // e.g. /sys/bus/i2c/devices
       const char * fn,        // e.g. i2c-3
@@ -270,7 +359,10 @@ void get_single_i2c_info(
 
 
 /** Returns an array of #Sysfs_I2C_Info describing each i2c-N device in
- *  directory /sys/bus/i2c/devices, and optionally reports the contents
+ *  directory /sys/bus/i2c/devices, and optionally reports the contents.
+ *
+ *  This is the primary collector of the #Sysfs_I2C_Info call tree: it owns the
+ *  outer walk, and every record below is gathered into the array it allocates.
  *
  *  @param rescan  if true, discard cached array and rescan
  *  @param depth   logical indentation depth, if < 0 do not emit report
@@ -278,7 +370,7 @@ void get_single_i2c_info(
  *
  *  The returned array is cached.  Caller should not free.
  */
-GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
+GPTRARRAY(Sysfs_I2C_Info)* get_all_sysfs_i2c_info(bool rescan, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
 
@@ -338,7 +430,7 @@ static bool is_potential_i2c_display(Sysfs_I2C_Info * info) {
  *  This function looks only in /sys. It does not verify that the
  *  corresponding /dev/i2c-N devices exist.
  */
-Bit_Set_256 get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info() {
+Bit_Set_256 get_possible_ddc_bus_numbers_using_sysfs_i2c_info() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Bit_Set_256 result = EMPTY_BIT_SET_256;
@@ -364,7 +456,7 @@ void init_i2c_sysfs_i2c_info() {
    RTTI_ADD_FUNC(get_i2c_info);
    RTTI_ADD_FUNC(get_single_i2c_info);
    RTTI_ADD_FUNC(get_all_sysfs_i2c_info);
-   RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info);
+   RTTI_ADD_FUNC(get_possible_ddc_bus_numbers_using_sysfs_i2c_info);
 }
 
 
