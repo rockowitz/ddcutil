@@ -550,7 +550,7 @@ void check_connector_reliability(
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dirname=|%s|, fn=|%s|", dirname, fn);
    int debug_depth = (debug) ? 1 : -1;
 
-   Sysfs_Reliability_Accumulator * accum = accumulator;
+   // Sysfs_Reliability_Accumulator * accum = accumulator;
 
    char buf[PATH_MAX];
    g_snprintf(buf, PATH_MAX, "%s/%s", dirname, fn);
@@ -633,8 +633,8 @@ void check_sysfs_reliability() {
    free(accum);
 #endif
 
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "nvidia_connectors_exist=%s, nvidia_connectors_reliable=%s",
-         sbool(nvidia_connectors_exist), sbool(nvidia_connectors_reliable));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "nvidia_connectors_exist=%s",
+         sbool(nvidia_connectors_exist));
 }
 
 
@@ -698,8 +698,6 @@ bool is_sysfs_reliable() {
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "other_drivers_seen=%s, nvidia_connectors_exist=%s",
          sbool(other_drivers_seen), sbool(nvidia_connectors_exist));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "nvdia_connectors_reliable=%s",
-         SBOOL(nvidia_connectors_reliable));
 
    bool result = true;
    // force_sysfs_unreliable, force_sysfs_reliable exist to facilitate testing
