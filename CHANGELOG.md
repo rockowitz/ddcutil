@@ -1,4 +1,4 @@
-## [2.2.8] 2026-09-09   DRAFT
+## [2.2.8] 2026-09-09
 
 ### Gemeral
 
@@ -33,7 +33,7 @@
 
 - Adjusted the tuning of slave-address x37 detection. The retry interval is now 100ms 
   for all drivers.  Max tries remains at 3, but is increased to 5 if an attempt fails 
-  with status EBUSY. Addresses issue #607,
+  with status EBUSY. Addresses issue #607.
 - Reduce command initialization time. 
 
 #### Miscellaneous Changes
@@ -52,7 +52,13 @@
   (a) enables reading the EDID on certain monitors that are not otherwise 
       readable. Based on pull request #621: Try a single combined I2C_RDWR 
       transaction when reading the EDID
-  (b) marginally improves perormance by reducing I2C bus round trips, 
+  (b) marginally improves perormance by reducing I2C bus round trips
+- watch mode **xevent** is unsupportedd. If no watch mode is specified, or 
+  ***--watch-mode dynamic*** is given, the watch mode resolves to **udev** if
+  udev is enabled, **poll** if not.  If ***--watch-mode xevent*** is explicitly
+  specified it will be respected, but execution  will not work properly; it is 
+  recognized solely for testing purposes.
+
 
 #### Fixed
 
