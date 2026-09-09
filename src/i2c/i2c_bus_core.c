@@ -46,6 +46,7 @@
 #include "base/status_code_mgt.h"
 
 #include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_simple.h"
 #include "sysfs/sysfs_dpms.h"
 #include "sysfs/sysfs_i2c_info.h"
 #include "sysfs/sysfs_sys_drm_connector.h"
@@ -271,20 +272,12 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
                           "Retrying i2c_check_edid_exists_by_dh() tryctr=%d, dh=%s",
                           tryctr, dh_repr(dh));
 
-#ifdef SYSFS_PROBLEMATIC   // apparently not by driver vfd on Raspberry pi
-      if (businfo->drm_connector_name) {
+      // n Raspberry Pi, the sysfs connector status is unreliable, so check the EDID directly
+      if (businfo->drm_connector_name && is_connector_reliable(businfo->drm_connector_name)) 
          edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
-         // edid_exists = i2c_check_bus_responsive_using_drm(businfo->drm_connector_name);  // fails for Nvidia
-      }
-      else {
-         // read edid
+      else  
          edid_exists = i2c_check_edid_exists_by_dh(dh);
-      }
-#else
-      edid_exists = i2c_check_edid_exists_by_dh(dh);
-#endif
    }
-
    if (!edid_exists) {
       DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "/dev/i2c-%d, Checking EDID failed after %d tries (B)",
             businfo->busno, tryctr);
