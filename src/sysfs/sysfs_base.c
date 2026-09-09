@@ -499,7 +499,6 @@ bool is_driver_reliable(const char * driver_name) {
 }
 
 
-
 /** Reports whether the DRM attributes of one connector can be relied on,
  *  by finding the driver of the adapter behind it and testing that.
  *
