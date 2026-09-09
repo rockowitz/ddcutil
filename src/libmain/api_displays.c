@@ -1176,8 +1176,6 @@ bus_open_errors_to_syslog(const char * api_func) {
 }
 
 
-
-
 DDCA_Status
 ddca_get_display_refs(
       bool                include_invalid_displays,
