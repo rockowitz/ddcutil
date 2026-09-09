@@ -29,6 +29,7 @@
 #include "base/core.h"
 #include "base/rtti.h"
 
+#include "sysfs_simple.h"
 #include "sysfs_base.h"
 #include "sysfs_basic_drm_connector.h"
 

@@ -8,6 +8,7 @@
 #include "sysfs/sysfs_conflicting_drivers.h"
 #include "sysfs/sysfs_dpms.h"
 #include "sysfs/sysfs_i2c_sys_info.h"
+#include "sysfs/sysfs_simple.h"
 #include "sysfs/sysfs_sys_drm_connector.h"
 #include "sysfs/sysfs_i2c_info.h"
 
@@ -22,6 +23,7 @@ void init_sysfs_services() {
    init_i2c_sysfs_base();
    init_i2c_sysfs_conflicting_drivers();
    init_i2c_sysfs_i2c_info();
+   init_sysfs_simple();
 }
 
 void terminate_sysfs_services() {

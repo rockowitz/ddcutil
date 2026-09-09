@@ -27,6 +27,7 @@
 #include "base/displays.h"
 #include "base/rtti.h"
 
+#include "sysfs_simple.h"
 #include "sysfs/sysfs_base.h"  // for is_sysfs_reliable()
 
 #include "sysfs/sysfs_dpms.h"

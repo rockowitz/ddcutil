@@ -39,6 +39,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
+#include "sysfs_simple.h"
 #include "sysfs_base.h"
 
 #include "sysfs_i2c_sys_info.h"

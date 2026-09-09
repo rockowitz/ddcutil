@@ -13,32 +13,14 @@
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
 
-extern bool force_sysfs_unreliable;
-extern bool force_sysfs_reliable;
-extern bool enable_write_detect_to_status;
 
-
-
-typedef struct {
-   int    i2c_busno;
-   int    base_busno;
-   int    connector_id;
-   char * name;
-} Connector_Bus_Numbers;
-
-void        dbgrpt_connector_bus_numbers(Connector_Bus_Numbers * cbn, int depth);
-void        free_connector_bus_numbers(Connector_Bus_Numbers * cbn);
-void        get_connector_bus_numbers(
-               const char *            dirname,    // <device>/drm/cardN
-               const char *            fn,         // card0-HDMI-1 etc
-               Connector_Bus_Numbers * cbn);
+// Sysfs_Connector_Names functions
 
 typedef struct {
    GPtrArray *  all_connectors;
    GPtrArray *  connectors_having_edid;
 } Sysfs_Connector_Names;
 
-bool        sysfs_connector_directories_exist();
 Sysfs_Connector_Names
             get_sysfs_drm_connector_names();
 bool        sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);
@@ -46,7 +28,16 @@ void        free_sysfs_connector_names_contents(Sysfs_Connector_Names names_stru
 void        dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
 Sysfs_Connector_Names
             copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
-char *      find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
+
+// Misc
+char *      find_sysfs_drm_connector_name_by_edid(
+                 GPTRARRAY(char*) * connector_names, Byte * edid);
+bool        sysfs_connector_directories_exist();
+
+// sysfs reliability
+
+extern bool force_sysfs_unreliable;
+extern bool force_sysfs_reliable;
 
 bool        is_driver_reliable(const char * driver_name);
 bool        is_connector_reliable(const char * connector_name);
@@ -56,12 +47,10 @@ bool        is_sysfs_reliable_for_busno(int busno);
 bool        is_sysfs_reliable();
 
 
-
 // predicate functions
 // typedef Dir_Filter_Func
 bool        is_n_nnnn(const char * dirname, const char * simple_fn);
 
-GPtrArray * get_sys_video_devices();
 void        dbgrpt_sysfs_basic_connector_attributes(int depth);
 char *      get_sys_drm_connector_name_by_connector_id(int connector_id);
 char *      get_sys_drm_connector_name_by_busno(int busno);
@@ -70,45 +59,13 @@ bool        all_sys_drm_connectors_have_connector_id_direct();
 
 
 
-void possibly_write_detect_to_status(const char * driver, const char * connector);
-void possibly_write_detect_to_status_by_connector_name(const char * connector);
-void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo);
-void possibly_write_detect_to_status_by_dref(Display_Ref * dref);
-void possibly_write_detect_to_status_by_connector_path(const char * path);
-
-#define WRITE_DETECT_TO_STATUS 1
-#ifdef WRITE_DETECT_TO_STATUS
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH possibly_write_detect_to_status_by_connector_path
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME possibly_write_detect_to_status_by_connector_name
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO        possibly_write_detect_to_status_by_businfo
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_DREF           possibly_write_detect_to_status_by_dref
-#else
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_DREF
-#endif
-
-
 
 
 
 
 // moved from sysfs_i2c_util.h:
 
-char *      find_adapter_and_get_driver(char * path, int depth);
-char *      get_driver_for_adapter(char * adapter_path, int depth);
-// char *      find_adapter(char * path, int depth); // MOVED
-char *
-sysfs_find_adapter(char * path);
 
-#ifdef DUPLICATIVE
-char *
-get_i2c_sysfs_driver_by_busno(
-      int busno);
-#endif
-
-char *      get_driver_for_busno(int busno);
 
 char *
 get_i2c_sysfs_driver_by_device_name(
@@ -119,23 +76,9 @@ char *
 get_i2c_sysfs_driver_by_fd(
       int fd);
 #endif
-uint32_t
-get_i2c_device_sysfs_class(
-      int busno);
-
-char *
-get_i2c_device_sysfs_name(
-      int busno);
-
-bool
-sysfs_is_ignorable_i2c_device(
-      int busno);
-
 // moved from dw_udev.h:
 
 int search_all_businfo_records_by_connector_name(char *connector_name);
-
-bool sysfs_is_soc_system();
 
 void init_i2c_sysfs_base();
 

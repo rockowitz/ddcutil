@@ -45,6 +45,7 @@
 #include "util/string_util.h"
 
 #include "sysfs/sysfs_base.h"
+#include "sysfs/sysfs_simple.h"
 
 static int total = 0;
 static int failed = 0;

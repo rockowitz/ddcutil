@@ -50,6 +50,7 @@
 #include "base/rtti.h"
 
 #include "sysfs_base.h"
+#include "sysfs_simple.h"
 
 #include "sysfs_i2c_info.h"
 

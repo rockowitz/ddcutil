@@ -41,6 +41,7 @@
 #include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 
+#include "sysfs_simple.h"
 #include "sysfs_base.h"
 
 #include "sysfs_sys_drm_connector.h"
