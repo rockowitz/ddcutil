@@ -71,7 +71,7 @@ static void test_whole_system_scan_smoke(void) {
    GPtrArray * all = get_all_sysfs_i2c_info(true, -1);
    CK(all != NULL);   // caller must not free; owned by the module
 
-   Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers_using_sysfs_i2c_info();
+   Bit_Set_256 buses = get_possible_ddc_bus_numbers_using_sysfs_i2c_info();
    CK(bs256_count(buses) >= 0);   // trivially true; exercises the call path
 
    terminate_i2c_sysfs_i2c_info();
