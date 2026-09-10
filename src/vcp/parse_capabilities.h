@@ -52,7 +52,7 @@ void                 init_parse_capabilities();
 
 
 // Tests
-void test_segments();
-void test_parse_caps();
+// void test_segments();
+// void test_parse_caps();
 
 #endif /* PARSE_CAPABILITIES_H_ */
