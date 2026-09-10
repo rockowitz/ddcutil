@@ -46,6 +46,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    DDCA_Feature_Value_Entry table[] = {
       { 0x01, "On" },
       { 0x02, "Off" },

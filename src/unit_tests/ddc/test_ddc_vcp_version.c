@@ -128,6 +128,8 @@ static void test_get_vcp_version_by_dh_guarded(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_get_overriding_vcp_version();
    test_get_saved_vcp_version();
    test_get_vcp_version_by_dref_guarded();

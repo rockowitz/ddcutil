@@ -196,6 +196,8 @@ static void test_report_smoke(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_dsa2();   // allocates results_tables[], read by pdd_init_pdd()
    init_per_display_data();
    init_ddc_try_data();

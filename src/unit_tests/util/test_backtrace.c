@@ -51,6 +51,8 @@ static void free_bt(GPtrArray * bt) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    GPtrArray * b0 = get_backtrace(0);
    if (b0 == NULL) {
       printf("NOTE  execinfo unavailable; backtrace checks skipped\n");

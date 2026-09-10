@@ -141,6 +141,8 @@ static void test_selectors(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_names();
    test_io_path();
    test_identifiers();

@@ -33,6 +33,8 @@ static int failed = 0;
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_i2c_services();
 
    // init_i2c_strategy_dispatcher(), called by init_i2c_services(), must

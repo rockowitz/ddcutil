@@ -42,6 +42,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_base_services();
 
    // execution stats were initialized: log_status_code works and returns the code

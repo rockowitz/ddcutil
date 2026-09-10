@@ -30,6 +30,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    bool orig = is_deferred_sleep_enabled();
 
    // enable_deferred_sleep returns the previous value; the getter reflects it

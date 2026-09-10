@@ -267,6 +267,8 @@ static void test_dbgrpt_display_ref_smoke(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_create_dispno_display_identifier();
    test_create_busno_display_identifier();
    test_create_mfg_model_sn_display_identifier();

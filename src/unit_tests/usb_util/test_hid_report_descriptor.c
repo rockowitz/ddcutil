@@ -280,14 +280,22 @@ static void test_dbgrpt_parsed_hid_descriptor_smoke(void) {
 }
 
 
+// Names each sub-test before running it, so if the process dies the last
+// line in the log is the function that was executing, not the last one
+// that finished.  Paired with the unbuffered stdout set in main().
+#define RUN(f) do { printf("-- %s()\n", #f); f(); } while(0)
+
+
 int main(int argc, char ** argv) {
-   test_hid_report_type_name();
-   test_interpret_item_flags_r();
-   test_extended_usage();
-   test_free_parsed_hid_descriptor_null_safe();
-   test_full_monitor_descriptor_pipeline();
-   test_non_monitor_descriptor();
-   test_dbgrpt_parsed_hid_descriptor_smoke();
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
+   RUN(test_hid_report_type_name);
+   RUN(test_interpret_item_flags_r);
+   RUN(test_extended_usage);
+   RUN(test_free_parsed_hid_descriptor_null_safe);
+   RUN(test_full_monitor_descriptor_pipeline);
+   RUN(test_non_monitor_descriptor);
+   RUN(test_dbgrpt_parsed_hid_descriptor_smoke);
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

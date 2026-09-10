@@ -46,6 +46,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    MLM_Level levels[2] = {
       { "vendor", 10, 0, NULL },
       { "device", 10, 0, NULL },

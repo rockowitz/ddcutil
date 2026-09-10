@@ -141,6 +141,8 @@ static void test_empty_selector_matches_first_non_phantom(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    setup_all_display_refs();
 
    test_find_by_busno();

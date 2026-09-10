@@ -93,6 +93,8 @@ static void test_ioctl_writer_reader_bad_fd(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_fileio_use_timeout_toggle();
    test_set_addr_bad_fd();
    test_fileio_writer_reader_bad_fd();

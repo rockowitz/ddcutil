@@ -36,6 +36,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    CK_STR(dpms_power_level_name(0), "DPMSModeOn");
    CK_STR(dpms_power_level_name(1), "DPMSModeStandby");
    CK_STR(dpms_power_level_name(2), "DPMSModeSuspend");

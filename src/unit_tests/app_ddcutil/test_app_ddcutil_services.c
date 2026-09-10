@@ -30,6 +30,8 @@ static int failed = 0;
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_app_ddcutil_services();
    init_app_ddcutil_services();   // safe to call again: RTTI registration is idempotent
    CK(true);   // reaching here without crashing is the test

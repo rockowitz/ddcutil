@@ -98,6 +98,8 @@ static void test_functionality_flags(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_name_to_busno();
    test_extract_number();
    test_compare();

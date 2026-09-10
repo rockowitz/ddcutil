@@ -416,6 +416,8 @@ static void test_find_feature_values_for_capabilities(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_vcp_feature_codes();
 
    test_feature_code_count();

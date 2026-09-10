@@ -134,6 +134,8 @@ static void test_app_vcpinfo_unrecognized_feature(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_app_listvcp();
    test_report_vcp_feature_table_entry_smoke();
    test_app_vcpinfo_single_feature();

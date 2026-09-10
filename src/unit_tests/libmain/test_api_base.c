@@ -188,6 +188,8 @@ static void test_elapsed_nanosec(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_version_and_build_info();
    test_rc_name_and_desc();
    test_output_level();

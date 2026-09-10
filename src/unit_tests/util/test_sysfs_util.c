@@ -52,6 +52,8 @@ static void write_attr(const char * dir, const char * name, const char * content
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    char dir[] = "/tmp/test_sysfs_XXXXXX";
    if (!mkdtemp(dir)) { perror("mkdtemp"); return 2; }
    write_attr(dir, "name", "widget\n");

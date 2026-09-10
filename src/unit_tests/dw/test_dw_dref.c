@@ -175,6 +175,8 @@ static void test_dw_remove_display_by_businfo_not_found(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_dw_add_display_ref();
    test_dw_add_display_by_businfo_no_edid();
    test_dw_add_and_remove_display_by_businfo();

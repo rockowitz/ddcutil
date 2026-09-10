@@ -36,6 +36,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // a bogus module is never loaded
    CK(is_module_loaded_using_sysfs("no_such_module_zqx_999") == false);
 

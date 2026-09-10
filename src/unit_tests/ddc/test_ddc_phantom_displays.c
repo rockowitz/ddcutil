@@ -162,6 +162,8 @@ static void test_filter_phantom_displays_with_invalid(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_drefs_edid_equal();
    test_filter_phantom_displays_disabled();
    test_filter_phantom_displays_too_few();

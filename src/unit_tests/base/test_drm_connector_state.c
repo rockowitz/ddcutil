@@ -46,6 +46,8 @@ static Drm_Connector_Identifier cid(int cardno, int connector_id,
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_drm_connector_state();     // smoke test: registers RTTI, must not crash
 
    Drm_Connector_State cs1;

@@ -58,6 +58,8 @@ static void reset_flags(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    char buf[128];
 
    // suspended: prefix is empty regardless of other settings

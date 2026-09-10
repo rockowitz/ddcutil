@@ -130,6 +130,8 @@ static void test_reset(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_execution_stats();
    init_i2c_display_lock();
 

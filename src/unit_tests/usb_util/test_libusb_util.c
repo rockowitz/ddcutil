@@ -131,14 +131,22 @@ static void test_report_libusb_device_descriptor_smoke(void) {
 }
 
 
+// Names each sub-test before running it, so if the process dies the last
+// line in the log is the function that was executing, not the last one
+// that finished.  Paired with the unbuffered stdout set in main().
+#define RUN(f) do { printf("-- %s()\n", #f); f(); } while(0)
+
+
 int main(int argc, char ** argv) {
-   test_make_path();
-   test_descriptor_title();
-   test_endpoint_direction_title();
-   test_transfer_type_title();
-   test_class_code_title();
-   test_is_hub_descriptor();
-   test_report_libusb_device_descriptor_smoke();
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
+   RUN(test_make_path);
+   RUN(test_descriptor_title);
+   RUN(test_endpoint_direction_title);
+   RUN(test_transfer_type_title);
+   RUN(test_class_code_title);
+   RUN(test_is_hub_descriptor);
+   RUN(test_report_libusb_device_descriptor_smoke);
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

@@ -119,6 +119,8 @@ static void test_detection_descriptions(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // no resume has been detected at program start
    CK(millisec_since_resume_detected_by_clocktime() == UINT64_MAX);
 

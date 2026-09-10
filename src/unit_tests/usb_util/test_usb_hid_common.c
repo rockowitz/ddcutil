@@ -67,11 +67,18 @@ static void test_deny_hid_monitor_by_vid_pid(void) {
    CK(!deny_hid_monitor_by_vid_pid(0x0000, 0x0000));
 }
 
+// Names each sub-test before running it, so if the process dies the last
+// line in the log is the function that was executing, not the last one
+// that finished.  Paired with the unbuffered stdout set in main().
+#define RUN(f) do { printf("-- %s()\n", #f); f(); } while(0)
+
 
 int main(int argc, char ** argv) {
-   test_collection_type_name();
-   test_force_hid_monitor_by_vid_pid();
-   test_deny_hid_monitor_by_vid_pid();
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
+   RUN(test_collection_type_name);
+   RUN(test_force_hid_monitor_by_vid_pid);
+   RUN(test_deny_hid_monitor_by_vid_pid);
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

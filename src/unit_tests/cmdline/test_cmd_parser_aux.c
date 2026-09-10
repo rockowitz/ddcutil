@@ -228,6 +228,8 @@ static void test_init_cmd_parser_base_smoke(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_find_command();
    test_get_command();
    test_all_digits();

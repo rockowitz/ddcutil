@@ -48,6 +48,8 @@ static void write_tmpfile(char * path_out, const char * content) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // a file with content is readable
    char path[64];
    write_tmpfile(path, "hello");

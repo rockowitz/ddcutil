@@ -114,6 +114,8 @@ static void test_collect_conflicting_drivers_nonexistent_bus(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_best_conflicting_driver_name();
    test_conflicting_driver_names();
    test_free_conflicting_drivers_null_safe();

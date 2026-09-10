@@ -187,6 +187,8 @@ static void test_thread_error_detail_lifecycle(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_new_ddca_error_detail();
    test_error_info_to_ddca_detail();
    test_error_info_to_ddca_detail_null();

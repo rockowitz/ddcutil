@@ -113,6 +113,8 @@ static void test_report_ddc_errors_flag(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_execution_mode_name();
    test_call_options();
    test_syslog_level_name();

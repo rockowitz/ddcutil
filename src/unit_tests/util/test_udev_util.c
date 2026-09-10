@@ -46,6 +46,8 @@ static bool keep_i2c(Udev_Device_Summary * s) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    Udev_Device_Summary a = {0}; a.sysname = "i2c-1";
    Udev_Device_Summary b = {0}; b.sysname = "i2c-2";
    Udev_Device_Summary c = {0}; c.sysname = "usbmisc0";

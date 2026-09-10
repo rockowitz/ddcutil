@@ -47,6 +47,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // single-line result is the first line of output
    char * s = execute_shell_cmd_one_line_result("echo hello");
    CK_STR(s, "hello");

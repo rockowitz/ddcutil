@@ -80,6 +80,8 @@ static void test_whole_system_scan_smoke(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_get_i2c_driver_info_nonexistent_bus();
    test_free_sysfs_i2c_info_null_safe();
    test_whole_system_scan_smoke();

@@ -35,6 +35,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    char * boot_id = get_current_boot_id();
    CK(boot_id != NULL);
    if (boot_id) {

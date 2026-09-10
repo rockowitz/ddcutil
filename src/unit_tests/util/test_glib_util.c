@@ -250,6 +250,8 @@ static void test_thread_buffers(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_g_list_to_g_array();
    test_comparators();
    test_truncate();

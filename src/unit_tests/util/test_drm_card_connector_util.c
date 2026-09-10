@@ -116,6 +116,8 @@ static void test_repr(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_dci_eq();
    test_dci_cmp();
    test_parse();

@@ -164,6 +164,8 @@ static void test_open_sleep_cycle(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_callbacks();
    test_resume_timing();
    test_open_sleep_cycle();

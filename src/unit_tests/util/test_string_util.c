@@ -401,6 +401,8 @@ static void test_ntsa(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_compare();
    test_case();
    test_trim();

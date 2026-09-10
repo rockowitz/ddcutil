@@ -31,6 +31,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // a model in the quirk table ("XMI", "Mi Monitor", 13380) is found.
    // Build the key directly so its model_name matches the table entry verbatim.
    Monitor_Model_Key known;

@@ -70,6 +70,8 @@ static void ck_contents(int line, GPtrArray * a, const char * const * expected) 
    ck_contents(__LINE__, (a), (const char * const []){ __VA_ARGS__, NULL })
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    traced_function_stack_enabled = true;
 
    // empty stack: size 0, peek NULL

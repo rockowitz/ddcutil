@@ -244,6 +244,8 @@ static void test_store_restore_erase_cache(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    char tmpl[] = "/tmp/ddcutil_test_xdg_cache_XXXXXX";
    char * tmpdir = mkdtemp(tmpl);
    if (!tmpdir) {

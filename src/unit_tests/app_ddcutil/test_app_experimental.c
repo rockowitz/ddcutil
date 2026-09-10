@@ -92,6 +92,8 @@ static void test_report_experimental_options_some_enabled(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_report_experimental_options_all_disabled();
    test_report_experimental_options_some_enabled();
 

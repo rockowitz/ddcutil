@@ -99,11 +99,19 @@ static void test_report_hid_field_locator_null_safe(void) {
 }
 
 
+// Names each sub-test before running it, so if the process dies the last
+// line in the log is the function that was executing, not the last one
+// that finished.  Paired with the unbuffered stdout set in main().
+#define RUN(f) do { printf("-- %s()\n", #f); f(); } while(0)
+
+
 int main(int argc, char ** argv) {
-   test_hiddev_report_type_name();
-   test_hid_field_locator_lifecycle();
-   test_free_hid_field_locator_null_safe();
-   test_report_hid_field_locator_null_safe();
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
+   RUN(test_hiddev_report_type_name);
+   RUN(test_hid_field_locator_lifecycle);
+   RUN(test_free_hid_field_locator_null_safe);
+   RUN(test_report_hid_field_locator_null_safe);
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

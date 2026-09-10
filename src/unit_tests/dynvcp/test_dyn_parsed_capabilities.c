@@ -139,6 +139,8 @@ static void test_gamma_feature_x72(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    char tmpl[] = "/tmp/ddcutil_test_xdg_data_XXXXXX";
    char * tmpdir = mkdtemp(tmpl);
    if (!tmpdir) {

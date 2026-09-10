@@ -137,6 +137,8 @@ static void test_no_issues_reports_none(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_full_rw_access_skips_checks();
    test_no_dev_i2c_devices_found();
    test_group_i2c_missing();

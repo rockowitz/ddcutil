@@ -150,6 +150,8 @@ static void test_device_xref_report_smoke(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_device_xref_edid_tag();
    test_find_and_new_by_busno();
    test_duplicate_edid_marked_ambiguous();

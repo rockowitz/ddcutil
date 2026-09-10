@@ -43,6 +43,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    CK_VENDOR("DEL", "Dell");
    CK_VENDOR("SAM", "Samsung");
    CK_VENDOR("APP", "Apple");

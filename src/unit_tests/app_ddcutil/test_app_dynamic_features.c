@@ -50,6 +50,8 @@ static void test_disabled_short_circuits(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_disabled_short_circuits();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",

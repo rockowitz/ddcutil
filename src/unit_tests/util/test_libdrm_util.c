@@ -50,6 +50,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // name -> connector type (searches titles, case-insensitive)
    CK_INT(lookup_drm_connector_type("DP"), DRM_MODE_CONNECTOR_DisplayPort);
    CK_INT(lookup_drm_connector_type("VGA"), DRM_MODE_CONNECTOR_VGA);

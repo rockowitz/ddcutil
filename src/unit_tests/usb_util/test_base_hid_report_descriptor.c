@@ -195,13 +195,21 @@ static void test_report_hid_report_item_list_smoke(void) {
 }
 
 
+// Names each sub-test before running it, so if the process dies the last
+// line in the log is the function that was executing, not the last one
+// that finished.  Paired with the unbuffered stdout set in main().
+#define RUN(f) do { printf("-- %s()\n", #f); f(); } while(0)
+
+
 int main(int argc, char ** argv) {
-   test_tokenize_basic_fields();
-   test_tokenize_multibyte_sizes();
-   test_tokenize_empty();
-   test_free_hid_report_item_list_null_safe();
-   test_is_monitor_by_tokenized_hid_report_descriptor();
-   test_report_hid_report_item_list_smoke();
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
+   RUN(test_tokenize_basic_fields);
+   RUN(test_tokenize_multibyte_sizes);
+   RUN(test_tokenize_empty);
+   RUN(test_free_hid_report_item_list_null_safe);
+   RUN(test_is_monitor_by_tokenized_hid_report_descriptor);
+   RUN(test_report_hid_report_item_list_smoke);
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

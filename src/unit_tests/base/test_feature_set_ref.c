@@ -47,6 +47,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // feature_subset_name returns the symbolic (stringified) constant
    CK_STR(feature_subset_name(VCP_SUBSET_COLOR),   "VCP_SUBSET_COLOR");
    CK_STR(feature_subset_name(VCP_SUBSET_PROFILE), "VCP_SUBSET_PROFILE");

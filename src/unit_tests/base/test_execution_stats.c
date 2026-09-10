@@ -65,6 +65,8 @@ static void test_status_code_loggers(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_io_event_name();
    test_sleep_event_name();
    test_status_code_loggers();

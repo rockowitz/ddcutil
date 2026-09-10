@@ -33,6 +33,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    CK_STR(retry_type_name(WRITE_ONLY_TRIES_OP),  "WRITE_ONLY_TRIES_OP");
    CK_STR(retry_type_name(WRITE_READ_TRIES_OP),  "WRITE_READ_TRIES_OP");
    CK_STR(retry_type_name(MULTI_PART_READ_OP),   "MULTI_PART_READ_OP");

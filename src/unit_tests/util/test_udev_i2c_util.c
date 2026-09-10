@@ -49,6 +49,8 @@ static int busno_of(const char * sysname) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // busno extracted from the "i2c-N" sysname
    CK_INT(busno_of("i2c-5"), 5);
    CK_INT(busno_of("i2c-0"), 0);

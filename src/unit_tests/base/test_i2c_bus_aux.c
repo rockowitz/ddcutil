@@ -73,6 +73,8 @@ static void test_bus_info_lifecycle(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_name_lookups();
    test_bus_info_lifecycle();
 

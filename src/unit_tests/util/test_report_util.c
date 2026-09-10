@@ -78,6 +78,8 @@ static size_t  capsize = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    rpt_set_ornamentation_enabled(false);
 
    // indent is depth * 3 spaces by default; negative depth clamps to 0

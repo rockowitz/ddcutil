@@ -111,6 +111,8 @@ static void test_close_bus_bad_fd(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // i2c_open_bus()/i2c_close_bus() use the display-lock table, which must
    // be initialized before first use (see src/unit_tests/base/test_display_lock.c).
    init_execution_stats();

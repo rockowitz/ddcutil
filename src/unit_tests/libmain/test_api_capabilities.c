@@ -127,6 +127,8 @@ static void test_free_parsed_capabilities_with_messages(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_feature_list_from_capabilities();
    test_feature_list_from_capabilities_null();
    test_free_parsed_capabilities_null_safe();

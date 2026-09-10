@@ -107,6 +107,8 @@ static void test_force_failure_hook(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_bitset_from_businfo_array();
    test_force_failure_hook();
 

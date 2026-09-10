@@ -77,6 +77,8 @@ static void test_malformed_capabilities_string(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_null_capabilities_string();
    test_valid_capabilities_string();
    test_malformed_capabilities_string();

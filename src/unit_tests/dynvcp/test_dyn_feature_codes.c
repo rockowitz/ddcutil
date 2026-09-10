@@ -253,6 +253,8 @@ static void test_dyn_get_feature_name(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_vcp_feature_codes();
 
    test_sl_lookup_formatters();

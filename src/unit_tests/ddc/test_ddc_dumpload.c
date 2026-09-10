@@ -287,6 +287,8 @@ static void test_dbgrpt_dumpload_data_smoke(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    char tmpl[] = "/tmp/ddcutil_test_xdg_data_XXXXXX";
    char * tmpdir = mkdtemp(tmpl);
    if (!tmpdir) {

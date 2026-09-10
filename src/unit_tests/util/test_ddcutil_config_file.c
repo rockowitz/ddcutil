@@ -221,6 +221,8 @@ static void test_missing_config(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_tokenize();
    test_read_config();
    test_apply_config();

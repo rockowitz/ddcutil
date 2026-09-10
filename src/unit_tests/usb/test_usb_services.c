@@ -29,9 +29,17 @@ static int failed = 0;
 } while(0)
 
 
+// Names each sub-test before running it, so if the process dies the last
+// line in the log is the function that was executing, not the last one
+// that finished.  Paired with the unbuffered stdout set in main().
+#define RUN(f) do { printf("-- %s()\n", #f); f(); } while(0)
+
+
 int main(int argc, char ** argv) {
-   init_usb_services();
-   terminate_usb_services();
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
+   RUN(init_usb_services);
+   RUN(terminate_usb_services);
    terminate_usb_services();   // safe to call again: no hiddevs were ever opened
    CK(true);   // reaching here without crashing is the test
 

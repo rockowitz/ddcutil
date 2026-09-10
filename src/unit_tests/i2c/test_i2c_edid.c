@@ -96,6 +96,8 @@ static void test_get_raw_edid_across_strategies(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    i2c_set_io_strategy_by_id(DEFAULT_I2C_IO_STRATEGY);   // required: asserted non-NOT_SET
 
    test_get_edid_bytes_using_single_ioctl_bad_fd();

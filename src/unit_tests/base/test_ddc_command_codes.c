@@ -34,6 +34,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    CK_STR(ddc_cmd_code_name(CMD_VCP_REQUEST), "VCP Request");
    CK_STR(ddc_cmd_code_name(CMD_VCP_SET), "VCP Set");
    CK_STR(ddc_cmd_code_name(CMD_SAVE_SETTINGS), "Save Settings");

@@ -198,6 +198,8 @@ static void test_sysenv_show_one_file_not_found(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_static_driver_tables();
    test_driver_name_list();
    test_only_fglrx();

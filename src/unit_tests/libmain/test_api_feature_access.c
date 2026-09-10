@@ -128,6 +128,8 @@ static void test_dbgrpt_any_vcp_value_smoke(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_free_table_vcp_value();
    test_free_table_vcp_value_null_safe();
    test_free_any_vcp_value_non_table();

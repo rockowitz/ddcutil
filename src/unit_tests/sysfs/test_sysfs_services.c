@@ -30,6 +30,8 @@ static int failed = 0;
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_sysfs_services();
    terminate_sysfs_services();
    terminate_sysfs_services();   // safe to call again: nothing left to free

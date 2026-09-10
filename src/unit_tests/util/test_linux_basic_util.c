@@ -72,6 +72,8 @@ static void unmute_stderr(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // process / thread ids
    CK_INT(get_process_id(), getpid());
    CK(get_thread_id() > 0);

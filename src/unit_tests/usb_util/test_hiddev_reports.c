@@ -205,17 +205,25 @@ static void test_dbgrpt_hiddev_usage_ref_smoke(void) {
 }
 
 
+// Names each sub-test before running it, so if the process dies the last
+// line in the log is the function that was executing, not the last one
+// that finished.  Paired with the unbuffered stdout set in main().
+#define RUN(f) do { printf("-- %s()\n", #f); f(); } while(0)
+
+
 int main(int argc, char ** argv) {
-   test_interpret_collection_type();
-   test_interpret_field_bits();
-   test_hiddev_interpret_report_id();
-   test_hiddev_interpret_usage_code();
-   test_dbgrpt_hiddev_devinfo_smoke();
-   test_report_hiddev_collection_info_smoke();
-   test_report_hiddev_string_descriptor_smoke();
-   test_dbgrpt_hiddev_report_info_smoke();
-   test_dbgrpt_hiddev_field_info_smoke();
-   test_dbgrpt_hiddev_usage_ref_smoke();
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
+   RUN(test_interpret_collection_type);
+   RUN(test_interpret_field_bits);
+   RUN(test_hiddev_interpret_report_id);
+   RUN(test_hiddev_interpret_usage_code);
+   RUN(test_dbgrpt_hiddev_devinfo_smoke);
+   RUN(test_report_hiddev_collection_info_smoke);
+   RUN(test_report_hiddev_string_descriptor_smoke);
+   RUN(test_dbgrpt_hiddev_report_info_smoke);
+   RUN(test_dbgrpt_hiddev_field_info_smoke);
+   RUN(test_dbgrpt_hiddev_usage_ref_smoke);
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

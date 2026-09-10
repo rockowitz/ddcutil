@@ -60,6 +60,8 @@ static Parsed_Edid * make_fake_edid(const char * mfg_id, const char * model_name
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    I2C_Bus_Info * b1 = i2c_new_bus_info(3);
    b1->edid = make_fake_edid("ACM", "Monitor One", "SN0001");
 

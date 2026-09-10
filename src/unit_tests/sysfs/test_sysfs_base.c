@@ -265,6 +265,8 @@ static void test_nonexistent_busno_lookups(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_is_n_nnnn();
    test_connector_bus_numbers_lifecycle();
    test_sysfs_connector_names();

@@ -117,6 +117,8 @@ static void test_get_interpreted_vcp_code_type_check(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_execution_stats();   // COUNT_STATUS_CODE, used by get_interpreted_vcp_code
 
    test_checksum();

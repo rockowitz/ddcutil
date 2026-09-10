@@ -47,6 +47,8 @@ static void group(const char * value, regmatch_t * m, int n, char * out) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // anchored match
    CK(compile_and_eval_regex("^abc", "abcdef") == true);
    CK(compile_and_eval_regex("^abc", "xabcdef") == false);

@@ -87,6 +87,8 @@ static void test_is_valid(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_parse();
    test_format();
    test_compare();

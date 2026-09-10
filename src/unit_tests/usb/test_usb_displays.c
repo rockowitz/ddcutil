@@ -119,14 +119,22 @@ static void test_discard_usb_monitor_list_noop_when_uninitialized(void) {
 }
 
 
+// Names each sub-test before running it, so if the process dies the last
+// line in the log is the function that was executing, not the last one
+// that finished.  Paired with the unbuffered stdout set in main().
+#define RUN(f) do { printf("-- %s()\n", #f); f(); } while(0)
+
+
 int main(int argc, char ** argv) {
-   test_create_usb_monitor_vcp_rec();
-   test_create_usb_monitor_info();
-   test_dbgrpt_usb_monitor_info_smoke();
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
+   RUN(test_create_usb_monitor_vcp_rec);
+   RUN(test_create_usb_monitor_info);
+   RUN(test_dbgrpt_usb_monitor_info_smoke);
    // order matters: these must run before anything that could trigger a
    // real probe of usb_monitors/usb_open_errors
-   test_get_usb_open_errors_before_probe();
-   test_discard_usb_monitor_list_noop_when_uninitialized();
+   RUN(test_get_usb_open_errors_before_probe);
+   RUN(test_discard_usb_monitor_list_noop_when_uninitialized);
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

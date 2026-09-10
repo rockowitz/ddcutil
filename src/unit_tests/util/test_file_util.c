@@ -202,6 +202,8 @@ static void test_filter(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_exists();
    test_readers();
    test_getlines_errinfo();

@@ -48,6 +48,8 @@ static void test_free_i2c_sys_info_null_safe(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_get_i2c_sys_info_nonexistent_bus();
    test_free_i2c_sys_info_null_safe();
 

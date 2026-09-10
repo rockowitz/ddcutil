@@ -145,6 +145,8 @@ static void test_dbgrpt_parsed_cmd_smoke(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_cmdid_name();
    test_setvcp_value_type_name();
    test_new_parsed_cmd_defaults();

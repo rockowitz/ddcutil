@@ -77,6 +77,8 @@ static void test_fn_comparators(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_cardN();
    test_cardN_connector();
    test_i2c_N();

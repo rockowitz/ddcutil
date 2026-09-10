@@ -76,6 +76,8 @@ static void test_bounds(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_enable();
    test_multiplier_to_step();
    test_bounds();

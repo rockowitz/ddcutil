@@ -94,6 +94,8 @@ static void test_trace_groups(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_function_registries();
    test_file_registry();
    test_trace_class_name();

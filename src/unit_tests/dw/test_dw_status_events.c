@@ -167,6 +167,8 @@ static void test_dw_emit_display_status_record_runs_callback(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // dw_execute_callback_func() (run in the callback worker thread spawned by
    // dw_emit_display_status_record()) calls unlock_all_displays_for_current_thread(),
    // which requires the display-lock subsystem's lock_records to be allocated.

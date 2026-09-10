@@ -41,6 +41,8 @@ static void sample_func_one(void) {}
 static void sample_func_two(void) {}
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    rtti_func_name_table_add((void *) sample_func_one, "sample_func_one");
    rtti_func_name_table_add((void *) sample_func_two, "sample_func_two");
 

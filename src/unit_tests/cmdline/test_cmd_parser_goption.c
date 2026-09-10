@@ -348,6 +348,8 @@ static void test_parse_syslog_level(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_command_recognition();
    test_unrecognized_command();
    test_no_command();

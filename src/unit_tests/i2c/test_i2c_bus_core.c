@@ -66,6 +66,8 @@ static void test_i2c_edid_exists(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_execution_stats();
 
    test_is_valid_drm_connector_name();

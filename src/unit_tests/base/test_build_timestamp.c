@@ -30,6 +30,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    CK(BUILD_DATE != NULL && strlen(BUILD_DATE) > 0);
    CK(BUILD_TIME != NULL && strlen(BUILD_TIME) > 0);
 

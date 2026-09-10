@@ -188,6 +188,8 @@ static void test_laptop(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_validators();
    test_mfg_id();
    test_parse();

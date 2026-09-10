@@ -110,6 +110,8 @@ static void test_free_null_safe(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_no_values();
    test_valid_value_list();
    test_invalid_value_list();

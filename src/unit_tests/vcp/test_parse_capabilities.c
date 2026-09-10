@@ -210,6 +210,8 @@ static void test_capabilities_validity_name(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    init_vcp_feature_codes();
 
    test_simple_valid_string();

@@ -193,6 +193,8 @@ static void test_removal_with_no_array(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    Byte edid1[128];
    memset(edid1, 0xA1, sizeof(edid1));
    Byte edid2[128];

@@ -40,6 +40,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    // the counter table is indexed 0 .. MAX_MAX_TRIES+1; the function scans
    // indices MAX_MAX_TRIES+1 down to 2 and returns the highest non-zero one,
    // or 1 if none is set.

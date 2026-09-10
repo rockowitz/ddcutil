@@ -213,6 +213,8 @@ static void test_active_callback_threads(void) {
 
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_dw_calc_watch_loop_millisec();
    test_terminate_eventfd_lifecycle();
    test_dw_split_sleep_terminate_signaled();

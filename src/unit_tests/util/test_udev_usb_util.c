@@ -42,6 +42,8 @@ static int failed = 0;
 } while(0)
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    CK_STR(usb_hiddev_directory(), "/dev/usb");
 
    // a device name that cannot match anything yields NULL

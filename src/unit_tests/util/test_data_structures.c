@@ -267,6 +267,8 @@ static void test_csb(void) {
 }
 
 int main(int argc, char ** argv) {
+   setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
+
    test_bva();
    test_bs256();
    test_vnt();
