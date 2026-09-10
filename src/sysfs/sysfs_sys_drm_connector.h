@@ -62,7 +62,6 @@ Sys_Drm_Connector * find_sys_drm_connector_by_connector_identifier(Drm_Connector
 void                free_sys_drm_connector(void * conninfo);
 Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid);
 void                free_sys_drm_connectors();
-Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
 int                 sys_drm_get_busno_by_connector_name(const char * connector_name);
 bool                all_sys_drm_connectors_have_connector_id(bool rescan);
 Bit_Set_256         buses_having_edid_from_sys_drm_connectors(bool rescan);
