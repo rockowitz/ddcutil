@@ -74,10 +74,10 @@ static void test_bitset_from_businfo_array(void) {
    CK(bs256_eq(i2c_buses_bitset_from_businfo_array(buses, false), all3));
    CK(bs256_eq(i2c_buses_bitset_from_businfo_array(buses, true),  connected));
 
-   // i2c_nonlaptop_buses_bitset_from_businfo_array() is not tested.  It is
-   // declared in i2c_bus_collections.h but its definition is #ifdef UNUSED,
-   // so it is not in the build.  The laptop bus (7) is still in the fixture
-   // above, so the cases return when the function does.
+   // i2c_nonlaptop_buses_bitset_from_businfo_array() is not tested.  Its
+   // definition in i2c_bus_collections.c is #ifdef UNUSED, so it is not in
+   // the build.  The laptop bus (7) is still in the fixture above, so the
+   // cases return when the function does.
 
    CK_INT(bs256_count(all3), 3);
    CK_INT(bs256_count(connected), 2);
