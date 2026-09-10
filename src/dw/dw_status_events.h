@@ -8,6 +8,11 @@
 
 #include <glib-2.0/glib.h>
 
+// Nneeded because unit test test_dw_status_events, created by claude, fails on
+// OpenSUSE build service when built for older distributions because true and
+// false are undefined.
+#include <stdbool.h>
+
 #include "public/ddcutil_types.h"
 
 #include "base/displays.h"
