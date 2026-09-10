@@ -32,7 +32,6 @@ void         ddc_set_async_threshold(int threshold);
 // Error_Info * ddc_initial_checks_by_dref(Display_Ref * dref, bool newly_added);
 
 // Get Display Information
-GPtrArray *  ddc_get_all_display_refs();  // returns GPtrArray of Display_Ref instances, including invalid displays
 void         ddc_dbgrpt_display_refs_summary(bool include_invalid_displays, bool report_businfo, int depth);
 void         ddc_dbgrpt_display_refs_terse(bool include_invalid_displays, int depth);
 GPtrArray *  ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_removed_drefs);
