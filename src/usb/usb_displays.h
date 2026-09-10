@@ -29,10 +29,6 @@
 
 bool check_usb_monitor( char * device_name );
 
-#ifdef OLD
-Display_Info_List usb_get_valid_displays();
-#endif
-
 bool          usb_is_valid_display_ref(         Display_Ref * dref, bool emit_error_msg);
 void          usb_show_active_display_by_dref(  Display_Ref * dref, int depth);
 Parsed_Edid * usb_get_parsed_edid_by_dref(      Display_Ref * dref);

@@ -11,8 +11,6 @@
 #include <linux/hiddev.h>
 #include <stdbool.h>
 
-void init_hiddev_reports();
-
 void dbgrpt_hiddev_devinfo(struct hiddev_devinfo * devinfo, bool lookup_names, int depth);
 void dbgrpt_hiddev_device_by_fd(int fd, int depth);
 
