@@ -6,7 +6,7 @@
  *  are not unidirectional.  The functionality has been split into 3 files for clarity.
  */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PER_DISPLAY_DATA_H_
@@ -83,8 +83,6 @@ Per_Display_Data *
 typedef void (*Pdd_Func)(Per_Display_Data * data, void * arg);   // Template for function to apply
 void   pdd_apply_all(Pdd_Func func, void * arg);
 void   pdd_apply_all_sorted(Pdd_Func func, void * arg);
-
-void   pdd_reset_all();
 
 void   pdd_enable_dynamic_sleep_all(bool onoff);
 bool   pdd_is_dynamic_sleep_enabled();
