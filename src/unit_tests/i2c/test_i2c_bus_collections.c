@@ -70,13 +70,14 @@ static void test_bitset_from_businfo_array(void) {
 
    Bit_Set_256 all3     = bs256_insert(bs256_insert(bs256_insert(EMPTY_BIT_SET_256, 3), 5), 7);
    Bit_Set_256 connected = bs256_insert(bs256_insert(EMPTY_BIT_SET_256, 5), 7);
-   Bit_Set_256 nonlaptop_all  = bs256_insert(bs256_insert(EMPTY_BIT_SET_256, 3), 5);
-   Bit_Set_256 nonlaptop_conn = bs256_insert(EMPTY_BIT_SET_256, 5);
 
    CK(bs256_eq(i2c_buses_bitset_from_businfo_array(buses, false), all3));
    CK(bs256_eq(i2c_buses_bitset_from_businfo_array(buses, true),  connected));
-   CK(bs256_eq(i2c_nonlaptop_buses_bitset_from_businfo_array(buses, false), nonlaptop_all));
-   CK(bs256_eq(i2c_nonlaptop_buses_bitset_from_businfo_array(buses, true),  nonlaptop_conn));
+
+   // i2c_nonlaptop_buses_bitset_from_businfo_array() is not tested.  It is
+   // declared in i2c_bus_collections.h but its definition is #ifdef UNUSED,
+   // so it is not in the build.  The laptop bus (7) is still in the fixture
+   // above, so the cases return when the function does.
 
    CK_INT(bs256_count(all3), 3);
    CK_INT(bs256_count(connected), 2);

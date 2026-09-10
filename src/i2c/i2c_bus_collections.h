@@ -27,7 +27,6 @@ Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_device
 Byte_Value_Array i2c_get_device_numbers_using_udev(bool include_ignorable_devices);
 Byte_Value_Array i2c_detect_attached_buses();
 Bit_Set_256      i2c_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
-Bit_Set_256      i2c_nonlaptop_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info
 GPtrArray *      i2c_detect_buses0();
 #ifdef MAINTAINED_CONNECTOR_ARRAY
 void        extended_bus_detection();
