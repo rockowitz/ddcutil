@@ -2,7 +2,7 @@
  * Linux errno descriptions
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_LINUX_ERRNO_H_
@@ -21,6 +21,8 @@ Status_Code_Info * get_errno_info(int errnum);
 Status_Code_Info * get_negative_errno_info(int errnum);
 
 bool errno_name_to_number(const char * errno_name, int * perrno);
+#ifdef OLD
 bool errno_name_to_modulated_number(const char * errno_name, Public_Status_Code * p_error_number);
+#endif
 
 #endif /* BASE_LINUX_ERRNO_H_ */
