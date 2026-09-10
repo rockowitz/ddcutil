@@ -8,8 +8,12 @@
 // Copyright (C) 2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #ifndef SYSFS_SIMPLE_H_
 #define SYSFS_SIMPLE_H_
+
+#include "base/parms.h"
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
@@ -54,19 +58,17 @@ void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo);
 void possibly_write_detect_to_status_by_dref(Display_Ref * dref);
 void possibly_write_detect_to_status_by_connector_path(const char * path);
 
-#define WRITE_DETECT_TO_STATUS 1
 #ifdef WRITE_DETECT_TO_STATUS
 #define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH possibly_write_detect_to_status_by_connector_path
 #define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME possibly_write_detect_to_status_by_connector_name
 #define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO        possibly_write_detect_to_status_by_businfo
 #define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_DREF           possibly_write_detect_to_status_by_dref
 #else
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO
-#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_DREF
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH(_path)
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(_name)
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO(_businfo)
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_DREF(_dref)
 #endif
-
 
 void        init_sysfs_simple();
 

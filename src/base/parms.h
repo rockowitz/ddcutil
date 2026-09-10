@@ -269,4 +269,6 @@
 
 #define STD_FUNCNAME_FIELD_SIZE 30
 
+// #define WRITE_DETECT_TO_STATUS
+
 #endif /* PARMS_H_ */

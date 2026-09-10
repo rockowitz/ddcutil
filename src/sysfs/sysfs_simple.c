@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
+#include "base/parms.h"
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
@@ -35,7 +36,6 @@
 
 #include "cmdline/parsed_cmd.h"
 
-// #include "sysfs_base.h"
 #include "sysfs_simple.h"
 
 static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SYSFS;

@@ -11,6 +11,7 @@
 // packet functions are for I2C and ADL only.  Consider splitting.
 
 #include "config.h"
+#include "base/parms.h"
 
 /** \cond */
 #include <assert.h>

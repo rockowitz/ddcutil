@@ -5,6 +5,7 @@
 
 
 #include "config.h"
+#include "base/parms.h"
 
 /** \cond */
 #include <assert.h>

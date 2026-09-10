@@ -8,6 +8,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
+#include "base/parms.h"
 
 #include <assert.h>
 #include <errno.h>
