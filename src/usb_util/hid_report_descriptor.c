@@ -307,9 +307,12 @@ void report_hid_collection(Parsed_Hid_Collection * col, int depth) {
       // rpt_vstring(d1, "%-20s:  0x%02x  %s", "Usage id",
       //                 col->usage_id, devid_usage_code_id_name(col->usage_page, col->usage_id));
 
+      char * ext_usage_name = devid_usage_code_name_by_extended_id(col->extended_usage);
+      if (!ext_usage_name)                 // NULL %s is undefined on musl
+         ext_usage_name = "(Unrecognized usage code)";
       rpt_vstring(d1, "%-20s:  0x%08x  %s", "Extended Usage",
                       col->extended_usage,
-                      devid_usage_code_name_by_extended_id(col->extended_usage));
+                      ext_usage_name);
    }
 
    if (col->child_collections && col->child_collections->len > 0) {
@@ -637,10 +640,13 @@ Parsed_Hid_Descriptor * parse_hid_report_desc_from_item_list(Hid_Report_Descript
       if (debug) {
          char datastr[20];
          snprintf(datastr, 20, "[0x%0*x] %d", item->bsize_bytect*2, item->data, item->data);
+         char * item_type_name = devid_hid_descriptor_item_type(item->btag);
+         if (!item_type_name)              // NULL %s is undefined on musl
+            item_type_name = "(Unrecognized item tag)";
          printf("(%s) Item(%-6s): %s, data=%s\n",
                  __func__,
                  types[item->btype],
-                 devid_hid_descriptor_item_type(item->btag),
+                 item_type_name,
                  datastr);
       }
 

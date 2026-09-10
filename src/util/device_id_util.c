@@ -151,6 +151,10 @@ static void report_simple_id_table(Simple_Id_Table * simple_table, int depth) {
 
 static char * get_simple_id_name(Simple_Id_Table * simple_table, gushort id) {
    char * result = NULL;
+   // A table is NULL if its source file was never loaded.  Report no name
+   // found, which is what a lookup miss on a populated table also returns.
+   if (!simple_table)
+      return result;
    for (int ndx = 0; ndx < simple_table->len; ndx++) {
       Simple_Id_Table_Entry * cur_entry = g_ptr_array_index(simple_table, ndx);
       if (cur_entry->id == id) {
@@ -736,6 +740,22 @@ static void load_id_file(Device_Id_Type id_type){
                {"interface", 10, 0}
          };
          usb_vendors_mlm = mlm_create("USB Devices", 3, usb_id_levels);
+
+         // usb.ids also supplies the HUT segment, from which hid_usages_table
+         // is built above.  Without a dummy here that table alone stays NULL
+         // while the other two are created, and it is reached from
+         // devid_usage_code_page_name().  Levels match the real table.
+         MLM_Level hut_levels[] = {
+               {"usage page", 20, 0},
+               {"usage_id",   20, 0}
+         };
+         hid_usages_table = mlm_create("HUT", 2, hut_levels);
+
+         // Same for the simple tables built from usb.ids segments HID, R
+         // and HCC, which get_simple_id_name() would otherwise receive NULL.
+         hid_descriptor_types      = create_simple_id_table(0);
+         hid_descriptor_item_types = create_simple_id_table(0);
+         hid_country_codes         = create_simple_id_table(0);
       }
    }
 

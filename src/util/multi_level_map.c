@@ -233,6 +233,14 @@ Multi_Level_Names mlm_get_names2(Multi_Level_Map * mlm, int levelct, guint* ids)
 
    Multi_Level_Names result = {0};
 
+   // A table is NULL when its source file was never loaded.  Only
+   // pci_vendors_mlm and usb_vendors_mlm get a dummy table when pci.ids or
+   // usb.ids is not found; hid_usages_table is left NULL, and reaches here
+   // from devid_usage_code_page_name().  Returning the zeroed result reports
+   // no names found, which every caller already handles.
+   if (!mlm)
+      return result;
+
    int argndx = 0;
    GPtrArray * children = mlm->root;
    result.levels = 0;

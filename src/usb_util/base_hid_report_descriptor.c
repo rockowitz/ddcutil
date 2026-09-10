@@ -338,10 +338,18 @@ void report_hid_report_item(
              sizeof(workbuf) );       // buffer size
    snprintf(rawbuf, 16, "%02x %-8s ", item->raw_bytes[0], workbuf);
 
+   // devid_hid_descriptor_item_type() returns NULL for an unrecognized tag,
+   // and for every tag if usb.ids was not found.  glibc prints "(null)" for a
+   // NULL %s argument, but that is a glibc extension; on musl it is undefined
+   // and crashes.  Substitute explicitly.
+   char * item_type_name = devid_hid_descriptor_item_type(item->btag);
+   if (!item_type_name)
+      item_type_name = "(Unrecognized item tag)";
+
    rpt_vstring(depth, "%sItem(%-6s): %s, data=[ %s ]",
                       rawbuf,
                       types[item->btype],
-                      devid_hid_descriptor_item_type(item->btag),  // replacement for names_reporttag()
+                      item_type_name,   // replacement for names_reporttag()
                       databuf);
 
    switch (item->btag) {
