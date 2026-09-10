@@ -34,6 +34,7 @@ void         ddc_set_async_threshold(int threshold);
 // Get Display Information
 void         ddc_dbgrpt_display_refs_summary(bool include_invalid_displays, bool report_businfo, int depth);
 void         ddc_dbgrpt_display_refs_terse(bool include_invalid_displays, int depth);
+GPtrArray *  ddc_get_all_display_refs();
 GPtrArray *  ddc_get_filtered_display_refs(bool include_invalid_displays, bool include_removed_drefs);
 GPtrArray *  ddc_get_bus_open_errors();
 int          ddc_get_display_count(bool include_invalid_displays);
