@@ -3,7 +3,7 @@
  * Functions for creating DDC packets and interpreting DDC response packets.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_PACKETS_H_
@@ -119,9 +119,7 @@ bool is_double_byte(Byte * pb);
 
 // Byte xor_bytes(Byte * bytes, int len);
 Byte ddc_checksum(Byte * bytes, int len, bool altmode);
-#ifdef UNUSED
-bool valid_ddc_packet_checksum(Byte * readbuf);
-#endif
+
 // void test_checksum();
 
 
@@ -151,11 +149,6 @@ create_ddc_typed_response_packet(
       DDC_Packet ** packet_ptr_addr);
 
 DDC_Packet *
-create_ddc_capabilities_request_packet(
-      int           offset,
-      const char *  tag);
-
-DDC_Packet *
 create_ddc_multi_part_read_request_packet(
       Byte          request_type,
       Byte          request_subtype,
@@ -172,28 +165,9 @@ create_ddc_multi_part_write_request_packet(
       const char * tag);
 
 void
-update_ddc_capabilities_request_packet_offset(
-      DDC_Packet *  packet,
-      int           offset);
-
-void
 update_ddc_multi_part_read_request_packet_offset(
       DDC_Packet *  packet,
       int           offset);
-
-Status_DDC
-create_ddc_capabilities_response_packet(
-      Byte *        i2c_response_bytes,
-      int           response_bytes_buffer_size,
-      const char *  tag,
-      DDC_Packet ** packet_ptr);
-
-Status_DDC
-interpret_capabilities_response(
-      Byte *        data_bytes,
-      int           bytect,
-      Interpreted_Multi_Part_Read_Fragment * aux_data,
-      bool          debug);
 
 extern Byte alt_source_addr;
 
@@ -201,16 +175,6 @@ DDC_Packet *
 create_ddc_getvcp_request_packet(
       Byte          vcp_code,
       const char *  tag);
-
-#ifdef UNUSED
-Status_DDC
-create_ddc_getvcp_response_packet(
-      Byte *        i2c_response_bytes,
-      int           response_bytes_buffer_size,
-      Byte          expected_vcp_opcode,
-      const char *  tag,
-      DDC_Packet ** packet_ptr);
-#endif
 
 DDC_Packet *
 create_ddc_setvcp_request_packet(
@@ -237,10 +201,6 @@ void
 dbgrpt_interpreted_nontable_vcp_response(
       Parsed_Nontable_Vcp_Response * interpreted,
       int depth);
-
-#ifdef OLD
-void   report_interpreted_aux_data(Byte response_type, void * interpreted);
-#endif
 
 Byte * get_packet_start(DDC_Packet * packet);
 int    get_packet_len(  DDC_Packet * packet);
