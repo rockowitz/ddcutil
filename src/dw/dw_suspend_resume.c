@@ -207,6 +207,17 @@ bool recently_resumed_from_sleep(int within_ms, uint64_t * millisec_since_loc,
 
    // Fallback, for the case dbus cannot cover: the signal has not yet been
    // delivered, or the build has no dbus support.
+   //
+   // This branch is the one that reports a resume when the clock method is
+   // wrong, and it is reached whatever dbus says, so a false detection here
+   // is not masked by a correct dbus answer.  It surfaced as
+   // test_dw_suspend_resume failing on the aarch64 worker at
+   // build.opensuse.org while passing on x86_64: the two assertions in that
+   // test expecting false are the only ones this branch can reach.  The
+   // cause was in get_accumulated_sleep_ns(), not here or in the test --
+   // nothing about it is specific to aarch64, only to a machine whose
+   // BOOTTIME/MONOTONIC offset sits near zero, which is every worker that
+   // has never suspended.
    if (!resumed && resumed_by_clocktime) {
       uint64_t clock_elapsed_ms = millisec_since_resume_detected_by_clocktime();
       if (clock_elapsed_ms < (uint64_t) within_ms) {
