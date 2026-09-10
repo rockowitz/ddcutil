@@ -61,19 +61,38 @@ static _Thread_local uint64_t previous_accumulated_sleep_ns = UINT64_MAX;
 static _Thread_local uint64_t most_recent_detection_ms = UINT64_MAX;
 
 
-/** Gets the current accumulated sleep time. 
- * 
- *  @param accumulated sleep time in nanaosec
+/** Gets the current accumulated sleep time.
+ *
+ *  @return accumulated sleep time in nanosec, 0 if none or if it cannot be read
+ *
+ *  @remark
+ *  The two clocks are sampled sequentially, so the second read is the later of
+ *  the two by the interval between them.  With no accumulated sleep the true
+ *  difference is ~0, and that interval alone can make it negative.  Computed
+ *  unsigned, as it was, such a value wrapped to nearly 2**64: this machine
+ *  reported 18446744073709551599, i.e. -17ns.  That is stable while the offset
+ *  stays on one side of zero, but a system whose offset jitters across zero
+ *  produces one sample small and positive and the next wrapped, and
+ *  recently_resumed_from_sleep_by_clocktime0() reads the step between them as
+ *  a 584-year increase in accumulated sleep -- a resume that never happened.
+ *  Observed as a unit test failure on an aarch64 build worker, which, never
+ *  having suspended, sat at an offset of ~0.
+ *
+ *  So: sample MONOTONIC first, so BOOTTIME is not the earlier of the two, and
+ *  compare signed, clamping at 0.  Zero accumulated sleep now reads as 0.
  */
 static uint64_t get_accumulated_sleep_ns() {
-   struct timespec bt;
-   struct timespec mt;
-   clock_gettime(CLOCK_BOOTTIME,  &bt);  // advances during sleep
-   clock_gettime(CLOCK_MONOTONIC, &mt);  // does not advance during sleep
-   uint64_t boottime_ns = SECS2NANOS(bt.tv_sec) + bt.tv_nsec;
-   uint64_t mono_ns     = SECS2NANOS(mt.tv_sec) + mt.tv_nsec;
-   uint64_t accumulated_sleep_ns = boottime_ns - mono_ns;
-   return accumulated_sleep_ns;
+   struct timespec bt = {0};
+   struct timespec mt = {0};
+   // Unchecked, a failure leaves the timespec uninitialized and the difference
+   // below is stack garbage.
+   if (clock_gettime(CLOCK_MONOTONIC, &mt) != 0 ||   // does not advance during sleep
+       clock_gettime(CLOCK_BOOTTIME,  &bt) != 0)     // advances during sleep
+      return 0;
+   int64_t boottime_ns = SECS2NANOS(bt.tv_sec) + bt.tv_nsec;
+   int64_t mono_ns     = SECS2NANOS(mt.tv_sec) + mt.tv_nsec;
+   int64_t accumulated_sleep_ns = boottime_ns - mono_ns;
+   return (accumulated_sleep_ns > 0) ? (uint64_t) accumulated_sleep_ns : 0;
 }
 
 
