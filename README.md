@@ -1,10 +1,6 @@
 ddcutil
 =======
 
-**The loss of access to www.ddcutil.com, which began the afternoon of Sunday, May 10
-has been fixed. If you're curious about what happened, see this [discussion](https://github.com/rockowitz/ddcutil/discussions/610).**
-
-
 **ddcutil** is a Linux program for querying and changing monitor settings, such as 
 brightness, color levels, and input connector.
 
@@ -16,11 +12,6 @@ the Display Data Channel/Command Interface Standard (DDC/CI).
 Alternatively, some monitors (e.g. Eizo ColorEdge, Apple Cinema) provide a USB
 interface to the VCP, as described in the USB Monitor Control Class Specification.
 **ddcutil** can communicate with these monitors over USB instead of I2C. 
-
-A particular use case for **ddcutil** is as part of color profile management. 
-Monitor calibration is relative to the monitor color settings currently in effect, 
-e.g. red gain.  **ddcutil** allows color related settings to be saved at the time 
-a monitor is calibrated, and then restored when the calibration is applied.
 
 The tarball/github project builds both command line (**ddcutil**) and shared
 library (**libddcutil**) executables. The command line executable does not depend on
@@ -52,12 +43,13 @@ probes the I2C environment and may provide clues as to the problem.
 
 ### User Support
 
-Please direct technical support questions, bug reports, and feature requests to the
-[Issue Tracker](https://github.com/rockowitz/ddcutil/issues) on the github repository.
+Please direct technical support questions, bug reports, and feature requests to
+the [Issue Tracker](https://github.com/rockowitz/ddcutil/issues) on the github repository.
 Use of this forum allows everyone to benefit from individual questions and ideas.
 
-When posting questions regarding **ddcutil** configuration, please execute the following command,
-capture its output in a file, and submit the output as an attachement.
+When posting questions regarding **ddcutil** configuration, please execute
+the following command,  capture its output in a file, and submit the output
+as an attachement.
 
 ~~~
 $ sudo ddcutil interrogate 
@@ -67,8 +59,8 @@ For further information about technical support, see https://www.ddcutil.com/tec
 
 ### Maintaining **ddcutil** in Linux Distributions
 
-Those responsible for maintaining **ddcutil** related packages in Linux distributions should see
-[Notes for Linux Distribution Maintainers](https://www.ddcutil.com/mult_shared_libs).
+Those responsible for maintaining **ddcutil** related packages in Linux distributions
+should see [Notes for Linux Distribution Maintainers](https://www.ddcutil.com/mult_shared_libs).
 
 ## Author
 
@@ -76,7 +68,8 @@ Sanford Rockowitz  <rockowitz@minsoft.com>
 
 ## Supporting **ddcutil**
 
-If you find **ddcutil** useful, please consider making a small contribution to its ongoing development and maintenance.
-You can do this either using the [Buy Me A Coffee](https://buymeacoffee.com/ddcutil) page for Sanford Rockowitz, the developer of **ddcutil**, 
-or as a [github sponsor](https://github.com/sponsors/rockowitz).
+If you find **ddcutil** useful, please consider making a small contribution to
+its ongoing development and maintenance. You can do this either using the
+[Buy Me A Coffee](https://buymeacoffee.com/ddcutil) page for Sanford Rockowitz,
+the developer of **ddcutil**, or as a [github sponsor](https://github.com/sponsors/rockowitz).
  
