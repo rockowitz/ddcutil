@@ -10,10 +10,13 @@
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <syslog.h>
+#include <unistd.h>
 /** \endcond */
 
 #include "config.h"
@@ -299,6 +302,7 @@ char * execute_shell_cmd_one_line_result(const char * shell_cmd) {
 }
 
 
+#ifdef OLD
 /** Tests if a command is found in path
  *
  *  @param cmd command name
@@ -318,6 +322,82 @@ bool is_command_in_path(const char * cmd) {
          result = true;
       g_ptr_array_free(resp, true);
    }
+   return result;
+}
+#endif
+
+
+/** Tests if a name is a regular file this process can execute.
+ *
+ *  @param  fqfn  fully qualified file name
+ *  @return true/false
+ *
+ *  @remark
+ *  access() alone is not sufficient: it reports X_OK for a directory, so
+ *  /usr/bin would answer yes for any command name.
+ */
+static bool is_executable_file(const char * fqfn) {
+   struct stat st;
+   return stat(fqfn, &st) == 0 && S_ISREG(st.st_mode) && access(fqfn, X_OK) == 0;
+}
+
+
+/** Tests if a command is found in path
+ *
+ *  @param cmd command name
+ *
+ *  @return true/false
+ *
+ *  @remark
+ *  Walks $PATH directly rather than running "which".  Forking a shell to
+ *  answer a question about the file system cost two processes per call, and
+ *  made the answer depend on which "which" is installed: it is a shell
+ *  builtin in some shells, a debianutils script on Debian, a GNU binary
+ *  elsewhere, and absent altogether in minimal containers.  In that last
+ *  case the old test reported every command PRESENT: execute_shell_cmd_collect()
+ *  appends 2>&1, so the shell's own "which: not found" was captured as
+ *  output, and the test was merely whether any output appeared.
+ *
+ *  @remark
+ *  Also answers the question the former TODO here asked.  "which" reports
+ *  what it finds on the path, whereas this tests X_OK, so a command in
+ *  /usr/sbin that the current user cannot execute now reports false rather
+ *  than true.  That is the intended reading of the name for the callers in
+ *  query_sysenv_drm.c, which run the command if it is reported present.
+ */
+bool is_command_in_path(const char * cmd) {
+   bool result = false;
+
+   if (cmd && *cmd) {
+      if (strchr(cmd, '/')) {
+         // Contains a separator, so it names a file rather than a command to
+         // be looked up.  $PATH is not searched, as in "which" and in execvp().
+         result = is_executable_file(cmd);
+      }
+      else {
+         const char * path = getenv("PATH");
+         if (!path)
+            path = "/usr/local/bin:/usr/bin:/bin";   // as good a default as any
+         const char * seg = path;
+         while (!result) {
+            const char * colon = strchr(seg, ':');
+            size_t seglen = (colon) ? (size_t)(colon - seg) : strlen(seg);
+            // An empty segment means the current directory, per POSIX.  Not
+            // searched: a file in the working directory is not a command
+            // "in path" for our purposes, and treating it as one would let
+            // an unrelated file decide what sysenv reports.
+            if (seglen > 0 && seglen + 1 + strlen(cmd) < PATH_MAX) {
+               char fqfn[PATH_MAX];
+               g_snprintf(fqfn, sizeof(fqfn), "%.*s/%s", (int) seglen, seg, cmd);
+               result = is_executable_file(fqfn);
+            }
+            if (!colon)
+               break;
+            seg = colon + 1;
+         }
+      }
+   }
+
    return result;
 }
 
