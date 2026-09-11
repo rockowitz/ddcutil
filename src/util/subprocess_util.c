@@ -402,6 +402,7 @@ bool is_command_in_path(const char * cmd) {
 }
 
 
+#ifdef OLD
 /** Tests if a command is executable.
  *
  *  \param cmd command to test execute
@@ -431,4 +432,76 @@ int test_command_executability(const char * cmd) {
 #else
    return WEXITSTATUS(rc);
 #endif
+}
+#endif
+
+
+/** Tests if a command is executable, by executing it and reporting its
+ *  exit status.
+ *
+ *  \param cmd command to test execute
+ *  \retval   0    ok
+ *  \retval 127    command not found
+ *  \retval   2    command requires sudo
+ *  \retval   1    command executed, but with some error
+ *
+ *  Output written by the command, on either stdout or stderr, is discarded.
+ *
+ *  @remark
+ *  Unlike #is_command_in_path(), this function must run the command: its
+ *  answer is the command's exit status, which no test of the file system can
+ *  supply.  What is avoided is the shell.  The former implementation appended
+ *  ">/dev/null 2>&1" to the caller's string and passed it to system(), which
+ *  runs /bin/sh; g_spawn_command_line_sync() instead parses the string into
+ *  an argument vector using shell quoting rules and execs it directly.
+ *
+ *  @remark
+ *  The consequence is that shell metacharacters -- pipes, redirection, globs,
+ *  variable expansion, command sequences -- are no longer interpreted, since
+ *  there is no shell to interpret them.  A quoted command with simple
+ *  arguments behaves as before.  The function has no callers, so nothing
+ *  relies on the former behavior; a caller that needs a pipeline should use
+ *  one of the execute_shell_cmd...() functions, which run a shell by design.
+ *
+ *  @remark
+ *  system() reports 127 when the shell cannot find the command.  There is no
+ *  shell to report that here, so a spawn failure for that reason is mapped to
+ *  127 to keep the documented return values.
+ */
+int test_command_executability(const char * cmd) {
+   assert(cmd);
+   int result = 127;
+
+   gchar * out = NULL;
+   gchar * err = NULL;
+   gint    wait_status = 0;
+   GError * error = NULL;
+
+   if (g_spawn_command_line_sync(cmd, &out, &err, &wait_status, &error)) {
+      // 0 ok
+      // 127 command not found
+      // 2 on dmidecode - not running sudo
+      // 2 on i2cdetect - not sudo
+      // 1 on i2cdetect - sudo, but some error
+#ifdef TARGET_BSD
+      result = (wait_status & 0xff00) >> 8;
+#else
+      result = WEXITSTATUS(wait_status);
+#endif
+   }
+   else {
+      // G_SPAWN_ERROR_NOENT is the command not existing, which system() would
+      // have reported as 127.  Any other failure is reported the same way:
+      // the command did not run, so it is not executable.
+      DBGF(false, "g_spawn_command_line_sync(|%s|) failed: %s", cmd,
+                  (error) ? error->message : "(no message)");
+      result = 127;
+   }
+
+   g_free(out);
+   g_free(err);
+   if (error)
+      g_error_free(error);
+
+   return result;
 }
