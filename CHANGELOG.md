@@ -1,4 +1,4 @@
-## [2.2.8] 2026-09-09
+## [2.2.8] 2026-09-10
 
 ### Gemeral
 
@@ -58,7 +58,6 @@
   udev is enabled, **poll** if not.  If ***--watch-mode xevent*** is explicitly
   specified it will be respected, but execution  will not work properly; it is 
   recognized solely for testing purposes.
-
 
 #### Fixed
 
@@ -157,7 +156,6 @@ to excessive i2c permission checks
   serialized against the watch thread.
 - **ddca_stop_watch_displays()** now always waits for the watch thread to
   terminate.
-
 
 #### Fixed
 - The default recheck thread declared DDC enabled, and emitted
