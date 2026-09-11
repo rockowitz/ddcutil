@@ -1,4 +1,4 @@
-## [2.2.8] 2026-09-10
+## [3.0.0] 2026-09-10
 
 ### Gemeral
 
@@ -7,15 +7,20 @@
 - Option ***--bus-drm-connector***: lets the user explicitly specify the I2C 
   bus number/DRM connector name pairing for a display, for cases where the 
   sysfs card-connector directory does not record the bus number and ddcutil's
-  alternative EDID-based association fails or is ambiguous. Addresses issue
-  #608: Failed to find connector name error with modified EDID
+  alternative edid-based association fails or is ambiguous. Addresses issue
+  #608: "Failed to find connector name error with modified EDID"
   The option argumnt is a quoted string specifying the i2c bus number and 
   connector name, e.g. ***--bus-drm-connector "5 card1-DP-1"***.
   - A user specified pairing is an override. It applies when the bus number is
-    not available from the sysfs DRM card-connector directory, e.g. with the 
+    not available from the sysfs drm card-connector directory, e.g. with the 
     Nvidia proprietary driver. It takes precedence over ddcutil's matching the 
-    bus number to card-connector directory by EDID comparison, which can fail 
-    if EDIDs are not unique. 
+    bus number to card-connector directory by edid comparison, which can fail
+    in 2 situations: 
+    - Multiple displays have the same edid in the monitor.
+    - The user has specified an alternative edid as an in-core firmware update, 
+      which is reported in the DRM card-connector edid attribute.
+      This in-core update does not change the edid that **ddcutil** reads directly
+      from the monitor using I2C.
   - The option can be specified multiple times, once per I2C bus. The bus number 
     and the connector name are validated when options are processed. Specifying 
     the same bus number more than once is an error.
@@ -25,19 +30,16 @@
   - To avoid a non-backward-compatible API change in enum **DDCA_Drm_Connector_Found_By**,
     the value **DDCA_DRM_CONNECTOR_NOT_FOUND** is used externally for this situation.
 - Option ***--max-setvcp-and-verify-tries***: Specifies the maximum number of 
-  set-then-verify cycles executed by command **setvcp --verify**. Work around for 
-  issue #626: Set VCP write is ignored on an LG display when initial DDC checks 
-  are skipped.
+  set-then-verify cycles executed by command **setvcp --verify**. The default
+  value is 1.  This option partially addresses issue #626: "Set VCP write is 
+  ignored on an LG display when initial DDC checks are skipped".
 
-#### Performance Changes
+#### Changed
 
 - Adjusted the tuning of slave-address x37 detection. The retry interval is now 100ms 
   for all drivers.  Max tries remains at 3, but is increased to 5 if an attempt fails 
   with status EBUSY. Addresses issue #607.
 - Reduce command initialization time. 
-
-#### Miscellaneous Changes
-
 - Command ***setvcp***: Relative value changes can now also be specified as 
   PLUS/MINUS (case-insensitive), in addition to +/-. e.g. **ddcutil setvcp 10 plus 5**. 
 - The handler that writes a crash report to the system log, which hitherto
@@ -45,19 +47,14 @@
   and **SIGABRT**. 
 - Reduce duplicative messages in the system log when trace output is redirected
   to the system log.
-- When reading EDID using I2C, first attempts to use a single combined 
-  **I2C_RDWR** ioctl transaction (write the EDID block-read command and read the
+- When reading the edid using I2C, first attempts to use a single combined 
+  **I2C_RDWR** ioctl transaction (send the EDID block-read packet and read the
   response as one multi-message transaction), as is done in kernel DRM processing, 
   before falling back to the previous separate write-then-read calls. This
-  (a) enables reading the EDID on certain monitors that are not otherwise 
+  (a) enables reading the edid on certain monitors that are not otherwise 
       readable. Based on pull request #621: Try a single combined I2C_RDWR 
       transaction when reading the EDID
   (b) marginally improves perormance by reducing I2C bus round trips
-- watch mode **xevent** is unsupportedd. If no watch mode is specified, or 
-  ***--watch-mode dynamic*** is given, the watch mode resolves to **udev** if
-  udev is enabled, **poll** if not.  If ***--watch-mode xevent*** is explicitly
-  specified it will be respected, but execution  will not work properly; it is 
-  recognized solely for testing purposes.
 
 #### Fixed
 
@@ -72,7 +69,7 @@
   to be regarded as reliable.
 - Do not ignore /dev/i2c devices on SOC systems whose adapter class cannot be
   read because the display adapter is not found. Addresses pull request #619: 
-  Do not ignore sysfs class being zero.
+  "Do not ignore sysfs class being zero".
 - Fixed numerous minor bugs and memory leaks identified by Claude unit tests 
   and Coverity scan. 
   
@@ -114,21 +111,21 @@ The released library file is libddcutil.so.5.6.0.
   instead of looping over multiple short sleep operations. Eliminates the watch
   thread's periodic wakeups (up to 10 per second) which degrade idle power 
   residency when libddcutil is embedded in a long-running process such as 
-  KDE PowerDevil. Addresses issue #617: ddcutil wakes up every 
-  100ms to check for monitors even when nothing connected
+  KDE PowerDevil. Addresses issue #617: "ddcutil wakes up every 
+  100ms to check for monitors even when nothing connected"
 - A burst of udev events, common following a resume, is coalesced to
   avoid a storm of redundant bus rescans.
 - Do not try to open a /dev/i2c device whose DRM connector reports "disconnected".
   Applies only to in kernel video drivers (e.g. amdgpu, i915, nouveau), not to
   the proprietary Nvidia driver, for which the status attribute is unreliable.
 
-#### EACCES Errors
+#### EACCES Error Changes
 
 Further work to reduce the impact of EACCES errors that can occur when opening 
 /dev/i2c devices immediately after initiailzation and after resume from sleep.
 The cause is udev not having yet applied permissions specified by uaccess.
-In particular, adddresses issue #581:ddcutil 2.2.5 causes KDE Plasma freeze due 
-to excessive i2c permission checks
+In particular, adddresses issue #581:"ddcutil 2.2.5 causes KDE Plasma freeze due 
+to excessive i2c permission checks"
 
 - Recovery from the transient loss of /dev/i2c permissions (EACCES errors) 
   when opening /dev/i2c devices after resume from sleep or at login is now
@@ -140,12 +137,19 @@ to excessive i2c permission checks
   - Reworked detection and handling of resume from sleep.
   - Rate-limit the expensive EACCES diagnostics. Diagnostics are emitted at most
     once per 10 seconds (set by parm **DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC** 
-    in parms.h), instead of once per bus open.  
+    in parms.h), instead of once per bus open.
+- Coalesce a burst of UDEV messages so that detected monitors are checked only
+  once instead of after UDEV event is received.
 - Defer display change processing until the EACESS window passes, to avoid 
   briefly treating every monitor as disconnected.   
 
 #### Miscellaneous Changes
 
+- Watch mode **xevent** is unsupportedd. If no watch mode is specified, or 
+  ***--watch-mode dynamic*** is given, the watch mode resolves to **udev** if
+  udev is enabled, **poll** if not.  If ***--watch-mode xevent*** is explicitly
+  specified it will be respected, but execution  will not work properly; it is 
+  recognized solely for testing purposes.
 - API cleanup: 
   - const-qualify string input parameters (and some return values),
   - added explicit **void** to empty parameter lists
@@ -158,6 +162,7 @@ to excessive i2c permission checks
   terminate.
 
 #### Fixed
+
 - The default recheck thread declared DDC enabled, and emitted
   **DDCA_EVENT_DDC_ENABLED**, whenever a recheck completed without error,
   even if DDC communication was not yet working. In releases through 2.2.6,
@@ -165,24 +170,6 @@ to excessive i2c permission checks
   this produced DDCA_EVENT_DDC_ENABLED events reporting ddc working: false
   (KDE bug 517290). The event is now emitted only when DDC communication is
   confirmed working; otherwise the recheck is requeued.
-
-- **XInitThreads()** is now called at library-initialization time, before the
-  first Xlib call.
-
-- Additional data races fixed: a TOCTOU (Time of Check to Time of Use) race on 
-  **dref->flags** in the recheck worker thread, a race on 
-  **retry_thread_sleep_factor_millisec**, and a TOCTOU race in **compile_and_eval_regex()**.
-
-- Thread safety (found by Coverity static analysis): serialized several
-  unsynchronized reads of shared global state that is written under a mutex —
-  the detected-display list and bus-open-error list, the retry **maxtries**
-  setting, the active API-call count, and the display-lock owner fields — and
-  closed a check-then-act (lock evasion) window when discarding detected
-  displays.
-
-- Thread safety: fixed a use-after-free crash caused by unsynchronized access
-  to the per-thread data table in **ptd_get_per_thread_data()**, which could
-  occur under concurrent libddcutil API calls.
 - **ddca_report_displays()** now respects API quiescing. Previously, calling it
   concurrently with **ddca_redetect_displays()** could crash by dereferencing
   display references freed by the redetection.
@@ -190,7 +177,6 @@ to excessive i2c permission checks
   by a NULL **dref->detail** in **i2c_check_open_bus_alive()**. Reads of
   **dref->detail** are now guarded against concurrent disconnect in several
   functions.
-
 - **ddca_unregister_display_status_callback()**: Status codes for success
   and not-found were swapped.
 - **ddca_dbgrpt_display_ref()**: The opaque **DDCA_Display_Ref** was being
@@ -198,6 +184,22 @@ to excessive i2c permission checks
   by lookup, causing a segfault.
 - Option ***--syslog*** passed in either the **ddca_init2()** libopts parm
   or the config file was not recognized.
+- Thread safety: 
+  - A TOCTOU (Time of Check to Time of Use) race on **dref->flags** in the 
+    recheck worker thread, 
+  - A race on **retry_thread_sleep_factor_millisec**, and a TOCTOU race in 
+    **compile_and_eval_regex()**.
+  - Fixed a use-after-free crash caused by unsynchronized access to the
+    per-thread data table in **ptd_get_per_thread_data()**, which could
+    occur under concurrent libddcutil API calls.
+- Additional thread safety issues found by Coverity static analysis: 
+  - Serialized several unsynchronized reads of shared global state that is 
+    written under a mutex:
+    - the detected-display list and bus-open-error list, 
+    - the retry **maxtries** setting 
+    - the active API-call count and display-lock owner fields 
+  - Closed a check-then-act (lock evasion) window when discarding detected
+    displays.
 
 
 ## [2.2.7] 2025-05-08
