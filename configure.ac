@@ -620,6 +620,19 @@ AC_SEARCH_LIBS([dlopen], [dl dld], [], [
 ###
 
 AC_CHECK_HEADERS([fcntl.h langinfo.h libintl.h limits.h stdint.h stdlib.h string.h sys/ioctl.h termios.h unistd.h wchar.h  dlfcn.h execinfo.h])
+
+dnl The execinfo backtrace is enabled only on x86_64.  Elsewhere glibc's
+dnl backtrace() unwinds using tables that are not emitted for C by default,
+dnl so it returns few frames or, on armhf, none at all -- observed as
+dnl test_backtrace failing at Launchpad.  Fixing that would mean building
+dnl with -funwind-tables everywhere, and the traced function stack now
+dnl supersedes the backtrace, so it is not worth the cost.
+dnl $host_cpu comes from AC_CANONICAL_HOST, invoked by LT_INIT above.
+AS_IF([test "x$ac_cv_header_execinfo_h" = "xyes" && test "x$host_cpu" = "xx86_64"],
+      [AC_DEFINE([ENABLE_BACKTRACE], [1],
+                 [Define to use the execinfo backtrace.  x86_64 only.])
+       enable_backtrace=yes],
+      [enable_backtrace=no])
 dnl i2c-dev.h is in linux-headers
 dnl i2c-dev.h not found:
 dnl AC_CHECK_HEADERS([i2c-dev.h])
@@ -1028,6 +1041,7 @@ AC_MSG_RESULT([
 	enable_dbus:            ${enable_dbus}
 	enable_systemd:         ${enable_systemd}
 	enable_watch_displays:  ${enable_watch_displays}
+	enable_backtrace:       ${enable_backtrace}  (host_cpu ${host_cpu})
 	enable_x11:             ${enable_x11}   
 dnl	enable_trace:           ${enable_trace}
 	enable_asan:            ${enable_asan}

@@ -54,8 +54,18 @@ int main(int argc, char ** argv) {
    setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
 
    GPtrArray * b0 = get_backtrace(0);
-   if (b0 == NULL) {
-      printf("NOTE  execinfo unavailable; backtrace checks skipped\n");
+   // NULL means the backtrace is not in this build: either execinfo.h was
+   // absent, or ENABLE_BACKTRACE was not defined, which configure does only
+   // for x86_64.  A non-NULL but empty array means backtrace() was called and
+   // returned no frames, which is what glibc does where the unwind
+   // information it needs was not generated.  Neither is a defect in the code
+   // under test, and the checks below all presume at least one frame, so skip
+   // them in both cases.
+   if (b0 == NULL || b0->len == 0) {
+      printf("NOTE  backtrace unavailable (%s); backtrace checks skipped\n",
+             (b0 == NULL) ? "not enabled in this build" : "backtrace() returned no frames");
+      if (b0)
+         free_bt(b0);
    }
    else {
       // non-empty, and every entry is a non-NULL string

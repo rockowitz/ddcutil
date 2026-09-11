@@ -5,7 +5,7 @@
 
 #include "config.h"
 /** \cond */
-#ifdef HAVE_EXECINFO_H
+#ifdef ENABLE_BACKTRACE
 #include <execinfo.h>
 #endif
 #include <assert.h>
@@ -35,10 +35,10 @@
 
 // HACK
 #ifdef TARGET_BSD
-#undef HAVE_EXECINFO_H
+#undef ENABLE_BACKTRACE
 #endif
 
-#ifdef HAVE_EXECINFO_H
+#ifdef ENABLE_BACKTRACE
 /* Extracts the function name and offset from a backtrace line
  *
  * \param  bt_line   line returned by backtrace()
@@ -145,7 +145,7 @@ void show_backtrace(int stack_adjust)
  *  @return array of strings of names of functions, caller must deep free
  */
 GPtrArray * get_backtrace(int stack_adjust) {
-#ifdef HAVE_EXECINFO_H
+#ifdef ENABLE_BACKTRACE
    bool debug = false;
    if (debug)
       printf("(%s) Starting.  stack_adjust = %d\n", __func__, stack_adjust);
