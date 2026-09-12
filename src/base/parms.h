@@ -140,7 +140,7 @@
 // with different hardware and drivers the result is different, so an explicit
 // value is used.
 #define CHECK_ASYNC_NEVER 99
-#define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD 4
+#define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD CHECK_ASYNC_NEVER
 
 // Parallelize DDC communication checks if at least this number of /dev/i2c devices
 // have an EDID.
