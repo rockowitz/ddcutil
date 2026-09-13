@@ -96,6 +96,7 @@
 #include "ddc/ddc_initial_checks.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
+#include "ddc/ddc_open_close.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_save_current_settings.h"

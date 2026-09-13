@@ -73,6 +73,7 @@
 
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_initial_checks.h"
+#include "ddc/ddc_open_close.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_phantom_displays.h"
 #include "ddc/ddc_serialize.h"

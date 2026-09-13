@@ -24,6 +24,7 @@ ddc_display_selection.c     \
 ddc_dumpload.c              \
 ddc_initial_checks.c        \
 ddc_multi_part_io.c         \
+ddc_open_close.c            \
 ddc_output.c                \
 ddc_packet_io.c             \
 ddc_phantom_displays.c      \

@@ -30,6 +30,7 @@
 #include "usb/usb_vcp.h"
 #endif
 
+#include "ddc/ddc_open_close.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 

@@ -32,6 +32,7 @@
 #include "vcp/persistent_capabilities.h"
 
 #include "ddc/ddc_multi_part_io.h"
+#include "ddc/ddc_open_close.h"
 #include "ddc/ddc_packet_io.h"
 
 #include "ddc/ddc_read_capabilities.h"

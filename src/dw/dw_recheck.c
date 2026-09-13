@@ -28,6 +28,7 @@
 #include "dw_poll.h"   // for retry_thread_sleep_factor_millisec
 
 #include "dw_recheck.h"
+#include "ddc/ddc_open_close.h"
 
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 

@@ -50,6 +50,7 @@
 #include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_initial_checks.h"
 #include "ddc/ddc_multi_part_io.h"
+#include "ddc/ddc_open_close.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_phantom_displays.h"
@@ -258,6 +259,7 @@ void init_ddc_services() {
    init_ddc_initial_checks();
    init_ddc_displays();
    init_ddc_dumpload();
+   init_ddc_open_close();
    init_ddc_output();
    init_ddc_packet_io();
    init_ddc_read_capabilities();
@@ -287,8 +289,13 @@ void terminate_ddc_services() {
 #endif
    // ddc_stop_watch_displays(true,NULL);
    terminate_ddc_serialize();
-   terminate_ddc_displays();  // must be called before terminate_ddc_packet_io()
+   // terminate_ddc_displays() reaches ddc_close_all_displays(), which asserts
+   // on the open_displays table that terminate_ddc_open_close() destroys, so
+   // it must run first.  The constraint named terminate_ddc_packet_io() while
+   // that table lived there.
+   terminate_ddc_displays();
    terminate_ddc_packet_io();
+   terminate_ddc_open_close();
    terminate_i2c_display_lock();
 
    terminate_persistent_capabilities();

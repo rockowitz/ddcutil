@@ -28,24 +28,6 @@ typedef enum {
    Write_Read_Flag_Table_Read = 4
 } DDC_Write_Read_Flags ;
 
-Error_Info * ddc_open_display(
-      Display_Ref *    dref,
-      Call_Options     callopts,
-      Display_Handle** dh_loc);
-
-Error_Info * ddc_close_display(
-      Display_Handle * dh);
-
-void ddc_close_display_wo_return(
-      Display_Handle * dh);
-
-void ddc_close_all_displays();
-void ddc_close_all_displays_for_current_thread(bool error_if_open);
-
-DDCA_Status ddc_validate_display_handle2(Display_Handle * dh);
-
-void ddc_dbgrpt_valid_display_handles(int depth);
-
 Error_Info * ddc_write_only(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);

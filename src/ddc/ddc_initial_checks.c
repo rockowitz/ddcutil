@@ -47,6 +47,7 @@
 
 #include "i2c/i2c_bus_core.h"
 
+#include "ddc/ddc_open_close.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"

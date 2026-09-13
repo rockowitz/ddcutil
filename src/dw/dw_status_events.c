@@ -22,6 +22,7 @@
 #include "base/sleep.h"
 #include "base/rtti.h"
 
+#include "ddc/ddc_open_close.h"
 #include "ddc/ddc_packet_io.h"
 
 #include "dw_common.h"

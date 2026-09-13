@@ -38,6 +38,7 @@
 #include "base/vcp_version.h"
 
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_open_close.h"
 
 static int total = 0;
 static int failed = 0;

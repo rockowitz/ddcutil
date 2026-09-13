@@ -45,6 +45,7 @@
 #include "dynvcp/dyn_feature_files.h"
 
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_open_close.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"

@@ -39,6 +39,7 @@
 #include "ddc/ddc_dumpload.h"
 
 #include "app_ddcutil/app_dumpload.h"
+#include "ddc/ddc_open_close.h"
 
 static const char TRACE_GROUP = DDCA_TRC_TOP;
 

@@ -44,6 +44,7 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_selection.h"
 #include "ddc/ddc_output.h"
+#include "ddc/ddc_open_close.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_vcp.h"
