@@ -1,3 +1,18 @@
+## [3.0.1] 2026-09-13
+
+#### Fixed
+
+- Examining /dev/i2c devices in parallel during initilaization caused system 
+  crashes on AMD Navi video devices. KDE Plasma failed to start. 
+  Reverted to serial examination by default, as was done in release 2.2.7.
+  Users of non-AMD video devices are stil able to perform parallel checking
+  by using option ***--i2c-bus-checks-async-min***.  Addresses issues #628,
+  #629, #630.
+- When building **ddcutil**, **make check** builds and executes unit tests. 
+  The test of function **is_command_in_path()** failed because command 
+  **which** was not present in the user's shell. The function was rewritten 
+  entirely in C.
+
 ## [3.0.0] 2026-09-10
 
 ### Gemeral
