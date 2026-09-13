@@ -38,10 +38,16 @@ endif
 
 check_PROGRAMS = ../../unit_test_executables/ddc/test_ddc_try_data ../../unit_test_executables/ddc/test_ddc_vcp_version \
   ../../unit_test_executables/ddc/test_ddc_phantom_displays ../../unit_test_executables/ddc/test_ddc_display_selection \
-  ../../unit_test_executables/ddc/test_ddc_serialize ../../unit_test_executables/ddc/test_ddc_dumpload
+  ../../unit_test_executables/ddc/test_ddc_serialize ../../unit_test_executables/ddc/test_ddc_dumpload \
+  ../../unit_test_executables/ddc/test_ddc_open_close
 TESTS = ../../unit_test_executables/ddc/test_ddc_try_data ../../unit_test_executables/ddc/test_ddc_vcp_version \
   ../../unit_test_executables/ddc/test_ddc_phantom_displays ../../unit_test_executables/ddc/test_ddc_display_selection \
-  ../../unit_test_executables/ddc/test_ddc_serialize ../../unit_test_executables/ddc/test_ddc_dumpload
+  ../../unit_test_executables/ddc/test_ddc_serialize ../../unit_test_executables/ddc/test_ddc_dumpload \
+  ../../unit_test_executables/ddc/test_ddc_open_close
+
+______unit_test_executables_ddc_test_ddc_open_close_SOURCES  = test_ddc_open_close.c
+______unit_test_executables_ddc_test_ddc_open_close_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+______unit_test_executables_ddc_test_ddc_open_close_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
 ______unit_test_executables_ddc_test_ddc_try_data_SOURCES  = test_ddc_try_data.c
 ______unit_test_executables_ddc_test_ddc_try_data_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)

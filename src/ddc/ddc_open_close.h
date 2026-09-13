@@ -28,6 +28,12 @@ void ddc_close_display_wo_return(
 void ddc_close_all_displays();
 void ddc_close_all_displays_for_current_thread(bool error_if_open);
 
+// Maintain the per-thread record of which display handles this thread has
+// open.  Called by ddc_open_display() and ddc_close_display(); declared here
+// so they can be tested directly.  Each reports whether it changed the array.
+bool add_open_display_for_current_thread(Display_Handle * dh);
+bool remove_open_display_for_current_thread(Display_Handle * dh);
+
 DDCA_Status ddc_validate_display_handle2(Display_Handle * dh);
 
 void ddc_dbgrpt_valid_display_handles(int depth);
