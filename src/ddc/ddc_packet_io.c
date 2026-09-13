@@ -1,14 +1,13 @@
 /** \file ddc_packet_io.c
  *
- *  Functions for performing DDC packet IO, using either the I2C bus API
- *  or the ADL API, as appropriate.  Handles I2C bus retry.
+ *  Functions for performing DDC packet IO, using the I2C bus.
+ *  Handles I2C bus retry
+ *
+ *  Historically, this file also handled packet io for the old ADL API.
  */
 
 // Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-// N. ddc_open_display() and ddc_close_display() handle case USB, but the
-// packet functions are for I2C and ADL only.  Consider splitting.
 
 #include "config.h"
 #include "base/parms.h"
