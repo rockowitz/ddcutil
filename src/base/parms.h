@@ -122,24 +122,10 @@
 // Asynchronous Initialization
 //
 
-// Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
-// Briefly set to 3, on the theory that i2c_async_scan() would overlap the I2C
-// EDID read on a bus with nothing attached, which times out at roughly 65 ms.
-// It does not.  The transactions serialize below ddcutil, in the adapter.
-//
-// Measured on a Lenovo Thinkpad P16 using driver i915, 14 buses of which 11 are empty
-// five threaded EDID reads all issue their ioctl within 1.7 ms of each other,
-// then complete strictly in sequence 63 to 75 ms apart.  Scan phase 372 ms
-// threaded vs 358 ms serial; whole detect 0.42 s either way, output identical.
-// Intel i7-12700 using driver i915, agrees at a smaller scale: 77.1 ms threaded
-// vs 76.6 ms serial.
-//
-// So the threads are real and concurrent, and the hardware queues them anyway.
-// On the test systems, parallelization per bus buys nothing, and a serial
-// scan makes a trace far easier to follow. However, it is possible that with
-// with different hardware and drivers the result is different, so an explicit
-// value is used.
 #define CHECK_ASYNC_NEVER 99
+
+// Parallelize bus checks if at least this number of checkable /dev/i2c devices exist
+// Leave at NEVER, parallelization has been seen to cause AMDGPU crash.
 #define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD CHECK_ASYNC_NEVER
 
 // Parallelize DDC communication checks if at least this number of /dev/i2c devices

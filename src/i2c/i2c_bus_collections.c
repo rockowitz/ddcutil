@@ -46,7 +46,28 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
-/** If at least this many buses found to check, perform checks asynchronously */
+/* Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
+
+// Per Claude:
+// Briefly set to 3, on the theory that i2c_async_scan() would overlap the I2C
+// EDID read on a bus with nothing attached, which times out at roughly 65 ms.
+// It does not.  The transactions serialize below ddcutil, in the adapter.
+//
+// Measured on a Lenovo Thinkpad P16 using driver i915, 14 buses of which 11 are empty
+// five threaded EDID reads all issue their ioctl within 1.7 ms of each other,
+// then complete strictly in sequence 63 to 75 ms apart.  Scan phase 372 ms
+// threaded vs 358 ms serial; whole detect 0.42 s either way, output identical.
+// Intel i7-12700 using driver i915, agrees at a smaller scale: 77.1 ms threaded
+// vs 76.6 ms serial.
+//
+// So the threads are real and concurrent, and the hardware queues them anyway.
+// On the test systems, parallelization per bus buys nothing, and a serial
+// scan makes a trace far easier to follow. However, it is possible that with
+// with different hardware and drivers the result is different, so an explicit
+// value is used.
+//
+// In 3.0.0 if checks run i2c checks run asynchronously, crash in AMDGPU
+
 int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 
 bool force_failure_i2c_all_relevant_i2c_buses_rw = false;     // for testing
