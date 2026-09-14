@@ -557,9 +557,23 @@ i2c_ioctl_reader1(
       char * msg = g_strdup_printf("Error in ioctl() read, rc=%d, errno=%s, device=%s",
             rc, psc_desc(-errsv), filename_for_fd_t(fd));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", msg);
-      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
-      free(msg);
-      TRACED_FUNCTION_STACK_TO_SYSLOG(DDCA_SYSLOG_ERROR, TFS_MOST_RECENT_LAST);
+      // ENXIO means no device acknowledged the slave address: the expected
+      // outcome of probing a bus that has nothing on it, not a fault.  Callers
+      // read it that way -- ddc_read_edid_bytes() breaks out of its retry loop
+      // on -ENXIO rather than retrying.  Reported at debug level and without a
+      // stack dump, so that "ddcutil environment --verbose", which probes
+      // every /dev/i2c-*, does not put a 6 line block in the system log for
+      // each bus that is empty.  The write path above likewise logs only an
+      // unexpected return value, never the ordinary failure.
+      if (errsv == ENXIO) {
+         DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "%s", msg);
+         free(msg);
+      }
+      else {
+         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+         free(msg);
+         TRACED_FUNCTION_STACK_TO_SYSLOG(DDCA_SYSLOG_ERROR, TFS_MOST_RECENT_LAST);
+      }
       if (IS_DBGTRC(debug, TRACE_GROUP)) {
          dbgrpt_traced_callstack_call_table(0);
       }
