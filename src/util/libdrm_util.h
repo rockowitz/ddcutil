@@ -33,4 +33,6 @@ void report_drm_modeProperty(    drmModePropertyRes * p,          int depth);
 void summarize_drm_modeProperty(drmModePropertyRes * p, int depth);
 void report_property_value(int fd, drmModePropertyPtr prop_ptr, uint64_t prop_value, int depth) ;
 
+int  connector_is_non_desktop(int fd, drmModeConnector * conn);
+
 #endif /* LIBDRM_UTIL_H_ */

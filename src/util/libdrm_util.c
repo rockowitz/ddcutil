@@ -710,3 +710,43 @@ void summarize_drm_modeProperty(drmModePropertyRes * p, int depth) {
                       interpret_property_flags(p->flags)
               );
 }
+
+
+/** Reports whether a DRM connector describes a non-desktop display, e.g. a
+ *  head mounted VR or AR device.
+ *
+ *  @param  fd    open file descriptor for a /dev/dri/cardN device
+ *  @param  conn  pointer to drmModeConnector, from drmModeGetConnector()
+ *  @retval  1    non-desktop
+ *  @retval  0    ordinary desktop display
+ *  @retval -1    the connector has no non-desktop property
+ *
+ *  @remark
+ *  non-desktop is a connector property, not a sysfs attribute, so it is
+ *  reachable only through the DRM API.  The kernel sets it while parsing the
+ *  EDID: from the Microsoft VSDB in a CTA extension block, from a DisplayID
+ *  2.0 primary use code of head mounted VR or AR, or from its own quirk table
+ *  for displays whose EDID does not declare it.  Reading the property rather
+ *  than the EDID gets all three, including the quirks.
+ *
+ *  @remark
+ *  Matched by name.  Property ids are assigned per device and differ between
+ *  cards, so they cannot be hardcoded.
+ *
+ *  @remark
+ *  Absent is distinct from 0.  A driver that never attaches the property is
+ *  not reporting a desktop display, it is reporting nothing.
+ */
+int connector_is_non_desktop(int fd, drmModeConnector * conn) {
+   assert(conn);
+   int result = -1;
+   for (int ndx = 0; ndx < conn->count_props && result < 0; ndx++) {
+      drmModePropertyRes * prop = drmModeGetProperty(fd, conn->props[ndx]);
+      if (prop) {
+         if (streq(prop->name, "non-desktop"))
+            result = (conn->prop_values[ndx] != 0);
+         drmModeFreeProperty(prop);
+      }
+   }
+   return result;
+}
