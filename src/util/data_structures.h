@@ -34,6 +34,18 @@ typedef enum {
 const char * none_some_all_name(None_Some_All value);
 
 
+#ifdef FUTURE
+// Used to distinguish between an explicit value set vs no value set
+typedef enum {
+   TRIVAL_UNSET,
+   TRIVAL_FALSE,
+   TRIVAL_TRUE
+} Optional_True_False;
+
+const char * trival_repr(Optional_True_False value);
+#endif
+
+
 //
 // Buffer with length management
 //

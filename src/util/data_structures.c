@@ -33,6 +33,18 @@ const char * none_some_all_name(None_Some_All value) {
    return result;
 }
 
+#ifdef FUTURE
+const char * trival_repr(Optional_True_False value) {
+   char * result = NULL;
+   switch(value) {
+   case TRIVAL_TRUE:    result = "true";    break;
+   case TRIVAL_FALSE:   result = "false";   break;
+   case TRIVAL_UNSET:   result = "not set"; break;
+   }
+   return result;
+}
+#endif
+
 
 //
 // Buffer with length management
