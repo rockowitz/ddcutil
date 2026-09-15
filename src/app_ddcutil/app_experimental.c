@@ -58,7 +58,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(10, "Extended sleep for DDC Null Msg");
    REPORT_FLAG_OPTION(11, "Explore monitor state tests");
    REPORT_FLAG_OPTION(12, "Disable DRM services");
-   REPORT_FLAG_OPTION(13, "Unused");
+   REPORT_FLAG_OPTION(13, "Do not read EDID with a single ioctl (read_edid_using_single_ioctl)");
    REPORT_FLAG_OPTION(14, "Debug flock");
 #ifdef GET_EDID_USING_SYSFS
    REPORT_FLAG_OPTION(15, "Verify sysfs EDID reads");

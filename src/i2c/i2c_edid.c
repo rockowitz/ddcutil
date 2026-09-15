@@ -63,6 +63,7 @@ bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 bool EDID_Read_Bytewise              = DEFAULT_EDID_READ_BYTEWISE;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 bool EDID_Write_Before_Read          = DEFAULT_EDID_WRITE_BEFORE_READ;
+bool read_edid_using_single_ioctl    = true;
 
 static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_ioctl(
@@ -591,7 +592,7 @@ retry:
                     (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
 
       // try using new i2c_get_edid-bytes_single_ioctl*() function first, if applicable
-      if (cur_strategy_id == I2C_IO_STRATEGY_IOCTL && !read_bytewise) {
+      if (cur_strategy_id == I2C_IO_STRATEGY_IOCTL && !read_bytewise && read_edid_using_single_ioctl) {
           int edid_read_size = (EDID_Read_Size == 256) ? 256 : 128;
           DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                         "Trying EDID read using single ioctl. edid_read_size=%d", edid_read_size);

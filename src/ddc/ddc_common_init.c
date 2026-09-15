@@ -426,6 +426,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F5)
       EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F13)
+      read_edid_using_single_ioctl = false;
 #ifdef USE_LIBDRM
    if (parsed_cmd->flags2 & CMD_FLAG2_F6)
       use_drm_connector_states = true;
