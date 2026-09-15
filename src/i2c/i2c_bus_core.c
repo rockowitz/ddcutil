@@ -76,8 +76,32 @@ bool primitive_sysfs = false;                 // logic and --f23
 // for the bus reports status "disconnected".
 bool edid_exists_checks_drm_status = true;    // --f35
 
-// If true, i2c_edid_exists() does not open the device when no DRM connector
-// names the bus, on a machine whose driver publishes that mapping.  --f38
+/** If true, i2c_edid_exists() and i2c_check_bus() do not open the device when
+ *  no DRM connector names the bus, on a machine whose driver publishes that
+ *  mapping.  Cleared by --f38.
+ *
+ *  What --f38 is for.  Disabling the skip is purely a cost: on ritter, amdgpu
+ *  with four unclaimed buses, detect takes 2.2 seconds with the skip and 7.4
+ *  without, and finds the same displays either way.  The option exists as a
+ *  diagnostic, not as a tuning knob, and it is off by default so that cost is
+ *  never paid unasked.
+ *
+ *  The skip rests on an inference: this driver publishes the bus/connector
+ *  mapping, no connector names this bus, therefore no display is here.  When
+ *  a display goes missing on a driver where it should be found, --f38 is how
+ *  one determines whether that inference is what hid it, without rebuilding.
+ *
+ *  Not hypothetical caution.  Each of the three guard conditions on the rule
+ *  exists because an assumption of exactly this shape proved wrong somewhere:
+ *  nvidia never publishes the mapping at all, and a display behind an MST hub
+ *  has no connector of its own, which was issue #585.  A fourth such case is
+ *  more likely than not, and this is how it would be identified.
+ *
+ *  The consequences are asymmetric, which is what settles it.  When the skip
+ *  is right it saves seconds.  When it is wrong a display disappears and the
+ *  user has no way to tell why.  That asymmetry is worth the cost of a
+ *  boolean test.
+ */
 bool edid_exists_skips_unmapped_bus = true;   // --f38
 
 
