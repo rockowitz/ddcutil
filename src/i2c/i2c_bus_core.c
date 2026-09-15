@@ -998,6 +998,42 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
          if (!businfo->drm_connector_name) {
             set_connector_for_businfo_using_user_bus_connector_table(businfo);
          }   
+
+         // Still no connector, and none was supplied by the user.  Same rule,
+         // and same reasoning, as in i2c_edid_exists(): where the driver
+         // publishes the bus/connector mapping at all, no connector naming this
+         // bus is positive evidence the bus serves no connector and so can have
+         // no display.  Opening it costs an EDID probe that can only fail.
+         //
+         // Not a micro-optimization.  On amdgpu the connectors attach to the
+         // "AMDGPU DM aux hw bus" adapters, leaving the "AMDGPU DM i2c hw bus"
+         // ones unclaimed, and a 128 byte read into silence on one of those
+         // spends ~626ms inside the driver before returning EIO -- the timeout
+         // dce_i2c_hw.c computes scales with the payload length.  Tried twice,
+         // that is 1.3 seconds during which this process holds the bus flock,
+         // and any other ddcutil or libddcutil process wanting that bus waits.
+         //
+         // The sysfs EDID shortcut below cannot cover this: it requires a
+         // connector to have been found, so it fires only on the buses that are
+         // cheap to probe anyway, never on these.
+         if (!businfo->drm_connector_name &&
+             edid_exists_skips_unmapped_bus &&
+             !(businfo->flags & I2C_BUS_DISPLAYLINK))
+         {
+            char * busname = get_i2c_device_sysfs_name(businfo->busno);
+            bool is_mst = streq(busname, "DPMST");     // streq() handles NULL
+            free(busname);
+            if (!is_mst &&
+                (businfo->flags & I2C_BUS_SYSFS_KNOWN_RELIABLE) &&
+                any_drm_connector_has_busno())
+            {
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                     "No DRM connector serves bus %d and this driver publishes the "
+                     "mapping, not opening device", businfo->busno);
+               businfo->flags |= I2C_BUS_INITIAL_CHECK_DONE;
+               goto bye;
+            }
+         }
       }
    }
 
