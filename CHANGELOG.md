@@ -1,3 +1,20 @@
+## [3.0.2] 2026-09-17
+
+#### Fixed
+
+- Disable use of a single multi-message ioctl to read EDIDs. This was introduced
+  in release 3.0.0 to handle displays whose EDID otherwise failed to read. Under
+  certain conditions, this had a severe performance impact if there was no 
+  EDID to be read. It may also have triggered an otherwise unexplained amdgpu
+  driver crash that was reported.
+
+  Related issues: 
+  - Issue #620: Dell P2725DE not detected: EDID read returns CEA extension block
+  - Issue #634: Slow performance after 3.0.0 executing setvcp 10 + 5
+  - Issue #629; AMDGPU disappears  from PCI bus and freezes Plasma immediately 
+    after login
+
+
 ## [3.0.1] 2026-09-13
 
 #### Fixed
