@@ -80,7 +80,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(27, "Disable dw_start() check that all relevant I2C buses rw");
    REPORT_FLAG_OPTION(28, "Disable ddci_init() check that all relevant i2c buses rw");
    REPORT_FLAG_OPTION(29, "Force recheck when display added (force_recheck)");
-   REPORT_FLAG_OPTION(30, "Unused");
+   REPORT_FLAG_OPTION(30, "Enable single ioctl edid read (read_edid_using_single_ioctl)");
    REPORT_FLAG_OPTION(31, "fail_i2c_all_relevant_i2c_buses_rw");
    REPORT_FLAG_OPTION(32, "Disable eventfd-based blocking waits in watch thread (use_eventfd)");
    REPORT_FLAG_OPTION(33, "Disable single poll() wait in dw_split_sleep() (split_sleep_eventfd)");
