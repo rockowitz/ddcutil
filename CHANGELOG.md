@@ -10,10 +10,9 @@
 
   Related issues: 
   - Issue #620: Dell P2725DE not detected: EDID read returns CEA extension block
-  - Issue #634: Slow performance after 3.0.0 executing setvcp 10 + 5
   - Issue #629; AMDGPU disappears  from PCI bus and freezes Plasma immediately 
     after login
-
+  - Issue #634: Slow performance after 3.0.0 executing setvcp 10 + 5
 
 ## [3.0.1] 2026-09-13
 
