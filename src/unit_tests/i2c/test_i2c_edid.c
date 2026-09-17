@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "util/data_structures.h"
@@ -46,9 +47,40 @@ static int failed = 0;
 } while(0)
 
 
+// Runs stmt with stdout and stderr redirected to a temporary file.  The calls
+// wrapped below deliberately fail -- a bad file descriptor, a nonexistent bus,
+// a forced failure hook -- and the code under test reports those failures to
+// the terminal, as it should.  Without this the log of a passing test run
+// fills with alarming messages, and a real error has nothing to stand out
+// against.  Modeled on the QUIETLY macro in the usb_util tests, extended to
+// cover stderr, which is where most of these particular messages go.
+// If the redirection cannot be set up, the statement still runs, noisily.
+#define QUIETLY(stmt) do { \
+   fflush(stdout); fflush(stderr); \
+   int _saved_out = dup(fileno(stdout)); \
+   int _saved_err = dup(fileno(stderr)); \
+   FILE * _tmp = tmpfile(); \
+   bool _redirected = (_tmp && _saved_out >= 0 && _saved_err >= 0); \
+   if (_redirected) { \
+      dup2(fileno(_tmp), fileno(stdout)); \
+      dup2(fileno(_tmp), fileno(stderr)); \
+   } \
+   stmt; \
+   fflush(stdout); fflush(stderr); \
+   if (_redirected) { \
+      dup2(_saved_out, fileno(stdout)); \
+      dup2(_saved_err, fileno(stderr)); \
+   } \
+   if (_saved_out >= 0) close(_saved_out); \
+   if (_saved_err >= 0) close(_saved_err); \
+   if (_tmp) fclose(_tmp); \
+} while(0)
+
+
 static void test_get_edid_bytes_using_single_ioctl_bad_fd(void) {
    Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
-   int rc = i2c_get_edid_bytes_using_single_ioctl(-1, buf, 128);
+   int rc;
+   QUIETLY( rc = i2c_get_edid_bytes_using_single_ioctl(-1, buf, 128) );
    CK(rc < 0);
    buffer_free(buf, NULL);
 }
@@ -56,7 +88,8 @@ static void test_get_edid_bytes_using_single_ioctl_bad_fd(void) {
 
 static void test_get_raw_edid_by_fd_bad_fd(void) {
    Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
-   int rc = i2c_get_raw_edid_by_fd(-1, buf);
+   int rc;
+   QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf) );
    CK(rc < 0);
    CK_INT(buf->len, 0);
    buffer_free(buf, NULL);
@@ -65,7 +98,8 @@ static void test_get_raw_edid_by_fd_bad_fd(void) {
 
 static void test_get_parsed_edid_by_fd_bad_fd(void) {
    Parsed_Edid * edid = NULL;
-   int rc = i2c_get_parsed_edid_by_fd(-1, &edid);
+   int rc;
+   QUIETLY( rc = i2c_get_parsed_edid_by_fd(-1, &edid) );
    CK(rc < 0);
    CK(edid == NULL);
 }
@@ -84,7 +118,8 @@ static void test_get_raw_edid_across_strategies(void) {
       for (int u = 0; u < 2; u++) {
          EDID_Read_Uses_I2C_Layer = use_i2c_layer_values[u];
          Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
-         int rc = i2c_get_raw_edid_by_fd(-1, buf);
+         int rc;
+         QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf) );
          CK(rc < 0);
          buffer_free(buf, NULL);
       }

@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "util/data_structures.h"
@@ -53,6 +54,36 @@ static int failed = 0;
 // with i2c_free_bus_info() (which would try to free_parsed_edid() the
 // bogus pointer); the businfo structs themselves are freed directly.
 #define FAKE_EDID ((Parsed_Edid *) 1)
+
+// Runs stmt with stdout and stderr redirected to a temporary file.  The calls
+// wrapped below deliberately fail -- a bad file descriptor, a nonexistent bus,
+// a forced failure hook -- and the code under test reports those failures to
+// the terminal, as it should.  Without this the log of a passing test run
+// fills with alarming messages, and a real error has nothing to stand out
+// against.  Modeled on the QUIETLY macro in the usb_util tests, extended to
+// cover stderr, which is where most of these particular messages go.
+// If the redirection cannot be set up, the statement still runs, noisily.
+#define QUIETLY(stmt) do { \
+   fflush(stdout); fflush(stderr); \
+   int _saved_out = dup(fileno(stdout)); \
+   int _saved_err = dup(fileno(stderr)); \
+   FILE * _tmp = tmpfile(); \
+   bool _redirected = (_tmp && _saved_out >= 0 && _saved_err >= 0); \
+   if (_redirected) { \
+      dup2(fileno(_tmp), fileno(stdout)); \
+      dup2(fileno(_tmp), fileno(stderr)); \
+   } \
+   stmt; \
+   fflush(stdout); fflush(stderr); \
+   if (_redirected) { \
+      dup2(_saved_out, fileno(stdout)); \
+      dup2(_saved_err, fileno(stderr)); \
+   } \
+   if (_saved_out >= 0) close(_saved_out); \
+   if (_saved_err >= 0) close(_saved_err); \
+   if (_tmp) fclose(_tmp); \
+} while(0)
+
 
 static void test_bitset_from_businfo_array(void) {
    I2C_Bus_Info * a = i2c_new_bus_info(3);   // no edid, not laptop
@@ -96,7 +127,8 @@ static void test_force_failure_hook(void) {
    CK(force_failure_i2c_all_relevant_i2c_buses_rw == false);   // default
 
    force_failure_i2c_all_relevant_i2c_buses_rw = true;
-   Error_Info * err = i2c_all_relevant_i2c_buses_rw();
+   Error_Info * err;
+   QUIETLY( err = i2c_all_relevant_i2c_buses_rw() );
    CK(err != NULL);
    if (err) {
       CK_INT(err->status_code, -EACCES);

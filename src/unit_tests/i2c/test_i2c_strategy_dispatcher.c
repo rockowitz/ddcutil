@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "base/parms.h"
@@ -40,6 +41,36 @@ static int failed = 0;
    if (_a == NULL || strcmp(_a, _e) != 0) { failed++; \
       printf("FAIL  line %-4d  %s -> \"%s\", expected \"%s\"\n", __LINE__, #actual, \
              _a ? _a : "(null)", _e); } \
+} while(0)
+
+
+// Runs stmt with stdout and stderr redirected to a temporary file.  The calls
+// wrapped below deliberately fail -- a bad file descriptor, a nonexistent bus,
+// a forced failure hook -- and the code under test reports those failures to
+// the terminal, as it should.  Without this the log of a passing test run
+// fills with alarming messages, and a real error has nothing to stand out
+// against.  Modeled on the QUIETLY macro in the usb_util tests, extended to
+// cover stderr, which is where most of these particular messages go.
+// If the redirection cannot be set up, the statement still runs, noisily.
+#define QUIETLY(stmt) do { \
+   fflush(stdout); fflush(stderr); \
+   int _saved_out = dup(fileno(stdout)); \
+   int _saved_err = dup(fileno(stderr)); \
+   FILE * _tmp = tmpfile(); \
+   bool _redirected = (_tmp && _saved_out >= 0 && _saved_err >= 0); \
+   if (_redirected) { \
+      dup2(fileno(_tmp), fileno(stdout)); \
+      dup2(fileno(_tmp), fileno(stderr)); \
+   } \
+   stmt; \
+   fflush(stdout); fflush(stderr); \
+   if (_redirected) { \
+      dup2(_saved_out, fileno(stdout)); \
+      dup2(_saved_err, fileno(stderr)); \
+   } \
+   if (_saved_out >= 0) close(_saved_out); \
+   if (_saved_err >= 0) close(_saved_err); \
+   if (_tmp) fclose(_tmp); \
 } while(0)
 
 
@@ -86,10 +117,11 @@ static void test_invoke_writer_reader_bad_fd(void) {
    for (int s = 0; s < 2; s++) {
       i2c_set_io_strategy_by_id(strategies[s]);
 
-      Status_Errno_DDC rc = invoke_i2c_writer(-1, 0x50, 4, data);
+      Status_Errno_DDC rc;
+      QUIETLY( rc = invoke_i2c_writer(-1, 0x50, 4, data) );
       CK(rc < 0);
 
-      rc = invoke_i2c_reader(-1, 0x50, false, 4, readbuf);
+      QUIETLY( rc = invoke_i2c_reader(-1, 0x50, false, 4, readbuf) );
       CK(rc < 0);
    }
 

@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "cmdline/cmd_parser_aux.h"
@@ -46,6 +47,36 @@ static int failed = 0;
    long _a = (long)(expr); long _e = (long)(expected); \
    if (_a != _e) { failed++; \
       printf("FAIL  line %-4d  %s -> %ld, expected %ld\n", __LINE__, #expr, _a, _e); } \
+} while(0)
+
+
+// Runs stmt with stdout and stderr redirected to a temporary file.  The calls
+// wrapped below deliberately fail -- a bad file descriptor, a nonexistent bus,
+// a forced failure hook -- and the code under test reports those failures to
+// the terminal, as it should.  Without this the log of a passing test run
+// fills with alarming messages, and a real error has nothing to stand out
+// against.  Modeled on the QUIETLY macro in the usb_util tests, extended to
+// cover stderr, which is where most of these particular messages go.
+// If the redirection cannot be set up, the statement still runs, noisily.
+#define QUIETLY(stmt) do { \
+   fflush(stdout); fflush(stderr); \
+   int _saved_out = dup(fileno(stdout)); \
+   int _saved_err = dup(fileno(stderr)); \
+   FILE * _tmp = tmpfile(); \
+   bool _redirected = (_tmp && _saved_out >= 0 && _saved_err >= 0); \
+   if (_redirected) { \
+      dup2(fileno(_tmp), fileno(stdout)); \
+      dup2(fileno(_tmp), fileno(stderr)); \
+   } \
+   stmt; \
+   fflush(stdout); fflush(stderr); \
+   if (_redirected) { \
+      dup2(_saved_out, fileno(stdout)); \
+      dup2(_saved_err, fileno(stderr)); \
+   } \
+   if (_saved_out >= 0) close(_saved_out); \
+   if (_saved_err >= 0) close(_saved_err); \
+   if (_tmp) fclose(_tmp); \
 } while(0)
 
 
@@ -206,7 +237,9 @@ static void test_validate_output_level(void) {
    // CMDID_PROBE does not accept DDCA_OL_TERSE
    pc->cmd_id = CMDID_PROBE;
    pc->output_level = DDCA_OL_TERSE;
-   CK(!validate_output_level(pc));
+   bool valid;
+   QUIETLY( valid = validate_output_level(pc) );
+   CK(!valid);
 
    pc->output_level = DDCA_OL_NORMAL;
    CK(validate_output_level(pc));

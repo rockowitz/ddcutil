@@ -25,6 +25,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "util/error_info.h"
@@ -51,6 +52,36 @@ static int failed = 0;
 
 // A bus number assumed not to exist on any test host.
 #define NONEXISTENT_BUSNO 9999
+
+
+// Runs stmt with stdout and stderr redirected to a temporary file.  The calls
+// wrapped below deliberately fail -- a bad file descriptor, a nonexistent bus,
+// a forced failure hook -- and the code under test reports those failures to
+// the terminal, as it should.  Without this the log of a passing test run
+// fills with alarming messages, and a real error has nothing to stand out
+// against.  Modeled on the QUIETLY macro in the usb_util tests, extended to
+// cover stderr, which is where most of these particular messages go.
+// If the redirection cannot be set up, the statement still runs, noisily.
+#define QUIETLY(stmt) do { \
+   fflush(stdout); fflush(stderr); \
+   int _saved_out = dup(fileno(stdout)); \
+   int _saved_err = dup(fileno(stderr)); \
+   FILE * _tmp = tmpfile(); \
+   bool _redirected = (_tmp && _saved_out >= 0 && _saved_err >= 0); \
+   if (_redirected) { \
+      dup2(fileno(_tmp), fileno(stdout)); \
+      dup2(fileno(_tmp), fileno(stderr)); \
+   } \
+   stmt; \
+   fflush(stdout); fflush(stderr); \
+   if (_redirected) { \
+      dup2(_saved_out, fileno(stdout)); \
+      dup2(_saved_err, fileno(stderr)); \
+   } \
+   if (_saved_out >= 0) close(_saved_out); \
+   if (_saved_err >= 0) close(_saved_err); \
+   if (_tmp) fclose(_tmp); \
+} while(0)
 
 
 static void test_simple_rw_test(void) {
@@ -102,10 +133,11 @@ static void test_open_bus_nonexistent(void) {
 
 static void test_close_bus_bad_fd(void) {
    // close(-1) always fails with EBADF; no real device is touched.
-   Status_Errno rc = i2c_close_bus_basic(NONEXISTENT_BUSNO, -1, 0);
+   Status_Errno rc;
+   QUIETLY( rc = i2c_close_bus_basic(NONEXISTENT_BUSNO, -1, 0) );
    CK_INT(rc, -EBADF);
 
-   rc = i2c_close_bus(NONEXISTENT_BUSNO, -1, 0);
+   QUIETLY( rc = i2c_close_bus(NONEXISTENT_BUSNO, -1, 0) );
    CK_INT(rc, -EBADF);
 }
 
