@@ -213,7 +213,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
  *
  * @remark
  * From user przemech, based on function drm_do_probe_ddc_edid() in kernel source
- * file drivers/gpu/drm/drm_probe_helper.c, which uses a single ioctl() to read the EDID.
+ * file drivers/gpu/drm/drm_edid.c, which uses a single ioctl() to read the EDID.
  */
 Status_Errno_DDC
 i2c_get_edid_bytes_using_single_ioctl(
