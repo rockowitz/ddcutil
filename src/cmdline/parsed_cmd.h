@@ -80,9 +80,10 @@ typedef enum {
                                  = 0x10000000,
    CMD_FLAG_FLOCK                = 0x20000000,
    CMD_FLAG_DEFER_SLEEPS         = 0x40000000,
+#ifdef OPTION_SINGLE_IOCTL
    CMD_FLAG_SINGLE_IOCTL_EDID_READ
                                  = 0x80000000,
-
+#endif
    CMD_FLAG_X52_NO_FIFO        = 0x0100000000,
    CMD_FLAG_VERBOSE_STATS      = 0x0200000000,
    CMD_FLAG_SHOW_SETTINGS      = 0x0400000000,

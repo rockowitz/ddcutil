@@ -402,7 +402,9 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
 
 STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
+#ifdef OPTION_SINGLE_IOCTL
    read_edid_using_single_ioctl  = parsed_cmd->flags & CMD_FLAG_SINGLE_IOCTL_EDID_READ;
+#endif
    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
