@@ -233,6 +233,23 @@
 // EDID in /sys can have stale data
 #define DEFAULT_TRY_GET_EDID_FROM_SYSFS  true
 
+/** Read the EDID using a single multi-message ioctl instead of
+ *  separate write and read calls. */
+
+// Needed to read the EDID on some monitors, e.g. Dell P2725DE, which returns
+// a CEA extension block unless offset write and read are a single
+// combined transaction.
+//
+// However: Using one ioctl() carrying both the word offset write and the 128
+// byte read, instead of using separate write and read ioctls, is much more
+// expensive when it fails, i.e. when there's no EDID at slave address x50.
+// On amdgpu the driver's timeout scales with the payload length, so the 128
+// byte read spends several hundred millisec before returning EIO where the 1
+// byte write fails in about 4.
+//
+// Also, the multi-message ioctl may trigger an amgdpu driver failure.
+#define DEFAULT_SINGLE_IOCTL_EDID_READ   false
+
 #define DEFAULT_FLOCK_POLL_MILLISEC      100
 #define DEFAULT_FLOCK_MAX_WAIT_MILLISEC 3000
 

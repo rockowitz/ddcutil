@@ -402,6 +402,7 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
 
 STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
+   read_edid_using_single_ioctl  = parsed_cmd->flags & CMD_FLAG_SINGLE_IOCTL_EDID_READ;
    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
    use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
@@ -426,8 +427,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F5)
       EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
-   if (parsed_cmd->flags2 & CMD_FLAG2_F13)
-      read_edid_using_single_ioctl = false;
 #ifdef USE_LIBDRM
    if (parsed_cmd->flags2 & CMD_FLAG2_F6)
       use_drm_connector_states = true;

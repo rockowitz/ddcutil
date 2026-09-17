@@ -1049,6 +1049,12 @@ parse_command(
    gboolean discard_cached_capabilities_flag = false;
    gboolean discard_dsa_cache_flag = false;
 
+   gboolean single_ioctl_edid_read = DEFAULT_SINGLE_IOCTL_EDID_READ;
+   char *   enable_sier_expl = NULL;
+   char *   disable_sier_expl = NULL;
+   DEFAULT_EXPL(enable_sier_expl, disable_sier_expl,
+                DEFAULT_SINGLE_IOCTL_EDID_READ, "read EDID using a single ioctl");
+
    gboolean try_get_edid_from_sysfs = DEFAULT_TRY_GET_EDID_FROM_SYSFS;
    char *   enable_tgefs_expl = NULL;
    char *   disable_tgefs_expl = NULL;
@@ -1348,6 +1354,11 @@ parse_command(
             '\0', 0, G_OPTION_ARG_NONE,     &enable_flock_flag,   enable_flock_expl,     NULL},
       {"disable-flock", '\0', G_OPTION_FLAG_REVERSE,
                        G_OPTION_ARG_NONE,     &enable_flock_flag,   disable_flock_expl ,   NULL},
+
+      {"enable-single-ioctl-edid-read",  '\0', 0,
+                            G_OPTION_ARG_NONE,    &single_ioctl_edid_read,    enable_sier_expl,  NULL},
+      {"disable-single-ioctl-edid-read", '\0', G_OPTION_FLAG_REVERSE,
+                            G_OPTION_ARG_NONE,    &single_ioctl_edid_read,    disable_sier_expl, NULL},
 
       {"enable-try-get-edid-from-sysfs", '\0', 0,
                             G_OPTION_ARG_NONE,    &try_get_edid_from_sysfs,   enable_tgefs_expl, NULL},
@@ -1878,6 +1889,7 @@ parse_command(
 
 
    SET_CLR_CMDFLAG(CMD_FLAG_TRY_GET_EDID_FROM_SYSFS,    try_get_edid_from_sysfs);
+   SET_CLR_CMDFLAG(CMD_FLAG_SINGLE_IOCTL_EDID_READ,     single_ioctl_edid_read);
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 // #ifdef REMOVED
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_DISPLAYS, enable_cd_flag);
