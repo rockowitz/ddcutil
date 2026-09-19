@@ -553,6 +553,25 @@ i2c_ioctl_reader1(
       ( rc = ioctl(fd, I2C_RDWR, &msgset))
      );
    int errsv = errno;
+#ifdef OLD
+    if (rc < 0) {
+       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+             "Error in ioctl() read, rc=%d, errno=%s, device=%s",
+                         rc, psc_desc(-errsv), filename_for_fd_t(fd));
+       SYSLOG2(DDCA_SYSLOG_DEBUG, "(%s) Error in ioctl() read, rc=%d, errno=%s, device=%s",
+             __func__, rc, psc_desc(-errsv), filename_for_fd_t(fd));
+       if (IS_DBGTRC(debug, TRACE_GROUP)) {
+          show_backtrace(0);
+          dbgrpt_traced_callstack_call_table(0);
+       }
+       rc = -errsv;
+    }
+
+    }
+    free(messages);
+#endif
+
+
    if (rc < 0) {
       char * msg = g_strdup_printf("Error in ioctl() read, rc=%d, errno=%s, device=%s",
             rc, psc_desc(-errsv), filename_for_fd_t(fd));
@@ -565,15 +584,11 @@ i2c_ioctl_reader1(
       // every /dev/i2c-*, does not put a 6 line block in the system log for
       // each bus that is empty.  The write path above likewise logs only an
       // unexpected return value, never the ordinary failure.
-      if (errsv == ENXIO) {
+      if (errsv == ENXIO || errsv == EIO )
          DECORATED_SYSLOG(DDCA_SYSLOG_DEBUG, "%s", msg);
-         free(msg);
-      }
-      else {
+      else
          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
-         free(msg);
-         TRACED_FUNCTION_STACK_TO_SYSLOG(DDCA_SYSLOG_ERROR, TFS_MOST_RECENT_LAST);
-      }
+      free(msg);
       if (IS_DBGTRC(debug, TRACE_GROUP)) {
          dbgrpt_traced_callstack_call_table(0);
       }
