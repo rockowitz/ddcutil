@@ -14,6 +14,7 @@
 #include <string.h>
 #include <syslog.h>
 
+#include "util/coredefs_base.h"
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/glib_util.h"
@@ -1716,6 +1717,34 @@ void free_bus_open_error(Bus_Open_Error * boe) {
 
 static GPtrArray  * ignored_mmk_table = NULL;
 
+//
+// Built-in list of monitor models which DDC/CI ignores by default.
+//
+// DDC/CI probing these models is either problematic for the devices or
+// is meaningless for them. Matching is by monitor model key (manufacturer id,
+// model name, product code). To disable DDC for another model, add a row here.
+//
+static const struct {
+   const char * mfg_id;
+   const char * model_name;
+   uint16_t     product_code;
+} builtin_ignored_mmks[] = {
+   // Valve Index: DDC/CI reads on I2C slave 0x37 cause the headset's firmware
+   // to stop responding to EDID reads.
+   { "VLV", "Index HMD", 0x91a8 },
+};
+
+
+static void init_ignored_mmk_table() {
+   ignored_mmk_table = g_ptr_array_new();
+   for (unsigned ndx = 0; ndx < ARRAY_SIZE(builtin_ignored_mmks); ndx++) {
+      Monitor_Model_Key* p_mmk = mmk_new(builtin_ignored_mmks[ndx].mfg_id,
+                                         builtin_ignored_mmks[ndx].model_name,
+                                         builtin_ignored_mmks[ndx].product_code);
+      g_ptr_array_add(ignored_mmk_table, p_mmk);
+   }
+}
+
 
 /** Adds a Monitor Model Id to the list of monitors for which DDC is disabled
  *
@@ -1738,7 +1767,7 @@ bool ignore_mmk(Monitor_Model_Key * p_mmk) {
    if (p_mmk->defined) {  // if it's a valid monitor model id string
       DBGF(debug, "%s is valid:", repr);
       if (!ignored_mmk_table)
-         ignored_mmk_table = g_ptr_array_new();
+         init_ignored_mmk_table();
       // n. g_ptr_array_find_with_equal_func() requires glib 2.54
       for (int ndx = 0; ndx < ignored_mmk_table->len; ndx++) {
          Monitor_Model_Key* p = g_ptr_array_index(ignored_mmk_table, ndx);
@@ -1844,6 +1873,8 @@ void init_displays() {
    RTTI_ADD_FUNC(delete_published_dref_id);
 
    init_published_dref_hash();
+   if (!ignored_mmk_table)
+      init_ignored_mmk_table();
 }
 
 

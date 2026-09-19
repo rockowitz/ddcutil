@@ -1,5 +1,10 @@
 ## [3.0.2] 2026-09-17
 
+#### Added
+
+- Built-in DDC ignore list. Added the Valve Index HMD (VLV / product 0x91a8, model
+  "Index HMD") to be ignored by default as DDC/CI reads on I2C slave 0x37 cause the headset's firmware to stop responding to EDID reads. Equivalent to using ***--ignore-mmid VLV-Index_HMD-37288***.
+
 #### Changed
 - Do not write traced function stack to syslog on error reading /dev/i2c device.  
   Created perception of failure when in fact there was none.
