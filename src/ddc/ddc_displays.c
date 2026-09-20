@@ -46,6 +46,7 @@
 
 #include "base/core.h"
 #include "base/ddc_packets.h"
+#include "base/display_lock.h"
 #include "base/dsa2.h"
 #include "base/feature_metadata.h"
 #include "base/linux_errno.h"
