@@ -1717,7 +1717,6 @@ void free_bus_open_error(Bus_Open_Error * boe) {
 static GPtrArray  * ignored_mmk_table = NULL;
 
 static const char * builtin_ignored_mmks[] = {
-                                                 // todo verify model id pull request specified 0x91a8
                                                  "VLV-Index HMD-37288",
                                                  NULL
                                               };
@@ -1805,7 +1804,7 @@ void dbgrpt_ignored_mmk_table(int depth) {
 
 /** Initializes the #ignored_mmk_table at startup.
  *
- *  Populates the table from the list in #builtin_ignored_mmks
+ *  Allocates the table and populates it from the list in #builtin_ignored_mmks
  *  of display models to ignore.
  */
 static void init_ignored_mmk_table() {
