@@ -1810,7 +1810,7 @@ void dbgrpt_ignored_mmk_table(int depth) {
  */
 static void init_ignored_mmk_table() {
    assert(!ignored_mmk_table);      // called only at initialization
-   ignored_mmk_table = g_ptr_array_new();
+   ignored_mmk_table = g_ptr_array_new_with_free_func((GDestroyNotify)mmk_free);
 
    for (const char ** p = builtin_ignored_mmks; *p; p++) {
       ignore_mmk_by_string(*p);
@@ -1822,22 +1822,21 @@ static void init_ignored_mmk_table() {
  *
  *  @param mmk  monitor-model-id
  *  @return **true** if the display type is disabled, **false** if not
+ *
+ *  @remark the #ignored_mmk_table must already exist
  */
 bool is_ignored_mmk(Monitor_Model_Key mmk) {
    bool debug = false;
    DBGF(debug, "Starting. mmk=%s", mmk_repr(mmk));
-
-  // dbgrpt_ddc_disabled_table(2);
+   assert(ignored_mmk_table);
 
    bool result = false;
-   if (ignored_mmk_table) {
-      for (int ndx = 0; ndx < ignored_mmk_table->len; ndx++) {
-         Monitor_Model_Key* p = g_ptr_array_index(ignored_mmk_table, ndx);
-         DBGF(debug, "Comparing vs p = %p -> %s", p, mmk_repr(*p));
-         if (monitor_model_key_eq(mmk, *p)) {
-            result = true;
-            break;
-         }
+   for (int ndx = 0; ndx < ignored_mmk_table->len; ndx++) {
+      Monitor_Model_Key* p = g_ptr_array_index(ignored_mmk_table, ndx);
+      DBGF(debug, "Comparing vs p = %p -> %s", p, mmk_repr(*p));
+      if (monitor_model_key_eq(mmk, *p)) {
+         result = true;
+         break;
       }
    }
 
@@ -1880,4 +1879,5 @@ void init_displays() {
 
 void terminate_displays() {
    g_hash_table_destroy(published_dref_hash);
+   g_ptr_array_free(ignored_mmk_table, true);
 }
