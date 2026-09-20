@@ -19,7 +19,7 @@ LIBUTIL = $(top_builddir)/src/util/libutil.la
 
 check_PROGRAMS = ../../unit_test_executables/util/test_string_util ../../unit_test_executables/util/test_glib_util ../../unit_test_executables/util/test_debug_util ../../unit_test_executables/util/test_timestamp \
   ../../unit_test_executables/util/test_data_structures ../../unit_test_executables/util/test_file_util_base ../../unit_test_executables/util/test_traced_function_stack ../../unit_test_executables/util/test_msg_util \
-  ../../unit_test_executables/util/test_report_util ../../unit_test_executables/util/test_ddcutil_config_file ../../unit_test_executables/util/test_dbus_util ../../unit_test_executables/util/test_acl_util \
+  ../../unit_test_executables/util/test_report_util ../../unit_test_executables/util/test_ddcutil_config_file ../../unit_test_executables/util/test_acl_util \
   ../../unit_test_executables/util/test_drm_card_connector_util ../../unit_test_executables/util/test_device_id_util ../../unit_test_executables/util/test_error_info ../../unit_test_executables/util/test_edid \
   ../../unit_test_executables/util/test_glib_string_util ../../unit_test_executables/util/test_file_util ../../unit_test_executables/util/test_failsim \
   ../../unit_test_executables/util/test_i2c_util ../../unit_test_executables/util/test_libdrm_util ../../unit_test_executables/util/test_libdrm_aux_util ../../unit_test_executables/util/test_linux_basic_util \
@@ -29,7 +29,7 @@ check_PROGRAMS = ../../unit_test_executables/util/test_string_util ../../unit_te
   ../../unit_test_executables/util/test_backtrace
 TESTS = ../../unit_test_executables/util/test_string_util ../../unit_test_executables/util/test_glib_util ../../unit_test_executables/util/test_debug_util ../../unit_test_executables/util/test_timestamp \
   ../../unit_test_executables/util/test_data_structures ../../unit_test_executables/util/test_file_util_base ../../unit_test_executables/util/test_traced_function_stack ../../unit_test_executables/util/test_msg_util \
-  ../../unit_test_executables/util/test_report_util ../../unit_test_executables/util/test_ddcutil_config_file ../../unit_test_executables/util/test_dbus_util ../../unit_test_executables/util/test_acl_util \
+  ../../unit_test_executables/util/test_report_util ../../unit_test_executables/util/test_ddcutil_config_file ../../unit_test_executables/util/test_acl_util \
   ../../unit_test_executables/util/test_drm_card_connector_util ../../unit_test_executables/util/test_device_id_util ../../unit_test_executables/util/test_error_info ../../unit_test_executables/util/test_edid \
   ../../unit_test_executables/util/test_glib_string_util ../../unit_test_executables/util/test_file_util ../../unit_test_executables/util/test_failsim \
   ../../unit_test_executables/util/test_i2c_util ../../unit_test_executables/util/test_libdrm_util ../../unit_test_executables/util/test_libdrm_aux_util ../../unit_test_executables/util/test_linux_basic_util \
@@ -43,6 +43,13 @@ TESTS = ../../unit_test_executables/util/test_string_util ../../unit_test_execut
 if ENABLE_UDEV_COND
 check_PROGRAMS += ../../unit_test_executables/util/test_udev_i2c_util ../../unit_test_executables/util/test_udev_util ../../unit_test_executables/util/test_udev_usb_util
 TESTS += ../../unit_test_executables/util/test_udev_i2c_util ../../unit_test_executables/util/test_udev_util ../../unit_test_executables/util/test_udev_usb_util
+endif
+
+# The dbus util test builds only when dbus supoprt is enabled, since
+# dbus_util.c is then compiled into libutil.
+if USE_DBUS_COND
+check_PROGRAMS += ../../unit_test_executables/util/test_dbus_util
+TESTS += ./../unit_test_executables/util/test_dbus_util
 endif
 
 # The x11 test builds only when x11 support is enabled, since x11_util.c is then
