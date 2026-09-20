@@ -25,7 +25,7 @@ check_PROGRAMS = ../../unit_test_executables/util/test_string_util ../../unit_te
   ../../unit_test_executables/util/test_i2c_util ../../unit_test_executables/util/test_libdrm_util ../../unit_test_executables/util/test_libdrm_aux_util ../../unit_test_executables/util/test_linux_basic_util \
   ../../unit_test_executables/util/test_linux_util ../../unit_test_executables/util/test_regex_util ../../unit_test_executables/util/test_multi_level_map ../../unit_test_executables/util/test_pnp_ids \
   ../../unit_test_executables/util/test_simple_ini_file ../../unit_test_executables/util/test_subprocess_util ../../unit_test_executables/util/test_sysfs_filter_functions \
-  ../../unit_test_executables/util/test_sysfs_util ../../unit_test_executables/util/test_sysfs_i2c_util ../../unit_test_executables/util/test_systemd_util ../../unit_test_executables/util/test_utilrpt ../../unit_test_executables/util/test_xdg_util \
+  ../../unit_test_executables/util/test_sysfs_util ../../unit_test_executables/util/test_sysfs_i2c_util ../../unit_test_executables/util/test_utilrpt ../../unit_test_executables/util/test_xdg_util \
   ../../unit_test_executables/util/test_backtrace
 TESTS = ../../unit_test_executables/util/test_string_util ../../unit_test_executables/util/test_glib_util ../../unit_test_executables/util/test_debug_util ../../unit_test_executables/util/test_timestamp \
   ../../unit_test_executables/util/test_data_structures ../../unit_test_executables/util/test_file_util_base ../../unit_test_executables/util/test_traced_function_stack ../../unit_test_executables/util/test_msg_util \
@@ -35,7 +35,7 @@ TESTS = ../../unit_test_executables/util/test_string_util ../../unit_test_execut
   ../../unit_test_executables/util/test_i2c_util ../../unit_test_executables/util/test_libdrm_util ../../unit_test_executables/util/test_libdrm_aux_util ../../unit_test_executables/util/test_linux_basic_util \
   ../../unit_test_executables/util/test_linux_util ../../unit_test_executables/util/test_regex_util ../../unit_test_executables/util/test_multi_level_map ../../unit_test_executables/util/test_pnp_ids \
   ../../unit_test_executables/util/test_simple_ini_file ../../unit_test_executables/util/test_subprocess_util ../../unit_test_executables/util/test_sysfs_filter_functions \
-  ../../unit_test_executables/util/test_sysfs_util ../../unit_test_executables/util/test_sysfs_i2c_util ../../unit_test_executables/util/test_systemd_util ../../unit_test_executables/util/test_utilrpt ../../unit_test_executables/util/test_xdg_util \
+  ../../unit_test_executables/util/test_sysfs_util ../../unit_test_executables/util/test_sysfs_i2c_util ../../unit_test_executables/util/test_utilrpt ../../unit_test_executables/util/test_xdg_util \
   ../../unit_test_executables/util/test_backtrace
 
 # The udev-based tests build only when the udev subsystem is enabled, since the
@@ -50,6 +50,13 @@ endif
 if USE_DBUS_COND
 check_PROGRAMS += ../../unit_test_executables/util/test_dbus_util
 TESTS += ./../unit_test_executables/util/test_dbus_util
+endif
+
+# The systemd util test builds only when systemd support is enabled, since
+# systemd_util.c is then compiled into libutil.
+if USE_SYSTEMD_COND
+check_PROGRAMS += ../../unit_test_executables/util/test_systemd_util
+TESTS += ../../unit_test_executables/util/test_systemd_util
 endif
 
 # The x11 test builds only when x11 support is enabled, since x11_util.c is then
