@@ -1,5 +1,9 @@
 ## [3.0.2] 2026-09-17
 
+#### Changed
+- Do not write traced function stack to syslog on error reading /dev/i2c device.  
+  Created perception of failure when in fact there was none.
+
 #### Fixed
 
 - Disable use of a single multi-message ioctl to read EDIDs. This was introduced
@@ -7,12 +11,13 @@
   certain conditions, this had a severe performance impact if there was no 
   EDID to be read. It may also have triggered an otherwise unexplained amdgpu
   driver crash that was reported.
-
   Related issues: 
   - Issue #620: Dell P2725DE not detected: EDID read returns CEA extension block
   - Issue #629; AMDGPU disappears  from PCI bus and freezes Plasma immediately 
     after login
   - Issue #634: Slow performance after 3.0.0 executing setvcp 10 + 5
+- Build failure with --enable-usb=no due to missing include. 
+  Pull request #636
 
 ## [3.0.1] 2026-09-13
 
