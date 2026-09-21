@@ -119,7 +119,7 @@ void dbgrpt_traced_object_table(GPtrArray * table, const char * table_name, int 
          rpt_vstring(depth, "%s: empty", table_name);
       else {
          for (int ndx = 0; ndx < table->len; ndx++)
-            rpt_vstring(depth+1, g_ptr_array_index(table, ndx));
+            rpt_vstring(depth+1, "%s", g_ptr_array_index(table, ndx));
       }
    }
    else {

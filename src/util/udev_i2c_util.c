@@ -104,7 +104,7 @@ get_i2c_devices_using_udev() {
  */
 void
 report_i2c_udev_device_summaries(GPtrArray * summaries, char * title, int depth) {
-   rpt_vstring(0,title);
+   rpt_vstring(0,"%s", title);
    if (!summaries || summaries->len == 0)
       rpt_vstring(depth,"No devices detected");
    else {
