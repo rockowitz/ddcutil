@@ -76,7 +76,7 @@ void drpt_label(int depth, const char * text);
 void drpt_vstring(int depth, char * format, ...) ;
 void drpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...);
 
-void rpt_vstring(int depth, char * format, ...) ;
+void rpt_vstring(int depth, char * format, ...); // FUTURE:  __attribute__((format(printf, 2, 3))) ;
 void rpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...);
 void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth);
 void rpt_structure_loc(const char * name, const void * ptr, int depth);
