@@ -49,7 +49,7 @@ endif
 # dbus_util.c is then compiled into libutil.
 if USE_DBUS_COND
 check_PROGRAMS += ../../unit_test_executables/util/test_dbus_util
-TESTS += ./../unit_test_executables/util/test_dbus_util
+TESTS += ../../unit_test_executables/util/test_dbus_util
 endif
 
 # The systemd util test builds only when systemd support is enabled, since
