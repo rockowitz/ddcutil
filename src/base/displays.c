@@ -1714,6 +1714,10 @@ void free_bus_open_error(Bus_Open_Error * boe) {
 // Monitor models for which DDC is disabled
 //
 
+// Note that the table is built only during shared library and command line
+// ddcutil initialization and is immuatable thereafter.  All other access is
+// read only from the per-bus detection threads, so lock-free reads are safe.
+
 static GPtrArray  * ignored_mmk_table = NULL;
 
 static const char * builtin_ignored_mmks[] = {
@@ -1753,6 +1757,8 @@ bool ignore_mmk(Monitor_Model_Key * p_mmk) {
       }
       if (missing)
          g_ptr_array_add(ignored_mmk_table, p_mmk);
+      else
+         mmk_free(p_mmk);
       result = true;
    }
 
@@ -1792,7 +1798,7 @@ void dbgrpt_ignored_mmk_table(int depth) {
       else {
          rpt_vstring(depth, "%s:", table_name);
          for (int ndx = 0; ndx < table->len; ndx++) {
-             rpt_vstring(depth+1, mmk_repr(* (Monitor_Model_Key*) g_ptr_array_index(table, ndx)));
+             rpt_vstring(depth+1, "%s", mmk_repr(* (Monitor_Model_Key*) g_ptr_array_index(table, ndx)));
          }
       }
    }
