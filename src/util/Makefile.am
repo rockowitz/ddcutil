@@ -28,7 +28,6 @@ data_structures.c          \
 ddcutil_config_file.c      \
 debug_util.c               \
 backtrace.c                \
-drm_card_connector_util.c  \
 edid.c                     \
 error_info.c               \
 file_util.c                \
@@ -82,6 +81,7 @@ endif
 
 if USE_LIBDRM_COND
 libutil_la_SOURCES += \
+drm_card_connector_util.c  \
 libdrm_util.c \
 libdrm_aux_util.c
 endif
