@@ -463,6 +463,15 @@ AS_IF([test "x$enable_install_lib_only" = "xyes" -a "x$enable_envcmds" = "xyes" 
    ) 
 
 
+# --disable-drm => --disable_watch_displas
+
+AS_IF([test "x$enable_drm" = "xno" -a "x$enable_watch_displays" = "xyes"  ],
+       [ AC_MSG_NOTICE( [--disable-drm forces --disable-watch-displays] )
+        enable_watch_displays=no
+       ]
+   ) 
+
+
 ###
 ### Report resolved options and set conditionals, substitutions, and defines
 ###
