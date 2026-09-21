@@ -68,6 +68,7 @@ demo_get_set_profile_related_values(
    ddca_reset_stats();
    DDCA_Status ddcrc = 0;
    DDCA_Display_Handle dh = NULL;
+   char* profile_values_string = NULL;
 
    // printf("Open display reference %s, creating a display handle...\n", ddca_dref_repr(dref));
     ddcrc = ddca_open_display2(dref, false, &dh);
@@ -76,9 +77,8 @@ demo_get_set_profile_related_values(
        goto bye;
     }
     printf("Opened display handle: %s\n", ddca_dh_repr(dh));
-
    printf("Saving profile related feature values in a string...\n");
-   char* profile_values_string = NULL;
+
    ddcrc = ddca_get_profile_related_values(dh, &profile_values_string);
    if (ddcrc != 0) {
       DDC_ERRMSG("ddca_get_profile_related_values", ddcrc);
