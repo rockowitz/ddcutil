@@ -430,9 +430,21 @@ i2c_open_bus_basic_by_busno(int busno,  Byte callopts, int* fd_loc) {
  *
  *  @param busno     bus number
  *  @param callopts  call option flags, controlling failure action
+ *  @param fd_loc    address at which to return the file descriptor, -1 if failure
  *
- *  @retval >=0     Linux file descriptor
- *  @retval -errno  negative Linux errno if open fails
+ *  @return NULL if the bus was opened, #Error_Info struct if not
+ *
+ *  @remark
+ *  The return value and *fd_loc always agree: NULL is returned if and only if
+ *  *fd_loc >= 0.  An open that succeeds only after a retry returns NULL, the
+ *  errors accumulated by the earlier attempts having been discarded.
+ *
+ *  @remark
+ *  An error does not necessarily mean that open() failed.  Locking the display
+ *  within this instance and acquiring the cross-instance flock can fail as
+ *  well, and the status code returned is then that of the step that failed.
+ *  Whichever step fails, the ones that already succeeded are backed out before
+ *  returning, so a caller receiving an error holds nothing.
  *
  *  Call options recognized
  *  - CALLOPT_WAIT
