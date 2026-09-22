@@ -16,7 +16,9 @@
 #include <stdbool.h>
 
 #include "util/debug_util.h"
+#ifdef USE_LIBDRM
 #include "util/drm_card_connector_util.h"
+#endif
 #ifdef ENABLE_FAILSIM
 #include "util/failsim.h"
 #endif
@@ -44,7 +46,9 @@
 
 #include "sysfs/sysfs_simple.h"
 #include "sysfs/sysfs_base.h"
+#ifdef USE_LIBDRM
 #include "sysfs/sysfs_sys_drm_connector.h"
+#endif
 
 #include "vcp/persistent_capabilities.h"
 
@@ -411,11 +415,15 @@ STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->resume_after_sleep_ms >= 0)
       pause_after_resume_ms = parsed_cmd->resume_after_sleep_ms;
    if (parsed_cmd->flags & CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS) {
+#ifdef WATCH_DISPLAYS
       enable_dw_start_check_dev_i2c_devices_rw = true;
+#endif
       enable_ddci_init_check_dev_i2c_devices_rw = true;
    }
    else {
+#ifdef WATCH_DISPLAYS
       enable_dw_start_check_dev_i2c_devices_rw = false;
+#endif
       enable_ddci_init_check_dev_i2c_devices_rw = false;
    }
 }
@@ -429,7 +437,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F5)
       EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
-#ifdef USE_LIBDRM
+#ifdef WATDH_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F6)
       use_drm_connector_states = true;
 #endif
@@ -467,30 +475,36 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 #ifdef WATCH_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F24)
       enable_write_detect_to_status = true;
-#endif
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F25)
       use_new_recheck_algorithm = false;
    if (parsed_cmd->flags2 & CMD_FLAG2_F27)
       enable_dw_start_check_dev_i2c_devices_rw = false;
+#endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F28)
       enable_ddci_init_check_dev_i2c_devices_rw = false;
+#ifdef WATCH_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F29)
       force_recheck = true;
+#endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F30)
       read_edid_using_single_ioctl = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F31)
       force_failure_i2c_all_relevant_i2c_buses_rw = true;
+#ifdef WATCH_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F32)
       use_eventfd = false;    // watch thread uses old time polling loops instead of blocking
    if (parsed_cmd->flags2 & CMD_FLAG2_F33)
       split_sleep_eventfd = false;    // dw_split_sleep() uses the old segmented sleeps instead of a single poll() wait
+#endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F35)
       edid_exists_checks_drm_status = false;    // always open device, do not consult DRM connector status first
    if (parsed_cmd->flags2 & CMD_FLAG2_F38)
       edid_exists_skips_unmapped_bus = false;   // open the device even when no DRM connector names the bus
+#ifdef WATCH_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F36)
       rescan_on_eacces = false;    // treat affected monitors as disconnected instead of rescanning while EACCES is seen
+#endif
 
 #ifdef MAINTAINED_CONNECTOR_ARRAY
    // The removal variants and the hotplug refresh, all belonging to the
@@ -694,6 +708,8 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (is_arm)
       primitive_sysfs = true;
 
+
+#ifdef USE_LIBDRM
    all_video_adapters_implement_drm = false;
    uint64_t t0;
    uint64_t t1;
@@ -715,13 +731,14 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F12)
       all_video_adapters_implement_drm = false;
+#endif
 
    // subinit_i2c_bus_core();
 
    // rpt_nl();
    // get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
 
-#ifdef USE_LIBDRM
+#ifdef WATCH_DISPLAYS
    if (use_drm_connector_states)
       redetect_drm_connector_states();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s",

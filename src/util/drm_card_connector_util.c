@@ -3,6 +3,7 @@
 // Copyright (C) 2018-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
  
 #include <assert.h>
 #include <glib-2.0/glib.h>
@@ -32,8 +33,6 @@
 #include "sysfs_i2c_util.h"
 #include "sysfs_util.h"
 #include "timestamp.h"
-
-#include "libdrm_util.h"
 
 #include "drm_card_connector_util.h"
 

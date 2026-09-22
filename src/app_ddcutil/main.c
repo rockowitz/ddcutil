@@ -413,9 +413,13 @@ int verify_i2c_access_for_single_bus(int busno) {
    else if (!i2c_device_exists(busno)) {
       fprintf(stderr, "Bus /dev/i2c-%d does not exist.\n", busno);
    }
+#ifdef USE_LIBDRM
    else if (sysfs_is_ignorable_i2c_device(busno)) {
       fprintf(stderr, "Bus /dev/i2c-%d cannot be used for DDC/CI communication.\n", busno);
    }
+#else
+   // what to use here?
+#endif
    else {
        char fnbuf[20];   // oversize to avoid -Wformat-truncation error
        snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
@@ -1140,7 +1144,7 @@ main(int argc, char *argv[]) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F2) {
       bool saved_prefix_report_output = rpt_set_ornamentation_enabled(false);
       consolidated_i2c_sysfs_report(0);
-#ifdef USE_LIBDRM
+#ifdef WATCH_DISPLAYS
       if (use_drm_connector_states)
          report_drm_connector_states(0);
 #endif

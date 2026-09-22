@@ -6,6 +6,8 @@
 #ifndef SYSFS_BASE_H_
 #define SYSFS_BASE_H_
 
+#include "config.h"
+
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -106,6 +108,14 @@ Connector_Busno_Dref * get_cbd_by_busno(int busno);
 // if dref != NULL, replaces, if NULL, just erases
 void                   set_cbd_connector(Connector_Busno_Dref * cbd, Display_Ref * dref);
 void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
+#endif
+
+// in sysfs_simple.h, is the the right location if sysfs_simple.h not included?
+#ifndef USE_LIBDRM
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH(_path)
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(_name)
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO(_businfo)
+#define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_DREF(_dref)
 #endif
 
 #endif /* SYSFS_BASE_H_ */

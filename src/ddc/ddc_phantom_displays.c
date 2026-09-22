@@ -17,7 +17,9 @@
 #include "base/rtti.h"
 
 #include "sysfs/sysfs_base.h"
+#ifdef USE_LIBDRM
 #include "sysfs/sysfs_simple.h"
+#endif
 
 #include "ddc_phantom_displays.h"
 
@@ -181,6 +183,7 @@ filter_phantom_displays(GPtrArray * all_displays) {
          all_displays->len, sbool(detect_phantom_displays));
 
    bool phantom_displays_found = false;
+#ifdef USE_LIBDRM
    if (detect_phantom_displays && all_displays->len > 1) {
       GPtrArray* valid_displays   = g_ptr_array_sized_new(all_displays->len);
       GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
@@ -254,6 +257,8 @@ filter_phantom_displays(GPtrArray * all_displays) {
       g_ptr_array_free(invalid_displays, true);
       g_ptr_array_free(valid_displays, true);
    }
+#endif
+
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, phantom_displays_found, "");
    return phantom_displays_found;
 }

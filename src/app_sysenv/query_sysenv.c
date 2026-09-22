@@ -404,7 +404,7 @@ void query_x11() {
 
 #endif
 
-
+#ifdef USE_LIBDRM
 static void query_using_shell_command(Byte_Value_Array i2c_device_numbers,
                 const char * pattern,
                 const char * command_name)
@@ -444,6 +444,7 @@ static void query_using_shell_command(Byte_Value_Array i2c_device_numbers,
       }
    }
 }
+#endif
 
 #ifdef ENABLE_UDEV
 /** Queries UDEV for devices in subsystem "i2c-dev".
@@ -994,6 +995,7 @@ void query_sysenv(bool quick_env) {
          if (sysfs_quick_test)
             DBGMSG("!!! Skipping i2cdetect and get-edid|parse-edid to speed up testing !!!");
          else {
+#ifdef USE_LIBDRM
             query_using_shell_command(accumulator->dev_i2c_device_numbers,
                                       "i2cdetect -y %d",   // command to issue
                                       "i2cdetect");        // command name for error message
@@ -1002,6 +1004,9 @@ void query_sysenv(bool quick_env) {
             query_using_shell_command(accumulator->dev_i2c_device_numbers,
                                       "get-edid -b %d | parse-edid",   // command to issue
                                       "get-edid | parse-edid");        // command name for error message
+#else
+            rpt_vstring(0, "Skipping i2cdetect tests, bus exclusion list requires libdrm");
+#endif
          }
       }
 

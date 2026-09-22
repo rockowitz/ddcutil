@@ -58,7 +58,7 @@ void possibly_write_detect_to_status_by_businfo(I2C_Bus_Info * businfo);
 void possibly_write_detect_to_status_by_dref(Display_Ref * dref);
 void possibly_write_detect_to_status_by_connector_path(const char * path);
 
-#ifdef WRITE_DETECT_TO_STATUS
+#if defined( WRITE_DETECT_TO_STATUS)
 #define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH possibly_write_detect_to_status_by_connector_path
 #define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME possibly_write_detect_to_status_by_connector_name
 #define POSSIBLY_WRITE_DETECT_TO_STATUS_BY_BUSINFO        possibly_write_detect_to_status_by_businfo

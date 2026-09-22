@@ -14,6 +14,8 @@
 #include <xf86drmMode.h>
 /** \endcond */
 
+#include "data_structures.h"
+
 extern Value_Name_Title_Table drm_connector_type_table;
 int    lookup_drm_connector_type(const char * name);
 char * drm_connector_type_name(Byte val);
