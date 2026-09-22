@@ -495,16 +495,14 @@ ddca_redetect_displays(void) {
       g_mutex_unlock(&ddca_redetect_active_mutex);
    }
 #else
-// #ifdef FUTURE
-//    ddc_discard_detected_displays();
-//    ddc_ensure_displays_detected();
-//    set_ddca_error_detail_from_open_errors();
-// #endif
-
-
-   ddcrc = DDCRC_INVALID_OPERATION;
-   erec = ERRINFO_NEW(ddcrc, "ddca_redetect_displays() unsupported - libddcutil not built with support for watching display connection changes");
-   DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "ddca_redetect_displays() unsupported - libddcutil not built with support for watching display connection changes");
+   // Display watch is not built in, so there is no watch thread to stop and
+   // restart.  Just redetect.
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Display redetection starting.");
+   quiesce_api();
+   erec = ddc_redetect_displays();
+   ddcrc = ERRINFO_STATUS(erec);
+   unquiesce_api();
+   DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "Display redetection finished.");
 #endif
 
    if (erec) {

@@ -3,7 +3,7 @@
  *  Access displays, whether DDC or USB
  */
 
-// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2026 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_DISPLAYS_H_
@@ -14,6 +14,8 @@
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+
+#include "util/error_info.h"
 
 #include "base/ddcutil_types_internal.h"
 #include "base/displays.h"
@@ -43,6 +45,7 @@ int          ddc_get_display_count(bool include_invalid_displays);
 GPtrArray *  ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc);
 void         ddc_ensure_displays_detected();
 void         ddc_discard_detected_displays();
+Error_Info * ddc_redetect_displays();
 bool         ddc_displays_already_detected();
 DDCA_Status  ddc_enable_usb_display_detection(bool onoff);
 void         dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);

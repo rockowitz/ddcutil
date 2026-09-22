@@ -476,33 +476,19 @@ dw_redetect_displays() {
       if (stop_watch_rc != DDCRC_OK)
          DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "ddc_stop_watch_displays() returned %s",
                                       psc_name(stop_watch_rc));
+      // stop watch rc != 0 indicates watch displays not running
    }
-   ddc_discard_detected_displays();
-   if (dsa2_is_enabled())
-      dsa2_save_persistent_stats();
-   // free_sysfs_drm_connector_names();
 
    if (use_drm_connector_states)
       redetect_drm_connector_states();
 
-   // init_sysfs_drm_connector_names();
-   // get_sys_drm_connectors(/*rescan=*/true);
-   if (dsa2_is_enabled()) {
-      Error_Info * erec = dsa2_restore_persistent_stats();
-      if (erec) {
-         DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected error from dsa2_restore_persistent_stats(): %s",
-               errinfo_summary(erec));
-         errinfo_free(erec);
-      }
+   err = ddc_redetect_displays();
+   if (err) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "ddc_redetect_displays() returned %s",
+                                          errinfo_summary(err));
    }
-   i2c_detect_buses();
-   g_mutex_lock(&all_display_refs_mutex);
-   all_display_refs = ddc_detect_all_displays(&display_open_errors);
-   g_mutex_unlock(&all_display_refs_mutex);
-   if (debug) {
-      ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
-   }
-   if (active_rc == DDCRC_OK && stop_watch_rc==DDCRC_OK) {
+
+   if (active_rc == DDCRC_OK && stop_watch_rc==DDCRC_OK && !err) {
       err = dw_start_watch_displays(enabled_classes);
       if (err)
          DECORATED_SYSLOG(DDCA_SYSLOG_WARNING, "dw_start_watch_displays() returned %s",

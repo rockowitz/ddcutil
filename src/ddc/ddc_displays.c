@@ -963,6 +963,57 @@ void check_drefs_alive() {
 #endif
 
 
+/** Completely redetect displays
+ *
+ *  Discards the currently detected displays and I2C buses, then performs
+ *  display detection anew.  Persistent sleep-multiplier statistics, if
+ *  enabled, are saved before the old state is discarded and restored
+ *  afterwards.
+ *
+ *  @return  pointer to Error_Info struct if error, currently always NULL
+ *
+ *  @remark
+ *  Normally called from #dw_redetect_displays(), but called directly from
+ *  #ddca_redetect_displays() if building without without watching for
+ *  display changes (#ifndef WATCH_DISPLAYS).
+ */
+Error_Info *
+ddc_redetect_displays() {
+   bool debug = false || debug_locks;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_display_refs=%p", all_display_refs);
+   Error_Info * err = NULL;
+
+   ddc_discard_detected_displays();
+   if (dsa2_is_enabled())
+      dsa2_save_persistent_stats();
+   // free_sysfs_drm_connector_names();
+   // init_sysfs_drm_connector_names();
+   // get_sys_drm_connectors(/*rescan=*/true);
+
+   i2c_detect_buses();
+   g_mutex_lock(&all_display_refs_mutex);
+   all_display_refs = ddc_detect_all_displays(&display_open_errors);
+   g_mutex_unlock(&all_display_refs_mutex);
+   if (debug) {
+      ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
+   }
+
+   if (dsa2_is_enabled()) {
+        Error_Info * erec = dsa2_restore_persistent_stats();
+        if (erec) {
+           DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected error from dsa2_restore_persistent_stats(): %s",
+                 errinfo_summary(erec));
+           errinfo_free(erec);
+        }
+     }
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "all_display_refs=%p, all_display_refs->len = %d",
+                                   all_display_refs, all_display_refs->len);
+   return err;
+}
+
+
+
 void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_async_scan);
    RTTI_ADD_FUNC(ddc_close_all_displays);
@@ -973,6 +1024,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_get_all_display_refs);
    RTTI_ADD_FUNC(ddc_get_filtered_display_refs);
    RTTI_ADD_FUNC(ddc_non_async_scan);
+   RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(ddc_validate_display_ref2);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
 }
