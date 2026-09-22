@@ -788,6 +788,10 @@ AS_IF([test "x$enable_drm" = "xyes"],
          ],
          [ AC_MSG_NOTICE( [drm disabled, not checking for libdrm] ) ]
      )
+     
+AS_IF([test "x$enable_drm" = "xno"],
+         AC_MSG_ERROR( [Building without drm currently unimplemented] )
+      ])
 
 AM_CONDITIONAL([USE_LIBDRM_COND], [test "x$enable_drm" = "xyes"] )
 AS_IF([test "x$enable_drm" = "xyes"],
