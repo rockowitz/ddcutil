@@ -909,7 +909,7 @@ static bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
  *
  *  @param  businfo  pointer to #I2C_Bus_Info struct in which information will be set
  *  @return NULL if success, Error_Info struct if error
- *  #retval Error_Info(-ENOENT) if but does not exist
+ *  #retval Error_Info(-ENOENT) if bus does not exist
  */
 Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode) {
    bool debug = false;
@@ -918,9 +918,12 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    assert(businfo && ( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "businfo->flags = 0x%04x = %s", businfo->flags,
          i2c_interpret_bus_flags_t(businfo->flags));
+#ifdef OLD
+   // no longer needed, traced function stack replaces
    if (debug) {
       show_backtrace(1);
    }
+#endif
    // int d = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 1 : -1;
    assert(businfo->busno >= 0);
    assert(businfo->busno != 255);
