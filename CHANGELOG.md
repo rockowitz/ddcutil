@@ -1,9 +1,14 @@
-## [3.0.2] 2026-09-17
+## [3.0.2] 2026-09-22
+
 
 #### Added
 
 - Built-in DDC ignore list. Added the Valve Index HMD (VLV / product 0x91a8, model
-  "Index HMD") to be ignored by default as DDC/CI reads on I2C slave 0x37 cause the headset's firmware to stop responding to EDID reads. Equivalent to using ***--ignore-mmid VLV-Index_HMD-37288***.
+  "Index HMD") to be ignored by default as DDC/CI reads on I2C slave 0x37 cause the 
+  headset's firmware to stop responding to EDID reads. Equivalent to using 
+  ***--ignore-mmid VLV-Index_HMD-37288***.
+  - PR #637: Add built-in ignore list which includes Valve Index
+  - Issue #632: DDC/CI probing wedges a Valve Index HMD 
 
 #### Changed
 - Do not write traced function stack to syslog on error reading /dev/i2c device.  
@@ -23,6 +28,11 @@
   - Issue #634: Slow performance after 3.0.0 executing setvcp 10 + 5
 - Build failure with --enable-usb=no due to missing include. 
   Pull request #636
+- Build systemd/dbus tests only when support for them is enabled. 
+  Pull request #638
+- Command **configure --disable-drm** now terminates with an error message.
+  Building without DRM has not worked for some time.
+- Fix ddca_redetect_displays() when building without display watch detection. 
 
 ## [3.0.1] 2026-09-13
 
