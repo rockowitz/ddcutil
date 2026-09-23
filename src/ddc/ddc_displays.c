@@ -467,7 +467,33 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             dbgrpt_display_ref(dref, /*include_businfo=*/ false, 5);
          g_ptr_array_add(display_list, dref);
       }
+#ifdef OLD
+      /* Superseded by the open_errno test below.  I2C_BUS_ACCESSIBLE is set
+       * only after i2c_open_bus() succeeds, so it is clear whenever no file
+       * descriptor was obtained -- including on the paths where i2c_check_bus()
+       * never attempted an open: the unmapped bus it declines to probe, and the
+       * device that no longer exists.  Those reach here with open_errno still 0
+       * and record a Bus_Open_Error reading "Error OK(0) opening /dev/i2c-N",
+       * which api_displays.c then attaches to every ddca_get_display_refs() and
+       * ddca_get_display_info_list2() call as error detail.
+       */
       else if ( !(businfo->flags & I2C_BUS_ACCESSIBLE) ) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bus=%d, I2C_BUS_ACCESSIBLE not set", businfo->busno);
+         Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
+         boe->io_mode = DDCA_IO_I2C;
+         boe->devno = businfo->busno;
+         boe->error = businfo->open_errno;
+         g_ptr_array_add(bus_open_errors, boe);
+      }
+#endif
+      /* open_errno is non-zero exactly when an open was attempted and failed,
+       * which is the only case a client can act on -- in practice the bus whose
+       * permissions need fixing.  Both i2c_check_bus() and i2c_reset_bus_info()
+       * clear it, so the value here is that of the most recent check.
+       */
+      else if ( businfo->open_errno != 0 ) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bus=%d, open failed: %s",
+                         businfo->busno, psc_desc(businfo->open_errno));
          Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
          boe->io_mode = DDCA_IO_I2C;
          boe->devno = businfo->busno;
@@ -548,6 +574,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             boe_copy->devno   = usb_boe->devno;
             boe_copy->error   = usb_boe->error;
             boe_copy->detail  = usb_boe->detail;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding bus open errors from usb open");
             g_ptr_array_add(bus_open_errors, boe_copy);
          }
       }
