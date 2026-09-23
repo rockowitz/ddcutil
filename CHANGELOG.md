@@ -32,7 +32,10 @@
   Pull request #638
 - Command **configure --disable-drm** now terminates with an error message.
   Building without DRM has not worked for some time.
-- Fix ddca_redetect_displays() when building without display watch detection. 
+- Fix **ddca_redetect_displays()** if libddcutil built without display watch detection.
+- **ddca_get_display_refs()** and **ddca_get_display_info_list2()** could put a 
+  bogus message in the data returned by **ddca_get_error_detail()** even when the 
+  API calls succeeded. 
 
 ## [3.0.1] 2026-09-13
 
