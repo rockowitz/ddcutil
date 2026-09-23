@@ -940,6 +940,14 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    bool drm_card_connector_directories_exist = sysfs_connector_directories_exist();
 
    businfo->flags |= I2C_BUS_PROBED;
+   // open_errno describes the open attempted by this check, not by some earlier
+   // one.  It is written only on failure, and the businfo struct outlives the
+   // check -- display watch rechecks in place, and i2c_detect_buses() rebuilds
+   // all_i2c_buses only when it does not already exist -- so without this a
+   // transient EACCES would be read as current for the life of the process.
+   // i2c_reset_bus_info() clears it as well, but three of the call sites that
+   // reach here never pass through it, so this is where the invariant is kept.
+   businfo->open_errno = 0;
    Error_Info *master_err = NULL;
    if (!i2c_device_exists(businfo->busno)) {
       master_err = ERRINFO_NEW(-ENOENT, "Device does not exist: /dev/i2c-%d", businfo->busno);
@@ -986,11 +994,13 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    // *** Try to find the drm connector, first from the user supplied table,
    // *** then by bus number
 
-   // i2c_reset_bus_info() frees and nulls drm_connector_name, so a recheck
-   // arrives here with it unset and the connector is determined afresh.  A
-   // display can move between connectors while its bus stays put, so the name
-   // found on an earlier pass is not to be trusted.  The test still skips the
-   // work when a caller has already established the name on this businfo.
+   // Runs only when the connector has never been established on this businfo.
+   // The association is invariant once discovered -- the same bus yields the
+   // same connector, and a display moving between connectors does not disturb
+   // it -- so a recheck keeps the name, found_by and id it already has rather
+   // than rediscovering them.  i2c_reset_bus_info() leaves all three alone for
+   // that reason.  A NULL name means "not yet discovered", not "stale", so a
+   // bus whose connector was not found the first time is retried.
    if (!businfo->drm_connector_name) {
       //assert(businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_CHECKED ||
       //       businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_FOUND);
