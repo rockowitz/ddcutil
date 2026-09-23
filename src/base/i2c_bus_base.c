@@ -506,6 +506,20 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
          //businfo->flags &= ~(I2C_BUS_ACCESSIBLE | I2C_BUS_ADDR_X30 | I2C_BUS_ADDR_X37 |
          //       I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID );
          businfo->flags = 0;
+         /* open_errno belongs with the flags cleared above: it describes the
+          * outcome of one check, not a property of the bus, so leaving it set
+          * would make it the one field still asserting a result on a struct
+          * that now reports itself as never probed.  (The edid discarded below
+          * is the same kind of per-check state; the drm connector fields are
+          * not, and are deliberately kept -- see the comment there.)  That
+          * matters because this function is also called on its own, when a
+          * display is removed but the bus remains (dw_common.c,
+          * dw_remove_display_by_businfo()), and nothing rechecks the bus
+          * afterwards.  Kept inside this if so that it and flags always agree:
+          * on a bus that has vanished, both stay as the last check left them.
+          * i2c_check_bus() clears it too, for the paths that never reach here.
+          */
+         businfo->open_errno = 0;
       }
       if (businfo->edid) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Calling free_parsed_edid for %p, marker=%s",
@@ -517,20 +531,25 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
       }
       /* Was commented out as "double free": the original used bare free(),
        * which leaves the pointer dangling, and i2c_free_bus_info() then frees
-       * the same address.  FREE() nulls it, so both frees are safe and the
-       * name is no longer leaked when a later assignment overwrites it --
-       * i2c_bus_core.c sets this field to NULL at the top of both
-       * set_connector_for_businfo_using_edid() and
-       * set_connector_for_businfo_using_user_bus_connector_table(),
-       * discarding whatever a previous check left behind.
+       * the same address.  It is now not freed here at all.
        *
-       * Nulling it here also means i2c_check_bus() re-determines the connector
-       * on a recheck rather than keeping the name found the first time.  That
-       * is deliberate: a display can move between connectors while its bus
-       * stays put -- observed on nvidia migrating DP-4 -> DP-5 -> DP-7 -- and
-       * the name found before the move is then wrong.
+       * The bus number to card-connector association is invariant once
+       * discovered: /dev/i2c-N is the DDC channel of one connector, whatever
+       * is plugged into it.  That holds however the name was arrived at --
+       * matching the bus's EDID against the connectors'
+       * (DRM_CONNECTOR_FOUND_BY_EDID, used where sysfs does not publish the
+       * bus number) is a one time discovery, after which the EDID value has no
+       * bearing on it.  drm_connector_found_by and drm_connector_id are equally
+       * invariant, and this function never cleared them, so discarding the name
+       * alone left the three disagreeing and made i2c_check_bus() rediscover
+       * what it already knew.  On the EDID route it could not even do that:
+       * that search needs businfo->edid, freed just above, so a connector
+       * discovered that way was unrecoverable until a display was again present
+       * on the bus.  i2c_free_bus_info() owns the string.
        */
+#ifdef OLD
       FREE(businfo->drm_connector_name);
+#endif
       if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Final businfo:");
          i2c_dbgrpt_bus_info(businfo, true, 2);
