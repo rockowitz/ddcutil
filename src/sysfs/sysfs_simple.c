@@ -570,7 +570,19 @@ char * sysfs_find_adapter(char * path) {
    // (e.g. the starting path itself does not exist), in which case the walk
    // up the directory chain has hit a dead end: stop rather than call
    // strlen(NULL).
-   while(!devpath && rp1 && strlen(rp1) > 0 && !streq(rp1, "/")) {
+   // Never walk above /sys/devices. Device class attributes live on the device
+   // node itself or its ancestors within /sys/devices. Platform devices (e.g.
+   // the DisplayLink evdi i2c adapter) have no class attribute anywhere in
+   // their chain; previously the walk continued up past /sys/devices and its
+   // probe for a "class" entry matched /sys/class - the sysfs class DIRECTORY,
+   // not a device attribute. glibc fopen() on a directory succeeds and
+   // getline() returns -1 but still leaves an allocated (empty) buffer, so
+   // the read appeared to succeed with a garbage/empty class string, causing
+   // such buses to be misclassified. Stopping at /sys/devices leaves the
+   // caller with a NULL adapter path for class-less devices, which callers
+   // already handle.
+   while(!devpath && rp1 && strlen(rp1) > 0 && !streq(rp1, "/") &&
+         g_str_has_prefix(rp1, "/sys/devices")) {
       if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
           devpath = rp1;
       }
@@ -940,8 +952,11 @@ sysfs_is_ignorable_i2c_device(int busno) {
          uint32_t class = get_i2c_device_sysfs_class(busno);
          DBGF(debug, "get_i2c_device_sysfs_class(%d) returned 0x%08x ", busno, class);
          if (class == 0) {
-            if (!sysfs_is_soc_system())
-               ignorable = true;
+            // No sysfs class attribute. This is normal for platform devices
+            // (e.g. DisplayLink/evdi i2c adapters), not just SoC systems:
+            // I2C_CLASS_DDC was removed from the kernel in 6.8 and platform
+            // device i2c adapters generally expose no class. Do not reject
+            // such buses; DDC/CI detection will decide on the evidence.
          }
          else {
             DBGF(debug, "   class = 0x%08x", class);
