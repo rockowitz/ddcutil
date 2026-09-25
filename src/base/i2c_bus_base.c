@@ -241,8 +241,12 @@ I2C_Bus_Info * i2c_add_bus_new_by_busno(int busno) {
 static bool i2c_remove_businfo_locked(I2C_Bus_Info * businfo) {
    if (!all_i2c_buses)
       all_i2c_buses = g_ptr_array_new();
+   // Matches the creation in i2c_remove_bus_by_businfo().  removed_i2c_buses
+   // owns the records moved into it; all_i2c_buses deliberately does not own
+   // its records, which is what makes the move below safe -- see the comment
+   // there.
    if (!removed_i2c_buses)
-      removed_i2c_buses = g_ptr_array_new();
+      removed_i2c_buses = g_ptr_array_new_with_free_func((GDestroyNotify) i2c_free_bus_info);
 
    bool found = false;
    int all_index     = i2c_find_bus_info_index_in_gptrarray_by_businfo(all_i2c_buses, businfo);
@@ -266,6 +270,10 @@ static bool i2c_remove_businfo_locked(I2C_Bus_Info * businfo) {
       found = true;
       businfo->removed = true;
 
+      // The order does not matter, but the ownership does: all_i2c_buses is
+      // created without a free function, so removing the index does not free
+      // the record that removed_i2c_buses now owns.  Giving all_i2c_buses a
+      // free function would make this a use after free.
       g_ptr_array_add(removed_i2c_buses, businfo);
       g_ptr_array_remove_index(all_i2c_buses, all_index);
    }
