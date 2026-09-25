@@ -296,7 +296,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
                           tryctr, dh_repr(dh));
 
       // n Raspberry Pi, the sysfs connector status is unreliable, so check the EDID directly
-      if (businfo->drm_connector_name && is_connector_reliable(businfo->drm_connector_name)) 
+      if (businfo->drm_connector_name && is_sysfs_reliable_for_connector(businfo->drm_connector_name)) 
          edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
       else  
          edid_exists = i2c_check_edid_exists_by_dh(dh);
