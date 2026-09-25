@@ -44,6 +44,7 @@
 #include "base/rtti.h"
 
 #include "sysfs_simple.h"
+
 #include "sysfs_base.h"
 
 
@@ -446,28 +447,29 @@ int search_all_businfo_records_by_connector_name(char *connector_name) {
 }
 
 
+//
+// sysfs reliability
+//
 
-/* i915, amdgpu, radeon, nouveau and (likely) other video drivers that share
- * the kernel's DRM code can be relied on to maintain the edid, status, and
- * enabled attributes as displays are connected and disconnected.
+/** List of video drivers known to reliably report sysfs attributes
+ *  edid, status, and connected, as monitors are disconnected and connected.
  *
- * Unfortunately depending on version, the nvidia driver does not.
- * Attribute enabled is always "disabled".  It may be the case
- * that the edid value is that of the monitor initially connected.
- * What has been observed is that if the driver does change the
- * edid attribute, it also properly sets status to "connected" or
- * disconnected.  If it does not, status is always "disconnected",
- * whether or not a monitor is connected.
+ *  Why the proprietary nvidia driver is not in this list:
+ *  Depending on version, the nvidia driver does not reliably set the attributes.
+ *  Attribute enabled is always "disabled".  It may be the case  that the edid
+ *  value is that of the monitor initially connected. What has been observed is
+ *  that if the driver does change the edid attribute, it also properly sets
+ *  status to "connected" or "disconnected".  If it does not, status is always
+ *  "disconnected", whether or not a monitor is connected.
  */
+static const char* known_reliable_drivers[] = {
+      "i915",
+       "xe",
+       "amdgpu",
+       "radeon",
+       "nouveau",
+       NULL};
 
-static
-bool known_reliable_driver(const char * driver) {
-   return streq(driver, "i915")   ||
-          streq(driver, "xe") ||
-          streq(driver, "amdgpu") ||
-          streq(driver, "radeon") ||
-          streq(driver, "nouveau");
-}
 
 /** Reports whether a video driver can be relied on to keep the DRM connector
  *  attributes edid, status, and enabled current as displays are connected and
@@ -480,22 +482,26 @@ bool known_reliable_driver(const char * driver) {
  *  True for the drivers sharing the kernel's DRM implementation, and for any
  *  driver when the user has asserted --force-sysfs-reliable.  Notably false
  *  for nvidia.  See the comment block above #known_reliable_driver().
+ *
+ *  @remark
+ *  This is the base function on which all reliability related functions
+ *  ultimately depend.
+ *
  */
-bool is_driver_reliable(const char * driver_name) {
+bool is_sysfs_reliable_for_driver(const char * driver_name) {
    bool debug = false;
 
    bool result = false;
-   if (known_reliable_driver(driver_name))
-   {
+   // force_sysfs_unreliable is tested first, so it wins when both flags are
+   // set.  is_sysfs_reliable() orders them the same way.
+   if (force_sysfs_unreliable)
+      result = false;
+   else if (force_sysfs_reliable)
       result = true;
-   }
-   else {
-      //if (streq(driver_name, "nvidia")) {
-      if (force_sysfs_reliable)
-         result = true;
-   }
+   else
+      result = (exactly_matches_any(driver_name, known_reliable_drivers) >= 0);
 
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "driverr_name=%s, returning %s", driver_name, sbool(result));
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "driver_name=%s, returning %s", driver_name, sbool(result));
    return result;
 }
 
@@ -506,166 +512,16 @@ bool is_driver_reliable(const char * driver_name) {
  *  @param  connector_name  DRM connector name, e.g. card1-DP-1
  *  @return true if the connector's driver is reliable, false if not
  */
-bool is_connector_reliable(const char * connector_name) {
+bool is_sysfs_reliable_for_connector(const char * connector_name) {
    bool debug = true;
    bool result = false;
 
    char buf[PATH_MAX];
    g_snprintf(buf, PATH_MAX, "/sys/ckass.drm/%s", connector_name);
    char * driver = find_adapter_and_get_driver(buf, -1);
-   result = is_driver_reliable(driver);
+   result = is_sysfs_reliable_for_driver(driver);
 
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "connector_name=%s, returning %s", connector_name, sbool(result));
-   return result;
-}
-
-typedef struct {
-   bool     known_good_driver_seen;
-   bool     nvidia_driver_seet;
-   bool     other_driver_seen;
-#ifdef OUT
-   uint8_t  nvidia_connector_ct;
-   uint8_t  nvidia_connector_w_edid_ct;
-   uint8_t  nvidia_connector_w_edid_and_connected_ct;
-#endif
-} Sysfs_Reliability_Accumulator;
-
-
-
-static bool drm_reliability_checked = false;
-static bool other_drivers_seen = false;
-// static bool nvidia_connectors_reliable = false;
-static bool nvidia_connectors_exist = false;
-static bool known_good_drivers_seen = false;
-
-
-
-static
-void check_connector_reliability(
-            const char *  dirname,
-            const char *  fn,
-            void *        accumulator,
-            int           depth)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dirname=|%s|, fn=|%s|", dirname, fn);
-   int debug_depth = (debug) ? 1 : -1;
-
-   // Sysfs_Reliability_Accumulator * accum = accumulator;
-
-   char buf[PATH_MAX];
-   g_snprintf(buf, PATH_MAX, "%s/%s", dirname, fn);
-   char * driver = find_adapter_and_get_driver(buf, debug_depth);
-#ifdef OLD
-   if (is_driver_reliable(driver))
-   {
-      accum->known_good_driver_seen = true;
-   }
-   else if (streq(driver, "nvidia")) {
-      // Per Michael Hamilton, testing that status == "connected" for any connector with EDID
-      // does not guarantee that DRM connector is updated when a display is connected/disconnected
-      accum->nvidia_connector_ct++;
-      GByteArray * edid_byte_array = NULL;
-      POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(fn);
-      RPT_ATTR_EDID(debug_depth, &edid_byte_array, dirname, fn, "edid");   // e.g. /sys/class/drm/card0-DP-1/edid
-      // DBGMSG("edid_byte_array=%p", (void*)edid_byte_array);
-      if (edid_byte_array) {
-         accum->nvidia_connector_w_edid_ct++;
-         g_byte_array_free(edid_byte_array,true);
-
-         char * status = NULL;
-         RPT_ATTR_TEXT(debug_depth, &status,  dirname, fn, "status"); // e.g. /sys/class/drm/card0-DP-1/status
-         if (status) {
-            if (streq(status, "connected"))
-               accum->nvidia_connector_w_edid_and_connected_ct++;
-            free(status);
-         }
-      }
-   }
-#endif
-
-   if (streq(driver, "nvidia")) {
-      // accum->nvidia_driver_seet = true;
-       nvidia_connectors_exist = true;
-   }
-   else if (is_driver_reliable(driver)) {
-         // accum->known_good_driver_seen = true;
-         known_good_drivers_seen = true;
-   }
-   else {
-      // accum->other_driver_seen = true;
-       other_drivers_seen = true;
-   }
-
-
-   free(driver);
-
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
-}
-
-
-// moved from sysfs_i2c_util.c:
-
-
-
-static
-void check_sysfs_reliability() {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
-
-//    Sysfs_Reliability_Accumulator * accum = calloc(1, sizeof(Sysfs_Reliability_Accumulator));
-   int depth=0;
-   dir_foreach(
-         "/sys/class/drm",
-         predicate_cardN_connector,       // filter function
-         check_connector_reliability,
-         NULL, //      accum,
-         depth);
-
-   drm_reliability_checked = true;
-#ifdef oud
-   nvidia_connectors_exist = (accum->nvidia_connector_ct > 0);
-   // known_good_driver_seen = > 0;
-   // This appears to be a necessary, but not sufficient, condition
-   nvidia_connectors_reliable =
-         accum->nvidia_connector_w_edid_ct > 0 &&
-         accum->nvidia_connector_w_edid_ct == accum->nvidia_connector_w_edid_and_connected_ct;
-   other_drivers_seen = accum->other_driver_seen;
-   free(accum);
-#endif
-
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "nvidia_connectors_exist=%s",
-         sbool(nvidia_connectors_exist));
-}
-
-
-/** Reports whether sysfs attributes for DRM connectors using the given video
- *  driver reliably reflect display connection and disconnection.
- *
- *  @param  driver  name of driver
- *  @return true if reliable, false if not
- */
-bool is_sysfs_reliable_for_driver(const char * driver) {
-   bool debug = false;
-
-//    if (!drm_reliability_checked)
-//       check_sysfs_reliability();
-
-   bool result = false;
-   // force_sysfs_unreliable, force_sysfs_reliable exist to facilitate testing
-   if (force_sysfs_unreliable)
-      result = false;
-   else if (force_sysfs_reliable)
-      result = true;
-
-   else {
-      if (streq(driver, "nvidia"))
-         result = false;   // set in check_sysfs_reliable()
-      else
-         result = known_reliable_driver(driver);
-   }
-
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "Returning %s, driver=%s", SBOOL(result), driver);
    return result;
 }
 
@@ -684,6 +540,85 @@ bool is_sysfs_reliable_for_busno(int busno) {
 }
 
 
+#ifdef UNUSED
+typedef struct {
+   bool     known_good_driver_seen;
+   bool     nvidia_driver_seet;
+   bool     other_driver_seen;
+} Sysfs_Reliability_Accumulator;
+#endif
+
+static bool drm_reliability_checked = false;
+static bool other_drivers_seen = false;
+static bool nvidia_connectors_exist = false;
+static bool known_good_drivers_seen = false;
+
+static
+void check_connector_reliability(
+            const char *  dirname,
+            const char *  fn,
+            void *        accumulator, // ignored
+            int           depth)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dirname=|%s|, fn=|%s|", dirname, fn);
+   int debug_depth = (debug) ? 1 : -1;
+
+   // Sysfs_Reliability_Accumulator * accum = accumulator;
+   char buf[PATH_MAX];
+   g_snprintf(buf, PATH_MAX, "%s/%s", dirname, fn);
+   char * driver = find_adapter_and_get_driver(buf, debug_depth);
+
+   if (streq(driver, "nvidia")) {
+      // accum->nvidia_driver_seet = true;
+       nvidia_connectors_exist = true;
+   }
+   else if (is_sysfs_reliable_for_driver(driver)) {
+         // accum->known_good_driver_seen = true;
+         known_good_drivers_seen = true;
+   }
+   else {
+      // accum->other_driver_seen = true;
+       other_drivers_seen = true;
+   }
+
+   free(driver);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+}
+
+
+/** If drm reliability has not yet been checked, sets globals:
+  *     #drm_reliability_checked
+  *     #other_drivers_seen = false;
+  *     #nvidia_connectors_exist
+  *     #known_good_drivers_seen
+  */
+static
+void check_sysfs_reliability() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+
+   if (!drm_reliability_checked) {
+
+      //    Sysfs_Reliability_Accumulator * accum = calloc(1, sizeof(Sysfs_Reliability_Accumulator));
+
+      int depth=0;
+      dir_foreach(
+            "/sys/class/drm",
+            predicate_cardN_connector,       // filter function
+            check_connector_reliability,
+            NULL,     // set globals instead of using accumulator
+            depth);
+
+      drm_reliability_checked = true;
+   }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "nvidia_connectors_exist=%s",
+         sbool(nvidia_connectors_exist));
+}
+
+
 /** Reports whether sysfs attributes for all DRM connectors reliably reflect
  *  display connection and disconnection.
  *
@@ -694,12 +629,6 @@ bool is_sysfs_reliable() {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "force_sysfs_unreliable=%s, force_sysfs_reliable=%s",
          sbool(force_sysfs_unreliable), sbool(force_sysfs_reliable));
 
-   if (!drm_reliability_checked)
-      check_sysfs_reliability();
-
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "other_drivers_seen=%s, nvidia_connectors_exist=%s",
-         sbool(other_drivers_seen), sbool(nvidia_connectors_exist));
-
    bool result = true;
    // force_sysfs_unreliable, force_sysfs_reliable exist to facilitate testing
    if (force_sysfs_unreliable)
@@ -707,18 +636,25 @@ bool is_sysfs_reliable() {
    else if (force_sysfs_reliable)
       result = true;
 
-   else if (other_drivers_seen)
-      result = false;
-   else if (nvidia_connectors_exist)
-      result = false;
+   else {
+      if (!drm_reliability_checked)
+         check_sysfs_reliability();
+      if (other_drivers_seen)
+         result = false;
+      else if (nvidia_connectors_exist)
+         result = false;
+      else
+         result = true;
+   }
 
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result,
+                            "other_drivers_seen=%s, nvidia_connectors_exist=%s",
+                            sbool(other_drivers_seen), sbool(nvidia_connectors_exist));
    return result;
 }
 
 
 /** Module initialization */
-
 
 
 /** Frees the strings a #Sysfs_Basic_I2C_Info holds.
@@ -768,18 +704,18 @@ Sysfs_Basic_I2C_Info get_basic_i2c_info(int busno) {
 
 
 void init_i2c_sysfs_base() {
-   RTTI_ADD_FUNC(check_connector_reliability);
-   RTTI_ADD_FUNC(check_sysfs_reliability);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_sysfs_drm_connector_names);
    RTTI_ADD_FUNC(get_basic_i2c_info);
-   RTTI_ADD_FUNC(is_connector_reliable);
-   RTTI_ADD_FUNC(is_driver_reliable);
-   RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);
-   RTTI_ADD_FUNC(is_sysfs_reliable);
    RTTI_ADD_FUNC(search_all_businfo_records_by_connector_name);
+
+   RTTI_ADD_FUNC(check_connector_reliability);
+   RTTI_ADD_FUNC(check_sysfs_reliability);
+
+   RTTI_ADD_FUNC(is_sysfs_reliable_for_connector);
+   RTTI_ADD_FUNC(is_sysfs_reliable_for_driver);
+   RTTI_ADD_FUNC(is_sysfs_reliable_for_busno);
+   RTTI_ADD_FUNC(is_sysfs_reliable);
+
    RTTI_ADD_FUNC(sysfs_connector_directories_exist);
-#ifdef UNUSED
-   RTTI_ADD_FUNC(get_sys_video_devices);
-#endif
 }

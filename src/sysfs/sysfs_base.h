@@ -42,7 +42,7 @@ extern bool force_sysfs_unreliable;
 extern bool force_sysfs_reliable;
 
 bool        is_driver_reliable(const char * driver_name);
-bool        is_connector_reliable(const char * connector_name);
+bool        is_sysfs_reliable_for_connector(const char * connector_name);
 
 bool        is_sysfs_reliable_for_driver(const char * driver);
 bool        is_sysfs_reliable_for_busno(int busno);
