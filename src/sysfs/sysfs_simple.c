@@ -348,10 +348,20 @@ bool check_connector_id_present(
    Check_Connector_Id_Present_Accumulator * accum = accumulator;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "accum->all_connectors_have_connector_id=%s",
          SBOOL(accum->all_connectors_have_connector_id));
-   bool found = RPT_ATTR_INT(debug_depth, &this_connector_id, dirname, fn, "connector_id");
-   if (!found) {
-      accum->all_connectors_have_connector_id = false;
-      terminate = true;
+
+   bool resolves = true;
+#ifdef ISSUE_641
+   // See the ISSUE_641 comment block in sysfs_base.c.  Taking an entry that does
+   // not resolve for a connector lacking connector_id would answer false for the
+   // system and terminate the walk, so real connectors after it are not seen.
+   resolves = RPT_ATTR_NOTE_SUBDIR(debug_depth, NULL, dirname, fn);
+#endif
+   if (resolves) {
+      bool found = RPT_ATTR_INT(debug_depth, &this_connector_id, dirname, fn, "connector_id");
+      if (!found) {
+         accum->all_connectors_have_connector_id = false;
+         terminate = true;
+      }
    }
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, terminate, "accum->all_connectors_have_connector_id = %s",
@@ -421,10 +431,20 @@ bool check_connector_id(
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "accum->connector_id=%d, accum->connector_id_s=|%s|",
    //       accum->connector_id, accum->connector_id_s);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "accum->connector_id=%d", accum->connector_id);
-   bool connector_id_found = RPT_ATTR_INT(debug_depth, &this_connector_id, dirname, fn, "connector_id");
-   if (connector_id_found && this_connector_id == accum->connector_id) {
-      accum->connector_name = strdup(fn);
-      terminate = true;
+
+   bool resolves = true;
+#ifdef ISSUE_641
+   // See the ISSUE_641 comment block in sysfs_base.c.  Such an entry cannot
+   // match, its connector_id being unreadable, so this only saves the attempt.
+   resolves = RPT_ATTR_NOTE_SUBDIR(debug_depth, NULL, dirname, fn);
+#endif
+   if (resolves) {
+      bool connector_id_found =
+            RPT_ATTR_INT(debug_depth, &this_connector_id, dirname, fn, "connector_id");
+      if (connector_id_found && this_connector_id == accum->connector_id) {
+         accum->connector_name = strdup(fn);
+         terminate = true;
+      }
    }
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, terminate, "accum->connector_name = |%s|", accum->connector_name);
@@ -446,14 +466,23 @@ bool check_busno(
    Check_Busno_Accumulator * accum = accumulator;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "accum->busno=%d", accum->busno);
 
-   Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
-   get_connector_bus_numbers(dirname, fn, cbn);
+   bool resolves = true;
+#ifdef ISSUE_641
+   // See the ISSUE_641 comment block in sysfs_base.c.  Such an entry cannot
+   // match, get_connector_bus_numbers() leaving cbn->i2c_busno at -1, so this
+   // only saves the work.
+   resolves = RPT_ATTR_NOTE_SUBDIR((debug) ? 1 : -1, NULL, dirname, fn);
+#endif
+   if (resolves) {
+      Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
+      get_connector_bus_numbers(dirname, fn, cbn);
 
-   if (cbn->i2c_busno == accum->busno) {
-      terminate = true;
-      accum->connector_name = g_strdup(fn);
+      if (cbn->i2c_busno == accum->busno) {
+         terminate = true;
+         accum->connector_name = g_strdup(fn);
+      }
+      free_connector_bus_numbers(cbn);
    }
-   free_connector_bus_numbers(cbn);
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, terminate, "accum->connector_name = |%s|", accum->connector_name);
    return terminate;

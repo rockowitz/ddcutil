@@ -553,6 +553,79 @@ static bool other_drivers_seen = false;
 static bool nvidia_connectors_exist = false;
 static bool known_good_drivers_seen = false;
 
+/* ISSUE_641 - tolerating a /sys/class/drm entry that does not resolve
+ *
+ * Parked, not enabled.  The triggering configuration appears to be rare and the
+ * current behavior, while imperfect, is safe.  What follows is the analysis, so
+ * that enabling it later does not require redoing it.
+ *
+ * The state.  A GPU whose PCI device is blocked or unbound at runtime can leave
+ * entries in /sys/class/drm that are listed but do not resolve: stat() and
+ * readlink() return ENOENT, ls shows l??????????.  Reported in issue #641 for
+ * cardwire, a hybrid graphics switcher, running in its Secure Boot fallback
+ * mode, where the dGPU's PCI device is denied rather than cleanly removed.
+ * supergfxctl and similar tools can produce the same state.
+ *
+ * The reported crash is already fixed.  sysfs_find_adapter() called strlen() on
+ * the NULL that a failed realpath() leaves behind; commit ebfacc401, released
+ * in 3.0.0, ended the walk instead.  The issue was filed against 2.2.1.
+ *
+ * What is not fixed is that the leaf functions of the /sys/class/drm walks still
+ * take such an entry for a connector.  The filter functions those walks are
+ * given - predicate_cardN_connector(), is_drm_connector() - test only that the
+ * entry name has the syntax of a card-connector directory, which is their whole
+ * job; whether the entry is usable belongs to the function that processes it.
+ * So each leaf function would test that the entry resolves and contribute
+ * nothing when it does not:
+ *
+ *   check_connector_reliability()       the one that matters.  The driver lookup
+ *      for a dangling entry returns NULL, indistinguishable from an
+ *      unrecognized driver, so other_drivers_seen is set and is_sysfs_reliable()
+ *      reports false for the whole system - disabling the sysfs accelerations
+ *      for the working card on account of one that is not in use.
+ *   one_drm_connector0()               builds a Sys_Drm_Connector whose every
+ *      attribute read failed, adding a record with connector_id -1 and no EDID,
+ *      and emitting two "Unexpected error.  Unable to open sysfs directory"
+ *      messages while doing so.
+ *   check_connector_id_present()       takes the entry for a connector lacking
+ *      connector_id, so it answers false for the system and terminates the walk,
+ *      and the real connectors after it are never examined.
+ *   check_connector_id(), check_busno() cannot be misled -
+ *      get_connector_bus_numbers() opens with i2c_busno and connector_id at -1 -
+ *      but are included for uniformity.
+ *
+ * Why this is not urgent.
+ *
+ * - is_sysfs_reliable() currently has no caller, so check_sysfs_reliability()
+ *   and check_connector_reliability() are unreachable outside the unit tests.
+ * - all_sys_drm_connectors_have_connector_id_direct() is called only from
+ *   ddc_common_init.c, inside #ifdef NOT_HERE, and
+ *   get_sys_drm_connector_name_by_connector_id() and
+ *   get_sys_drm_connector_name_by_busno() have no callers at all.
+ * - When a switcher unbinds the device properly the i2c adapters are destroyed,
+ *   the /dev/i2c nodes disappear, and display watch already handles it as bus
+ *   detach: the bus enters bs_attached_buses_removed, dw_common.c calls
+ *   i2c_remove_businfo_by_busno(), and a DISPLAY_DISCONNECTED event is emitted.
+ *   On switch back a fresh businfo is built and the connector rediscovered,
+ *   which is required in any case because the i2c core recycles bus numbers and
+ *   DRM reassigns connector ids.  Only the block-without-unbind case, where the
+ *   node persists, is left, and there the buses are simply probed and found
+ *   empty.
+ *
+ * What enabling this does not address.  is_sysfs_reliable() caches its answer -
+ * drm_reliability_checked is set once and never reset, and _ddca_terminate is a
+ * library destructor so a long lived client gets one scan per process.  With
+ * these tests enabled, a scan taken while a dGPU is blocked sees only the
+ * working driver and caches "reliable"; if the dGPU is later restored, the cache
+ * is then wrong in the unsafe direction - ddcutil would trust sysfs edid, status
+ * and enabled for connectors whose driver does not maintain them.  Without these
+ * tests the dangling entries make the cached answer false, which is wrong but
+ * conservative.  Enabling ISSUE_641 therefore requires either invalidating
+ * drm_reliability_checked where the bus set is rebuilt, or removing the
+ * system-wide roll-up in favor of the per-driver and per-busno functions, which
+ * are computed fresh on every call and are what every live caller uses.
+ */
+
 static
 void check_connector_reliability(
             const char *  dirname,
@@ -567,24 +640,33 @@ void check_connector_reliability(
    // Sysfs_Reliability_Accumulator * accum = accumulator;
    char buf[PATH_MAX];
    g_snprintf(buf, PATH_MAX, "%s/%s", dirname, fn);
-   char * driver = find_adapter_and_get_driver(buf, debug_depth);
 
-   if (streq(driver, "nvidia")) {
-      // accum->nvidia_driver_seet = true;
-       nvidia_connectors_exist = true;
-   }
-   else if (is_sysfs_reliable_for_driver(driver)) {
-         // accum->known_good_driver_seen = true;
-         known_good_drivers_seen = true;
-   }
-   else {
-      // accum->other_driver_seen = true;
-       other_drivers_seen = true;
+   bool resolves = true;
+#ifdef ISSUE_641
+   // See the ISSUE_641 comment block above.  Nothing is known about an entry
+   // that does not resolve, so contribute nothing.
+   resolves = RPT_ATTR_NOTE_SUBDIR(debug_depth, NULL, buf);
+#endif
+   if (resolves) {
+      char * driver = find_adapter_and_get_driver(buf, debug_depth);
+
+      if (streq(driver, "nvidia")) {
+         // accum->nvidia_driver_seet = true;
+          nvidia_connectors_exist = true;
+      }
+      else if (is_sysfs_reliable_for_driver(driver)) {
+            // accum->known_good_driver_seen = true;
+            known_good_drivers_seen = true;
+      }
+      else {
+         // accum->other_driver_seen = true;
+          other_drivers_seen = true;
+      }
+
+      free(driver);
    }
 
-   free(driver);
-
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "resolves=%s", sbool(resolves));
 }
 
 

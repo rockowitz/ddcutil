@@ -227,38 +227,50 @@ Sys_Drm_Connector * one_drm_connector0(
    if (depth < 0 && (IS_DBGTRC(debug, TRACE_GROUP)))
       d0 = 2;
 
-   Sys_Drm_Connector * cur = calloc(1, sizeof(Sys_Drm_Connector));
-   cur->i2c_busno = -1;      // 0 is valid bus number
-   cur->base_busno = -1;
-   cur->connector_id = -1;
-   cur->connector_name = g_strdup(fn);   // e.g. card0-DP-1
-   RPT_ATTR_INT(     d0, &cur->connector_id, dirname, fn, "connector_id");
-   RPT_ATTR_REALPATH(d0, &cur->connector_path, dirname, fn);
+   bool resolves = true;
+#ifdef ISSUE_641
+   // See the ISSUE_641 comment block in sysfs_base.c.  Building a
+   // Sys_Drm_Connector for an entry that does not resolve would add a record
+   // whose every attribute read failed, so leave cur NULL and let the caller
+   // omit it.
+   resolves = RPT_ATTR_NOTE_SUBDIR(d0, NULL, dirname, fn);
+#endif
+   Sys_Drm_Connector * cur = NULL;
+   if (resolves) {
+      cur = calloc(1, sizeof(Sys_Drm_Connector));
+      cur->i2c_busno = -1;      // 0 is valid bus number
+      cur->base_busno = -1;
+      cur->connector_id = -1;
+      cur->connector_name = g_strdup(fn);   // e.g. card0-DP-1
+      RPT_ATTR_INT(     d0, &cur->connector_id, dirname, fn, "connector_id");
+      RPT_ATTR_REALPATH(d0, &cur->connector_path, dirname, fn);
 
-   GByteArray * edid_byte_array = NULL;
-   POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH(cur->connector_path);
-   RPT_ATTR_EDID(d0, &edid_byte_array, dirname, fn, "edid");   // e.g. /sys/class/drm/card0-DP-1/edid
-   // DBGMSG("edid_byte_array=%p", (void*)edid_byte_array);
-   if (edid_byte_array) {
-     cur->edid_size = edid_byte_array->len;
-     cur->edid_bytes = g_byte_array_free(edid_byte_array, false);
-     // DBGMSG("Setting cur->edid_bytes = %p", (void*)cur->edid_bytes);
+      GByteArray * edid_byte_array = NULL;
+      POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_PATH(cur->connector_path);
+      RPT_ATTR_EDID(d0, &edid_byte_array, dirname, fn, "edid");   // e.g. /sys/class/drm/card0-DP-1/edid
+      // DBGMSG("edid_byte_array=%p", (void*)edid_byte_array);
+      if (edid_byte_array) {
+        cur->edid_size = edid_byte_array->len;
+        cur->edid_bytes = g_byte_array_free(edid_byte_array, false);
+        // DBGMSG("Setting cur->edid_bytes = %p", (void*)cur->edid_bytes);
+      }
+
+      Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
+      get_connector_bus_numbers(dirname, fn, cbn);
+      cur->base_busno = cbn->base_busno;
+      cur->i2c_busno = cbn->i2c_busno;
+      cur->i2c_busno_from_driver = (cbn->i2c_busno >= 0);
+      cur->connector_id = cbn->connector_id;
+      free_connector_bus_numbers(cbn);
+      POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(fn);
+      RPT_ATTR_TEXT(d0, &cur->enabled, dirname, fn, "enabled");   // e.g. /sys/class/drm/card0-DP-1/enabled
+      RPT_ATTR_TEXT(d0, &cur->status,  dirname, fn, "status"); // e.g. /sys/class/drm/card0-DP-1/status
+
+      if (depth >= 0)
+         rpt_nl();
    }
 
-   Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
-   get_connector_bus_numbers(dirname, fn, cbn);
-   cur->base_busno = cbn->base_busno;
-   cur->i2c_busno = cbn->i2c_busno;
-   cur->i2c_busno_from_driver = (cbn->i2c_busno >= 0);
-   cur->connector_id = cbn->connector_id;
-   free_connector_bus_numbers(cbn);
-   POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(fn);
-   RPT_ATTR_TEXT(d0, &cur->enabled, dirname, fn, "enabled");   // e.g. /sys/class/drm/card0-DP-1/enabled
-   RPT_ATTR_TEXT(d0, &cur->status,  dirname, fn, "status"); // e.g. /sys/class/drm/card0-DP-1/status
-
-   if (depth >= 0)
-      rpt_nl();
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", (void*) cur);
    return cur;
 }
 
