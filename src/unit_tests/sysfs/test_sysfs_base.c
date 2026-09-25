@@ -14,14 +14,17 @@
  *  the same hooks applied to is_sysfs_reliable() and
  *  is_sysfs_reliable_for_busno(), including that force_sysfs_unreliable wins
  *  when both are set,
- *  and the driver/class/name lookup functions' handling of an I2C bus
- *  number that does not exist.
+ *  the driver/class/name lookup functions' handling of an I2C bus
+ *  number that does not exist, and sysfs_is_ignorable_i2c_device() rejecting
+ *  such a bus because it has neither a name nor a class.
  *
  *  Not exercised: functions that depend on the actual DRM connectors and
  *  drivers present on the test host (get_sys_drm_connector_name_by_*(),
  *  all_sys_drm_connectors_have_connector_id_direct(),
  *  is_sysfs_reliable_for_driver("nvidia"), is_sysfs_reliable() with neither
- *  force flag set, the possibly_write_detect_to_status_*() family), and
+ *  force flag set, sysfs_is_ignorable_i2c_device() on a class-less bus that
+ *  does have a name, which needs a platform i2c adapter,
+ *  the possibly_write_detect_to_status_*() family), and
  *  search_all_businfo_records_by_connector_name() (requires the global
  *  all_i2c_buses array).  known_reliable_driver() is static, so it is reached
  *  only through is_sysfs_reliable_for_driver() above.
@@ -250,7 +253,15 @@ static void test_nonexistent_busno_lookups(void) {
    uint32_t class = get_i2c_device_sysfs_class(NONEXISTENT_BUSNO);
    CK_INT(class, 0);
 
-   // busno doesn't exist: no name, class 0 -> ignorable
+   // sysfs_is_ignorable_i2c_device() rejects on class 0 only when there is also
+   // no name.  Class 0 alone means the adapter has no PCI ancestor, which is
+   // true of every platform i2c controller including ones that do serve a
+   // display, so it is not on its own grounds for rejection.  A nonexistent bus
+   // has neither name nor class, i.e. no evidence of any kind, and is rejected.
+   // The complementary case -- class 0 with a name, not ignorable -- needs a
+   // platform i2c adapter and so cannot be asserted on an arbitrary host.
+   CK(get_i2c_device_sysfs_name(NONEXISTENT_BUSNO) == NULL);
+   CK_INT(get_i2c_device_sysfs_class(NONEXISTENT_BUSNO), 0);
    CK(sysfs_is_ignorable_i2c_device(NONEXISTENT_BUSNO));
 
    // no driver found for a nonexistent bus -> not a known-reliable driver
