@@ -547,7 +547,7 @@ char * get_driver_for_adapter(char * adapter_path, int depth) {
  *
  *  @param  path   e.g. /sys/bus/i2c/devices/i2c-5
  *  @param  depth  logical indentation depth
- *  @return sysfs path to adapter
+ *  @return sysfs path to adapter, NULL if not found
  *
  *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
  *  If depth >= 0, sysfs attributes are reported.
@@ -562,19 +562,42 @@ char * sysfs_find_adapter(char * path) {
    int depth = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 2 : -1;
 
    char * devpath = NULL;
-   char * rp1 = strdup(path);
+   // Resolve before the walk rather than relying on the ".." steps within it to
+   // do so.  The /sys/devices test in the loop condition is evaluated before the
+   // first iteration, and callers pass paths under /sys/bus/i2c/devices (
+   // get_basic_i2c_info(), get_i2c_driver_info(), get_driver_for_busno()) or
+   // under /sys/class/drm, none of which would pass it.
+   char * rp1 = realpath(path, NULL);
    char * rp2 = NULL;
 
-   // strlen(rp1) > 1  should be unnecessary, but just in case:
-   // rp1 can become NULL if RPT_ATTR_REALPATH() below fails to resolve ".."
-   // (e.g. the starting path itself does not exist), in which case the walk
-   // up the directory chain has hit a dead end: stop rather than call
-   // strlen(NULL).
-   while(!devpath && rp1 && strlen(rp1) > 0 && !streq(rp1, "/")) {
+   // rp1 is NULL if realpath() above failed, e.g. the path does not exist, and
+   // the rp1 term in the loop condition then ends the walk before it starts.
+   // "" and "/" need no separate tests: neither has the /sys/devices prefix.
+
+   // The walk stays within /sys/devices.  A device class attribute lives on the
+   // device node or on one of its ancestors there, so nothing above /sys/devices
+   // can answer the question - and worse, a probe for "class" outside it finds
+   // /sys/class, the sysfs class DIRECTORY rather than an attribute.  That probe
+   // looks like a success: glibc fopen() on a directory succeeds, getline()
+   // returns -1, and file_get_first_line() returns its allocated empty buffer
+   // regardless, so RPT_ATTR_TEXT() reports true and /sys is taken to be the
+   // adapter.
+   //
+   // A device with no class attribute anywhere in its chain therefore yields a
+   // NULL adapter path, which callers already handle.  Platform i2c controllers
+   // are the usual case - the DisplayLink evdi adapter, the i2c controllers of
+   // ARM boards - and get_i2c_device_sysfs_class() reports 0 for them.  Whether
+   // that means the bus cannot serve a monitor is decided in
+   // sysfs_is_ignorable_i2c_device(), not here.
+
+   while(!devpath && rp1 && g_str_has_prefix(rp1, "/sys/devices"))
+   {
       if ( RPT_ATTR_TEXT(depth, NULL, rp1, "class")) {
           devpath = rp1;
       }
       else {
+         // A failed realpath() leaves rp2 NULL, so rp1 becomes NULL and the rp1
+         // term in the loop condition ends the walk.  No separate test needed.
          RPT_ATTR_REALPATH(depth, &rp2, rp1, "..");
          free(rp1);
          rp1 = rp2;
@@ -940,7 +963,33 @@ sysfs_is_ignorable_i2c_device(int busno) {
          uint32_t class = get_i2c_device_sysfs_class(busno);
          DBGF(debug, "get_i2c_device_sysfs_class(%d) returned 0x%08x ", busno, class);
          if (class == 0) {
-            if (!sysfs_is_soc_system())
+            /* No class attribute was found anywhere above this i2c device.
+             *
+             * The attribute is a PCI class code, so class == 0 means only that
+             * the adapter has no PCI ancestor.  That is true of every platform
+             * i2c controller, video or not -- DisplayLink/evdi, and the i2c
+             * controllers of ARM boards.  It was never evidence that the bus
+             * cannot serve a monitor, and rejecting on it lost real display
+             * buses: see pull request #619, "Do not ignore sysfs class being
+             * zero".  The SoC exemption that addressed #619 tested for a
+             * /sys/devices/platform/soc* node, which many ARM platforms do not
+             * have (their controllers appear as e.g. ff3c0000.i2c), so those
+             * systems kept losing buses.  Hence no rejection on class alone.
+             *
+             * With no name either, there is no evidence of any kind: a real
+             * adapter always has a name attribute, so this is a bus that does
+             * not exist or cannot be read.  Nothing to gain by probing it.
+             *
+             * What this leaves: for a class-less bus the name test above is the
+             * only filter.  It already covers every hang documented to date --
+             * smu, mac-io and u4 (Mac G5, platform devices, hence class-less
+             * and previously caught here as well), AMDGPU SMU, SMBus, Synopsys
+             * DesignWare.  Note also that the adapter class rejection in
+             * i2c_check_bus() is guarded on the class being non-NULL, so it
+             * does not apply to these buses either.  A bus that hangs when
+             * probed must therefore be added to ignorable_prefixes above.
+             */
+            if (!name)
                ignorable = true;
          }
          else {
