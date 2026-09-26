@@ -476,7 +476,8 @@ static const char* known_reliable_drivers[] = {
  *  disconnected.
  *
  *  @param  driver_name  driver name, e.g. i915
- *  @return true if the driver is reliable, false if not
+ *  @retval true  the driver is reliable
+ *  @retval false the driver is unreliable, or driver_name is null
  *
  *  @remark
  *  True for the drivers sharing the kernel's DRM implementation, and for any
@@ -498,10 +499,11 @@ bool is_sysfs_reliable_for_driver(const char * driver_name) {
       result = false;
    else if (force_sysfs_reliable)
       result = true;
-   else
+   else if (driver_name)
       result = (exactly_matches_any(driver_name, known_reliable_drivers) >= 0);
 
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "driver_name=%s, returning %s", driver_name, sbool(result));
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "driver_name=%s, returning %s",
+                                         driver_name, sbool(result));
    return result;
 }
 
@@ -522,7 +524,8 @@ bool is_sysfs_reliable_for_connector(const char * connector_name) {
    result = is_sysfs_reliable_for_driver(driver);
    free(driver);   // safe if NULL
 
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "connector_name=%s, returning %s", connector_name, sbool(result));
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "connector_name=%s, returning %s",
+                                         connector_name, sbool(result));
    return result;
 }
 
