@@ -234,6 +234,9 @@ void get_connector_bus_numbers(
 // Debug Report
 //
 
+#ifdef UNUSED
+// The sysfs basic connector report.  dbgrpt_sysfs_basic_connector_attributes() is
+// referenced only by a commented out line in ddc_common_init.c.
 static
 void simple_report_one_connector0(
       const char * dirname,     // <device>/drm/cardN
@@ -322,11 +325,16 @@ void dbgrpt_sysfs_basic_connector_attributes(int depth) {
                 depth);
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
+#endif
 
 
 //
 // Checks whether connector_id exists
 //
+
+#ifdef UNUSED
+// all_sys_drm_connectors_have_connector_id_direct() and its called functions.
+// called only from #ifdefed out section of ddc_common_init.3
 
 typedef struct {
    bool   all_connectors_have_connector_id;
@@ -394,6 +402,7 @@ bool all_sys_drm_connectors_have_connector_id_direct() {
    DBGTRC_RET_BOOL(debug, DDCA_TRC_I2C, accum.all_connectors_have_connector_id, "");
    return accum.all_connectors_have_connector_id;
 }
+#endif
 
 
 //
@@ -402,16 +411,12 @@ bool all_sys_drm_connectors_have_connector_id_direct() {
 // Get DRM connector name given an I2C bus number or connector id.
 //
 
+#ifdef UNUSED
 typedef struct {
    int    connector_id;
    // char * connector_id_s;
    char * connector_name;
 } Check_Connector_Id_Accumulator;
-
-typedef struct {
-   int    busno;
-   char * connector_name;
-} Check_Busno_Accumulator;
 
 
 static
@@ -452,6 +457,44 @@ bool check_connector_id(
 }
 
 
+/** Given a DRM connector id, return the sysfs connector name
+ *
+ *  @param  connector_id
+ *  @return connector name, e.g. card1-DP-1, caller must free
+ */
+char * get_sys_drm_connector_name_by_connector_id(int connector_id) {
+   bool debug = false;
+   int depth = 0;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "connector_id=%d", connector_id);
+
+   char connector_id_s[20];
+   snprintf(connector_id_s, 20, "%d", connector_id);
+
+   Check_Connector_Id_Accumulator accum;
+   accum.connector_id = connector_id;
+   // accum.connector_id_s = connector_id_s;
+   accum.connector_name = NULL;
+
+   dir_foreach_terminatable(
+         "/sys/class/drm",
+         predicate_cardN_connector,       // filter function
+         check_connector_id,
+         &accum,
+         depth);
+
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %s", accum.connector_name);
+   return accum.connector_name;
+}
+#endif
+
+
+#ifdef UNUSED
+typedef struct {
+   int    busno;
+   char * connector_name;
+} Check_Busno_Accumulator;
+
+
 static
 bool check_busno(
       const char *  dirname,
@@ -489,36 +532,6 @@ bool check_busno(
 }
 
 
-/** Given a DRM connector id, return the sysfs connector name
- *
- *  @param  connector_id
- *  @return connector name, e.g. card1-DP-1, caller must free
- */
-char * get_sys_drm_connector_name_by_connector_id(int connector_id) {
-   bool debug = false;
-   int depth = 0;
-   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "connector_id=%d", connector_id);
-
-   char connector_id_s[20];
-   snprintf(connector_id_s, 20, "%d", connector_id);
-
-   Check_Connector_Id_Accumulator accum;
-   accum.connector_id = connector_id;
-   // accum.connector_id_s = connector_id_s;
-   accum.connector_name = NULL;
-
-   dir_foreach_terminatable(
-         "/sys/class/drm",
-         predicate_cardN_connector,       // filter function
-         check_connector_id,
-         &accum,
-         depth);
-
-   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %s", accum.connector_name);
-   return accum.connector_name;
-}
-
-
 /** Given a I2C bus number, return the name of the connector for that
  *  bus number.
  *
@@ -544,6 +557,7 @@ char * get_sys_drm_connector_name_by_busno(int busno) {
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %s", accum.connector_name);
    return accum.connector_name;
 }
+#endif
 
 
 // The following functions are not really generic sysfs utilities, and more
@@ -646,7 +660,7 @@ char * sysfs_find_adapter(char * path) {
  *
  *  @param  path   e.g. /sys/bus/i2c/drivers/i2c-5
  *  @param  depth  logical indentation depth
- *  @return sysfs path to adapter
+ *  @return driver name, NULL if not found
  *
  *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
  *  If depth >= 0, sysfs attributes are reported.
@@ -776,11 +790,8 @@ get_i2c_sysfs_driver_by_busno(int busno) {
    DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning %s", busno, driver_name);
    return driver_name;
 }
-#endif
 
 
-
-#ifdef UNUSED
 /** Gets the name of the driver for a /dev/i2c-N device,
  *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
  *
@@ -906,6 +917,8 @@ get_i2c_device_sysfs_class(int busno) {
 }
 
 
+// Was called only by sysfs_is_ignorable_i2c_device(), from the class == 0 test that
+// no longer exempts SoC systems.
 /** Checks if this is a System On A Chip (SOC) system.
  *
  * @return true/false
@@ -1133,15 +1146,10 @@ void possibly_write_detect_to_status_by_dref(Display_Ref * dref) {
 }
 
 
-
-
 void init_sysfs_simple() {
-   RTTI_ADD_FUNC(dbgrpt_sysfs_basic_connector_attributes);
    RTTI_ADD_FUNC(find_adapter_and_get_driver);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
-//   RTTI_ADD_FUNC(get_i2c_sysfs_driver_by_busno);
-   RTTI_ADD_FUNC(get_sys_drm_connector_name_by_connector_id);
    RTTI_ADD_FUNC(ignorable_i2c_device_sysfs_name);
    RTTI_ADD_FUNC(possibly_write_detect_to_status);
    RTTI_ADD_FUNC(sysfs_find_adapter);
