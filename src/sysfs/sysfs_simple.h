@@ -46,6 +46,12 @@ uint32_t    get_i2c_device_sysfs_class(int busno);
 bool        sysfs_is_soc_system();
 bool        sysfs_is_ignorable_i2c_device(int busno);
 
+#ifdef UNUSED
+void        dbgrpt_sysfs_basic_connector_attributes(int depth);
+char *      get_sys_drm_connector_name_by_connector_id(int connector_id);
+char *      get_sys_drm_connector_name_by_busno(int busno);
+bool        all_sys_drm_connectors_have_connector_id_direct();
+#endif
 
 // Must be executed by root.  For future use in case libddcutil is incorporated
 // into a system service.
