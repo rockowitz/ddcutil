@@ -37,6 +37,11 @@
 
 #include "ddc/ddc_phantom_displays.h"
 
+// Supply adapter names without consulting sysfs. All refs below use fake buses.
+char * __wrap_get_i2c_device_sysfs_name(int busno) {
+   return strdup(busno == 9051 ? "DPMST" : "Test legacy I2C adapter");
+}
+
 static int total = 0;
 static int failed = 0;
 
@@ -161,6 +166,45 @@ static void test_filter_phantom_displays_with_invalid(void) {
 }
 
 
+static void test_filter_valid_mst_duplicate(void) {
+   GPtrArray * displays = g_ptr_array_new();
+   Display_Ref * legacy = make_dref(9050, 1, make_edid("DEL", "Root", 42, 0x42));
+   Display_Ref * mst = make_dref(9051, 2, make_edid("DEL", "Root", 42, 0x42));
+   Display_Ref * other = make_dref(9052, 3, make_edid("DEL", "Other", 43, 0x43));
+   g_ptr_array_add(displays, legacy);
+   g_ptr_array_add(displays, mst);
+   g_ptr_array_add(displays, other);
+
+   // With no invalid displays, detecting this valid duplicate must still
+   // return true so the caller renumbers the remaining displays from 1.
+   CK(filter_phantom_displays(displays));
+   CK_INT(legacy->dispno, DISPNO_PHANTOM);
+   CK(legacy->actual_display == mst);
+   CK_INT(mst->dispno, 2);
+   CK_INT(other->dispno, 3);
+   g_ptr_array_free(displays, true);
+}
+
+
+static void test_filter_ambiguous_legacy_edids(void) {
+   GPtrArray * displays = g_ptr_array_new();
+   Display_Ref * first = make_dref(9050, 1, make_edid("DEL", "Root", 42, 0x42));
+   Display_Ref * mst = make_dref(9051, 2, make_edid("DEL", "Root", 42, 0x42));
+   Display_Ref * second = make_dref(9052, 3, make_edid("DEL", "Root", 42, 0x42));
+   g_ptr_array_add(displays, first);
+   g_ptr_array_add(displays, mst);
+   g_ptr_array_add(displays, second);
+
+   // Preserve the existing ambiguity guard when distinct legacy displays
+   // have identical EDIDs; no path can safely be identified as redundant.
+   CK(!filter_phantom_displays(displays));
+   CK_INT(first->dispno, 1);
+   CK_INT(mst->dispno, 2);
+   CK_INT(second->dispno, 3);
+   g_ptr_array_free(displays, true);
+}
+
+
 int main(int argc, char ** argv) {
    setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
 
@@ -169,6 +213,8 @@ int main(int argc, char ** argv) {
    test_filter_phantom_displays_too_few();
    test_filter_phantom_displays_no_invalid();
    test_filter_phantom_displays_with_invalid();
+   test_filter_valid_mst_duplicate();
+   test_filter_ambiguous_legacy_edids();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);
