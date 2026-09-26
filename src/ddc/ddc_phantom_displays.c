@@ -240,6 +240,7 @@ filter_phantom_displays(GPtrArray * all_displays) {
                      if (memcmp(pedid1->bytes, pedid2->bytes, 128) == 0) {
                         valid_non_mst_display_ref->dispno = DISPNO_PHANTOM;
                         valid_non_mst_display_ref->actual_display = valid_mst_display_ref;
+                        phantom_displays_found = true;
                      }
                   }
                }
@@ -249,7 +250,7 @@ filter_phantom_displays(GPtrArray * all_displays) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%d valid mst_displays, %d valid_non_mst_displays",
                                     valid_mst_displays->len, valid_non_mst_displays->len);
 
-      phantom_displays_found = invalid_displays->len > 0;
+      phantom_displays_found |= invalid_displays->len > 0;
       // n. frees the underlying array, but not the Display_Refs pointed to by
       // array members, since no GDestroyNotify() function defined
       g_ptr_array_free(valid_mst_displays, true);
