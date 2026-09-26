@@ -195,14 +195,16 @@ bool str_all_printable(const char * s) {
 /** Compares a string to a null-terminated array of strings, using a specified
  *  comparison function.
  *
- *  @param s          string to test
- *  @param match_list null terminated array of strings to test against
+ *  @param s          string to test, must not be null
+ *  @param match_list null terminated array of strings to test against, must not be null
  *  @param comp_func  comparison function
  *
  *  @retval >= 0 index of first entry in list for which the comparison function succeeds
  *  @retval -1   no match
  */
 int matches_by_func(const char * s, const char ** match_list, String_Comp_Func comp_func) {
+   assert(s);
+   assert(match_list);
    int result = -1;
    int ndx = 0;
    for (ndx=0; match_list[ndx] != NULL; ndx++) {
@@ -226,6 +228,9 @@ int matches_by_func(const char * s, const char ** match_list, String_Comp_Func c
  *
  *  @remark
  *  Returns -1 if empty match list
+ *
+ *  @remark
+ *  Both s and match_list must be non-null
  */
 int exactly_matches_any(const char * s, const char ** match_list) {
    return matches_by_func(s, match_list, streq);
@@ -245,6 +250,9 @@ int exactly_matches_any(const char * s, const char ** match_list) {
  *
  *  @remark
  *  Returns -1 if empty match list
+ *
+ *  @remark
+ *  Both s and match_list must be non-null
  */
 int exactly_matches_anyv(const char * s, ...) {
    int result = -1;
@@ -291,6 +299,9 @@ int exactly_matches_any_case(const char * s, const char ** match_list) {
  *
  *  @retval >= 0 index of matching prefix
  *  @retval -1   not found
+ *
+ *  @remark
+ *  Both s and match_list must be non-null
  */
 int starts_with_any(const char * s, const char ** match_list) {
    return matches_by_func(s, match_list, str_starts_with);
