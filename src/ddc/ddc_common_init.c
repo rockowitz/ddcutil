@@ -765,8 +765,6 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->flags & CMD_FLAG_DISCARD_CACHES) {
       i2c_discard_caches(parsed_cmd->discarded_cache_types);
    }
-   // if (parsed_cmd->flags & CMD_FLAG2_F16)
-   //    dbgrpt_sysfs_basic_connector_attributes(1);
 
    i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
 

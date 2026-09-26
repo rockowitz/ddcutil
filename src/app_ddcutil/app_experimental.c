@@ -65,7 +65,6 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 #else
    REPORT_FLAG_OPTION(15, "Unused");
 #endif
-   // REPORT_FLAG_OPTION(16, "Simple report /sys/class/drm");
    REPORT_FLAG_OPTION(16, "Tag output messages");
    REPORT_FLAG_OPTION(17, "Force open failure");
    REPORT_FLAG_OPTION(18, "Always report UDEV events");
