@@ -513,13 +513,14 @@ bool is_sysfs_reliable_for_driver(const char * driver_name) {
  *  @return true if the connector's driver is reliable, false if not
  */
 bool is_sysfs_reliable_for_connector(const char * connector_name) {
-   bool debug = true;
+   bool debug = false;
    bool result = false;
 
    char buf[PATH_MAX];
-   g_snprintf(buf, PATH_MAX, "/sys/ckass.drm/%s", connector_name);
+   g_snprintf(buf, PATH_MAX, "/sys/class/drm/%s", connector_name);
    char * driver = find_adapter_and_get_driver(buf, -1);
    result = is_sysfs_reliable_for_driver(driver);
+   free(driver);   // safe if NULL
 
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "connector_name=%s, returning %s", connector_name, sbool(result));
    return result;
