@@ -48,15 +48,9 @@ bool        is_sysfs_reliable_for_driver(const char * driver);
 bool        is_sysfs_reliable_for_busno(int busno);
 bool        is_sysfs_reliable();
 
-
 // predicate functions
 // typedef Dir_Filter_Func
 bool        is_n_nnnn(const char * dirname, const char * simple_fn);
-
-void        dbgrpt_sysfs_basic_connector_attributes(int depth);
-char *      get_sys_drm_connector_name_by_connector_id(int connector_id);
-char *      get_sys_drm_connector_name_by_busno(int busno);
-bool        all_sys_drm_connectors_have_connector_id_direct();
 
 char *      get_i2c_sysfs_driver_by_device_name(char * device_name);
 
