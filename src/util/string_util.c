@@ -242,7 +242,7 @@ int exactly_matches_any(const char * s, const char ** match_list) {
  *  The match is case-sensitive.  The variable argument list must be
  *  terminated by a NULL.
  *
- *  @param  s  string to test for
+ *  @param  s  string to test for, must be non-null
  *  @param  ...  candidate strings to compare against, NULL terminated
  *
  *  @retval >= 0  index of matching argument (0 based)
@@ -250,9 +250,6 @@ int exactly_matches_any(const char * s, const char ** match_list) {
  *
  *  @remark
  *  Returns -1 if empty match list
- *
- *  @remark
- *  Both s and match_list must be non-null
  */
 int exactly_matches_anyv(const char * s, ...) {
    int result = -1;
