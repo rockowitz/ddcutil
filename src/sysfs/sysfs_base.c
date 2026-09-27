@@ -556,6 +556,21 @@ static bool drm_reliability_checked = false;
 static bool other_drivers_seen = false;
 static bool nvidia_connectors_exist = false;
 static bool known_good_drivers_seen = false;
+static bool unresolvable_connector_name_seen = false;
+
+
+void set_unresolvable_connector_name_encountered() {
+   unresolvable_connector_name_seen = true;
+}
+
+void reset_drm_reliability_checks() {
+   drm_reliability_checked = false;
+   other_drivers_seen = false;
+   nvidia_connectors_exist = false;
+   known_good_drivers_seen = false;
+   unresolvable_connector_name_seen = false;
+}
+
 
 /* ISSUE_641 - tolerating a /sys/class/drm entry that does not resolve
  *
@@ -569,10 +584,6 @@ static bool known_good_drivers_seen = false;
  * cardwire, a hybrid graphics switcher, running in its Secure Boot fallback
  * mode, where the dGPU's PCI device is denied rather than cleanly removed.
  * supergfxctl and similar tools can produce the same state.
- *
- * The reported crash is already fixed.  sysfs_find_adapter() called strlen() on
- * the NULL that a failed realpath() leaves behind; commit ebfacc401, released
- * in 3.0.0, ended the walk instead.  The issue was filed against 2.2.1.
  *
  * What is not fixed is that the leaf functions of the /sys/class/drm walks still
  * take such an entry for a connector.  The filter functions those walks are
