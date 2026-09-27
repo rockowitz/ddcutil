@@ -38,8 +38,13 @@ void        get_connector_bus_numbers(
 char *      find_adapter_and_get_driver(char * path, int depth);
 char *      get_driver_for_adapter(char * adapter_path, int depth);
 // char *   find_adapter(char * path, int depth); // MOVED
+#ifdef ISSUE_641
+char *      sysfs_find_adapter(char * path, bool * resolvable);
+#else
 char *      sysfs_find_adapter(char * path);
+#endif
 char *      get_driver_for_busno(int busno);
+
 // char *   get_i2c_sysfs_driver_by_busno(int busno);  //duplicative
 char *      get_i2c_device_sysfs_name(int busno);
 uint32_t    get_i2c_device_sysfs_class(int busno);

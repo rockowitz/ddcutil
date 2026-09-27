@@ -589,16 +589,19 @@ char * get_driver_for_adapter(char * adapter_path, int depth) {
  *  until an adapter node is found.
  *
  *  @param  path   e.g. /sys/bus/i2c/devices/i2c-5
+ *  @param  resolvable pointer to boolean set false  if unresolvable
  *  @param  depth  logical indentation depth
  *  @return sysfs path to adapter, NULL if not found
  *
- *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
- *  If depth >= 0, sysfs attributes are reported.
- *  If depth <  0, there is no output
+ *  if resolution succeeds, &resolvable is unchanged
  *
  *  Caller is responsible for freeing the returned value
  */
-char * sysfs_find_adapter(char * path) {
+#ifdef ISSUE_641
+char * sysfs_find_adapter(char * path, bool* resolvable ) {
+#else
+   char * sysfs_find_adapter(char * path) {
+#endif  
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
    assert(path);
@@ -611,6 +614,12 @@ char * sysfs_find_adapter(char * path) {
    // get_basic_i2c_info(), get_i2c_driver_info(), get_driver_for_busno()) or
    // under /sys/class/drm, none of which would pass it.
    char * rp1 = realpath(path, NULL);
+#ifdef ISSUE_641
+   if (!*rp1) {
+      *resolvable = false;
+      goto bye;
+   }
+#endif
    char * rp2 = NULL;
 
    // rp1 is NULL if realpath() above failed, e.g. the path does not exist, and
@@ -630,8 +639,7 @@ char * sysfs_find_adapter(char * path) {
    // NULL adapter path, which callers already handle.  Platform i2c controllers
    // are the usual case - the DisplayLink evdi adapter, the i2c controllers of
    // ARM boards - and get_i2c_device_sysfs_class() reports 0 for them.  Whether
-   // that means the bus cannot serve a monitor is decided in
-   // sysfs_is_ignorable_i2c_device(), not here.
+   // that means the bus cannot serve a monitor is decided later.
 
    while(!devpath && rp1 && g_str_has_prefix(rp1, "/sys/devices"))
    {
@@ -641,7 +649,16 @@ char * sysfs_find_adapter(char * path) {
       else {
          // A failed realpath() leaves rp2 NULL, so rp1 becomes NULL and the rp1
          // term in the loop condition ends the walk.  No separate test needed.
+#ifdef ISSUE_641
+         if (!RPT_ATTR_REALPATH(depth, &rp2, rp1, "..")) {
+            *resolvable = false;
+            devpath = NULL;
+            free(rp1);
+            goto bye;
+         }
+#else
          RPT_ATTR_REALPATH(depth, &rp2, rp1, "..");
+#endif
          free(rp1);
          rp1 = rp2;
          rp2 = NULL;
@@ -650,6 +667,9 @@ char * sysfs_find_adapter(char * path) {
    if (!devpath)
       free(rp1);
 
+#ifdef ISSUE_641
+bye:
+#endif
    DBGTRC_DONE(debug,TRACE_GROUP, "Returning: %s", devpath);
    return devpath;
 }
@@ -745,7 +765,6 @@ char * get_driver_for_busno(int busno) {
    char * result = find_adapter_and_get_driver(path, -1);
    return result;
 }
-
 
 
 #ifdef DUPLICATIVE
@@ -890,7 +909,11 @@ get_i2c_device_sysfs_class(int busno) {
       char * rpath = realpath(device_path[pathno], NULL);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "device_path=%s, rpath=%s", device_path[pathno], rpath);
       if (rpath) {
+#ifdef ISSUE_641
+         char * adapter_path = sysfs_find_adapter(rpath, loc_resolvable);
+#else
          char * adapter_path = sysfs_find_adapter(rpath);
+#endif
          // DBGF(debug, "adapter_path=%s", adapter_path);
          if (adapter_path)  {
             char * s_class = read_sysfs_attr(adapter_path, "class", /*verbose*/ true);
