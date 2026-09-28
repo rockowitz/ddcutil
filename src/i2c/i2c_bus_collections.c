@@ -696,11 +696,33 @@ void extended_bus_detection() {
 
 int i2c_detect_buses() {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "all_i2c_buses = %p", all_i2c_buses);
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "all_i2c_buses = %p, len = %d",
+         all_i2c_buses, (all_i2c_buses) ? (int) all_i2c_buses->len : -1);
+   assert(all_i2c_buses);    // created by init_i2c_bus_base()
 
-   if (!all_i2c_buses) {
-      all_i2c_buses = i2c_detect_buses0();
-      // g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
+   /* init_i2c_bus_base() creates all_i2c_buses and i2c_discard_buses() empties
+    * it rather than destroying it, so the array exists for the life of the
+    * process and "not yet detected" means empty, not absent.  This tested for
+    * absence, as it did when the array was created on first use, so once
+    * creation moved to module initialization the test never succeeded and
+    * detection never ran.
+    */
+   if (all_i2c_buses->len == 0) {
+      /* Transfer the records into the array the rest of the program already
+       * holds a pointer to, rather than replacing it.  The asserts in
+       * i2c_bus_base.c, and the NULL checks removed from it, rely on there
+       * being exactly one array for the life of the process.
+       */
+      GPtrArray * detected = i2c_detect_buses0();
+      g_mutex_lock(&all_i2c_buses_mutex);   // taken after the scan: the scan
+                                           // calls functions that take it
+      for (guint ndx = 0; ndx < detected->len; ndx++)
+         g_ptr_array_add(all_i2c_buses, g_ptr_array_index(detected, ndx));
+      g_mutex_unlock(&all_i2c_buses_mutex);
+      // i2c_detect_buses0() sets no free function on the array it returns, so
+      // this releases the array and its pointer block, not the records just
+      // transferred out of it.
+      g_ptr_array_free(detected, true);
 
       // The bus view is complete, so this is the first point at which a
       // connector left without an i2c_busno by the driver can be resolved

@@ -27,7 +27,10 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 GPtrArray * all_i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
-GPtrArray * removed_i2c_buses = NULL;
+GPtrArray * removed_i2c_buses = NULL;  ///  array of #I2C_Bus_Info for buses that
+                                       ///  have gone away.  Never emptied while
+                                       ///  the program runs - see the note in
+                                       ///  i2c_discard_buses().
 GMutex all_i2c_buses_mutex;
 
 
@@ -175,13 +178,11 @@ I2C_Bus_Info * i2c_find_businfo_by_drm_connector_id(int drm_connector_id) {
 
    I2C_Bus_Info * result = NULL;
    g_mutex_lock(&all_i2c_buses_mutex);
-   if (all_i2c_buses) {
-      for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
-         I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
-         if (businfo->drm_connector_id == drm_connector_id) {
-            result = businfo;
-            break;
-         }
+   for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
+      I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
+      if (businfo->drm_connector_id == drm_connector_id) {
+         result = businfo;
+         break;
       }
    }
    g_mutex_unlock(&all_i2c_buses_mutex);
@@ -203,8 +204,6 @@ bool i2c_add_businfo(I2C_Bus_Info * businfo){
    assert(businfo->busno != 255 && businfo->busno != -1);
 
    g_mutex_lock(&all_i2c_buses_mutex);
-   if (!all_i2c_buses)
-      all_i2c_buses = g_ptr_array_new();
 
    bool ok = true;
    guint existing_index;
@@ -239,15 +238,6 @@ I2C_Bus_Info * i2c_add_bus_new_by_busno(int busno) {
 
 // Caller must hold all_i2c_buses_mutex.
 static bool i2c_remove_businfo_locked(I2C_Bus_Info * businfo) {
-   if (!all_i2c_buses)
-      all_i2c_buses = g_ptr_array_new();
-   // Matches the creation in i2c_remove_bus_by_businfo().  removed_i2c_buses
-   // owns the records moved into it; all_i2c_buses deliberately does not own
-   // its records, which is what makes the move below safe -- see the comment
-   // there.
-   if (!removed_i2c_buses)
-      removed_i2c_buses = g_ptr_array_new_with_free_func((GDestroyNotify) i2c_free_bus_info);
-
    bool found = false;
    int all_index     = i2c_find_bus_info_index_in_gptrarray_by_businfo(all_i2c_buses, businfo);
    int removed_index = i2c_find_bus_info_index_in_gptrarray_by_businfo(removed_i2c_buses, businfo);
@@ -270,10 +260,11 @@ static bool i2c_remove_businfo_locked(I2C_Bus_Info * businfo) {
       found = true;
       businfo->removed = true;
 
-      // The order does not matter, but the ownership does: all_i2c_buses is
-      // created without a free function, so removing the index does not free
-      // the record that removed_i2c_buses now owns.  Giving all_i2c_buses a
-      // free function would make this a use after free.
+      // The order does not matter, but the ownership does: all_i2c_buses has no
+      // free function while the program runs, so removing the index does not
+      // free the record that removed_i2c_buses now owns.  Giving it one here
+      // would make this a use after free.  terminate_i2c_bus_base() sets one,
+      // but only once no further removal can occur.
       g_ptr_array_add(removed_i2c_buses, businfo);
       g_ptr_array_remove_index(all_i2c_buses, all_index);
    }
@@ -475,8 +466,6 @@ void i2c_remove_bus_by_businfo(I2C_Bus_Info * businfo) {
    if (perform_remove) {
       int busndx = i2c_find_bus_info_index_by_businfo(businfo);
       businfo->removed = true;
-      if (!removed_i2c_buses)
-         removed_i2c_buses = g_ptr_array_new_with_free_func((GDestroyNotify) i2c_free_bus_info);
       g_ptr_array_add(removed_i2c_buses, businfo);
       g_ptr_array_remove_index(all_i2c_buses, busndx);
    }
@@ -572,29 +561,33 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
 // Reset arrays
 //
 
-void i2c_discard_buses0(GPtrArray* buses) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "buses=%p", buses);
-
-   if (buses) {
-      g_ptr_array_set_free_func(buses, (GDestroyNotify) i2c_free_bus_info);
-      g_ptr_array_free(buses, true);
-   }
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-
-
 /** Discard all known buses */
 void i2c_discard_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
+   /* Only all_i2c_buses is emptied.  Leaving removed_i2c_buses as it is is
+    * intentional for now: a Display_Ref points at its I2C_Bus_Info through
+    * dref->detail (see ddc_detect_all_displays() in ddc_displays.c), so a record
+    * moved to removed_i2c_buses when its bus went away can still be referenced,
+    * and freeing it would leave that pointer dangling.  The records therefore
+    * accumulate for the life of the process and are released only by
+    * terminate_i2c_bus_base().
+    *
+    * TO REVISIT once it is settled who may still hold a pointer to a removed
+    * record.  If nothing can by the time a discard runs, this should empty
+    * removed_i2c_buses as well, which needs no more than
+    * g_ptr_array_set_size(removed_i2c_buses, 0) since that array owns its
+    * contents.
+    */
+
    g_mutex_lock(&all_i2c_buses_mutex);
-   if (all_i2c_buses) {
-      i2c_discard_buses0(all_i2c_buses);
-      all_i2c_buses= NULL;
+
+   for (int ndx = all_i2c_buses->len - 1; ndx>=0; ndx--) {
+      I2C_Bus_Info * removed = g_ptr_array_remove_index(all_i2c_buses, ndx);
+      i2c_free_bus_info(removed);
    }
+
    g_mutex_unlock(&all_i2c_buses_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -685,17 +678,21 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_remove_businfo);
    RTTI_ADD_FUNC(i2c_remove_businfo_by_busno);
    RTTI_ADD_FUNC(i2c_reset_bus_info);
-   RTTI_ADD_FUNC(i2c_discard_buses0);
    RTTI_ADD_FUNC(i2c_discard_buses);
    RTTI_ADD_FUNC(i2c_dbgrpt_buses);
+
+   all_i2c_buses     = g_ptr_array_new();   ///  array of  #I2C_Bus_Info
+   removed_i2c_buses = g_ptr_array_new_with_free_func((GDestroyNotify) i2c_free_bus_info);
 }
 
 
 /** Module termination **/
 void terminate_i2c_bus_base() {
-   if (all_i2c_buses) {
-      // i2c_free_bus_info() already set as free function
-      g_ptr_array_free(all_i2c_buses, true);
-      free (all_i2c_buses);
-   }
+   // g_ptr_array_free(array, true) releases the records, the pointer block and
+   // the GPtrArray itself, so there is nothing left to free() afterwards.
+   // all_i2c_buses needs the free function set here because it does not carry
+   // one while the program runs - see i2c_remove_businfo_locked().
+   g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
+   g_ptr_array_free(all_i2c_buses, true);
+   g_ptr_array_free(removed_i2c_buses, true);
 }
