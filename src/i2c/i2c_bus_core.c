@@ -57,11 +57,11 @@
 #endif
 
 #include "i2c/i2c_bus_sysfs.h"
+#include "i2c/i2c_bus_open_close.h"
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_bus_open_close.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
@@ -1618,6 +1618,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_check_edid_exists_by_dh);
    RTTI_ADD_FUNC(i2c_detect_x37_new);
    RTTI_ADD_FUNC(i2c_detect_x37);
+   RTTI_ADD_FUNC(i2c_detect_x37_new);
    RTTI_ADD_FUNC(i2c_check_open_bus_alive);
    RTTI_ADD_FUNC(i2c_edid_exists);
    RTTI_ADD_FUNC(set_connector_for_businfo_using_user_bus_connector_table);
