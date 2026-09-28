@@ -18,6 +18,8 @@
 // changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
 extern bool i2c_forceable_slave_addr_flag;
 
+extern _Thread_local bool i2c_use_x30;
+
 Status_Errno i2c_set_addr(int fd, int addr);
 
 void set_i2c_fileio_use_timeout(bool yesno);
@@ -56,6 +58,9 @@ Status_Errno_DDC i2c_ioctl_writer(
       Byte   slave_address,
       int    bytect,
       Byte * pbytes);
+
+Status_Errno_DDC i2c_ioctl_write_x30(
+      int fd);
 
 Status_Errno_DDC i2c_ioctl_reader(
       int    fd,

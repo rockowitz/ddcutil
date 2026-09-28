@@ -56,6 +56,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
  *  after EBUSY error by changing ioctl op I2C_SLAVE to I2C_SLAVE_FORCE.
  */
 bool i2c_forceable_slave_addr_flag = false;
+_Thread_local bool i2c_use_x30 = false;
 
 
 Status_Errno
@@ -501,6 +502,20 @@ i2c_ioctl_writer(
    }
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "fh=%d, filename=%s", fd, filename_for_fd_t(fd));
+   return rc;
+}
+
+
+Status_Errno_DDC
+i2c_ioctl_write_x30(int fd) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s,", fd, filename_for_fd_t(fd));
+
+   Byte byte_to_write = 0x00;
+
+   Status_Errno rc = i2c_ioctl_writer(fd,0x30,1, &byte_to_write);
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
