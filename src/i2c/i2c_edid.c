@@ -82,6 +82,9 @@ i2c_get_edid_bytes_directly_using_ioctl(
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
    int rc = 0;
 
+   if (i2c_use_x30)
+       i2c_ioctl_write_x30(fd);
+
    if (write_before_read) {
       Byte byte_to_write = 0x00;
 
@@ -434,6 +437,9 @@ i2c_get_edid_bytes_using_i2c_layer(
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
+
+   if (i2c_use_x30)
+      i2c_ioctl_write_x30(fd);
 
    int rc = 0;
    bool write_before_read = EDID_Write_Before_Read;
