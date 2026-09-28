@@ -437,6 +437,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 
    if (parsed_cmd->flags2 & CMD_FLAG2_F5)
       EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F37)
+      EDID_Write_Before_Read = !EDID_Write_Before_Read;
 #ifdef WATDH_DISPLAYS
    if (parsed_cmd->flags2 & CMD_FLAG2_F6)
       use_drm_connector_states = true;

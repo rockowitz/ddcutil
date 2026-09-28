@@ -43,6 +43,9 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    char buf5[80];
    g_snprintf(buf5, 80, "Use non-default value for EDID read uses I2C layer (default=%s)",
                         SBOOL(DEFAULT_EDID_READ_USES_I2C_LAYER));
+   char buf37[80];
+   g_snprintf(buf37, 80, "Use non-default value for EDID write before read (default=%s)",
+                        SBOOL(DEFAULT_EDID_WRITE_BEFORE_READ));
 
    rpt_label(depth, "Experimental Options:");
    REPORT_FLAG_OPTION(1,  "Suppress SE_POST_READ");
@@ -86,7 +89,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(34, "Unused");
    REPORT_FLAG_OPTION(35, "Disable skipping device open when DRM connector reports disconnected (edid_exists_checks_drm_status)");
    REPORT_FLAG_OPTION(36, "Do not disable display change scan while EACCES is seen (rescan_on_eacces)");
-   REPORT_FLAG_OPTION(37, "Unused");
+   REPORT_FLAG_OPTION(37, buf37);
    REPORT_FLAG_OPTION(38, "Open device even when no DRM connector names the bus (edid_exists_skips_unmapped_bus)");
    REPORT_FLAG_OPTION(39, "Run both DRM connector lookups, log any disagreement");
    REPORT_FLAG_OPTION(40, "Unused");
