@@ -41,7 +41,7 @@ I2C_Bus_Info *   i2c_get_bus_info(int busno, bool* new_info);
 void             i2c_reset_bus_info(I2C_Bus_Info * businfo);
 
 // Reset arrays
-void             i2c_discard_buses0(GPtrArray* buses);
+// void             i2c_discard_buses0(GPtrArray* buses);
 void             i2c_discard_buses();
 
 // Debug arrays
