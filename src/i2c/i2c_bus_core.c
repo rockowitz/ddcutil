@@ -189,6 +189,34 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
 #endif
 
 
+Status_Errno_DDC
+i2c_detect_x37_new(int fd, char * driver) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s, driver=%s", fd, filename_for_fd_t(fd), driver);
+
+   Status_Errno_DDC  rc = 0;
+   Byte readbuf[4];  //  4 byte buffer
+   // rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
+   rc = invoke_i2c_reader(fd, 0x37, false, 1, readbuf);
+           DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                     "invoke_i2c_reader() for slave address x37 returned %s", psc_name_code(rc));
+
+   if (rc != 0) {
+      Byte writebuf = 0x00;
+      // rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
+      rc = invoke_i2c_writer(fd, 0x37, 0, &writebuf);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                      "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
+   }
+   if (rc == -EBUSY) {
+      DUAL_MSGX(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
+            "unexpected -EBUSY reading from or writing to x37");
+   }
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"");
+   return rc;
+}
+
 static Status_Errno_DDC
 i2c_detect_x37(int fd, char * driver) {
    bool debug = false;
@@ -320,7 +348,8 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
                businfo->busno,tryctr);
       }
       char * driver = businfo->driver;
-      int ddcrc = i2c_detect_x37(dh->fd, driver);
+      // int ddcrc = i2c_detect_x37(dh->fd, driver);
+      int ddcrc = i2c_detect_x37_new(dh->fd, driver);
       if (ddcrc){
          // would DDCRC_DDC_DISABLED, DDCRC_DEAD, DDCRC_UNAVAILBLE be better?
          err = ERRINFO_NEW(DDCRC_DISCONNECTED,
@@ -865,7 +894,8 @@ static bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
    if (x37_detection_state != X37_Detected) {
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "Calling i2c_detect_x37() for /dev/i2c-%d...", businfo->busno);
-       int rc = i2c_detect_x37(fd, businfo->driver);
+       // int rc = i2c_detect_x37(fd, businfo->driver);
+       int rc = i2c_detect_x37_new(fd, businfo->driver);
        // if (rc == -EBUSY)
        //    businfo->flags |= I2C_BUS_BUSY;
    #ifdef TEST
@@ -1586,6 +1616,7 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 
 static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_check_edid_exists_by_dh);
+   RTTI_ADD_FUNC(i2c_detect_x37_new);
    RTTI_ADD_FUNC(i2c_detect_x37);
    RTTI_ADD_FUNC(i2c_check_open_bus_alive);
    RTTI_ADD_FUNC(i2c_edid_exists);
