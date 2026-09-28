@@ -213,11 +213,13 @@ i2c_detect_x37(int fd, char * driver) {
       // regard either a successful write() or a read() as indication slave address is valid
       Byte writebuf = 0x00;
       rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
+      // rc = invoke_i2c_writer(fd, 0x37, 0, &writebuf);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                    "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
       if (rc != 0) {
          Byte    readbuf[4];  //  4 byte buffer
          rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
+         // rc = invoke_i2c_reader(fd, 0x37, false, 1, readbuf);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                    "invoke_i2c_reader() for slave address x37 returned %s", psc_name_code(rc));
       }
@@ -1111,9 +1113,16 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", businfo->busno);
    businfo->flags |= I2C_BUS_ACCESSIBLE;
    businfo->functionality = i2c_get_functionality_flags_by_fd(fd);  // is this really needed?
+
+   int x30rc = i2c_ioctl_write_x30(fd);
+      businfo->flags |= I2C_BUS_ADDR_X30;
+
    if (!checked_connector_for_edid) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, calling i2c_get_parsed_edid", businfo->busno);
       assert(!businfo->edid);
+
+      i2c_use_x30 = (x30rc == 0);
+
       DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
                     businfo->busno, psc_desc(ddcrc));
