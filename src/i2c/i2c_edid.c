@@ -491,10 +491,16 @@ retry:
                   goto retry;
                }
             }
-            if (rc == 0) {
+            // Reports a read that needed the retry ladder.  The message formerly
+            // named i2c_get_edid_bytes_using_single_ioctl() as what had failed,
+            // that read having been attempted first; with it gone this is the
+            // first read of the try, so there is nothing to report unless an
+            // earlier try failed.  tryctr is the current try's index, reset at
+            // the retry label, so it counts only failures within this strategy.
+            if (rc == 0 && tryctr > 0) {
                DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
-                  "%s() succeeded after i2c_get_edid_bytes_using_single_ioctl() failed.",
-                  called_func_name);
+                  "%s() succeeded after %d failed attempt(s).",
+                  called_func_name, tryctr);
             }
          }
          else {
