@@ -64,7 +64,6 @@
 #define DEFAULT_DDC_READ_BYTEWISE         false       ///< Use single byte reads
 
 #define EDID_BUFFER_SIZE                  256         ///< always 256
-#define DEFAULT_EDID_WRITE_BEFORE_READ    true
 #define DEFAULT_EDID_READ_SIZE            0           ///< 128, 256, 0=>dynamic
 #define DEFAULT_EDID_READ_USES_I2C_LAYER  true
 #define DEFAULT_EDID_READ_BYTEWISE        false
