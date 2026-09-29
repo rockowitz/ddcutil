@@ -317,6 +317,27 @@ static void test_verify_noverify_flags(void) {
 }
 
 
+static void test_removed_single_ioctl_options(void) {
+   // --enable-single-ioctl-edid-read and --disable-single-ioctl-edid-read were
+   // removed along with the OPTION_SINGLE_IOCTL plumbing.  The single ioctl EDID
+   // read costs about 650 ms per attempt on an amdgpu bus with nothing at x50, so
+   // the options must not come back by accident; g_option_context_parse() treats
+   // an unrecognized long option as an error, which is what is checked here.
+   char * argv[] = {"ddcutil", "--enable-single-ioctl-edid-read", "detect", NULL};
+   GPtrArray * errmsgs;
+   Parsed_Cmd * pc = parse(argv, 3, &errmsgs);
+   CK(pc == NULL);
+   CK(errmsgs->len > 0);
+   g_ptr_array_free(errmsgs, true);
+
+   char * argv2[] = {"ddcutil", "--disable-single-ioctl-edid-read", "detect", NULL};
+   pc = parse(argv2, 3, &errmsgs);
+   CK(pc == NULL);
+   CK(errmsgs->len > 0);
+   g_ptr_array_free(errmsgs, true);
+}
+
+
 static void test_stats_option(void) {
    char * argv[] = {"ddcutil", "--stats", "calls", "detect", NULL};
    Parsed_Cmd * pc = parse(argv, 4, NULL);
@@ -359,6 +380,7 @@ int main(int argc, char ** argv) {
    test_setvcp_args();
    test_display_selection();
    test_verify_noverify_flags();
+   test_removed_single_ioctl_options();
    test_stats_option();
    test_parse_syslog_level();
 
