@@ -191,7 +191,7 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
 
 Status_Errno_DDC
 i2c_detect_x37_new(int fd, char * driver) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s, driver=%s", fd, filename_for_fd_t(fd), driver);
 
    Status_Errno_DDC  rc = 0;
