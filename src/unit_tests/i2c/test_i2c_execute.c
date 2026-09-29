@@ -126,6 +126,38 @@ static void test_ioctl_writer_reader_bad_fd(void) {
 }
 
 
+/** i2c_ioctl_write_x30() writes the EDID block number to slave address x30.
+ *
+ *  Only the failure path is exercisable without a monitor: a bad file descriptor
+ *  must be reported, not treated as a successful write, because a caller that
+ *  took the result for success would set i2c_use_x30 and then read the EDID
+ *  expecting block 0 to have been selected.
+ */
+static void test_ioctl_write_x30_bad_fd(void) {
+   Status_Errno_DDC rc;
+   QUIETLY( rc = i2c_ioctl_write_x30(-1) );
+   CK(rc < 0);
+}
+
+
+/** i2c_use_x30 records whether x30 answered, and is consulted by the EDID read.
+ *
+ *  It is _Thread_local, so the value the EDID read sees is the one set on its own
+ *  thread.  i2c_check_bus() sets it from the x30 probe and the nested EDID read
+ *  runs on the same thread, which is what makes that work; a value set on one
+ *  thread is deliberately invisible on another.
+ */
+static void test_use_x30_default(void) {
+   CK(i2c_use_x30 == false);      // default, per i2c_execute.c
+
+   bool saved = i2c_use_x30;
+   i2c_use_x30 = true;
+   CK(i2c_use_x30 == true);
+   i2c_use_x30 = saved;
+   CK(i2c_use_x30 == false);
+}
+
+
 int main(int argc, char ** argv) {
    setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
 
@@ -133,6 +165,8 @@ int main(int argc, char ** argv) {
    test_set_addr_bad_fd();
    test_fileio_writer_reader_bad_fd();
    test_ioctl_writer_reader_bad_fd();
+   test_ioctl_write_x30_bad_fd();
+   test_use_x30_default();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

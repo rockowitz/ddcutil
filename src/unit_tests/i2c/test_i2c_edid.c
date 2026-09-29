@@ -30,6 +30,14 @@
 
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+#include "i2c/i2c_execute.h"   // i2c_use_x30
+#include "i2c/i2c_bus_open_close.h"
+#include "base/i2c_bus_aux.h"            // i2c_device_exists
+#include "base/display_lock.h"           // init_i2c_display_lock
+#include "base/execution_stats.h"        // init_execution_stats
+#include "util/error_info.h"
+#include "util/timestamp.h"
+#include "sysfs/sysfs_simple.h"          // sysfs_is_ignorable_i2c_device
 
 static int total = 0;
 static int failed = 0;
@@ -105,28 +113,255 @@ static void test_get_parsed_edid_by_fd_bad_fd(void) {
 }
 
 
-// Exercise both the IOCTL and FILEIO strategies, and both the
-// EDID_Read_Uses_I2C_Layer branches, with the bad-fd path.
-static void test_get_raw_edid_across_strategies(void) {
-   bool saved_uses_i2c_layer = EDID_Read_Uses_I2C_Layer;
-
-   I2C_IO_Strategy_Id strategies[] = { I2C_IO_STRATEGY_IOCTL, I2C_IO_STRATEGY_FILEIO };
-   bool use_i2c_layer_values[] = { false, true };
-
-   for (int s = 0; s < 2; s++) {
-      i2c_set_io_strategy_by_id(strategies[s]);
-      for (int u = 0; u < 2; u++) {
-         EDID_Read_Uses_I2C_Layer = use_i2c_layer_values[u];
-         Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
-         int rc;
-         QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf) );
-         CK(rc < 0);
-         buffer_free(buf, NULL);
+/* Finds an I2C bus that ddcutil itself would probe and that has a monitor on
+ * it, and leaves it open.  Returns the bus number, or -1 if none was found, in
+ * which case the hardware tests are skipped rather than failed -- these tests
+ * must pass on a machine with no monitor, and on one where /dev/i2c is not
+ * readable by the user running them.
+ *
+ * Bus selection uses sysfs_is_ignorable_i2c_device(), the same guard ddcutil
+ * uses, so the SMBus and AMDGPU SMU buses are never opened.  Probing those is
+ * what hangs some cards.
+ */
+static int find_bus_with_monitor(int * fd_loc, Byte * edid_out) {
+   *fd_loc = -1;
+   for (int busno = 0; busno < 32; busno++) {
+      if (!i2c_device_exists(busno))
+         continue;
+      if (sysfs_is_ignorable_i2c_device(busno))
+         continue;
+      int fd = -1;
+      Error_Info * err = NULL;
+      QUIETLY( err = i2c_open_bus(busno, CALLOPT_WAIT, &fd) );
+      if (err) {
+         errinfo_free(err);
+         continue;
       }
+      Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
+      Status_Errno_DDC rc;
+      QUIETLY( rc = i2c_get_raw_edid_by_fd(fd, buf) );
+      if (rc == 0 && buf->len >= 128) {
+         memcpy(edid_out, buf->bytes, 128);
+         buffer_free(buf, NULL);
+         *fd_loc = fd;
+         return busno;
+      }
+      buffer_free(buf, NULL);
+      QUIETLY( i2c_close_bus(busno, fd, CALLOPT_NONE) );
    }
+   return -1;
+}
 
-   EDID_Read_Uses_I2C_Layer = saved_uses_i2c_layer;
-   i2c_set_io_strategy_by_id(DEFAULT_I2C_IO_STRATEGY);
+/** The same sweep as below, against a real bus with a monitor on it.
+ *
+ *  With a working file descriptor the interesting property is not the status but
+ *  agreement: no combination of switches should change what is read.  Every
+ *  combination that succeeds must return the same 128 bytes, and the 256 byte and
+ *  dynamic read sizes must agree with the 128 byte one on the first block rather
+ *  than returning an extension block -- which is the failure
+ *  is_valid_raw_cea861_extension_block() exists to recover from.
+ *
+ *  Combinations that fail are counted and printed rather than asserted against a
+ *  fixed number, which would be specific to this monitor and driver.  The test
+ *  requires only that at least one combination succeeded, so that agreement is
+ *  being checked against something.
+ */
+static void test_get_raw_edid_all_switches_real_bus(void) {
+   Byte reference[128];
+   int fd = -1;
+   int busno = find_bus_with_monitor(&fd, reference);
+   if (busno < 0) {
+      printf("   no usable bus with a monitor found; hardware sweep skipped\n");
+      return;
+   }
+   printf("   using /dev/i2c-%d\n", busno);
+
+   I2C_IO_Strategy_Id saved_strategy   = i2c_get_io_strategy_id();
+   bool saved_uses_i2c_layer           = EDID_Read_Uses_I2C_Layer;
+   bool saved_bytewise                 = EDID_Read_Bytewise;
+   bool saved_write_before_read         = EDID_Write_Before_Read;
+   bool saved_single_ioctl             = read_edid_using_single_ioctl;
+   bool saved_use_x30                  = i2c_use_x30;
+   int  saved_read_size                = EDID_Read_Size;
+
+   I2C_IO_Strategy_Id strategies[] = {I2C_IO_STRATEGY_IOCTL, I2C_IO_STRATEGY_FILEIO};
+   bool bools[] = {false, true};
+   int  read_sizes[] = {0, 128, 256};
+
+   int succeeded = 0, failed_ct = 0, disagreed = 0;
+   uint64_t min_us = UINT64_MAX, max_us = 0, total_us = 0;
+   char slowest[160] = "";
+   for (int si = 0; si < 2; si++)
+    for (int ul = 0; ul < 2; ul++)
+     for (int oi = 0; oi < 2; oi++)
+      for (int bw = 0; bw < 2; bw++)
+       for (int wb = 0; wb < 2; wb++)
+        for (int x3 = 0; x3 < 2; x3++)
+         for (int rs = 0; rs < 3; rs++) {
+            i2c_set_io_strategy_by_id(strategies[si]);
+            EDID_Read_Uses_I2C_Layer     = bools[ul];
+            read_edid_using_single_ioctl = bools[oi];
+            EDID_Read_Bytewise           = bools[bw];
+            EDID_Write_Before_Read       = bools[wb];
+            i2c_use_x30                  = bools[x3];
+            EDID_Read_Size               = read_sizes[rs];
+
+            Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
+            Status_Errno_DDC rc;
+            uint64_t t0 = cur_realtime_nanosec();
+            QUIETLY( rc = i2c_get_raw_edid_by_fd(fd, buf) );
+            uint64_t elapsed_us = NANOS2MICROS(cur_realtime_nanosec() - t0);
+
+            char settings[128];
+            snprintf(settings, sizeof(settings),
+                     "%-22s layer=%d single=%d bytewise=%d wbr=%d x30=%d size=%-3d",
+                     i2c_io_strategy_id_name(strategies[si]), bools[ul], bools[oi],
+                     bools[bw], bools[wb], bools[x3], read_sizes[rs]);
+
+            if (elapsed_us < min_us) min_us = elapsed_us;
+            if (elapsed_us > max_us) { max_us = elapsed_us; snprintf(slowest, sizeof(slowest), "%s", settings); }
+            total_us += elapsed_us;
+
+            bool ok = (rc == 0 && buf->len >= 128);
+            bool agrees = ok && (memcmp(buf->bytes, reference, 128) == 0);
+            if (ok) {
+               succeeded++;
+               if (!agrees) disagreed++;
+            }
+            else
+               failed_ct++;
+            printf("   %s  %7lu us  %s%s\n", settings, (unsigned long) elapsed_us,
+                   ok ? "ok" : "FAILED", (ok && !agrees) ? "  DISAGREES WITH REFERENCE" : "");
+            if (!ok)
+               printf("        rc = %d\n", rc);
+            buffer_free(buf, NULL);
+         }
+
+   int n = succeeded + failed_ct;
+   printf("   %d of %d combinations read the EDID, %d disagreed\n", succeeded, n, disagreed);
+   printf("   elapsed per combination: min %lu us, mean %lu us, max %lu us\n",
+          (unsigned long) min_us, (unsigned long) (n ? total_us/n : 0), (unsigned long) max_us);
+   printf("   slowest: %s\n", slowest);
+   CK(succeeded > 0);          // agreement is being checked against something
+   CK_INT(disagreed, 0);       // no switch setting changes what is read
+
+   EDID_Read_Uses_I2C_Layer     = saved_uses_i2c_layer;
+   EDID_Read_Bytewise           = saved_bytewise;
+   EDID_Write_Before_Read       = saved_write_before_read;
+   read_edid_using_single_ioctl = saved_single_ioctl;
+   i2c_use_x30                  = saved_use_x30;
+   EDID_Read_Size               = saved_read_size;
+   i2c_set_io_strategy_by_id((saved_strategy == I2C_IO_STRATEGY_NOT_SET)
+                                ? DEFAULT_I2C_IO_STRATEGY : saved_strategy);
+   QUIETLY( i2c_close_bus(busno, fd, CALLOPT_NONE) );
+}
+
+
+/** i2c_get_raw_edid_by_fd() over every combination of the switches that select
+ *  its path, with a file descriptor that cannot work.
+ *
+ *  The switches, and what each selects:
+ *
+ *    io strategy                    ioctl(I2C_RDWR) or read()/write()
+ *    EDID_Read_Uses_I2C_Layer       i2c_get_edid_bytes_using_i2c_layer() or
+ *                                   i2c_get_edid_bytes_directly_using_ioctl()
+ *    read_edid_using_single_ioctl   the single ioctl read, taken only when the
+ *                                   strategy is IOCTL and not bytewise
+ *    EDID_Read_Bytewise             one read per byte rather than one for all
+ *    EDID_Write_Before_Read         a one byte write to x50 precedes the read
+ *    i2c_use_x30                    a write to x30 selects EDID block 0 first
+ *    EDID_Read_Size                 128, 256, or 0 for dynamic, which also
+ *                                   changes max_tries from 2 to 4
+ *
+ *  That is 2*2*2*2*2*2*3 = 192 combinations.  What must hold for all of them is
+ *  narrow but worth having: a negative status, no crash, and rawedid->len left
+ *  at 0 rather than describing bytes that were never read.  A caller that got 0
+ *  here would go on to parse an uninitialized buffer.
+ *
+ *  This is a reachability sweep, not a protocol test -- with no device there is
+ *  nothing to read, so what it exercises is that every branch combination
+ *  handles failure consistently.  Combinations differ in how many attempts they
+ *  make and in which of the three readers they reach, and those are exactly the
+ *  paths where an early return or an uninitialized value would hide.
+ */
+static void test_get_raw_edid_all_switch_combinations(void) {
+   I2C_IO_Strategy_Id saved_strategy   = i2c_get_io_strategy_id();
+   bool saved_uses_i2c_layer           = EDID_Read_Uses_I2C_Layer;
+   bool saved_bytewise                 = EDID_Read_Bytewise;
+   bool saved_write_before_read         = EDID_Write_Before_Read;
+   bool saved_single_ioctl             = read_edid_using_single_ioctl;
+   bool saved_use_x30                  = i2c_use_x30;
+   int  saved_read_size                = EDID_Read_Size;
+
+   I2C_IO_Strategy_Id strategies[] = {I2C_IO_STRATEGY_IOCTL, I2C_IO_STRATEGY_FILEIO};
+   bool bools[] = {false, true};
+   int  read_sizes[] = {0, 128, 256};
+
+   int combinations = 0;
+   int nonneg = 0;
+   int nonzero_len = 0;
+   for (int si = 0; si < 2; si++) {
+    for (int ul = 0; ul < 2; ul++) {
+     for (int oi = 0; oi < 2; oi++) {
+      for (int bw = 0; bw < 2; bw++) {
+       for (int wb = 0; wb < 2; wb++) {
+        for (int x3 = 0; x3 < 2; x3++) {
+         for (int rs = 0; rs < 3; rs++) {
+            i2c_set_io_strategy_by_id(strategies[si]);
+            EDID_Read_Uses_I2C_Layer     = bools[ul];
+            read_edid_using_single_ioctl = bools[oi];
+            EDID_Read_Bytewise           = bools[bw];
+            EDID_Write_Before_Read       = bools[wb];
+            i2c_use_x30                  = bools[x3];
+            EDID_Read_Size               = read_sizes[rs];
+
+            Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
+            Status_Errno_DDC rc;
+            QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf) );
+            if (rc >= 0) {
+               nonneg++;
+               printf("FAIL  strategy=%s i2c_layer=%d single_ioctl=%d bytewise=%d"
+                      " write_before_read=%d use_x30=%d read_size=%d -> %d\n",
+                      i2c_io_strategy_id_name(strategies[si]), bools[ul], bools[oi],
+                      bools[bw], bools[wb], bools[x3], read_sizes[rs], rc);
+            }
+            if (buf->len != 0)
+               nonzero_len++;
+            buffer_free(buf, NULL);
+            combinations++;
+         }}}}}}}
+
+   CK_INT(combinations, 2*2*2*2*2*2*3);
+   CK_INT(nonneg, 0);         // every combination reported failure
+   CK_INT(nonzero_len, 0);    // and left the buffer empty
+
+   EDID_Read_Uses_I2C_Layer     = saved_uses_i2c_layer;
+   EDID_Read_Bytewise           = saved_bytewise;
+   EDID_Write_Before_Read       = saved_write_before_read;
+   read_edid_using_single_ioctl = saved_single_ioctl;
+   i2c_use_x30                  = saved_use_x30;
+   EDID_Read_Size               = saved_read_size;
+   i2c_set_io_strategy_by_id((saved_strategy == I2C_IO_STRATEGY_NOT_SET)
+                                ? DEFAULT_I2C_IO_STRATEGY : saved_strategy);
+}
+
+
+/** EDID_Write_Before_Read governs whether a one byte write to x50 precedes the
+ *  EDID read.  Option --f37 flips it from its default, so the default is what
+ *  that option is defined against.
+ *
+ *  It matters on a bus with nothing at x50: the write fails and the read is never
+ *  issued, so the cost of probing a silent bus is a one byte timeout rather than
+ *  a 128 byte one.
+ */
+static void test_write_before_read_default(void) {
+   CK(EDID_Write_Before_Read == DEFAULT_EDID_WRITE_BEFORE_READ);
+
+   bool saved = EDID_Write_Before_Read;
+   EDID_Write_Before_Read = !EDID_Write_Before_Read;      // what --f37 does
+   CK(EDID_Write_Before_Read == !DEFAULT_EDID_WRITE_BEFORE_READ);
+   EDID_Write_Before_Read = saved;
+   CK(EDID_Write_Before_Read == DEFAULT_EDID_WRITE_BEFORE_READ);
 }
 
 
@@ -138,7 +373,12 @@ int main(int argc, char ** argv) {
    test_get_edid_bytes_using_single_ioctl_bad_fd();
    test_get_raw_edid_by_fd_bad_fd();
    test_get_parsed_edid_by_fd_bad_fd();
-   test_get_raw_edid_across_strategies();
+   test_get_raw_edid_all_switch_combinations();
+   // i2c_open_bus()/i2c_close_bus() use the display lock table
+   init_execution_stats();
+   init_i2c_display_lock();
+   test_get_raw_edid_all_switches_real_bus();
+   test_write_before_read_default();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);
