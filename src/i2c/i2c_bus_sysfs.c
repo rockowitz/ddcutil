@@ -454,13 +454,12 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_snapshot(
 /** Locates a drm-card-connector directory using either an I2C bus number or
  *  EDID value.
  *
- *  The search runs against the persistent #Sys_Drm_Connector array.  Utility
- *  option --f37 selects the original implementation, which walks the connector
- *  directories on every call.  Utility option --f39 runs both and writes a
- *  syslog warning wherever they disagree, which is how the replacement is
- *  meant to be validated on hardware this has not been tried on.  --f37 wins
- *  if both are given, the comparison having nothing to compare against.  See
- *  claude_changes.txt.
+ *  The search runs against the persistent #Sys_Drm_Connector array while a
+ *  connector snapshot is active, and otherwise walks the connector directories
+ *  on every call, which is the original implementation.  Utility option --f39
+ *  runs both and writes a syslog warning wherever they disagree, which is how
+ *  the replacement is meant to be validated on hardware this has not been tried
+ *  on.  See claude_changes.txt.
  *
  *  @param  busno      (-1 for not set)
  *  @param  edid_bytes pointer to 128 byte edid
