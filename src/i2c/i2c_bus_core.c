@@ -209,12 +209,16 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
  *  The document that owns 0x37 is the DDC/CI standard, and what it defines is a
  *  message protocol: destination address, source address, a length byte with the
  *  0x80 high bit set, payload, and an XOR checksum in which the host's virtual
- *  address participates.  Its answer to "is DDC/CI present" is at that level: a
- *  display that supports it must answer a read with either a real reply or a Null
- *  Message, 6E 80 BE, when it has nothing to say.  So the sanctioned test is to
- *  issue an actual request -- Identification Request, Capabilities Request, or a
- *  VCP feature read -- and validate the reply's length and checksum.  A bare
- *  address probe sits below the level either standard describes.
+ *  address participates.  Its answer to "is DDC/CI present" is at that level, and
+ *  it is host initiated throughout: the display is a slave and every message it
+ *  sends is a response.  The Null Message, 6E 80 BE, is one such response, returned
+ *  to a valid request the display has no data for or does not support.  It is not
+ *  something a display emits because it has nothing to say, so an unsolicited read
+ *  of 0x6F has no defined result at all -- what comes back is whatever the output
+ *  buffer holds.  The sanctioned test is therefore to issue an actual request --
+ *  Identification Request, Capabilities Request, or a VCP feature read -- and
+ *  validate the reply's length and checksum.  A bare address probe, of any length,
+ *  sits below the level either standard describes.
  *
  *  @remark
  *  So this test is a heuristic, wrong in both directions, and neither direction is
@@ -259,16 +263,40 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
  *  settle it.
  *
  *  @remark
- *  Making the probe defensible by the letter of DDC/CI would mean reading the full
- *  three byte null message and verifying the checksum rather than ACK testing.  The
- *  cost objection to that is void, this function never running on a bus with
- *  nothing at 0x37.  What recommends it is that an ACK test cannot distinguish
- *  something answering at 0x37 from a DDC/CI display answering there, which is
- *  exactly the failure the comments in i2c_check_bus() record -- a laptop display
- *  reporting x37 active without responding to DDC, and a U3011 with DDC turned off
- *  still showing x37 detected.  It would have to tolerate phase rather than assume
- *  alignment, reading six bytes and locating 6e 80 be, as the amdgpu trace shows a
- *  three byte read can itself land mid message.
+ *  Reading the full Null Message and checking it was tried and removed.  The
+ *  attraction was that an ACK test cannot distinguish something answering at 0x37
+ *  from a DDC/CI display answering there, which is exactly the failure the comments
+ *  in i2c_check_bus() record -- a laptop display reporting x37 active without
+ *  responding to DDC, and a U3011 with DDC turned off still showing x37 detected.
+ *  Six bytes were read and scanned for 6e 80 be at any phase.  On amdgpu the Null
+ *  Message was found every time.  On i915 it was found on none of three buses
+ *  with working monitors, which returned "53 e7 ae 62 54 be", "30 31 31 29 63 6d"
+ *  and "00 00 00 00 03 00"; the second of those is ASCII "011)cm", stale bytes of a
+ *  capabilities string from an earlier conversation, which is what an empty output
+ *  buffer hands back.  The i915 result is not misbehavior: no request precedes this
+ *  read, and the Null Message is a response to a request, so a display owes nothing
+ *  here.  Finding it is positive evidence; not finding it proves nothing.  That is
+ *  the reason it cannot be the verdict, the measurement merely showing what the
+ *  protocol already implies, and making it decisive would have reported three
+ *  working monitors as unresponsive at x37.  With the result unable to inform
+ *  anything, a six byte read only consumed five more bytes of a buffer whose
+ *  contents matter to whatever reads next, so the one byte read is restored.
+ *
+ *  @remark
+ *  A probe that would be sound by the letter of DDC/CI has to send a request and
+ *  validate the response, which is what the DDC layer already does.  That is the
+ *  same conclusion the comments in i2c_check_bus() reached when DDC checking was
+ *  moved there entirely, and it is why no amount of refining this read turns it
+ *  into a support test.  What is left for it to do is what it does now: establish
+ *  cheaply that something is still at 0x37, so that cached display information is
+ *  not reloaded for a display that has gone away.
+ *
+ *  @remark
+ *  Worth keeping from that experiment: a read at 0x37 does not begin on a message
+ *  boundary.  Of three consecutive amdgpu probes two began mid message, returning
+ *  "be 80 be 6e 80 be" where the third returned "6e 80 be 6e 80 be".  Any future
+ *  attempt to interpret bytes read here has to tolerate phase rather than assume
+ *  alignment, or it will look like an intermittent fault.
  *
  *  @remark
  *  The account above is from knowledge of the two standards rather than from the
