@@ -62,8 +62,63 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 
-// No Longer global:
 
+
+/* Recovery from a read that began at the display's current word offset.
+ *
+ * The quirk: a read whose word offset write does not take effect starts wherever the
+ * display's internal counter stands, 0x80 after a prior 128 byte read, so a 128 byte
+ * read returns the first extension block where the base block belongs.  Now that the
+ * offset write is unconditional the write must be issued and fail to take effect, so
+ * either an adapter drops or reorders it -- DP AUX to I2C emulation and MST hubs being
+ * the suspects -- or another user of the bus transacts between the write ioctl and the
+ * read ioctl.  The kernel's adapter lock covers one transfer and not a pair, and the
+ * cross instance flock excludes other ddcutil and libddcutil instances but not the
+ * kernel's own DRM EDID probing or a non-ddcutil user of the device.
+ *
+ * Every recovery for it, live and parked, works the same way: re-read 256 bytes so
+ * that the address counter's wrap from 0xff to 0x00 puts the base block at buffer
+ * offset 128, then copy it down.  That wrap is verified, not assumed:
+ * test_current_address_read_wrap() in test_i2c_edid.c writes 0x80 as the word offset
+ * deliberately and confirms the base block appears at offset 128, on i915 with a
+ * Samsung LS34A650U carrying a CEA extension block and on amdgpu with an HP L2245w
+ * whose upper 128 bytes are unprogrammed 0xff and which wraps anyway.  What has no
+ * reproducer is the quirk itself, not the repair.
+ *
+ * The ladder in i2c_get_raw_edid_by_fd() already performs that repair unaided, and
+ * this is the reason the recoveries below were parked rather than chosen.  With the
+ * default dynamic read size max_tries is 4 and the sizes are 128, 128, 256, 256, and
+ * DDCRC_INVALID_EDID is in no break list, so the quirk costs two failed 128 byte reads
+ * and is recovered on try 2.  An EDID read with a display present measures about 12 ms
+ * on both i915 and amdgpu, so what earlier interception saves is about 24 ms.  Not the
+ * 650 ms that a failed read costs on a silent amdgpu bus: this path requires a read
+ * that succeeded, so the display is answering.
+ *
+ * There is one configuration the ladder cannot recover.  --edid-read-size 128 makes
+ * max_tries 2 and pins every read at 128, so the 256 byte read never happens, the wrap
+ * never happens, the copy-down can never fire, and the display is not detected at all.
+ * The recoveries here all re-read 256 regardless of the size requested, so there they
+ * are not an optimization but the only repair.  That gap, rather than the 24 ms, is why
+ * RECOVER_CURRENT_ADDRESS_READ_BY_FD is now defined.
+ *
+ * Of the three it is the one worth having live.  Only one reader runs per try, so at
+ * most one of the two in-function recoveries can ever fire, while this one sits in
+ * i2c_get_raw_edid_by_fd() after whichever reader ran and therefore covers all three,
+ * including i2c_get_edid_bytes_directly_using_fileio(), which has no recovery of its
+ * own.  It is a superset, not a third case.  Its trigger cannot false positive: a base
+ * EDID begins 00 ff ff ff ff ff ff 00 and a CEA extension block begins 02, so the two
+ * cannot be confused.  Its cost is one extra 256 byte read, in the failure case only.
+ * The one behavioral note is that its helper re-reads through the i2c layer whatever
+ * reader ran, so a recovery on the --f5 paths changes transport; that is defensible for
+ * a repair, and those paths are developer options.
+ *
+ * RECOVER_CURRENT_ADDRESS_READ and RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER remain
+ * parked.  With the catch-all live they add only earliness on their own reader, and
+ * RECOVER_CURRENT_ADDRESS_READ is reachable only under --f5.  Each is still guarded
+ * separately, and each still compiles on its own, so either can be enabled to attribute
+ * a repair to one interception point should a reproducer ever appear.
+ */
+#define RECOVER_CURRENT_ADDRESS_READ_BY_FD
 
 
 static Status_Errno_DDC
@@ -176,10 +231,17 @@ i2c_get_edid_bytes_directly_using_ioctl(
    // followed by the base block.
    //
    // Three parked recoveries for this quirk exist, each under its own macro so
-   // that one can be enabled and evaluated without the others.  They are not
-   // variations on a single switch: two of them intercept in the read function
-   // itself, the third is a catch-all in the caller, and they use different
-   // means.  There is no reproducer for any of them.
+   // that one can be enabled and evaluated without the others.  They differ in
+   // where they intercept, not in means: after the relocations below all three
+   // re-read 256 bytes and lean on a copy-down, so what each buys over the retry
+   // ladder is only reaching the wrap sooner.  Two intercept in the read function,
+   // the third is a catch-all in the caller.  There is still no reproducer for the
+   // quirk itself, but the wrap all three depend on is no longer an assumption:
+   // test_current_address_read_wrap() in test_i2c_edid.c provokes a read at word
+   // offset 0x80 deliberately and confirms that a following 256 byte read returns the
+   // base block at offset 128.  Verified on i915 with a Samsung LS34A650U, which has
+   // a CEA extension block, and on amdgpu with an HP L2245w, whose upper 128 bytes
+   // are unprogrammed 0xff and which wraps anyway.
    //
    //   RECOVER_CURRENT_ADDRESS_READ           this block.  Self-recursion,
    //                                          repair inline.  It was the
@@ -200,6 +262,28 @@ i2c_get_edid_bytes_directly_using_ioctl(
    //                                          repair rather than repairing
    //                                          here.  Covers the fileio path,
    //                                          which has no in-function recovery.
+   //
+   // What the ladder does unaided, and what these therefore save.  With the default
+   // dynamic read size max_tries is 4 and the sizes are 128, 128, 256, 256, and
+   // DDCRC_INVALID_EDID is in no break list, so an extension block at offset 0
+   // costs two failed 128 byte reads and is then recovered on try 2, where the 256
+   // byte wrap puts the base block at offset 128 for the copy-down in the caller.
+   // An EDID read with a display present measures about 12 ms on both i915 and
+   // amdgpu, so the waste is about 24 ms, not the 650 ms that applies to a silent
+   // bus.  That is the whole benefit of intercepting earlier, in a case with no
+   // reproducer, which is why all three of these stay parked.
+   //
+   // How the quirk can still arise, now that the write is unconditional: the write
+   // must be issued and fail to take effect.  Either an adapter drops or reorders
+   // it, DP AUX to I2C emulation and MST hubs being the suspects, or another user
+   // of the bus transacts between ddcutil's write ioctl and its read ioctl.  The
+   // kernel's adapter lock covers one transfer, not a pair, and the cross instance
+   // flock excludes other ddcutil and libddcutil instances but not the kernel's own
+   // DRM EDID probing or a non-ddcutil user of the device.  Note also that
+   // combining the write and the read into one transfer, which no live reader now
+   // does, would defend against the interposition but not against a write that
+   // silently fails: on amdgpu the engine reported a NACKed write as successful
+   // within a multi-payload transfer and submitted the read anyway.
    //
    // Recovering here rather than leaving it to the catch-all saves a try: the
    // catch-all in i2c_get_raw_edid_by_fd() is the latest interception point, so by
@@ -396,7 +480,9 @@ i2c_get_edid_bytes_using_i2c_layer(
  *  @return status code
  *
  *  @remark
- *  Untested.  Written from the reported symptom -- an unrequested extension
+ *  The function has never run, there being no reproducer, but its premise is tested:
+ *  test_current_address_read_wrap() confirms the wrap on two displays and two
+ *  drivers.  Written from the reported symptom -- an unrequested extension
  *  block at offset 0 with the base block at offset 128 -- not from a
  *  reproducer.  Note the circularity: the adapters that provoke this, most
  *  likely DP AUX to I2C emulation and MST hubs, are the ones least likely to
@@ -558,7 +644,13 @@ retry:
 #ifdef RECOVER_CURRENT_ADDRESS_READ_BY_FD
                // A valid extension block where the base block belongs means the
                // read began at word offset 0x80, i.e. it was a read at the
-               // current address.  Re-read 256 bytes so the wrap puts the base
+               // current address.  0x80 is the only misalignment ddcutil can reach
+               // unaided, the offset auto incrementing to 0x80 after a 128 byte
+               // read and wrapping to 0 after 256, which is why testing for an
+               // extension block at offset 0 suffices here.  An intervenor that
+               // leaves the offset elsewhere yields bytes that are neither a valid
+               // base EDID nor a valid extension block, still invalid and still
+               // retried, so the ladder covers that case without this fast path.  Re-read 256 bytes so the wrap puts the base
                // block at offset 128, where the check just below recovers it.
                // Only worth doing if less than 256 bytes were read; at 256 the
                // base block is already present and that check handles it.

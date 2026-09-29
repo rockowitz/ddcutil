@@ -310,6 +310,98 @@ static void test_get_raw_edid_all_switch_combinations(void) {
 
 
 
+/** Provokes a read at word offset 0x80 and reports whether the EEPROM rolls over,
+ *  which is the premise the three parked RECOVER_CURRENT_ADDRESS_READ* blocks in
+ *  i2c_edid.c rest on.
+ *
+ *  Those recoveries respond to a read that began at the display's current word
+ *  offset, 0x80 after a prior 128 byte read, by re-reading 256 bytes.  They then
+ *  expect the address counter to wrap 0xff -> 0x00 so that the base block lands at
+ *  buffer offset 128, where the caller's existing check copies it down.  Nothing has
+ *  ever confirmed the wrap: there is no reproducer for the quirk, so the recovery
+ *  path has never run on real hardware.
+ *
+ *  This does not need the quirk.  Writing 0x80 rather than 0x00 as the word offset
+ *  produces the same starting point deliberately, so the premise can be tested
+ *  directly.  Two questions, in order:
+ *
+ *    1. is the word offset write honored at all?  Set 0x80, read 128 bytes, and see
+ *       whether what comes back differs from the base block.  If it does not differ,
+ *       the write was ignored and question 2 cannot be answered on this display.
+ *    2. does the address counter wrap?  Set 0x80, read 256 bytes, and see whether the
+ *       base block appears at offset 128.  That is exactly what the recoveries do.
+ *
+ *  Reports rather than asserts on question 2: a display that does not wrap is not
+ *  broken, it just cannot be repaired by those blocks.  The offset is restored to 0
+ *  afterwards, with a 128 byte read to consume the block, so nothing later in this
+ *  process or the next sees a shifted pointer.
+ */
+static void test_current_address_read_wrap(void) {
+   Byte reference[128];
+   int fd = -1;
+   int busno = find_bus_with_monitor(&fd, reference);
+   if (busno < 0) {
+      printf("   no usable bus with a monitor found; wrap test skipped\n");
+      return;
+   }
+   printf("   using /dev/i2c-%d\n", busno);
+
+   Byte offset_80 = 0x80;
+   Byte offset_00 = 0x00;
+   Byte buf[256];
+   Status_Errno_DDC rc;
+
+   // 1. is the word offset write honored?
+   memset(buf, 0, sizeof(buf));
+   QUIETLY( rc = invoke_i2c_writer(fd, 0x50, 1, &offset_80) );
+   CK_INT(rc, 0);
+   bool offset_honored = false;
+   if (rc == 0) {
+      QUIETLY( rc = invoke_i2c_reader(fd, 0x50, false, 128, buf) );
+      CK_INT(rc, 0);
+      if (rc == 0) {
+         offset_honored = (memcmp(buf, reference, 128) != 0);
+         printf("   offset 0x80, 128 byte read: %s (first 8 bytes %02x %02x %02x %02x %02x %02x %02x %02x)\n",
+                (offset_honored) ? "differs from base block, write honored"
+                                 : "SAME as base block, write appears ignored",
+                buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+      }
+   }
+
+   // 2. does the address counter wrap 0xff -> 0x00?
+   memset(buf, 0, sizeof(buf));
+   QUIETLY( rc = invoke_i2c_writer(fd, 0x50, 1, &offset_80) );
+   if (rc == 0) {
+      QUIETLY( rc = invoke_i2c_reader(fd, 0x50, false, 256, buf) );
+      printf("   offset 0x80, 256 byte read: %s\n", psc_desc(rc));
+      if (rc == 0) {
+         bool wrapped      = (memcmp(buf+128, reference, 128) == 0);
+         bool valid_at_128 = is_valid_raw_edid(buf+128, 128);
+         printf("   ROLL-OVER %s: base block %sfound at offset 128"
+                " (is_valid_raw_edid: %s)\n",
+                (wrapped) ? "CONFIRMED" : "NOT observed",
+                (wrapped) ? "" : "NOT ",
+                (valid_at_128) ? "true" : "false");
+         printf("   bytes 128..135: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+                buf[128], buf[129], buf[130], buf[131],
+                buf[132], buf[133], buf[134], buf[135]);
+         if (wrapped != valid_at_128)
+            printf("   NOTE: the two tests disagree, which the recovery's copy-down"
+                   " would act on\n");
+      }
+   }
+
+   // restore: leave the word offset at 0 and consume the block
+   QUIETLY( rc = invoke_i2c_writer(fd, 0x50, 1, &offset_00) );
+   if (rc == 0)
+      QUIETLY( rc = invoke_i2c_reader(fd, 0x50, false, 128, buf) );
+   if (rc == 0)
+      CK(memcmp(buf, reference, 128) == 0);     // the display is left readable
+
+   QUIETLY( i2c_close_bus(busno, fd, CALLOPT_NONE) );
+}
+
+
 int main(int argc, char ** argv) {
    setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
 
@@ -322,6 +414,7 @@ int main(int argc, char ** argv) {
    init_execution_stats();
    init_i2c_display_lock();
    test_get_raw_edid_all_switches_real_bus();
+   test_current_address_read_wrap();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);
