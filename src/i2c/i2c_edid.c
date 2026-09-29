@@ -207,142 +207,6 @@ i2c_get_edid_bytes_directly_using_ioctl(
 }
 
 
-/** Reads the EDID in a single I2C_RDWR ioctl.
- *
- *  Some monitors, e.g. Dell P2725DE ignore an offset write sent as a transaction
- *  of its own and return the wrong 128 byte block for the subsequent read.
- *
- * @param   fd             file descriptor for open /dev/i2c-n
- * @param   rawedid        buffer in which to return bytes of the EDID
- * @param   edid_read_size number of bytes to read
- * @return  status code
- *
- * @remark
- * From user przemech, based on function drm_do_probe_ddc_edid() in kernel source
- * file drivers/gpu/drm/drm_edid.c, which uses a single ioctl() to read the EDID.
- */
-Status_Errno_DDC
-i2c_get_edid_bytes_using_single_ioctl(
-   int     fd,
-   Buffer* rawedid,
-   int     edid_read_size)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d",
-                 fd, filename_for_fd_t(fd), edid_read_size);
-   assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
-
-   int rc = 0;
-   Byte byte_to_write = 0x00;
-
-   // messages needs to be allocated, cannot be on stack:
-   struct i2c_msg * messages = calloc(2, sizeof(struct i2c_msg));
-   struct i2c_rdwr_ioctl_data  msgset;
-   memset(&msgset,0,sizeof(msgset));  // see comment in i2c_get_edid_bytes_directly_using_ioctl()
-
-   messages[0].addr  = 0x50;
-   messages[0].flags = 0;
-   messages[0].len   = 1;
-   messages[0].buf   = &byte_to_write;
-
-   messages[1].addr  = 0x50;
-   messages[1].flags = I2C_M_RD;
-   messages[1].len   = edid_read_size;
-   messages[1].buf   = rawedid->bytes;
-
-   msgset.msgs  = messages;
-   msgset.nmsgs = 2;
-
-   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
-      dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
-
-   RECORD_IO_EVENT(
-         fd,
-         IE_IOCTL_READ,
-         ( rc = ioctl(fd, I2C_RDWR, &msgset) )
-         );
-   int errsv = errno;
-   if (rc < 0) {
-      if (debug) {
-         REPORT_IOCTL_ERROR("I2C_RDWR", errno);
-      }
-      rc = -errsv;
-   }
-   else {
-      if (rc != 2)      // expected success value: number of messages executed
-         DBGMSG("Unexpected: ioctl() returned %d", rc);
-      buffer_set_length(rawedid, edid_read_size);
-      rc = 0;
-   }
-   free(messages);
-
-#ifdef RECOVER_CURRENT_ADDRESS_READ
-   // A CEA 861 extension block where the base block belongs means the read
-   // began at word offset 0x80 rather than 0, i.e. the word offset write above
-   // did not take effect and this was a read at the current address.  See VESA
-   // E-DDC 1.2 sections 6.1 (Read at the Current Address) and 6.3 (DDC
-   // Sequential Read Operation).  The address space at 0x50 is 256 bytes, so a
-   // 256 byte read starting at 0x80 wraps and returns the extension block
-   // followed by the base block.
-   //
-   // Three parked recoveries for this quirk exist, each under its own macro so
-   // that one can be enabled and evaluated without the others.  They are not
-   // variations on a single switch: two of them intercept in the read function
-   // itself, the third is a catch-all in the caller, and they use different
-   // means.  There is no reproducer for any of them.
-   //
-   //   RECOVER_CURRENT_ADDRESS_READ           this block.  Self-recursion,
-   //                                          repair inline.
-   //   RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER same, in
-   //                                          i2c_get_edid_bytes_using_i2c_layer().
-   //   RECOVER_CURRENT_ADDRESS_READ_BY_FD     catch-all in
-   //                                          i2c_get_raw_edid_by_fd(), after
-   //                                          whichever read path ran.  Calls a
-   //                                          helper and leans on that
-   //                                          function's existing 256 byte
-   //                                          repair rather than repairing
-   //                                          here.  Covers the direct ioctl
-   //                                          and fileio paths, which have no
-   //                                          in-function recovery.
-   //
-   // Recovering here rather than leaving it to the catch-all matters because
-   // with the default EDID_Read_Size this function runs first on every read
-   // and, per the local edid_read_size computed above, always asks for 128
-   // bytes.  Left to the caller, the quirk costs two failed tries before a 256
-   // byte read is even attempted.
-   //
-   // The re-read does not depend on the word offset write working the second
-   // time.  It relies only on the wrap: the address space at 0x50 is 256 bytes,
-   // so a 256 byte read starting at 0x80 returns the extension block followed
-   // by the base block, whether it started there by accident or on purpose.
-   if (rc == 0 && edid_read_size < 256 &&
-         is_valid_raw_cea861_extension_block(rawedid->bytes, rawedid->len))
-   {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "Read returned a CEA 861 extension block, indicating a read at the"
-            " current address.  Re-reading 256 bytes.");
-      // Bounded to one level of recursion: the recursive call passes 256, which
-      // fails the edid_read_size < 256 test above.
-      rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, 256);
-      if (rc == 0 && is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "Base block found at offset 128.  Copying it down.");
-         memcpy(rawedid->bytes, rawedid->bytes+128, 128);
-         buffer_set_length(rawedid, 128);
-      }
-   }
-#endif
-
-   if ( (debug || IS_TRACING()) && rc == 0) {
-      DBGMSG("Returning buffer:");
-      rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
-   }
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
-   return rc;
-}
-
-
 static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_fileio(
    int     fd,
@@ -600,45 +464,8 @@ retry:
                     tryctr, max_tries, edid_read_size, sbool(read_bytewise),
                     (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
 
-#ifdef EDID_READ_SINGLE_IOCTL
-      // Try i2c_get_edid_bytes_using_single_ioctl() first, if applicable.
-      // read_edid_using_single_ioctl is false in any normal build and must stay
-      // that way: on amdgpu it costs about 650 ms per attempt on a bus with
-      // nothing at 0x50 -- see the comment at its definition above.  Note also
-      // that a failure here falls through to the attempt below rather than
-      // replacing it, so on such a bus the two costs add.
-      if (cur_strategy_id == I2C_IO_STRATEGY_IOCTL && !read_bytewise && read_edid_using_single_ioctl) {
-          int edid_read_size = (EDID_Read_Size == 256) ? 256 : 128;
-          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                        "Trying EDID read using single ioctl. edid_read_size=%d", edid_read_size);
-          rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, edid_read_size);
-          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                "i2c_get_edid_bytes_using_single_ioctl returned %s", psc_desc(rc));
-          if (rc == 0 && !is_valid_raw_edid(rawedid->bytes, rawedid->len)) {
-             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Invalid EDID from single ioctl read");
-             rc = DDCRC_INVALID_EDID;
-          }
-          if (rc == 0) {
-             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Valid EDID read using single ioctl");
-             tryctr++;
-             break;
-          }
-          if (rc == -ENXIO) {
-             tryctr++;
-             break;   // no point in retrying
-          }
-          if (rc == -EINVAL) {
-             int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
-             assert(busno >= 0);
-             if ( is_nvidia_einval_bug(I2C_IO_STRATEGY_IOCTL, busno, rc)) {
-                cur_strategy_id = I2C_IO_STRATEGY_FILEIO;
-                goto retry;
-             }
-          }
-      }
-#endif
 
-      char * called_func_name = NULL;
+     char * called_func_name = NULL;
       if (EDID_Read_Uses_I2C_Layer) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                "Calling i2c_get_edid_bytes_using_i2c_layer, cur_strategy_id = %s...",
@@ -826,7 +653,6 @@ i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 
 void init_i2c_edid() {
    RTTI_ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
-   RTTI_ADD_FUNC(i2c_get_edid_bytes_using_single_ioctl);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly_using_fileio);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly_using_ioctl);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
@@ -939,3 +765,142 @@ bool read_edid_using_single_ioctl    = DEFAULT_SINGLE_IOCTL_EDID_READ;
 #define DEFAULT_SINGLE_IOCTL_EDID_READ   false
 #endif
 
+
+
+
+#ifdef EDID_READ_SINGLE_IOCTL
+/** Reads the EDID in a single I2C_RDWR ioctl.
+ *
+ *  Some monitors, e.g. Dell P2725DE ignore an offset write sent as a transaction
+ *  of its own and return the wrong 128 byte block for the subsequent read.
+ *
+ * @param   fd             file descriptor for open /dev/i2c-n
+ * @param   rawedid        buffer in which to return bytes of the EDID
+ * @param   edid_read_size number of bytes to read
+ * @return  status code
+ *
+ * @remark
+ * From user przemech, based on function drm_do_probe_ddc_edid() in kernel source
+ * file drivers/gpu/drm/drm_edid.c, which uses a single ioctl() to read the EDID.
+ */
+Status_Errno_DDC
+i2c_get_edid_bytes_using_single_ioctl(
+   int     fd,
+   Buffer* rawedid,
+   int     edid_read_size)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d",
+                 fd, filename_for_fd_t(fd), edid_read_size);
+   assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
+
+   int rc = 0;
+   Byte byte_to_write = 0x00;
+
+   // messages needs to be allocated, cannot be on stack:
+   struct i2c_msg * messages = calloc(2, sizeof(struct i2c_msg));
+   struct i2c_rdwr_ioctl_data  msgset;
+   memset(&msgset,0,sizeof(msgset));  // see comment in i2c_get_edid_bytes_directly_using_ioctl()
+
+   messages[0].addr  = 0x50;
+   messages[0].flags = 0;
+   messages[0].len   = 1;
+   messages[0].buf   = &byte_to_write;
+
+   messages[1].addr  = 0x50;
+   messages[1].flags = I2C_M_RD;
+   messages[1].len   = edid_read_size;
+   messages[1].buf   = rawedid->bytes;
+
+   msgset.msgs  = messages;
+   msgset.nmsgs = 2;
+
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+      dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
+
+   RECORD_IO_EVENT(
+         fd,
+         IE_IOCTL_READ,
+         ( rc = ioctl(fd, I2C_RDWR, &msgset) )
+         );
+   int errsv = errno;
+   if (rc < 0) {
+      if (debug) {
+         REPORT_IOCTL_ERROR("I2C_RDWR", errno);
+      }
+      rc = -errsv;
+   }
+   else {
+      if (rc != 2)      // expected success value: number of messages executed
+         DBGMSG("Unexpected: ioctl() returned %d", rc);
+      buffer_set_length(rawedid, edid_read_size);
+      rc = 0;
+   }
+   free(messages);
+
+#ifdef RECOVER_CURRENT_ADDRESS_READ
+   // A CEA 861 extension block where the base block belongs means the read
+   // began at word offset 0x80 rather than 0, i.e. the word offset write above
+   // did not take effect and this was a read at the current address.  See VESA
+   // E-DDC 1.2 sections 6.1 (Read at the Current Address) and 6.3 (DDC
+   // Sequential Read Operation).  The address space at 0x50 is 256 bytes, so a
+   // 256 byte read starting at 0x80 wraps and returns the extension block
+   // followed by the base block.
+   //
+   // Three parked recoveries for this quirk exist, each under its own macro so
+   // that one can be enabled and evaluated without the others.  They are not
+   // variations on a single switch: two of them intercept in the read function
+   // itself, the third is a catch-all in the caller, and they use different
+   // means.  There is no reproducer for any of them.
+   //
+   //   RECOVER_CURRENT_ADDRESS_READ           this block.  Self-recursion,
+   //                                          repair inline.
+   //   RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER same, in
+   //                                          i2c_get_edid_bytes_using_i2c_layer().
+   //   RECOVER_CURRENT_ADDRESS_READ_BY_FD     catch-all in
+   //                                          i2c_get_raw_edid_by_fd(), after
+   //                                          whichever read path ran.  Calls a
+   //                                          helper and leans on that
+   //                                          function's existing 256 byte
+   //                                          repair rather than repairing
+   //                                          here.  Covers the direct ioctl
+   //                                          and fileio paths, which have no
+   //                                          in-function recovery.
+   //
+   // Recovering here rather than leaving it to the catch-all matters because
+   // with the default EDID_Read_Size this function runs first on every read
+   // and, per the local edid_read_size computed above, always asks for 128
+   // bytes.  Left to the caller, the quirk costs two failed tries before a 256
+   // byte read is even attempted.
+   //
+   // The re-read does not depend on the word offset write working the second
+   // time.  It relies only on the wrap: the address space at 0x50 is 256 bytes,
+   // so a 256 byte read starting at 0x80 returns the extension block followed
+   // by the base block, whether it started there by accident or on purpose.
+   if (rc == 0 && edid_read_size < 256 &&
+         is_valid_raw_cea861_extension_block(rawedid->bytes, rawedid->len))
+   {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "Read returned a CEA 861 extension block, indicating a read at the"
+            " current address.  Re-reading 256 bytes.");
+      // Bounded to one level of recursion: the recursive call passes 256, which
+      // fails the edid_read_size < 256 test above.
+      rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, 256);
+      if (rc == 0 && is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "Base block found at offset 128.  Copying it down.");
+         memcpy(rawedid->bytes, rawedid->bytes+128, 128);
+         buffer_set_length(rawedid, 128);
+      }
+   }
+#endif
+
+   if ( (debug || IS_TRACING()) && rc == 0) {
+      DBGMSG("Returning buffer:");
+      rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
+   }
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
+   return rc;
+}
+#endif
