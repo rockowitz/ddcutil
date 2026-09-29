@@ -902,10 +902,11 @@ void init_i2c_edid() {
  * read the way it can in the two transaction readers.  That is why it is kept
  * rather than deleted.
  *
- * Enabling it requires a rebuild with OPTION_SINGLE_IOCTL defined, which restores
- * the --enable-single-ioctl-edid-read and --disable-single-ioctl-edid-read
- * options.  There is deliberately no runtime switch: --f30 used to enable it and
- * no longer does.
+ * Nothing assigns to read_edid_using_single_ioctl any more.  The
+ * --enable-single-ioctl-edid-read and --disable-single-ioctl-edid-read options
+ * have been removed along with the OPTION_SINGLE_IOCTL plumbing that carried
+ * them, and the --f30 route that once flipped it is gone too.  Enabling it now
+ * means editing the source.
  */
 bool read_edid_using_single_ioctl    = DEFAULT_SINGLE_IOCTL_EDID_READ;
 #endif
