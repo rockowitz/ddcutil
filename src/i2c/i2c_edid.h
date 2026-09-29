@@ -22,8 +22,6 @@ extern int  EDID_Read_Size;
 
 Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid);
 Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc);
-Status_Errno_DDC i2c_get_edid_bytes_using_single_ioctl(
-                    int fd, Buffer* rawedid, int edid_read_size);
 
 void init_i2c_edid();
 
