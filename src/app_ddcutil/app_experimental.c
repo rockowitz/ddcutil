@@ -226,7 +226,6 @@ void test_display_detection_variants() {
        rpt_vstring(d, "EDID read size:           %s", read_size_name(cur.edid_read_size));
 
        DDC_Read_Bytewise        = false;       //      cur.i2c_read_bytewise;
-       EDID_Read_Bytewise       = cur.edid_read_bytewise;
        EDID_Read_Size           = cur.edid_read_size;
        assert(EDID_Read_Size == 128 || EDID_Read_Size == 256 || EDID_Read_Size == 0);
 

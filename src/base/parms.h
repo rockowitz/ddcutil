@@ -66,14 +66,6 @@
 #define EDID_BUFFER_SIZE                  256         ///< always 256
 #define DEFAULT_EDID_READ_SIZE            0           ///< 128, 256, 0=>dynamic
 #define DEFAULT_EDID_READ_USES_I2C_LAYER  true
-#define DEFAULT_EDID_READ_BYTEWISE        false
-
-// Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
-// FILEIO      false       ok                                                 ok
-// FILEIO      true        on P2411h and Acer, reads byes 0. 2, 4 of response EDID ok, getvcp fails
-// IOCTL       false       ok                                                 All ok
-// IOCTL       true        on P2411h and Acer, returns corrupt data           EDID ok, getvcp fails
-
 
 //
 // *** Retry Management ***

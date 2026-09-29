@@ -189,6 +189,63 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
 #endif
 
 
+/** Tests whether slave address x37 is responsive, which ddcutil takes as evidence
+ *  that the display supports DDC/CI.
+ *
+ *  @param  fd      file descriptor for open /dev/i2c-n
+ *  @param  driver  driver name
+ *  @return status code, 0 if the address responded
+ *
+ *  @remark
+ *  What the VESA standards say about probing this address: nothing.  E-DDC's scope
+ *  is getting the EDID or DisplayID out of the display -- the EEPROM at 7 bit
+ *  0x50, the segment pointer at 0x30 for access past 256 bytes, and the
+ *  requirement that the EDID be readable whenever the display has power.  It
+ *  mentions the 0x6E/0x6F pair only as the address pair belonging to the DDC2Bi
+ *  and DDC2B+ command channel.  It defines no procedure for determining whether
+ *  that channel exists, and no concept of address responsiveness at all.
+ *
+ *  @remark
+ *  The document that owns 0x37 is the DDC/CI standard, and what it defines is a
+ *  message protocol: destination address, source address, a length byte with the
+ *  0x80 high bit set, payload, and an XOR checksum in which the host's virtual
+ *  address participates.  Its answer to "is DDC/CI present" is at that level: a
+ *  display that supports it must answer a read with either a real reply or a Null
+ *  Message, 6E 80 BE, when it has nothing to say.  So the sanctioned test is to
+ *  issue an actual request -- Identification Request, Capabilities Request, or a
+ *  VCP feature read -- and validate the reply's length and checksum.  A bare
+ *  address probe sits below the level either standard describes.
+ *
+ *  @remark
+ *  So this test is a heuristic, wrong in both directions, and neither direction is
+ *  a violation by the monitor.  An ACK does not imply DDC/CI works: nothing
+ *  obliges a device that ACKs 0x6E to produce a well formed reply.  No ACK does
+ *  not imply no DDC/CI: a zero length write is a degenerate transaction that some
+ *  adapters will not emit and some drivers synthesize a result for, and a display
+ *  in standby may not answer on 0x6E though E-DDC still requires it to answer on
+ *  0xA0.  That asymmetry is why an x37 result is less durable than an EDID result,
+ *  and it is the justification for the x37 detection table.
+ *
+ *  @remark
+ *  Of the two probes here, the 1 byte read is the defensible one: it is at least
+ *  the opening byte of a null message read, so a display following the spec should
+ *  return 0x6E.  The zero length write corresponds to nothing in either document.
+ *  But reading one byte and discarding it leaves the display partway through a
+ *  message it expected the host to drain, where the spec assumes complete messages
+ *  plus minimum intervals between transactions -- the same timing sensitivity the
+ *  parked i2c_detect_x37() below acknowledged with its extra sleep.  If a monitor
+ *  turns up whose probe result depends on what preceded it, look here first.
+ *
+ *  @remark
+ *  Making the probe defensible by the letter of DDC/CI would mean reading the full
+ *  three byte null message and verifying the checksum rather than ACK testing.  Not
+ *  done: it costs a slower probe on buses with nothing at 0x37, which on amdgpu is
+ *  not free.  See the comment at read_edid_using_single_ioctl in i2c_edid.c.
+ *
+ *  @remark
+ *  The account above is from knowledge of the two standards rather than from the
+ *  documents; no clause numbers are cited because none were verified.
+ */
 Status_Errno_DDC
 i2c_detect_x37_new(int fd, char * driver) {
    bool debug = false;
