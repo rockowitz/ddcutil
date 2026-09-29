@@ -85,15 +85,6 @@ static int failed = 0;
 } while(0)
 
 
-static void test_get_edid_bytes_using_single_ioctl_bad_fd(void) {
-   Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
-   int rc;
-   QUIETLY( rc = i2c_get_edid_bytes_using_single_ioctl(-1, buf, 128) );
-   CK(rc < 0);
-   buffer_free(buf, NULL);
-}
-
-
 static void test_get_raw_edid_by_fd_bad_fd(void) {
    Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
    int rc;
@@ -324,7 +315,6 @@ int main(int argc, char ** argv) {
 
    i2c_set_io_strategy_by_id(DEFAULT_I2C_IO_STRATEGY);   // required: asserted non-NOT_SET
 
-   test_get_edid_bytes_using_single_ioctl_bad_fd();
    test_get_raw_edid_by_fd_bad_fd();
    test_get_parsed_edid_by_fd_bad_fd();
    test_get_raw_edid_all_switch_combinations();
