@@ -63,7 +63,6 @@ bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 
 // No Longer global:
-bool EDID_Write_Before_Read          = true;
 
 
 
@@ -79,57 +78,52 @@ i2c_get_edid_bytes_directly_using_ioctl(
             fd, filename_for_fd_t(fd), edid_read_size);
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
-   bool write_before_read = EDID_Write_Before_Read;
-   // write_before_read = false;
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
    int rc = 0;
 
    if (i2c_use_x30)
        i2c_ioctl_write_x30(fd);
 
-   if (write_before_read) {
-      Byte byte_to_write = 0x00;
+   Byte byte_to_write = 0x00;
 
-      struct i2c_msg              messages[1];
-      struct i2c_rdwr_ioctl_data  msgset;
+   struct i2c_msg              messages[1];
+   struct i2c_rdwr_ioctl_data  msgset;
 
-      // The memset() calls are logically unnecessary, and code works fine without them.
-      // However, without the memset() calls, valgrind complains about uninitialized bytes
-      // on the ioctl() call.
-      // See:  https://stackoverflow.com/questions/17859320/valgrind-error-in-ioctl-call-while-sending-an-i2c-message
-      // Also: https://github.com/the-tcpdump-group/libpcap/issues/1083
-      memset(messages,0, sizeof(messages));
-      memset(&msgset,0,sizeof(msgset));
+   // The memset() calls are logically unnecessary, and code works fine without them.
+   // However, without the memset() calls, valgrind complains about uninitialized bytes
+   // on the ioctl() call.
+   // See:  https://stackoverflow.com/questions/17859320/valgrind-error-in-ioctl-call-while-sending-an-i2c-message
+   // Also: https://github.com/the-tcpdump-group/libpcap/issues/1083
+   memset(messages,0, sizeof(messages));
+   memset(&msgset,0,sizeof(msgset));
 
-      messages[0].addr  = 0x50;
-      messages[0].flags = 0;
-      messages[0].len   = 1;
-      messages[0].buf   = &byte_to_write;
+   messages[0].addr  = 0x50;
+   messages[0].flags = 0;
+   messages[0].len   = 1;
+   messages[0].buf   = &byte_to_write;
 
-      msgset.msgs  = messages;
-      msgset.nmsgs = 1;
+   msgset.msgs  = messages;
+   msgset.nmsgs = 1;
 
-      RECORD_IO_EVENT(
-            fd,
-            IE_IOCTL_WRITE,
-            ( rc = ioctl(fd, I2C_RDWR, &msgset) )
-            );
-      int errsv = errno;
-      if (rc < 0) {
-         if (debug) {
-            REPORT_IOCTL_ERROR("I2C_RDWR", errno);
-         }
+   RECORD_IO_EVENT(
+         fd,
+         IE_IOCTL_WRITE,
+         ( rc = ioctl(fd, I2C_RDWR, &msgset) )
+         );
+   int errsv = errno;
+   if (rc < 0) {
+      if (debug) {
+         REPORT_IOCTL_ERROR("I2C_RDWR", errno);
       }
-      // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
+   }
+   // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
 
-      if (rc >= 0) {
-         if (rc != 1)      // expected success value
-            DBGMSG("Unexpected: ioctl() write returned %d", rc);
-         rc = 0;
-      }
-      else if (rc < 0) {
-         rc = -errsv;
-      }
+   if (rc >= 0) {
+      if (rc != 1)      // expected success value
+         DBGMSG("Unexpected: ioctl() write returned %d", rc);
+      rc = 0;
+   }
+   else if (rc < 0) {
+      rc = -errsv;
    }
 
    if (rc == 0) {
@@ -258,30 +252,25 @@ i2c_get_edid_bytes_directly_using_fileio(
                  fd, filename_for_fd_t(fd), edid_read_size);
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
-   bool write_before_read = EDID_Write_Before_Read;
-   // write_before_read = false;
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
 
    int rc = i2c_set_addr(fd, 0x50);
    if (rc < 0) {
       goto bye;
    }
 
-   if (write_before_read) {
-      Byte byte_to_write = 0x00;
-      RECORD_IO_EVENT(
-          fd,
-          IE_FILEIO_WRITE,
-          ( rc = write(fd, &byte_to_write, 1) )
-         );
-      if (rc < 0) {
-         rc = -errno;
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() failed.  rc = %s", psc_name_code(rc));
-      }
-      else {
-         rc = 0;
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() succeeded");
-      }
+   Byte byte_to_write = 0x00;
+   RECORD_IO_EVENT(
+       fd,
+       IE_FILEIO_WRITE,
+       ( rc = write(fd, &byte_to_write, 1) )
+      );
+   if (rc < 0) {
+      rc = -errno;
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() failed.  rc = %s", psc_name_code(rc));
+   }
+   else {
+      rc = 0;
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() succeeded");
    }
 
    if (rc == 0) {
@@ -327,13 +316,10 @@ i2c_get_edid_bytes_using_i2c_layer(
       i2c_ioctl_write_x30(fd);
 
    int rc = 0;
-   bool write_before_read = EDID_Write_Before_Read;
-   if (write_before_read) {
-      Byte byte_to_write = 0x00;
-      rc = invoke_i2c_writer(fd, 0x50, 1, &byte_to_write);
-      DBGMSF(debug, "invoke_i2c_writer returned %s", psc_desc(rc));
-   }
-   if (rc == 0) {   // write succeeded or no write
+   Byte byte_to_write = 0x00;
+   rc = invoke_i2c_writer(fd, 0x50, 1, &byte_to_write);
+   DBGMSF(debug, "invoke_i2c_writer returned %s", psc_desc(rc));
+   if (rc == 0) {   // write succeeded
       rc = invoke_i2c_reader(fd, 0x50, /*read_bytewise*/ false, edid_read_size, rawedid->bytes);
       DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
       if (rc == 0) {
@@ -353,15 +339,15 @@ i2c_get_edid_bytes_using_i2c_layer(
    // write and the read as two separate I2C transactions rather than one
    // combined transfer with a repeated START, so anything that intervenes
    // between them can leave the read starting from the display's current word
-   // offset.  And the write is conditional on EDID_Write_Before_Read: when that
-   // is false every read here is by definition a read at the current address.
+   // offset.  The write is now unconditional, EDID_Write_Before_Read having been
+   // eliminated, so a read at the current address here means the write was issued
+   // and did not take effect, rather than that it was skipped.
    if (rc == 0 && edid_read_size < 256 &&
          is_valid_raw_cea861_extension_block(rawedid->bytes, rawedid->len))
    {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "Read returned a CEA 861 extension block, indicating a read at the"
-            " current address.  Re-reading 256 bytes.  write_before_read=%s",
-            sbool(write_before_read));
+            " current address.  Re-reading 256 bytes.");
       // Bounded to one level of recursion: the recursive call passes 256, which
       // fails the edid_read_size < 256 test above.
       rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256);
@@ -727,15 +713,16 @@ void init_i2c_edid() {
  * The two ioctl readers are immune for a reason that has nothing to do with the
  * driver: ddcutil itself gates the read on the write's ioctl returning success,
  * so on a silent bus the read is never submitted.  The corollary is that
- * EDID_Write_Before_Read = false (--f37) is exposed to the same cost for the
+ * suppressing the write exposed the two ioctl readers to the same cost for the
  * opposite reason -- no write precedes the read, so the read goes to the engine
- * alone.  Measured 1301.9 ms on the same bus.  --f37 must not be used on amdgpu
- * either, and it is a worse trap than this switch because it needs no rebuild.
+ * alone.  Measured 1301.9 ms on the same bus, using EDID_Write_Before_Read=false
+ * via --f37, both since eliminated: the write is now unconditional, which is what
+ * keeps a silent bus cheap on this driver.
  *
- * Two further facts from that measurement.  This function sends the write message
- * unconditionally, so it does not honor EDID_Write_Before_Read.  And its caller
- * falls through to the normal i2c layer attempt on EIO, so enabling it prepends a
- * timeout rather than replacing one: the two costs add, to 2617 ms with --f37.
+ * One further fact from that measurement: this function's caller falls through to
+ * the normal i2c layer attempt on EIO, so enabling it prepends a timeout rather
+ * than replacing one.  The two costs added, to 2617 ms, when the write was also
+ * suppressed.
  *
  * Not explained: of the three DM i2c hw buses on that host only hw bus 0 reaches
  * the timeout.  Hw bus 1 and the aux bus, equally silent at 0x50, fail in under a
@@ -780,8 +767,8 @@ bool read_edid_using_single_ioctl    = DEFAULT_SINGLE_IOCTL_EDID_READ;
 // comparison testing.  Users reported it, and measurement on amdgpu confirmed
 // both the cost and the mechanism -- see the comment at
 // read_edid_using_single_ioctl in i2c_edid.c.  The same comment records that
-// EDID_Write_Before_Read = false (--f37) is exposed to the same cost on that
-// driver, for the opposite reason.
+// suppressing the word offset write incurred the same cost on that driver, for
+// the opposite reason; that is part of why the write is now unconditional.
 #define DEFAULT_SINGLE_IOCTL_EDID_READ   false
 #endif
 
