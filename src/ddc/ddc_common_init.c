@@ -733,13 +733,6 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // rpt_nl();
    // get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
 
-#ifdef WATCH_DISPLAYS
-   if (use_drm_connector_states)
-      redetect_drm_connector_states();
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s",
-         sbool(use_drm_connector_states), sbool(all_video_adapters_implement_drm));
-#endif
-
 #ifdef NOT_HERE
   // adding or removing MST device can change whether all drm connectors have connector_id
   all_drm_connectors_have_connector_id = all_sys_drm_connectors_have_connector_id(false);
@@ -783,6 +776,16 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 #endif
    init_algorithm_options(parsed_cmd);
    init_experimental_options(parsed_cmd);
+
+#ifdef WATCH_DISPLAYS
+   // Must follow init_algorithm_options(), where --f6 sets
+   // use_drm_connector_states.  This block used to sit above that call, so the
+   // redetect never ran and the trace always reported the initial value.
+   if (use_drm_connector_states)
+      redetect_drm_connector_states();
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "use_drm_connector_states=%s, drm_enabled = %s",
+         sbool(use_drm_connector_states), sbool(all_video_adapters_implement_drm));
+#endif
 
    if (errinfo_accumulator->len > 0)
       final_result = errinfo_new_with_causes_gptr(
