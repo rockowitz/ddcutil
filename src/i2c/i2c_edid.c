@@ -60,110 +60,13 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 // Globals:
 bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
-bool EDID_Read_Bytewise              = false;;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
+
+// No Longer global:
+bool EDID_Read_Bytewise              = false;
 bool EDID_Write_Before_Read          = true;
 
 
-#ifdef OUT
-// if EDID_Read_Bytewise tests show significantly lower performance,
-// cases where it fails
-// To be eliminated.
-// moved from parms.h
-#define DEFAULT_EDID_READ_BYTEWISE        false
-// Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
-// FILEIO      false       ok                                                 ok
-// FILEIO      true        on P2411h and Acer, reads byes 0. 2, 4 of response EDID ok, getvcp fails
-// IOCTL       false       ok                                                 All ok
-// IOCTL       true        on P2411h and Acer, returns corrupt data           EDID ok, getvcp fails
-
-#endif
-
-
-#ifdef EDID_READ_SINGLE_IOCTL
-/* Retained for comparison testing only.  Must not be enabled in normal use.
- *
- * Why not: on some drivers the single ioctl read is very slow when there is no
- * EDID to read -- which is most of what display detection looks at, and the bus
- * flock is held throughout, so other ddcutil and libddcutil instances wait too.
- * Users reported this; it was confirmed by measurement on amdgpu (AMD Baffin,
- * kernel 7.0.0) on 2026-09-28.  On an AMDGPU DM i2c hw bus with nothing at 0x50,
- * elapsed time per i2c_get_raw_edid_by_fd() call was 22.9 ms for the default path
- * and 1337.9 ms with this switch on, a factor of 58.
- *
- * The mechanism is the amdgpu per payload timeout, which scales with payload
- * length: get_transaction_timeout_hw() in dce_i2c_hw.c.  The missing piece, and
- * the reason an earlier reading of the driver wrongly exonerated this function,
- * is that the timeout is reached at all.  amdgpu_dm_i2c_xfer() maps one payload
- * per i2c_msg and dce_i2c_submit_command_hw() breaks out of the payload loop on
- * the first failure, so the one byte word offset write submitted here as payload
- * 0 ought to fail on a silent bus and stop the transaction before the long read.
- * It does not: the measurement shows payload 1 being submitted and running its
- * timeout out, about 650 ms for a 128 byte read.  The engine evidently reports
- * the NACKed write as successful.  (650 ms is twice what the formula gives for
- * 128 bytes at speed 100, so the speed or the (len+1)<<3 term in that arithmetic
- * is off by two.  The scaling with payload length is the point, not the constant.)
- *
- * The two ioctl readers are immune for a reason that has nothing to do with the
- * driver: ddcutil itself gates the read on the write's ioctl returning success,
- * so on a silent bus the read is never submitted.  The corollary is that
- * EDID_Write_Before_Read = false (--f37) is exposed to the same cost for the
- * opposite reason -- no write precedes the read, so the read goes to the engine
- * alone.  Measured 1301.9 ms on the same bus.  --f37 must not be used on amdgpu
- * either, and it is a worse trap than this switch because it needs no rebuild.
- *
- * Two further facts from that measurement.  This function sends the write message
- * unconditionally, so it does not honor EDID_Write_Before_Read.  And its caller
- * falls through to the normal i2c layer attempt on EIO, so enabling it prepends a
- * timeout rather than replacing one: the two costs add, to 2617 ms with --f37.
- *
- * Not explained: of the three DM i2c hw buses on that host only hw bus 0 reaches
- * the timeout.  Hw bus 1 and the aux bus, equally silent at 0x50, fail in under a
- * millisecond in every combination.
- *
- * The other half of the comparison is settled and favorable: where a monitor is
- * present the single ioctl read costs nothing, 12.13 ms against 12.25 ms for the
- * default path on amdgpu and 11.78 against 11.81 on i915, and it is atomic
- * against the adapter lock, so nothing can intervene between the write and the
- * read the way it can in the two transaction readers.  That is why it is kept
- * rather than deleted.
- *
- * Enabling it requires a rebuild with OPTION_SINGLE_IOCTL defined, which restores
- * the --enable-single-ioctl-edid-read and --disable-single-ioctl-edid-read
- * options.  There is deliberately no runtime switch: --f30 used to enable it and
- * no longer does.
- */
-bool read_edid_using_single_ioctl    = DEFAULT_SINGLE_IOCTL_EDID_READ;
-#endif
-
-#ifdef EDID_READ_SINGLE_IOCTL
-// Comments that claude code put in parms.h, more appropriate here
-/** Read the EDID using a single multi-message ioctl instead of
- *  separate write and read calls. */
-
-// Needed to read the EDID on some monitors, e.g. Dell P2725DE, which returns
-// a CEA extension block unless offset write and read are a single
-// combined transaction.
-//
-// However: Using one ioctl() carrying both the word offset write and the 128
-// byte read, instead of using separate write and read ioctls, is much more
-// expensive when it fails, i.e. when there's no EDID at slave address x50.
-// On amdgpu the driver's timeout scales with the payload length, so the 128
-// byte read spends several hundred millisec before returning EIO where a write
-// only transaction fails in single digits.  Measured on an AMD Baffin, kernel
-// 7.0.0: 650 ms for the read against 11 ms for the write, and 1337.9 ms against
-// 22.9 ms per EDID read attempt on a silent bus, the retry ladder included.
-//
-// Also, the multi-message ioctl may trigger an amgdpu driver failure.
-//
-// Not merely a default: the single ioctl read must not be enabled outside
-// comparison testing.  Users reported it, and measurement on amdgpu confirmed
-// both the cost and the mechanism -- see the comment at
-// read_edid_using_single_ioctl in i2c_edid.c.  The same comment records that
-// EDID_Write_Before_Read = false (--f37) is exposed to the same cost on that
-// driver, for the opposite reason.
-#define DEFAULT_SINGLE_IOCTL_EDID_READ   false
-#endif
 
 static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_ioctl(
@@ -929,4 +832,110 @@ void init_i2c_edid() {
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
    RTTI_ADD_FUNC(i2c_get_parsed_edid_by_fd);
 }
+
+
+//
+// Collected comments re code variants eliminated
+//
+
+
+#ifdef OUT
+// if EDID_Read_Bytewise tests show significantly lower performance,
+// cases where it fails
+// To be eliminated.
+// moved from parms.h
+#define DEFAULT_EDID_READ_BYTEWISE        false
+// Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
+// FILEIO      false       ok                                                 ok
+// FILEIO      true        on P2411h and Acer, reads byes 0. 2, 4 of response EDID ok, getvcp fails
+// IOCTL       false       ok                                                 All ok
+// IOCTL       true        on P2411h and Acer, returns corrupt data           EDID ok, getvcp fails
+
+#endif
+
+
+#ifdef EDID_READ_SINGLE_IOCTL
+/* Retained for comparison testing only.  Must not be enabled in normal use.
+ *
+ * Why not: on some drivers the single ioctl read is very slow when there is no
+ * EDID to read -- which is most of what display detection looks at, and the bus
+ * flock is held throughout, so other ddcutil and libddcutil instances wait too.
+ * Users reported this; it was confirmed by measurement on amdgpu (AMD Baffin,
+ * kernel 7.0.0) on 2026-09-28.  On an AMDGPU DM i2c hw bus with nothing at 0x50,
+ * elapsed time per i2c_get_raw_edid_by_fd() call was 22.9 ms for the default path
+ * and 1337.9 ms with this switch on, a factor of 58.
+ *
+ * The mechanism is the amdgpu per payload timeout, which scales with payload
+ * length: get_transaction_timeout_hw() in dce_i2c_hw.c.  The missing piece, and
+ * the reason an earlier reading of the driver wrongly exonerated this function,
+ * is that the timeout is reached at all.  amdgpu_dm_i2c_xfer() maps one payload
+ * per i2c_msg and dce_i2c_submit_command_hw() breaks out of the payload loop on
+ * the first failure, so the one byte word offset write submitted here as payload
+ * 0 ought to fail on a silent bus and stop the transaction before the long read.
+ * It does not: the measurement shows payload 1 being submitted and running its
+ * timeout out, about 650 ms for a 128 byte read.  The engine evidently reports
+ * the NACKed write as successful.  (650 ms is twice what the formula gives for
+ * 128 bytes at speed 100, so the speed or the (len+1)<<3 term in that arithmetic
+ * is off by two.  The scaling with payload length is the point, not the constant.)
+ *
+ * The two ioctl readers are immune for a reason that has nothing to do with the
+ * driver: ddcutil itself gates the read on the write's ioctl returning success,
+ * so on a silent bus the read is never submitted.  The corollary is that
+ * EDID_Write_Before_Read = false (--f37) is exposed to the same cost for the
+ * opposite reason -- no write precedes the read, so the read goes to the engine
+ * alone.  Measured 1301.9 ms on the same bus.  --f37 must not be used on amdgpu
+ * either, and it is a worse trap than this switch because it needs no rebuild.
+ *
+ * Two further facts from that measurement.  This function sends the write message
+ * unconditionally, so it does not honor EDID_Write_Before_Read.  And its caller
+ * falls through to the normal i2c layer attempt on EIO, so enabling it prepends a
+ * timeout rather than replacing one: the two costs add, to 2617 ms with --f37.
+ *
+ * Not explained: of the three DM i2c hw buses on that host only hw bus 0 reaches
+ * the timeout.  Hw bus 1 and the aux bus, equally silent at 0x50, fail in under a
+ * millisecond in every combination.
+ *
+ * The other half of the comparison is settled and favorable: where a monitor is
+ * present the single ioctl read costs nothing, 12.13 ms against 12.25 ms for the
+ * default path on amdgpu and 11.78 against 11.81 on i915, and it is atomic
+ * against the adapter lock, so nothing can intervene between the write and the
+ * read the way it can in the two transaction readers.  That is why it is kept
+ * rather than deleted.
+ *
+ * Enabling it requires a rebuild with OPTION_SINGLE_IOCTL defined, which restores
+ * the --enable-single-ioctl-edid-read and --disable-single-ioctl-edid-read
+ * options.  There is deliberately no runtime switch: --f30 used to enable it and
+ * no longer does.
+ */
+bool read_edid_using_single_ioctl    = DEFAULT_SINGLE_IOCTL_EDID_READ;
+#endif
+
+#ifdef EDID_READ_SINGLE_IOCTL
+// Comments that claude code put in parms.h, more appropriate here
+/** Read the EDID using a single multi-message ioctl instead of
+ *  separate write and read calls. */
+
+// Needed to read the EDID on some monitors, e.g. Dell P2725DE, which returns
+// a CEA extension block unless offset write and read are a single
+// combined transaction.
+//
+// However: Using one ioctl() carrying both the word offset write and the 128
+// byte read, instead of using separate write and read ioctls, is much more
+// expensive when it fails, i.e. when there's no EDID at slave address x50.
+// On amdgpu the driver's timeout scales with the payload length, so the 128
+// byte read spends several hundred millisec before returning EIO where a write
+// only transaction fails in single digits.  Measured on an AMD Baffin, kernel
+// 7.0.0: 650 ms for the read against 11 ms for the write, and 1337.9 ms against
+// 22.9 ms per EDID read attempt on a silent bus, the retry ladder included.
+//
+// Also, the multi-message ioctl may trigger an amgdpu driver failure.
+//
+// Not merely a default: the single ioctl read must not be enabled outside
+// comparison testing.  Users reported it, and measurement on amdgpu confirmed
+// both the cost and the mechanism -- see the comment at
+// read_edid_using_single_ioctl in i2c_edid.c.  The same comment records that
+// EDID_Write_Before_Read = false (--f37) is exposed to the same cost on that
+// driver, for the opposite reason.
+#define DEFAULT_SINGLE_IOCTL_EDID_READ   false
+#endif
 
