@@ -63,7 +63,6 @@ bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 
 // No Longer global:
-bool EDID_Read_Bytewise              = false;
 bool EDID_Write_Before_Read          = true;
 
 
@@ -72,12 +71,12 @@ static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_ioctl(
    int     fd,
    Buffer* rawedid,
-   int     edid_read_size,
-   bool    read_bytewise)
+   int     edid_read_size)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
-                 fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+            "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d",
+            fd, filename_for_fd_t(fd), edid_read_size);
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
    bool write_before_read = EDID_Write_Before_Read;
@@ -134,67 +133,43 @@ i2c_get_edid_bytes_directly_using_ioctl(
    }
 
    if (rc == 0) {
-      read_bytewise = false;
-      if (read_bytewise) { // unimplemented
-         PROGRAM_LOGIC_ERROR("oops");
-#ifdef FOR_REF
-         int ndx = 0;
-         for (; ndx < edid_read_size && rc == 0; ndx++) {
-            RECORD_IO_EVENT(
-                fd,
-                IE_FILEIO_READ,
-                ( rc = read(fd, &rawedid->bytes[ndx], 1) )
-               );
-            if (rc < 0) {
-               rc = -errno;
-               break;
-            }
-            assert(rc == 1);
-            rc = 0;
-          }
-          rawedid->len = ndx;
-          DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
-#endif
-      }
-      else {
-         // messages needs to be allocated, cannot be on stack:
+      // messages needs to be allocated, cannot be on stack:
          struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
-         struct i2c_rdwr_ioctl_data  msgset;
-         memset(&msgset,0,sizeof(msgset));  // see comment in i2c_ioctl_writer()
+      struct i2c_rdwr_ioctl_data  msgset;
+      memset(&msgset,0,sizeof(msgset));  // see comment in i2c_ioctl_writer()
 
-         messages[0].addr  = 0x50;
-         messages[0].flags = I2C_M_RD;
-         messages[0].len   = edid_read_size;
-         messages[0].buf   = rawedid->bytes;
+      messages[0].addr  = 0x50;
+      messages[0].flags = I2C_M_RD;
+      messages[0].len   = edid_read_size;
+      messages[0].buf   = rawedid->bytes;
 
-         msgset.msgs  = messages;
-         msgset.nmsgs = 1;
+      msgset.msgs  = messages;
+      msgset.nmsgs = 1;
 
-         RECORD_IO_EVENT(
-            fd,
-            IE_IOCTL_READ,
-            ( rc = ioctl(fd, I2C_RDWR, &msgset))
-           );
-         int errsv = errno;
-         if (rc < 0) {
-            if (debug) {
-               REPORT_IOCTL_ERROR("I2C_RDWR", errno);
-            }
+      RECORD_IO_EVENT(
+         fd,
+         IE_IOCTL_READ,
+         ( rc = ioctl(fd, I2C_RDWR, &msgset))
+        );
+      int errsv = errno;
+      if (rc < 0) {
+         if (debug) {
+            REPORT_IOCTL_ERROR("I2C_RDWR", errno);
          }
-         // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
-         if (rc >= 0) {
-            // always see rc == 1
-            if (rc != 1) {
-               DBGMSG("Unexpected ioctl rc = %d, bytect =%d", rc, edid_read_size);
-            }
-            buffer_set_length(rawedid, edid_read_size);
-            rc = 0;
-         }
-         else if (rc < 0)
-            rc = -errsv;
-
-         free(messages);
       }
+      // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
+      if (rc >= 0) {
+         // always see rc == 1
+         if (rc != 1) {
+            DBGMSG("Unexpected ioctl rc = %d, bytect =%d", rc, edid_read_size);
+         }
+         buffer_set_length(rawedid, edid_read_size);
+         rc = 0;
+      }
+      else if (rc < 0)
+         rc = -errsv;
+
+      free(messages);
    }
 
 #ifdef RECOVER_CURRENT_ADDRESS_READ
@@ -251,7 +226,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
             " current address.  Re-reading 256 bytes.");
       // Bounded to one level of recursion: the recursive call passes 256, which
       // fails the edid_read_size < 256 test above.
-      rc = i2c_get_edid_bytes_directly_using_ioctl(fd, rawedid, 256, read_bytewise);
+      rc = i2c_get_edid_bytes_directly_using_ioctl(fd, rawedid, 256);
       if (rc == 0 && is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "Base block found at offset 128.  Copying it down.");
@@ -275,12 +250,12 @@ static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_fileio(
    int     fd,
    Buffer* rawedid,
-   int     edid_read_size,
-   bool    read_bytewise)
+   int     edid_read_size)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
-                 fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d",
+                 fd, filename_for_fd_t(fd), edid_read_size);
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
    bool write_before_read = EDID_Write_Before_Read;
@@ -310,41 +285,21 @@ i2c_get_edid_bytes_directly_using_fileio(
    }
 
    if (rc == 0) {
-      if (read_bytewise) {
-         int ndx = 0;
-         for (; ndx < edid_read_size && rc == 0; ndx++) {
-            RECORD_IO_EVENT(
-                fd,
-                IE_FILEIO_READ,
-                ( rc = read(fd, &rawedid->bytes[ndx], 1) )
-               );
-            if (rc < 0) {
-               rc = -errno;
-               break;
-            }
-            assert(rc == 1);
-            rc = 0;
-          }
-          rawedid->len = ndx;
-          DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
+      RECORD_IO_EVENT(
+          fd,
+          IE_FILEIO_READ,
+          ( rc = read(fd, rawedid->bytes, edid_read_size) )
+         );
+      if (rc >= 0) {
+         DBGMSF(debug, "read() returned %d", rc);
+         rawedid->len = rc;
+         // assert(rc == 128 || rc == 256);
+         rc = 0;
       }
       else {
-         RECORD_IO_EVENT(
-             fd,
-             IE_FILEIO_READ,
-             ( rc = read(fd, rawedid->bytes, edid_read_size) )
-            );
-         if (rc >= 0) {
-            DBGMSF(debug, "read() returned %d", rc);
-            rawedid->len = rc;
-            // assert(rc == 128 || rc == 256);
-            rc = 0;
-         }
-         else {
-            rc = -errno;
-         }
-         DBGMSF(debug, "read() returned %s", psc_desc(rc) );
+         rc = -errno;
       }
+      DBGMSF(debug, "read() returned %s", psc_desc(rc) );
    }
 
 bye:
@@ -361,12 +316,11 @@ static Status_Errno_DDC
 i2c_get_edid_bytes_using_i2c_layer(
       int     fd,
       Buffer* rawedid,
-      int     edid_read_size,
-      bool    read_bytewise)
+      int     edid_read_size)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d, read_bytewise=%s",
-                 fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size, sbool(read_bytewise));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d",
+                 fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size);
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
    if (i2c_use_x30)
@@ -380,19 +334,8 @@ i2c_get_edid_bytes_using_i2c_layer(
       DBGMSF(debug, "invoke_i2c_writer returned %s", psc_desc(rc));
    }
    if (rc == 0) {   // write succeeded or no write
-      if (read_bytewise) {
-         int ndx = 0;
-         for (; ndx < edid_read_size && rc == 0; ndx++) {
-            // DBGMSG("Before invoke_i2c_reader() call");
-            rc = invoke_i2c_reader(fd, 0x50, false, 1, &rawedid->bytes[ndx] );
-         }
-         DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
-      } // read_bytewise == true
-      else {
-         rc = invoke_i2c_reader(fd, 0x50, read_bytewise, edid_read_size, rawedid->bytes);
-         DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
-
-      }
+      rc = invoke_i2c_reader(fd, 0x50, /*read_bytewise*/ false, edid_read_size, rawedid->bytes);
+      DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
       if (rc == 0) {
          rawedid->len = edid_read_size;
       }
@@ -421,7 +364,7 @@ i2c_get_edid_bytes_using_i2c_layer(
             sbool(write_before_read));
       // Bounded to one level of recursion: the recursive call passes 256, which
       // fails the edid_read_size < 256 test above.
-      rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256, read_bytewise);
+      rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256);
       if (rc == 0 && is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "Base block found at offset 128.  Copying it down.");
@@ -464,7 +407,6 @@ i2c_get_edid_bytes_using_i2c_layer(
  *
  *  @param  fd             file descriptor for open /dev/i2c-n
  *  @param  rawedid        buffer in which to return bytes of the EDID
- *  @param  read_bytewise  passed through to the reader
  *  @return status code
  *
  *  @remark
@@ -478,17 +420,17 @@ i2c_get_edid_bytes_using_i2c_layer(
  *  the read starts at 0x80 by accident or on purpose.
  */
 STATIC Status_Errno_DDC
-i2c_reread_edid_after_current_address_read(int fd, Buffer * rawedid, bool read_bytewise)
+i2c_reread_edid_after_current_address_read(int fd, Buffer * rawedid)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, read_bytewise=%s",
-                   fd, filename_for_fd_t(fd), sbool(read_bytewise));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s",
+                   fd, filename_for_fd_t(fd));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
    // Requesting 256 also declines the recovery inside the reader: the
    // RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER block is guarded by
    // edid_read_size < 256, so there is no recursion even with both enabled.
-   Status_Errno_DDC rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256, read_bytewise);
+   Status_Errno_DDC rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256);
    if (rc == 0 && rawedid->len != 256)
       rc = DDCRC_INVALID_EDID;
 
@@ -523,9 +465,6 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
 retry:
    DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_id_name(cur_strategy_id) );
    int rc = -1;
-   bool read_bytewise = EDID_Read_Bytewise;
-   // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
-   //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
    int tryctr = 0;
    int consecutive_eio_ct = 0;
 
@@ -535,8 +474,8 @@ retry:
          edid_read_size = (tryctr < 2) ? 128 : 256;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                     "Trying EDID read. tryctr=%d, max_tries=%d,"
-                    " edid_read_size=%d, read_bytewise=%s, using %s",
-                    tryctr, max_tries, edid_read_size, sbool(read_bytewise),
+                    " edid_read_size=%d, using %s",
+                    tryctr, max_tries, edid_read_size,
                     (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
 
 
@@ -545,7 +484,7 @@ retry:
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                "Calling i2c_get_edid_bytes_using_i2c_layer, cur_strategy_id = %s...",
                 i2c_io_strategy_id_name(cur_strategy_id));
-         rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
+         rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size);
          called_func_name = "i2c_get_edid_bytes_using_i2c_layer";
       }
       else {   // use local functions
@@ -556,8 +495,7 @@ retry:
             rc = i2c_get_edid_bytes_directly_using_ioctl(
                fd,
                rawedid,
-               edid_read_size,
-               read_bytewise);
+               edid_read_size);
             if (rc == -EINVAL) {
                int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
                assert(busno >= 0);
@@ -582,7 +520,7 @@ retry:
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                   "Calling i2c_get_edid_bytes_directly_using_fileio()...");
             called_func_name = "i2c_get_edid_bytes_directly_using_fileio";
-            rc = i2c_get_edid_bytes_directly_using_fileio(fd, rawedid, edid_read_size, read_bytewise);
+            rc = i2c_get_edid_bytes_directly_using_fileio(fd, rawedid, edid_read_size);
          }
       }  // use local functions
       tryctr++;
@@ -655,8 +593,7 @@ retry:
                // guard declines and the 256 bytes arrive here intact.
                if (rawedid->len < 256) {
                   Status_Errno_DDC reread_rc =
-                        i2c_reread_edid_after_current_address_read(fd, rawedid,
-                                                                    read_bytewise);
+                        i2c_reread_edid_after_current_address_read(fd, rawedid);
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                         "i2c_reread_edid_after_current_address_read() returned %s",
                         psc_desc(reread_rc));
