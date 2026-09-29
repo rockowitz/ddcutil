@@ -392,8 +392,15 @@ i2c_get_edid_bytes_using_i2c_layer(
  *  Re-reading 256 bytes makes that wrap visible.  The caller's existing check
  *  for a valid base EDID at offset 128 then copies it down.
  *
- *  @param  fd       file descriptor for open /dev/i2c-n
- *  @param  rawedid  buffer in which to return bytes of the EDID
+ *  Which reader performs the re-read does not matter, for the reason given in the
+ *  remark below: the recovery relies on the wrap, not on the word offset write
+ *  taking effect.  It formerly used i2c_get_edid_bytes_using_single_ioctl(), which
+ *  is now parked behind EDID_READ_SINGLE_IOCTL and would make this recovery
+ *  unbuildable on its own, so it reads through the i2c layer instead.
+ *
+ *  @param  fd             file descriptor for open /dev/i2c-n
+ *  @param  rawedid        buffer in which to return bytes of the EDID
+ *  @param  read_bytewise  passed through to the reader
  *  @return status code
  *
  *  @remark
@@ -407,13 +414,17 @@ i2c_get_edid_bytes_using_i2c_layer(
  *  the read starts at 0x80 by accident or on purpose.
  */
 STATIC Status_Errno_DDC
-i2c_reread_edid_after_current_address_read(int fd, Buffer * rawedid)
+i2c_reread_edid_after_current_address_read(int fd, Buffer * rawedid, bool read_bytewise)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s", fd, filename_for_fd_t(fd));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, read_bytewise=%s",
+                   fd, filename_for_fd_t(fd), sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
-   Status_Errno_DDC rc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, 256);
+   // Requesting 256 also declines the recovery inside the reader: the
+   // RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER block is guarded by
+   // edid_read_size < 256, so there is no recursion even with both enabled.
+   Status_Errno_DDC rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256, read_bytewise);
    if (rc == 0 && rawedid->len != 256)
       rc = DDCRC_INVALID_EDID;
 
@@ -564,8 +575,9 @@ retry:
                // Only worth doing if less than 256 bytes were read; at 256 the
                // base block is already present and that check handles it.
                //
-               // This is the catch-all of the three parked recoveries -- see the
-               // list in i2c_get_edid_bytes_using_single_ioctl().  It sits after
+               // This is the catch-all of the three parked recoveries, the list
+               // of them being in the EDID_READ_SINGLE_IOCTL comment block near
+               // the end of this file.  It sits after
                // whichever read path ran, so unlike the two in-function
                // recoveries it also covers i2c_get_edid_bytes_directly_using_ioctl()
                // and i2c_get_edid_bytes_directly_using_fileio(), neither of which
@@ -573,13 +585,14 @@ retry:
                // most expensive: by the time control reaches here the ladder has
                // already spent a try.
                //
-               // Independent of RECOVER_CURRENT_ADDRESS_READ by design.  If both
-               // are enabled they do not collide: the helper requests 256, so the
-               // in-function recovery's edid_read_size < 256 guard declines and
-               // the 256 bytes arrive here intact.
+               // Does not collide with the recovery inside the reader it calls:
+               // the helper requests 256, so
+               // RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER's edid_read_size < 256
+               // guard declines and the 256 bytes arrive here intact.
                if (rawedid->len < 256) {
                   Status_Errno_DDC reread_rc =
-                        i2c_reread_edid_after_current_address_read(fd, rawedid);
+                        i2c_reread_edid_after_current_address_read(fd, rawedid,
+                                                                    read_bytewise);
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                         "i2c_reread_edid_after_current_address_read() returned %s",
                         psc_desc(reread_rc));
