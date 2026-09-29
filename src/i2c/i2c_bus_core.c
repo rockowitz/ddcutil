@@ -227,20 +227,48 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
  *  and it is the justification for the x37 detection table.
  *
  *  @remark
- *  Of the two probes here, the 1 byte read is the defensible one: it is at least
- *  the opening byte of a null message read, so a display following the spec should
- *  return 0x6E.  The zero length write corresponds to nothing in either document.
- *  But reading one byte and discarding it leaves the display partway through a
- *  message it expected the host to drain, where the spec assumes complete messages
- *  plus minimum intervals between transactions -- the same timing sensitivity the
- *  parked i2c_detect_x37() below acknowledged with its extra sleep.  If a monitor
- *  turns up whose probe result depends on what preceded it, look here first.
+ *  This function is called only where an EDID was obtained, the check sitting
+ *  inside "else if (businfo->edid)" in i2c_check_bus(), so it never probes a silent
+ *  bus.  Measured cost where it does run is negligible: 0.25 ms and 0.69 ms on
+ *  i915, 0.27 ms on amdgpu, the payload being one byte and a device being known to
+ *  answer.  The amdgpu asymmetry that governs the EDID readers, roughly 11 ms for a
+ *  write only transfer against 650 ms for a read whose payload reaches the engine,
+ *  therefore does not bear on this probe at all.
+ *
+ *  @remark
+ *  Both probes are ACK tests and the byte read is discarded.  An earlier version of
+ *  this comment claimed the 1 byte read was at least the opening byte of a null
+ *  message, so that a display following the spec should return 0x6E.  Measurement
+ *  says otherwise: the first byte came back 0x53, 0x30 and 0x00 on three i915 buses
+ *  and 0xbe on amdgpu.  The amdgpu trace shows why -- the display emits
+ *  6e 80 be repeatedly and a read lands at an arbitrary point in that stream, 0xbe
+ *  being the third byte of a null message.  So the read is defensible on other
+ *  grounds, that it is cheap, that it is non-destructive where a write probe on
+ *  0x30 to 0x37 need not be, and that on a responsive display it is a single ACKed
+ *  transaction, but not on the content of what it returns.  The zero length write
+ *  corresponds to nothing in either document and, every monitor tested having ACKed
+ *  the read, has never been exercised.
+ *
+ *  @remark
+ *  Reading one byte and discarding it does leave the display partway through a
+ *  message, but no harm from that has been observed: the first full DDC/CI read
+ *  after the probe was correctly aligned on both drivers.  Misalignment does appear
+ *  later in a session, reads beginning "be 80 be" or "80 80 be", in a stream the
+ *  display emits continuously, so the probe is not shown to be the cause.
+ *  Comparing the phase of the first DDC/CI read with the probe and without would
+ *  settle it.
  *
  *  @remark
  *  Making the probe defensible by the letter of DDC/CI would mean reading the full
- *  three byte null message and verifying the checksum rather than ACK testing.  Not
- *  done: it costs a slower probe on buses with nothing at 0x37, which on amdgpu is
- *  not free.  See the comment at read_edid_using_single_ioctl in i2c_edid.c.
+ *  three byte null message and verifying the checksum rather than ACK testing.  The
+ *  cost objection to that is void, this function never running on a bus with
+ *  nothing at 0x37.  What recommends it is that an ACK test cannot distinguish
+ *  something answering at 0x37 from a DDC/CI display answering there, which is
+ *  exactly the failure the comments in i2c_check_bus() record -- a laptop display
+ *  reporting x37 active without responding to DDC, and a U3011 with DDC turned off
+ *  still showing x37 detected.  It would have to tolerate phase rather than assume
+ *  alignment, reading six bytes and locating 6e 80 be, as the amdgpu trace shows a
+ *  three byte read can itself land mid message.
  *
  *  @remark
  *  The account above is from knowledge of the two standards rather than from the
