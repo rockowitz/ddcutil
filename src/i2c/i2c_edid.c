@@ -905,8 +905,7 @@ void init_i2c_edid() {
  * Nothing assigns to read_edid_using_single_ioctl any more.  The
  * --enable-single-ioctl-edid-read and --disable-single-ioctl-edid-read options
  * have been removed along with the OPTION_SINGLE_IOCTL plumbing that carried
- * them, and the --f30 route that once flipped it is gone too.  Enabling it now
- * means editing the source.
+ * them.  Enabling it now means editing the source.
  */
 bool read_edid_using_single_ioctl    = DEFAULT_SINGLE_IOCTL_EDID_READ;
 #endif
