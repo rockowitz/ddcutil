@@ -489,8 +489,6 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags2 & CMD_FLAG2_F29)
       force_recheck = true;
 #endif
-   if (parsed_cmd->flags2 & CMD_FLAG2_F30)
-      read_edid_using_single_ioctl = true;
    if (parsed_cmd->flags2 & CMD_FLAG2_F31)
       force_failure_i2c_all_relevant_i2c_buses_rw = true;
 #ifdef WATCH_DISPLAYS
