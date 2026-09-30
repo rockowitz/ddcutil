@@ -13,6 +13,7 @@
 #include "config.h"
 
 /** \cond */
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <string.h>
@@ -99,22 +100,51 @@ Caveats:
  */
 
 
-int probe_i2c_quick(int fd, Byte addr,  bool write) {
+/** Probes a slave address with one SMBus transaction.
+ *
+ *  @param  fd     file descriptor for open /dev/i2c-n
+ *  @param  addr   7 bit slave address
+ *  @param  write  true for a write, false for a read
+ *  @param  size   I2C_SMBUS_QUICK or I2C_SMBUS_BYTE
+ *  @return 0 if the transaction succeeded, otherwise the negated errno
+ *
+ *  @remark
+ *  I2C_SMBUS_QUICK is address only, carrying neither a command nor data byte.  For
+ *  I2C_SMBUS_BYTE the kernel takes the byte to be written from the command field and
+ *  data must be NULL, while a read returns one byte in data->byte; that asymmetry is
+ *  why the two are set up separately below rather than from one expression.
+ */
+int probe_i2c_quick(int fd, Byte addr,  bool write, int size) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "addr=0x%02x, write=%s", addr, sbool(write));
+   assert(size == I2C_SMBUS_QUICK || size == I2C_SMBUS_BYTE);
+   const char * szname = (size == I2C_SMBUS_QUICK) ? "I2C_SMBUS_QUICK" : "I2C_SMBUS_BYTE";
+   const char * tname  = (size == I2C_SMBUS_QUICK)
+                            ? ((write) ? "SMBUS_QUICK_WRITE" : "SMBUS_QUICK_READ")
+                            : ((write) ? "SMBUS_BYTE_WRITE"  : "SMBUS_BYTE_READ");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "addr=0x%02x, write=%s, size=%s",
+                   addr, sbool(write), szname);
 
    int result = 0;
    unsigned long funcs;
+   union i2c_smbus_data smbus_data;
+   memset(&smbus_data, 0, sizeof(smbus_data));
 
    struct i2c_smbus_ioctl_data smbus = {
        .read_write = I2C_SMBUS_READ,
        .command = 0,
-       .size = I2C_SMBUS_QUICK,
+       .size = size,
        .data = NULL,
    };
 
    if (write)
          smbus.read_write = I2C_SMBUS_WRITE;
+
+   if (size == I2C_SMBUS_BYTE) {
+      if (write)
+         smbus.command = 0x00;         // the byte written
+      else
+         smbus.data = &smbus_data;     // one byte returned in smbus_data.byte
+   }
 
    int rc = 0;
 
@@ -138,7 +168,10 @@ int probe_i2c_quick(int fd, Byte addr,  bool write) {
    if (rc < 0) {
            result = -errno;
            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s failed, rc=%d, errno=%s",
-                 (write) ? "SMBUS_QUICK_WRITE" : "SMBUS_QUICK_READ", rc, psc_desc(-result));
+                 tname, rc, psc_desc(-result));
+   }
+   else if (size == I2C_SMBUS_BYTE && !write) {
+           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s returned 0x%02x", tname, smbus_data.byte);
    }
 
 bye:
@@ -162,13 +195,13 @@ void explore_smbus_quick(int fd) {
 
 
    for (int ndx= 0; ndx< 3; ndx++) {
-       rc = probe_i2c_quick(fd, addrs[ndx],  /*write*/ true);
+       rc = probe_i2c_quick(fd, addrs[ndx],  /*write*/ true,  I2C_SMBUS_QUICK);
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "probe_i2c_quick(), %s, addr=0x%02x', %s returned %d, errno=%d",
              fn,
          addrs[ndx], "write", rc, errno);
 
-       rc = probe_i2c_quick(fd, addrs[ndx],  /*write*/ false);
+       rc = probe_i2c_quick(fd, addrs[ndx],  /*write*/ false, I2C_SMBUS_QUICK);
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "probe_i2c_quick(), %s.  addr=0x%02x', %s returned %d, errno=%d",
              fn,
@@ -211,8 +244,8 @@ probe_i2c_rdwr(int fd, Byte addr, int len, bool is_read, Byte * buf) {
 
 /** Reports how each way of probing a slave address behaves on this bus.
  *
- *  Six transfers per address: SMBus Quick write and read, a zero length write and
- *  read, and a one byte write and read.  The one byte read is the only one of the six
+ *  Eight transfers per address: SMBus Quick write and read, SMBus Byte write and read,
+ *  a zero length write and read, and a one byte write and read.  The one byte read is the only one of the six
  *  that is a full transaction on every adapter, so it is the best available reference
  *  and the report flags any probe that disagrees with it.
  *
@@ -286,21 +319,26 @@ void explore_smbus_probes(int fd, char * driver) {
       // buffer and returns it, so two calls in one argument list both yield the same
       // pointer and print the same text; reporting a differing pair on one line
       // silently shows one status twice.
-      struct { const char * name; Status_Errno rc; } probes[6];
+      // The one byte read is last: it is the reference the others are compared against.
+      struct { const char * name; Status_Errno rc; } probes[8];
       probes[0].name = "SMBus quick write";
-      probes[0].rc   = probe_i2c_quick(fd, addr, /*write*/ true);
+      probes[0].rc   = probe_i2c_quick(fd, addr, /*write*/ true,  I2C_SMBUS_QUICK);
       probes[1].name = "SMBus quick read";
-      probes[1].rc   = probe_i2c_quick(fd, addr, /*write*/ false);
-      probes[2].name = "zero length write";
-      probes[2].rc   = probe_i2c_rdwr(fd, addr, 0, /*is_read*/ false, &databyte);
-      probes[3].name = "zero length read";
-      probes[3].rc   = probe_i2c_rdwr(fd, addr, 0, /*is_read*/ true,  &databyte);
-      probes[4].name = "one byte write";
-      probes[4].rc   = probe_i2c_rdwr(fd, addr, 1, /*is_read*/ false, &databyte);
+      probes[1].rc   = probe_i2c_quick(fd, addr, /*write*/ false, I2C_SMBUS_QUICK);
+      probes[2].name = "SMBus byte write";
+      probes[2].rc   = probe_i2c_quick(fd, addr, /*write*/ true,  I2C_SMBUS_BYTE);
+      probes[3].name = "SMBus byte read";
+      probes[3].rc   = probe_i2c_quick(fd, addr, /*write*/ false, I2C_SMBUS_BYTE);
+      probes[4].name = "zero length write";
+      probes[4].rc   = probe_i2c_rdwr(fd, addr, 0, /*is_read*/ false, &databyte);
+      probes[5].name = "zero length read";
+      probes[5].rc   = probe_i2c_rdwr(fd, addr, 0, /*is_read*/ true,  &databyte);
+      probes[6].name = "one byte write";
+      probes[6].rc   = probe_i2c_rdwr(fd, addr, 1, /*is_read*/ false, &databyte);
       Byte readbyte  = 0x00;
-      probes[5].name = "one byte read";
-      probes[5].rc   = probe_i2c_rdwr(fd, addr, 1, /*is_read*/ true,  &readbyte);
-      Status_Errno one_read = probes[5].rc;
+      probes[7].name = "one byte read";
+      probes[7].rc   = probe_i2c_rdwr(fd, addr, 1, /*is_read*/ true,  &readbyte);
+      Status_Errno one_read = probes[7].rc;
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s, addr=0x%02x, driver=%s:", fn, addr, driver);
       for (uint k = 0; k < ARRAY_SIZE(probes); k++)
@@ -453,10 +491,10 @@ i2c_detect_x37(int fd, char * driver) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s, driver=%s", fd, filename_for_fd_t(fd), driver);
 
 #ifdef EXPLORATORY
-   Status_Errno_DDC rc0 = probe_i2c_quick(fd, 0x37, /*write*/ true);
+   Status_Errno_DDC rc0 = probe_i2c_quick(fd, 0x37, /*write*/ true,  I2C_SMBUS_QUICK);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "probe_i2c_quick() 0x%02x  write returned %d", 0x37,rc0);
 
-   rc0 = probe_i2c_quick(fd, 0x37, /*write*/ false);
+   rc0 = probe_i2c_quick(fd, 0x37, /*write*/ false, I2C_SMBUS_QUICK);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "probe_i2c_quick 0x%02x read returned %d", 0x37, rc0);
 #endif
 
@@ -550,4 +588,11 @@ i2c_check_x37_old(int fd, char * driver) {
 void init_i2c_x37() {
    RTTI_ADD_FUNC(i2c_detect_x37);
    RTTI_ADD_FUNC(i2c_check_x37_old);
+#ifdef EXPLORATORY
+   // Both have a DBGTRC_STARTING prolog, so --trcfunc can reach them.  The guard is
+   // required: explore_smbus_quick() is itself compiled only under EXPLORATORY, so
+   // registering it unconditionally leaves an undefined reference at link time.
+   RTTI_ADD_FUNC(explore_smbus_quick);
+   RTTI_ADD_FUNC(explore_smbus_probes);
+#endif
 }

@@ -25,7 +25,7 @@ Status_Errno_DDC i2c_detect_x37(   int fd, char * driver);
 Status_Errno_DDC i2c_check_x37_old(int fd, char * driver);
 
 // Probes one address one way.  Used by the exploration functions below.
-int  probe_i2c_quick(int fd, Byte addr, bool write);
+int  probe_i2c_quick(int fd, Byte addr, bool write, int size);  // I2C_SMBUS_QUICK or I2C_SMBUS_BYTE
 
 // Report how a bus responds to each way of probing an address.
 void explore_smbus_quick( int fd);
