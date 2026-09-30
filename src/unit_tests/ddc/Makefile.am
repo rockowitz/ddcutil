@@ -61,6 +61,7 @@ ______unit_test_executables_ddc_test_ddc_vcp_version_SOURCES  = test_ddc_vcp_ver
 ______unit_test_executables_ddc_test_ddc_vcp_version_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 ______unit_test_executables_ddc_test_ddc_vcp_version_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
 
+______unit_test_executables_ddc_test_ddc_phantom_displays_LDFLAGS = -Wl,--wrap=get_i2c_device_sysfs_name
 ______unit_test_executables_ddc_test_ddc_phantom_displays_SOURCES  = test_ddc_phantom_displays.c
 ______unit_test_executables_ddc_test_ddc_phantom_displays_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 ______unit_test_executables_ddc_test_ddc_phantom_displays_LDADD    = $(LIBCOMMON) $(GLIB_LIBS) $(EXTRA_SYSLIBS) -lm
