@@ -35,6 +35,7 @@
 #include "base/execution_stats.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_x37.h"
 #include "i2c/i2c_execute.h"               // i2c_forceable_slave_addr_flag
 #include "i2c/i2c_strategy_dispatcher.h"   // io strategy selection
 #include "i2c/i2c_bus_open_close.h"
@@ -161,7 +162,7 @@ static void test_detect_x37_new_all_switches_real_bus(void) {
 
             Status_Errno_DDC rc;
             uint64_t t0 = cur_realtime_nanosec();
-            QUIETLY( rc = i2c_detect_x37_new(fd, drivers[di]) );
+            QUIETLY( rc = i2c_detect_x37(fd, drivers[di]) );
             uint64_t elapsed_us = NANOS2MICROS(cur_realtime_nanosec() - t0);
 
             if (!have_first) { first = rc; have_first = true; }
@@ -220,7 +221,7 @@ static void test_detect_x37_new_all_switches(void) {
             i2c_forceable_slave_addr_flag = forceable_values[fi];
 
             Status_Errno_DDC rc;
-            QUIETLY( rc = i2c_detect_x37_new(-1, drivers[di]) );
+            QUIETLY( rc = i2c_detect_x37(-1, drivers[di]) );
             if (rc >= 0)
                printf("FAIL  strategy=%s forceable=%s driver=%s -> %d, expected < 0\n",
                       i2c_io_strategy_id_name(strategies[si]),

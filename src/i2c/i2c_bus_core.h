@@ -25,7 +25,6 @@
 
 extern bool try_get_edid_from_sysfs_first;
 extern bool edp_always_laptop;
-extern int  pause_after_resume_ms;
 extern bool edid_exists_checks_drm_status;
 extern bool edid_exists_skips_unmapped_bus;
 extern bool primitive_sysfs;
@@ -43,7 +42,6 @@ I2C_Bus_Info *   i2c_get_and_check_bus_info(int busno,  I2C_Check_Bus_Mode check
 bool             i2c_edid_exists(int busno, bool * eacces_loc);
 bool             i2c_check_edid_exists_by_dh(Display_Handle * dh);
 Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
-Status_Errno_DDC i2c_detect_x37_new(int fd, char * driver);
 
 // Reports
 void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);

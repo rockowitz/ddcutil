@@ -30,6 +30,7 @@
 #include "util/traced_function_stack.h"
 
 #include "base/core.h"
+#include "base/parms.h"
 #include "base/displays.h"
 #include "base/drm_connector_state.h"
 #include "base/i2c_bus_base.h"
@@ -64,6 +65,7 @@ _Atomic uint16_t  retry_thread_sleep_factor_millisec = WATCH_RETRY_THREAD_SLEEP_
 bool stabilize_added_buses_w_edid = false;  // if set, stabilize when displays added as well as removed
 bool recheck_thread_active = false;
 int  display_watch_thread_initial_delay = 0;
+int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;   // --pause-after-resume-ms, --i10
 
 STATIC void dw_process_screen_change_event(
       BS256*      p_bs_attached_buses,

@@ -12,6 +12,7 @@
 #include "i2c_edid.h"
 #include "i2c_execute.h"
 #include "i2c_strategy_dispatcher.h"
+#include "i2c_x37.h"
 
 /** Master initializer for directory i2c */
 void init_i2c_services() {
@@ -22,6 +23,7 @@ void init_i2c_services() {
    init_i2c_edid();
    init_i2c_execute();
    init_i2c_strategy_dispatcher();
+   init_i2c_x37();
 }
 
 void terminate_i2c_services() {

@@ -14,6 +14,7 @@
 #include <glib-2.0/glib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 /** \endcond */
 
@@ -60,6 +61,7 @@
 #include "i2c/i2c_bus_open_close.h"
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+#include "i2c/i2c_x37.h"
 
 #include "i2c/i2c_bus_core.h"
 
@@ -69,7 +71,6 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 // Globals
 bool try_get_edid_from_sysfs_first = true;    // enable-try-get-edid-from-sysfs, disable-try-get-edid-from-sysfs
 
-int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;   // --pause-after-resume_ms 500
 bool primitive_sysfs = false;                 // logic and --f23
 
 // If true, i2c_edid_exists() does not open the device when the DRM connector
@@ -102,6 +103,7 @@ bool edid_exists_checks_drm_status = true;    // --f35
  *  user has no way to tell why.  That asymmetry is worth the cost of a
  *  boolean test.
  */
+
 bool edid_exists_skips_unmapped_bus = true;   // --f38
 
 
@@ -189,197 +191,6 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
 #endif
 
 
-/** Tests whether slave address x37 is responsive, which ddcutil takes as evidence
- *  that the display supports DDC/CI.
- *
- *  @param  fd      file descriptor for open /dev/i2c-n
- *  @param  driver  driver name
- *  @return status code, 0 if the address responded
- *
- *  @remark
- *  What the VESA standards say about probing this address: nothing.  E-DDC's scope
- *  is getting the EDID or DisplayID out of the display -- the EEPROM at 7 bit
- *  0x50, the segment pointer at 0x30 for access past 256 bytes, and the
- *  requirement that the EDID be readable whenever the display has power.  It
- *  mentions the 0x6E/0x6F pair only as the address pair belonging to the DDC2Bi
- *  and DDC2B+ command channel.  It defines no procedure for determining whether
- *  that channel exists, and no concept of address responsiveness at all.
- *
- *  @remark
- *  The document that owns 0x37 is the DDC/CI standard, and what it defines is a
- *  message protocol: destination address, source address, a length byte with the
- *  0x80 high bit set, payload, and an XOR checksum in which the host's virtual
- *  address participates.  Its answer to "is DDC/CI present" is at that level, and
- *  it is host initiated throughout: the display is a slave and every message it
- *  sends is a response.  The Null Message, 6E 80 BE, is one such response, returned
- *  to a valid request the display has no data for or does not support.  It is not
- *  something a display emits because it has nothing to say, so an unsolicited read
- *  of 0x6F has no defined result at all -- what comes back is whatever the output
- *  buffer holds.  The sanctioned test is therefore to issue an actual request --
- *  Identification Request, Capabilities Request, or a VCP feature read -- and
- *  validate the reply's length and checksum.  A bare address probe, of any length,
- *  sits below the level either standard describes.
- *
- *  @remark
- *  So this test is a heuristic, wrong in both directions, and neither direction is
- *  a violation by the monitor.  An ACK does not imply DDC/CI works: nothing
- *  obliges a device that ACKs 0x6E to produce a well formed reply.  No ACK does
- *  not imply no DDC/CI: a zero length write is a degenerate transaction that some
- *  adapters will not emit and some drivers synthesize a result for, and a display
- *  in standby may not answer on 0x6E though E-DDC still requires it to answer on
- *  0xA0.  That asymmetry is why an x37 result is less durable than an EDID result,
- *  and it is the justification for the x37 detection table.
- *
- *  @remark
- *  This function is called only where an EDID was obtained, the check sitting
- *  inside "else if (businfo->edid)" in i2c_check_bus(), so it never probes a silent
- *  bus.  Measured cost where it does run is negligible: 0.25 ms and 0.69 ms on
- *  i915, 0.27 ms on amdgpu, the payload being one byte and a device being known to
- *  answer.  The amdgpu asymmetry that governs the EDID readers, roughly 11 ms for a
- *  write only transfer against 650 ms for a read whose payload reaches the engine,
- *  therefore does not bear on this probe at all.
- *
- *  @remark
- *  Both probes are ACK tests and the byte read is discarded.  An earlier version of
- *  this comment claimed the 1 byte read was at least the opening byte of a null
- *  message, so that a display following the spec should return 0x6E.  Measurement
- *  says otherwise: the first byte came back 0x53, 0x30 and 0x00 on three i915 buses
- *  and 0xbe on amdgpu.  The amdgpu trace shows why -- the display emits
- *  6e 80 be repeatedly and a read lands at an arbitrary point in that stream, 0xbe
- *  being the third byte of a null message.  So the read is defensible on other
- *  grounds, that it is cheap, that it is non-destructive where a write probe on
- *  0x30 to 0x37 need not be, and that on a responsive display it is a single ACKed
- *  transaction, but not on the content of what it returns.  The zero length write
- *  corresponds to nothing in either document and, every monitor tested having ACKed
- *  the read, has never been exercised.
- *
- *  @remark
- *  Reading one byte and discarding it does leave the display partway through a
- *  message, but no harm from that has been observed: the first full DDC/CI read
- *  after the probe was correctly aligned on both drivers.  Misalignment does appear
- *  later in a session, reads beginning "be 80 be" or "80 80 be", in a stream the
- *  display emits continuously, so the probe is not shown to be the cause.
- *  Comparing the phase of the first DDC/CI read with the probe and without would
- *  settle it.
- *
- *  @remark
- *  Reading the full Null Message and checking it was tried and removed.  The
- *  attraction was that an ACK test cannot distinguish something answering at 0x37
- *  from a DDC/CI display answering there, which is exactly the failure the comments
- *  in i2c_check_bus() record -- a laptop display reporting x37 active without
- *  responding to DDC, and a U3011 with DDC turned off still showing x37 detected.
- *  Six bytes were read and scanned for 6e 80 be at any phase.  On amdgpu the Null
- *  Message was found every time.  On i915 it was found on none of three buses
- *  with working monitors, which returned "53 e7 ae 62 54 be", "30 31 31 29 63 6d"
- *  and "00 00 00 00 03 00"; the second of those is ASCII "011)cm", stale bytes of a
- *  capabilities string from an earlier conversation, which is what an empty output
- *  buffer hands back.  The i915 result is not misbehavior: no request precedes this
- *  read, and the Null Message is a response to a request, so a display owes nothing
- *  here.  Finding it is positive evidence; not finding it proves nothing.  That is
- *  the reason it cannot be the verdict, the measurement merely showing what the
- *  protocol already implies, and making it decisive would have reported three
- *  working monitors as unresponsive at x37.  With the result unable to inform
- *  anything, a six byte read only consumed five more bytes of a buffer whose
- *  contents matter to whatever reads next, so the one byte read is restored.
- *
- *  @remark
- *  A probe that would be sound by the letter of DDC/CI has to send a request and
- *  validate the response, which is what the DDC layer already does.  That is the
- *  same conclusion the comments in i2c_check_bus() reached when DDC checking was
- *  moved there entirely, and it is why no amount of refining this read turns it
- *  into a support test.  What is left for it to do is what it does now: establish
- *  cheaply that something is still at 0x37, so that cached display information is
- *  not reloaded for a display that has gone away.
- *
- *  @remark
- *  Worth keeping from that experiment: a read at 0x37 does not begin on a message
- *  boundary.  Of three consecutive amdgpu probes two began mid message, returning
- *  "be 80 be 6e 80 be" where the third returned "6e 80 be 6e 80 be".  Any future
- *  attempt to interpret bytes read here has to tolerate phase rather than assume
- *  alignment, or it will look like an intermittent fault.
- *
- *  @remark
- *  The account above is from knowledge of the two standards rather than from the
- *  documents; no clause numbers are cited because none were verified.
- */
-Status_Errno_DDC
-i2c_detect_x37_new(int fd, char * driver) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s, driver=%s", fd, filename_for_fd_t(fd), driver);
-
-   Status_Errno_DDC  rc = 0;
-   Byte readbuf[4];  //  4 byte buffer
-   // rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
-   rc = invoke_i2c_reader(fd, 0x37, false, 1, readbuf);
-           DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                     "invoke_i2c_reader() for slave address x37 returned %s", psc_name_code(rc));
-
-   if (rc != 0) {
-      Byte writebuf = 0x00;
-      // rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
-      rc = invoke_i2c_writer(fd, 0x37, 0, &writebuf);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                      "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
-   }
-   if (rc == -EBUSY) {
-      DUAL_MSGX(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
-            "unexpected -EBUSY reading from or writing to x37");
-   }
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"");
-   return rc;
-}
-
-static Status_Errno_DDC
-i2c_detect_x37(int fd, char * driver) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s, driver=%s", fd, filename_for_fd_t(fd), driver);
-
-   // Quirks
-   // - i2c_set_addr() Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
-   //   avoided by never calling this function for an eDP screen
-   // - Dell P2715Q does not respond to single byte read, but does respond to
-   //   a write (7/2018), so this function checks both
-   Status_Errno_DDC rc = -1;
-   int max_tries =  DETECT_X37_MAX_TRIES;
-   int poll_wait_millisec = DETECT_X37_NORMAL_RETRY_MS;
-   int loopctr;
-   for (loopctr = 0; loopctr < max_tries && rc != 0; loopctr++) {  // retries seem to give no benefit
-      if (loopctr > 0) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "driver=%s, sleeping for %d millisec",
-                                driver, poll_wait_millisec);
-         SLEEP_MILLIS_WITH_SYSLOG(poll_wait_millisec, "Extra x37 sleep");
-      }
-
-      // regard either a successful write() or a read() as indication slave address is valid
-      Byte writebuf = 0x00;
-      rc = invoke_i2c_writer(fd, 0x37, 1, &writebuf);
-      // rc = invoke_i2c_writer(fd, 0x37, 0, &writebuf);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                   "invoke_i2c_writer() for slave address x37 returned %s", psc_name_code(rc));
-      if (rc != 0) {
-         Byte    readbuf[4];  //  4 byte buffer
-         rc = invoke_i2c_reader(fd, 0x37, false, 4, readbuf);
-         // rc = invoke_i2c_reader(fd, 0x37, false, 1, readbuf);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                   "invoke_i2c_reader() for slave address x37 returned %s", psc_name_code(rc));
-      }
-
-      if (rc == -EBUSY) {
-         DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP, "X37 detection encountered EBUSY error");
-         max_tries = DETECT_X37_MAX_TRIES + 2;
-      }
-
-   }
-
-   if (rc == 0 && loopctr > 1) {
-      DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP, "X37 detection succeeded on try %d", loopctr);
-   }
-
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"loopctr=%d", loopctr);
-   return rc;
-}
 
 
 /** Tests if an open display handle is still valid
@@ -462,7 +273,7 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
       }
       char * driver = businfo->driver;
       // int ddcrc = i2c_detect_x37(dh->fd, driver);
-      int ddcrc = i2c_detect_x37_new(dh->fd, driver);
+      int ddcrc = i2c_detect_x37(dh->fd, driver);
       if (ddcrc){
          // would DDCRC_DDC_DISABLED, DDCRC_DEAD, DDCRC_UNAVAILBLE be better?
          err = ERRINFO_NEW(DDCRC_DISCONNECTED,
@@ -992,8 +803,30 @@ static bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "fd=%d, businfo=%p, use_x37_detection_table=%s",
          fd, businfo, SBOOL(use_x37_detection_table));
 
+   // The two are exclusive by execution mode, not by any test here: --skip-ddc-checks is
+   // permitted only in command line ddcutil, and the detection table is enabled only in
+   // libddcutil.  skip_x37_detection is what --skip-ddc-checks sets; skip_ddc_checks
+   // itself lives in the ddc layer and cannot be read from here.
+   assert(!(use_x37_detection_table && skip_x37_detection));
+
    bool first_x37_check = true;
    X37_Detection_State x37_detection_state = X37_Not_Recorded;
+
+   if (skip_x37_detection) {
+      // --skip-ddc-checks assumes DDC communication works, so x37 must be assumed
+      // responsive rather than merely left unprobed: ddc_initial_checks_by_dref() tests
+      // I2C_BUS_ADDR_X37 before it consults skip_ddc_checks, so leaving the flag clear
+      // would reject every display.
+      //
+      // Nothing below needs to test for this.  Setting the state to X37_Detected declines
+      // the probe, whose guard is x37_detection_state != X37_Detected, and the assert
+      // above rules out the detection table clobbering the state on the way there.
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "skip_x37_detection set, assuming x37 responsive for /dev/i2c-%d", businfo->busno);
+      businfo->flags |= I2C_BUS_ADDR_X37;
+      x37_detection_state = X37_Detected;
+   }
+
    if (use_x37_detection_table) {
       x37_detection_state = i2c_query_x37_detected(businfo->busno, businfo->edid->bytes);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
@@ -1008,7 +841,7 @@ static bool check_x37_for_businfo(int fd, I2C_Bus_Info * businfo) {
        DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "Calling i2c_detect_x37() for /dev/i2c-%d...", businfo->busno);
        // int rc = i2c_detect_x37(fd, businfo->driver);
-       int rc = i2c_detect_x37_new(fd, businfo->driver);
+       int rc = i2c_detect_x37(fd, businfo->driver);
        // if (rc == -EBUSY)
        //    businfo->flags |= I2C_BUS_BUSY;
    #ifdef TEST
@@ -1455,8 +1288,8 @@ void i2c_recheck_bus(I2C_Bus_Info * businfo) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Restored(2) %s", x37_detection_state_name(x37_detection_state));
          if (x37_detection_state == X37_Not_Recorded) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_detect() for /dev/i2c-%d...", businfo->busno);
-            int rc = i2c_detect_x37(fd, businfo->driver);
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s. i2c_detect_x37() returned %s", dev_name, psc_desc(rc));
+            int rc = i2c_check_x37_old(fd, businfo->driver);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s. i2c_check_x37_old() returned %s", dev_name, psc_desc(rc));
             X37_Detection_State detection_state = X37_Not_Detected;
             if (rc == 0) {
                businfo->flags |= I2C_BUS_ADDR_X37;
@@ -1664,7 +1497,12 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
       DO_OUTPUT(d1, title_width, "I2C address 0x30 (EDID block#)  present:", sbool(businfo->flags & I2C_BUS_ADDR_X30));
 // #endif
       DO_OUTPUT(d1, title_width, "EDID exists:",  sbool(businfo->flags & I2C_BUS_HAS_EDID));
-      DO_OUTPUT(d1, title_width, "I2C address 0x37 (DDC) responsive:", sbool(businfo->flags & I2C_BUS_ADDR_X37));
+      // Under --skip-ddc-checks the x37 probe is not performed and I2C_BUS_ADDR_X37 is
+      // set on the assumption that it would have succeeded, so reporting "true" here
+      // would assert a measurement that was never made.
+      DO_OUTPUT(d1, title_width, "I2C address 0x37 (DDC) responsive:",
+                (skip_x37_detection) ? "not checked"
+                                     : sbool(businfo->flags & I2C_BUS_ADDR_X37));
 #ifdef OLD
       rpt_vstring(d1, "Is eDP device:                         %-5s", sbool(businfo->flags & I2C_BUS_EDP));
       rpt_vstring(d1, "Is LVDS device:                        %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
@@ -1729,9 +1567,6 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 
 static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_check_edid_exists_by_dh);
-   RTTI_ADD_FUNC(i2c_detect_x37_new);
-   RTTI_ADD_FUNC(i2c_detect_x37);
-   RTTI_ADD_FUNC(i2c_detect_x37_new);
    RTTI_ADD_FUNC(i2c_check_open_bus_alive);
    RTTI_ADD_FUNC(i2c_edid_exists);
    RTTI_ADD_FUNC(set_connector_for_businfo_using_user_bus_connector_table);

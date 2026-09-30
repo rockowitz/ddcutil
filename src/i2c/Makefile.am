@@ -29,4 +29,5 @@ i2c_bus_sysfs.c           \
 i2c_edid.c                \
 i2c_execute.c             \
 i2c_services.c            \
-i2c_strategy_dispatcher.c
+i2c_strategy_dispatcher.c \
+i2c_x37.c

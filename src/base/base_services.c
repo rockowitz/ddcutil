@@ -23,6 +23,7 @@
 #include "flock.h"
 #include "feature_metadata.h"
 #include "i2c_bus_base.h"
+#include "i2c_bus_aux.h"
 #include "linux_errno.h"
 #include "monitor_model_key.h"
 #include "per_display_data.h"
@@ -55,6 +56,7 @@ void init_base_services() {
    init_tuned_sleep();
    init_displays();
    init_i2c_bus_base();
+   init_i2c_bus_aux();
    init_feature_metadata();
 #ifdef USE_LIBDRM
    init_drm_connector_state();

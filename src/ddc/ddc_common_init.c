@@ -56,6 +56,7 @@
 
 #include "i2c/i2c_bus_collections.h"
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_x37.h"
 #include "i2c/i2c_bus_open_close.h"
 #include "i2c/i2c_bus_sysfs.h"
 #include "i2c/i2c_edid.h"
@@ -408,9 +409,16 @@ STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
-   use_x37_detection_table = !(parsed_cmd->flags2 & CMD_FLAG2_F20);
+   // The detection table spares a probe only where a bus is rechecked, which happens in
+   // libddcutil, not within a single command, so in MODE_DDCUTIL every query would be a
+   // miss by construction.  execution_mode is set before this runs: main.c for the
+   // executable, api_base.c for the shared library.
+   use_x37_detection_table = (execution_mode == MODE_LIBDDCUTIL) &&
+                             !(parsed_cmd->flags2 & CMD_FLAG2_F20);
+#ifdef WATCH_DISPLAYS
    if (parsed_cmd->resume_after_sleep_ms >= 0)
       pause_after_resume_ms = parsed_cmd->resume_after_sleep_ms;
+#endif
    if (parsed_cmd->flags & CMD_FLAG_ENABLE_EARLY_PERMISSION_CHECKS) {
 #ifdef WATCH_DISPLAYS
       enable_dw_start_check_dev_i2c_devices_rw = true;
@@ -766,6 +774,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    init_performance_options(parsed_cmd, errinfo_accumulator);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
    skip_ddc_checks = parsed_cmd->flags & CMD_FLAG_SKIP_DDC_CHECKS;
+   skip_x37_detection = skip_ddc_checks;   // x37 detection is a DDC check
 #ifdef BUILD_SHARED_LIB
    library_disabled = parsed_cmd->flags & CMD_FLAG_DISABLE_API;
 #endif

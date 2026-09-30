@@ -42,6 +42,7 @@
 #include "dw_common.h"
 
 #include "dw_udev.h"
+#include "dw_poll.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
