@@ -407,6 +407,7 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
 
 STATIC void init_algorithm_options(Parsed_Cmd * parsed_cmd) {
    try_get_edid_from_sysfs_first = parsed_cmd->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS;
+   use_sysfs_edid_for_user_connector = parsed_cmd->flags & CMD_FLAG_BUS_DRM_CONNECTOR_EDID;
    force_sysfs_unreliable = parsed_cmd->flags2 & CMD_FLAG2_F21;
    force_sysfs_reliable   = parsed_cmd->flags2 & CMD_FLAG2_F22;
    // The detection table spares a probe only where a bus is rechecked, which happens in

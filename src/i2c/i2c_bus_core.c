@@ -71,6 +71,22 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 // Globals
 bool try_get_edid_from_sysfs_first = true;    // enable-try-get-edid-from-sysfs, disable-try-get-edid-from-sysfs
 
+/** If true, i2c_check_bus() takes the EDID from the sysfs edid attribute of a
+ *  connector that the user associated with the bus using --bus-drm-connector,
+ *  instead of reading it from the bus.
+ *
+ *  Off by default, and deliberately separate from --bus-drm-connector itself.
+ *  That option exists for two populations.  One has a connector whose edid
+ *  attribute is not the monitor's EDID, because an alternative EDID was loaded
+ *  as firmware (issue #608); for them the bus is the only source of the real
+ *  EDID and this must stay off.  The other has a driver, nvidia being the
+ *  standing example, that simply does not publish the bus/connector linkage
+ *  while its edid attribute is accurate; for them reading 0x30/0x50 is
+ *  three I2C transactions that tell ddcutil nothing sysfs has not already said.
+ *  Only the user knows which case applies, so the user has to say so.
+ */
+bool use_sysfs_edid_for_user_connector = false;    // --bus-drm-connector-edid
+
 bool primitive_sysfs = false;                 // logic and --f23
 
 // If true, i2c_edid_exists() does not open the device when the DRM connector
@@ -1055,20 +1071,38 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    // *** Possibly try to get the EDID from sysfs
    bool checked_connector_for_edid = false;
    if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO or _BY_USER
-      // The sysfs shortcut is taken only if the connector was found by busno.
-      // If the association was supplied by the user, it is because sysfs does not
-      // properly record it for this bus, so read the EDID from the bus itself.
-      if ((try_get_edid_from_sysfs_first &&
-            businfo->flags&I2C_BUS_SYSFS_KNOWN_RELIABLE &&
-            businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO)  ||
-            (businfo->flags&I2C_BUS_DISPLAYLINK))   // X50 can't be read for DisplayLink, must use sysfs
-      {
+      // By default the sysfs shortcut is taken only if the connector was found by
+      // busno.  If the association was supplied by the user, it is because sysfs
+      // does not properly record it for this bus, so read the EDID from the bus
+      // itself.
+      //
+      // Option --bus-drm-connector-edid lifts that for user supplied associations.
+      // It is the user's statement that the connector's edid attribute is this
+      // monitor's EDID, see use_sysfs_edid_for_user_connector.  Sysfs reliability
+      // for the driver is not required: the option is meant for exactly the
+      // drivers that are not on that list.  --disable-try-get-edid-from-sysfs
+      // still wins.
+      bool by_busno =  try_get_edid_from_sysfs_first &&
+                       (businfo->flags&I2C_BUS_SYSFS_KNOWN_RELIABLE) &&
+                       businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO;
+      bool by_user  =  try_get_edid_from_sysfs_first &&
+                       use_sysfs_edid_for_user_connector &&
+                       businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_USER;
+      bool displaylink = businfo->flags&I2C_BUS_DISPLAYLINK;   // X50 can't be read for DisplayLink, must use sysfs
+      if (by_busno || by_user || displaylink) {
          Parsed_Edid * edid = get_parsed_edid_for_businfo_using_sysfs(businfo);
          if (edid) {
             businfo->edid = edid;
             businfo->flags |= I2C_BUS_SYSFS_EDID;
          }
-         checked_connector_for_edid = true;
+         // For a connector found by busno, no EDID in sysfs means no display.
+         // A user supplied association carries no such evidence, so if sysfs has
+         // nothing for the connector fall back to reading the bus.
+         checked_connector_for_edid = edid || by_busno || displaylink;
+         if (by_user && !edid)
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "No sysfs EDID for user specified connector %s, will read /dev/i2c-%d",
+                  businfo->drm_connector_name, businfo->busno);
       }
    }
 
