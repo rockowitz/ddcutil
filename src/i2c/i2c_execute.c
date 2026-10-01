@@ -56,7 +56,23 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
  *  after EBUSY error by changing ioctl op I2C_SLAVE to I2C_SLAVE_FORCE.
  */
 bool i2c_forceable_slave_addr_flag = false;
-_Thread_local bool i2c_use_x30 = false;
+/** Where to record what is learned about slave address x30, or NULL if nowhere.
+ *
+ *  x30 is the E-DDC segment pointer and is write only, so the only way to learn whether
+ *  it answers is to write to it.  There is no separate probe: the write the EDID read
+ *  performs anyway records the answer, and the recorded value then controls whether a
+ *  further write is issued.  TRIVAL_UNSET means not yet attempted for this display, so
+ *  write and find out; TRIVAL_FALSE suppresses further writes.
+ *
+ *  The answer belongs to the display on the bus, so it is kept in I2C_Bus_Info.  The EDID
+ *  readers take an fd and have no bus record, hence this pointer: i2c_check_bus() aims it
+ *  at businfo->x30_responsive for the duration of the read and clears it afterwards, so a
+ *  stale pointer to a freed businfo cannot be dereferenced later.  Thread local because
+ *  --async-i2c-check runs one i2c_check_bus() per bus on its own thread, each needing its
+ *  own target; libddcutil admits only one thread at a time to a given bus, so the pointed
+ *  to field needs no lock of its own.
+ */
+_Thread_local Optional_True_False * i2c_x30_responsive_loc = NULL;
 
 
 Status_Errno

@@ -84,6 +84,8 @@ struct {
    uint32_t         flags;              ///< I2C_BUS_* flags
    char *           driver;             ///< driver name
    int              open_errno;         ///< errno if open fails (!I2C_BUS_ACCESSIBLE)
+   Optional_True_False
+                    x30_responsive;     ///< does the segment pointer at x30 answer?
    char *           drm_connector_name; ///< from /sys
    Drm_Connector_Found_By
                     drm_connector_found_by;

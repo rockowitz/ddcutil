@@ -135,8 +135,14 @@ i2c_get_edid_bytes_directly_using_ioctl(
 
    int rc = 0;
 
-   if (i2c_use_x30)
-       i2c_ioctl_write_x30(fd);
+   // Writes unless x30 is already known not to answer.  With no target recorded, which is
+   // how the readers are reached outside i2c_check_bus(), nothing is remembered and the
+   // write is attempted each time.
+   if (!i2c_x30_responsive_loc || *i2c_x30_responsive_loc != TRIVAL_FALSE) {
+      Status_Errno x30rc = i2c_ioctl_write_x30(fd);
+      if (i2c_x30_responsive_loc)
+         *i2c_x30_responsive_loc = (x30rc == 0) ? TRIVAL_TRUE : TRIVAL_FALSE;
+   }
 
    Byte byte_to_write = 0x00;
 
@@ -396,8 +402,14 @@ i2c_get_edid_bytes_using_i2c_layer(
                  fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size);
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
-   if (i2c_use_x30)
-      i2c_ioctl_write_x30(fd);
+   // Writes unless x30 is already known not to answer.  With no target recorded, which is
+   // how the readers are reached outside i2c_check_bus(), nothing is remembered and the
+   // write is attempted each time.
+   if (!i2c_x30_responsive_loc || *i2c_x30_responsive_loc != TRIVAL_FALSE) {
+      Status_Errno x30rc = i2c_ioctl_write_x30(fd);
+      if (i2c_x30_responsive_loc)
+         *i2c_x30_responsive_loc = (x30rc == 0) ? TRIVAL_TRUE : TRIVAL_FALSE;
+   }
 
    int rc = 0;
    Byte byte_to_write = 0x00;

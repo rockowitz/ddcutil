@@ -12,13 +12,15 @@
 #include <linux/i2c-dev.h>
 
 #include "util/coredefs.h"
+#include "util/data_structures.h"   // Optional_True_False
+
 #include "base/status_code_mgt.h"
 
 // Controls whether function #i2c_set_addr() retries from EBUSY error by
 // changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
 extern bool i2c_forceable_slave_addr_flag;
 
-extern _Thread_local bool i2c_use_x30;
+extern _Thread_local Optional_True_False * i2c_x30_responsive_loc;
 
 Status_Errno i2c_set_addr(int fd, int addr);
 

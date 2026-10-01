@@ -186,6 +186,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, bool include_sysinfo, int depth
    if ( businfo->flags & I2C_BUS_PROBED ) {
       rpt_vstring(d1, "Driver:                  %s", businfo->driver);
       rpt_vstring(d1, "errno for open:          %s", psc_desc(businfo->open_errno));
+      rpt_vstring(d1, "x30 responsive:          %s", trival_repr(businfo->x30_responsive));
 //    rpt_vstring(d1, "Connector name checked:  %s", sbool(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
       rpt_vstring(d1, "drm_connector_found_by:  %s (%d)",
          drm_connector_found_by_name(businfo->drm_connector_found_by), businfo->drm_connector_found_by);

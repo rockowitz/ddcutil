@@ -1090,18 +1090,29 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    businfo->flags |= I2C_BUS_ACCESSIBLE;
    businfo->functionality = i2c_get_functionality_flags_by_fd(fd);  // is this really needed?
 
-   int x30rc = i2c_ioctl_write_x30(fd);
-      businfo->flags |= I2C_BUS_ADDR_X30;
-
+   // A separate write to x30 used to probe it here, and the EDID read then wrote the same
+   // byte again.  Two identical transactions, the first proving the second unnecessary:
+   // nothing between them reads, and the segment pointer reverts to 0 after a read in any
+   // case.  Reported as issue #626, where each costs about 22 ms, so the pair was about
+   // 45 ms of a 135 ms getvcp.  The EDID read's own write is now the probe, and what it
+   // learns is kept per display in businfo so a later read, on this thread or another,
+   // does not pay for the answer again.
    if (!checked_connector_for_edid) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, calling i2c_get_parsed_edid", businfo->busno);
       assert(!businfo->edid);
 
-      i2c_use_x30 = (x30rc == 0);
-
+      i2c_x30_responsive_loc = &businfo->x30_responsive;
       DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid);
+      i2c_x30_responsive_loc = NULL;   // businfo outlives the read, the pointer must not
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
                     businfo->busno, psc_desc(ddcrc));
+      // Set from the EDID read's x30 write rather than from a probe of its own.  Where
+      // the EDID came from sysfs no write was issued, so nothing is known and the flag
+      // stays clear; it was previously set unconditionally, which made the "I2C address
+      // 0x30 present" line of detect --verbose always true.
+      if (businfo->x30_responsive == TRIVAL_TRUE)
+         businfo->flags |= I2C_BUS_ADDR_X30;
+
       // NB It's quite possible that bus has no edid
       if (ddcrc == 0) {
          businfo->flags |=  I2C_BUS_X50_EDID;

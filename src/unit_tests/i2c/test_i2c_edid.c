@@ -30,7 +30,7 @@
 
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_execute.h"   // i2c_use_x30
+#include "i2c/i2c_execute.h"   // i2c_x30_responsive_loc
 #include "i2c/i2c_bus_open_close.h"
 #include "base/i2c_bus_aux.h"            // i2c_device_exists
 #include "base/display_lock.h"           // init_i2c_display_lock
@@ -169,7 +169,9 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
 
    I2C_IO_Strategy_Id saved_strategy   = i2c_get_io_strategy_id();
    bool saved_uses_i2c_layer           = EDID_Read_Uses_I2C_Layer;
-   bool saved_use_x30                  = i2c_use_x30;
+   Optional_True_False * saved_x30_loc  = i2c_x30_responsive_loc;
+   Optional_True_False x30_field       = TRIVAL_UNSET;   // stands in for businfo's field
+   i2c_x30_responsive_loc              = &x30_field;
    int  saved_read_size                = EDID_Read_Size;
 
    I2C_IO_Strategy_Id strategies[] = {I2C_IO_STRATEGY_IOCTL, I2C_IO_STRATEGY_FILEIO};
@@ -185,7 +187,7 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
       for (int rs = 0; rs < 3; rs++) {
             i2c_set_io_strategy_by_id(strategies[si]);
             EDID_Read_Uses_I2C_Layer     = bools[ul];
-            i2c_use_x30                  = bools[x3];
+            x30_field                    = (bools[x3]) ? TRIVAL_TRUE : TRIVAL_FALSE;
             EDID_Read_Size               = read_sizes[rs];
 
             Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
@@ -228,7 +230,7 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
    CK_INT(disagreed, 0);       // no switch setting changes what is read
 
    EDID_Read_Uses_I2C_Layer     = saved_uses_i2c_layer;
-   i2c_use_x30                  = saved_use_x30;
+   i2c_x30_responsive_loc       = saved_x30_loc;
    EDID_Read_Size               = saved_read_size;
    i2c_set_io_strategy_by_id((saved_strategy == I2C_IO_STRATEGY_NOT_SET)
                                 ? DEFAULT_I2C_IO_STRATEGY : saved_strategy);
@@ -244,7 +246,10 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
  *    io strategy                    ioctl(I2C_RDWR) or read()/write()
  *    EDID_Read_Uses_I2C_Layer       i2c_get_edid_bytes_using_i2c_layer() or
  *                                   i2c_get_edid_bytes_directly_using_ioctl()
- *    i2c_use_x30                    a write to x30 selects EDID block 0 first
+ *    x30 responsiveness             TRIVAL_TRUE writes to x30 to select EDID block 0
+ *                                   first, TRIVAL_FALSE suppresses that write.  Driven
+ *                                   through i2c_x30_responsive_loc, which is where the
+ *                                   readers look for the per display answer.
  *    EDID_Read_Size                 128, 256, or 0 for dynamic, which also
  *                                   changes max_tries from 2 to 4
  *
@@ -262,7 +267,9 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
 static void test_get_raw_edid_all_switch_combinations(void) {
    I2C_IO_Strategy_Id saved_strategy   = i2c_get_io_strategy_id();
    bool saved_uses_i2c_layer           = EDID_Read_Uses_I2C_Layer;
-   bool saved_use_x30                  = i2c_use_x30;
+   Optional_True_False * saved_x30_loc  = i2c_x30_responsive_loc;
+   Optional_True_False x30_field       = TRIVAL_UNSET;   // stands in for businfo's field
+   i2c_x30_responsive_loc              = &x30_field;
    int  saved_read_size                = EDID_Read_Size;
 
    I2C_IO_Strategy_Id strategies[] = {I2C_IO_STRATEGY_IOCTL, I2C_IO_STRATEGY_FILEIO};
@@ -278,7 +285,7 @@ static void test_get_raw_edid_all_switch_combinations(void) {
       for (int rs = 0; rs < 3; rs++) {
             i2c_set_io_strategy_by_id(strategies[si]);
             EDID_Read_Uses_I2C_Layer     = bools[ul];
-            i2c_use_x30                  = bools[x3];
+            x30_field                    = (bools[x3]) ? TRIVAL_TRUE : TRIVAL_FALSE;
             EDID_Read_Size               = read_sizes[rs];
 
             Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
@@ -301,7 +308,7 @@ static void test_get_raw_edid_all_switch_combinations(void) {
    CK_INT(nonzero_len, 0);    // and left the buffer empty
 
    EDID_Read_Uses_I2C_Layer     = saved_uses_i2c_layer;
-   i2c_use_x30                  = saved_use_x30;
+   i2c_x30_responsive_loc       = saved_x30_loc;
    EDID_Read_Size               = saved_read_size;
    i2c_set_io_strategy_by_id((saved_strategy == I2C_IO_STRATEGY_NOT_SET)
                                 ? DEFAULT_I2C_IO_STRATEGY : saved_strategy);

@@ -517,6 +517,10 @@ void i2c_reset_bus_info(I2C_Bus_Info * businfo) {
           * i2c_check_bus() clears it too, for the paths that never reach here.
           */
          businfo->open_errno = 0;
+         // A property of the display on the bus, not of the bus, so it goes when the
+         // display does.  TRIVAL_UNSET means the next EDID read writes to x30 and finds
+         // out again, which is what should happen for a display we have not seen.
+         businfo->x30_responsive = TRIVAL_UNSET;
       }
       if (businfo->edid) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Calling free_parsed_edid for %p, marker=%s",
