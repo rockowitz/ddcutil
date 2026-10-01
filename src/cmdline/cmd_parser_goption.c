@@ -2277,6 +2277,17 @@ parse_command(
             parsing_ok = false;
          }
 
+         // command "settings" is shorthand for "noop --settings");
+         Cmd_Desc * cmdInfo_settings = find_command("settings");
+         Cmd_Desc * cmdInfo_noop     = find_command("noop");
+         assert(cmdInfo_settings);
+         assert(cmdInfo_noop);
+         if (cmdInfo->cmd_id == cmdInfo_settings->cmd_id) {
+            DBG("processing setttings");
+            cmdInfo = cmdInfo_noop;
+            parsed_cmd->flags |= CMD_FLAG_SHOW_SETTINGS;
+         }
+
          if ( parsing_ok &&
               (parsed_cmd->cmd_id == CMDID_VCPINFO ||
                parsed_cmd->cmd_id == CMDID_GETVCP)

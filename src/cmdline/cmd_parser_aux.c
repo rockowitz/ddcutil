@@ -56,6 +56,7 @@ static Cmd_Desc cmdinfo[] = {
                                           2,  0,       0,                  Option_None},
    {CMDID_NOOP,         "noop",           2,  0,       9,                  Option_None},
    {CMDID_NOOP,         "c0",             2,  0,       0,                  Option_None},
+   {CMDID_SETTINGS,     "settings",       4,  0,       0,                  Option_None},
 
    {CMDID_C1,           "c1",             2,  0,       9,                  Option_None},
    {CMDID_C2,           "c2",             2,  0,       9,                  Option_None},

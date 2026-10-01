@@ -18,32 +18,40 @@
 
 typedef enum {
    CMDID_NONE          =   0x0000,
+
    CMDID_DETECT        =   0x0001,
    CMDID_CAPABILITIES  =   0x0002,
    CMDID_GETVCP        =   0x0004,
    CMDID_SETVCP        =   0x0008,
+
    CMDID_LISTVCP       =   0x0010,
    CMDID_TESTCASE      =   0x0020,
    CMDID_LISTTESTS     =   0x0040,
    CMDID_LOADVCP       =   0x0080,
+
    CMDID_DUMPVCP       =   0x0100,
 #ifdef ENABLE_ENVCMDS
    CMDID_INTERROGATE   =   0x0200,
    CMDID_ENVIRONMENT   =   0x0400,
    CMDID_USBENV        =   0x0800,
 #endif
+
    CMDID_VCPINFO       =   0x1000,
    CMDID_READCHANGES   =   0x2000,
    CMDID_CHKUSBMON     =   0x4000,
    CMDID_PROBE         =   0x8000,
+
    CMDID_SAVE_SETTINGS = 0x010000,
    CMDID_DISCARD_CACHE = 0x020000,
    CMDID_LIST_RTTI     = 0x040000,
    CMDID_NOOP          = 0x080000,
+
    CMDID_C1            = 0x100000,         // utility command id, for tests
    CMDID_C2            = 0x200000,
    CMDID_C3            = 0x400000,
    CMDID_C4            = 0x800000,
+
+   CMDID_SETTINGS     =0x01000000,
 } Cmd_Id_Type;
 
 typedef enum {
