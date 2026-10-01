@@ -524,10 +524,12 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
           //  - the driver is in known_reliable_driver(), so a connector's
           //    absence reflects hardware rather than a driver that does not
           //    maintain this part of sysfs;
-          //  - some connector does report a bus number, proving this driver on
-          //    this machine attaches DDC adapters.  Without this the rule would
-          //    skip every bus under a driver that never publishes the mapping,
-          //    nvidia being the standing example;
+          //  - some connector of the video adapter that owns this bus does
+          //    report a bus number, proving that adapter's driver publishes the
+          //    mapping.  Without this the rule would skip every bus under a
+          //    driver that never publishes it, nvidia being the standing
+          //    example.  It is asked per adapter because a second adapter under
+          //    a different driver proves nothing about this one;
           //  - the bus is not DPMST.  A display behind an MST hub has no
           //    connector of its own, so its absence here says nothing.  That
           //    was issue #585.
@@ -539,7 +541,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
              free(busname);
              if (!is_mst &&
                  is_sysfs_reliable_for_busno(busno) &&
-                 any_drm_connector_has_busno())
+                 any_drm_connector_has_busno(busno))
              {
                 DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                       "No DRM connector serves bus %d and this driver publishes the "
@@ -1040,7 +1042,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
             free(busname);
             if (!is_mst &&
                 (businfo->flags & I2C_BUS_SYSFS_KNOWN_RELIABLE) &&
-                any_drm_connector_has_busno())
+                any_drm_connector_has_busno(businfo->busno))
             {
                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                      "No DRM connector serves bus %d and this driver publishes the "

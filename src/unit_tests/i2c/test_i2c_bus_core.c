@@ -247,6 +247,54 @@ static void test_is_valid_drm_connector_name(void) {
 }
 
 
+/** sysfs_path_is_at_or_below() decides whether a DRM connector belongs to the
+ *  video adapter that owns an I2C bus, by comparing canonical sysfs paths.
+ *
+ *  The case that matters is the sibling whose name merely extends the
+ *  adapter's: a bare prefix test accepts it.
+ */
+static void test_sysfs_path_is_at_or_below(void) {
+   const char * adapter = "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0";
+
+   // a connector of that adapter, and the adapter itself
+   CK( sysfs_path_is_at_or_below(
+          "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0/drm/card1/card1-DP-3", adapter));
+   CK( sysfs_path_is_at_or_below(adapter, adapter));
+
+   // a connector of a second adapter
+   CK(!sysfs_path_is_at_or_below(
+          "/sys/devices/pci0000:00/0000:00:08.1/0000:7a:00.0/drm/card0/card0-DP-4", adapter));
+
+   // prefix of the name, but a different device
+   CK(!sysfs_path_is_at_or_below(
+          "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.01/drm/card2/card2-DP-1", adapter));
+
+   // the ancestor itself is not beneath its own child
+   CK(!sysfs_path_is_at_or_below(
+          adapter, "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0/drm"));
+
+   // trailing slash on the ancestor is tolerated
+   CK( sysfs_path_is_at_or_below(
+          "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0/drm",
+          "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0/"));
+
+   // degenerate arguments
+   CK(!sysfs_path_is_at_or_below(NULL, adapter));
+   CK(!sysfs_path_is_at_or_below(adapter, NULL));
+   CK(!sysfs_path_is_at_or_below(adapter, ""));
+}
+
+
+/** any_drm_connector_has_busno() answers per video adapter.  What it answers
+ *  depends on the hardware, so only the hardware independent part is checked:
+ *  a bus that does not exist has no adapter, and the function then considers
+ *  the connectors of every adapter, exactly as it does when given no bus.
+ */
+static void test_any_drm_connector_has_busno_unknown_adapter(void) {
+   CK(any_drm_connector_has_busno(NONEXISTENT_BUSNO) == any_drm_connector_has_busno(-1));
+}
+
+
 static void test_i2c_edid_exists(void) {
    bool eacces = false;
    CK(!i2c_edid_exists(NONEXISTENT_BUSNO, &eacces));
@@ -261,6 +309,8 @@ int main(int argc, char ** argv) {
 
    RUN(test_is_valid_drm_connector_name);
    RUN(test_i2c_edid_exists);
+   RUN(test_sysfs_path_is_at_or_below);
+   RUN(test_any_drm_connector_has_busno_unknown_adapter);
    RUN(test_detect_x37_new_all_switches);
    // i2c_open_bus()/i2c_close_bus() use the display lock table
    init_execution_stats();
