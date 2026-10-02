@@ -187,7 +187,7 @@ Error_Info * validate_ddca_display_handle_erec(
 
 
 // forward declarations
-STATIC void dbgrpt_display_info(DDCA_Display_Info * dinfo, int depth);
+STATIC void dbgrpt_ddca_display_info(DDCA_Display_Info * dinfo, int depth);
 STATIC void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);
 
 #ifdef REMOVED
@@ -1492,7 +1492,7 @@ ddca_report_display_info2(
 
 
 STATIC void
-dbgrpt_display_info(
+dbgrpt_ddca_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
 {
@@ -1564,7 +1564,7 @@ dbgrpt_display_info_list(
    int d1 = depth+1;
    rpt_vstring(depth, "Found %d displays", dlist->ct);
    for (int ndx=0; ndx<dlist->ct; ndx++) {
-      dbgrpt_display_info(&dlist->info[ndx], d1);
+      dbgrpt_ddca_display_info(&dlist->info[ndx], d1);
    }
    DBGMSF(debug, "Done.");
 }
