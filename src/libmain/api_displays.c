@@ -516,7 +516,10 @@ ddca_redetect_displays(void) {
 const char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
-   if (traced_function_stack_enabled)
+   // Reset only at the outermost API call, as the API prologs do: this function is
+   // reached only from a client, but emptying the stack when it is not the top frame
+   // would discard the caller's entry and leave the caller's epilog with nothing to pop.
+   if (traced_function_stack_enabled && trace_api_call_depth == 0)
       reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref=%p", ddca_dref);
 
@@ -534,7 +537,10 @@ ddca_dbgrpt_display_ref(
       int              depth)
 {
    bool debug = false;
-   if (traced_function_stack_enabled)
+   // Reset only at the outermost API call, as the API prologs do: this function is
+   // reached only from a client, but emptying the stack when it is not the top frame
+   // would discard the caller's entry and leave the caller's epilog with nothing to pop.
+   if (traced_function_stack_enabled && trace_api_call_depth == 0)
       reset_current_traced_function_stack();
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
    // n. as with ddca_dref_repr() just above, ddca_dref is an opaque handle
