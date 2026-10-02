@@ -762,6 +762,7 @@ i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 
 
 void init_i2c_edid() {
+   RTTI_ADD_FUNC(i2c_reread_edid_after_current_address_read);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly_using_fileio);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly_using_ioctl);
