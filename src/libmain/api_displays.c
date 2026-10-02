@@ -188,7 +188,7 @@ Error_Info * validate_ddca_display_handle_erec(
 
 // forward declarations
 STATIC void dbgrpt_ddca_display_info(DDCA_Display_Info * dinfo, int depth);
-STATIC void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);
+STATIC void dbgrpt_ddca_display_display_info_list(DDCA_Display_Info_List * dlist, int depth);
 
 #ifdef REMOVED
 DDCA_Status
@@ -1286,7 +1286,7 @@ ddca_get_display_info_list2(
 
    if (IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
       DBGMSG("Final result list %p", result_list);
-      dbgrpt_display_info_list(result_list, 2);
+      dbgrpt_ddca_display_display_info_list(result_list, 2);
       dbgrpt_published_dref_hash(__func__, 1);
    }
 
@@ -1554,7 +1554,7 @@ ddca_report_display_info_list(
 
 
 STATIC void
-dbgrpt_display_info_list(
+dbgrpt_ddca_display_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth)
 {
