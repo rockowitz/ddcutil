@@ -1354,11 +1354,18 @@ ddci_report_display_info(
       int                 depth)
 {
    bool debug = false;
-   API_PROLOGX(debug, NORESPECT_QUIESCE, "dinfo=%p, dinfo->dispno=%d, depth=%d",
-                                         dinfo, dinfo->dispno, depth);
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "dinfo=%p, depth=%d", dinfo, depth);
    DDCA_Status rc = 0;
-   API_PRECOND_W_EPILOG(dinfo);
-   API_PRECOND_W_EPILOG(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
+   // This is an internal function, so it uses the DBGTRC prolog and epilog rather than
+   // the API pair.  The API pair resets the traced function stack on the assumption that
+   // it is the outermost frame on the thread, which discarded the caller's frame when an
+   // API function called this one.  The API_PRECOND_W_EPILOG() checks went with it: that
+   // macro decrements trace_api_call_depth, which only an API prolog increments.
+   // Validating the argument is the business of the API entry points in any case.
+   if (!dinfo || memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) != 0) {
+      DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Invalid DDCA_Display_Info %p", dinfo);
+      rc = DDCRC_ARG;
+   }
    if (rc == 0) {
       int d0 = depth;
       int d1 = depth+1;
@@ -1469,7 +1476,8 @@ ddci_report_display_info(
          rpt_vstring(d1, "Consider using option --force-slave-address.");
       }
    }
-   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "");
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, rc, "");
+   return rc;
 }
 
 
@@ -1478,7 +1486,10 @@ ddca_report_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
 {
-	return ddci_report_display_info(dinfo, depth);
+   bool debug = false;
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "dinfo=%p, depth=%d", dinfo, depth);
+   DDCA_Status rc = ddci_report_display_info(dinfo, depth);
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "");
 }
 
 
@@ -1487,7 +1498,10 @@ ddca_report_display_info2(
       DDCA_Display_Info2 * dinfo,
       int                  depth)
 {
-   return ddci_report_display_info((DDCA_Display_Info*) dinfo, depth);
+   bool debug = false;
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "dinfo=%p, depth=%d", dinfo, depth);
+   DDCA_Status rc = ddci_report_display_info((DDCA_Display_Info*) dinfo, depth);
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "");
 }
 
 
@@ -1773,6 +1787,9 @@ void init_api_displays() {
    RTTI_ADD_FUNC(ddci_open_display3);
    RTTI_ADD_FUNC(ddca_redetect_displays);
    RTTI_ADD_FUNC(ddca_report_display_by_dref);
+   RTTI_ADD_FUNC(ddca_report_display_info);
+   RTTI_ADD_FUNC(ddca_report_display_info2);
+   RTTI_ADD_FUNC(ddci_report_display_info);
    RTTI_ADD_FUNC(ddca_register_display_status_callback);
    RTTI_ADD_FUNC(ddca_unregister_display_status_callback);
    RTTI_ADD_FUNC(ddci_init_display_info);
