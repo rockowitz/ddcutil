@@ -189,6 +189,11 @@ void unquiesce_api();
 //
 // Function prologs and epilogs
 //
+// Each prolog asserts that it is the outermost frame on the thread rather than testing
+// for it: an API entry point is, by definition, since no ddca_ function calls another.
+// A nonzero trace_api_call_depth or a non-empty traced function stack on entry is the
+// residue of an earlier missed epilog, and the prolog is the one place that can clear it.
+//
 
 /** API function prolog for functions that don't return a status code.
  *
@@ -202,10 +207,10 @@ void unquiesce_api();
          ddci_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE, NULL); \
       } \
       if (traced_function_stack_enabled) { \
-         if (trace_api_call_depth == 0) \
-            reset_current_traced_function_stack(); \
+         reset_current_traced_function_stack(); \
          push_traced_function(__func__); \
       } \
+      trace_api_call_depth = 0; \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_STARTING, \
@@ -258,10 +263,10 @@ void unquiesce_api();
          } \
       } \
       if (traced_function_stack_enabled) { \
-         if (trace_api_call_depth == 0) \
-            reset_current_traced_function_stack(); \
+         reset_current_traced_function_stack(); \
          push_traced_function(__func__); \
       } \
+      trace_api_call_depth = 0; \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_STARTING, \
@@ -273,10 +278,10 @@ void unquiesce_api();
 #define API_PROLOG_NO_DISPLAY_IO(debug_flag, format, ...) \
    do { \
       if (traced_function_stack_enabled) { \
-         if (trace_api_call_depth == 0) \
-            reset_current_traced_function_stack(); \
+         reset_current_traced_function_stack(); \
          push_traced_function(__func__); \
       } \
+      trace_api_call_depth = 0; \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_STARTING, \
