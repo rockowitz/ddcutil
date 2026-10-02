@@ -42,6 +42,7 @@ Found_Sys_Drm_Connector
                  find_sys_drm_connector_by_busno_or_edid_snapshot(int busno, Byte * edid_bytes);
 void             free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec);
 
+char *           sysfs_connectors_having_placeholder_edid();
 Byte *           get_connector_edid(const char * connector_name);
 Parsed_Edid *    get_parsed_edid_for_businfo_using_sysfs(I2C_Bus_Info * businfo);
 

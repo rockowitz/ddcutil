@@ -76,6 +76,53 @@ bool is_valid_raw_edid(const Byte * edid, int len) {
 }
 
 
+/** Tests whether a 128 byte EDID block is a placeholder, i.e. structurally valid
+ *  but carrying nothing that identifies a display.
+ *
+ *  @param  edidbytes  pointer to a 128 byte EDID block
+ *  @return **true** if the block identifies no display, **false** if not
+ *
+ *  Some video drivers publish such an EDID in the **edid** attribute of a
+ *  connected connector in sysfs, in place of the EDID of the attached monitor.
+ *  The block has a valid header and checksum, so #is_valid_raw_edid() accepts it,
+ *  but it names no product and describes no timings.  A bus whose EDID was read
+ *  from the monitor therefore cannot be matched to the connector by comparing
+ *  EDIDs.  Observed on an Nvidia DisplayPort connector, where the block even
+ *  carried the driver's own manufacturer id.  The test is on content, not on any
+ *  particular vendor.
+ *
+ *  All three conditions must hold, so that a real EDID which merely omits a
+ *  serial number is not reported: no product code, no serial number, and no
+ *  detailed timing descriptors.  A real EDID always describes at least its
+ *  preferred timing.
+ */
+bool is_placeholder_edid(const Byte * edidbytes) {
+   bool debug = false;
+
+   bool no_product = (edidbytes[10] == 0 && edidbytes[11] == 0);
+   bool no_serial  = (edidbytes[12] == 0 && edidbytes[13] == 0 &&
+                      edidbytes[14] == 0 && edidbytes[15] == 0);
+   bool no_descriptors = true;
+   for (int ndx = 54; ndx < 126; ndx++) {     // the four 18 byte descriptors
+      if (edidbytes[ndx] != 0) {
+         no_descriptors = false;
+         break;
+      }
+   }
+   bool result = no_product && no_serial && no_descriptors;
+
+   if (debug) {
+      char * hs = hexstring(edidbytes+8, 10);   // mfg id, product code, serial, date
+      printf("(%s) bytes 8..17: %s, no_product=%s, no_serial=%s, no_descriptors=%s,"
+             " returning %s\n",
+             __func__, hs, sbool(no_product), sbool(no_serial), sbool(no_descriptors),
+             sbool(result));
+      free(hs);
+   }
+   return result;
+}
+
+
 bool is_valid_raw_cea861_extension_block(const Byte * edid, int len) {
    return (len >= 128) && edid[0] == 0x02 && is_valid_edid_checksum(edid);
 }

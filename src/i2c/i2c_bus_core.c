@@ -748,6 +748,17 @@ static void set_connector_for_businfo_using_edid(I2C_Bus_Info * businfo) {
       if (sysfs_connector_directories_exist()) {
          MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
          // LOGABLE_MSG(DDCA_SYSLOG_ERROR,"%s", msg);
+         // A connector whose edid attribute holds a placeholder rather than the EDID of
+         // the monitor attached to it cannot be matched by the comparison just performed,
+         // so name it.  Observed on an Nvidia DisplayPort connector.  Without this the
+         // message implicates the lookup, when the EDID the driver published is the cause.
+         char * placeholders = sysfs_connectors_having_placeholder_edid();
+         if (placeholders) {
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
+                  "DRM connector(s) reporting a placeholder EDID, which identifies no"
+                  " display and so cannot match any bus: %s", placeholders);
+            free(placeholders);
+         }
       }
       else {
          DECORATED_SYSLOG(DDCA_SYSLOG_INFO, "%s", msg);

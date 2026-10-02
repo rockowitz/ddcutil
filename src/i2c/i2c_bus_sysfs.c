@@ -25,6 +25,7 @@
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
+#include "util/glib_string_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
@@ -503,6 +504,42 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
 }
 
 
+/** Returns the names of DRM connectors whose sysfs edid attribute holds a
+ *  placeholder EDID, i.e. one that is structurally valid but identifies no
+ *  display.  See #is_placeholder_edid().
+ *
+ *  @return connector names, comma separated, caller responsible for freeing,
+ *          NULL if there are none
+ *
+ *  A bus whose EDID was read from the monitor can never match such a connector,
+ *  so this explains an otherwise unaccountable EDID lookup failure.
+ */
+char * sysfs_connectors_having_placeholder_edid() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   char * result = NULL;
+
+   GPtrArray * found = g_ptr_array_new_with_free_func(g_free);
+   Sysfs_Connector_Names cnames = get_sysfs_drm_connector_names();
+   for (int ndx = 0; ndx < cnames.connectors_having_edid->len; ndx++) {
+      char * cname = g_ptr_array_index(cnames.connectors_having_edid, ndx);
+      Byte * edidbytes = get_connector_edid(cname);
+      if (edidbytes) {
+         if (is_placeholder_edid(edidbytes))
+            g_ptr_array_add(found, g_strdup(cname));
+         free(edidbytes);
+      }
+   }
+   if (found->len > 0)
+      result = join_string_g_ptr_array(found, ", ");
+   g_ptr_array_free(found, true);
+   free_sysfs_connector_names_contents(cnames);
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %s", result);
+   return result;
+}
+
+
 /** Returns the value of the edid attribute for a DRM connector.
  *
  *  @param  connector_name
@@ -810,6 +847,7 @@ void init_i2c_bus_sysfs() {
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_sysfs);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_snapshot);
+   RTTI_ADD_FUNC(sysfs_connectors_having_placeholder_edid);
    RTTI_ADD_FUNC(any_drm_connector_has_busno);
    RTTI_ADD_FUNC(get_connector_edid);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
