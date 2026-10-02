@@ -937,7 +937,7 @@ ddca_dbgrpt_feature_metadata(
       int                     depth)
 {
    bool debug = false;
-   if (traced_function_stack_enabled)
+   if (traced_function_stack_enabled && trace_api_call_depth == 0)
       reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    // rpt_push_output_dest(stdout);
