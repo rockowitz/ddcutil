@@ -212,15 +212,16 @@ ddca_create_dispno_display_identifier(
       int                      dispno,
       DDCA_Display_Identifier* did_loc)
 {
+   bool debug = false;
    free_thread_error_detail();
-   if (traced_function_stack_enabled)
-      reset_current_traced_function_stack();
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "dispno=%d, did_loc=%p", dispno, did_loc);
    // assert(did_loc);
-   API_PRECOND(did_loc);
+   API_PRECOND_W_EPILOG(did_loc);
+   DDCA_Status rc = 0;
    Display_Identifier* did = create_dispno_display_identifier(dispno);
    *did_loc = did;
    assert(*did_loc);
-   return 0;
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "*did_loc=%p", *did_loc);
 }
 
 
@@ -229,15 +230,16 @@ ddca_create_busno_display_identifier(
       int busno,
       DDCA_Display_Identifier* did_loc)
 {
+   bool debug = false;
    free_thread_error_detail();
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "busno=%d, did_loc=%p", busno, did_loc);
    // assert(did_loc);
-   if (traced_function_stack_enabled)
-      reset_current_traced_function_stack();
-   API_PRECOND(did_loc);
+   API_PRECOND_W_EPILOG(did_loc);
+   DDCA_Status rc = 0;
    Display_Identifier* did = create_busno_display_identifier(busno);
    *did_loc = did;
    assert(*did_loc);
-   return 0;
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "*did_loc=%p", *did_loc);
 }
 
 
@@ -248,11 +250,12 @@ ddca_create_mfg_model_sn_display_identifier(
       const char*              serial_ascii,
       DDCA_Display_Identifier* did_loc)
 {
+   bool debug = false;
    free_thread_error_detail();
-   if (traced_function_stack_enabled)
-      reset_current_traced_function_stack();
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "mfg_id=|%s|, model_name=|%s|, serial_ascii=|%s|",
+                                         mfg_id, model_name, serial_ascii);
    // assert(did_loc);
-   API_PRECOND(did_loc);
+   API_PRECOND_W_EPILOG(did_loc);
    *did_loc = NULL;
    DDCA_Status rc = 0;
 
@@ -278,7 +281,7 @@ ddca_create_mfg_model_sn_display_identifier(
                      mfg_id, model_name, serial_ascii);
    }
    assert( (rc==0 && *did_loc) || (rc!=0 && !*did_loc));
-   return rc;
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "*did_loc=%p", *did_loc);
 }
 
 
@@ -287,11 +290,11 @@ ddca_create_edid_display_identifier(
       const Byte *              edid,
       DDCA_Display_Identifier * did_loc)    // 128 byte EDID
 {
+   bool debug = false;
    // assert(did_loc);
    free_thread_error_detail();
-   if (traced_function_stack_enabled)
-      reset_current_traced_function_stack();
-   API_PRECOND(did_loc);
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "edid=%p, did_loc=%p", edid, did_loc);
+   API_PRECOND_W_EPILOG(did_loc);
    *did_loc = NULL;
    DDCA_Status rc = 0;
    if (edid == NULL) {
@@ -302,7 +305,7 @@ ddca_create_edid_display_identifier(
       *did_loc = create_edid_display_identifier(edid);
    }
    assert( (rc==0 && *did_loc) || (rc!=0 && !*did_loc));
-   return rc;
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "*did_loc=%p", *did_loc);
 }
 
 
@@ -312,15 +315,16 @@ ddca_create_usb_display_identifier(
       int                      device,
       DDCA_Display_Identifier* did_loc)
 {
+   bool debug = false;
    // assert(did_loc);
    free_thread_error_detail();
-   if (traced_function_stack_enabled)
-      reset_current_traced_function_stack();
-   API_PRECOND(did_loc);
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "bus=%d, device=%d, did_loc=%p", bus, device, did_loc);
+   API_PRECOND_W_EPILOG(did_loc);
+   DDCA_Status rc = 0;
    Display_Identifier* did = create_usb_display_identifier(bus, device);
    *did_loc = did;
    assert(*did_loc);
-   return 0;
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "*did_loc=%p", *did_loc);
 }
 
 
@@ -329,15 +333,16 @@ ddca_create_usb_hiddev_display_identifier(
       int                      hiddev_devno,
       DDCA_Display_Identifier* did_loc)
 {
+   bool debug = false;
    // assert(did_loc);
    free_thread_error_detail();
-   if (traced_function_stack_enabled)
-      reset_current_traced_function_stack();
-   API_PRECOND(did_loc);
+   API_PROLOGX(debug, NORESPECT_QUIESCE, "hiddev_devno=%d, did_loc=%p", hiddev_devno, did_loc);
+   API_PRECOND_W_EPILOG(did_loc);
+   DDCA_Status rc = 0;
    Display_Identifier* did = create_usb_hiddev_display_identifier(hiddev_devno);
    *did_loc = did;
    assert(*did_loc);
-   return 0;
+   API_EPILOG_RET_DDCRC(debug, NORESPECT_QUIESCE, rc, "*did_loc=%p", *did_loc);
 }
 
 
@@ -1782,6 +1787,12 @@ void init_api_displays() {
    RTTI_ADD_FUNC(ddci_get_display_ref);
    RTTI_ADD_FUNC(ddca_get_display_ref);
    RTTI_ADD_FUNC(ddca_create_display_ref);
+   RTTI_ADD_FUNC(ddca_create_dispno_display_identifier);
+   RTTI_ADD_FUNC(ddca_create_busno_display_identifier);
+   RTTI_ADD_FUNC(ddca_create_mfg_model_sn_display_identifier);
+   RTTI_ADD_FUNC(ddca_create_edid_display_identifier);
+   RTTI_ADD_FUNC(ddca_create_usb_display_identifier);
+   RTTI_ADD_FUNC(ddca_create_usb_hiddev_display_identifier);
    RTTI_ADD_FUNC(ddca_get_display_refs);
    RTTI_ADD_FUNC(ddca_open_display2);
    RTTI_ADD_FUNC(ddci_open_display3);
