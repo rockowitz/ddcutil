@@ -202,7 +202,8 @@ void unquiesce_api();
          ddci_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE, NULL); \
       } \
       if (traced_function_stack_enabled) { \
-         reset_current_traced_function_stack(); \
+         if (trace_api_call_depth == 0) \
+            reset_current_traced_function_stack(); \
          push_traced_function(__func__); \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
@@ -257,7 +258,8 @@ void unquiesce_api();
          } \
       } \
       if (traced_function_stack_enabled) { \
-         reset_current_traced_function_stack(); \
+         if (trace_api_call_depth == 0) \
+            reset_current_traced_function_stack(); \
          push_traced_function(__func__); \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
@@ -271,7 +273,8 @@ void unquiesce_api();
 #define API_PROLOG_NO_DISPLAY_IO(debug_flag, format, ...) \
    do { \
       if (traced_function_stack_enabled) { \
-         reset_current_traced_function_stack(); \
+         if (trace_api_call_depth == 0) \
+            reset_current_traced_function_stack(); \
          push_traced_function(__func__); \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
