@@ -939,11 +939,11 @@ ddca_dbgrpt_feature_metadata(
    bool debug = false;
    if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   DBGMSF(debug, "Starting.  md=%p, depth=%d", md, depth);
    // rpt_push_output_dest(stdout);
    dbgrpt_ddca_feature_metadata(md, depth);
    // rpt_pop_output_dest();
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
+   DBGMSF(debug, "Done.");
 }
 
 

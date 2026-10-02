@@ -237,9 +237,7 @@ ddca_free_parsed_capabilities(
       DDCA_Capabilities * pcaps)
 {
    bool debug = false;
-   if (traced_function_stack_enabled)
-      reset_current_traced_function_stack();
-   DBGTRC_STARTING(debug, DDCA_TRC_API, "pcaps=%p", pcaps);
+   API_PROLOG_NO_DISPLAY_IO(debug, "pcaps=%p", pcaps);
    if (pcaps) {
       assert(memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
       free(pcaps->unparsed_string);
@@ -256,7 +254,7 @@ ddca_free_parsed_capabilities(
       pcaps->marker[3] = 'x';
       free(pcaps);
    }
-   DBGTRC_DONE(debug, DDCA_TRC_API, "");
+   API_EPILOG_NO_RETURN(debug, false, "");
 }
 
 #ifdef OLD

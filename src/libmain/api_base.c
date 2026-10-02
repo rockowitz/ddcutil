@@ -1235,7 +1235,10 @@ ddca_get_error_detail() {
 
 void
 ddca_free_error_detail(DDCA_Error_Detail * ddca_erec) {
+   bool debug = false;
+   API_PROLOG_NO_DISPLAY_IO(debug, "ddca_erec=%p", ddca_erec);
    free_error_detail(ddca_erec);
+   API_EPILOG_NO_RETURN(debug, false, "");
 }
 
 
@@ -1622,7 +1625,8 @@ ddca_is_force_slave_address_enabled(void) {
 
 void
 ddca_reset_stats(void) {
-   // DBGMSG("Executing");
+   bool debug = false;
+   API_PROLOG_NO_DISPLAY_IO(debug, "");
    g_mutex_lock(&api_quiesced_mutex);
    g_mutex_lock(&active_calls_mutex);
 
@@ -1631,6 +1635,7 @@ ddca_reset_stats(void) {
 
    g_mutex_unlock(&active_calls_mutex);
    g_mutex_unlock(&api_quiesced_mutex);
+   API_EPILOG_NO_RETURN(debug, false, "");
 }
 
 
@@ -1665,7 +1670,10 @@ void
 ddca_report_locks(
       int             depth)
 {
+   bool debug = false;
+   API_PROLOG_NO_DISPLAY_IO(debug, "depth=%d", depth);
    dbgrpt_display_locks(depth);
+   API_EPILOG_NO_RETURN(debug, false, "");
 }
 
 
@@ -1682,4 +1690,7 @@ void init_api_base() {
    RTTI_ADD_FUNC(unquiesce_api);
    RTTI_ADD_FUNC(increment_active_api_calls);
    RTTI_ADD_FUNC(decrement_active_api_calls);
+   RTTI_ADD_FUNC(ddca_free_error_detail);
+   RTTI_ADD_FUNC(ddca_reset_stats);
+   RTTI_ADD_FUNC(ddca_report_locks);
 }
