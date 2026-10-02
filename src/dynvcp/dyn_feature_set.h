@@ -32,7 +32,7 @@
 typedef struct {
    char                 marker[4];
    VCP_Feature_Subset   subset;      // subset identifier
-   DDCA_Display_Ref     dref;
+   Display_Ref *        dref;
    GPtrArray *          members_dfm; // array of pointers to Display_Feature_Metadata - alt
 } Dyn_Feature_Set;
 
@@ -52,7 +52,7 @@ dyn_feature_set_repr_t(
 Dyn_Feature_Set *
 dyn_create_feature_set(
       VCP_Feature_Subset  subset,
-      DDCA_Display_Ref    dref,
+      Display_Ref *       dref,
       Feature_Set_Flags   flags);
 
 bool test_show_feature(
@@ -72,7 +72,7 @@ create_dyn_feature_set_from_feature_set_ref(
 Dyn_Feature_Set *
 dyn_create_single_feature_set_by_hexid2(
       DDCA_Vcp_Feature_Code  feature_code,
-      DDCA_Display_Ref       dref,
+      Display_Ref *          dref,
       bool                   force);
 #endif
 
@@ -90,7 +90,7 @@ Dyn_Feature_Set *
 dyn_create_feature_set_from_feature_set_ref2(
    Feature_Set_Ref *       fsref,
    // DDCA_MCCS_Version_Spec  vcp_version,
-   DDCA_Display_Ref        dref,
+   Display_Ref *           dref,
    Feature_Set_Flags       flags);
 #endif
 

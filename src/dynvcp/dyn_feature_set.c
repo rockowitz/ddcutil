@@ -456,7 +456,7 @@ create_vcp_feature_set(
 Dyn_Feature_Set *
 dyn_create_feature_set(
       VCP_Feature_Subset     subset_id,
-      DDCA_Display_Ref       display_ref,
+      Display_Ref *          display_ref,
       Feature_Set_Flags      feature_set_flags)
 {
    bool debug = false;
@@ -470,7 +470,7 @@ dyn_create_feature_set(
     Dyn_Feature_Set * result = NULL;
     Display_Ref * dref = NULL;
     if (display_ref) {
-       dref = (Display_Ref *) display_ref;
+       dref = display_ref;
        assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
     }
     else {
@@ -744,13 +744,13 @@ create_vcp_feature_set_from_feature_set_ref(
 Dyn_Feature_Set *
 dyn_create_single_feature_set_by_hexid2(
       DDCA_Vcp_Feature_Code  feature_code,
-      DDCA_Display_Ref       display_ref,
+      Display_Ref *          display_ref,
       bool                  force)
 {
    bool debug = false;
    DBGMSF(debug, "feature_code=0x%02x, display_ref=%s, force=%s",
                  feature_code, dref_repr_t(display_ref), sbool(force));
-   Display_Ref * dref = (Display_Ref *) display_ref;
+   Display_Ref * dref = display_ref;
    assert( dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
 
    Dyn_Feature_Set * result = calloc(1, sizeof(Dyn_Feature_Set));
@@ -827,7 +827,7 @@ dyn_get_feature_set_size(
 Dyn_Feature_Set *
 dyn_create_feature_set_from_feature_set_ref2(
    Feature_Set_Ref *       fsref,
-   DDCA_Display_Ref        dref,
+   Display_Ref *           dref,
    Feature_Set_Flags       flags)
 {
    bool debug = false;
