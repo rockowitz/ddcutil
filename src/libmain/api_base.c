@@ -696,8 +696,7 @@ init_library_trace_file(char * library_trace_file, bool debug) {
 void __attribute__ ((destructor))
 _ddca_terminate(void) {
    bool debug = false;
-   if (trace_api_call_depth == 0)
-      reset_current_traced_function_stack();  // ?? needed?
+   reset_current_traced_function_stack();  // ?? needed?
    DBGTRC_STARTING(debug, DDCA_TRC_API, "library_initialized = %s", SBOOL(library_initialized));
    if (library_initialized) {
       if (debug)
@@ -1478,7 +1477,7 @@ double
 ddca_set_sleep_multiplier(double multiplier)
 {
    bool debug = false;
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, DDCA_TRC_API, "Setting multiplier = %6.3f", multiplier);
 
@@ -1500,7 +1499,7 @@ double
 ddca_get_sleep_multiplier(void)
 {
    bool debug = false;
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    DBGTRC(debug, DDCA_TRC_API, "");
 

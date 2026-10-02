@@ -213,7 +213,7 @@ ddca_create_dispno_display_identifier(
       DDCA_Display_Identifier* did_loc)
 {
    free_thread_error_detail();
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    // assert(did_loc);
    API_PRECOND(did_loc);
@@ -231,7 +231,7 @@ ddca_create_busno_display_identifier(
 {
    free_thread_error_detail();
    // assert(did_loc);
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    Display_Identifier* did = create_busno_display_identifier(busno);
@@ -249,7 +249,7 @@ ddca_create_mfg_model_sn_display_identifier(
       DDCA_Display_Identifier* did_loc)
 {
    free_thread_error_detail();
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    // assert(did_loc);
    API_PRECOND(did_loc);
@@ -289,7 +289,7 @@ ddca_create_edid_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    *did_loc = NULL;
@@ -314,7 +314,7 @@ ddca_create_usb_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    Display_Identifier* did = create_usb_display_identifier(bus, device);
@@ -331,7 +331,7 @@ ddca_create_usb_hiddev_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    API_PRECOND(did_loc);
    Display_Identifier* did = create_usb_hiddev_display_identifier(hiddev_devno);
@@ -516,10 +516,7 @@ ddca_redetect_displays(void) {
 const char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
-   // Reset only at the outermost API call, as the API prologs do: this function is
-   // reached only from a client, but emptying the stack when it is not the top frame
-   // would discard the caller's entry and leave the caller's epilog with nothing to pop.
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "ddca_dref=%p", ddca_dref);
 
@@ -537,10 +534,7 @@ ddca_dbgrpt_display_ref(
       int              depth)
 {
    bool debug = false;
-   // Reset only at the outermost API call, as the API prologs do: this function is
-   // reached only from a client, but emptying the stack when it is not the top frame
-   // would discard the caller's entry and leave the caller's epilog with nothing to pop.
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
    // n. as with ddca_dref_repr() just above, ddca_dref is an opaque handle

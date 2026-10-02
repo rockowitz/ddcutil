@@ -237,7 +237,7 @@ ddca_free_parsed_capabilities(
       DDCA_Capabilities * pcaps)
 {
    bool debug = false;
-   if (traced_function_stack_enabled && trace_api_call_depth == 0)
+   if (traced_function_stack_enabled)
       reset_current_traced_function_stack();
    DBGTRC_STARTING(debug, DDCA_TRC_API, "pcaps=%p", pcaps);
    if (pcaps) {
