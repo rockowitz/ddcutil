@@ -175,6 +175,95 @@ static void test_parse(void) {
    CK(create_parsed_edid(bad) == NULL);
 }
 
+/* The edid attribute of card2-DP-4 on ritter, byte for byte.  The Nvidia driver
+ * publishes this for a connected DisplayPort connector instead of the EDID of the
+ * monitor attached to it.  Structurally impeccable -- correct header, and byte 127
+ * makes block 0 sum to zero -- but it names nothing: manufacturer id "NVD" is the
+ * driver's own, product code and serial are zero, and bytes 54-125 hold no
+ * detailed timing descriptor at all.
+ */
+static const Byte ritter_dp4_placeholder[128] = {
+   0x00,0xff,0xff,0xff,0xff,0xff,0xff,0x00, 0x3a,0xc4,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,0x01,0x04,0x95,0x00,0x00,0x78, 0xee,0x91,0xa3,0x54,0x4c,0x99,0x26,0x0f,
+   0x50,0x54,0x00,0x20,0x00,0x00,0x01,0x01, 0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,
+   0x01,0x01,0x01,0x01,0x01,0x01,0x00,0x00, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x92,
+};
+
+static void test_placeholder(void) {
+   char buf[8];
+
+   // The captured stub.  That it passes the structural validators is the point:
+   // nothing else rejects it, which is why is_placeholder_edid() exists.
+   CK(is_valid_edid_header(ritter_dp4_placeholder)   == true);
+   CK(is_valid_edid_checksum(ritter_dp4_placeholder) == true);
+   CK(is_valid_raw_edid(ritter_dp4_placeholder, 128) == true);
+   get_edid_mfg_id_in_buffer(ritter_dp4_placeholder, buf, sizeof(buf));
+   CK_STR(buf, "NVD");
+   CK(is_placeholder_edid(ritter_dp4_placeholder) == true);
+
+   // A fully populated EDID is not a placeholder.
+   Byte e[128];
+   build_edid(e, true);
+   CK(is_placeholder_edid(e) == false);
+
+   // Nor is one without descriptor blocks, so long as it identifies a product.
+   // This is the false positive the three-part test exists to prevent: the same
+   // EDID the laptop heuristic accepts must not be called a placeholder.
+   build_edid(e, false);
+   CK(is_placeholder_edid(e) == false);
+
+   // Each condition alone is insufficient.  Start from the stub and restore one
+   // piece of identity at a time; every one of these must read as not-placeholder.
+   Byte v[128];
+
+   memcpy(v, ritter_dp4_placeholder, 128);   // product code restored
+   v[0x0a] = 0x34; v[0x0b] = 0x12;
+   fix_checksum(v);
+   CK(is_placeholder_edid(v) == false);
+
+   memcpy(v, ritter_dp4_placeholder, 128);   // serial number restored
+   v[0x0c] = 0x04; v[0x0d] = 0x03; v[0x0e] = 0x02; v[0x0f] = 0x01;
+   fix_checksum(v);
+   CK(is_placeholder_edid(v) == false);
+
+   memcpy(v, ritter_dp4_placeholder, 128);   // a single descriptor restored
+   set_descriptor(v, 54, 0xfc, "Real Monitor");
+   fix_checksum(v);
+   CK(is_placeholder_edid(v) == false);
+
+   // A descriptor anywhere counts, not just the first slot.
+   memcpy(v, ritter_dp4_placeholder, 128);
+   set_descriptor(v, 108, 0xff, "SN999");
+   fix_checksum(v);
+   CK(is_placeholder_edid(v) == false);
+
+   // One non-zero byte at either end of the descriptor range is enough.
+   memcpy(v, ritter_dp4_placeholder, 128);
+   v[54] = 0x01;  fix_checksum(v);
+   CK(is_placeholder_edid(v) == false);
+   memcpy(v, ritter_dp4_placeholder, 128);
+   v[125] = 0x01; fix_checksum(v);
+   CK(is_placeholder_edid(v) == false);
+
+   // Byte 126 is the extension block count and 127 the checksum; neither is part
+   // of the descriptor range, so neither makes an otherwise empty EDID identify
+   // a display.
+   memcpy(v, ritter_dp4_placeholder, 128);
+   v[126] = 0x01; fix_checksum(v);
+   CK(is_placeholder_edid(v) == true);
+
+   // A wholly zero block past the header is a placeholder too.
+   memset(v, 0, 128);
+   v[0] = 0x00; memset(v+1, 0xff, 6); v[7] = 0x00;
+   fix_checksum(v);
+   CK(is_placeholder_edid(v) == true);
+}
+
+
 static void test_laptop(void) {
    // no descriptor blocks: model name and serial remain empty -> laptop heuristic
    Byte e[128];
@@ -194,6 +283,7 @@ int main(int argc, char ** argv) {
    test_mfg_id();
    test_parse();
    test_laptop();
+   test_placeholder();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);
