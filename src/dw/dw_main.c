@@ -82,23 +82,33 @@ STATIC bool is_watch_mode_x11_available() {
 
    bool result = false;
 #ifdef USE_X11
+   // Open a display rather than infer from the environment.  XDG_SESSION_TYPE and
+   // DISPLAY were only ever proxies for the question that matters, and both answer
+   // it wrongly: session type "wayland" does not imply XWayland is installed, and
+   // DISPLAY arriving over ssh names a forwarding proxy, not the server driving the
+   // monitors.  Where the proxies said yes and no display could be opened, the mode
+   // was selected and then unwound in dw_start_watch_displays() when
+   // dw_init_xevent_screen_change_notification() returned NULL.  Opening a display
+   // here asks the same question that function asks, so the answers agree.
+   // XInitThreads() has already run, in init_dw_services().
    if (x11_init_state != failed) {
       char * xdg_session_type = getenv("XDG_SESSION_TYPE");
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE=|%s|", xdg_session_type);
-      if (xdg_session_type &&         // can xdg_session_type ever not be set
-           (streq(xdg_session_type, "x11") || streq(xdg_session_type,"wayland")))
-      {
+      char * display          = getenv("DISPLAY");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE=|%s|, DISPLAY=|%s|",
+                                            xdg_session_type, display);
+      Display * dpy = XOpenDisplay(NULL);
+      if (dpy) {
          result = true;
+         XCloseDisplay(dpy);
       }
       else {
-         // assert xdg_session_type == "tty"  ?
-         char * display = getenv("DISPLAY");
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "xdg_session_type=|%s|, display=|%s|", xdg_session_type, display);
-         // possibility of coming in on ssh with a x11 proxy running
-         // see https://stackoverflow.com/questions/45536141/how-i-can-find-out-if-a-linux-system-uses-wayland-or-x11
-         if (display) {
-            result = true;
-         }
+         // Reached only when xevent was explicitly requested: with
+         // MODE_XEVENT_NOT_WORKING_DONT_RESOLVE_TO_IT undefined, watch mode dynamic
+         // never asks.  resolve_watch_mode() silently substitutes another mode, so
+         // this is the only notice the user gets that the request was not honored.
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+               "Watch mode xevent requires an X display, which cannot be opened."
+               " DISPLAY=%s", (display) ? display : "unset");
       }
    }
 #endif
