@@ -1446,8 +1446,10 @@ ddci_report_display_info(
          if (stat(fn, &statrec) == 0 )
             rpt_vstring(d1, "Driver ddcci is hogging I2C slave address x37 (DDC) on /dev/i2c-%d", busno);
    #endif
-         Display_Ref * dref = (Display_Ref *) dinfo->dref;
-         int busno = dref->io_path.path.i2c_busno;
+         // dinfo->dref is an id published by dref_to_ddca_dref(), not a Display_Ref *,
+         // so it cannot be cast and dereferenced.  No lookup is needed here: dinfo->path
+         // is a copy of dref->io_path, assigned in ddci_init_display_info().
+         int busno = dinfo->path.path.i2c_busno;
          GPtrArray * conflicts = collect_conflicting_drivers(busno, -1);
          if (conflicts && conflicts->len > 0) {
             rpt_vstring(d1, "I2C bus is busy. Likely conflicting driver(s): %s",
@@ -1499,10 +1501,17 @@ dbgrpt_display_info(
    ddci_report_display_info(dinfo, depth);
    int d1 = depth+1;
 
-   rpt_vstring(d1, "dref:                %s", dref_repr_t(dinfo->dref));
-   if (dinfo->dref) {  // paranoid, should never be NULL
-      rpt_vstring(d1, "VCP Version (dref xdf): %s", format_vspec_verbose(((Display_Ref*)dinfo->dref)->vcp_version_xdf));
-   }
+   // dinfo->dref is an id published by dref_to_ddca_dref(), not a Display_Ref *.  It has to
+   // be resolved, as ddci_report_display_info() above already does: casting the id and
+   // dereferencing it segfaulted ddcutil-service on the first display reported.  That went
+   // unnoticed because the only caller reaches this function solely when tracing is enabled
+   // for DDCA_TRC_API or DDCA_TRC_DDC.  The lookup can legitimately fail for an id no
+   // longer published, after a redetect for instance, so its result is tested rather than
+   // assumed; dref_repr_t() handles NULL itself.
+   Display_Ref * dref = dref_from_published_ddca_dref(dinfo->dref);
+   rpt_vstring(d1, "dref:                %s", dref_repr_t(dref));
+   if (dref)
+      rpt_vstring(d1, "VCP Version (dref xdf): %s", format_vspec_verbose(dref->vcp_version_xdf));
    DBGMSF(debug, "Done.");
 }
 
