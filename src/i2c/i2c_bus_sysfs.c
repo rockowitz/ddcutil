@@ -41,6 +41,9 @@
 
 #include "i2c_bus_sysfs.h"
 
+// Trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
+
 /* The DRM connectors are read once at the start of display detection, used for
  * the lookups detection performs, and the array then discarded.  One scan,
  * where walking /sys/class/drm per lookup costs buses x connectors: measured,
@@ -98,6 +101,7 @@ void take_connector_snapshot() {
    connector_snapshot = scan_basic_drm_connectors(-1);
    connector_snapshot_active = true;
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "%d connectors", connector_snapshot->len);
+   dbgrpt_basic_drm_connectors(connector_snapshot, 3);
 }
 
 
@@ -302,7 +306,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
       if (check_busno) {
          Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
          get_connector_bus_numbers("/sys/class/drm", cname, cbn);
-         if (cbn->i2c_busno == busno){
+         if (cbn->i2c_busno == busno || cbn->base_busno){
             found = true;
             result.connector_name = strdup(cname);
             result.found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
@@ -412,7 +416,7 @@ bool any_drm_connector_has_busno() {
 Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_snapshot(
                                  int busno, Byte * edid_bytes)
 {
-   bool debug  = false;
+   bool debug  = true;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, " busno = %d, edid = %p" , busno, edid_bytes);
    if (busno == 255)  // happens somehow
       busno = -1;
@@ -432,6 +436,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_snapshot(
       if (hit)
          result.found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
    }
+
    if (!hit && check_edid) {
       hit = find_basic_drm_connector_by_edid(connector_snapshot, edid_bytes);
       if (hit)
@@ -470,7 +475,11 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_snapshot(
 Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
                                  int busno, Byte * edid_bytes)
 {
+   bool debug = true;
    bool use_array = connector_snapshot_active;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "busnp%d, eddid_bytes=%p, ise+arrau.=%s, drm_connector_lookup_compare=%s",
+         busno, edid_bytes, sbool(use_array), sbool(drm_connector_lookup_compare));
 
    if (!use_array && !drm_connector_lookup_compare)
       return find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
@@ -500,6 +509,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
       }
       free_found_sys_drm_connector_result_contents(alt);
    }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
    return result;
 }
 
