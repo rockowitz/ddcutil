@@ -158,7 +158,7 @@ Sys_Basic_Drm_Connector * find_basic_drm_connector_by_busno(
    if (connectors && busno >= 0) {
       for (int ndx = 0; ndx < connectors->len; ndx++) {
          Sys_Basic_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
-         if (cur->i2c_busno == busno) {
+         if (cur->i2c_busno == busno || cur->base_busno == busno) {
             result = cur;
             break;
          }
