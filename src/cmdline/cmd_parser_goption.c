@@ -1026,8 +1026,10 @@ parse_command(
 // // char *   tracework       = NULL;
    char**   cmd_and_args    = NULL;
    gchar**  trace_classes   = NULL;
+   // libddcutil: NOT_SET unless --syslog is given, so that ddci_init() keeps
+   // the level passed by the client (or DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL)
    DDCA_Syslog_Level syslog_level = (parser_mode == MODE_DDCUTIL) ? DEFAULT_DDCUTIL_SYSLOG_LEVEL
-                                                                  : DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;
+                                                                  : DDCA_SYSLOG_NOT_SET;
    char *   syslog_work     = NULL;
    gint     buswork         = -1;
    gint     hidwork         = -1;
