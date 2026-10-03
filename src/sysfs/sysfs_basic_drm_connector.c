@@ -65,7 +65,7 @@ void free_basic_drm_connectors(GPtrArray * connectors) {
 static Sys_Basic_Drm_Connector * one_basic_drm_connector0(
       const char * dirname, const char * fn, int depth)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=%s", dirname, fn);
    int d0 = depth;
 
@@ -73,6 +73,7 @@ static Sys_Basic_Drm_Connector * one_basic_drm_connector0(
    cur->connector_name = g_strdup(fn);
    cur->connector_id   = -1;
    cur->i2c_busno      = -1;   // 0 is a valid bus number
+   cur->base_busno     = -1;
 
    RPT_ATTR_INT(d0, &cur->connector_id, dirname, fn, "connector_id");
 
@@ -95,6 +96,7 @@ static Sys_Basic_Drm_Connector * one_basic_drm_connector0(
    Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
    get_connector_bus_numbers(dirname, fn, cbn);
    cur->i2c_busno = cbn->i2c_busno;
+   cur->base_busno = cbn->base_busno;
    if (cur->connector_id < 0)
       cur->connector_id = cbn->connector_id;
    free_connector_bus_numbers(cbn);
@@ -125,7 +127,7 @@ static void one_basic_drm_connector(
  *  @return array of #Sys_Basic_Drm_Connector, never NULL, possibly empty
  */
 GPtrArray * scan_basic_drm_connectors(int depth)  {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
 
    GPtrArray * connectors = g_ptr_array_new_with_free_func(free_basic_drm_connector);
@@ -205,6 +207,7 @@ void dbgrpt_basic_drm_connector(Sys_Basic_Drm_Connector * connector, int depth) 
    rpt_vstring(depth+1, "connector_name:  %s", connector->connector_name);
    rpt_vstring(depth+1, "connector_id:    %d", connector->connector_id);
    rpt_vstring(depth+1, "i2c_busno:       %d", connector->i2c_busno);
+   rpt_vstring(depth+1, "base_busno:      %d", connector->base_busno);
    // Reported as bytes rather than as a parsed summary: the summary helpers
    // live in the i2c layer, which sysfs must not depend on.
    if (connector->edid_bytes)

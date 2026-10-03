@@ -36,6 +36,7 @@ typedef struct {
    char *  connector_name;    // e.g. card1-DP-1, copied to businfo->drm_connector_name
    int     connector_id;      // copied to businfo->drm_connector_id, -1 if not published
    int     i2c_busno;         // match key, -1 if the driver does not publish it
+   int     base_busno;
    Byte *  edid_bytes;        // match key, NULL if no display is attached
    gsize   edid_size;
 } Sys_Basic_Drm_Connector;
