@@ -1228,13 +1228,13 @@ ddca_get_display_refs(
    if (!IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
       // SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Called with include_invalid_displays=%s", SBOOL(include_invalid_displays));
       // SIMPLE_STD_FUNC_SYSLOG(LOG_INFO, "Returning DDCA_Display_Ref list: ");
-      DECORATED_SYSLOG(LOG_INFO, "Called with include_invalid_displays=%s", SBOOL(include_invalid_displays));
-      DECORATED_SYSLOG(LOG_INFO, "Returning DDCA_Display_Ref list: ");
+      DECORATED_SYSLOG(DDCA_SYSLOG_INFO, "Called with include_invalid_displays=%s", SBOOL(include_invalid_displays));
+      DECORATED_SYSLOG(DDCA_SYSLOG_INFO, "Returning DDCA_Display_Ref list: ");
       cur_ddca_dref = result_list;
       while (*cur_ddca_dref) {
          Display_Ref * dref = dref_from_published_ddca_dref(*cur_ddca_dref);
          // SIMPLE_STD_SYSLOG(LOG_INFO, "   DDCA_Display_Ref %s", dref_reprx_t(dref));
-         DECORATED_SYSLOG(LOG_INFO, "   DDCA_Display_Ref %s", dref_reprx_t(dref));
+         DECORATED_SYSLOG(DDCA_SYSLOG_INFO, "   DDCA_Display_Ref %s", dref_reprx_t(dref));
          cur_ddca_dref++;
       }
       bus_open_errors_to_syslog(__func__);
