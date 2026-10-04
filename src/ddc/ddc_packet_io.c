@@ -330,6 +330,8 @@ ddc_write_read_with_retry(
          " all_zero_response_ok=%s, Write_Read_Flag_All_Zero_Response_Ok: %s",
          dh_repr(dh), max_read_bytes, expected_response_type, expected_subtype,
          sbool(all_zero_response_ok), sbool(flags&Write_Read_Flag_All_Zero_Response_Ok) );
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dh->testing_unsupported_feature_active =%s",
+         sbool(dh->testing_unsupported_feature_active));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref flags: %s", interpret_dref_flags_t(dh->dref->flags));
    Per_Display_Data * pdd = dh->dref->pdd;
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
