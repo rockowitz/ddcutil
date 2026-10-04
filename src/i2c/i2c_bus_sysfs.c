@@ -100,8 +100,11 @@ void take_connector_snapshot() {
       free_basic_drm_connectors(connector_snapshot);
    connector_snapshot = scan_basic_drm_connectors(-1);
    connector_snapshot_active = true;
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "%d connectors", connector_snapshot->len);
-   dbgrpt_basic_drm_connectors(connector_snapshot, 3);
+   // if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+   //    DBGMSG("connector_smapshot:");
+   //    dbgrpt_basic_drm_connectors(connector_snapshot, 3);
+   // }
+   DBGTRC_DONE(false, DDCA_TRC_NONE, "%d connectors", connector_snapshot->len);
 }
 
 
@@ -416,7 +419,7 @@ bool any_drm_connector_has_busno() {
 Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_snapshot(
                                  int busno, Byte * edid_bytes)
 {
-   bool debug  = true;
+   bool debug  = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, " busno = %d, edid = %p" , busno, edid_bytes);
    if (busno == 255)  // happens somehow
       busno = -1;
@@ -475,7 +478,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_snapshot(
 Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
                                  int busno, Byte * edid_bytes)
 {
-   bool debug = true;
+   bool debug = false;
    bool use_array = connector_snapshot_active;
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "busnp%d, eddid_bytes=%p, ise+arrau.=%s, drm_connector_lookup_compare=%s",

@@ -65,7 +65,7 @@ void free_basic_drm_connectors(GPtrArray * connectors) {
 static Sys_Basic_Drm_Connector * one_basic_drm_connector0(
       const char * dirname, const char * fn, int depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=%s", dirname, fn);
    int d0 = depth;
 
@@ -127,7 +127,7 @@ static void one_basic_drm_connector(
  *  @return array of #Sys_Basic_Drm_Connector, never NULL, possibly empty
  */
 GPtrArray * scan_basic_drm_connectors(int depth)  {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
 
    GPtrArray * connectors = g_ptr_array_new_with_free_func(free_basic_drm_connector);
@@ -138,6 +138,11 @@ GPtrArray * scan_basic_drm_connectors(int depth)  {
          one_basic_drm_connector,
          connectors,            // accumulator
          depth);
+
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      DBGMSG("connectors:");
+      dbgrpt_basic_drm_connectors(connectors, 3);
+   }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d connectors", connectors->len);
    return connectors;
