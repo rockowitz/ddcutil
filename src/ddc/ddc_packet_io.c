@@ -100,7 +100,6 @@ bool is_ddc_null_message(Byte * packet) {
 #endif
 
 
-
 // work in progress
 // typedef for ddc_i2c_write_read_raw, ddc_adl_write_read_raw, ddc_write_read_raw
 
@@ -298,6 +297,174 @@ ddc_write_read(
 }
 
 
+/** Disposition of one ddc_write_read() attempt, as determined by
+ *  #ddc_classify_write_read_error().
+ */
+typedef struct {
+   bool retryable;                        ///< try again?
+   bool adjust_remaining_tries_for_null;  ///< use the Null Response retry limit
+} Write_Read_Try_Disposition;
+
+
+/** Classifies the error from one ddc_write_read() attempt.
+ *
+ *  @param  dh                           display handle
+ *  @param  psc                          status code from the attempt, < 0
+ *  @param  tryctr                       0 based attempt number
+ *  @param  expected_response_type       as passed to ddc_write_read()
+ *  @param  flags                        as passed to ddc_write_read_with_retry()
+ *  @param  all_zero_response_ok         from Write_Read_Flag_All_Zero_Response_Ok
+ *  @param  retryable                    value on entry
+ *  @param  ddcrc_null_response_max      retry limit for DDC Null Response
+ *  @param  ddcrc_null_response_ctr_loc  in/out, accumulates across attempts
+ *  @param  ddcrc_read_all_zero_ct_loc   in/out, accumulates across attempts
+ *  @return disposition of this attempt
+ *
+ *  Decision logic only: it performs no I/O and has no early exit, so the caller
+ *  keeps the disconnect check, whose goto cannot cross a function boundary.
+ */
+STATIC Write_Read_Try_Disposition
+ddc_classify_write_read_error(
+      Display_Handle *     dh,
+      DDCA_Status          psc,
+      int                  tryctr,
+      Byte                 expected_response_type,
+      DDC_Write_Read_Flags flags,
+      bool                 all_zero_response_ok,
+      bool                 retryable,
+      int                  ddcrc_null_response_max,
+      int *                ddcrc_null_response_ctr_loc,
+      int *                ddcrc_read_all_zero_ct_loc)
+{
+   bool debug = false;
+   bool adjust_remaining_tries_for_null = false;
+   int  ddcrc_null_response_ctr = *ddcrc_null_response_ctr_loc;
+   int  ddcrc_read_all_zero_ct  = *ddcrc_read_all_zero_ct_loc;
+
+   // The problem: Does NULL response indicate an error condition, or
+   // is the monitor using NULL response to indicate unsupported?
+   // Acer monitor uses NULL response instead of setting the unsupported
+   // flag in a valid response
+   switch (psc)
+   {
+      case DDCRC_NULL_RESPONSE:
+         {
+            bool null_handled = false;
+            if (dh->testing_unsupported_feature_active) {
+               // DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED
+               // => testing already performed
+               assert(!(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
+               assert(expected_response_type == DDC_PACKET_TYPE_QUERY_VCP_RESPONSE);
+               if (ddcrc_null_response_ctr == tryctr &&
+                   (++ddcrc_null_response_ctr) >= ddcrc_null_response_max)
+               {
+                  if (ddcrc_null_response_ctr > 1) {
+                     // it wasn't a fluke, we have an answer
+                     retryable = false;
+                  }
+                  adjust_remaining_tries_for_null = true;
+                  null_handled = true;
+               }
+            }
+
+            if (!null_handled) {
+               // may indicate unsupported or just be a junk answer
+               if (   (expected_response_type == DDC_PACKET_TYPE_QUERY_VCP_RESPONSE &&
+                      (dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED))
+                    ||  expected_response_type == DDC_PACKET_TYPE_TABLE_READ_RESPONSE)
+               {
+                  // may be the real answer
+                  if ( tryctr == 1 && ddcrc_null_response_ctr == 1 )  {
+                     // valid NULL response
+                     null_handled = true;
+                     retryable = false;
+                  }
+                  adjust_remaining_tries_for_null = true;
+                  ddcrc_null_response_ctr++;
+               }
+            }
+
+            if (!null_handled) {
+                  // just one bad response out of several
+               ddcrc_null_response_ctr++;
+            }
+         }
+         break;
+
+#ifdef OLD
+                     // testing_unsupported_feature_active really is redundant,
+                     // DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED is set upon completion of
+                     // testing for unsupported feature
+                     assert( !(dh->testing_unsupported_feature_active &&
+                               dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED) );
+                     if (!dh->testing_unsupported_feature_active) {
+                        bool may_mean_unsupported_feature =
+                              (expected_response_type == DDC_PACKET_TYPE_QUERY_VCP_RESPONSE &&
+                               (dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED)) ||
+                              expected_response_type == DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
+                        if (may_mean_unsupported_feature) {
+                           adjust_remaining_tries_for_null = true;
+                           retryable = (++ddcrc_null_response_ctr <= ddcrc_null_response_max);
+                           DBGTRC(debug, DDCA_TRC_NONE,
+                                 "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
+                           if (!retryable) {
+                              MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+                                    "Feature 0x%02x, maximum retries (%d) for DDC Null Response exceeded",
+                                    expected_subtype, ddcrc_null_response_max);
+                           }
+                        }
+                     }
+                     else
+                        retryable = true;
+                  }
+              }
+#endif
+
+      case (DDCRC_READ_ALL_ZERO):
+           // Sometimes an all-zero response indicates an unsupported feature
+           // instead of an error.  On Dell P2411 and U3011 the all zero response occurs
+           // when reading an unsupported table feature.
+           retryable = (all_zero_response_ok) ? false : true;
+           ddcrc_read_all_zero_ct++;
+           break;
+
+      case (-EIO):
+           retryable = false;     // ??
+           break;
+
+      case (-EBADF):
+           // DBGMSG("EBADF");
+           retryable = false;
+           break;
+
+      case (-ENXIO):    // no such device or address, i915 driver
+           // But have seen success after 7 retries of errors including ENXIO, DDCRC_DATA, make retryable?
+           retryable = false;
+           break;
+
+      case (-EBUSY):
+            retryable = false;
+            break;
+
+      default:
+           retryable = true;     // for now
+   }
+
+   // try exponential backoff on all errors, not just SE_DDC_NULL
+   // if (retryable)
+   //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
+
+   *ddcrc_null_response_ctr_loc = ddcrc_null_response_ctr;
+   *ddcrc_read_all_zero_ct_loc  = ddcrc_read_all_zero_ct;
+   Write_Read_Try_Disposition result = {
+         .retryable                       = retryable,
+         .adjust_remaining_tries_for_null = adjust_remaining_tries_for_null };
+   DBGMSF(debug, "psc=%s, returning retryable=%s, adjust_remaining_tries_for_null=%s",
+          psc_desc(psc), sbool(result.retryable),
+          sbool(result.adjust_remaining_tries_for_null));
+   return result;
+}
+
 /** Wraps #ddc_write_read() in retry logic.
  *
  *  \param dh                  display handle (for either I2C or ADL device)
@@ -344,7 +511,7 @@ ddc_write_read_with_retry(
    int  tryctr;
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
-   int  ddcrc_null_response_ct = 0;
+   int  ddcrc_null_response_ctr = 0;
    int  max_tries = (explicit_max_tries > 0) ? explicit_max_tries
                                              : try_data_get_maxtries(WRITE_READ_TRIES_OP);
    int  ddcrc_null_response_max = 3;
@@ -362,7 +529,7 @@ ddc_write_read_with_retry(
          "Start of try loop, tryctr=%d, max_tries=%d, psc=%s, retryable=%s, "
          "read_bytewise=%s, sleep-multiplier=%5.2f, ddcrc_null_response_ct=%d",
          tryctr, max_tries, psc_name_code(psc), sbool(retryable),
-         sbool(read_bytewise), pdd_get_adjusted_sleep_multiplier(pdd),  ddcrc_null_response_ct );
+         sbool(read_bytewise), pdd_get_adjusted_sleep_multiplier(pdd),  ddcrc_null_response_ctr );
 
       Error_Info * cur_excp = ddc_write_read(
                 dh,
@@ -382,16 +549,15 @@ ddc_write_read_with_retry(
       psc = (cur_excp) ? cur_excp->status_code : 0;
       try_errors[tryctr] = cur_excp;
 
-      if (psc == 0 && ddcrc_null_response_ct > 0) {
+      if (psc == 0 && ddcrc_null_response_ctr > 0) {
          DUAL_MSGXV(debug, DDCA_SYSLOG_DEBUG, TRACE_GROUP | DDCA_TRC_RETRY,
                "%s, expected_subtype=0x%02x, sleep-multiplier=%5.2f, ddc_write_read() succeeded"
                " after %d sleep and retry for DDC Null Response",
                dh_repr(dh),
                expected_subtype,
                pdd_get_adjusted_sleep_multiplier(pdd),
-               ddcrc_null_response_ct);
-       }
-
+               ddcrc_null_response_ctr);
+      }
       bool adjust_remaining_tries_for_null = false;
 
       if (psc < 0) {     // n. ADL status codes have been modulated
@@ -400,70 +566,17 @@ ddc_write_read_with_retry(
 
          TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
-         // The problem: Does NULL response indicate an error condition, or
-         // is the monitor using NULL response to indicate unsupported?
-         // Acer monitor uses NULL response instead of setting the unsupported
-         // flag in a valid response
-         switch (psc) {
-         case DDCRC_NULL_RESPONSE:
-               {
-                  // testing_unsupported_feature_active really is redundant,
-                  // DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED is set upon completion of
-                  // testing for unsupported feature
-                  assert( !(dh->testing_unsupported_feature_active &&
-                            dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED) );
-                  if (!dh->testing_unsupported_feature_active) {
-                     bool may_mean_unsupported_feature =
-                           (expected_response_type == DDC_PACKET_TYPE_QUERY_VCP_RESPONSE &&
-                            (dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED)) ||
-                           expected_response_type == DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
-                     if (may_mean_unsupported_feature) {
-                        adjust_remaining_tries_for_null = true;
-                        retryable = (++ddcrc_null_response_ct <= ddcrc_null_response_max);
-                        DBGTRC(debug, DDCA_TRC_NONE,
-                              "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
-                        if (!retryable) {
-                           MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
-                                 "Feature 0x%02x, maximum retries (%d) for DDC Null Response exceeded",
-                                 expected_subtype, ddcrc_null_response_max);
-                        }
-                     }
-                  }
-                  else
-                     retryable = true;
-               }
-               break;
+         Write_Read_Try_Disposition disp = ddc_classify_write_read_error(
+                     dh, psc, tryctr, expected_response_type, flags,
+                     all_zero_response_ok, retryable, ddcrc_null_response_max,
+                     &ddcrc_null_response_ctr, &ddcrc_read_all_zero_ct);
+         retryable                       = disp.retryable;
+         adjust_remaining_tries_for_null = disp.adjust_remaining_tries_for_null;
 
-         case (DDCRC_READ_ALL_ZERO):
-              // Sometimes an all-zero response indicates an unsupported feature
-              // instead of an error.  On Dell P2411 and U3011 the all zero response occurs
-              // when reading an unsupported table feature.
-              retryable = (all_zero_response_ok) ? false : true;
-              ddcrc_read_all_zero_ct++;
-              break;
-
-         case (-EIO):
-              retryable = false;     // ??
-              break;
-
-         case (-EBADF):
-              // DBGMSG("EBADF");
-              retryable = false;
-              break;
-
-         case (-ENXIO):    // no such device or address, i915 driver
-              // But have seen success after 7 retries of errors including ENXIO, DDCRC_DATA, make retryable?
-              retryable = false;
-              break;
-
-         case (-EBUSY):
-               retryable = false;
-               break;
-
-         default:
-              retryable = true;     // for now
-         }
-
+         // Left in the caller rather than folded into the classification above:
+         // it performs I/O and leaves the retry loop, and a goto cannot cross a
+         // function boundary.  It also must not sit inside the switch, where it
+         // would need a case label of its own to be reached.
          if ((psc == -EIO || psc == -ENXIO) && execution_mode == MODE_LIBDDCUTIL) {
             Error_Info * err = i2c_check_open_bus_alive(dh);
             if (err) {
@@ -474,15 +587,10 @@ ddc_write_read_with_retry(
                goto bye;
             }
          }
-
-         // try exponential backoff on all errors, not just SE_DDC_NULL
-         // if (retryable)
-         //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
-      }    // rc < 0
-
+      }    // psc < 0
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-            "Bottom of try loop. psc=%s, tryctr=%d,  ddcrc_null_response_ct=%d, retryable=%s",
-            psc_name_code(psc), tryctr, ddcrc_null_response_ct, sbool(retryable));
+            "Bottom of try loop. psc=%s, tryctr=%d,  ddcrc_null_response_ctr=%d, retryable=%s",
+            psc_name_code(psc), tryctr, ddcrc_null_response_ctr, sbool(retryable));
       int remaining_tries = (max_tries-1) - tryctr;
       int adjusted_remaining_tries = remaining_tries;
       if (adjust_remaining_tries_for_null) {
@@ -493,22 +601,21 @@ ddc_write_read_with_retry(
       }
       if (psc != 0  && retryable && remaining_tries > 0) {
          pdd_note_retryable_failure_by_dh(dh, psc, adjusted_remaining_tries);
-
       }
-   }  // for loop
+   }
 
    // tryctr = number of times through loop, i.e. 1..max_tries
    assert(tryctr >= 1 && tryctr <= max_tries);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-         "After try loop. tryctr=%d, psc=%s, ddcrc_null_response_ct=%d, retryable=%s",
-         tryctr, psc_name_code(psc), ddcrc_null_response_ct, sbool(retryable) );
+         "After try loop. tryctr=%d, psc=%s, ddcrc_null_response_ctr=%d, retryable=%s",
+         tryctr, psc_name_code(psc), ddcrc_null_response_ctr, sbool(retryable) );
 
    bool all_responses_null_meant_unsupported = false;
    int adjusted_tryctr = tryctr;
    if ( ( (dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED) ||
           expected_response_type == DDC_PACKET_TYPE_TABLE_READ_RESPONSE )
          && !(flags & Write_Read_Flag_Capabilities)
-         && ddcrc_null_response_ct == tryctr)
+         && ddcrc_null_response_ctr == tryctr)
    {
       all_responses_null_meant_unsupported = true;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
@@ -548,7 +655,7 @@ ddc_write_read_with_retry(
                "Converting DDCRC_ALL_RESPONSES_NULL to DDCRC_DETERMINED_UNSUPPORTED");
          psc = DDCRC_DETERMINED_UNSUPPORTED;
       }
-      else if (ddcrc_null_response_ct > ddcrc_null_response_max) {
+      else if (ddcrc_null_response_ctr > ddcrc_null_response_max) {
          psc = DDCRC_ALL_RESPONSES_NULL;
       }
 
