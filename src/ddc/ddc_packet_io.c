@@ -360,9 +360,9 @@ ddc_write_read_with_retry(
    {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "Start of try loop, tryctr=%d, max_tries=%d, psc=%s, retryable=%s, "
-         "read_bytewise=%s, sleep-multiplier=%5.2f",
+         "read_bytewise=%s, sleep-multiplier=%5.2f, ddcrc_null_response_ct=%d",
          tryctr, max_tries, psc_name_code(psc), sbool(retryable),
-         sbool(read_bytewise), pdd_get_adjusted_sleep_multiplier(pdd) );
+         sbool(read_bytewise), pdd_get_adjusted_sleep_multiplier(pdd),  ddcrc_null_response_ct );
 
       Error_Info * cur_excp = ddc_write_read(
                 dh,
