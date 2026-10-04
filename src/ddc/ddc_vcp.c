@@ -930,6 +930,7 @@ void init_ddc_vcp() {
    RTTI_ADD_FUNC(ddc_get_table_vcp_value);
    RTTI_ADD_FUNC(ddc_get_vcp_value);
    RTTI_ADD_FUNC(ddc_set_nontable_vcp_value);
+   RTTI_ADD_FUNC(ddc_get_nontable_vcp_value_full);
    RTTI_ADD_FUNC(ddc_set_vcp_value);
    RTTI_ADD_FUNC(ddc_set_verified_vcp_value_with_retry);
    RTTI_ADD_FUNC(is_rereadable_feature);
