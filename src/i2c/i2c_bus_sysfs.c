@@ -15,6 +15,7 @@
 /** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -363,24 +364,77 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
 }
 
 
-/** Reports whether any DRM connector names the I2C bus that serves it, i.e.
- *  whether this driver publishes the bus/connector mapping at all.
+/** Reports whether one canonical sysfs path is another, or lies beneath it.
+ *
+ *  A plain prefix test is not enough: ".../0000:01:00.0" is a prefix of
+ *  ".../0000:01:00.01", so the character following the prefix must end a path
+ *  component.
+ *
+ *  @param  path      canonical path to test, may be NULL
+ *  @param  ancestor  canonical path of the candidate ancestor, may be NULL
+ *  @return true if **path** is **ancestor** or lies beneath it
+ */
+bool sysfs_path_is_at_or_below(const char * path, const char * ancestor) {
+   bool result = false;
+   if (path && ancestor) {
+      size_t len = strlen(ancestor);
+      while (len > 1 && ancestor[len-1] == '/')   // tolerate a trailing slash
+         len--;
+      result = len > 0 &&
+               strncmp(path, ancestor, len) == 0 &&
+               (path[len] == '/' || path[len] == '\0');
+   }
+   return result;
+}
+
+
+/** Reports whether any DRM connector of the video adapter that owns an I2C bus
+ *  names the I2C bus that serves it, i.e. whether the driver for that adapter
+ *  publishes the bus/connector mapping at all.
+ *
+ *  The question has to be asked per adapter.  On a machine with two video
+ *  adapters under different drivers, for example an amdgpu iGPU beside an
+ *  nvidia card, the amdgpu connectors name their buses and the nvidia
+ *  connectors do not.  When this function answered for the system as a whole,
+ *  the amdgpu connectors were taken as evidence that "this driver publishes the
+ *  mapping" for a bus owned by nvidia.  A nvidia bus with a display on it was
+ *  then skipped as unmapped whenever sysfs was regarded as reliable for it, and
+ *  the EDID based connector lookup never ran because no EDID was ever read from
+ *  the bus (issue #626).
+ *
+ *  A connector belongs to the adapter if its canonical sysfs path lies beneath
+ *  the adapter's, which is where the kernel puts drm/cardN/cardN-xxx.
+ *
+ *  If the adapter that owns the bus cannot be determined, the connectors of
+ *  every adapter are considered, which is what this function did before it
+ *  took a bus number.
  *
  *  Walks the connector directories and stops at the first one that names a
  *  bus.  No array is built: the question is a single bit, the answer usually
  *  comes from the first connector examined, and a driver that publishes the
- *  mapping publishes it for every connector, so the loop rarely runs twice.
+ *  mapping publishes it for every connector, so the loop rarely runs twice
+ *  within one adapter.
  *
  *  Reads only the bus/connector artifacts get_connector_bus_numbers() consults
  *  -- the ddc symlink, the i2c-N subdirectory, connector_id -- and not the
  *  EDID or the status, which is what the callers of a full scan pay for and
  *  what this question does not need.
  *
- *  @return true if at least one connector reports a bus number
+ *  @param  busno  I2C bus number whose adapter is of interest,
+ *                 < 0 to consider the connectors of all adapters
+ *  @return true if at least one connector of that adapter reports a bus number
  */
-bool any_drm_connector_has_busno() {
+bool any_drm_connector_has_busno(int busno) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
+
+   char * adapter_path = NULL;
+   if (busno >= 0) {
+      char bus_path[40];
+      g_snprintf(bus_path, sizeof(bus_path), "/sys/bus/i2c/devices/i2c-%d", busno);
+      adapter_path = sysfs_find_adapter(bus_path);    // NULL if it cannot be determined
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "adapter for bus %d: %s", busno, adapter_path);
+   }
 
    bool result = false;
    Sysfs_Connector_Names cnames = get_sysfs_drm_connector_names();
@@ -389,12 +443,27 @@ bool any_drm_connector_has_busno() {
       Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
       get_connector_bus_numbers("/sys/class/drm", cname, cbn);
       if (cbn->i2c_busno >= 0) {
-         result = true;
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s names bus %d", cname, cbn->i2c_busno);
+         bool same_adapter = true;
+         if (adapter_path) {
+            char connector_path[PATH_MAX];
+            g_snprintf(connector_path, sizeof(connector_path), "/sys/class/drm/%s", cname);
+            char * connector_realpath = realpath(connector_path, NULL);
+            same_adapter = sysfs_path_is_at_or_below(connector_realpath, adapter_path);
+            free(connector_realpath);
+         }
+         if (same_adapter) {
+            result = true;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s names bus %d", cname, cbn->i2c_busno);
+         }
+         else {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "%s names bus %d but belongs to a different adapter", cname, cbn->i2c_busno);
+         }
       }
       free_connector_bus_numbers(cbn);
    }
    free_sysfs_connector_names_contents(cnames);
+   free(adapter_path);
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
