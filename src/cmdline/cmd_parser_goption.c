@@ -1154,6 +1154,7 @@ parse_command(
    char *   i2c_source_addr_work = NULL;
    char *   watch_mode_work = NULL;
    gboolean skip_ddc_checks_flag = false;
+   gboolean bus_drm_connector_edid_flag = false;
 
    gboolean hidden_help_flag = false;
    gboolean disable_config_flag = false;
@@ -1436,6 +1437,7 @@ parse_command(
 	   {"trcback",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->backtraced_functions, "Report caller stack of function","function name" },
       {"trcfile",    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
       {"bus-drm-connector", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->bus_drm_connectors, "I2C bus / DRM connector association", "\"busno connector-name\""},
+      {"bus-drm-connector-edid", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &bus_drm_connector_edid_flag, "Get EDID from sysfs for --bus-drm-connector displays", NULL},
       {"enable-traced-function-stack", '\0', G_OPTION_FLAG_NONE,
                                            G_OPTION_ARG_NONE, &enable_tfs_flag,  enable_tfs_expl, NULL},
       {"disable-traced-function-stack",'\0', G_OPTION_FLAG_REVERSE,
@@ -1870,6 +1872,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, null_msg_for_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, enable_heuristic_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
+   SET_CMDFLAG(CMD_FLAG_BUS_DRM_CONNECTOR_EDID, bus_drm_connector_edid_flag);
    SET_CMDFLAG(CMD_FLAG_FLOCK,             enable_flock_flag);
    SET_CMDFLAG(CMD_FLAG_ENABLE_TRACED_FUNCTION_STACK,
                                            enable_tfs_flag);
