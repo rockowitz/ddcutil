@@ -72,10 +72,14 @@ int main(int argc, char ** argv) {
    // --- database-backed lookups (only if the id files are present) ---
 
    Pci_Usb_Id_Names intel = devid_get_pci_names(0x8086, 0, 0, 0, 1);
-   if (intel.vendor_name) {
+   if (intel.vendor_name)
       CK_HAS(intel.vendor_name, "Intel");
+   else
+      printf("NOTE  pci.ids lookups skipped: pci.ids not found\n");
 
-      Pci_Usb_Id_Names linux_usb = devid_get_usb_names(0x1d6b, 0, 0, 1);
+   // usb.ids may be absent even when pci.ids is present
+   Pci_Usb_Id_Names linux_usb = devid_get_usb_names(0x1d6b, 0, 0, 1);
+   if (linux_usb.vendor_name) {
       CK_HAS(linux_usb.vendor_name, "Linux Foundation");
 
       // HUT page 0x01 is "Generic Desktop Controls"
@@ -86,7 +90,7 @@ int main(int argc, char ** argv) {
       CK_STR(devid_hid_descriptor_item_type(8), "Usage");
    }
    else {
-      printf("NOTE  database-backed lookups skipped: pci.ids/usb.ids not found\n");
+      printf("NOTE  usb.ids lookups skipped: usb.ids not found\n");
    }
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
