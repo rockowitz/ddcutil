@@ -148,7 +148,70 @@ STATIC void dw_process_screen_change_event(
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_old_buses_w_edid: %s",   BS256_REPR(bs_old_buses_w_edid));
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bs_new_buses_edid: %s",   BS256_REPR(bs_new_buses_w_edid));
 
+#ifdef HONOR_NAMED_BUS_REMOVAL
+      // Whether the bus the event named lost its EDID in the scan above, tested
+      // before stabilization overwrites the removal set.
+      bool event_bus_lost_edid = (event_busno >= 0) &&
+                                 bs256_contains(bs_removed_buses_w_edid, event_busno);
+#endif
+
       bs_new_buses_w_edid = dw_stabilized_buses_bs(bs_new_buses_w_edid, bs256_count(bs_removed_buses_w_edid));
+
+#ifdef HONOR_NAMED_BUS_REMOVAL
+      // Stabilization exists to filter buses that flap while the driver retrains
+      // links, and it decides by re-reading every bus some milliseconds later.  It
+      // cannot distinguish a bus that flapped from one whose display genuinely went
+      // away and came back, because by the time it looks both are present again.
+      // When udev named the connector, that ambiguity is already resolved: the
+      // kernel told us this connector changed and the scan found its EDID gone, so
+      // the removal is real however the bus reads a moment later.  Honor it.
+      //
+      // Not hypothetical.  Powering a DisplayPort monitor off emits a udev event at
+      // once, but an HDMI monitor here emits none until it is powered back on - the
+      // disconnect notification arrives at reconnect time, when a re-read finds the
+      // display present.  Without this, any nonzero initial_stabilization_millisec
+      // turns that monitor's off/on into no event at all rather than into the late
+      // disconnect/connect pair it is.
+      bool honor_named_removal = event_bus_lost_edid &&
+                                 bs256_contains(bs_new_buses_w_edid, event_busno);
+
+      // Only when there is a live display ref to disconnect.  A dref whose DDC
+      // never answered is assigned dispno DISPNO_INVALID, and the lookup inside
+      // dw_remove_display_by_businfo() ignores those, so honoring the removal
+      // would reset the bus info, log at ERROR level and emit no event.  That
+      // state arises from starting the watch while a monitor is switched off: the
+      // Samsung LS34A650U here answers EDID reads when off but not DDC, so it is
+      // detected as an invalid display, and the udev event at power on is the
+      // first thing to name its connector.
+      //
+      // Standing aside loses nothing that was ever reported: there is no working
+      // display to report gone.  It reports nothing gained either, and that is a
+      // gap rather than a decision.  The bus never left bs_old_buses_w_edid, this
+      // monitor's EDID reading whether it is powered or not, so when it becomes
+      // usable there is no set change, no call to dw_hotplug_change_handler() and
+      // no event.  Measured: switching it on after starting the watch with it off
+      // emits nothing at all.  The event that belongs there is
+      // DDCA_EVENT_DDC_ENABLED from the recheck path, which never examines this
+      // dref -- see the note at the only place rechecks are queued, the add branch
+      // of dw_hotplug_change_handler().
+      if (honor_named_removal && !GET_DREF_BY_BUSNO(event_busno, /*ignore_invalid*/ true)) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+               "Stabilization restored /dev/i2c-%d, which has no live display ref."
+               " Letting stabilization stand.", event_busno);
+         honor_named_removal = false;
+      }
+
+      if (honor_named_removal) {
+         char * s = g_strdup_printf(
+               "Stabilization restored /dev/i2c-%d, but the udev event named its"
+               " connector and the scan found no EDID. Reporting the disconnect.",
+               event_busno);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s", s);
+         DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE, "%s", s);
+         free(s);
+         bs_new_buses_w_edid = bs256_remove(bs_new_buses_w_edid, event_busno);
+      }
+#endif
 
       bs_added_buses_w_edid     = bs256_and_not(bs_new_buses_w_edid, bs_old_buses_w_edid);
       bs_removed_buses_w_edid   = bs256_and_not(bs_old_buses_w_edid, bs_new_buses_w_edid);

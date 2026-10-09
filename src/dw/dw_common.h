@@ -24,6 +24,19 @@
  */
 #define EVENT_BUS_NUMBER
 
+#ifdef EVENT_BUS_NUMBER
+/** When defined, a removal on the bus named by the udev event is honored even
+ *  when dw_stabilized_buses_bs() re-reads that bus and finds its EDID back.
+ *  Meaningless without the bus number, so it is defined only inside this
+ *  conditional and cannot be turned on alone.
+ */
+#define HONOR_NAMED_BUS_REMOVAL
+#endif
+
+#if defined(HONOR_NAMED_BUS_REMOVAL) && !defined(EVENT_BUS_NUMBER)
+#error "HONOR_NAMED_BUS_REMOVAL requires EVENT_BUS_NUMBER"
+#endif
+
 extern _Atomic uint16_t  initial_stabilization_millisec;
 extern _Atomic uint16_t  pause_after_add_ms;
 extern _Atomic uint16_t  drain_pause_ms;
