@@ -72,11 +72,20 @@ STATIC void dw_process_screen_change_event(
       BS256*      p_bs_buses_w_edid,
       GArray *    deferred_events,
       GPtrArray * displays_to_recheck
+#ifdef EVENT_BUS_NUMBER
+      ,
+      int         event_busno
+#endif
       )
 {
    bool debug = false;
+#ifdef EVENT_BUS_NUMBER
+   DBGTRC_STARTING(debug, TRACE_GROUP, "*p_bs_old_attached_buses -> %s, event_busno=%d",
+                         bs256_to_string_decimal_t(*p_bs_attached_buses, "", ","), event_busno);
+#else
    DBGTRC_STARTING(debug, TRACE_GROUP, "*p_bs_old_attached_buses -> %s",
                          bs256_to_string_decimal_t(*p_bs_attached_buses, "", ","));
+#endif
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "*p_bs_buses_w_edid   -> %s",
                          bs256_to_string_decimal_t(*p_bs_buses_w_edid,   "", ",")) ;
 
@@ -237,10 +246,19 @@ STATIC void dw_invoke_process_screen_change_event(
       BS256*     bs_old_attached_buses_loc,
       BS256*     bs_old_buses_w_edid_loc,
       GArray* deferred_events,
-      GPtrArray* displays_to_recheck)
+      GPtrArray* displays_to_recheck
+#ifdef EVENT_BUS_NUMBER
+      ,
+      int        event_busno
+#endif
+      )
 {
    bool debug = false;
+#ifdef EVENT_BUS_NUMBER
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "event_busno=%d", event_busno);
+#else
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+#endif
 
    // Announce the pending event before acquiring master_dw_mutex, so that
    // recheck worker threads defer starting new probes (which can hold the
@@ -253,7 +271,11 @@ STATIC void dw_invoke_process_screen_change_event(
    g_mutex_lock(&process_event_mutex);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Processing screen change event");
    dw_process_screen_change_event(bs_old_attached_buses_loc, bs_old_buses_w_edid_loc,
-                               deferred_events, displays_to_recheck);
+                               deferred_events, displays_to_recheck
+#ifdef EVENT_BUS_NUMBER
+                               , event_busno
+#endif
+                               );
    if (displays_to_recheck->len > 0) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "handling displays_to_recheck");
       int len = displays_to_recheck->len;
@@ -389,6 +411,13 @@ gpointer dw_watch_display_connections(gpointer data) {
          continue;
       dw_terminate_if_invalid_thread_or_process(cur_pid, cur_tid);
 
+      // The I2C bus of the DRM connector a udev event names, -1 when there is no
+      // such information: the other watch modes supply none, and neither does the
+      // direct-scan path below, which answers events the post-scan drain collected.
+#ifdef EVENT_BUS_NUMBER
+      int event_busno = -1;
+#endif
+
       if (wdd->watch_mode == Watch_Mode_Udev) {
          if (rescan_without_waiting) {
             // Events are already in hand from the post-scan drain below.
@@ -404,7 +433,11 @@ gpointer dw_watch_display_connections(gpointer data) {
             // sem_wait(&sem);
             // close the door behind us:
             // sem_post(&sem);
+#ifdef EVENT_BUS_NUMBER
+            dw_udev_watch(wdd->watch_loop_millisec, &event_busno);
+#else
             dw_udev_watch(wdd->watch_loop_millisec);
+#endif
             if (terminate_watch_thread)
                continue;
          }
@@ -438,7 +471,11 @@ gpointer dw_watch_display_connections(gpointer data) {
       }
 
       dw_invoke_process_screen_change_event(&bs_old_attached_buses, &bs_old_buses_w_edid,
-            deferred_events, displays_to_recheck);
+            deferred_events, displays_to_recheck
+#ifdef EVENT_BUS_NUMBER
+            , event_busno
+#endif
+            );
 
       // A scan takes on the order of a second, and after a resume udev keeps
       // emitting device re-registration events for longer than that, so events

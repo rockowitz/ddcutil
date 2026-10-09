@@ -12,12 +12,18 @@
 #include <stdbool.h>
 /** \endcond */
 
+#include "dw_common.h"   // for EVENT_BUS_NUMBER
+
 extern bool report_udev_events;
 extern int  udev_watch_stats_interval_sec;
 
 void dw_udev_setup();
 void dw_udev_teardown();
+#ifdef EVENT_BUS_NUMBER
+bool dw_udev_watch(int watch_loop_millisec, int * event_busno_loc);
+#else
 bool dw_udev_watch(int watch_loop_millisec);
+#endif
 int  dw_udev_drain();
 
 void init_dw_udev();

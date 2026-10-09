@@ -172,12 +172,22 @@ static uint64_t last_stats_report_ns = 0;
 /** Poll udev to watch for display connection/disconnection
  *
  *  @param  watch_loop_millisec
+ *  @param  event_busno_loc  where to return the I2C bus number of the DRM
+ *                           connector the event names, -1 if the event names
+ *                           no connector or the connector serves no known bus
  *  @retval true   returning because watching terminated
  *  @retval false  display change detected
  */
+#ifdef EVENT_BUS_NUMBER
+bool dw_udev_watch(int watch_loop_millisec, int * event_busno_loc) {
+#else
 bool dw_udev_watch(int watch_loop_millisec) {
+#endif
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_loop_millisec=%d", watch_loop_millisec);
+#ifdef EVENT_BUS_NUMBER
+   *event_busno_loc = -1;
+#endif
 
 #ifdef PROFILE_UDEV_WATCH_THREAD
    // Profiling this function both registers the watch thread in
@@ -294,6 +304,17 @@ bool dw_udev_watch(int watch_loop_millisec) {
                            connector_msg = g_strdup_printf(
                                "prop_connector = %d -> /dev/i2c-%d",
                                  ival, businfo->busno);
+                           // Unlike the connector name above, this is used rather than
+                           // only logged: dw_process_screen_change_event() honors a
+                           // disconnect on the bus the event names even when
+                           // stabilization would otherwise overrule it.  The bus table
+                           // is the right source precisely because it holds what the
+                           // last scan found - a display now disconnecting was on this
+                           // bus when it was last seen, which is what sysfs can no
+                           // longer tell us once the connector has changed.
+#ifdef EVENT_BUS_NUMBER
+                           *event_busno_loc = businfo->busno;
+#endif
                         }
                      }
                      if (!conn_name)

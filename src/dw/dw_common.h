@@ -17,6 +17,13 @@
 #include "dw_xevent.h"
 #endif
 
+/** When defined, dw_udev_watch() reports the I2C bus number of the DRM
+ *  connector named by the udev event that woke it, and that bus number is
+ *  passed down to dw_process_screen_change_event().  Only the udev watch mode
+ *  has such information to report; the other modes pass -1.
+ */
+#define EVENT_BUS_NUMBER
+
 extern _Atomic uint16_t  initial_stabilization_millisec;
 extern _Atomic uint16_t  pause_after_add_ms;
 extern _Atomic uint16_t  drain_pause_ms;
