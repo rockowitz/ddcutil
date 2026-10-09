@@ -699,6 +699,21 @@ bool dw_hotplug_change_handler(
       Display_Ref* dref = dw_add_display_by_businfo(businfo);
       if (dref && !(dref->flags & DREF_TRANSIENT)) {   // how could it be transient here???
          add_published_dref_id_by_dref(dref);
+         // The only place a dref is queued for recheck, which bounds what the
+         // recheck thread can ever report.  A display switched off when libddcutil
+         // started does not pass through here: the initial detect created its dref,
+         // and a monitor whose EDID reads while it is off but whose DDC does not
+         // answer -- the Samsung LS34A650U is one -- is recorded as an invalid
+         // display, dispno DISPNO_INVALID.  Switching it on does wake the watch
+         // thread, udev reporting the connector change, but the scan compares only
+         // EDID presence and that has not changed: the bus held an EDID throughout,
+         // powered or not.  So this handler is never called, DDC is never re-tested,
+         // and neither DDCA_EVENT_DDC_ENABLED nor a connect is emitted.  A client
+         // started before the monitor is never told the display became usable.
+         //
+         // Queuing such drefs at initial detect would close that, at the cost of a
+         // recheck cascade for every permanently dark bus.  Not attempted here.
+         // (To be addressed in a later commit.)
          if (   businfo->flags & I2C_BUS_ADDR_X37
              && (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) || force_recheck)
              && drefs_to_recheck)
