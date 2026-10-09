@@ -309,7 +309,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
       if (check_busno) {
          Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
          get_connector_bus_numbers("/sys/class/drm", cname, cbn);
-         if (cbn->i2c_busno == busno || cbn->base_busno){
+         if (cbn->i2c_busno == busno || cbn->base_busno == busno) {
             found = true;
             result.connector_name = strdup(cname);
             result.found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
@@ -363,8 +363,10 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
 }
 
 
-/** Reports whether any DRM connector names the I2C bus that serves it, i.e.
+/** Reports whether any drm-connector identifies the I2C bus that serves it, i.e.
  *  whether this driver publishes the bus/connector mapping at all.
+ *  If this is false, then code that associates a drm-connector with a
+ *  /dev/i2c bus will always fail and can be skipped.
  *
  *  Walks the connector directories and stops at the first one that names a
  *  bus.  No array is built: the question is a single bit, the answer usually
@@ -465,37 +467,35 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_snapshot(
  *
  *  The search runs against the persistent #Sys_Drm_Connector array while a
  *  connector snapshot is active, and otherwise walks the connector directories
- *  on every call, which is the original implementation.  Utility option --f39
- *  runs both and writes a syslog warning wherever they disagree, which is how
- *  the replacement is meant to be validated on hardware this has not been tried
- *  on.  See claude_changes.txt.
+ *  on every call, which is the original implementation.  This behavior is
+ *  controlled by global #connector_snapshot_active;
+ *
+ *  If running against the persistent #Sys_Drm_Connector array and global
+ *  #drm_connector_lookup_compare is set, a search is also executed by
+ *  walking the connector directories, and a warning is written to
+ *  the system log if they disagree.
  *
  *  @param  busno      (-1 for not set)
  *  @param  edid_bytes pointer to 128 byte edid
  *  @return Found_Sys_Drm_Connector struct, returned on the stack
  */
-// n. result returned on stack
 Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
                                  int busno, Byte * edid_bytes)
 {
    bool debug = false;
-   bool use_array = connector_snapshot_active;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-         "busnp%d, eddid_bytes=%p, ise+arrau.=%s, drm_connector_lookup_compare=%s",
-         busno, edid_bytes, sbool(use_array), sbool(drm_connector_lookup_compare));
+         "busno=%d, edid_bytes=%p, connector_snapshot_active=%s, drm_connector_lookup_compare=%s",
+         busno, edid_bytes, sbool(connector_snapshot_active), sbool(drm_connector_lookup_compare));
 
-   if (!use_array && !drm_connector_lookup_compare)
-      return find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
-
-   // The comparison needs both, and reports whichever the algorithm selected as
-   // the answer, so that --f39 does not itself change behavior.
-   Found_Sys_Drm_Connector result = (use_array)
+   Found_Sys_Drm_Connector result = (connector_snapshot_active)
          ? find_sys_drm_connector_by_busno_or_edid_snapshot(busno, edid_bytes)
-         : find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes);
-   if (drm_connector_lookup_compare) {    // --f39
-      Found_Sys_Drm_Connector alt = (use_array)
-            ? find_sys_drm_connector_by_busno_or_edid_sysfs(busno, edid_bytes)
-            : find_sys_drm_connector_by_busno_or_edid_snapshot(busno, edid_bytes);
+         : find_sys_drm_connector_by_busno_or_edid_sysfs(   busno, edid_bytes);
+
+   if (connector_snapshot_active &&  drm_connector_lookup_compare) {
+      Found_Sys_Drm_Connector alt = (connector_snapshot_active)
+         ? find_sys_drm_connector_by_busno_or_edid_sysfs(   busno, edid_bytes)
+         : find_sys_drm_connector_by_busno_or_edid_snapshot(busno, edid_bytes);
+
       if (!streq(result.connector_name, alt.connector_name) ||
            result.found_by     != alt.found_by ||
            result.connector_id != alt.connector_id)
@@ -512,7 +512,11 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
       }
       free_found_sys_drm_connector_result_contents(alt);
    }
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
+
+   DBGTRC_DONE(debug, TRACE_GROUP,
+         "Found_Sys_Drm_Connector: found_by=%s, connector_id=%d, connector_name=%s",
+         drm_connector_found_by_name(result.found_by), result.connector_id,
+         (result.connector_name) ? result.connector_name : "NOT FOUND");
    return result;
 }
 
