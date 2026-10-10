@@ -110,8 +110,9 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
  *  Off by default because it is the one part of event interpretation that
  *  performs I/O on the hardware: a short AUX transaction, read only, issued
  *  from the watch thread while the driver may still be retraining the link the
- *  event announced.  It also requires root, /dev/drm_dp_aux* being mode 0600
- *  root:root, so for most invocations it would report only that it cannot read.
+ *  event announced.  It also requires read access to /dev/drm_dp_aux*, normally
+ *  mode 0600 root:root, so for most invocations it would report only that the
+ *  device is not readable with the privileges the process has.
  */
 // #define READ_DPCD_ON_UDEV_EVENT
 #endif
@@ -249,10 +250,11 @@ static uint64_t last_stats_report_ns = 0;
  *  Says whether a sink is attached and whether the link is trained, which the
  *  EDID cannot: a monitor that is switched off may still answer EDID reads.
  *
- *  Requires root, /dev/drm_dp_aux* being mode 0600 root:root, and applies only
- *  to DisplayPort; a connector with no AUX device is reported as such.  The
- *  read is a short AUX transaction, failing with EIO or ETIMEDOUT when the
- *  link is down rather than blocking.
+ *  Requires read access to /dev/drm_dp_aux*, normally mode 0600 root:root, and
+ *  applies only to DisplayPort; a connector with no AUX device is reported as
+ *  such, as is a device that cannot be opened.  The read is a short AUX
+ *  transaction, failing with EIO or ETIMEDOUT when the link is down rather
+ *  than blocking.
  *
  *  @param  connector_name  DRM connector name, e.g. card1-DP-1
  *  @param  depth           logical indentation depth
@@ -280,8 +282,14 @@ STATIC void dbgrpt_connector_dpcd_status(const char * connector_name, int depth)
       char devpath[PATH_MAX];
       g_snprintf(devpath, PATH_MAX, "/dev/%s", aux_name);
       int fd = open(devpath, O_RDONLY);
-      if (fd < 0)
-         rpt_vstring(depth, "open(%s) failed: %s", devpath, strerror(errno));
+      int errsv = errno;
+      if (fd < 0 && errsv == EACCES) {
+         rpt_vstring(depth, "%s is not readable with the privileges this process has.",
+                            devpath);
+         rpt_label(depth,   "These devices are normally mode 0600 root:root.");
+      }
+      else if (fd < 0)
+         rpt_vstring(depth, "open(%s) failed: %s", devpath, strerror(errsv));
       else {
          // DPCD 0x200 SINK_COUNT, 0x202 LANE0_1_STATUS, 0x204 LANE_ALIGN_STATUS_UPDATED,
          // 0x205 SINK_STATUS
@@ -420,22 +428,17 @@ STATIC void dbgrpt_interpreted_udev_event_detail(Udev_Event_Detail * detail, int
    }
 
 #ifdef READ_DPCD_ON_UDEV_EVENT
-   // geteuid() rather than running_as_root: that global is set only for setuid
-   // root, euid 0 with a different real uid, so it is false under plain sudo.
-   // What matters here is whether the reads below can succeed.
-   if (geteuid() == 0) {
-      if (connector_name) {
-         rpt_label(d1, "Running as root, so DPCD can be consulted.  It answers what the EDID");
-         rpt_label(d1, "cannot: whether a sink is attached, independently of whether its EDID");
-         rpt_label(d1, "still reads.");
-         dbgrpt_connector_dpcd_status(connector_name, d1+1);
-      }
-      else
-         rpt_label(d1, "Running as root, but the event names no connector whose DPCD could"
-                       " be read.");
+   // No privilege test: the question is whether the device can be opened, which
+   // only the open() can answer.  A uid test would be both too strict, a local
+   // udev rule or ACL being free to grant access, and too lax, since root says
+   // nothing about whether the AUX read will succeed.  access() would be wrong
+   // here for the reason i2c_check_device_access() documents: it tests the real
+   // uid, so it misreports under setuid root, which this library supports.
+   if (connector_name) {
+      rpt_label(d1, "DPCD answers what the EDID cannot: whether a sink is attached,");
+      rpt_label(d1, "independently of whether its EDID still reads.");
+      dbgrpt_connector_dpcd_status(connector_name, d1+1);
    }
-   else
-      rpt_label(d1, "Not running as root, so DPCD sink and link status cannot be read.");
 
    free(connector_name);
 #endif
