@@ -1127,10 +1127,11 @@ bool str_to_long(const char * sval, long * p_ival, int base)
             printf("(%s) work = %s\n", __func__, work);
 
          if (has_digits) {
+            errno = 0;
             long result = strtol(work, &endptr, base); // allow hex
             // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
             //        __func__, sval, endptr, *endptr, *endptr, result);
-            if (*endptr == '\0') {
+            if (*endptr == '\0' && errno != ERANGE) {
                *p_ival = result;
                ok = true;
             }
