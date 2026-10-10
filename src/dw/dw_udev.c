@@ -96,7 +96,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
  *  See #READ_DPCD_ON_UDEV_EVENT below for the one part of the interpretation
  *  that is off by default.
  */
-#define INTERPRET_UDEV_EVENT
+//#define INTERPRET_UDEV_EVENT
 
 #ifdef INTERPRET_UDEV_EVENT
 /** When defined, the interpretation of a udev event reports DisplayPort sink
