@@ -13,10 +13,13 @@
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <libudev.h>
+#include <dirent.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "util/debug_util.h"
 #include "util/linux_util.h"
@@ -46,6 +49,76 @@
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
+
+/** When defined, each udev event reported by #dbgrpt_udev_event_basic_detail()
+ *  is followed by #dbgrpt_interpreted_udev_event_detail(), which explains what
+ *  the event means for display watching rather than listing its fields again:
+ *  the significance of its subsystem and action, the settling pause that an add
+ *  outside /dev/dri will cause, and the connector and I2C bus named by its
+ *  CONNECTOR property.  Reported only when that basic report is, i.e. when
+ *  debug is set in dw_udev_watch() or report_udev_events is set by --f18.
+ *
+ *  Experimental, and used only in this file.
+ *
+ *  What it adds over the basic report.  That report prints sysname, which for
+ *  a DRM event is the card -- "card1" -- and has its prop_connector line
+ *  commented out, so the log otherwise says only that something on the card
+ *  changed.  The interpretation resolves the connector id to a connector name
+ *  and an I2C bus, using the same two lookups dw_udev_watch() uses for its own
+ *  log message, and records that both answer from what the last scan found and
+ *  so can be stale.
+ *
+ *  Measured, on one power cycle each of a DisplayPort and an HDMI display,
+ *  four events, every one drm/change with HOTPLUG=1 and a CONNECTOR property:
+ *
+ *     Interpretation:
+ *        A connector on this DRM card changed state.  This is how the kernel
+ *        announces that a display was connected or disconnected.  It does not
+ *        say which way, nor whether DDC will work; the watch thread answers
+ *        that by rescanning every bus for an EDID and comparing with the
+ *        previous scan.
+ *        CONNECTOR 507 is card1-DP-1, served by /dev/i2c-6.
+ *        Both lookups answer from the last scan, so either can be stale.
+ *
+ *  Unexercised as yet, for want of the events that reach them: a drm change
+ *  without HOTPLUG, drm add and remove, the i2c-dev branches and the settling
+ *  pause note that an add outside /dev/dri triggers, a CONNECTOR naming a
+ *  connector with no known bus as a display behind an MST hub has, a CONNECTOR
+ *  matching nothing the last scan found, and an unrecognized subsystem.  The
+ *  i2c-dev and add/remove branches should appear on a driver reload or a resume
+ *  from sleep.
+ *
+ *  Volume.  The explanatory paragraph above repeats for every event, so a burst
+ *  -- a resume emits one -- fills the log with it.  If that becomes a nuisance,
+ *  the paragraph belongs once per watch session, leaving the connector line as
+ *  the per-event output.
+ *
+ *  See #READ_DPCD_ON_UDEV_EVENT below for the one part of the interpretation
+ *  that is off by default.
+ */
+#define INTERPRET_UDEV_EVENT
+
+#ifdef INTERPRET_UDEV_EVENT
+/** When defined, the interpretation of a udev event reports DisplayPort sink
+ *  and link status, read from DPCD through the connector's AUX device.  That
+ *  says whether a sink is attached independently of whether its EDID still
+ *  reads, which a monitor that is merely switched off may well do.
+ *
+ *  Experimental, and used only in this file, so it is defined here rather than
+ *  in dw_common.h.
+ *
+ *  Off by default because it is the one part of event interpretation that
+ *  performs I/O on the hardware: a short AUX transaction, read only, issued
+ *  from the watch thread while the driver may still be retraining the link the
+ *  event announced.  It also requires root, /dev/drm_dp_aux* being mode 0600
+ *  root:root, so for most invocations it would report only that it cannot read.
+ */
+// #define READ_DPCD_ON_UDEV_EVENT
+#endif
+
+#if defined(READ_DPCD_ON_UDEV_EVENT) && !defined(INTERPRET_UDEV_EVENT)
+#error "READ_DPCD_ON_UDEV_EVENT requires INTERPRET_UDEV_EVENT"
+#endif
 
 // globals
 bool    report_udev_events = false;   // --f18
@@ -169,6 +242,207 @@ STATIC int dw_pause_retaking_if_suspended(
 static uint64_t last_stats_report_ns = 0;
 
 
+#ifdef READ_DPCD_ON_UDEV_EVENT
+/** Reports the DisplayPort sink and link status of a DRM connector, read from
+ *  DPCD through the connector's AUX device.
+ *
+ *  Says whether a sink is attached and whether the link is trained, which the
+ *  EDID cannot: a monitor that is switched off may still answer EDID reads.
+ *
+ *  Requires root, /dev/drm_dp_aux* being mode 0600 root:root, and applies only
+ *  to DisplayPort; a connector with no AUX device is reported as such.  The
+ *  read is a short AUX transaction, failing with EIO or ETIMEDOUT when the
+ *  link is down rather than blocking.
+ *
+ *  @param  connector_name  DRM connector name, e.g. card1-DP-1
+ *  @param  depth           logical indentation depth
+ */
+STATIC void dbgrpt_connector_dpcd_status(const char * connector_name, int depth) {
+   assert(connector_name);
+   char   sysdir[PATH_MAX];
+   char * aux_name = NULL;
+   g_snprintf(sysdir, PATH_MAX, "/sys/class/drm/%s", connector_name);
+   DIR * dp = opendir(sysdir);
+   if (dp) {
+      struct dirent * ep;
+      while ( (ep = readdir(dp)) ) {
+         if (str_starts_with(ep->d_name, "drm_dp_aux")) {
+            aux_name = g_strdup(ep->d_name);
+            break;
+         }
+      }
+      closedir(dp);
+   }
+
+   if (!aux_name)
+      rpt_vstring(depth, "%s has no AUX device, so it is not DisplayPort.", connector_name);
+   else {
+      char devpath[PATH_MAX];
+      g_snprintf(devpath, PATH_MAX, "/dev/%s", aux_name);
+      int fd = open(devpath, O_RDONLY);
+      if (fd < 0)
+         rpt_vstring(depth, "open(%s) failed: %s", devpath, strerror(errno));
+      else {
+         // DPCD 0x200 SINK_COUNT, 0x202 LANE0_1_STATUS, 0x204 LANE_ALIGN_STATUS_UPDATED,
+         // 0x205 SINK_STATUS
+         Byte buf[6];
+         ssize_t ct = pread(fd, buf, 6, 0x200);
+         int errsv = errno;
+         close(fd);
+         if (ct != 6)
+            rpt_vstring(depth, "Reading DPCD 0x200 from %s returned %zd: %s",
+                               devpath, ct, (ct < 0) ? strerror(errsv) : "short read");
+         else {
+            int  sink_count = buf[0] & 0x3f;
+            bool cr_done    = buf[2] & 0x01;
+            bool eq_done    = buf[2] & 0x02;
+            bool sym_locked = buf[2] & 0x04;
+            bool aligned    = buf[4] & 0x01;
+            bool rx_port0   = buf[5] & 0x01;
+            rpt_vstring(depth, "DPCD via %s: SINK_COUNT=%d, lane 0 CR=%s EQ=%s SYMLOCK=%s,"
+                               " interlane aligned=%s, receive port 0=%s",
+                               aux_name, sink_count, sbool(cr_done), sbool(eq_done),
+                               sbool(sym_locked), sbool(aligned), sbool(rx_port0));
+            if (sink_count == 0)
+               rpt_vstring(depth, "SINK_COUNT 0: no sink is attached.  A display that still"
+                                  " answers EDID reads is powered off, not connected.");
+            else if (cr_done && eq_done && sym_locked && aligned)
+               rpt_vstring(depth, "A sink is attached and the link is trained, so the display"
+                                  " is present and driven.");
+            else
+               rpt_vstring(depth, "A sink is attached but the link is not fully trained, as"
+                                  " during the retraining that follows a hotplug.");
+         }
+      }
+      free(aux_name);
+   }
+}
+#endif
+
+
+#ifdef INTERPRET_UDEV_EVENT
+/** Explains what a udev event means for display watching.
+ *
+ *  Reports the significance of the event rather than its fields, which
+ *  #dbgrpt_udev_event_basic_detail() has already listed.
+ *
+ *  @param  detail  event detail
+ *  @param  depth   logical indentation depth
+ */
+STATIC void dbgrpt_interpreted_udev_event_detail(Udev_Event_Detail * detail, int depth) {
+   assert(detail);
+   int d1 = depth + 1;
+   rpt_label(depth, "Interpretation:");
+
+   bool hotplug = streq(detail->prop_hotplug, "1");
+#ifdef READ_DPCD_ON_UDEV_EVENT
+   char * connector_name = NULL;   // of the connector the event names, if known
+#endif
+
+   if (streq(detail->prop_subsystem, "drm")) {
+      if (streq(detail->prop_action, "change")) {
+         if (hotplug) {
+            rpt_label(d1, "A connector on this DRM card changed state.  This is how the kernel");
+            rpt_label(d1, "announces that a display was connected or disconnected.  It does not");
+            rpt_label(d1, "say which way, nor whether DDC will work; the watch thread answers");
+            rpt_label(d1, "that by rescanning every bus for an EDID and comparing with the");
+            rpt_label(d1, "previous scan.");
+         }
+         else {
+            rpt_label(d1, "A DRM property changed with no HOTPLUG flag, a mode set for instance.");
+            rpt_label(d1, "Not a connection change, though the watch thread rescans regardless.");
+         }
+      }
+      else if (streq(detail->prop_action, "add")) {
+         rpt_label(d1, "A DRM device node was registered, as when the video driver loads.");
+      }
+      else if (streq(detail->prop_action, "remove")) {
+         rpt_label(d1, "A DRM device node was unregistered, as when the video driver unloads.");
+      }
+      else {
+         rpt_vstring(d1, "Action \"%s\" is not one display watching interprets for subsystem drm.",
+                         detail->prop_action);
+      }
+   }
+   else if (streq(detail->prop_subsystem, "i2c-dev")) {
+      if (streq(detail->prop_action, "add")) {
+         rpt_label(d1, "An I2C device node appeared.  Buses are added when a driver loads and");
+         rpt_label(d1, "again after a resume from sleep.");
+      }
+      else if (streq(detail->prop_action, "remove")) {
+         rpt_label(d1, "An I2C device node disappeared, as when a driver unloads.  A bus that");
+         rpt_label(d1, "carried a display takes the display with it.");
+      }
+      else {
+         rpt_vstring(d1, "Action \"%s\" is not one display watching interprets for subsystem"
+                         " i2c-dev.", detail->prop_action);
+      }
+   }
+   else {
+      rpt_vstring(d1, "Subsystem \"%s\" is not one display watching interprets.",
+                      detail->prop_subsystem);
+   }
+
+   // The test that sets add_event_detected in dw_udev_watch(), whose only
+   // consequence is the pause taken after the event burst.
+   if (streq(detail->prop_action, "add") && !str_starts_with(detail->prop_devname, "/dev/dri")) {
+      rpt_vstring(d1, "An add outside /dev/dri, so the watch thread will pause %d milliseconds",
+                      (int) pause_after_add_ms);
+      rpt_label(d1,   "after the event burst, letting the remaining device nodes appear.");
+   }
+
+   if (detail->prop_connector) {
+      int connector_id = 0;
+      if (str_to_int(detail->prop_connector, &connector_id, 10)) {
+         char *         cname   = get_drm_connector_name_by_connector_id(connector_id);
+         I2C_Bus_Info * businfo = i2c_find_businfo_by_drm_connector_id(connector_id);
+#ifdef READ_DPCD_ON_UDEV_EVENT
+         connector_name = (cname) ? g_strdup(cname) : NULL;
+#endif
+         if (cname && businfo)
+            rpt_vstring(d1, "CONNECTOR %d is %s, served by /dev/i2c-%d.",
+                            connector_id, cname, businfo->busno);
+         else if (cname)
+            rpt_vstring(d1, "CONNECTOR %d is %s.  No I2C bus is known for it, as for a"
+                            " display behind an MST hub.", connector_id, cname);
+         else
+            rpt_vstring(d1, "CONNECTOR %d matches no connector the last scan found.",
+                            connector_id);
+         rpt_label(d1, "Both lookups answer from the last scan, so either can be stale.");
+         free(cname);
+      }
+      else
+         rpt_vstring(d1, "CONNECTOR property \"%s\" is not a number.", detail->prop_connector);
+   }
+   else if (streq(detail->prop_subsystem, "drm")) {
+      rpt_label(d1, "No CONNECTOR property: the event does not say which connector changed,");
+      rpt_label(d1, "so every bus has to be rescanned.");
+   }
+
+#ifdef READ_DPCD_ON_UDEV_EVENT
+   // geteuid() rather than running_as_root: that global is set only for setuid
+   // root, euid 0 with a different real uid, so it is false under plain sudo.
+   // What matters here is whether the reads below can succeed.
+   if (geteuid() == 0) {
+      if (connector_name) {
+         rpt_label(d1, "Running as root, so DPCD can be consulted.  It answers what the EDID");
+         rpt_label(d1, "cannot: whether a sink is attached, independently of whether its EDID");
+         rpt_label(d1, "still reads.");
+         dbgrpt_connector_dpcd_status(connector_name, d1+1);
+      }
+      else
+         rpt_label(d1, "Running as root, but the event names no connector whose DPCD could"
+                       " be read.");
+   }
+   else
+      rpt_label(d1, "Not running as root, so DPCD sink and link status cannot be read.");
+
+   free(connector_name);
+#endif
+}
+#endif
+
+
 /** Poll udev to watch for display connection/disconnection
  *
  *  @param  watch_loop_millisec
@@ -278,6 +552,9 @@ bool dw_udev_watch(int watch_loop_millisec) {
                   found = true;
                   if (debug || report_udev_events) {
                      dbgrpt_udev_event_basic_detail(detail,1);
+#ifdef INTERPRET_UDEV_EVENT
+                     dbgrpt_interpreted_udev_event_detail(detail,1);
+#endif
                   }
                   char * connector_msg = NULL;
                   char * connector_msg2 = NULL;
