@@ -295,7 +295,7 @@ STATIC void dbgrpt_connector_dpcd_status(const char * connector_name, int depth)
          // 0x205 SINK_STATUS
          Byte buf[6];
          ssize_t ct = pread(fd, buf, 6, 0x200);
-         int errsv = errno;
+         errsv = errno;
          close(fd);
          if (ct != 6)
             rpt_vstring(depth, "Reading DPCD 0x200 from %s returned %zd: %s",
@@ -751,7 +751,7 @@ int dw_udev_drain() {
 
    int drained_ct = 0;
    if (monitor_fd < 0) {
-      DUAL_MSGX(debug, TRACE_GROUP, DDCA_SYSLOG_ERROR, "monitor_fd mpt set");
+      DUAL_MSGX(debug, DDCA_SYSLOG_ERROR, TRACE_GROUP, "monitor_fd mpt set");
       goto bye;
    }
 
