@@ -15,6 +15,7 @@
 #include "dw_common.h"   // for EVENT_BUS_NUMBER
 
 extern bool report_udev_events;
+extern bool interpret_reported_udev_events;
 extern int  udev_watch_stats_interval_sec;
 
 void dw_udev_setup();

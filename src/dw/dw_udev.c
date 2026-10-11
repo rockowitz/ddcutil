@@ -96,7 +96,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
  *  See #READ_DPCD_ON_UDEV_EVENT below for the one part of the interpretation
  *  that is off by default.
  */
-//#define INTERPRET_UDEV_EVENT
+define INTERPRET_UDEV_EVENT
 
 #ifdef INTERPRET_UDEV_EVENT
 /** When defined, the interpretation of a udev event reports DisplayPort sink
@@ -123,6 +123,8 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 // globals
 bool    report_udev_events = false;   // --f18
+bool    interpret_reported_udev_events = false;
+
 
 /** Minimum seconds between execution statistics reports from #dw_udev_watch(),
  *  0 to report nothing.  Set by --i15.
@@ -556,7 +558,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
                   if (debug || report_udev_events) {
                      dbgrpt_udev_event_basic_detail(detail,1);
 #ifdef INTERPRET_UDEV_EVENT
-                     dbgrpt_interpreted_udev_event_detail(detail,1);
+                     dbgrpt_interpreted_udev_event_detail(detail, 1);
 #endif
                   }
                   char * connector_msg = NULL;
@@ -746,7 +748,7 @@ bool dw_udev_watch(int watch_loop_millisec) {
  *  @return number of events drained
  */
 int dw_udev_drain() {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    int drained_ct = 0;
@@ -777,6 +779,8 @@ int dw_udev_drain() {
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Draining event that would not otherwise be excluded");
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Detail for drained event");
          dbgrpt_udev_event_basic_detail(detail,1);   // apparently does only to terminal
+         if (interpret_reported_udev_events)
+            dbgrpt_interpreted_udev_event_detail(detail,1);
 
          GPtrArray* collector = udev_event_detail_to_collector(detail, NULL);  // allocates collector
          g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
