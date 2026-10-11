@@ -1105,7 +1105,7 @@ dbgrpt_display_info2(
       int                  depth)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dinfo=%p");
+   DBGMSF(debug, "Starting. dinfo=%p", dinfo);
    int d1 = depth+1;
    ddci_report_display_info((DDCA_Display_Info*)dinfo, depth);
 
