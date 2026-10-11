@@ -548,7 +548,7 @@ _libddcutil_constructor(void) {
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
-      debug = true;
+      debug = false;
 
    DBGF(debug, "Starting. library built %s at %s", BUILD_DATE, BUILD_TIME);
    detect_stdout_stderr_redirection();
@@ -828,7 +828,7 @@ ddci_init(const char *      libopts,
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
-      debug = true;
+      debug = false;
 
    char * s1 = g_strdup_printf("Starting. library built %s at %s, library_initialized=%s, libopts=|%s|",
          BUILD_DATE, BUILD_TIME, sbool(library_initialized), libopts);
