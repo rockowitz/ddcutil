@@ -395,6 +395,8 @@ init_display_watch_options(Parsed_Cmd* parsed_cmd) {
       udev_watch_loop_millisec = parsed_cmd->i8;
    if (parsed_cmd->flags2 & CMD_FLAG2_F18)
       report_udev_events = true;
+   if (parsed_cmd->flags2 & CMD_FLAG2_F13)
+      interpret_reported_udev_events = true;
    if (parsed_cmd->i15 >= 0 && (parsed_cmd->flags2 & CMD_FLAG2_I15_SET))
       udev_watch_stats_interval_sec = parsed_cmd->i15;   // 0 = do not report
    if (parsed_cmd->flags2 & CMD_FLAG2_I1_SET)

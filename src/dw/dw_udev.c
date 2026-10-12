@@ -96,7 +96,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
  *  See #READ_DPCD_ON_UDEV_EVENT below for the one part of the interpretation
  *  that is off by default.
  */
-define INTERPRET_UDEV_EVENT
+#define INTERPRET_UDEV_EVENT
 
 #ifdef INTERPRET_UDEV_EVENT
 /** When defined, the interpretation of a udev event reports DisplayPort sink
@@ -123,7 +123,7 @@ define INTERPRET_UDEV_EVENT
 
 // globals
 bool    report_udev_events = false;   // --f18
-bool    interpret_reported_udev_events = false;
+bool    interpret_reported_udev_events = false;   // --f13
 
 
 /** Minimum seconds between execution statistics reports from #dw_udev_watch(),
@@ -558,7 +558,8 @@ bool dw_udev_watch(int watch_loop_millisec) {
                   if (debug || report_udev_events) {
                      dbgrpt_udev_event_basic_detail(detail,1);
 #ifdef INTERPRET_UDEV_EVENT
-                     dbgrpt_interpreted_udev_event_detail(detail, 1);
+                     if (interpret_reported_udev_events)
+                        dbgrpt_interpreted_udev_event_detail(detail, 1);
 #endif
                   }
                   char * connector_msg = NULL;
