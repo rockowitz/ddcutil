@@ -97,6 +97,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
  *  that is off by default.
  */
 #define INTERPRET_UDEV_EVENT
+#define READ_DPCD_ON_UDEV_EVENT
 
 #ifdef INTERPRET_UDEV_EVENT
 /** When defined, the interpretation of a udev event reports DisplayPort sink
@@ -246,6 +247,80 @@ static uint64_t last_stats_report_ns = 0;
 
 
 #ifdef READ_DPCD_ON_UDEV_EVENT
+/** Reports the link configuration of a DisplayPort connector, whether link
+ *  training is in progress, and whether every active lane is trained.
+ *
+ *  Reads DPCD 0x100-0x102, the link settings the source has written, from an
+ *  open AUX device.  The lane status checked against them is the 6 byte block
+ *  at DPCD 0x200, which the caller has already read.
+ *
+ *  @param  fd           open file descriptor for the AUX device
+ *  @param  devpath      device path, for messages
+ *  @param  aux_name     AUX device name, e.g. drm_dp_aux0
+ *  @param  status       DPCD 0x200-0x205, NULL if the caller could not read it
+ *  @param  depth        logical indentation depth
+ *
+ *  @remark
+ *  If **status** is NULL, only the link configuration is reported.
+ */
+STATIC void dbgrpt_dpcd_link_training(
+      int          fd,
+      const char * devpath,
+      const char * aux_name,
+      const Byte * status,
+      int          depth)
+{
+   // DPCD 0x100 LINK_BW_SET, 0x101 LANE_COUNT_SET, 0x102 TRAINING_PATTERN_SET
+   Byte cfg[3];
+   ssize_t cfg_ct = pread(fd, cfg, 3, 0x100);
+   int cfg_errsv = errno;
+   if (cfg_ct != 3)
+      rpt_vstring(depth, "Reading DPCD 0x100 from %s returned %zd: %s",
+                         devpath, cfg_ct, (cfg_ct < 0) ? strerror(cfg_errsv) : "short read");
+   else {
+      // LINK_BW_SET is the link rate in units of 0.27 Gbps per lane, 0 if the rate
+      // is instead set by LINK_RATE_SET (eDP).  TRAINING_PATTERN_SELECT, bits 3:0
+      // of TRAINING_PATTERN_SET, is 1-3 for TPS1-TPS3, 7 for TPS4, and 0 when no
+      // training is in progress.  (Before DP 1.3 the field was bits 1:0.)
+      int link_bw          = cfg[0];
+      int lane_ct          = cfg[1] & 0x1f;
+      int training_pattern = cfg[2] & 0x0f;
+      rpt_vstring(depth, "DPCD via %s: LINK_BW_SET=0x%02x (%.2f Gbps/lane),"
+                         " LANE_COUNT_SET=%d, TRAINING_PATTERN_SELECT=%d",
+                         aux_name, link_bw, link_bw * 0.27, lane_ct, training_pattern);
+      if (training_pattern != 0)
+         rpt_vstring(depth, "TRAINING_PATTERN_SELECT %d: link training is in progress.",
+                            training_pattern);
+
+      if (status) {
+         if (lane_ct != 1 && lane_ct != 2 && lane_ct != 4)
+            rpt_vstring(depth, "LANE_COUNT_SET %d is not a valid lane count,"
+                               " so the link is not configured.", lane_ct);
+         else {
+            // Lane status: 0x202 holds lanes 0 and 1, 0x203 lanes 2 and 3, 4 bits
+            // per lane: bit 0 CR_DONE, bit 1 CHANNEL_EQ_DONE, bit 2 SYMBOL_LOCKED
+            bool all_lanes_trained = true;
+            for (int lane = 0; lane < lane_ct; lane++) {
+               Byte lane_bits = (status[2 + lane/2] >> (4 * (lane%2))) & 0x07;
+               rpt_vstring(depth, "lane %d: CR=%s EQ=%s SYMLOCK=%s", lane,
+                                  sbool(lane_bits & 0x01), sbool(lane_bits & 0x02),
+                                  sbool(lane_bits & 0x04));
+               if (lane_bits != 0x07)
+                  all_lanes_trained = false;
+            }
+            bool aligned = status[4] & 0x01;
+            if (all_lanes_trained && aligned)
+               rpt_vstring(depth, "All %d active lanes are trained and aligned.", lane_ct);
+            else
+               rpt_vstring(depth, "The link is not trained: %s.",
+                                  (all_lanes_trained) ? "lanes are not interlane aligned"
+                                                      : "not every active lane is locked");
+         }
+      }
+   }
+}
+
+
 /** Reports the DisplayPort sink and link status of a DRM connector, read from
  *  DPCD through the connector's AUX device.
  *
@@ -298,7 +373,6 @@ STATIC void dbgrpt_connector_dpcd_status(const char * connector_name, int depth)
          Byte buf[6];
          ssize_t ct = pread(fd, buf, 6, 0x200);
          errsv = errno;
-         close(fd);
          if (ct != 6)
             rpt_vstring(depth, "Reading DPCD 0x200 from %s returned %zd: %s",
                                devpath, ct, (ct < 0) ? strerror(errsv) : "short read");
@@ -323,6 +397,9 @@ STATIC void dbgrpt_connector_dpcd_status(const char * connector_name, int depth)
                rpt_vstring(depth, "A sink is attached but the link is not fully trained, as"
                                   " during the retraining that follows a hotplug.");
          }
+
+         dbgrpt_dpcd_link_training(fd, devpath, aux_name, (ct == 6) ? buf : NULL, depth);
+         close(fd);
       }
       free(aux_name);
    }
@@ -342,6 +419,7 @@ STATIC void dbgrpt_connector_dpcd_status(const char * connector_name, int depth)
 STATIC void dbgrpt_interpreted_udev_event_detail(Udev_Event_Detail * detail, int depth) {
    assert(detail);
    int d1 = depth + 1;
+   int d2 = depth + 2;
    rpt_label(depth, "Interpretation:");
 
    bool hotplug = streq(detail->prop_hotplug, "1");
@@ -350,42 +428,46 @@ STATIC void dbgrpt_interpreted_udev_event_detail(Udev_Event_Detail * detail, int
 #endif
 
    if (streq(detail->prop_subsystem, "drm")) {
+
       if (streq(detail->prop_action, "change")) {
+         rpt_label(d1, "Subsystem: drm, Action: change");
          if (hotplug) {
-            rpt_label(d1, "A connector on this DRM card changed state.  This is how the kernel");
-            rpt_label(d1, "announces that a display was connected or disconnected.  It does not");
-            rpt_label(d1, "say which way, nor whether DDC will work; the watch thread answers");
-            rpt_label(d1, "that by rescanning every bus for an EDID and comparing with the");
-            rpt_label(d1, "previous scan.");
+            rpt_label(d2, "A connector on this DRM card changed state.  This is how the kernel");
+            rpt_label(d2, "announces that a display was connected or disconnected.");
          }
          else {
-            rpt_label(d1, "A DRM property changed with no HOTPLUG flag, a mode set for instance.");
-            rpt_label(d1, "Not a connection change, though the watch thread rescans regardless.");
+            rpt_label(d1, "Subsystem: drm, other than Action change:");
+            rpt_label(d2, "A DRM property changed with no HOTPLUG flag, a mode set for instance.");
+            rpt_label(d2, "Not a connection change, though the watch thread rescans regardless.");
          }
       }
       else if (streq(detail->prop_action, "add")) {
-         rpt_label(d1, "A DRM device node was registered, as when the video driver loads.");
+         rpt_label(d1, "Subsystem: drm, Action: add");
+         rpt_label(d2, "A DRM device node was registered, as when the video driver loads.");
       }
       else if (streq(detail->prop_action, "remove")) {
-         rpt_label(d1, "A DRM device node was unregistered, as when the video driver unloads.");
+         rpt_label(d1, "Subsystem: drm, Action: remove");
+         rpt_label(d2, "A DRM device node was unregistered, as when the video driver unloads.");
       }
       else {
-         rpt_vstring(d1, "Action \"%s\" is not one display watching interprets for subsystem drm.",
-                         detail->prop_action);
+         rpt_vstring(d1, "Subsystem: drm, Action: %s", detail->prop_action);
+         rpt_label(d2, "Not an action that display watching interprets.");
       }
    }
    else if (streq(detail->prop_subsystem, "i2c-dev")) {
       if (streq(detail->prop_action, "add")) {
-         rpt_label(d1, "An I2C device node appeared.  Buses are added when a driver loads and");
-         rpt_label(d1, "again after a resume from sleep.");
+         rpt_label(d1, "Subsystem: i2c-dev, Action: add");
+         rpt_label(d2, "An I2C device node appeared.  Buses are added when a driver loads and");
+         rpt_label(d2, "again after a resume from sleep.");
       }
       else if (streq(detail->prop_action, "remove")) {
-         rpt_label(d1, "An I2C device node disappeared, as when a driver unloads.  A bus that");
-         rpt_label(d1, "carried a display takes the display with it.");
+         rpt_label(d1, "Subsystem: i2c-dev, Action: remove");
+         rpt_label(d2, "An I2C device node disappeared, as when a driver unloads.  A bus that");
+         rpt_label(d2, "carried a display takes the display with it.");
       }
       else {
-         rpt_vstring(d1, "Action \"%s\" is not one display watching interprets for subsystem"
-                         " i2c-dev.", detail->prop_action);
+         rpt_vstring(d1, "Subsystem: i2c-dev, Action: %s", detail->prop_action);
+         rpt_label(d2, "Not an action that display watching interprets.");
       }
    }
    else {
