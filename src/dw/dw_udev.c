@@ -780,8 +780,10 @@ int dw_udev_drain() {
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Draining event that would not otherwise be excluded");
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Detail for drained event");
          dbgrpt_udev_event_basic_detail(detail,1);   // apparently does only to terminal
+#ifdef INTERPRET_UDEV_EVENT
          if (interpret_reported_udev_events)
             dbgrpt_interpreted_udev_event_detail(detail,1);
+#endif
 
          GPtrArray* collector = udev_event_detail_to_collector(detail, NULL);  // allocates collector
          g_ptr_array_to_syslog(LOG_DEBUG, collector, /*ornament*/ true, /*tag*/ NULL);
