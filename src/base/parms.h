@@ -131,7 +131,7 @@
 //
 
 // Retry interval for retrying to open display
-#define DEFAULT_OPEN_MAX_WAIT_MILLISEC 1000
+#define DEFAULT_OPEN_MAX_WAIT_MILLISEC 100
 #define DEFAULT_OPEN_WAIT_INTERVAL_MILLISEC 100
 
 // Retry interval and max tries when checking that a display handle
