@@ -516,14 +516,14 @@ void dbgrpt_udev_event_basic_detail(Udev_Event_Detail * detail, int depth) {
    int d1 = depth + 1;
    rpt_vstring(d1, "prop_subsystem:  %s", detail->prop_subsystem);
    rpt_vstring(d1, "prop_action:     %s", detail->prop_action);
- //  rpt_vstring(d1, "prop_connector:  %s", detail->prop_connector);
+   rpt_vstring(d1, "prop_connector:  %s", detail->prop_connector);
  //  rpt_vstring(d1, "prop_devname:    %s", detail->prop_devname);
  //  rpt_vstring(d1, "prop_devmode:    %s", detail->prop_devmode);
    rpt_vstring(d1, "prop_hotplug:    %s", detail->prop_hotplug);
  //  rpt_vstring(d1, "prop_major:      %s", detail->prop_major);
  //  rpt_vstring(d1, "prop_minor:      %s", detail->prop_minor);
    rpt_vstring(d1, "sysname:         %s", detail->sysname);
- //  rpt_vstring(d1, "syspath:         %s", detail->syspath);
+ // rpt_vstring(d1, "syspath:         %s", detail->syspath);
    rpt_vstring(d1, "attr_name:       %s", detail->attr_name);
 }
 
