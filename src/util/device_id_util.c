@@ -722,7 +722,7 @@ static void load_id_file(Device_Id_Type id_type){
       g_ptr_array_free(all_lines, true);
       free(device_id_fqfn);
    }          // if pci.ids or usb.ids was found
-   if (linect == 0) {  //  pci.ids/usb.ids not found or empty
+   if (linect <= 0) {  //  pci.ids/usb.ids not found, unreadable, or empty
       if (debug)
          printf("(%s) File not found or empty, creating dummy mlm", __func__);
       if (id_type == ID_TYPE_PCI) {
