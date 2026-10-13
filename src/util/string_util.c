@@ -545,7 +545,7 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
       printf("(%s) str_to_split=|%s|, delims=|%s|, max_pieces=%zu\n",
              __func__, str_to_split, delims, max_pieces);
 
-   char** workstruct = calloc(sizeof(char *), max_pieces+1);
+   char** workstruct = calloc(max_pieces+1, sizeof(char *));
    int piecect = 0;
    if (str_to_split) {
       char * str_to_split_dup = g_strdup(str_to_split);
@@ -566,7 +566,7 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
    if (debug)
       printf("(%s) piecect=%d\n", __func__, piecect);
 
-   char ** result = calloc(sizeof(char *), piecect+1);
+   char ** result = calloc(piecect+1, sizeof(char *));
    // n. workstruct[piecect] == NULL because we used calloc()
    memcpy(result, workstruct, (piecect+1)*sizeof(char*) );
 
@@ -1110,34 +1110,32 @@ bool str_to_long(const char * sval, long * p_ival, int base)
 
    char * endptr;
    bool ok = false;
-   if (sval) {
-      if ( *sval != '\0') {
-         char * work = NULL;
-         bool has_digits = false;
-         if (sval[0] == 'x' || sval[0] == 'X') {
-            work = g_strdup_printf("0%s", sval);
-            has_digits = strlen(work) > 2;
-         }
-         else {
-            work = strdup(sval);
-            has_digits = strlen(work) > 0;
-         }
-
-         if (debug)
-            printf("(%s) work = %s\n", __func__, work);
-
-         if (has_digits) {
-            errno = 0;
-            long result = strtol(work, &endptr, base); // allow hex
-            // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
-            //        __func__, sval, endptr, *endptr, *endptr, result);
-            if (*endptr == '\0' && errno != ERANGE) {
-               *p_ival = result;
-               ok = true;
-            }
-         }
-         free(work);
+   if (sval && *sval != '\0') {
+      char * work = NULL;
+      bool has_digits = false;
+      if (sval[0] == 'x' || sval[0] == 'X') {
+         work = g_strdup_printf("0%s", sval);
+         has_digits = strlen(work) > 2;
       }
+      else {
+         work = strdup(sval);
+         has_digits = strlen(work) > 0;
+      }
+
+      if (debug)
+         printf("(%s) work = %s\n", __func__, work);
+
+      if (has_digits) {
+         errno = 0;
+         long result = strtol(work, &endptr, base); // allow hex
+         // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
+         //        __func__, sval, endptr, *endptr, *endptr, result);
+         if (*endptr == '\0' && errno != ERANGE) {
+            *p_ival = result;
+            ok = true;
+         }
+      }
+      free(work);
    }
 
    if (debug) {
@@ -1677,7 +1675,7 @@ void hex_dump_indented_collect(GPtrArray * collector, const Byte* data, int size
    buffer[4] = '0';
    for (i = 0, j = 0; i < size; i++, j++) {
       if (j == 16) {
-         char * line = g_strdup_printf("%s%s", indentation, buffer);
+         line = g_strdup_printf("%s%s", indentation, buffer);
          g_ptr_array_add(collector, line);
          memset(buffer, ' ', 58 + 16);
          sprintf(temp, "+%04x", i);
@@ -1694,7 +1692,7 @@ void hex_dump_indented_collect(GPtrArray * collector, const Byte* data, int size
    }
 
    if (j != 0) {
-      char * line = g_strdup_printf("%s%s", indentation, buffer);
+      line = g_strdup_printf("%s%s", indentation, buffer);
       g_ptr_array_add(collector, line);
    }
    if (debug)
@@ -1714,7 +1712,7 @@ void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents)
 {
    GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
    hex_dump_indented_collect(collector, data, size, indents);
-   for (int ndx = 0; ndx < collector->len; ndx++) {
+   for (guint ndx = 0; ndx < collector->len; ndx++) {
       fprintf(fh, "%s\n", (char*) g_ptr_array_index(collector, ndx));
    }
    g_ptr_array_free(collector, true);
