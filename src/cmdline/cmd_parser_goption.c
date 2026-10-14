@@ -327,7 +327,7 @@ static bool parse_display_identifier(
       int           dispwork,
       int           buswork,
       int           hidwork,
-      char *        usbwork,
+      char *        usbwork_local,   // avoid pointless warning about shadowed variable
       char *        edidwork,
       char *        mfg_id_work,
       char *        modelwork,
@@ -337,17 +337,17 @@ static bool parse_display_identifier(
 
    parsed_cmd->dsel = dsel_new();
 
-   if (usbwork) {
+   if (usbwork_local) {
 #ifdef ENABLE_USB
       bool debug = false;
-      DBGMSF(debug, "usbwork = |%s|", usbwork);
+      DBGMSF(debug, "usbwork = |%s|", usbwork_local);
       int busnum;
       int devicenum;
-      bool arg_ok = parse_dot_separated_arg(usbwork, &busnum, &devicenum);
+      bool arg_ok = parse_dot_separated_arg(usbwork_local, &busnum, &devicenum);
       if (!arg_ok)
-         arg_ok = parse_colon_separated_arg(usbwork, &busnum, &devicenum);
+         arg_ok = parse_colon_separated_arg(usbwork_local, &busnum, &devicenum);
       if (!arg_ok) {
-         EMIT_PARSER_ERROR(errmsgs, "Invalid USB argument: %s", usbwork );
+         EMIT_PARSER_ERROR(errmsgs, "Invalid USB argument: %s", usbwork_local );
          parsing_ok = false;
       }
       else {
@@ -1028,7 +1028,7 @@ parse_command(
    gchar**  trace_classes   = NULL;
    // libddcutil: NOT_SET unless --syslog is given, so that ddci_init() keeps
    // the level passed by the client (or DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL)
-   DDCA_Syslog_Level syslog_level = (parser_mode == MODE_DDCUTIL) ? DEFAULT_DDCUTIL_SYSLOG_LEVEL
+   DDCA_Syslog_Level syslog_level0 = (parser_mode == MODE_DDCUTIL) ? DEFAULT_DDCUTIL_SYSLOG_LEVEL
                                                                   : DDCA_SYSLOG_NOT_SET;
    char *   syslog_work     = NULL;
    gint     buswork         = -1;
@@ -1286,7 +1286,7 @@ parse_command(
       {"disable-async-i2c-bus-checks", '\0', G_OPTION_FLAG_REVERSE,
                                           G_OPTION_ARG_NONE, &async_check_i2c_flag, "Disable parallel examination of /dev/i2c devices", NULL},
 #endif
-      {"async",   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection (deprecated)", NULL},
+      {"async",   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection (Deprecated)", NULL},
 
       {"pause-after-resume-ms",   '\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &resume_after_sleep_ms_work, resume_after_sleep_ms_expl, "milliseconds"},
@@ -1390,7 +1390,7 @@ parse_command(
 
       {"disable-ddc",   '\0', G_OPTION_FLAG_HIDDEN,
                                  G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
-      {"ignore-mmid",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
+      {"ignore-mmid",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor (Deprecated, use --disable-mmid)","monitor model id" },
 
 #ifdef FUTURE
       {"force-slave-address",
@@ -1989,12 +1989,12 @@ parse_command(
       bool this_ok = parse_syslog_level(syslog_work, &level, errmsgs);
       // printf("(%s) this_ok = %s\n", __func__, sbool(this_ok));
       if (this_ok)
-         syslog_level = level;
+         syslog_level0 = level;
       else
          parsing_ok = false;
       FREE(syslog_work);
    }
-   parsed_cmd->syslog_level = syslog_level;
+   parsed_cmd->syslog_level = syslog_level0;
 
    if (i2c_source_addr_work) {
       int ival;
@@ -2104,10 +2104,11 @@ parse_command(
          }
          else {
             // DBGMSG("vid = 0x%04x, pid=0x%04x", vid, pid);
-            uint32_t ignored_vid_pid = vid << 16 | pid;
-            // DBGMSG("ignored_vid_pid = 0x%08x", ignored_vid_pid);
+            uint32_t ignored_vid_pid1= vid << 16 | pid;
+            // DBGMSG("ignored_vid_pid1 = 0x%08x", ignored_vid_pid1);
             if (parsed_cmd->ignored_usb_vid_pid_ct < IGNORED_VID_PID_MAX)
-               parsed_cmd->ignored_usb_vid_pids[parsed_cmd->ignored_usb_vid_pid_ct++] = ignored_vid_pid;
+               parsed_cmd->ignored_usb_vid_pids[parsed_cmd->ignored_usb_vid_pid_ct++]
+                                                = ignored_vid_pid1;
              else {
                 EMIT_PARSER_ERROR(errmsgs, "Too many ignore-usb-vid-pid values");
                 parsing_ok = false;
@@ -2299,9 +2300,9 @@ parse_command(
                                   parsed_cmd->cmd_id,  parsed_cmd->args, parsed_cmd->argct);
             if (!parsed_cmd->fref) {
                parsing_ok = false;
-               char * s = strjoin((const char **)parsed_cmd->args, parsed_cmd->argct, " ");
-               EMIT_PARSER_ERROR(errmsgs,  "Invalid feature code(s) or subset: %s", s);
-               free(s);
+               char * s1 = strjoin((const char **)parsed_cmd->args, parsed_cmd->argct, " ");
+               EMIT_PARSER_ERROR(errmsgs,  "Invalid feature code(s) or subset: %s", s1);
+               free(s1);
             }
          }
 
