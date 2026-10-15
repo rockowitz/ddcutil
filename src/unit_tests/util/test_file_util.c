@@ -144,20 +144,20 @@ static void test_inode_and_fd(void) {
    char path[64];
    write_tmpfile(path, "x", 1);
 
-   long ino1 = get_inode_by_fn(path);
-   long ino2 = get_inode_by_fn(path);
+   ino_t ino1 = get_inode_by_fn(path);
+   ino_t ino2 = get_inode_by_fn(path);
    CK(ino1 > 0);
-   CK_INT(ino1, ino2);                     // stable across calls
+   CK(ino1 == ino2);                       // stable across calls
 
    int fd = open(path, O_RDONLY);
    CK(fd >= 0);
-   CK_INT(get_inode_by_fd(fd), ino1);       // same file, same inode
+   CK(get_inode_by_fd(fd) == ino1);         // same file, same inode
 
    char * fn = filename_for_fd_t(fd);        // resolve fd back to its path
    CK_STR(fn, path);
    close(fd);
 
-   CK_INT(get_inode_by_fn("/no/such/file"), -1);
+   CK(get_inode_by_fn("/no/such/file") == 0);
    unlink(path);
 }
 

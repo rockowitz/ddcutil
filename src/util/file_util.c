@@ -943,9 +943,17 @@ fopen_mkdir(
 }
 
 
-long
+/** Returns the inode number of a file.
+ *
+ *  @param  fqfn  file name
+ *  @return inode number, 0 if the file cannot be stat'd
+ *
+ *  @remark
+ *  For printing type ino_t, cast the value to uintmax_t and use printf() format "%ju".
+ */
+ino_t
 get_inode_by_fn(const char * fqfn) {
-   long result = -1;
+   ino_t result = 0;
    if (fqfn) {
       struct stat stat_buf;
       int rc = stat(fqfn, &stat_buf);
@@ -957,9 +965,17 @@ get_inode_by_fn(const char * fqfn) {
 }
 
 
-long
+/** Returns the inode number of an open file.
+ *
+ *  @param  fd    file descriptor
+ *  @return inode number, 0 if the file cannot be stat'd
+ *
+ *  @remark
+ *  For printing type ino_t, cast the value to uintmax_t and use printf() format "%ju".
+ */
+ino_t
 get_inode_by_fd(int fd) {
-   long result = -1;
+   ino_t result = 0;
    struct stat stat_buf;
    int rc = fstat(fd, &stat_buf);
    if (rc == 0) {
