@@ -112,7 +112,7 @@ static int find_bus_with_monitor(int * fd_loc, Byte * edid_out) {
       }
       Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
       Status_Errno_DDC rc;
-      QUIETLY( rc = i2c_get_raw_edid_by_fd(fd, buf) );
+      QUIETLY( rc = i2c_get_raw_edid_by_fd(fd, buf, NULL) );
       if (rc == 0 && buf->len >= 128) {
          memcpy(edid_out, buf->bytes, 128);
          buffer_free(buf, NULL);

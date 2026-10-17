@@ -30,7 +30,6 @@
 
 #include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_execute.h"   // i2c_x30_responsive_loc
 #include "i2c/i2c_bus_open_close.h"
 #include "base/i2c_bus_aux.h"            // i2c_device_exists
 #include "base/display_lock.h"           // init_i2c_display_lock
@@ -88,7 +87,7 @@ static int failed = 0;
 static void test_get_raw_edid_by_fd_bad_fd(void) {
    Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
    int rc;
-   QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf) );
+   QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf, NULL) );
    CK(rc < 0);
    CK_INT(buf->len, 0);
    buffer_free(buf, NULL);
@@ -98,9 +97,45 @@ static void test_get_raw_edid_by_fd_bad_fd(void) {
 static void test_get_parsed_edid_by_fd_bad_fd(void) {
    Parsed_Edid * edid = NULL;
    int rc;
-   QUIETLY( rc = i2c_get_parsed_edid_by_fd(-1, &edid) );
+   QUIETLY( rc = i2c_get_parsed_edid_by_fd(-1, &edid, NULL) );
    CK(rc < 0);
    CK(edid == NULL);
+}
+
+
+/** The x30_responsive_loc argument records whether slave address x30 answers.
+ *
+ *  x30 is the E-DDC segment pointer and is write only, so the EDID read's own write to
+ *  it is the probe.  The answer belongs to the display on the bus and lives in
+ *  I2C_Bus_Info; i2c_check_bus() passes &businfo->x30_responsive, other callers NULL.
+ *  Three states rather than two because "not yet attempted" and "attempted and refused"
+ *  call for different behavior: TRIVAL_UNSET means write and find out, TRIVAL_FALSE
+ *  means do not write again.
+ *
+ *  With a file descriptor that cannot work the write fails, so TRIVAL_UNSET must become
+ *  TRIVAL_FALSE, TRIVAL_FALSE must stay as it is (no write attempted), and NULL must be
+ *  accepted.  Uses the i2c layer reader, which writes to x30 whatever the io strategy.
+ */
+static void test_get_raw_edid_records_x30_answer(void) {
+   bool saved_uses_i2c_layer = EDID_Read_Uses_I2C_Layer;
+   EDID_Read_Uses_I2C_Layer  = true;
+
+   Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
+   Optional_True_False x30_field = TRIVAL_UNSET;   // stands in for businfo->x30_responsive
+   Status_Errno_DDC rc;
+   QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf, &x30_field) );
+   CK(rc < 0);
+   CK(x30_field == TRIVAL_FALSE);             // write attempted, failed, recorded
+
+   QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf, &x30_field) );
+   CK(rc < 0);
+   CK(x30_field == TRIVAL_FALSE);             // not attempted again, unchanged
+
+   QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf, NULL) );
+   CK(rc < 0);                                // nothing recorded, no crash
+   buffer_free(buf, NULL);
+
+   EDID_Read_Uses_I2C_Layer = saved_uses_i2c_layer;
 }
 
 
@@ -130,7 +165,7 @@ static int find_bus_with_monitor(int * fd_loc, Byte * edid_out) {
       }
       Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
       Status_Errno_DDC rc;
-      QUIETLY( rc = i2c_get_raw_edid_by_fd(fd, buf) );
+      QUIETLY( rc = i2c_get_raw_edid_by_fd(fd, buf, NULL) );
       if (rc == 0 && buf->len >= 128) {
          memcpy(edid_out, buf->bytes, 128);
          buffer_free(buf, NULL);
@@ -169,9 +204,7 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
 
    I2C_IO_Strategy_Id saved_strategy   = i2c_get_io_strategy_id();
    bool saved_uses_i2c_layer           = EDID_Read_Uses_I2C_Layer;
-   Optional_True_False * saved_x30_loc  = i2c_x30_responsive_loc;
    Optional_True_False x30_field       = TRIVAL_UNSET;   // stands in for businfo's field
-   i2c_x30_responsive_loc              = &x30_field;
    int  saved_read_size                = EDID_Read_Size;
 
    I2C_IO_Strategy_Id strategies[] = {I2C_IO_STRATEGY_IOCTL, I2C_IO_STRATEGY_FILEIO};
@@ -193,7 +226,7 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
             Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
             Status_Errno_DDC rc;
             uint64_t t0 = cur_realtime_nanosec();
-            QUIETLY( rc = i2c_get_raw_edid_by_fd(fd, buf) );
+            QUIETLY( rc = i2c_get_raw_edid_by_fd(fd, buf, &x30_field) );
             uint64_t elapsed_us = NANOS2MICROS(cur_realtime_nanosec() - t0);
 
             char settings[128];
@@ -230,7 +263,6 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
    CK_INT(disagreed, 0);       // no switch setting changes what is read
 
    EDID_Read_Uses_I2C_Layer     = saved_uses_i2c_layer;
-   i2c_x30_responsive_loc       = saved_x30_loc;
    EDID_Read_Size               = saved_read_size;
    i2c_set_io_strategy_by_id((saved_strategy == I2C_IO_STRATEGY_NOT_SET)
                                 ? DEFAULT_I2C_IO_STRATEGY : saved_strategy);
@@ -247,8 +279,8 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
  *    EDID_Read_Uses_I2C_Layer       i2c_get_edid_bytes_using_i2c_layer() or
  *                                   i2c_get_edid_bytes_directly_using_ioctl()
  *    x30 responsiveness             TRIVAL_TRUE writes to x30 to select EDID block 0
- *                                   first, TRIVAL_FALSE suppresses that write.  Driven
- *                                   through i2c_x30_responsive_loc, which is where the
+ *                                   first, TRIVAL_FALSE suppresses that write.  Passed
+ *                                   as argument x30_responsive_loc, which is where the
  *                                   readers look for the per display answer.
  *    EDID_Read_Size                 128, 256, or 0 for dynamic, which also
  *                                   changes max_tries from 2 to 4
@@ -267,9 +299,7 @@ static void test_get_raw_edid_all_switches_real_bus(void) {
 static void test_get_raw_edid_all_switch_combinations(void) {
    I2C_IO_Strategy_Id saved_strategy   = i2c_get_io_strategy_id();
    bool saved_uses_i2c_layer           = EDID_Read_Uses_I2C_Layer;
-   Optional_True_False * saved_x30_loc  = i2c_x30_responsive_loc;
    Optional_True_False x30_field       = TRIVAL_UNSET;   // stands in for businfo's field
-   i2c_x30_responsive_loc              = &x30_field;
    int  saved_read_size                = EDID_Read_Size;
 
    I2C_IO_Strategy_Id strategies[] = {I2C_IO_STRATEGY_IOCTL, I2C_IO_STRATEGY_FILEIO};
@@ -290,7 +320,7 @@ static void test_get_raw_edid_all_switch_combinations(void) {
 
             Buffer * buf = buffer_new(EDID_BUFFER_SIZE, NULL);
             Status_Errno_DDC rc;
-            QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf) );
+            QUIETLY( rc = i2c_get_raw_edid_by_fd(-1, buf, &x30_field) );
             if (rc >= 0) {
                nonneg++;
                printf("FAIL  strategy=%s i2c_layer=%d use_x30=%d read_size=%d -> %d\n",
@@ -308,7 +338,6 @@ static void test_get_raw_edid_all_switch_combinations(void) {
    CK_INT(nonzero_len, 0);    // and left the buffer empty
 
    EDID_Read_Uses_I2C_Layer     = saved_uses_i2c_layer;
-   i2c_x30_responsive_loc       = saved_x30_loc;
    EDID_Read_Size               = saved_read_size;
    i2c_set_io_strategy_by_id((saved_strategy == I2C_IO_STRATEGY_NOT_SET)
                                 ? DEFAULT_I2C_IO_STRATEGY : saved_strategy);
@@ -416,6 +445,7 @@ int main(int argc, char ** argv) {
 
    test_get_raw_edid_by_fd_bad_fd();
    test_get_parsed_edid_by_fd_bad_fd();
+   test_get_raw_edid_records_x30_answer();
    test_get_raw_edid_all_switch_combinations();
    // i2c_open_bus()/i2c_close_bus() use the display lock table
    init_execution_stats();

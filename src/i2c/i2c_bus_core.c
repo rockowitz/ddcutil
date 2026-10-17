@@ -124,7 +124,7 @@ i2c_check_edid_exists_by_dh(Display_Handle * dh) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dh = %s", dh_repr(dh));
 
    Buffer * edidbuf = buffer_new(256, "");
-   Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(dh->fd, edidbuf);
+   Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(dh->fd, edidbuf, NULL);
    bool result = (rc == 0);
    buffer_free(edidbuf, "");
 
@@ -150,7 +150,7 @@ bool i2c_check_edid_exists_by_businfo(I2C_Bus_Info * businfo) {
    if (!erec) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", businfo->busno);
       Buffer * edidbuf = buffer_new(256, "");
-      Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf);
+      Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf, NULL);
       if (rc == 0)
          result = true;
       buffer_free(edidbuf, "");
@@ -340,7 +340,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", businfo->busno);
 
    Parsed_Edid * true_i2c_edid;
-   DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &true_i2c_edid);
+   DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &true_i2c_edid, NULL);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
          businfo->busno, psc_desc(ddcrc));
    bool reset = false;
@@ -650,7 +650,7 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
     //open succeeded
     DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", busno);
     Buffer * rawedidbuf = buffer_new(EDID_BUFFER_SIZE, NULL);
-    Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
+    Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf, NULL);
     if (rc == 0) {
        edid_exists = true;
     }
@@ -1112,9 +1112,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, calling i2c_get_parsed_edid", businfo->busno);
       assert(!businfo->edid);
 
-      i2c_x30_responsive_loc = &businfo->x30_responsive;
-      DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid);
-      i2c_x30_responsive_loc = NULL;   // businfo outlives the read, the pointer must not
+      DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid, &businfo->x30_responsive);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
                     businfo->busno, psc_desc(ddcrc));
       // Set from the EDID read's x30 write rather than from a probe of its own.  Where
@@ -1292,7 +1290,7 @@ void i2c_recheck_bus(I2C_Bus_Info * businfo) {
 
       if (!checked_connector_for_edid) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, calling i2c_get_parsed_edid", businfo->busno);
-         DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid);
+         DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid, NULL);
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
                     businfo->busno, psc_desc(ddcrc));
          // NB It's quite possible that bus has no edid

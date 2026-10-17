@@ -347,7 +347,7 @@ Status_Errno flock_lock_by_fd(int fd, const char * filename, bool wait) {
 #ifdef EXPERIMENTAL_FLOCK_RECOVERY
       if (errsv == EWOULDBLOCK) {
          Buffer * edidbuf = buffer_new(256, "");
-         Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf);
+         Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf, NULL);
          bool found_edid = (rc == 0);
          buffer_free(edidbuf, "");
          DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "able to read edid directly: %s", sbool(found_edid));

@@ -123,9 +123,10 @@ int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 
 static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_ioctl(
-   int     fd,
-   Buffer* rawedid,
-   int     edid_read_size)
+   int                   fd,
+   Buffer*               rawedid,
+   int                   edid_read_size,
+   Optional_True_False * x30_responsive_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
@@ -138,10 +139,10 @@ i2c_get_edid_bytes_directly_using_ioctl(
    // Writes unless x30 is already known not to answer.  With no target recorded, which is
    // how the readers are reached outside i2c_check_bus(), nothing is remembered and the
    // write is attempted each time.
-   if (!i2c_x30_responsive_loc || *i2c_x30_responsive_loc != TRIVAL_FALSE) {
+   if (!x30_responsive_loc || *x30_responsive_loc != TRIVAL_FALSE) {
       Status_Errno x30rc = i2c_ioctl_write_x30(fd);
-      if (i2c_x30_responsive_loc)
-         *i2c_x30_responsive_loc = (x30rc == 0) ? TRIVAL_TRUE : TRIVAL_FALSE;
+      if (x30_responsive_loc)
+         *x30_responsive_loc = (x30rc == 0) ? TRIVAL_TRUE : TRIVAL_FALSE;
    }
 
    Byte byte_to_write = 0x00;
@@ -310,7 +311,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
             " current address.  Re-reading 256 bytes.");
       // Bounded to one level of recursion: the recursive call passes 256, which
       // fails the edid_read_size < 256 test above.
-      rc = i2c_get_edid_bytes_directly_using_ioctl(fd, rawedid, 256);
+      rc = i2c_get_edid_bytes_directly_using_ioctl(fd, rawedid, 256, x30_responsive_loc);
       if (rc == 0 && is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "Base block found at offset 128.  Copying it down.");
@@ -393,9 +394,10 @@ bye:
 
 static Status_Errno_DDC
 i2c_get_edid_bytes_using_i2c_layer(
-      int     fd,
-      Buffer* rawedid,
-      int     edid_read_size)
+      int                   fd,
+      Buffer*               rawedid,
+      int                   edid_read_size,
+      Optional_True_False * x30_responsive_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d",
@@ -405,10 +407,10 @@ i2c_get_edid_bytes_using_i2c_layer(
    // Writes unless x30 is already known not to answer.  With no target recorded, which is
    // how the readers are reached outside i2c_check_bus(), nothing is remembered and the
    // write is attempted each time.
-   if (!i2c_x30_responsive_loc || *i2c_x30_responsive_loc != TRIVAL_FALSE) {
+   if (!x30_responsive_loc || *x30_responsive_loc != TRIVAL_FALSE) {
       Status_Errno x30rc = i2c_ioctl_write_x30(fd);
-      if (i2c_x30_responsive_loc)
-         *i2c_x30_responsive_loc = (x30rc == 0) ? TRIVAL_TRUE : TRIVAL_FALSE;
+      if (x30_responsive_loc)
+         *x30_responsive_loc = (x30rc == 0) ? TRIVAL_TRUE : TRIVAL_FALSE;
    }
 
    int rc = 0;
@@ -446,7 +448,7 @@ i2c_get_edid_bytes_using_i2c_layer(
             " current address.  Re-reading 256 bytes.");
       // Bounded to one level of recursion: the recursive call passes 256, which
       // fails the edid_read_size < 256 test above.
-      rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256);
+      rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256, x30_responsive_loc);
       if (rc == 0 && is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "Base block found at offset 128.  Copying it down.");
@@ -504,7 +506,10 @@ i2c_get_edid_bytes_using_i2c_layer(
  *  the read starts at 0x80 by accident or on purpose.
  */
 STATIC Status_Errno_DDC
-i2c_reread_edid_after_current_address_read(int fd, Buffer * rawedid)
+i2c_reread_edid_after_current_address_read(
+      int                   fd,
+      Buffer *              rawedid,
+      Optional_True_False * x30_responsive_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s",
@@ -514,7 +519,7 @@ i2c_reread_edid_after_current_address_read(int fd, Buffer * rawedid)
    // Requesting 256 also declines the recovery inside the reader: the
    // RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER block is guarded by
    // edid_read_size < 256, so there is no recursion even with both enabled.
-   Status_Errno_DDC rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256);
+   Status_Errno_DDC rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, 256, x30_responsive_loc);
    if (rc == 0 && rawedid->len != 256)
       rc = DDCRC_INVALID_EDID;
 
@@ -528,12 +533,28 @@ i2c_reread_edid_after_current_address_read(int fd, Buffer * rawedid)
  *
  * @param  fd        file descriptor for open /dev/i2c-n
  * @param  rawedid   buffer in which to return bytes of the EDID
+ * @param  x30_responsive_loc  where to record whether slave address x30 answers,
+ *                   or NULL to record nothing
  *
  * @retval  0        success
  * @retval  <0       error
+ *
+ * @remark
+ * x30 is the E-DDC segment pointer and is write only, so the only way to learn
+ * whether it answers is to write to it.  There is no separate probe: the write
+ * the EDID read performs anyway records the answer at **x30_responsive_loc**,
+ * and the recorded value then controls whether a further write is issued.
+ * TRIVAL_UNSET means not yet attempted for this display, so write and find out;
+ * TRIVAL_TRUE means keep writing; TRIVAL_FALSE suppresses further writes.
+ * If **x30_responsive_loc** is NULL the write is attempted on every read.
+ * @remark
+ * The answer belongs to the display on the bus, so the caller that owns the
+ * bus record, i2c_check_bus(), passes &businfo->x30_responsive.  libddcutil
+ * admits only one thread at a time to a given bus, so the field needs no lock
+ * of its own.
  */
 Status_Errno_DDC
-i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
+i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, Optional_True_False * x30_responsive_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
@@ -568,7 +589,7 @@ retry:
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                "Calling i2c_get_edid_bytes_using_i2c_layer, cur_strategy_id = %s...",
                 i2c_io_strategy_id_name(cur_strategy_id));
-         rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size);
+         rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, x30_responsive_loc);
          called_func_name = "i2c_get_edid_bytes_using_i2c_layer";
       }
       else {   // use local functions
@@ -579,7 +600,8 @@ retry:
             rc = i2c_get_edid_bytes_directly_using_ioctl(
                fd,
                rawedid,
-               edid_read_size);
+               edid_read_size,
+               x30_responsive_loc);
             if (rc == -EINVAL) {
                int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
                assert(busno >= 0);
@@ -683,7 +705,7 @@ retry:
                // guard declines and the 256 bytes arrive here intact.
                if (rawedid->len < 256) {
                   Status_Errno_DDC reread_rc =
-                        i2c_reread_edid_after_current_address_read(fd, rawedid);
+                        i2c_reread_edid_after_current_address_read(fd, rawedid, x30_responsive_loc);
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                         "i2c_reread_edid_after_current_address_read() returned %s",
                         psc_desc(reread_rc));
@@ -725,17 +747,19 @@ retry:
  * @param fd      file descriptor for open /dev/i2c-n
  * @param edid_ptr_loc where to return pointer to newly allocated #Parsed_Edid,
  *                     or NULL if error
+ * @param x30_responsive_loc where to record whether slave address x30 answers,
+ *                     or NULL; see #i2c_get_raw_edid_by_fd()
  * @return status code
  */
 Status_Errno_DDC
-i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
+i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc, Optional_True_False * x30_responsive_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s", fd, filename_for_fd_t(fd));
    Parsed_Edid * edid = NULL;
    Buffer * rawedidbuf = buffer_new(EDID_BUFFER_SIZE, NULL);
 
-   Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
+   Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf, x30_responsive_loc);
    if (rc == 0) {
       edid = create_parsed_edid2(rawedidbuf->bytes, "I2C");
       if (debug) {

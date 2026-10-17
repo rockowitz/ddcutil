@@ -20,8 +20,10 @@
 extern bool EDID_Read_Uses_I2C_Layer;
 extern int  EDID_Read_Size;
 
-Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid);
-Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc);
+Status_Errno_DDC i2c_get_raw_edid_by_fd(
+      int fd, Buffer * rawedid, Optional_True_False * x30_responsive_loc);
+Status_Errno_DDC i2c_get_parsed_edid_by_fd(
+      int fd, Parsed_Edid ** edid_ptr_loc, Optional_True_False * x30_responsive_loc);
 
 void init_i2c_edid();
 

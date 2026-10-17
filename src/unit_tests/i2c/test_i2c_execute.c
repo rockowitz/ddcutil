@@ -140,34 +140,6 @@ static void test_ioctl_write_x30_bad_fd(void) {
 }
 
 
-/** i2c_x30_responsive_loc says where to record what is learned about x30.
- *
- *  The answer belongs to the display on the bus and lives in I2C_Bus_Info; this pointer is
- *  only the channel by which the EDID readers, which take an fd and have no bus record,
- *  reach it.  i2c_check_bus() aims it at businfo->x30_responsive for the duration of the
- *  read and clears it afterwards, so a pointer to a freed businfo cannot be dereferenced
- *  later.  Three states rather than two because "not yet attempted" and "attempted and
- *  refused" call for different behavior: TRIVAL_UNSET means write and find out,
- *  TRIVAL_FALSE means do not write again.
- *
- *  It is _Thread_local because --async-i2c-check runs one i2c_check_bus() per bus on its
- *  own thread, each needing its own target.
- */
-static void test_x30_responsive_loc_default(void) {
-   CK(i2c_x30_responsive_loc == NULL);      // default, per i2c_execute.c
-
-   // stands in for businfo->x30_responsive
-   Optional_True_False field = TRIVAL_UNSET;
-   Optional_True_False * saved = i2c_x30_responsive_loc;
-   i2c_x30_responsive_loc = &field;
-   CK(*i2c_x30_responsive_loc == TRIVAL_UNSET);
-   *i2c_x30_responsive_loc = TRIVAL_TRUE;
-   CK(field == TRIVAL_TRUE);                // the write reaches the pointed to field
-   i2c_x30_responsive_loc = saved;
-   CK(i2c_x30_responsive_loc == NULL);
-}
-
-
 int main(int argc, char ** argv) {
    setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
 
@@ -176,7 +148,6 @@ int main(int argc, char ** argv) {
    test_fileio_writer_reader_bad_fd();
    test_ioctl_writer_reader_bad_fd();
    test_ioctl_write_x30_bad_fd();
-   test_x30_responsive_loc_default();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

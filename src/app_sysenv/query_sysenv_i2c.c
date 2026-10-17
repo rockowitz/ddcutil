@@ -396,7 +396,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
             //  Base_Status_Errno rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
             // TODO save force slave addr setting, set it for duration of call - do it outside loop
             rpt_vstring(d2, "Reading EDID using get_raw_edid_by_fd()...");
-            psc = i2c_get_raw_edid_by_fd(fd, buf0);
+            psc = i2c_get_raw_edid_by_fd(fd, buf0, NULL);
             if (psc != 0) {
                rpt_vstring(d2, "Unable to read EDID, psc=%s", psc_desc(psc));
                tryctr = 999;   // retries have already happened in i2c_get_raw_edid_by_fd()

@@ -541,7 +541,7 @@ i2c_open_bus(
                                               filename, psc_desc(flockrc));
 #ifdef EXPERIMENTAL_FLOCK_RECOVREY
              Buffer * edidbuf = buffer_new(256, "");
-             Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(*fd_loc, edidbuf);
+             Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(*fd_loc, edidbuf, NULL);
              bool found_edid = (rc == 0);
              buffer_free(edidbuf, "");
              DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "able to read edid directly for /dev/i2c-%d: %s",
