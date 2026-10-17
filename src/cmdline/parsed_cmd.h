@@ -83,6 +83,7 @@ typedef enum {
    CMD_FLAG_ENABLE_UDF             = 0x100000,
    CMD_FLAG_ENABLE_USB             = 0x200000,
    CMD_FLAG_EDP_ALWAYS_LAPTOP      = 0x400000,
+   CMD_FLAG_BUS_DRM_CONNECTOR_EDID = 0x800000,  // --bus-drm-connector-edid
 
    CMD_FLAG_TRY_GET_EDID_FROM_SYSFS
                                  = 0x10000000,
