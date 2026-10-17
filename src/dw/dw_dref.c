@@ -141,6 +141,9 @@ Display_Ref * dw_add_display_by_businfo(I2C_Bus_Info * businfo) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "Display on bus %d went away during initial checks, dref=%s",
                businfo->busno, dref_reprx_t(dref));
+         DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
+               "ddc_initial_checks_by_dref() returned %s",psc_desc(err->status_code));
+
          detected_disconnected = true;
       }
    }
