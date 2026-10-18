@@ -1514,7 +1514,9 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
    if (output_level >= DDCA_OL_VERBOSE) {
       DO_OUTPUT(d1, title_width, "Driver:", (businfo->driver) ? businfo->driver : "Unknown");
 // #ifdef DETECT_SLAVE_ADDRS
-      DO_OUTPUT(d1, title_width, "I2C address 0x30 (EDID block#)  present:", sbool(businfo->flags & I2C_BUS_ADDR_X30));
+      DO_OUTPUT(d1, title_width, "I2C address 0x30 (EDID block#) responsive:",
+            trival_repr(businfo->x30_responsive));
+      // DO_OUTPUT(d1, title_width, "I2C address 0x30 (EDID block#)  present:", sbool(businfo->flags & I2C_BUS_ADDR_X30));
 // #endif
       DO_OUTPUT(d1, title_width, "EDID exists:",  sbool(businfo->flags & I2C_BUS_HAS_EDID));
       // Under --skip-ddc-checks the x37 probe is not performed and I2C_BUS_ADDR_X37 is
