@@ -50,7 +50,6 @@ extern bool      use_x37_detection_table;
 #define I2C_BUS_X50_EDID                 0x0200    ///< EDID was read using I2C
 #define I2C_BUS_HAS_EDID                 (I2C_BUS_SYSFS_EDID | I2C_BUS_X50_EDID)
 #define I2C_BUS_ADDR_X37                 0x0400    ///< detected I2C bus address 0x37
-#define I2C_BUS_ADDR_X30                 0x0800    ///< detected write-only addr to specify EDID block number
 #define I2C_BUS_ACCESSIBLE               0x1000    ///< user could change permissions
 
 #define I2C_BUS_DDC_CHECKS_IGNORABLE     0x2000
@@ -84,6 +83,10 @@ struct {
    uint32_t         flags;              ///< I2C_BUS_* flags
    char *           driver;             ///< driver name
    int              open_errno;         ///< errno if open fails (!I2C_BUS_ACCESSIBLE)
+
+   // x30_responsive is set from the EDID read's x30 write rather than from
+   // a probe of its own.  When the EDID has come came from sysfs no write was
+   // issued, so nothing is known and x30_responsive remains unset.
    Optional_True_False
                     x30_responsive;     ///< does the segment pointer at x30 answer?
    char *           drm_connector_name; ///< from /sys

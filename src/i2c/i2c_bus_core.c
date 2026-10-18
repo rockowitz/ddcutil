@@ -1115,12 +1115,9 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
       DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &businfo->edid, &businfo->x30_responsive);
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
                     businfo->busno, psc_desc(ddcrc));
-      // Set from the EDID read's x30 write rather than from a probe of its own.  Where
-      // the EDID came from sysfs no write was issued, so nothing is known and the flag
-      // stays clear; it was previously set unconditionally, which made the "I2C address
-      // 0x30 present" line of detect --verbose always true.
-      if (businfo->x30_responsive == TRIVAL_TRUE)
-         businfo->flags |= I2C_BUS_ADDR_X30;
+      // x30_responsive is set here from the EDID read's x30 write rather than from
+      // a probe of its own.  When the EDID has come came from sysfs no write was
+      // issued, so nothing is known and x30_responsive remains unset.
 
       // NB It's quite possible that bus has no edid
       if (ddcrc == 0) {

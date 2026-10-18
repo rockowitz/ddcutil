@@ -42,7 +42,6 @@ Value_Name_Table i2c_bus_flags_table = {
       VN(I2C_BUS_ACCESSIBLE),
     //  VN(I2C_BUS_ADDR_0X50),
       VN(I2C_BUS_ADDR_X37),
-      VN(I2C_BUS_ADDR_X30),
 //      VN(I2C_BUS_EDP),
 //      VN(I2C_BUS_LVDS),
       VN(I2C_BUS_PROBED),
