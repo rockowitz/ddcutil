@@ -1468,6 +1468,10 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
       DO_OUTPUT(d, title_width, "DRM_connector:",
             (businfo->drm_connector_name) ? businfo->drm_connector_name : "Not found" );
    }
+   if (businfo->drm_connector_name && output_level >= DDCA_OL_VERBOSE) {
+       DO_OUTPUT(d, title_width, "DRM_connector found by:",
+             drm_connector_found_by_public_name(businfo->drm_connector_found_by) );
+   }
 
    if (output_level >= DDCA_OL_VERBOSE) {
       if (businfo->drm_connector_name) {
