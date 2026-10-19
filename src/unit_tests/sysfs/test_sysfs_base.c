@@ -49,6 +49,7 @@
 
 #include "sysfs/sysfs_base.h"
 #include "sysfs/sysfs_simple.h"
+#include "sysfs/sysfs_basic_drm_connector.h"
 
 static int total = 0;
 static int failed = 0;
@@ -275,6 +276,43 @@ static void test_nonexistent_busno_lookups(void) {
 }
 
 
+
+static Sys_Basic_Drm_Connector * make_basic_connector(
+      const char * connector_name, const char * adapter_name,
+      bool connected, bool has_edid)
+{
+   Sys_Basic_Drm_Connector * connector = calloc(1, sizeof(Sys_Basic_Drm_Connector));
+   connector->connector_name = g_strdup(connector_name);
+   connector->adapter_name = g_strdup(adapter_name);
+   connector->connected = connected;
+   if (has_edid) {
+      connector->edid_bytes = calloc(1, 128);
+      connector->edid_size = 128;
+   }
+   return connector;
+}
+
+static void test_unique_basic_drm_connector_by_adapter_name(void) {
+   GPtrArray * connectors = g_ptr_array_new_with_free_func(free_basic_drm_connector);
+   Sys_Basic_Drm_Connector * mst = make_basic_connector("card0-DP-7", "DPMST", true, true);
+   g_ptr_array_add(connectors, mst);
+   g_ptr_array_add(connectors, make_basic_connector("card0-DP-3", "AUX USBC3", true, true));
+   g_ptr_array_add(connectors, make_basic_connector("card0-DP-8", "DPMST", false, true));
+   CK(find_unique_basic_drm_connector_by_adapter_name(connectors, "DPMST") == mst);
+
+   g_ptr_array_add(connectors, make_basic_connector("card0-DP-9", "DPMST", true, true));
+   CK(find_unique_basic_drm_connector_by_adapter_name(connectors, "DPMST") == NULL);
+   CK(find_unique_basic_drm_connector_by_adapter_name(connectors, "AUX USBC3") ==
+      g_ptr_array_index(connectors, 1));
+   g_ptr_array_free(connectors, true);
+
+   connectors = g_ptr_array_new_with_free_func(free_basic_drm_connector);
+   g_ptr_array_add(connectors, make_basic_connector("card0-DP-7", "DPMST", true, false));
+   CK(find_unique_basic_drm_connector_by_adapter_name(connectors, "DPMST") == NULL);
+   g_ptr_array_free(connectors, true);
+}
+
+
 int main(int argc, char ** argv) {
    setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
 
@@ -288,6 +326,7 @@ int main(int argc, char ** argv) {
    test_is_sysfs_reliable_overrides();
    test_is_sysfs_reliable_for_busno_overrides();
    test_nonexistent_busno_lookups();
+   test_unique_basic_drm_connector_by_adapter_name();
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);

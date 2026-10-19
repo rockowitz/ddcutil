@@ -69,6 +69,7 @@ static const char * connector_found_by_description(DDCA_Drm_Connector_Found_By f
    case DDCA_DRM_CONNECTOR_NOT_FOUND:       return "not found or user specified";
    case DDCA_DRM_CONNECTOR_FOUND_BY_BUSNO:  return "I2C bus number";
    case DDCA_DRM_CONNECTOR_FOUND_BY_EDID:   return "EDID";
+   case DDCA_DRM_CONNECTOR_FOUND_BY_AUX_NAME: return "DisplayPort AUX name";
    }
    return "unrecognized";
 }

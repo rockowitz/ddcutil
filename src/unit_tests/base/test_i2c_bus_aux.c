@@ -52,6 +52,10 @@ static void test_name_lookups(void) {
    CK_STR(drm_connector_found_by_name(DRM_CONNECTOR_NOT_FOUND), "DRM_CONNECTOR_NOT_FOUND");
    CK_STR(drm_connector_found_by_name(DRM_CONNECTOR_FOUND_BY_BUSNO), "DRM_CONNECTOR_FOUND_BY_BUSNO");
    CK_STR(drm_connector_found_by_name(DRM_CONNECTOR_FOUND_BY_EDID), "DRM_CONNECTOR_FOUND_BY_EDID");
+   CK_STR(drm_connector_found_by_name(DRM_CONNECTOR_FOUND_BY_AUX_NAME),
+          "DRM_CONNECTOR_FOUND_BY_AUX_NAME");
+   CK_STR(drm_connector_found_by_public_name(DRM_CONNECTOR_FOUND_BY_AUX_NAME),
+          "DisplayPort AUX name");
 
    CK_STR(x37_detection_state_name(X37_Not_Recorded), "X37_Not_Recorded");
    CK_STR(x37_detection_state_name(X37_Not_Detected), "X37_Not_Detected");

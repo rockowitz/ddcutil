@@ -1,3 +1,9 @@
+## [Unreleased]
+
+#### Fixed
+
+- On docks where an i915 DPMST I2C adapter has no parseable EDID, use the sysfs EDID from its unique connected DPMST DRM connector. Ambiguous MST matches remain unassociated.
+
 ## [3.0.3] 2026-10-18
 
 This release contains performance improvements and a large number of relatively

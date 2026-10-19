@@ -37,6 +37,8 @@ bool             is_laptop_drm_connector_name(const char * connector_name);
 Found_Sys_Drm_Connector
                  find_sys_drm_connector_by_busno_or_edid(int busno, Byte * edid_bytes);
 Found_Sys_Drm_Connector
+                 find_sys_drm_connector_by_aux_name(const char * adapter_name);
+Found_Sys_Drm_Connector
                  find_sys_drm_connector_by_busno_or_edid_sysfs(int busno, Byte * edid_bytes);
 Found_Sys_Drm_Connector
                  find_sys_drm_connector_by_busno_or_edid_snapshot(int busno, Byte * edid_bytes);

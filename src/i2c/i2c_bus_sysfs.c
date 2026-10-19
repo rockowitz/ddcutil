@@ -521,6 +521,74 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid(
 }
 
 
+static Found_Sys_Drm_Connector find_unique_connector_by_adapter_name(
+      GPtrArray * connectors, const char * adapter_name)
+{
+   Found_Sys_Drm_Connector result = {
+      .connector_name = NULL,
+      .connector_id = 0,
+      .found_by = DRM_CONNECTOR_NOT_FOUND,
+   };
+   Sys_Basic_Drm_Connector * connector =
+         find_unique_basic_drm_connector_by_adapter_name(connectors, adapter_name);
+   if (connector) {
+      result.connector_name = strdup(connector->connector_name);
+      result.connector_id = connector->connector_id;
+      result.found_by = DRM_CONNECTOR_FOUND_BY_AUX_NAME;
+   }
+   return result;
+}
+
+
+/** Finds a unique connector whose AUX/I2C adapter has the specified name.
+ *
+ *  Used for MST adapters, which do not publish a connector bus number.  A
+ *  repeated adapter name is not enough to identify a monitor; ambiguous names
+ *  are deliberately left unmatched.
+ */
+Found_Sys_Drm_Connector find_sys_drm_connector_by_aux_name(const char * adapter_name) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "adapter_name=%s",
+         adapter_name ? adapter_name : "(null)");
+
+   Found_Sys_Drm_Connector result;
+   if (connector_snapshot_active) {
+      result = find_unique_connector_by_adapter_name(connector_snapshot, adapter_name);
+      if (drm_connector_lookup_compare) {
+         GPtrArray * connectors = scan_basic_drm_connectors(-1);
+         Found_Sys_Drm_Connector alt =
+               find_unique_connector_by_adapter_name(connectors, adapter_name);
+         if (!streq(result.connector_name, alt.connector_name) ||
+             result.found_by != alt.found_by ||
+             result.connector_id != alt.connector_id)
+         {
+            DECORATED_SYSLOG(DDCA_SYSLOG_WARNING,
+                  "AUX-name connector lookup mismatch for %s."
+                  " Snapshot: %s, connector_id=%d."
+                  " Sysfs: %s, connector_id=%d.",
+                  adapter_name ? adapter_name : "(null)",
+                  result.connector_name ? result.connector_name : "NOT FOUND",
+                  result.connector_id,
+                  alt.connector_name ? alt.connector_name : "NOT FOUND",
+                  alt.connector_id);
+         }
+         free_found_sys_drm_connector_result_contents(alt);
+         free_basic_drm_connectors(connectors);
+      }
+   }
+   else {
+      GPtrArray * connectors = scan_basic_drm_connectors(-1);
+      result = find_unique_connector_by_adapter_name(connectors, adapter_name);
+      free_basic_drm_connectors(connectors);
+   }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "found_by=%s, connector=%s",
+         drm_connector_found_by_name(result.found_by),
+         result.connector_name ? result.connector_name : "NOT FOUND");
+   return result;
+}
+
+
 /** Returns the names of DRM connectors whose sysfs edid attribute holds a
  *  placeholder EDID, i.e. one that is structurally valid but identifies no
  *  display.  See #is_placeholder_edid().
@@ -871,5 +939,6 @@ void init_i2c_bus_sysfs() {
    RTTI_ADD_FUNC(is_adapter_class_display_controller);
    RTTI_ADD_FUNC(is_valid_drm_connector_name);
    RTTI_ADD_FUNC(user_drm_connector_for_busno);
+   RTTI_ADD_FUNC(find_sys_drm_connector_by_aux_name);
    RTTI_ADD_FUNC(user_busno_for_drm_connector);
 }
