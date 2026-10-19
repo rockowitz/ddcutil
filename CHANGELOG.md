@@ -2,7 +2,11 @@
 
 #### Fixed
 
-- On docks where an i915 DPMST I2C adapter has no parseable EDID, use the sysfs EDID from its unique connected DPMST DRM connector. Ambiguous MST matches remain unassociated.
+- On i915 docks where a DPMST I2C adapter cannot provide a parseable EDID,
+  use a unique connected connector's sysfs EDID, or share an EDID identity
+  across connected DPMST connectors only when manufacturer, product code, and
+  serial agree. Keep I2C-bus entries separate; leave different identities
+  unresolved.
 
 ## [3.0.3] 2026-10-18
 

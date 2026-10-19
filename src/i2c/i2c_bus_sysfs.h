@@ -38,8 +38,8 @@ Found_Sys_Drm_Connector
                  find_sys_drm_connector_by_busno_or_edid(int busno, Byte * edid_bytes);
 Found_Sys_Drm_Connector
                  find_sys_drm_connector_by_aux_name(const char * adapter_name);
-Found_Sys_Drm_Connector
-                 find_sys_drm_connector_by_busno_or_edid_sysfs(int busno, Byte * edid_bytes);
+Parsed_Edid * get_shared_dpmst_edid_from_connectors(GPtrArray * connectors);
+Parsed_Edid * get_shared_dpmst_edid(void);
 Found_Sys_Drm_Connector
                  find_sys_drm_connector_by_busno_or_edid_snapshot(int busno, Byte * edid_bytes);
 void             free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec);

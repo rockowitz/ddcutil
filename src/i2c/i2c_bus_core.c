@@ -927,6 +927,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
    // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
    bool drm_card_connector_directories_exist = sysfs_connector_directories_exist();
+   bool dpmst_edid_from_group = false;
 
    businfo->flags |= I2C_BUS_PROBED;
    // open_errno describes the open attempted by this check, not by some earlier
@@ -1039,6 +1040,17 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
             }
             free_found_sys_drm_connector_result_contents(res);
          }
+         if (!businfo->drm_connector_name && is_mst &&
+             try_get_edid_from_sysfs_first &&
+             (businfo->flags & I2C_BUS_SYSFS_KNOWN_RELIABLE) &&
+             !businfo->edid)
+         {
+            businfo->edid = get_shared_dpmst_edid();
+            if (businfo->edid) {
+               businfo->flags |= I2C_BUS_SYSFS_EDID;
+               dpmst_edid_from_group = true;
+            }
+         }
 
 
          // Still no connector, and none was supplied by the user.  Same rule,
@@ -1075,7 +1087,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    }
 
    // *** Possibly try to get the EDID from sysfs
-   bool checked_connector_for_edid = false;
+   bool checked_connector_for_edid = dpmst_edid_from_group;
    if (businfo->drm_connector_name) {   // found by busno, AUX name, or user
       // Bus-number and AUX-name associations identify a sysfs connector.  A
       // user-supplied association does not: the user selected it precisely

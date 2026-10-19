@@ -611,8 +611,13 @@ record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "edid_use_records=%p, dref=%s", edid_use_records, dref_repr_t(dref));
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       I2C_Bus_Info * binfo = (I2C_Bus_Info *) dref->detail;
+      bool shared_dpmst_edid =
+            binfo->drm_connector_found_by == DRM_CONNECTOR_NOT_FOUND &&
+            !binfo->drm_connector_name &&
+            (binfo->flags & I2C_BUS_SYSFS_EDID);
       if (binfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_EDID ||
-          binfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_AUX_NAME) {
+          binfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_AUX_NAME ||
+          shared_dpmst_edid) {
          EDID_Use_Record * cur = get_edid_use_record(edid_use_records, binfo->edid->bytes);
          cur->bus_numbers = bs256_insert(cur->bus_numbers, binfo->busno);
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updated bus list %s for edid %s",
