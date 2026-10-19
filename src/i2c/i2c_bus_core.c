@@ -1155,10 +1155,13 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
       }
    }
 
-   // If there's an EDID on the bus and we don't yet have the connector name
-   // based on a busno match or user busno-connector match, try EDID match
-
-   if (!businfo->drm_connector_name && businfo->edid && drm_card_connector_directories_exist) {
+   // A shared DPMST EDID identifies the monitor but cannot identify which
+   // connector owns this bus; leave that association unset.
+   if (!dpmst_edid_from_group &&
+       !businfo->drm_connector_name &&
+       businfo->edid &&
+       drm_card_connector_directories_exist)
+   {
       set_connector_for_businfo_using_edid(businfo);
    }
 
