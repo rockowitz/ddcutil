@@ -1,3 +1,99 @@
+## [3.0.3] 2026-10-18
+
+This release contains performance improvements and a large number of relatively
+minor bug fixes forspecific situations.
+
+#### Added
+
+- Command **ddcutil settings** is shorthand for **ddcutil noop -settings**. 
+
+#### Changed 
+.
+- Watch mode xevent now works on wayland (had been disabled), but must be
+  explicitly requested using ***--watch-mode xevent***.
+- Recognize a placeholder EDID, which is structurally valid but identifies
+  no display. Seen on a Nvidia DisplayPort connector, where the sysfs edid
+  attribute carries the driver's own manufacturer id, no product code, no
+  serial number and no timing descriptors. A drm card-connector whose EDID
+  attribute is a placeholder cannot be matched by EDID to a /dev/i2c bus. 
+  Failure messsages report any such EDID.
+- Before reading the EDID over /dev/i2c, write 0 to slave address x30, the
+  E-DDC segment pointer, so that the read starts at EDID segment 0 whatever
+  the segment pointer's prior state.  The first write to slave address x30 
+  also serves as a test of whether slave address x30 is responsive. If not,
+  later bus checks which read the EDID do not attempt to write 0 to slave
+  address x30. Command **detect --verbose** line "I2C address 0x30 (EDID 
+  block#) responsive" now reports whether that write succeeded.  If the EDID
+  was obtained from sysfs, no write was tried made and the line reports
+  Not Set.  Issue #626.
+- Help message for option ***--disable-mmid*** includes the string 
+  "(Deprecated, use --disable-mmid)"
+
+#### Fixed
+
+- Slow performance  Issue #634.
+- The syslog level specified on **ddca_init2()** was overridden by the
+  libddcutil default (DDCA_Syslog_Notice).  Pull Request #650.
+- An argument of type LOG_INFO was passed when DDCA_Syslog_Info was required,
+  causing information messages to be written to the syslog as warnings.
+  Pull Request #649.
+- Report valid MST phantom displays so that callers renumber them. 
+  Pull Request 643, 
+- Build systemd/dbus tests only when libddcutil is built with them enabled. 
+  Pull Request #638.
+- Displays connected to a System on Chip (SOC) devices and other platform
+  devices, e.g. DisplayLink/evdi, were not detected. Pull Requests #619, #649.
+- Back out use of combined I2C_RDWR transaction when reading the EDID. 
+  Caused severe performance problems with driver amdgpu when trying to read EDID 
+  from /dev/i2c devices that have none. Issue #634.
+- ddcutil not detecting DP monitors where the bus number of the /dev/i2c device
+  communicating with the monitor is the sysfs base bus number, i.e. the 
+  ddc/i2c-dev/i2c-N atribute of the card-connector directory, not the one given
+  in the i2c-N attibute of the sysfs card-connector directory. Issue #648.
+- SIGSEGV when a DRM card's sysfs entry is preset but unreadable (blocked, not
+  removed GPU)  Issue #641.
+- Function str_to_long() could fail with values too large to be represented on
+  32 bit system. Pull Request #651.
+- Tracing an API function caused a segfault.
+- Eliminated double EDID reads during initializatoin, improving performance
+  Issue #626.
+- Change address probe for X37 to a 0 length write. Probing with a 1 byte write  
+  caused a subsequent setvcp failure when when ***--skip-ddc-checks*** was 
+  specified. Issue #636, "Set VCP write is ignored on an LG display
+  when initial DDC checks are skipped".
+- No way of probing an I2C address is correct on every adapter tested, and the
+  ways of failing are all different. But the cases line up favorably. Every 
+  native-DDC bus, i.e. one with dedicated wires for the I2C bus, when probed 
+  properly discriminates between one where slave address is responsive and one 
+  where it is hot. The bus type on which a probe of slave address x37 cannot 
+  discriminate is DisplayPort.  Probes of most slave addressses, including x37,
+  are always responsive. (See the output of command i2cdetect.)
+  So on DisplayPort the initial screen for DDC by checking x37 responsiveness 
+  always succeeds. However, this at worst impacts performance. DisplayPort 
+  displays are recent enough that they almost without exception implement 
+  DDC/CI (unless it has been disabled). If the x37 screen is passed but the
+  monitor does not support DDC, that will be caught with later tests. 
+  Issue #626.
+- Option ***--skip-ddc-checks*** now ignores check of x37 as well as DDC
+  communictaion tests.  Issue #626.
+- Build failure with configure option ***--disable-usb***. Pull Request #636.
+- Add missing otherwise implicit include "display_lock.h" to ddc_displays.c. 
+  Failed to compile when ddcutil was built without USB support. 
+  Pull Request #636.
+- Build systemd/dbus tests only when support for systemd/dbud enabled in build.
+  Issue #638.
+- Eliminate unneeded syslog message and traced function stack in 
+  io2c_ioctl_reader1() which were mistaken for an error. Issue #637.
+- Resolve DDCA_Display_Ref to Display_Ref by lookup rather than casting in 
+  functions ddci_report_display_info(), dbgrpt_display_info().  The bug was 
+  encountered only when tracing.
+- Assertion failure in **dw_add_display_by_businfo()** when a monitor
+  disconnected while being added by display change detection and so was not 
+  marked removed, i.e it went away between the bus probe and the open. The
+  assertion was removed; the display reference is discarded whether or not it
+  is marked. Pull Request #654. 
+
+
 ## [3.0.2] 2026-09-23
 
 #### Added
