@@ -392,6 +392,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_CMDFLAG("async I2C bus checks",    CMD_FLAG_ASYNC_I2C_CHECK,                          d1);
       RPT_CMDFLAG("enable_flock",            CMD_FLAG_FLOCK,                                    d1);
       RPT_CMDFLAG("try get edid from sysfs", CMD_FLAG_TRY_GET_EDID_FROM_SYSFS,                  d1);
+      RPT_CMDFLAG("sysfs edid for bus-drm-connector", CMD_FLAG_BUS_DRM_CONNECTOR_EDID,          d1);
       rpt_nl();
       rpt_label(depth, "Unsorted");
 

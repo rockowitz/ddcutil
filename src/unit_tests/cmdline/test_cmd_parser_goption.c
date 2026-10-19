@@ -317,6 +317,39 @@ static void test_verify_noverify_flags(void) {
 }
 
 
+/** --bus-drm-connector-edid is off by default, including when a pairing is
+ *  given with --bus-drm-connector: using the connector's sysfs EDID for a user
+ *  supplied pairing is a separate statement the user has to make.
+ */
+static void test_bus_drm_connector_edid_flag(void) {
+   char * argv[] = {"ddcutil", "detect", NULL};
+   Parsed_Cmd * pc = parse(argv, 2, NULL);
+   CK(pc != NULL);
+   if (pc) { CK(!(pc->flags & CMD_FLAG_BUS_DRM_CONNECTOR_EDID)); free_parsed_cmd(pc); }
+
+   char * argv2[] = {"ddcutil", "--bus-drm-connector", "5 card1-DP-3", "detect", NULL};
+   pc = parse(argv2, 4, NULL);
+   CK(pc != NULL);
+   if (pc) {
+      CK(!(pc->flags & CMD_FLAG_BUS_DRM_CONNECTOR_EDID));
+      CK(pc->bus_drm_connectors != NULL);
+      free_parsed_cmd(pc);
+   }
+
+   char * argv3[] = {"ddcutil", "--bus-drm-connector", "5 card1-DP-3",
+                     "--bus-drm-connector-edid", "detect", NULL};
+   pc = parse(argv3, 5, NULL);
+   CK(pc != NULL);
+   if (pc) {
+      CK(pc->flags & CMD_FLAG_BUS_DRM_CONNECTOR_EDID);
+      CK(pc->bus_drm_connectors != NULL);
+      // it does not disturb the general sysfs EDID default
+      CK(pc->flags & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS);
+      free_parsed_cmd(pc);
+   }
+}
+
+
 static void test_removed_single_ioctl_options(void) {
    // --enable-single-ioctl-edid-read and --disable-single-ioctl-edid-read were
    // removed along with the OPTION_SINGLE_IOCTL plumbing.  The single ioctl EDID
@@ -380,6 +413,7 @@ int main(int argc, char ** argv) {
    test_setvcp_args();
    test_display_selection();
    test_verify_noverify_flags();
+   test_bus_drm_connector_edid_flag();
    test_removed_single_ioctl_options();
    test_stats_option();
    test_parse_syslog_level();
