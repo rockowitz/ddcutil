@@ -265,59 +265,6 @@ void free_found_sys_drm_connector_result_contents(Found_Sys_Drm_Connector rec) {
    free(rec.connector_name);
 }
 
-/*
-  claude analysis of sysfs drm connector attributes that identify the /dev/i2c-N bus, by driver
-
-Surveyed live on banner (i915), darksand (amdgpu + mgag200) and ritter (i915 +
-nvidia proprietary).
-
-Two ways a connector names its bus:
-  - ddc      symlink to the i2c adapter; N is also in ddc/i2c-dev/i2c-N/
-  - i2c-N    subdirectory of the connector itself (DP only), containing
-             i2c-N/i2c-dev/i2c-N
-
-Not separate routes:
-  - drm_dp_aux0/device is a link back to the connector (-> ../../cardN-DP-M),
-    so drm_dp_aux0/device/ddc is the same file as ddc.  drm_dp_aux0 itself has
-    only dev, name, power, subsystem, uevent -- no bus number; it just marks
-    the connector as DisplayPort.
-  - There is no ddc_i2c-dev attribute.  That name is ddcutil's
-    ddc_i2c_dev_name / ddc_i2c_dev_dev fields (src/sysfs/sysfs_i2c_sys_info.c),
-    read from ddc/i2c-dev/<N>/name and dev.
-
-Driver / connector    ddc symlink                       i2c-N subdir          drm_dp_aux*
---------------------  --------------------------------  --------------------  -----------
-i915, DP              ddc -> i2c-6 (connector's child)  yes, SAME N as ddc    yes
-i915, HDMI            ddc -> ../../../i2c-2 (PCI child, no                    no
-                      GMBUS)
-amdgpu, DP            ddc -> ../../../i2c-3             yes, DIFFERENT N      yes
-                      "AMDGPU DM i2c hw bus 0"          i2c-6 "AMDGPU DM aux
-                                                        hw bus 0"
-amdgpu, HDMI/DVI      ddc -> ../../../i2c-N             no                    no
-mgag200, VGA          ddc -> ../../../i2c-0             no                    no
-nvidia (proprietary)  none                              none                  none
-
-Examples:
-  banner   DP-1 ddc->i2c-6, subdir i2c-6, name "AUX A/DDI A/PHY A";
-           DP-2 -> i2c-7, DP-3 -> i2c-8; HDMI-A-1..4 -> i2c-1..4
-  ritter   i915 DP-1 ddc->i2c-16, subdir i2c-16 ("AUX USBC2/DDI TC2/PHY C");
-           HDMI-A-1/2 -> i2c-11/12
-  darksand card2-DP-1 ddc->i2c-3, subdir i2c-6; DVI-D-1 -> i2c-5;
-           HDMI-A-1 -> i2c-4; card1-VGA-1 (mgag200) -> i2c-0
-
-Points of note:
-  1. amdgpu DP has two different buses: ddc gives the DM i2c hw bus, the i2c-N
-     subdir gives the AUX bus.  On i915 the two agree.  Code assuming they
-     always match gets one wrong on amdgpu.
-  2. nvidia connector dirs contain only connector_id, device, dpms, edid,
-     enabled, modes, power, status, subsystem, uevent.  Its adapters
-     (i2c-17..23, "NVIDIA i2c adapter N at 1:00.0") are children of PCI device
-     0000:01:00.0 and no connector links to them; connector-to-bus matching
-     there needs an EDID comparison.
-  3. The form of the ddc target tells where the adapter lives: bare "i2c-N"
-     means a child of the connector (i915 DP AUX); "../../../i2c-N" means a
-     child of the PCI device.
-*/
 
 /** Locates a drm-card-connector directory using either an
  *  I2C bus number or EDID value.
