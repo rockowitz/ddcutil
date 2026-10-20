@@ -927,6 +927,7 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sysfs_name = |%s|, dev_name = |%s|", sysfs_name, dev_name);
    // int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
    bool drm_card_connector_directories_exist = sysfs_connector_directories_exist();
+   bool dpmst_edid_from_group = false;
 
    businfo->flags |= I2C_BUS_PROBED;
    // open_errno describes the open attempted by this check, not by some earlier
@@ -991,6 +992,9 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
    // that reason.  A NULL name means "not yet discovered", not "stale", so a
    // bus whose connector was not found the first time is retried.
    if (!businfo->drm_connector_name) {
+      char * busname = get_i2c_device_sysfs_name(businfo->busno);
+      bool is_mst = streq(busname, "DPMST");
+      free(busname);
       //assert(businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_CHECKED ||
       //       businfo->drm_connector_found_by == DRM_CONNECTOR_NOT_FOUND);
       businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_CHECKED;
@@ -1024,6 +1028,30 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
          if (!businfo->drm_connector_name) {
             set_connector_for_businfo_using_user_bus_connector_table(businfo);
          }   
+         // MST I2C adapters have no connector bus-number link.  i915 exposes
+         // the matching name on the DRM connector's AUX node instead.
+         if (!businfo->drm_connector_name && is_mst) {
+            Found_Sys_Drm_Connector res = find_sys_drm_connector_by_aux_name("DPMST");
+            if (res.connector_name) {
+               businfo->drm_connector_name = res.connector_name;
+               res.connector_name = NULL;
+               businfo->drm_connector_found_by = res.found_by;
+               businfo->drm_connector_id = res.connector_id;
+            }
+            free_found_sys_drm_connector_result_contents(res);
+         }
+         if (!businfo->drm_connector_name && is_mst &&
+             try_get_edid_from_sysfs_first &&
+             (businfo->flags & I2C_BUS_SYSFS_KNOWN_RELIABLE) &&
+             !businfo->edid)
+         {
+            businfo->edid = get_shared_dpmst_edid();
+            if (businfo->edid) {
+               businfo->flags |= I2C_BUS_SYSFS_EDID;
+               dpmst_edid_from_group = true;
+            }
+         }
+
 
          // Still no connector, and none was supplied by the user.  Same rule,
          // and same reasoning, as in i2c_edid_exists(): where the driver
@@ -1044,34 +1072,32 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
          // cheap to probe anyway, never on these.
          if (!businfo->drm_connector_name &&
              edid_exists_skips_unmapped_bus &&
-             !(businfo->flags & I2C_BUS_DISPLAYLINK))
+             !(businfo->flags & I2C_BUS_DISPLAYLINK) &&
+             !is_mst &&
+             (businfo->flags & I2C_BUS_SYSFS_KNOWN_RELIABLE) &&
+             any_drm_connector_has_busno())
          {
-            char * busname = get_i2c_device_sysfs_name(businfo->busno);
-            bool is_mst = streq(busname, "DPMST");     // streq() handles NULL
-            free(busname);
-            if (!is_mst &&
-                (businfo->flags & I2C_BUS_SYSFS_KNOWN_RELIABLE) &&
-                any_drm_connector_has_busno())
-            {
-               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                     "No DRM connector serves bus %d and this driver publishes the "
-                     "mapping, not opening device", businfo->busno);
-               businfo->flags |= I2C_BUS_INITIAL_CHECK_DONE;
-               goto bye;
-            }
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "No DRM connector serves bus %d and this driver publishes the "
+                  "mapping, not opening device", businfo->busno);
+            businfo->flags |= I2C_BUS_INITIAL_CHECK_DONE;
+            goto bye;
          }
       }
    }
 
    // *** Possibly try to get the EDID from sysfs
-   bool checked_connector_for_edid = false;
-   if (businfo->drm_connector_name)  {   // i.e. DRM_CONNECTOR_FOUND_BY_BUSNO or _BY_USER
-      // The sysfs shortcut is taken only if the connector was found by busno.
-      // If the association was supplied by the user, it is because sysfs does not
-      // properly record it for this bus, so read the EDID from the bus itself.
+   bool checked_connector_for_edid = dpmst_edid_from_group;
+   if (businfo->drm_connector_name) {   // found by busno, AUX name, or user
+      // Bus-number and AUX-name associations identify a sysfs connector.  A
+      // user-supplied association does not: the user selected it precisely
+      // because sysfs cannot map that bus.
+      bool connector_mapping_available =
+            businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO ||
+            businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_AUX_NAME;
       if ((try_get_edid_from_sysfs_first &&
             businfo->flags&I2C_BUS_SYSFS_KNOWN_RELIABLE &&
-            businfo->drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_BUSNO)  ||
+            connector_mapping_available) ||
             (businfo->flags&I2C_BUS_DISPLAYLINK))   // X50 can't be read for DisplayLink, must use sysfs
       {
          Parsed_Edid * edid = get_parsed_edid_for_businfo_using_sysfs(businfo);
@@ -1129,10 +1155,13 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
       }
    }
 
-   // If there's an EDID on the bus and we don't yet have the connector name
-   // based on a busno match or user busno-connector match, try EDID match
-
-   if (!businfo->drm_connector_name && businfo->edid && drm_card_connector_directories_exist) {
+   // A shared DPMST EDID identifies the monitor but cannot identify which
+   // connector owns this bus; leave that association unset.
+   if (!dpmst_edid_from_group &&
+       !businfo->drm_connector_name &&
+       businfo->edid &&
+       drm_card_connector_directories_exist)
+   {
       set_connector_for_businfo_using_edid(businfo);
    }
 

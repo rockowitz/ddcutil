@@ -42,6 +42,7 @@ void free_basic_drm_connector(void * connector) {
    if (connector) {
       Sys_Basic_Drm_Connector * cur = connector;
       free(cur->connector_name);
+      free(cur->adapter_name);
       free(cur->edid_bytes);
       free(cur);
    }
@@ -99,6 +100,14 @@ static Sys_Basic_Drm_Connector * one_basic_drm_connector0(
    cur->base_busno = cbn->base_busno;
    if (cur->connector_id < 0)
       cur->connector_id = cbn->connector_id;
+   cur->adapter_name = cbn->name;
+   cbn->name = NULL;
+   if (streq(cur->adapter_name, "DPMST")) {
+      char * status = NULL;
+      RPT_ATTR_TEXT(d0, &status, dirname, fn, "status");
+      cur->connected = streq(status, "connected");
+      free(status);
+   }
    free_connector_bus_numbers(cbn);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "%s: i2c_busno=%d, connector_id=%d, edid_size=%d",
@@ -202,6 +211,30 @@ Sys_Basic_Drm_Connector * find_basic_drm_connector_by_edid(
    return result;
 }
 
+/** Finds the unique connected connector with the specified adapter name.
+ *
+ *  Multiple DPMST connectors have the same adapter name.  An ambiguous match,
+ *  or a connected connector without an EDID, is rejected rather than
+ *  associated with an arbitrary monitor.
+ */
+Sys_Basic_Drm_Connector * find_unique_basic_drm_connector_by_adapter_name(
+      GPtrArray * connectors, const char * adapter_name)
+{
+   Sys_Basic_Drm_Connector * result = NULL;
+   if (!connectors || !adapter_name)
+      return NULL;
+
+   for (int ndx = 0; ndx < connectors->len; ndx++) {
+      Sys_Basic_Drm_Connector * cur = g_ptr_array_index(connectors, ndx);
+      if (!streq(cur->adapter_name, adapter_name) || !cur->connected)
+         continue;
+      if (!cur->edid_bytes || cur->edid_size < 128 || result)
+         return NULL;
+      result = cur;
+   }
+   return result;
+}
+
 
 void dbgrpt_basic_drm_connector(Sys_Basic_Drm_Connector * connector, int depth) {
    if (!connector) {
@@ -215,6 +248,8 @@ void dbgrpt_basic_drm_connector(Sys_Basic_Drm_Connector * connector, int depth) 
    rpt_vstring(depth+1, "base_busno:      %d", connector->base_busno);
    // Reported as bytes rather than as a parsed summary: the summary helpers
    // live in the i2c layer, which sysfs must not depend on.
+   rpt_vstring(depth+1, "adapter_name:    %s", connector->adapter_name);
+   rpt_vstring(depth+1, "connected:       %s", sbool(connector->connected));
    if (connector->edid_bytes)
       rpt_vstring(depth+1, "edid:            %d bytes, starting %s",
             (int) connector->edid_size, hexstring_t(connector->edid_bytes, 8));

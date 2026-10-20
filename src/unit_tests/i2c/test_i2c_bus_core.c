@@ -48,6 +48,7 @@
 #include "util/error_info.h"
 #include "sysfs/sysfs_simple.h"              // sysfs_is_ignorable_i2c_device
 #include "i2c/i2c_bus_sysfs.h"
+#include "sysfs/sysfs_basic_drm_connector.h"
 
 static int total = 0;
 static int failed = 0;
@@ -253,6 +254,100 @@ static void test_i2c_edid_exists(void) {
    CK(!eacces);   // bus doesn't exist, so no open was even attempted
 }
 
+static Byte * make_test_edid(const char * serial, Byte input) {
+   static const Byte header[] = { 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00 };
+   Byte * edid = calloc(1, 128);
+   memcpy(edid, header, sizeof(header));
+   edid[8] = 0x5a;    // VSC
+   edid[9] = 0x63;
+   edid[10] = 0x3a;
+   edid[11] = 0x3c;
+   edid[12] = 1;
+   edid[13] = 1;
+   edid[14] = 1;
+   edid[15] = 1;
+   edid[16] = 1;
+   edid[17] = 36;
+   edid[18] = 1;
+   edid[19] = 4;
+   edid[20] = input;
+
+   // Serial-number descriptor.
+   edid[57] = 0xff;
+   memset(&edid[59], ' ', 13);
+   size_t serial_length = strlen(serial);
+   if (serial_length > 12)
+      serial_length = 12;
+   memcpy(&edid[59], serial, serial_length);
+   edid[59 + serial_length] = 0x0a;
+
+   // Model-name descriptor.
+   edid[75] = 0xfc;
+   memset(&edid[77], ' ', 13);
+   memcpy(&edid[77], "XG270Q", 6);
+   edid[83] = 0x0a;
+
+   unsigned int sum = 0;
+   for (int ndx = 0; ndx < 127; ndx++)
+      sum += edid[ndx];
+   edid[127] = (Byte)((256 - (sum % 256)) % 256);
+   return edid;
+}
+
+
+static Sys_Basic_Drm_Connector * make_dpmst_connector(
+      const char * name, bool connected, const Byte * edid_bytes)
+{
+   Sys_Basic_Drm_Connector * connector = calloc(1, sizeof(Sys_Basic_Drm_Connector));
+   connector->connector_name = strdup(name);
+   connector->adapter_name = strdup("DPMST");
+   connector->connected = connected;
+   if (edid_bytes) {
+      connector->edid_bytes = malloc(128);
+      memcpy(connector->edid_bytes, edid_bytes, 128);
+      connector->edid_size = 128;
+   }
+   return connector;
+}
+
+
+static void test_shared_dpmst_edid_identity_group(void) {
+   Byte * dp_edid = make_test_edid("W70204900452", 0xb5);
+   Byte * hdmi_edid = make_test_edid("W70204900452", 0xa5);
+   CK(memcmp(dp_edid, hdmi_edid, 128) != 0);  // input-specific bytes may differ
+
+   GPtrArray * connectors = g_ptr_array_new_with_free_func(free_basic_drm_connector);
+   g_ptr_array_add(connectors, make_dpmst_connector("card0-DP-6", true, hdmi_edid));
+   g_ptr_array_add(connectors, make_dpmst_connector("card0-DP-7", true, dp_edid));
+   Parsed_Edid * shared = get_shared_dpmst_edid_from_connectors(connectors);
+   CK(shared != NULL);
+   if (shared) {
+      CK(strcmp(shared->mfg_id, "VSC") == 0);
+      CK_INT(shared->product_code, 0x3c3a);
+      CK(strcmp(shared->serial_ascii, "W70204900452") == 0);
+      free_parsed_edid(shared);
+   }
+   g_ptr_array_free(connectors, true);
+   free(dp_edid);
+   free(hdmi_edid);
+
+   Byte * first_edid = make_test_edid("SERIAL-0001", 0xb5);
+   Byte * other_edid = make_test_edid("SERIAL-0002", 0xa5);
+   connectors = g_ptr_array_new_with_free_func(free_basic_drm_connector);
+   g_ptr_array_add(connectors, make_dpmst_connector("card0-DP-6", true, first_edid));
+   g_ptr_array_add(connectors, make_dpmst_connector("card0-DP-7", true, other_edid));
+   CK(get_shared_dpmst_edid_from_connectors(connectors) == NULL);
+   g_ptr_array_free(connectors, true);
+   free(first_edid);
+   free(other_edid);
+   Byte * single_edid = make_test_edid("W70204900452", 0xb5);
+   connectors = g_ptr_array_new_with_free_func(free_basic_drm_connector);
+   g_ptr_array_add(connectors, make_dpmst_connector("card0-DP-6", true, single_edid));
+   CK(get_shared_dpmst_edid_from_connectors(connectors) == NULL);
+   g_ptr_array_free(connectors, true);
+   free(single_edid);
+}
+
 
 int main(int argc, char ** argv) {
    setvbuf(stdout, NULL, _IONBF, 0);   // so output survives a crash
@@ -261,6 +356,7 @@ int main(int argc, char ** argv) {
 
    RUN(test_is_valid_drm_connector_name);
    RUN(test_i2c_edid_exists);
+   RUN(test_shared_dpmst_edid_identity_group);
    RUN(test_detect_x37_new_all_switches);
    // i2c_open_bus()/i2c_close_bus() use the display lock table
    init_execution_stats();

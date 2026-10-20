@@ -91,11 +91,12 @@ char * i2c_interpret_bus_flags_t(uint16_t flags) {
 const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
    char * result = NULL;
    switch(found_by) {
-   case DRM_CONNECTOR_NOT_CHECKED:    result = "DRM_CONNECTOR_NOT_CHECKED";    break;
-   case DRM_CONNECTOR_NOT_FOUND:      result = "DRM_CONNECTOR_NOT_FOUND";      break;
-   case DRM_CONNECTOR_FOUND_BY_BUSNO: result = "DRM_CONNECTOR_FOUND_BY_BUSNO"; break;
-   case DRM_CONNECTOR_FOUND_BY_EDID:  result = "DRM_CONNECTOR_FOUND_BY_EDID";  break;
-   case DRM_CONNECTOR_FOUND_BY_USER:  result = "DRM_CONNECTOR_FOUND_BY_USER";  break;
+   case DRM_CONNECTOR_NOT_CHECKED:         result = "DRM_CONNECTOR_NOT_CHECKED"; break;
+   case DRM_CONNECTOR_NOT_FOUND:           result = "DRM_CONNECTOR_NOT_FOUND"; break;
+   case DRM_CONNECTOR_FOUND_BY_BUSNO:      result = "DRM_CONNECTOR_FOUND_BY_BUSNO"; break;
+   case DRM_CONNECTOR_FOUND_BY_EDID:       result = "DRM_CONNECTOR_FOUND_BY_EDID"; break;
+   case DRM_CONNECTOR_FOUND_BY_USER:       result = "DRM_CONNECTOR_FOUND_BY_USER"; break;
+   case DRM_CONNECTOR_FOUND_BY_AUX_NAME:   result = "DRM_CONNECTOR_FOUND_BY_AUX_NAME"; break;
    }
    return result;
 }
@@ -104,11 +105,12 @@ const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
 const char * drm_connector_found_by_public_name(Drm_Connector_Found_By found_by) {
    char * result = NULL;
    switch(found_by) {
-   case DRM_CONNECTOR_NOT_CHECKED:    result = "Not checked";    break;
-   case DRM_CONNECTOR_NOT_FOUND:      result = "Not found";      break;
-   case DRM_CONNECTOR_FOUND_BY_BUSNO: result = "I2C bus number"; break;
-   case DRM_CONNECTOR_FOUND_BY_EDID:  result = "EDID";           break;
-   case DRM_CONNECTOR_FOUND_BY_USER:  result = "User";           break;
+   case DRM_CONNECTOR_NOT_CHECKED:         result = "Not checked"; break;
+   case DRM_CONNECTOR_NOT_FOUND:           result = "Not found"; break;
+   case DRM_CONNECTOR_FOUND_BY_BUSNO:      result = "I2C bus number"; break;
+   case DRM_CONNECTOR_FOUND_BY_EDID:       result = "EDID"; break;
+   case DRM_CONNECTOR_FOUND_BY_USER:       result = "User"; break;
+   case DRM_CONNECTOR_FOUND_BY_AUX_NAME:   result = "DisplayPort AUX name"; break;
    }
    return result;
 }

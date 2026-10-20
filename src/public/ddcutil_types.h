@@ -351,6 +351,7 @@ typedef enum {
    DDCA_DRM_CONNECTOR_NOT_FOUND,        ///< also used if specified by user
    DDCA_DRM_CONNECTOR_FOUND_BY_BUSNO,
    DDCA_DRM_CONNECTOR_FOUND_BY_EDID,
+   DDCA_DRM_CONNECTOR_FOUND_BY_AUX_NAME, ///< uniquely matched DPMST AUX adapter name
 } DDCA_Drm_Connector_Found_By;
 
 
