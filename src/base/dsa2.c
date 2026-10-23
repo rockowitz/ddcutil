@@ -541,7 +541,10 @@ dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, Sleep_Multiplier multiplier) {
 
 
 /** Given a floating point multiplier value, return the index of the step
- *  with the greatest value less than the value specified.
+ *  with the smallest value greater than or equal to the value specified,
+ *  i.e. the multiplier is rounded up to a step.  The search starts at
+ *  #dsa2_step_floor, so the result is never below the floor.  A multiplier
+ *  greater than the last step's value returns the last step.
  *
  *  @param  multiplier  floating point multiplier value
  *  @return step index
