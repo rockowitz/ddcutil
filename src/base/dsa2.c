@@ -1016,6 +1016,14 @@ DDCA_Sleep_Multiplier dsa2_get_minimum_multiplier() {
 }
 
 
+/** Returns the largest multiplier the dynamic sleep algorithm can use,
+ *  i.e. the value of the last step.
+ */
+DDCA_Sleep_Multiplier dsa2_get_maximum_multiplier() {
+   return dsa2_step_to_multiplier(step_last);
+}
+
+
 /** Gets the current sleep multiplier value for a device
  *
  *  Converts the internal step number for the current retry loop

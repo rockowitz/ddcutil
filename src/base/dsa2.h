@@ -28,6 +28,8 @@ DDCA_Sleep_Multiplier
                  dsa2_step_to_multiplier(int step);
 DDCA_Sleep_Multiplier
                  dsa2_get_minimum_multiplier();
+DDCA_Sleep_Multiplier
+                 dsa2_get_maximum_multiplier();
 struct Results_Table *
                  dsa2_get_results_table_by_busno(int busno, bool create_if_not_found);
 bool             dsa2_is_from_cache(struct Results_Table * dpath);
