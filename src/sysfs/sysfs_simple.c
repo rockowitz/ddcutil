@@ -63,21 +63,23 @@ void free_connector_bus_numbers(Connector_Bus_Numbers * cbn) {
 
 
 /*
-  claude analysis of sysfs drm connector attributes that identify the /dev/i2c-N bus, by driver
+  claude analysis of sysfs drm connector attributes that identify the /dev/i2c-N bus,
+  by driver, including DP MST and the name attributes (2026-10-18, revised 2026-10-21)
 
-Surveyed live on banner (i915), darksand (amdgpu + mgag200) and ritter (i915 +
-nvidia proprietary).
+Surveyed live on banner (i915; MST hub attached 2026-10-20), darksand (amdgpu
++ mgag200; MST hub attached 2026-10-19) and ritter (i915 + nvidia proprietary
+580.178.04; MST hub attached 2026-10-19).  The same hub moved between them.
 
 Two ways a connector names its bus:
   - ddc      symlink to the i2c adapter; N is also in ddc/i2c-dev/i2c-N/
-  - i2c-N    subdirectory of the connector itself (DP only), containing
+  - i2c-N    subdirectory of the connector itself (DP SST only), containing
              i2c-N/i2c-dev/i2c-N
 
 Not separate routes:
   - drm_dp_aux0/device is a link back to the connector (-> ../../cardN-DP-M),
     so drm_dp_aux0/device/ddc is the same file as ddc.  drm_dp_aux0 itself has
-    only dev, name, power, subsystem, uevent -- no bus number; it just marks
-    the connector as DisplayPort.
+    only dev, name, power, subsystem, uevent -- no bus number.  Its name
+    attribute is the useful part (see below).
   - There is no ddc_i2c-dev attribute.  That name is ddcutil's
     ddc_i2c_dev_name / ddc_i2c_dev_dev fields (src/sysfs/sysfs_i2c_sys_info.c),
     read from ddc/i2c-dev/<N>/name and dev.
@@ -87,33 +89,233 @@ Driver / connector    ddc symlink                       i2c-N subdir          dr
 i915, DP              ddc -> i2c-6 (connector's child)  yes, SAME N as ddc    yes
 i915, HDMI            ddc -> ../../../i2c-2 (PCI child, no                    no
                       GMBUS)
+i915, DP MST          none                              none                  yes
+  (downstream ports
+  of the hub)
 amdgpu, DP            ddc -> ../../../i2c-3             yes, DIFFERENT N      yes
-                      "AMDGPU DM i2c hw bus 0"          i2c-6 "AMDGPU DM aux
-                                                        hw bus 0"
+amdgpu, DP MST        none                              none                  yes
+  (downstream ports
+  of the hub)
 amdgpu, HDMI/DVI      ddc -> ../../../i2c-N             no                    no
 mgag200, VGA          ddc -> ../../../i2c-0             no                    no
 nvidia (proprietary)  none                              none                  none
+nvidia, DP MST        none                              none                  none
+  (downstream ports
+  of the hub)
+
+MST i2c adapter (the bus for a display behind the hub):
+  i915     yes, "DPMST", child of the PCI device        banner i2c-9, i2c-10
+                                                        (one per connected port)
+  amdgpu   yes, "DPMST", child of the PCI device        darksand i2c-7, i2c-8
+                                                        (one per connected port)
+  nvidia   none                                         ritter
+
+Which bus actually answers (tested 2026-10-20): 128 byte EDID read at x50
+after writing offset 0, raw /dev/i2c ioctls, compared with the connectors'
+sysfs EDIDs; DDC/CI from ddcutil 6cae16c6e (detect valid display, getvcp 10).
+
+Driver / connector  Bus via ddc       Bus via i2c-N     EDID at x50                 DDC/CI
+------------------  ----------------  ----------------  --------------------------  --------------------
+i915 DP (SST)       i2c-6 (same bus)  i2c-6             yes (P3421W direct on DP-1, yes, valid display
+                                                        earlier 10-20)
+i915 HDMI           i2c-2 GMBUS       --                yes (banner U3818DW)        yes
+i915 DP MST         --                --                yes, on DPMST i2c-9 and     yes, both valid
+                                                        i2c-10; each matches one
+                                                        MST connector's EDID
+amdgpu DP (SST)     i2c-3 "DM i2c     i2c-6 "DM aux     ddc bus: NO -- EIO, every   ddc bus: NO -- getvcp
+                    hw bus 0"         hw bus 0"         try; subdir bus: yes        EIO; subdir bus: yes
+amdgpu DP MST       --                --                yes, on DPMST i2c-7 (10-19) yes, valid display
+                                                        and (10-20, two displays)   (10-20: both valid,
+                                                        i2c-7 and i2c-8, each       then both failed:
+                                                        matching one MST connector  hub can't handle two
+                                                        -- then both EIO: hub       monitors on darksand)
+                                                        limitation, see below
+amdgpu DVI          i2c-5             --                yes (HP L2245w)             yes
+amdgpu HDMI         i2c-4             --                (disconnected; EIO)         not tested
+mgag200 VGA         i2c-0             --                no -- ENXIO; the sysfs EDID not tested
+                                                        is empty too, so nothing
+                                                        is answering at x50 there
+nvidia DVI, DP      --                --                yes (10-21):                yes, valid,
+                                                        i2c-19 adapter 4 (DVI-D-1,  "found by: EDID"
+                                                        LP1965), i2c-21 adapter 7   (10-20)
+                                                        (DP-2, LS34A650U), i2c-23
+                                                        adapter 9 (DP-7, U2719DX);
+                                                        each matches its
+                                                        connector's sysfs EDID
+nvidia DP MST       --                --                no adapter (10-19)          no
+
+Answer for amdgpu DP: the EDID (and DDC/CI) is readable only on the bus
+named by the i2c-N subdirectory -- the AUX bus, "AMDGPU DM aux hw bus 0".
+The bus the ddc symlink points to, "AMDGPU DM i2c hw bus 0", fails every
+EDID read with EIO and every DDC exchange with EIO.  So on amdgpu DP the ddc
+link is the wrong bus for both EDID and DDC; on i915 the question does not
+arise because ddc and i2c-N are the same bus.
+
+Side observations from the same runs:
+  - ddcutil detect on darksand lists the i2c-3 bus as an "Invalid display"
+    for card2-DP-1 (HP ZR2740w, "found by: I2C bus number") in addition to
+    the valid display on i2c-6.  The EDID it shows for i2c-3 must come from
+    sysfs, since the bus itself cannot be read: a phantom of the real
+    display.  Not investigated further.
+  - banner's empty i915 AUX buses fail differently: i2c-6 and i2c-7 ENXIO,
+    i2c-8 EREMOTEIO.  i2c-8 is DP-3's AUX; an AUX channel that reaches a
+    device which then NAKs at x50 fits the hub being on DP-3, but this is
+    suggestive only.
+  - ritter: with the hub gone, the U2719DX is connected directly again but as
+    card1-DP-7 on i2c-21.  On 10-19, before the hub, the DP display (model
+    not recorded then, presumably the same U2719DX) was card1-DP-4 on
+    i2c-22.  If so, on nvidia the connector name and bus can change on a
+    replug; ddcutil matches by EDID either way.
+
+darksand, 2026-10-20, hub back with two displays (attached 16:48 per the
+kernel log, "DM_MST: DP12, 4-lane link detected"):
+  - sysfs: card2-DP-1 (upstream) disconnected but keeps ddc->i2c-3, subdir
+    i2c-6, drm_dp_aux0.  MST connectors DP-2..DP-5, drm_dp_aux1..4 "DPMST";
+    DP-4 (NEC P241W) and DP-5 (HP ZR2740w) connected.  Two adapters, i2c-7
+    and i2c-8, both "DPMST", both children of PCI 0000:06:00.0 -- the same
+    picture as banner with two displays: one MST adapter per connected port.
+  - First pass (~16:50): raw EDID read OK on i2c-7 (= DP-4, P241W) and i2c-8
+    (= DP-5, ZR2740w).  ddcutil detect: three valid displays, i2c-7 and
+    i2c-8 "found by: EDID".  i2c-6 (DP-1's AUX, the hub's upstream link) now
+    fails with EREMOTEIO -- the same error banner's i2c-8 gave, which
+    strengthens the guess that banner's hub was on DP-3.
+  - Then the MST buses stopped answering, one after the other:
+      getvcp 10 --bus 7    "No monitor detected on bus /dev/i2c-7" (x3)
+      getvcp 10 --bus 8    OK, brightness 245
+      a minute or so later: detect finds only i2c-5; raw EDID reads on
+      i2c-7 and i2c-8 both EIO; --trcfunc i2c_check_bus shows
+      i2c_get_parsed_edid_by_fd() returning EIO on bus 7.
+    Meanwhile sysfs still showed DP-4 and DP-5 connected, dpms On, enabled,
+    with their 128 byte EDIDs, and the adapters still present.  No kernel
+    messages after 16:48.
+  - Cause (per Sanford, 2026-10-20): the hub cannot handle two monitors on
+    darksand, so this is a hub limitation, not a ddcutil or amdgpu sysfs
+    finding.  No further two-display testing on darksand.  Note that the
+    failure is invisible in sysfs: connectors stay "connected" with EDIDs
+    and the DPMST adapters stay registered while every transfer returns EIO.
+
+Name attributes
+---------------
+Three places carry a name: the i2c adapter (/sys/bus/i2c/devices/i2c-N/name,
+the same file as ddc/name and i2c-N/name when those exist), and the
+connector's drm_dp_auxN/name.
+
+Driver / bus kind          i2c adapter name                     drm_dp_auxN/name
+-------------------------  -----------------------------------  ---------------------------
+i915 DP AUX (SST)          "AUX A/DDI A/PHY A"                  same as the adapter
+                           "AUX USBC2/DDI TC2/PHY C" (ritter)
+i915 GMBUS (HDMI)          "i915 gmbus dpa" .. "dpd",           (no aux)
+                           "i915 gmbus tc1" .. "tc6"
+amdgpu DP, ddc link        "AMDGPU DM i2c hw bus 0"             --
+amdgpu DP, i2c-N subdir    "AMDGPU DM aux hw bus 0"             same as the subdir adapter
+amdgpu HDMI/DVI            "AMDGPU DM i2c hw bus 1", "... 2"    (no aux)
+amdgpu, no connector       "AMDGPU i2c bit bus OEM 0x97"        --
+DP MST (i915 and amdgpu)   "DPMST"                              "DPMST"
+mgag200 VGA                "Matrox DDC bus"                     (no aux)
+nvidia                     "NVIDIA i2c adapter N at 1:00.0"     (none)
+non-display adapters       "SMBus I801 adapter at 0000:00:1f.4",
+                           "Synopsys DesignWare I2C adapter"
+
+What the names tell, and do not:
+  - "DPMST" comes from the DRM MST core, so it is the same on i915 and amdgpu.
+    It marks both the MST adapter and every MST connector's drm_dp_aux, and
+    is how ddcutil recognizes MST (i2c_bus_core.c:538/1050,
+    ddc_phantom_displays.c:222, query_sysenv.c:485).  It does not tell
+    which MST port the adapter belongs to: every MST connector's aux, and
+    every MST adapter, carry the identical name.
+  - On i915 SST DP the adapter name, ddc/name, i2c-N/name and
+    drm_dp_auxN/name are all the same string.  On amdgpu DP drm_dp_auxN/name
+    matches the i2c-N subdir ("aux hw bus 0") but not ddc/name ("i2c hw bus
+    0") -- the name shows the two buses apart.
+  - The i915 GMBUS and AUX names encode the hardware port (dpa..dpd, tc1..tc6,
+    "DDI A", "TC2"), but that is not the connector name (HDMI-A-1, DP-1); the
+    ddc link, not the name, ties them together.
+  - nvidia names give only the adapter index and PCI address.
 
 Examples:
-  banner   DP-1 ddc->i2c-6, subdir i2c-6, name "AUX A/DDI A/PHY A";
-           DP-2 -> i2c-7, DP-3 -> i2c-8; HDMI-A-1..4 -> i2c-1..4
-  ritter   i915 DP-1 ddc->i2c-16, subdir i2c-16 ("AUX USBC2/DDI TC2/PHY C");
-           HDMI-A-1/2 -> i2c-11/12
-  darksand card2-DP-1 ddc->i2c-3, subdir i2c-6; DVI-D-1 -> i2c-5;
-           HDMI-A-1 -> i2c-4; card1-VGA-1 (mgag200) -> i2c-0
+  banner, 2026-10-18 (no hub)
+           DP-1 ddc->i2c-6, subdir i2c-6, "AUX A/DDI A/PHY A";
+           DP-2 -> i2c-7 "AUX C/DDI C/PHY C"; DP-3 -> i2c-8 "AUX D/DDI D/PHY D";
+           HDMI-A-1..4 -> i2c-1..4 "i915 gmbus dpa".."dpd"
+  banner, 2026-10-20 (hub attached, HP Z22i behind it)
+           DP-1 to DP-3 unchanged (DP-1 Dell P3421W direct).  DP-3 was
+             connected on 10-18 and is now disconnected, so the hub is
+             presumably on DP-3 (inferred, not checked: needs debugfs/root);
+             it keeps ddc->i2c-8 and its aux, like darksand's upstream port.
+           New DP-4..DP-7 (MST): only drm_dp_aux3..6, name "DPMST";
+             no ddc, no i2c-N subdir.  DP-5 is the connected one (HP Z22i,
+             128 byte EDID).
+           i2c-9 "DPMST", child of the PCI device 0000:03:00.0.
+           ddcutil 6cae16c6e detect --verbose: i2c-9 -> card1-DP-5,
+             "DRM_connector found by: EDID"; i2c-6 (DP-1) and i2c-2
+             (HDMI-A-2) "found by: I2C bus number".
+  banner, 2026-10-20 later (two displays on the hub: HP Z22i and the Dell
+  P3421W, moved off DP-1)
+           DP-1, DP-2, DP-3 all disconnected, each still with its ddc link,
+             i2c-N subdir and drm_dp_aux0..2.  With DP-1 now empty too, the
+             upstream port can no longer be picked out by status: the hub is
+             on DP-1 or DP-3, and sysfs does not say which.
+           DP-4..DP-7 unchanged in form (drm_dp_aux3..6 "DPMST" only); DP-5
+             (HP Z22i, 128 byte EDID) and DP-6 (Dell P3421W, 256 byte EDID)
+             connected.  DP-5 kept its connector number across the change.
+           Two MST adapters now: i2c-9 and i2c-10, both "DPMST", both
+             children of PCI device 0000:03:00.0, nothing else to tell them
+             apart.  The new one took the next free bus number.
+           ddcutil 6cae16c6e detect --verbose: i2c-9 -> card1-DP-5 (HP
+             Z22i) and i2c-10 -> card1-DP-6 (Dell P3421W), both "found by:
+             EDID"; i2c-2 (HDMI-A-2) "found by: I2C bus number".
+  darksand, 2026-10-18 (no hub)
+           card2-DP-1 ddc->i2c-3 "AMDGPU DM i2c hw bus 0", subdir i2c-6
+           "AMDGPU DM aux hw bus 0"; DVI-D-1 -> i2c-5 "... hw bus 2";
+           HDMI-A-1 -> i2c-4 "... hw bus 1"; card1-VGA-1 (mgag200) -> i2c-0
+           "Matrox DDC bus"
+  darksand, 2026-10-19 (hub on card2-DP-1)
+           DP-1 keeps ddc->i2c-3, subdir i2c-6, drm_dp_aux0, but reports
+             disconnected.
+           DP-2..5 (MST): only drm_dp_aux1..4, "DPMST".  DP-3 connected.
+           i2c-7 "DPMST", child of PCI device 0000:06:00.0.
+           ddcutil 6cae16c6e: i2c-7 -> card2-DP-3, "found by: EDID";
+             i2c-5 (DVI-D-1) "found by: I2C bus number".
+  ritter, 2026-10-18 (no hub)
+           i915 DP-1 ddc->i2c-16, subdir i2c-16, "AUX USBC2/DDI TC2/PHY C";
+           HDMI-A-1/2 -> i2c-11/12 "i915 gmbus tc2"/"tc3"
+           nvidia card1-*: no ddc, no subdir, no aux
+  ritter, 2026-10-19 (hub on nvidia, Dell U2719DX behind it)
+           New connector card1-DP-6, connected, 256 byte EDID, same attribute
+           list as the other nvidia connectors.  Adapters still only i2c-17..23
+           "NVIDIA i2c adapter N"; none answers for the U2719DX.  The only
+           drm_dp_aux device (drm_dp_aux0) is the i915 DP-1's.
 
 Points of note:
-  1. amdgpu DP has two different buses: ddc gives the DM i2c hw bus, the i2c-N
-     subdir gives the AUX bus.  On i915 the two agree.  Code assuming they
-     always match gets one wrong on amdgpu.
+  1. amdgpu DP SST has two different buses: ddc gives the DM i2c hw bus, the
+     i2c-N subdir gives the AUX bus.  On i915 the two agree.  Code assuming
+     they always match gets one wrong on amdgpu.
   2. nvidia connector dirs contain only connector_id, device, dpms, edid,
-     enabled, modes, power, status, subsystem, uevent.  Its adapters
-     (i2c-17..23, "NVIDIA i2c adapter N at 1:00.0") are children of PCI device
-     0000:01:00.0 and no connector links to them; connector-to-bus matching
-     there needs an EDID comparison.
+     enabled, modes, power, status, subsystem, uevent.  Its adapters are
+     children of PCI device 0000:01:00.0 and no connector links to them;
+     connector-to-bus matching there needs an EDID comparison.
   3. The form of the ddc target tells where the adapter lives: bare "i2c-N"
      means a child of the connector (i915 DP AUX); "../../../i2c-N" means a
      child of the PCI device.
+  4. DP MST behaves the same on i915 and amdgpu: the downstream connectors
+     have only a drm_dp_aux* named "DPMST" -- nothing names the bus.  The
+     MST adapter, also "DPMST", hangs off the PCI device.  There is one
+     adapter per connected MST port, not per MST connector: with one display
+     on the hub, darksand and banner each had one adapter for four MST
+     connectors; with two displays banner had two (i2c-9, i2c-10).  Multiple
+     MST adapters are indistinguishable in sysfs -- same name, same parent,
+     no link to a connector -- so the connector-to-bus match needs an EDID
+     comparison, which ddcutil does ("found by: EDID" for every MST display
+     seen, including both on banner at once).  The hub's upstream
+     connector keeps its ddc and AUX links but reports disconnected, so they
+     do not lead to a display.
+  5. nvidia MST is worse: the proprietary driver creates no i2c adapter and
+     no drm_dp_aux device for a port behind the hub.  ddcutil detect does
+     not list the display even as invalid, and --bus 20..23 each report "No
+     monitor detected".  A display behind an MST hub on nvidia proprietary
+     cannot be reached over /dev/i2c.
+
+radeon not checked: only amdgpu and mgag200 are loaded on darksand.
 */
 
 
