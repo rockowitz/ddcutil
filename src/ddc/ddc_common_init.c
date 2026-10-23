@@ -356,6 +356,15 @@ init_performance_options(Parsed_Cmd * parsed_cmd, GPtrArray * errinfo_accumulato
    dsa2_enable(dsa2_enabled);
    if (dsa2_enabled) {
       if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) {
+         // Dynamic sleep cannot go above its last step, so a larger explicit
+         // multiplier is used only where dynamic sleep is suspended.
+         DDCA_Sleep_Multiplier dsa2_max = dsa2_get_maximum_multiplier();
+         if (parsed_cmd->sleep_multiplier > dsa2_max) {
+            MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+                  "Dynamic sleep is enabled and caps sleep-multiplier %.2f at %.2f."
+                  " Use --disable-dynamic-sleep with a larger fixed multiplier.",
+                  parsed_cmd->sleep_multiplier, dsa2_max);
+         }
          dsa2_reset_multiplier(parsed_cmd->sleep_multiplier);
          dsa2_erase_persistent_stats();
       }
