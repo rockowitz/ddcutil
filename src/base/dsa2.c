@@ -940,7 +940,7 @@ dsa2_record_final(
                "busno=%d, Incremented cur_step for null_msg_ct=%d. New value: %d",
                rtable->busno, rtable->cur_retry_loop_null_msg_ct, next_cur_step);
       }
-      else if (tries > Target_Max_Tries){    // 4
+      else if (tries > Target_Max_Tries){    // >= 4
          // Too many tries. Unconditionally increase rtable->cur_step
          next_cur_step = MIN(rtable->cur_retry_loop_step+1, step_last);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
