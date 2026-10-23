@@ -814,11 +814,9 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "latest_avg_tryct = %4.1f", rtable->latest_avg_tryct_10/10.0);
       if (next_step < step_last) {
-         next_step = rtable->cur_step++;
-         rtable->total_steps_up++;
-         rtable->adjustments_up++;
+         next_step = rtable->cur_step + 1;
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Incremented cur_step. New value: %d",
-                                            rtable->busno, rtable->cur_step);
+                                            rtable->busno, next_step);
       }
       else {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not inccrementing cur_step above step_last=%d", step_last);
@@ -832,9 +830,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
       int floor = MIN(rtable->null_msg_max_step_for_success, 3);  // is this a good number?
       if (next_step > floor) {
          next_step = rtable->cur_step - 1;
-         rtable->total_steps_down++;
-         rtable->adjustments_down++;
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, next_step);
       }
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not decrementing cur_step below floor=%d", floor);
