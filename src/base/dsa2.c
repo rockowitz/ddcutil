@@ -689,7 +689,7 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
       // don't wait until last try to hit max step
       if (remaining_tries > 2)
          fadj = (1.0*remaining_steps) / (remaining_tries-2);
-      if (remaining_tries > 1)
+      else if (remaining_tries > 1)
          fadj = (1.0*remaining_steps) / (remaining_tries-1);
 
       DDCA_Sleep_Multiplier fadj2 = fadj;
