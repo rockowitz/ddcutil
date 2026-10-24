@@ -50,7 +50,7 @@ void dbgrpt_connector_bus_numbers(Connector_Bus_Numbers * cbn, int depth) {
    rpt_structure_loc("Connector_Bus_Numbers", cbn, depth);
    int d1 = depth+1;
    rpt_vstring(d1, "i2c_busno:    %d", cbn->i2c_busno);
-   rpt_vstring(d1, "base_busno:   %d", cbn->base_busno);
+   rpt_vstring(d1, "base_busno:   %d", cbn->ddc_i2c_dev_i2c_busno);
    rpt_vstring(d1, "connector_id: %d", cbn->connector_id);
    rpt_vstring(d1, "name:         %s", cbn->name);
 }
@@ -359,7 +359,7 @@ void get_connector_bus_numbers(
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "is_dp_connector=%s", sbool(is_dp_connector));
 
    cbn->i2c_busno = -1;      // 0 is valid bus number
-   cbn->base_busno = -1;
+   cbn->ddc_i2c_dev_i2c_busno = -1;
    cbn->connector_id = -1;
 
    int connector_id;
@@ -417,7 +417,7 @@ void get_connector_bus_numbers(
                   RPT_ATTR_SINGLE_SUBDIR(d0, &i2cN_buf2, fn_starts_with, "i2c-",
                                          dirname, fn, "ddc", "i2c-dev");
             if (has_i2c_subdir) {
-               cbn->base_busno = i2c_name_to_busno(i2cN_buf2);
+               cbn->ddc_i2c_dev_i2c_busno = i2c_name_to_busno(i2cN_buf2);
 
                // RPT_ATTR_TEXT(d0, &cbn->base_dev, dirname, fn, "ddc", "i2c-dev", i2cN_buf2, "dev");
 

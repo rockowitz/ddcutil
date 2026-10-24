@@ -1,7 +1,7 @@
-## [3.0.3] 2026-10-18
+## [3.0.3] 2026-10-24
 
 This release contains performance improvements and a large number of relatively
-minor bug fixes forspecific situations.
+minor bug fixes for specific situations.
 
 #### Added
 
@@ -21,13 +21,14 @@ minor bug fixes forspecific situations.
   E-DDC segment pointer, so that the read starts at EDID segment 0 whatever
   the segment pointer's prior state.  The first write to slave address x30 
   also serves as a test of whether slave address x30 is responsive. If not,
-  later bus checks which read the EDID do not attempt to write 0 to slave
+  subsequent bus checks which read the EDID do not attempt to write 0 to slave
   address x30. Command **detect --verbose** line "I2C address 0x30 (EDID 
   block#) responsive" now reports whether that write succeeded.  If the EDID
   was obtained from sysfs, no write was tried made and the line reports
   Not Set.  Issue #626.
-- Help message for option ***--disable-mmid*** includes the string 
+- Help message for option ***--ignore-mmid*** includes the string 
   "(Deprecated, use --disable-mmid)"
+
 
 #### Fixed
 
@@ -61,13 +62,13 @@ minor bug fixes forspecific situations.
   caused a subsequent setvcp failure when when ***--skip-ddc-checks*** was 
   specified. Issue #636, "Set VCP write is ignored on an LG display
   when initial DDC checks are skipped".
-- No way of probing an I2C address is correct on every adapter tested, and the
-  ways of failing are all different. But the cases line up favorably. Every 
+- No way of probing an I2C address is correct on every adapter and monitor
+  tested, but the ways of failing vary. But the cases line up favorably. Every 
   native-DDC bus, i.e. one with dedicated wires for the I2C bus, when probed 
   properly discriminates between one where slave address is responsive and one 
-  where it is hot. The bus type on which a probe of slave address x37 cannot 
-  discriminate is DisplayPort.  Probes of most slave addressses, including x37,
-  are always responsive. (See the output of command i2cdetect.)
+  where it is hot. The bus type where a probe of slave address x37 might not
+  discriminate is DisplayPort.  On some monitors, probes of most slave addressses, 
+  including x37, are always responsive. (See the output of command  i2cdetect.)
   So on DisplayPort the initial screen for DDC by checking x37 responsiveness 
   always succeeds. However, this at worst impacts performance. DisplayPort 
   displays are recent enough that they almost without exception implement 
@@ -91,7 +92,23 @@ minor bug fixes forspecific situations.
   disconnected while being added by display change detection and so was not 
   marked removed, i.e it went away between the bus probe and the open. The
   assertion was removed; the display reference is discarded whether or not it
-  is marked. Pull Request #654. 
+  is marked. Pull Request #654.
+- Dynamic sleep changes: 
+  - Emit warning message if an explicit sleep-multiplier value greater than 2.0
+    is specified and dynamic sleep is not disabled.  Dynamic sleep caps the 
+    multiplier at 2.0.  Addresses issue #657.
+  - When recent operations had needed too many retries but the latest succeeded
+    on its second or third try, the resulting increase in the sleep multiplier 
+    was immediately undone, so subsequent operations continued at the lower 
+    multiplier and repeated the retries.  The internal dynamic sleep statistics
+    also counted that lost increase as a decrease, and counted decreases twice.
+  - Within a retry loop, the multiplier increased more slowly
+    than intended, reaching its maximum only on the next to last try.
+  - Option ***--min-dynamic-multiplier*** did not apply to the first operation
+    on a display.  The initial multiplier, whether given by
+    ***--sleep-multiplier***, restored from the dynamic sleep cache, or the
+    default for a display not in the cache, could be below the minimum
+    specified.
 
 
 ## [3.0.2] 2026-09-23

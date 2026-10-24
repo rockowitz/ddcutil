@@ -23,7 +23,7 @@
 
 typedef struct {
    int    i2c_busno;
-   int    base_busno;
+   int    ddc_i2c_dev_i2c_busno;
    int    connector_id;
    char * name;
 } Connector_Bus_Numbers;

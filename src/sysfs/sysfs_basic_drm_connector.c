@@ -96,7 +96,7 @@ static Sys_Basic_Drm_Connector * one_basic_drm_connector0(
    Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
    get_connector_bus_numbers(dirname, fn, cbn);
    cur->i2c_busno = cbn->i2c_busno;
-   cur->base_busno = cbn->base_busno;
+   cur->base_busno = cbn->ddc_i2c_dev_i2c_busno;
    if (cur->connector_id < 0)
       cur->connector_id = cbn->connector_id;
    free_connector_bus_numbers(cbn);

@@ -309,7 +309,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
       if (check_busno) {
          Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
          get_connector_bus_numbers("/sys/class/drm", cname, cbn);
-         if (cbn->i2c_busno == busno || cbn->base_busno == busno) {
+         if (cbn->i2c_busno == busno || cbn->ddc_i2c_dev_i2c_busno == busno) {
             found = true;
             result.connector_name = strdup(cname);
             result.found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;

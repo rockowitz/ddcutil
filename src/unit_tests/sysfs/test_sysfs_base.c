@@ -87,7 +87,7 @@ static void test_is_n_nnnn(void) {
 static void test_connector_bus_numbers_lifecycle(void) {
    Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
    cbn->i2c_busno = 5;
-   cbn->base_busno = -1;
+   cbn->ddc_i2c_dev_i2c_busno = -1;
    cbn->connector_id = 3;
    cbn->name = strdup("card0-DP-1");
    CK_INT(cbn->i2c_busno, 5);
