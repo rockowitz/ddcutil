@@ -818,7 +818,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
                                             rtable->busno, next_step);
       }
       else {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not inccrementing cur_step above step_last=%d", step_last);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not incrementing cur_step above step_last=%d", step_last);
       }
    }
    else
@@ -884,12 +884,14 @@ dsa2_note_retryable_failure(Results_Table * rtable, DDCA_Status ddcrc,  int rema
  *  Response buffer. The results table for the bus is updated.
  *  Depending on how many tries were required, the current step
  *  may be adjusted up or down. The cur_retry_loop_step is reset to the
- *  (possibly updated) cur_loop_step, ready to be used on the next
+ *  (possibly updated) cur_step, ready to be used on the next
  *  #ddc_write_read_with_retry() operation.
  *
  *  If ddcrc != 0 (the operation failed, either because of a fatal error
- *  or retries exhausted) it's not clear what to do.  Currently just
- *  cur_retry_loop_step is set to the global initial_step.
+ *  or retries exhausted) it's not clear what to do.  Currently cur_step
+ *  is set one step above the last cur_retry_loop_step, unless ddcrc is
+ *  DDCRC_ALL_RESPONSES_NULL (which may mean the feature is unsupported),
+ *  in which case cur_step is unchanged.
  *
  *  @param  rtable  #Results_Table for device
  *  @param  ddcrc   #ddc_write_read_with_retry() return code
