@@ -425,7 +425,7 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d, edid=%p, connector_name=%s",
                                         busno, (void*)edid, connector_name);
    g_rec_mutex_lock(&sys_drm_connectors_mutex);
-   GPtrArray * connectors = get_sys_drm_connectors(/*rescan=*/ false);
+   GPTRARRAY(Sys_Drm_Connector) * connectors = get_sys_drm_connectors(/*rescan=*/ false);
    assert(connectors);
    Sys_Drm_Connector * result = NULL;
    for (int ndx = 0; ndx < connectors->len; ndx++) {
