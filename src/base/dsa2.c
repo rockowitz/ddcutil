@@ -609,6 +609,9 @@ dsa2_reset_multiplier(DDCA_Sleep_Multiplier multiplier) {
          rtable->total_steps_down = 0;
          rtable->successful_try_ct = 0;
          rtable->retryable_failure_ct = 0;
+         // null_msg_max_step_for_success is not reset, so a floor recorded earlier
+         // in the process survives.  Matters only in libddcutil, and only if
+         // experimental global null_msg_adjustment_enabled is set (currently false).
       }
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "Set initial_step=%d", initial_step);
@@ -745,6 +748,10 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    int next_step = rtable->cur_step;
    // n. called only if most recent try was a success
    Successful_Invocation latest_values[Max_Recent_Values];
+   // The lookback is fixed at 10.  global_lookback (Default_Look_Back) and
+   // rtable->cur_lookback are not used here; cur_lookback is set only in the
+   // decrement branch below, and is read only for reports and the stats file.
+   // Either use them or settle on 10.
    int actual_lookback = cirb_get_latest(
                               rtable->recent_values,
                               10,     // rtable->lookback,
@@ -828,6 +835,10 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
             && dsa2_too_few_errors(max_tryct, total_tryct, actual_lookback)
             && rtable->cur_step > 0)
    {
+      // null_msg_max_step_for_success is set only when the extended Null Response
+      // sleep was added, i.e. only if experimental global null_msg_adjustment_enabled
+      // is true (currently false).  Otherwise it remains -1 and this floor never
+      // blocks a decrement.
       int floor = MIN(rtable->null_msg_max_step_for_success, 3);  // is this a good number?
       if (next_step > floor) {
          next_step = rtable->cur_step - 1;
@@ -920,6 +931,9 @@ dsa2_record_final(
       return;
    }
 
+   // Can be true only if experimental global null_msg_adjustment_enabled is set
+   // (currently false).  Note that this is recorded whether or not the operation
+   // succeeded, despite the name null_msg_max_step_for_success.
    if (cur_loop_null_adjustment_occurred)
       rtable->null_msg_max_step_for_success =
             MAX(rtable->null_msg_max_step_for_success, rtable->cur_retry_loop_step);
