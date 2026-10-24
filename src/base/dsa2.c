@@ -406,8 +406,8 @@ static
 Results_Table * new_results_table(int busno) {
    Results_Table * rtable = calloc(1, sizeof(Results_Table));
    rtable->busno = busno;
-   rtable->initial_step = initial_step;
-   rtable->cur_step = initial_step;
+   rtable->initial_step = MAX(initial_step, dsa2_step_floor);
+   rtable->cur_step = rtable->initial_step;
    rtable->cur_lookback = global_lookback;
    rtable->recent_values = cirb_new(Max_Recent_Values);
    rtable->remaining_interval = Default_Interval;
@@ -509,8 +509,7 @@ dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
    if (!rtable && create_if_not_found) {
       rtable = new_results_table(busno);
       results_tables[busno] = rtable;
-      rtable->cur_step = initial_step;
-      rtable->cur_retry_loop_step = initial_step;
+      rtable->cur_retry_loop_step = rtable->cur_step;
       rtable->state = RTABLE_BUS_DETECTED;
       rtable->edid_checksum_byte = get_edid_checkbyte(busno);
    }
