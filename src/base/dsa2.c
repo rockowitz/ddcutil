@@ -1376,6 +1376,11 @@ dsa2_restore_persistent_stats() {
                      __func__, busno, rtable->cur_step, step_last);
                rtable->cur_step = step_last;
             }
+            else if (rtable->cur_step < dsa2_step_floor) {
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, raising cur_step from %d to floor %d",
+                     busno, rtable->cur_step, dsa2_step_floor);
+               rtable->cur_step = dsa2_step_floor;
+            }
          }
 
          if (format_id == 1) {

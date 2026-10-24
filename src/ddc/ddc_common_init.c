@@ -355,6 +355,13 @@ init_performance_options(Parsed_Cmd * parsed_cmd, GPtrArray * errinfo_accumulato
    bool dsa2_enabled = parsed_cmd->flags & CMD_FLAG_DSA2;
    dsa2_enable(dsa2_enabled);
    if (dsa2_enabled) {
+      // Set the floor first, so the initial step is not below it
+      if (parsed_cmd->min_dynamic_multiplier >= 0.0f) {
+          dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->min_dynamic_multiplier);
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                "min_dynamic_multiplier = %3.1f, setting dsa2_step_floor = %d",
+                parsed_cmd->min_dynamic_multiplier, dsa2_step_floor);
+      }
       if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) {
          // Dynamic sleep cannot go above its last step, so a larger explicit
          // multiplier is used only where dynamic sleep is suspended.
@@ -372,12 +379,6 @@ init_performance_options(Parsed_Cmd * parsed_cmd, GPtrArray * errinfo_accumulato
          Error_Info * stats_errs = dsa2_restore_persistent_stats();
          if (stats_errs)
             g_ptr_array_add(errinfo_accumulator, stats_errs);
-      }
-      if (parsed_cmd->min_dynamic_multiplier >= 0.0f) {
-          dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->min_dynamic_multiplier);
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                "min_dynamic_multiplier = %3.1f, setting dsa2_step_floor = %d",
-                parsed_cmd->min_dynamic_multiplier, dsa2_step_floor);
       }
    }
    else {
