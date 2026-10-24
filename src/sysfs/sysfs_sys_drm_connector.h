@@ -36,7 +36,7 @@ typedef struct {
    char * name;
    char * ddc_dir_path;
    bool   is_aux_channel;
-   int    base_busno;
+   int    ddc_i2c_dev_i2c_busno;
    char * base_name;
    char * base_dev;
    Byte * edid_bytes;

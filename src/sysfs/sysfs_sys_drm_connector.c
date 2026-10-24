@@ -154,7 +154,7 @@ void report_one_sys_drm_connector(Sys_Drm_Connector * cur, bool detailed_edid, i
    rpt_vstring(d1, "status:       %s", cur->status);
 
    if (cur->is_aux_channel) {
-      rpt_vstring(d1, "base_busno:   %d", cur->base_busno);
+      rpt_vstring(d1, "base_busno:   %d", cur->ddc_i2c_dev_i2c_busno);
       rpt_vstring(d1, "base_name:    %s", cur->base_name);
       rpt_vstring(d1, "base dev:     %s", cur->base_dev);
    }
@@ -239,7 +239,7 @@ Sys_Drm_Connector * one_drm_connector0(
    if (resolves) {
       cur = calloc(1, sizeof(Sys_Drm_Connector));
       cur->i2c_busno = -1;      // 0 is valid bus number
-      cur->base_busno = -1;
+      cur->ddc_i2c_dev_i2c_busno = -1;
       cur->connector_id = -1;
       cur->connector_name = g_strdup(fn);   // e.g. card0-DP-1
       RPT_ATTR_INT(     d0, &cur->connector_id, dirname, fn, "connector_id");
@@ -257,7 +257,7 @@ Sys_Drm_Connector * one_drm_connector0(
 
       Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
       get_connector_bus_numbers(dirname, fn, cbn);
-      cur->base_busno = cbn->ddc_i2c_dev_i2c_busno;
+      cur->ddc_i2c_dev_i2c_busno = cbn->ddc_i2c_dev_i2c_busno;
       cur->i2c_busno = cbn->i2c_busno;
       cur->i2c_busno_from_driver = (cbn->i2c_busno >= 0);
       cur->connector_id = cbn->connector_id;

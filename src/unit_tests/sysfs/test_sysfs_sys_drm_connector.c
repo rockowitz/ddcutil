@@ -73,7 +73,7 @@ static Sys_Drm_Connector * make_connector(const char * name, int busno, int conn
    Sys_Drm_Connector * c = calloc(1, sizeof(Sys_Drm_Connector));
    c->connector_name = g_strdup(name);
    c->i2c_busno      = busno;
-   c->base_busno     = -1;
+   c->ddc_i2c_dev_i2c_busno     = -1;
    c->connector_id   = connector_id;
    if (edid) {
       c->edid_bytes = malloc(128);
