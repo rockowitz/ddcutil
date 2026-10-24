@@ -799,8 +799,10 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
 
 
    if (most_recent_step > step_last) {
-      DBGMSG("most_recent_step=%d, step_last=%d", most_recent_step, step_last);
-      show_backtrace(0);
+      // DBGMSG("most_recent_step=%d, step_last=%d", most_recent_step, step_last);
+      // show_backtrace(0);
+      DUAL_MSGXV(true, DDCA_SYSLOG_ERROR, DDCA_TRC_NONE,"most_recent_step=%d, step_last=%d", most_recent_step, step_last);
+      dbgrpt_current_traced_function_stack(/*reverse*/ true, /* show_tid*/ true, 3);
    }
    assert(most_recent_step <= step_last);
 
