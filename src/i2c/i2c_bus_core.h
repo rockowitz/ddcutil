@@ -24,6 +24,7 @@
 #define I2C_SLAVE_ADDR_MAX 128
 
 extern bool try_get_edid_from_sysfs_first;
+extern bool use_sysfs_edid_for_user_connector;
 extern bool edp_always_laptop;
 extern bool edid_exists_checks_drm_status;
 extern bool edid_exists_skips_unmapped_bus;
