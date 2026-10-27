@@ -329,6 +329,65 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
 
 
 //
+// Ignored drivers
+//
+
+// Kept here rather than beside the ignored bus numbers in base/i2c_bus_aux.c:
+// testing a bus requires its driver, which comes from sysfs, a layer above base.
+static Null_Terminated_String_Array ignored_drivers = NULL;
+
+/** Specify drivers whose /dev/i2c-N devices are to be ignored
+ *  (option --ignore-driver).
+ *
+ *  @param drivers  null terminated array of driver names, may be NULL
+ *
+ *  The array is copied.
+ */
+void
+i2c_exclude_drivers(Null_Terminated_String_Array drivers) {
+   bool debug = false;
+   ntsa_free(ignored_drivers, true);   // safe if NULL
+   ignored_drivers = (drivers && ntsa_length(drivers) > 0) ? ntsa_copy(drivers, true) : NULL;
+
+   char * s = (ignored_drivers) ? g_strjoinv(", ", ignored_drivers) : NULL;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "ignored_drivers: %s", s);
+   g_free(s);
+}
+
+
+/** Reports whether the driver of an I2C bus is one the user has asked
+ *  to be ignored.
+ *
+ *  @param  busno  I2C bus number
+ *  @return true if the bus's driver is ignored, false if not or if no
+ *          drivers are ignored
+ */
+bool
+i2c_bus_driver_is_excluded(int busno) {
+   bool debug = false;
+   bool result = false;
+   char * driver = NULL;
+   if (ignored_drivers) {
+      driver = get_driver_for_busno(busno);
+      if (driver)
+         result = ntsa_find(ignored_drivers, driver) >= 0;
+   }
+
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "busno=%d, driver=%s, returning %s",
+         busno, driver, sbool(result));
+   free(driver);   // safe if NULL
+   return result;
+}
+
+
+// for use as Byte_Value_Array filter function
+static bool
+i2c_bus_driver_is_not_excluded(int busno) {
+   return !i2c_bus_driver_is_excluded(busno);
+}
+
+
+//
 // Attached buses
 //
 
@@ -369,7 +428,7 @@ i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
 
 /** Returns the bus numbers for /dev/i2c buses that could possibly be
  *  connected to a monitor. Buees that the user had indicated should
- *  be ignored (option --ignore-bus) are not included.
+ *  be ignored (options --ignore-bus and --ignore-driver) are not included.
  *
  *  @return array of bus numbers
  */
@@ -389,6 +448,14 @@ Byte_Value_Array i2c_detect_attached_buses() {
    // option --ignore_bus
    Byte_Value_Array bva = bva_filter(bva0, i2c_bus_is_not_excluded);
    bva_free(bva0);
+
+   // and buses whose driver the user has indicated should be excluded using
+   // option --ignore-driver
+   if (ignored_drivers) {
+      Byte_Value_Array bva1 = bva_filter(bva, i2c_bus_driver_is_not_excluded);
+      bva_free(bva);
+      bva = bva1;
+   }
 
    char * s = bva_as_string(bva,  false,  ", ");
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);

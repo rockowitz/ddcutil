@@ -1387,6 +1387,7 @@ parse_command(
       {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
 #endif
       {"ignore-bus",    '\0', 0, G_OPTION_ARG_CALLBACK, ignored_busno_arg_func,  "I2C bus to ignore", "bus number"},
+      {"ignore-driver", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ignored_drivers, "Ignore I2C buses using this driver", "driver name"},
 
       {"disable-ddc",   '\0', G_OPTION_FLAG_HIDDEN,
                                  G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },

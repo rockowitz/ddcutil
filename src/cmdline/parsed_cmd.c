@@ -162,6 +162,7 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
       ntsa_free(parsed_cmd->traced_api_calls, true);
       ntsa_free(parsed_cmd->bus_drm_connectors, true);
       ntsa_free(parsed_cmd->ddc_disabled,true);
+      ntsa_free(parsed_cmd->ignored_drivers, true);
       g_array_free(parsed_cmd->setvcp_values, true);
       free(parsed_cmd->s1);
       free(parsed_cmd->s2);
@@ -278,6 +279,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       char * buf3 = bs256_to_string_decimal_t(parsed_cmd->ignored_i2c_buses, "", " ");
       rpt_vstring(d1, "ignored_i2c_buses                                          : %s",
             buf3);
+      dbgrpt_ntsa(d1, "ignored_drivers", parsed_cmd->ignored_drivers);
 
       char buf2[BIT_SET_32_MAX+1];
       bs32_to_bitstring(parsed_cmd->ignored_hiddevs, buf2, BIT_SET_32_MAX+1);

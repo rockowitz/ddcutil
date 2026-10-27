@@ -15,6 +15,7 @@
 
 #include "util/data_structures.h"
 #include "util/error_info.h"
+#include "util/string_util.h"
 
 #include "base/i2c_bus_base.h"
 
@@ -36,6 +37,9 @@ bool        update_sys_drm_connector_by_edid(I2C_Bus_Info * businfo);
 #endif
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
+
+void             i2c_exclude_drivers(Null_Terminated_String_Array drivers);
+bool             i2c_bus_driver_is_excluded(int busno);
 
 Bit_Set_256      i2c_detect_attached_buses_as_bitset();
 Bit_Set_256      i2c_filter_buses_w_edid_as_bitset(Bit_Set_256 bs_all_buses, bool * eacces_loc);

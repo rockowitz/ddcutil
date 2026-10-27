@@ -410,6 +410,9 @@ int verify_i2c_access_for_single_bus(int busno) {
    if (i2c_bus_is_excluded(busno)) {
       fprintf(stderr, "Bus /dev/i2c-%d is being ignored.\n", busno);
    }
+   else if (i2c_bus_driver_is_excluded(busno)) {
+      fprintf(stderr, "Bus /dev/i2c-%d is being ignored, its driver is excluded by --ignore-driver.\n", busno);
+   }
    else if (!i2c_device_exists(busno)) {
       fprintf(stderr, "Bus /dev/i2c-%d does not exist.\n", busno);
    }
