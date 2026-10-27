@@ -1433,7 +1433,7 @@ void possibly_write_detect_to_status_by_connector_path(const char * connector_pa
    bool debug = false;
     int d = (debug) ? 1 : -1;
     if (enable_write_detect_to_status) {
-       char * driver = find_adapter_and_get_driver((char*) connector_path, d);
+       char * driver = find_bound_driver(connector_path, d);
        if (driver) {
           possibly_write_detect_to_status(driver, connector_path);
          free(driver);
@@ -1448,7 +1448,7 @@ void possibly_write_detect_to_status_by_connector_name(const char * connector) {
    if (enable_write_detect_to_status) {
       char path[50];
       g_snprintf(path, 50, "/sys/class/drm/%s", connector);
-      char * driver = find_adapter_and_get_driver(path, d);
+      char * driver = find_bound_driver(path, d);
       if (driver) {
          possibly_write_detect_to_status(driver, connector);
         free(driver);

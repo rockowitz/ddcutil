@@ -570,7 +570,7 @@ bool is_sysfs_reliable_for_connector(const char * connector_name) {
 
    char buf[PATH_MAX];
    g_snprintf(buf, PATH_MAX, "/sys/class/drm/%s", connector_name);
-   char * driver = find_adapter_and_get_driver(buf, -1);
+   char * driver = find_bound_driver(buf, -1);
    result = is_sysfs_reliable_for_driver(driver);
    free(driver);   // safe if NULL
 
@@ -713,7 +713,7 @@ void check_connector_reliability(
    resolves = RPT_ATTR_NOTE_SUBDIR(debug_depth, NULL, buf);
 #endif
    if (resolves) {
-      char * driver = find_adapter_and_get_driver(buf, debug_depth);
+      char * driver = find_bound_driver(buf, debug_depth);
 
       if (streq(driver, "nvidia")) {
          // accum->nvidia_driver_seet = true;
