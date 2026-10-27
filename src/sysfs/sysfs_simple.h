@@ -36,6 +36,7 @@ void        get_connector_bus_numbers(
                Connector_Bus_Numbers * cbn);
 
 char *      find_adapter_and_get_driver(char * path, int depth);
+char *      find_bound_driver(const char * path, int depth);
 char *      get_driver_for_adapter(char * adapter_path, int depth);
 // char *   find_adapter(char * path, int depth); // MOVED
 #ifdef ISSUE_641

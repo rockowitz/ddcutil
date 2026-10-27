@@ -964,6 +964,61 @@ find_adapter_and_get_driver(char * path, int depth) {
 }
 
 
+/** Given a sysfs node, walk up the chain of device directories until one
+ *  that is bound to a driver is found, and return the name of that driver.
+ *
+ *  @param  path   e.g. /sys/bus/i2c/devices/i2c-5
+ *  @param  depth  logical indentation depth
+ *  @return driver name, NULL if not found
+ *
+ *  Unlike find_adapter_and_get_driver(), which stops at the first ancestor
+ *  having a PCI class attribute, this stops at the first ancestor having a
+ *  driver link.  The two differ when the device bound to a driver is not the
+ *  PCI device:
+ *  - The Intel LPSS DesignWare i2c controllers are platform children
+ *    (i2c_designware.N) of a PCI function bound to intel_lpss_pci.  The class
+ *    walk reports intel_lpss_pci.
+ *  - A device whose driver is not on a PCI device at all, e.g. a DisplayLink
+ *    evdi card, has no class attribute in its chain if it sits under
+ *    /sys/devices/platform, so the class walk reports nothing; if it sits
+ *    under a USB device, the class walk reaches the USB host controller and
+ *    reports xhci_hcd.
+ *
+ *  The name returned is the basename of the driver link, not of
+ *  driver/module.  A built-in driver, e.g. i2c_designware, has no module link.
+ *
+ *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
+ *  If depth >= 0, sysfs attributes are reported.
+ *  If depth <  0, there is no output
+ *
+ *  Caller is responsible for freeing the returned value
+ */
+char *
+find_bound_driver(const char * path, int depth) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s,  depth=%d", path, depth);
+   assert(path);
+
+   char * result = NULL;
+   // As in sysfs_find_adapter(), resolve first, and stay within /sys/devices.
+   // A failed realpath() leaves rp1 NULL, which ends the walk.
+   char * rp1 = realpath(path, NULL);
+   char * rp2 = NULL;
+   while (!result && rp1 && g_str_has_prefix(rp1, "/sys/devices")) {
+      if (!RPT_ATTR_REALPATH_BASENAME(depth, &result, rp1, "driver")) {
+         RPT_ATTR_REALPATH(depth, &rp2, rp1, "..");
+         free(rp1);
+         rp1 = rp2;
+         rp2 = NULL;
+      }
+   }
+   free(rp1);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", result);
+   return result;
+}
+
+
 #ifdef OLD
 char * sysfs_find_adapter_old(char * path) {
    bool debug = false;
@@ -1019,7 +1074,7 @@ char * sysfs_find_adapter_old(char * path) {
 char * get_driver_for_busno(int busno) {
    char path[PATH_MAX];
    g_snprintf(path, PATH_MAX, "/sys/bus/i2c/devices/i2c-%d", busno);
-   char * result = find_adapter_and_get_driver(path, -1);
+   char * result = find_bound_driver(path, -1);
    return result;
 }
 
@@ -1428,6 +1483,7 @@ void possibly_write_detect_to_status_by_dref(Display_Ref * dref) {
 
 void init_sysfs_simple() {
    RTTI_ADD_FUNC(find_adapter_and_get_driver);
+   RTTI_ADD_FUNC(find_bound_driver);
    RTTI_ADD_FUNC(get_connector_bus_numbers);
    RTTI_ADD_FUNC(get_i2c_device_sysfs_class);
    RTTI_ADD_FUNC(ignorable_i2c_device_sysfs_name);
