@@ -44,6 +44,7 @@ extern _Atomic uint16_t  stabilization_poll_millisec;
 extern _Atomic uint16_t  udev_watch_loop_millisec;
 extern _Atomic uint16_t  poll_watch_loop_millisec;
 extern _Atomic uint16_t  xevent_watch_loop_millisec;
+extern _Atomic uint16_t  retry_thread_sleep_factor_millisec;
 extern _Atomic bool      terminate_watch_thread;
 extern _Atomic bool      terminate_using_x11_event;
 extern _Atomic bool      dw_event_processing_pending;
@@ -53,6 +54,7 @@ extern bool               use_drm_connector_states;
 extern bool               force_recheck;
 extern bool               rescan_on_eacces;
 extern bool               skip_settling_pauses;
+extern int                pause_after_resume_ms;
 
 // If true, blocking waits in the watch thread poll() the relevant fd together
 // with terminate_watch_thread_fd instead of sleeping in timed polling loops.

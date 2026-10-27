@@ -67,6 +67,8 @@ _Atomic uint16_t  stabilization_poll_millisec    = DEFAULT_STABILIZATION_POLL_MI
 _Atomic uint16_t  udev_watch_loop_millisec       = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;
 _Atomic uint16_t  poll_watch_loop_millisec       = DEFAULT_POLL_WATCH_LOOP_MILLISEC;
 _Atomic uint16_t  xevent_watch_loop_millisec     = DEFAULT_XEVENT_WATCH_LOOP_MILLISEC;
+// Atomic to handle concurrent reads in recheck worker threads and writes by dw_set_display_watch_settings()
+_Atomic uint16_t  retry_thread_sleep_factor_millisec = WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC;
 
 _Atomic bool  terminate_watch_thread    = false;
 _Atomic bool  terminate_using_x11_event = false;
@@ -98,6 +100,7 @@ bool      rescan_on_eacces               = true;
  * add-event pause is skipped along with it.
  */
 bool      skip_settling_pauses  = false;
+int       pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;   // --pause-after-resume-ms, --i10
 
 
 /** Creates the eventfd used to wake blocking waits in the watch thread

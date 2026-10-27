@@ -60,12 +60,9 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 
 int  nonudev_poll_loop_millisec = DEFAULT_UDEV_WATCH_LOOP_MILLISEC;   // 2000;
-// Atomic to handle concurrent reads in recheck worker threads and writes by dw_set_display_watch_settings()
-_Atomic uint16_t  retry_thread_sleep_factor_millisec = WATCH_RETRY_THREAD_SLEEP_FACTOR_MILLISEC;
 bool stabilize_added_buses_w_edid = false;  // if set, stabilize when displays added as well as removed
 bool recheck_thread_active = false;
 int  display_watch_thread_initial_delay = 0;
-int  pause_after_resume_ms = DEFAULT_PAUSE_AFTER_RESUME_MS;   // --pause-after-resume-ms, --i10
 
 STATIC void dw_process_screen_change_event(
       BS256*      p_bs_attached_buses,
