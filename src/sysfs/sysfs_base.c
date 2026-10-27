@@ -277,6 +277,56 @@ Sysfs_Connector_Names get_sysfs_drm_connector_names() {
  }
 
 
+/** Adds a single connector name, e.g. card0-HDMI-1, to an array of names.
+ *
+ *  @param  dirname    directory being scanned, ignored
+ *  @param  simple_fn  connector name
+ *  @param  data       pointer to the GPtrArray collecting the names
+ *  @param  depth      ignored
+ */
+STATIC
+void get_sysfs_drm_add_one_connector_name_only(
+      const char * dirname,
+      const char * simple_fn,
+      void *       data,
+      int          depth)
+{
+   g_ptr_array_add((GPtrArray*) data, g_strdup(simple_fn));
+}
+
+
+/** Returns the names of all DRM connectors in /sys/class/drm, sorted.
+ *
+ *  Same list as the all_connectors array of get_sysfs_drm_connector_names(),
+ *  but reads no connector attributes.  That function also reads every
+ *  connector's edid attribute to fill connectors_having_edid, which a caller
+ *  needing only the names would pay for on every call.  A lookup by bus
+ *  number is made for each I2C bus on every display watch scan, so the cost
+ *  multiplies; and reading an edid attribute takes a DRM mutex, which a
+ *  suspending driver may hold (issue #659).
+ *
+ *  @return array of connector names, caller must free
+ */
+GPtrArray * get_sysfs_drm_connector_names_only() {
+   bool debug = false;
+   const char * dname = SYS"/class/drm";
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s", dname);
+
+   GPtrArray * names = g_ptr_array_new_with_free_func(g_free);
+   dir_filtered_ordered_foreach(
+                 dname,
+                 is_card_connector_dir,   // filter function
+                 NULL,                    // ordering function
+                 get_sysfs_drm_add_one_connector_name_only,
+                 names,                   // accumulator
+                 0);
+   g_ptr_array_sort(names, gaux_ptr_scomp);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d connector names", names->len);
+   return names;
+}
+
+
 /** Tests if two Sysfs_Connector_Names instances have the same lists
  *  for all connectors and for connectors having a valid EDID
  *
@@ -803,6 +853,7 @@ Sysfs_Basic_I2C_Info get_basic_i2c_info(int busno) {
 void init_i2c_sysfs_base() {
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
    RTTI_ADD_FUNC(get_sysfs_drm_connector_names);
+   RTTI_ADD_FUNC(get_sysfs_drm_connector_names_only);
    RTTI_ADD_FUNC(get_basic_i2c_info);
    RTTI_ADD_FUNC(search_all_businfo_records_by_connector_name);
 

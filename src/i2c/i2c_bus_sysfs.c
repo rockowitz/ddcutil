@@ -301,8 +301,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
    result.found_by = DRM_CONNECTOR_NOT_FOUND;
    result.connector_id = 0;
 
-   Sysfs_Connector_Names cnames = get_sysfs_drm_connector_names();
-   GPtrArray * drm_connector_names = cnames.all_connectors;
+   GPtrArray * drm_connector_names = get_sysfs_drm_connector_names_only();
    bool found = false;
    for (int ndx = 0; ndx < drm_connector_names->len && !found; ndx++) {
       char * cname = g_ptr_array_index(drm_connector_names, ndx);
@@ -353,7 +352,7 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
          }
       }
    }
-   free_sysfs_connector_names_contents(cnames);
+   g_ptr_array_free(drm_connector_names, true);
 
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       dbgrpt_found_sys_drm_connector(result, 1);
@@ -368,10 +367,10 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
  *  If this is false, then code that associates a drm-connector with a
  *  /dev/i2c bus will always fail and can be skipped.
  *
- *  Walks the connector directories and stops at the first one that names a
- *  bus.  No array is built: the question is a single bit, the answer usually
- *  comes from the first connector examined, and a driver that publishes the
- *  mapping publishes it for every connector, so the loop rarely runs twice.
+ *  Walks the connector names from get_sysfs_drm_connector_names_only() and
+ *  stops at the first connector that names a bus.  The answer usually comes
+ *  from the first connector examined: a driver that publishes the mapping
+ *  publishes it for every connector, so the loop rarely runs twice.
  *
  *  Reads only the bus/connector artifacts get_connector_bus_numbers() consults
  *  -- the ddc symlink, the i2c-N subdirectory, connector_id -- and not the
@@ -385,9 +384,9 @@ bool any_drm_connector_has_busno() {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
 
    bool result = false;
-   Sysfs_Connector_Names cnames = get_sysfs_drm_connector_names();
-   for (int ndx = 0; ndx < cnames.all_connectors->len && !result; ndx++) {
-      char * cname = g_ptr_array_index(cnames.all_connectors, ndx);
+   GPtrArray * drm_connector_names = get_sysfs_drm_connector_names_only();
+   for (int ndx = 0; ndx < drm_connector_names->len && !result; ndx++) {
+      char * cname = g_ptr_array_index(drm_connector_names, ndx);
       Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
       get_connector_bus_numbers("/sys/class/drm", cname, cbn);
       if (cbn->i2c_busno >= 0) {
@@ -396,7 +395,7 @@ bool any_drm_connector_has_busno() {
       }
       free_connector_bus_numbers(cbn);
    }
-   free_sysfs_connector_names_contents(cnames);
+   g_ptr_array_free(drm_connector_names, true);
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;

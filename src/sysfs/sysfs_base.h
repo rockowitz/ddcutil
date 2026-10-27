@@ -25,6 +25,7 @@ typedef struct {
 
 Sysfs_Connector_Names
             get_sysfs_drm_connector_names();
+GPtrArray * get_sysfs_drm_connector_names_only();
 bool        sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);
 void        free_sysfs_connector_names_contents(Sysfs_Connector_Names names_struct);
 void        dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
