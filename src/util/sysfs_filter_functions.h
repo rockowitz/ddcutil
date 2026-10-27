@@ -11,6 +11,12 @@
 
 #include "data_structures.h"
 
+// DRM connector exclusion
+
+typedef bool (*Card_Connector_Exclusion_Func)(const char * connector_name);
+void set_card_connector_exclusion_func(Card_Connector_Exclusion_Func func);
+bool is_excluded_card_connector(const char * connector_name);
+
 // Filename_Filter_Func
 
 bool predicate_cardN(          const char * value);

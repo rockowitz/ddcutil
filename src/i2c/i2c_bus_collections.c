@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 /** \endcond */
@@ -22,6 +23,7 @@
 #include "util/error_info.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_filter_functions.h"
 #include "util/traced_function_stack.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
@@ -336,8 +338,25 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
 // testing a bus requires its driver, which comes from sysfs, a layer above base.
 static Null_Terminated_String_Array ignored_drivers = NULL;
 
-/** Specify drivers whose /dev/i2c-N devices are to be ignored
- *  (option --ignore-driver).
+
+// Registered with set_card_connector_exclusion_func() while drivers are ignored,
+// so that the connector filter functions in util skip connectors using them.
+static bool
+card_connector_driver_is_excluded(const char * connector_name) {
+   bool debug = false;
+   char path[PATH_MAX];
+   g_snprintf(path, PATH_MAX, "/sys/class/drm/%s", connector_name);
+   char * driver = find_bound_driver(path, -1);
+   bool result = driver && ntsa_find(ignored_drivers, driver) >= 0;
+
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "connector_name=%s, driver=%s, returning %s",
+         connector_name, driver, sbool(result));
+   free(driver);   // safe if NULL
+   return result;
+}
+
+/** Specify drivers whose /dev/i2c-N devices and DRM connectors are to be
+ *  ignored (option --ignore-driver).
  *
  *  @param drivers  null terminated array of driver names, may be NULL
  *
@@ -348,6 +367,8 @@ i2c_exclude_drivers(Null_Terminated_String_Array drivers) {
    bool debug = false;
    ntsa_free(ignored_drivers, true);   // safe if NULL
    ignored_drivers = (drivers && ntsa_length(drivers) > 0) ? ntsa_copy(drivers, true) : NULL;
+   set_card_connector_exclusion_func(
+         (ignored_drivers) ? card_connector_driver_is_excluded : NULL);
 
    char * s = (ignored_drivers) ? g_strjoinv(", ", ignored_drivers) : NULL;
    DBGTRC_EXECUTED(debug, TRACE_GROUP, "ignored_drivers: %s", s);

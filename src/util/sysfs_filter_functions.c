@@ -26,6 +26,39 @@ static const char * cardN_pattern = "^card[0-9]+$";
 static const char * D_00hh_pattern = "^[0-9]+-00[0-9a-fA-F]{2}$";
 static const char * i2c_N_pattern = "^i2c-([0-9]+)$";
 
+
+//
+// DRM connector exclusion
+//
+
+// Whether a connector is to be ignored (option --ignore-driver) depends on
+// settings that util cannot see, so the application registers the test.
+// Registered during initialization, before any thread enumerates connectors.
+static Card_Connector_Exclusion_Func card_connector_exclusion_func = NULL;
+
+/** Registers the function that decides whether a DRM connector is to be
+ *  ignored.  The connector filter functions predicate_cardN_connector(),
+ *  is_card_connector_dir() and is_drm_connector() reject a connector
+ *  for which it returns true.
+ *
+ *  @param  func  exclusion function, NULL to exclude nothing
+ */
+void set_card_connector_exclusion_func(Card_Connector_Exclusion_Func func) {
+   card_connector_exclusion_func = func;
+}
+
+
+/** Reports whether a DRM connector is to be ignored, as decided by the
+ *  function registered with set_card_connector_exclusion_func().
+ *
+ *  @param  connector_name  e.g. card1-DP-1
+ *  @return true if excluded, false if not or if no function is registered
+ */
+bool is_excluded_card_connector(const char * connector_name) {
+   bool result = card_connector_exclusion_func && card_connector_exclusion_func(connector_name);
+   return result;
+}
+
 //
 // Predicate functions for filenames and attribute values, of
 // typedef Filname_Filter_Func
@@ -56,6 +89,7 @@ bool predicate_cardN(const char * value) {
 
 /** Tests if a value appears to be a DRM connector, e.g "card2-DP-1"
  *  Only the initial part of the value being tested is actually checked.
+ *  A connector excluded by is_excluded_card_connector() fails the test.
  *
  *  @param  value value to test
  *  @result true/false
@@ -64,7 +98,8 @@ bool predicate_cardN_connector(const char * value) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. value=|%s|\n", __func__, value);
-   bool b1 = compile_and_eval_regex(cardN_connector_pattern, value);
+   bool b1 = compile_and_eval_regex(cardN_connector_pattern, value) &&
+             !is_excluded_card_connector(value);
    if (debug)
       printf("(%s) Returning %s, value=|%s|\n", __func__, sbool( b1), value);
    return b1;
@@ -317,6 +352,7 @@ bool has_class_display(
 
 /** Tests whether the filename of a dirname/filename pair
  *  has the form card<digits>-....
+ *  A connector excluded by is_excluded_card_connector() fails the test.
  *
  *  @param  dirname   directory name (ignored)
  *  @param  simple_fn value to test
@@ -332,7 +368,7 @@ bool is_drm_connector(const char * dirname, const char * simple_fn) {
       char * s = s0;
       while (isdigit(*s)) s++;
       if (*s == '-')
-         result = true;
+         result = !is_excluded_card_connector(simple_fn);
       free(s0);
    }
 
