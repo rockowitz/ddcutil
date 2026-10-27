@@ -464,16 +464,24 @@ ddc_initial_checks_by_dh(Display_Handle * dh, bool newly_added) {
       int depth = IS_DBGTRC(debug, DDCA_TRC_NONE) ? 1 : -1;
       if (businfo->drm_connector_name) {
          POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(businfo->drm_connector_name);
-         if (depth > 0)
+         // The attributes are read only for this report, so read them only
+         // when it is shown.  A negative depth suppresses the output but not
+         // the reads.  This function also runs on every recheck in a display
+         // watch worker thread, and reading the edid attribute takes a DRM
+         // mutex: if a suspending driver holds it, the thread blocks in
+         // uninterruptible sleep, the kernel cannot freeze it, and the suspend
+         // fails (issue #659).
+         if (depth > 0) {
             rpt_label(0, "Current sysfs attributes:");
-         RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "dpms");
-         RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "status");
-         RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "enabled");
-         RPT_ATTR_INT (depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "drm_connector_id");
-         bool edid_found = GET_ATTR_EDID(NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
-         rpt_vstring(depth, "/sys/class/drm/%s/edid:                                     %s",
-               businfo->drm_connector_name, (edid_found) ? "Found" : "Not found");
-         // RPT_ATTR_EDID(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
+            RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "dpms");
+            RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "status");
+            RPT_ATTR_TEXT(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "enabled");
+            RPT_ATTR_INT (depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "drm_connector_id");
+            bool edid_found = GET_ATTR_EDID(NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
+            rpt_vstring(depth, "/sys/class/drm/%s/edid:                                     %s",
+                  businfo->drm_connector_name, (edid_found) ? "Found" : "Not found");
+            // RPT_ATTR_EDID(depth, NULL, "/sys/class/drm",businfo->drm_connector_name, "edid");
+         }
       }
 
       // DBGMSG("monitor_state_tests = %s", SBOOL(monitor_state_tests));
