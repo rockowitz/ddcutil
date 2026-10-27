@@ -1,4 +1,4 @@
-## [3.0.3] 2026-10-24
+## [3.0.3] 2026-10-27
 
 This release contains performance improvements and a large number of relatively
 minor bug fixes for specific situations.
@@ -6,6 +6,13 @@ minor bug fixes for specific situations.
 #### Added
 
 - Command **ddcutil settings** is shorthand for **ddcutil noop -settings**. 
+- Option ***--ignore-driver <driver name>*** causes /dev/i2c devices and drm
+  card-connectors that use the named driver to be ignored, by both ddcutil
+  and libddcutil.  May be specified more than once.  Unlike ***--ignore-bus***,
+  it does not depend on bus numbers, which for devices such as DisplayLink
+  (driver evdi) can change across reboots or when the device is reconnected.
+  ***--ignore-driver evdi*** keeps ddcutil from reading the sysfs EDID of
+  DisplayLink connectors, a read seen to hang during suspend. Issue #659.
 
 #### Changed 
 .
@@ -85,9 +92,11 @@ minor bug fixes for specific situations.
   Issue #638.
 - Eliminate unneeded syslog message and traced function stack in 
   io2c_ioctl_reader1() which were mistaken for an error. Issue #637.
-- Resolve DDCA_Display_Ref to Display_Ref by lookup rather than casting in 
-  functions ddci_report_display_info(), dbgrpt_display_info().  The bug was 
-  encountered only when tracing.
+- Resolve DDCA_Display_Ref to Display_Ref by table lookup rather than by
+  casting in function **ddci_report_display_info()** (called by 
+  **ddca_report_display_info()**, **ddca_report_display_info2()**, 
+  **ddca_report_display_info_list()**, and debug functions. The bug was 
+  encountered when tracing.
 - Assertion failure in **dw_add_display_by_businfo()** when a monitor
   disconnected while being added by display change detection and so was not 
   marked removed, i.e it went away between the bus probe and the open. The
