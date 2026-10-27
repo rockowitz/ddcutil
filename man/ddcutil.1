@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH ddcutil 1 "2024-01-11"
+.TH ddcutil 1 "2026-10-27"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -367,7 +367,17 @@ The default is
 Force \fBddcutil\fP to ignore a particular USB device, specified by its 4 hex digit vendor id and its 4 hex digit product id.
 .TQ
 .BI "--ignore-hiddev " hiddev-device-number
-Force \fBddcutil\fI to ignore a particular USB device, specified by /dev/usb/hiddev device number
+Force \fBddcutil\fP to ignore a particular USB device, specified by /dev/usb/hiddev device number
+.TQ
+.BI "--ignore-bus " bus-number
+Ignore /dev/i2c device \fIbus-number\fP, e.g. 3 for /dev/i2c-3.
+May be specified more than once.
+.TQ
+.BI "--ignore-driver " driver-name
+Ignore /dev/i2c devices and DRM connectors that use driver \fIdriver-name\fP,
+e.g. \fBevdi\fP for DisplayLink devices.
+Unlike a bus number, a driver name does not change across reboots or when a device is reconnected.
+May be specified more than once.
 .TQ
 .BI "--use-file-io | --use-ioctl-io"
 Cause \fBddcutil\fP to use the write()/read() interface or the ioctl interface of driver dev-i2c to send and receive I2C packets.
