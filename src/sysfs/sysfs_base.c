@@ -277,10 +277,10 @@ Sysfs_Connector_Names get_sysfs_drm_connector_names() {
  }
 
 
-/** Adds a single connector name, e.g. card0-HDMI-1, to an array of names.
+/** Adds the current connector name, e.g. card0-HDMI-1, to an array of names.
  *
  *  @param  dirname    directory being scanned, ignored
- *  @param  simple_fn  connector name
+ *  @param  simple_fn  connector name to be added
  *  @param  data       pointer to the GPtrArray collecting the names
  *  @param  depth      ignored
  */
