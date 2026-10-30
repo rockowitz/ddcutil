@@ -12,7 +12,7 @@ minor bug fixes for specific situations.
   it does not depend on bus numbers, which for devices such as DisplayLink
   (driver evdi) can change across reboots or when the device is reconnected.
   ***--ignore-driver evdi*** keeps ddcutil from reading the sysfs EDID of
-  DisplayLink connectors, a read seen to hang during suspend. Issue #659.
+  DisplayLink devices, a read seen to hang during suspend. Issue #659.
 
 #### Changed 
 .
