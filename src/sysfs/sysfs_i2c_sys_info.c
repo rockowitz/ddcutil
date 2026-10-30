@@ -255,7 +255,7 @@ one_drm_card(
    dir_ordered_foreach(
          buf,
          predicate_cardN_connector,
-         gaux_ptr_scomp,
+         gaux_ptr_strcasecmp,
          read_drm_nondp_card_connector_node,
          info,
          depth);

@@ -324,7 +324,7 @@ static char * get_gptrarray_as_joined_string(GPtrArray * arry, bool sort) {
    char * result = NULL;
    if (arry) {
       if (sort)
-         g_ptr_array_sort(arry, gaux_ptr_scomp);
+         g_ptr_array_sort(arry, gaux_ptr_strcasecmp);
       result = join_string_g_ptr_array(arry, ", ");
    }
    return result;
@@ -335,7 +335,7 @@ static char * get_gptrarray_as_joined_string(GPtrArray * arry, bool sort) {
 static char * get_traced_functions_as_joined_string() {
    char * result = NULL;
    if (traced_function_table) {
-      g_ptr_array_sort(traced_function_table, gaux_ptr_scomp);
+      g_ptr_array_sort(traced_function_table, gaux_ptr_strcasecmp);
       result = join_string_g_ptr_array(traced_function_table, ", ");
    }
    return result;
@@ -345,7 +345,7 @@ static char * get_traced_functions_as_joined_string() {
 static char * get_traced_api_calls_as_joined_string() {
    char * result = NULL;
    if (traced_api_call_table) {
-      g_ptr_array_sort(traced_api_call_table, gaux_ptr_scomp);
+      g_ptr_array_sort(traced_api_call_table, gaux_ptr_strcasecmp);
       result = join_string_g_ptr_array(traced_api_call_table, ", ");
    }
    return result;
@@ -355,7 +355,7 @@ static char * get_traced_api_calls_as_joined_string() {
 static char * get_traced_callstack_calls_as_joined_string() {
    char * result = NULL;
    if (traced_callstack_call_table) {
-      g_ptr_array_sort(traced_callstack_call_table, gaux_ptr_scomp);
+      g_ptr_array_sort(traced_callstack_call_table, gaux_ptr_strcasecmp);
       result = join_string_g_ptr_array(traced_callstack_call_table, ", ");
    }
    return result;
@@ -366,7 +366,7 @@ static char * get_traced_callstack_calls_as_joined_string() {
 static char * get_traced_files_as_joined_string() {
    char * result = NULL;
    if (traced_file_table) {
-      g_ptr_array_sort(traced_file_table, gaux_ptr_scomp);
+      g_ptr_array_sort(traced_file_table, gaux_ptr_strcasecmp);
       result = join_string_g_ptr_array(traced_file_table, ", ");
    }
    return result;

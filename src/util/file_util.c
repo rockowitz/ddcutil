@@ -497,13 +497,24 @@ dir_foreach(
 }
 
 
+/** Handles the boilerplate of iterating over a directory, with the possiblity
+ *  of early.
+ *
+ *  \param   dirname     directory name
+ *  \param   fn_filter   tests the name of a file in a directory to see if should
+ *                       be processed.  If NULL, all files are processed.
+ *  \param   func        function to be called for each filename in the directory
+ *                       Iteration terminates if the function returns true.
+ *  \param   accumulator pointer to a data structure passed
+ *  \param   depth       logical indentation depth
+ */
 void
 dir_foreach_terminatable(
-      const char *          dirname,
-      Filename_Filter_Func  fn_filter,
-      Terminating_Dir_Foreach_Func      func,
-      void *                accumulator,
-      int                   depth)
+      const char *                  dirname,
+      Filename_Filter_Func          fn_filter,
+      Terminating_Dir_Foreach_Func  func,
+      void *                        accumulator,
+      int                           depth)
 {
    struct dirent *dent;
    DIR           *d;
@@ -532,7 +543,8 @@ dir_foreach_terminatable(
  *  \param   dirname      directory name
  *  \param   fn_filter    tests the name of a file in a directory to see if should
  *                        be processed.  If NULL, all files are processed.
- *  \param   compare_func qsort style function to compare filenames. If NULL perform string comparison
+ *  \param   compare_func qsort style function to compare filenames.
+ *                        If NULL, perform strcmp comparison using indirect_string
  *  \param   func         function to be called for each filename in the directory
  *  \param   accumulator  pointer to a data structure passed
  *  \param   depth        logical indentation depth
@@ -635,7 +647,7 @@ dir_ordered_foreach_with_arg(
  *  \param   dirname      directory name
  *  \param   dir_filter   tests the name of a file in a directory to see if should
  *                        be processed.  If NULL, all files are processed.
- *  \param   compare_func qsort style function to compare filenames. If NULL perform string comparison
+ *  \param   compare_func qsort style function to compare filenames. If NULL use indirect_strcmp().
  *  \param   func         function to be called for each file processed
  *  \param   accumulator  pointer to a data structure passed
  *  \param   depth        logical indentation depth

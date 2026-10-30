@@ -142,7 +142,7 @@ get_hiddev_device_names_using_udev() {
        }
        udev_device_unref(dev);
     }
-    g_ptr_array_sort(dev_names, gaux_ptr_scomp);
+    g_ptr_array_sort(dev_names, gaux_ptr_strcasecmp);
     udev_enumerate_unref(enumerate);        // free the enumerator object
     udev_unref(udev);
 

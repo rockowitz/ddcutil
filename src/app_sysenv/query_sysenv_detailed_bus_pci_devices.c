@@ -192,7 +192,7 @@ void sysfs_dir_cardN(
    dir_ordered_foreach(
          fqfn,
          predicate_cardN_connector,
-         gaux_ptr_scomp,    // GCompareFunc
+         gaux_ptr_strcasecmp,    // GCompareFunc
          sysfs_dir_cardN_cardNconnector,
          accumulator,
          depth);
@@ -324,7 +324,7 @@ void one_pci_device(
        dir_ordered_foreach(
              dir_fn_drm,
              predicate_cardN,   // only subdirectories named drm/cardN
-             gaux_ptr_scomp,    // GCompareFunc
+             gaux_ptr_strcasecmp,    // GCompareFunc
              sysfs_dir_cardN,
              accumulator,
              d1);

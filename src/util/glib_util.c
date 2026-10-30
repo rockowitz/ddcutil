@@ -113,7 +113,8 @@ g_list_to_g_array(
 //      gconstpointer b
 //    )
 
-/** String comparison function with signature GCompareFunc
+/** Case insensitive string comparison function with signature GCompareFunc,
+ *  i.e. its the signature for a sort function passed to qsort().
  *
  * @param a pointer to first string
  * @param b pointer to second string
@@ -122,7 +123,7 @@ g_list_to_g_array(
  * @remark Used by g_ptr_array_sort()
  */
 gint
-gaux_ptr_scomp(
+gaux_ptr_strcasecmp(
       gconstpointer a,
       gconstpointer b)
 {

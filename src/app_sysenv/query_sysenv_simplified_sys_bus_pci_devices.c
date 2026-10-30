@@ -152,7 +152,7 @@ void report_one_pci_device(
          dir_filtered_ordered_foreach(
                drmdir,
                is_cardN_dir,
-               gaux_ptr_scomp,  // fails if card-11 etc.exist, but chance of that is vanishingly small
+               gaux_ptr_strcasecmp,  // fails if card-11 etc.exist, but chance of that is vanishingly small
                report_one_cardN,
                NULL,
                depth);

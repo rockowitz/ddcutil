@@ -221,7 +221,7 @@ void dump_original_sys_scans() {
       dir_ordered_foreach(
             "/sys/class/drm",
             predicate_cardN_connector,
-            gaux_ptr_scomp,    // GCompareFunc
+            gaux_ptr_strcasecmp,    // GCompareFunc
             each_drm_device,    //
             NULL,                 // accumulator
             0);                   // depth

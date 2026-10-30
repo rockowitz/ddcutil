@@ -85,7 +85,7 @@ char * join_string_g_ptr_array2(
    char * result = NULL;
    if (strings) {
       if (sort)
-         g_ptr_array_sort(strings, gaux_ptr_scomp);
+         g_ptr_array_sort(strings, gaux_ptr_strcasecmp);
       result = join_string_g_ptr_array(strings, sepstr);
    }
    else

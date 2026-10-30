@@ -2325,7 +2325,7 @@ static void dbgrpt_ids_hash(int depth) {
           g_ptr_array_add(keys, l->data);
       }
       g_list_free(keys_list);    // Free GList container (not the keys themselves)
-      g_ptr_array_sort(keys, gaux_ptr_scomp);
+      g_ptr_array_sort(keys, gaux_ptr_strcasecmp);
       for (int ndx = 0; ndx < keys->len; ndx++) {
          char * next_key = g_ptr_array_index(keys, ndx);
          char * v = g_hash_table_lookup(ids_hash, next_key);

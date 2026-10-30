@@ -149,7 +149,7 @@ const char * drm_bus_type_name(uint8_t bus) {
  GPtrArray * get_dri_device_names_using_filesys() {
     const char *dri_paths[] = { "/dev/dri/", NULL };
     GPtrArray* dev_names = get_filenames_by_filter(dri_paths, is_dri2);
-    g_ptr_array_sort(dev_names, gaux_ptr_scomp);   // needed?
+    g_ptr_array_sort(dev_names, gaux_ptr_strcasecmp);   // needed?
     return dev_names;
  }
 

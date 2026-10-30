@@ -36,7 +36,7 @@ g_list_to_g_array(
       guint * length);
 
 gint
-gaux_ptr_scomp(
+gaux_ptr_strcasecmp(
       gconstpointer a,
       gconstpointer b);
 

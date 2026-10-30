@@ -268,8 +268,8 @@ Sysfs_Connector_Names get_sysfs_drm_connector_names() {
                  get_sysfs_drm_add_one_connector_name,
                  &connector_names,      // accumulator
                  0);
-   g_ptr_array_sort(connector_names.all_connectors, gaux_ptr_scomp);
-   g_ptr_array_sort(connector_names.connectors_having_edid, gaux_ptr_scomp);
+   g_ptr_array_sort(connector_names.all_connectors, gaux_ptr_strcasecmp);
+   g_ptr_array_sort(connector_names.connectors_having_edid, gaux_ptr_strcasecmp);
 
    DBGTRC_RET_STRUCT_VALUE(debug, DDCA_TRC_NONE, Sysfs_Connector_Names,
                                   dbgrpt_sysfs_connector_names, connector_names);
@@ -320,7 +320,7 @@ GPtrArray * get_sysfs_drm_connector_names_only() {
                  get_sysfs_drm_add_one_connector_name_only,
                  names,                   // accumulator
                  0);
-   g_ptr_array_sort(names, gaux_ptr_scomp);
+   g_ptr_array_sort(names, gaux_ptr_strcasecmp);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d connector names", names->len);
    return names;
