@@ -1035,7 +1035,7 @@ char * chars_to_string(const char * start, int len)
 int indirect_strcmp(const void * a, const void * b) {
    char * alpha = *(char **) a;
    char * beta  = *(char **) b;
-   return strcmp(alpha, beta);
+   return g_strcmp0(alpha, beta);
 }
 
 
