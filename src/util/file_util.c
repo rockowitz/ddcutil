@@ -455,25 +455,52 @@ filename_for_fd_t(int fd) {
 }
 
 
-/** Handles the boilerplate of iterating over a directory.
+// combinds dIr_ordered_foreach_with_arg() dir_filtered_ordered_foreach()
+
+/** Selects files from a directory using any combination of three filter
+ *  functions, then iterates over the selected files in an ordered manner.
  *
- *  \param   dirname     directory name
- *  \param   fn_filter   tests the name of a file in a directory to see if should
- *                       be processed.  If NULL, all files are processed.
- *  \param   func        function to be called for each filename in the directory
- *  \param   accumulator pointer to a data structure passed
- *  \param   depth       logical indentation depth
+ *  Combines #dir_ordered_foreach(), #dir_ordered_foreach_with_arg() and
+ *  #dir_filtered_ordered_foreach().  A file is processed only if it passes
+ *  every filter that is set.
+ *
+ *  \param   dirname      directory name
+ *  \param   dir_filter   tests the directory name and the name of a file in it.
+ *                        If NULL, this test is not performed.
+ *  \param   fn_filter_noarg  tests the name of a file, without an argument.
+ *                        If NULL, this test is not performed.
+ *  \param   fn_filter    tests the name of a file, using fn_filter_argument.
+ *                        If NULL, this test is not performed.
+ *  \param   fn_filter_argument  passed unchanged to fn_filter, may be NULL
+ *  \param   compare_func qsort style function to compare filenames. If NULL use indirect_strcmp().
+ *  \param   func         function to be called for each file processed
+ *  \param   accumulator  pointer to a data structure passed
+ *  \param   depth        logical indentation depth
+ *
+ *  \remark
+ *  If fn_filter_argument is NULL, fn_filter is still called, with a NULL
+ *  argument; a filter that requires an argument must check for it.
  */
 void
-dir_foreach(
-      const char *         dirname,
-      Filename_Filter_Func fn_filter,
-      Dir_Foreach_Func     func,
-      void *               accumulator,
-      int                  depth)
+dir_general_foreach(
+        const char *          dirname,
+        Dir_Filter_Func       dir_filter,
+        Filename_Filter_Func  fn_filter_noarg,
+        Filename_Filter_Func_With_Arg
+                              fn_filter,
+        const char *          fn_filter_argument,
+        GCompareFunc          compare_func,
+        Dir_Foreach_Func      func,
+        void *                accumulator,
+        int                   depth)
 {
-   // bool debug = true;
-   // DBGF(debug, "Starting. accumulator=%p", accumulator);
+   bool debug = false;
+   DBGF(debug, "Starting. dirname=%s, fn_filter_argument=%s%s%s",
+         dirname,
+         (fn_filter_argument) ? "|" : "",
+         (fn_filter_argument) ? fn_filter_argument : "NULL",
+         (fn_filter_argument) ? "|" : "");
+   GPtrArray * simple_filenames = g_ptr_array_new_with_free_func(g_free);
 
    struct dirent *dent;
    DIR           *d;
@@ -483,18 +510,139 @@ dir_foreach(
    }
    else {
       while ((dent = readdir(d)) != NULL) {
-         // DBGMSG("%s", dent->d_name);
          if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
-            if (!fn_filter || fn_filter(dent->d_name)) {
-               func(dirname, dent->d_name, accumulator, depth);
+            if ( (!dir_filter || dir_filter(dirname, dent->d_name)) &&
+                 (!fn_filter_noarg || fn_filter_noarg(dent->d_name))   &&
+                 (!fn_filter  || fn_filter(dent->d_name, fn_filter_argument)) )
+            {
+               DBGF(debug, "Adding simple filename |%s|", dent->d_name);
+               g_ptr_array_add(simple_filenames, g_strdup(dent->d_name));
             }
          }
       }
       closedir(d);
-   }
 
-   // DBGF(debug, "Done.  accumlator=%p", accumulator);
+      if (compare_func)
+         g_ptr_array_sort(simple_filenames, compare_func);
+      else
+         g_ptr_array_sort(simple_filenames, indirect_strcmp);
+
+      for (int ndx = 0; ndx < simple_filenames->len; ndx++) {
+         char * fn = g_ptr_array_index(simple_filenames, ndx);
+         DBGF(debug, "Calling Dir_Foreach_Func, dirname=%s, fn=%s", dirname, fn);
+         func(dirname, fn, accumulator, depth);
+      }
+   }
+   g_ptr_array_free(simple_filenames, true);
+
+   DBGF(debug, "Done.");
 }
+
+
+/** Handles the boilerplate of iterating over a directory.
+ *  Implemented using #dir_general_foreach().
+ *
+ *  \param   dirname     directory name
+ *  \param   fn_filter   tests the name of a file in a directory to see if should
+ *                       be processed.  If NULL, all files are processed.
+ *  \param   func        function to be called for each filename in the directory
+ *  \param   accumulator pointer to a data structure passed
+ *  \param   depth       logical indentation depth
+ *
+ *  \remark
+ *  Files are processed in indirect_strcmp() order.  The previous implementation
+ *  processed them in the order readdir() returned them.
+ */
+void
+dir_foreach(
+      const char *         dirname,
+      Filename_Filter_Func fn_filter,
+      Dir_Foreach_Func     func,
+      void *               accumulator,
+      int                  depth)
+{
+   dir_general_foreach(dirname, NULL, fn_filter, NULL, NULL, NULL, func, accumulator, depth);
+}
+
+
+/** Iterates over a directory in an ordered manner.
+ *  Implemented using #dir_general_foreach().
+ *
+ *  \param   dirname      directory name
+ *  \param   fn_filter    tests the name of a file in a directory to see if should
+ *                        be processed.  If NULL, all files are processed.
+ *  \param   compare_func qsort style function to compare filenames. If NULL use indirect_strcmp().
+ *  \param   func         function to be called for each filename in the directory
+ *  \param   accumulator  pointer to a data structure passed
+ *  \param   depth        logical indentation depth
+ */
+void
+dir_ordered_foreach(
+        const char *          dirname,
+        Filename_Filter_Func  fn_filter,
+        GCompareFunc          compare_func,
+        Dir_Foreach_Func      func,
+        void *                accumulator,
+        int                   depth)
+{
+   dir_general_foreach(dirname, NULL, fn_filter, NULL, NULL, compare_func, func, accumulator, depth);
+}
+
+
+/** Iterates over a directory in an ordered manner, using a filter function
+ *  that takes an argument.  Implemented using #dir_general_foreach().
+ *
+ *  \param   dirname      directory name
+ *  \param   fn_filter    tests the name of a file, using fn_filter_argument.
+ *                        If NULL, all files are processed.
+ *  \param   fn_filter_argument  passed unchanged to fn_filter, may be NULL
+ *  \param   compare_func qsort style function to compare filenames. If NULL use indirect_strcmp().
+ *  \param   func         function to be called for each filename in the directory
+ *  \param   accumulator  pointer to a data structure passed
+ *  \param   depth        logical indentation depth
+ */
+void
+dir_ordered_foreach_with_arg(
+        const char *          dirname,
+        Filename_Filter_Func_With_Arg
+                              fn_filter,
+        const char *          fn_filter_argument,
+        GCompareFunc          compare_func,
+        Dir_Foreach_Func      func,
+        void *                accumulator,
+        int                   depth)
+{
+   dir_general_foreach(dirname, NULL, NULL, fn_filter, fn_filter_argument, compare_func,
+                       func, accumulator, depth);
+}
+
+
+/** Selects files from a directory using a filter function,
+ *  then Iterates over the selected files in an ordered manner.
+ *  Implemented using #dir_general_foreach().
+ *
+ *  \param   dirname      directory name
+ *  \param   dir_filter   tests the directory name and the name of a file in it.
+ *                        If NULL, all files are processed.
+ *  \param   compare_func qsort style function to compare filenames. If NULL use indirect_strcmp().
+ *  \param   func         function to be called for each file processed
+ *  \param   accumulator  pointer to a data structure passed
+ *  \param   depth        logical indentation depth
+ */
+void
+dir_filtered_ordered_foreach(
+        const char *          dirname,
+        Dir_Filter_Func       dir_filter,
+        GCompareFunc          compare_func,
+        Dir_Foreach_Func      func,
+        void *                accumulator,
+        int                   depth)
+{
+   dir_general_foreach(dirname, dir_filter, NULL, NULL, NULL, compare_func, func, accumulator, depth);
+}
+
+
+
 
 
 /** Handles the boilerplate of iterating over a directory, with the possiblity
@@ -535,6 +683,48 @@ dir_foreach_terminatable(
       }
       closedir(d);
    }
+}
+
+#ifdef OLD
+/** Handles the boilerplate of iterating over a directory.
+ *
+ *  \param   dirname     directory name
+ *  \param   fn_filter   tests the name of a file in a directory to see if should
+ *                       be processed.  If NULL, all files are processed.
+ *  \param   func        function to be called for each filename in the directory
+ *  \param   accumulator pointer to a data structure passed
+ *  \param   depth       logical indentation depth
+ */
+void
+dir_foreach(
+      const char *         dirname,
+      Filename_Filter_Func fn_filter,
+      Dir_Foreach_Func     func,
+      void *               accumulator,
+      int                  depth)
+{
+   // bool debug = true;
+   // DBGF(debug, "Starting. accumulator=%p", accumulator);
+
+   struct dirent *dent;
+   DIR           *d;
+   d = opendir(dirname);
+   if (!d) {
+      rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
+   }
+   else {
+      while ((dent = readdir(d)) != NULL) {
+         // DBGMSG("%s", dent->d_name);
+         if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+            if (!fn_filter || fn_filter(dent->d_name)) {
+               func(dirname, dent->d_name, accumulator, depth);
+            }
+         }
+      }
+      closedir(d);
+   }
+
+   // DBGF(debug, "Done.  accumlator=%p", accumulator);
 }
 
 
@@ -631,7 +821,7 @@ dir_ordered_foreach_with_arg(
 
       for (int ndx = 0; ndx < simple_filenames->len; ndx++) {
          char * fn = g_ptr_array_index(simple_filenames, ndx);
-         DBGF(debug, "Calling Dir_Foreach_Func, dirname=%s, fn=%s", __func__, dirname, fn);
+         DBGF(debug, "Calling Dir_Foreach_Func, dirname=%s, fn=%s", dirname, fn);
          func(dirname, fn, accumulator, depth);
       }
    }
@@ -693,6 +883,7 @@ dir_filtered_ordered_foreach(
    }
    g_ptr_array_free(simple_filenames, true);
 }
+#endif
 
 
 /** Reads the contents of a file into a #GPtrArray of lines, optionally keeping only
