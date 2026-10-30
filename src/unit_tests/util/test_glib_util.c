@@ -75,7 +75,7 @@ static void test_comparators(void) {
    char * s_abc = "abc";
    char * s_ABC = "ABC";
    char * s_abd = "abd";
-   // gaux_ptr_scomp: case-insensitive, GCompareFunc over pointers-to-strings
+   // gaux_ptr_strcasecmp: case-insensitive, GCompareFunc over pointers-to-strings
    CK(gaux_ptr_strcasecmp(&s_abc, &s_ABC) == 0);      // differ only in case
    CK(gaux_ptr_strcasecmp(&s_abc, &s_abd) < 0);
    CK(gaux_ptr_strcasecmp(&s_abd, &s_abc) > 0);
