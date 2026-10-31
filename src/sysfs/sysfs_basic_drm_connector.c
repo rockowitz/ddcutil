@@ -78,8 +78,8 @@ static Sys_Basic_Drm_Connector * one_basic_drm_connector0(
    RPT_ATTR_INT(d0, &cur->connector_id, dirname, fn, "connector_id");
 
    // Forces the driver to re-probe the connector before the EDID is read, on
-   // the drivers where that is needed and only when the user asked for it with
-   // --f24.  Same call the full scan makes; skipping it would make this scan
+   // the drivers where that is needed and only when enable_write_detect_to_status
+   // is set.  Same call the full scan makes; skipping it would make this scan
    // quietly different rather than merely cheaper.
    POSSIBLY_WRITE_DETECT_TO_STATUS_BY_CONNECTOR_NAME(fn);
 

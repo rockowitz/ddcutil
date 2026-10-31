@@ -24,10 +24,10 @@
 #include "base/status_code_mgt.h"
 
 // Set from options in ddc_common_init.c
-extern bool force_failure_i2c_open;                     // --f17
-extern int  max_eacces_retry_ms;                        // --i11
-extern int  max_eacces_retry_ct;                        // --i12
-extern int  rate_limit_eacces_diagnostics_interval_sec; // --i13
+extern bool force_failure_i2c_open;
+extern int  max_eacces_retry_ms;
+extern int  max_eacces_retry_ct;
+extern int  rate_limit_eacces_diagnostics_interval_sec;
 
 // Bus open and close
 #ifdef DETERMINED_UNUSED

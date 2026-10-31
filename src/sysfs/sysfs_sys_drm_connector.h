@@ -21,9 +21,9 @@
 extern GPtrArray * sys_drm_connectors;
 extern GRecMutex   sys_drm_connectors_mutex;
 #ifdef MAINTAINED_CONNECTOR_ARRAY
-extern bool        drm_connector_removal_delete_only;    // utility option --f30
-extern bool        drm_connector_removal_rebuild_only;   // utility option --f34
-extern bool        refresh_connectors_on_hotplug;        // disabled by utility option --f40
+extern bool        drm_connector_removal_delete_only;
+extern bool        drm_connector_removal_rebuild_only;
+extern bool        refresh_connectors_on_hotplug;
 #endif
 extern bool all_drm_connectors_have_connector_id;
 

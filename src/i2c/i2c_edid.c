@@ -109,14 +109,15 @@ int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
  * EDID begins 00 ff ff ff ff ff ff 00 and a CEA extension block begins 02, so the two
  * cannot be confused.  Its cost is one extra 256 byte read, in the failure case only.
  * The one behavioral note is that its helper re-reads through the i2c layer whatever
- * reader ran, so a recovery on the --f5 paths changes transport; that is defensible for
- * a repair, and those paths are developer options.
+ * reader ran, so a recovery when EDID_Read_Uses_I2C_Layer is false changes transport;
+ * that is defensible for a repair, and those paths are developer options.
  *
  * RECOVER_CURRENT_ADDRESS_READ and RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER remain
  * parked.  With the catch-all live they add only earliness on their own reader, and
- * RECOVER_CURRENT_ADDRESS_READ is reachable only under --f5.  Each is still guarded
- * separately, and each still compiles on its own, so either can be enabled to attribute
- * a repair to one interception point should a reproducer ever appear.
+ * RECOVER_CURRENT_ADDRESS_READ is reachable only when EDID_Read_Uses_I2C_Layer is
+ * false.  Each is still guarded separately, and each still compiles on its own, so
+ * either can be enabled to attribute a repair to one interception point should a
+ * reproducer ever appear.
  */
 #define RECOVER_CURRENT_ADDRESS_READ_BY_FD
 
@@ -971,8 +972,8 @@ void init_i2c_edid() {
  * so on a silent bus the read is never submitted.  The corollary is that
  * suppressing the write exposed the two ioctl readers to the same cost for the
  * opposite reason -- no write precedes the read, so the read goes to the engine
- * alone.  Measured 1301.9 ms on the same bus, using EDID_Write_Before_Read=false
- * via --f37, both since eliminated: the write is now unconditional, which is what
+ * alone.  Measured 1301.9 ms on the same bus, using EDID_Write_Before_Read=false,
+ * since eliminated: the write is now unconditional, which is what
  * keeps a silent bus cheap on this driver.
  *
  * One further fact from that measurement: this function's caller falls through to

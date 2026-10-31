@@ -71,17 +71,17 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 // Globals
 bool try_get_edid_from_sysfs_first = true;    // enable-try-get-edid-from-sysfs, disable-try-get-edid-from-sysfs
 
-bool primitive_sysfs = false;                 // logic and --f23
+bool primitive_sysfs = false;                 // set by logic and in ddc_common_init.c
 
 // If true, i2c_edid_exists() does not open the device when the DRM connector
 // for the bus reports status "disconnected".
-bool edid_exists_checks_drm_status = true;    // --f35
+bool edid_exists_checks_drm_status = true;
 
 /** If true, i2c_edid_exists() and i2c_check_bus() do not open the device when
  *  no DRM connector names the bus, on a machine whose driver publishes that
- *  mapping.  Cleared by --f38.
+ *  mapping.  Cleared in ddc_common_init.c.
  *
- *  What --f38 is for.  Disabling the skip is purely a cost: on ritter, amdgpu
+ *  What clearing it is for.  Disabling the skip is purely a cost: on ritter, amdgpu
  *  with four unclaimed buses, detect takes 2.2 seconds with the skip and 7.4
  *  without, and finds the same displays either way.  The option exists as a
  *  diagnostic, not as a tuning knob, and it is off by default so that cost is
@@ -89,8 +89,8 @@ bool edid_exists_checks_drm_status = true;    // --f35
  *
  *  The skip rests on an inference: this driver publishes the bus/connector
  *  mapping, no connector names this bus, therefore no display is here.  When
- *  a display goes missing on a driver where it should be found, --f38 is how
- *  one determines whether that inference is what hid it, without rebuilding.
+ *  a display goes missing on a driver where it should be found, clearing
+ *  edid_exists_skips_unmapped_bus is how one determines whether that inference is what hid it, without rebuilding.
  *
  *  Not hypothetical caution.  Each of the three guard conditions on the rule
  *  exists because an assumption of exactly this shape proved wrong somewhere:
@@ -104,7 +104,7 @@ bool edid_exists_checks_drm_status = true;    // --f35
  *  boolean test.
  */
 
-bool edid_exists_skips_unmapped_bus = true;   // --f38
+bool edid_exists_skips_unmapped_bus = true;
 
 
 //

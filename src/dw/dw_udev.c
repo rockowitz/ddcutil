@@ -55,7 +55,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
  *  the significance of its subsystem and action, the settling pause that an add
  *  outside /dev/dri will cause, and the connector and I2C bus named by its
  *  CONNECTOR property.  Reported only when that basic report is, i.e. when
- *  debug is set in dw_udev_watch() or report_udev_events is set by --f18.
+ *  debug is set in dw_udev_watch() or report_udev_events is set.
  *
  *  Experimental, and used only in this file.
  *
@@ -122,8 +122,8 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_CONN;
 #endif
 
 // globals
-bool    report_udev_events = false;   // --f18
-bool    interpret_reported_udev_events = false;   // --f13
+bool    report_udev_events = false;
+bool    interpret_reported_udev_events = false;
 
 
 /** Minimum seconds between execution statistics reports from #dw_udev_watch(),
@@ -139,7 +139,7 @@ bool    interpret_reported_udev_events = false;   // --f13
  *
  *  Accepted rather than fixed: capping the poll timeout at the interval would
  *  make it a true period, but would reintroduce the periodic wakeup that the
- *  eventfd path (--f32) exists to eliminate, and idle power residency matters
+ *  eventfd path (use_eventfd) exists to eliminate, and idle power residency matters
  *  more here than report cadence.
  */
 int     udev_watch_stats_interval_sec = DEFAULT_UDEV_WATCH_STATS_INTERVAL_SEC;  // --i15

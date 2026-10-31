@@ -71,13 +71,13 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 // Globals, consumed only by the open/close path.  Set from options in
 // ddc_common_init.c; declared in i2c_bus_open_close.h with the rest of this
 // subsystem's externs.
-bool force_failure_i2c_open = false;                     // --f17
-int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;  // --i11
-int  max_eacces_retry_ct = DEFAULT_MAX_EACCES_RETRY_CT;  // --i12
+bool force_failure_i2c_open = false;
+int  max_eacces_retry_ms = DEFAULT_MAX_EACCES_RETRY_MS;
+int  max_eacces_retry_ct = DEFAULT_MAX_EACCES_RETRY_CT;
 
 // The expensive EACCES diagnostics in i2c_open_bus_basic() -- traced function
 // stack dump, open failure diagnosis -- are emitted at most once per interval
-// instead of once per open call.  --i13
+// instead of once per open call.
 int rate_limit_eacces_diagnostics_interval_sec = DEFAULT_EACCES_DIAGNOSTIC_INTERVAL_SEC;
 
 
@@ -333,7 +333,7 @@ retry:
             // stabilization rescans multiply the failures.  Emit the expensive
             // diagnostics (traced function stack dump, open failure diagnosis,
             // which forks getfacl and lsof) at most once per
-            // rate_limit_eacces_diagnostics_interval_sec (option --i13),
+            // rate_limit_eacces_diagnostics_interval_sec,
             // process wide, not once per failing open: a single rescan of
             // this machine's buses would otherwise produce one full dump per
             // inaccessible bus.  An interval of 0 disables the limit.

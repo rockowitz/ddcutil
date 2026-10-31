@@ -441,21 +441,22 @@ Bit_Set_256 ddc_i2c_check_bus_asleep(
  *
  *  By default this deletes the one instance naming the bus and rebuilds the
  *  array from sysfs only if no instance names it.  Either half can be selected
- *  on its own for comparison, with utility option --f30 or --f34.  The
+ *  on its own for comparison, by setting drm_connector_removal_delete_only or
+ *  drm_connector_removal_rebuild_only.  The
  *  trade-offs that produced the combination, and the measurements behind them,
  *  are written up in claude_changes.txt.
  *
  *  Defensive: no driver tested has ever removed an I2C bus, so neither this nor
- *  either alternative has run on hardware, and --f30 and --f34 cannot be told
- *  apart on such a machine.  See the remark on
+ *  either alternative has run on hardware, and drm_connector_removal_delete_only
+ *  and drm_connector_removal_rebuild_only cannot be told apart on such a machine.  See the remark on
  *  #drop_sys_drm_connector_for_removed_bus() for what was tried.
  *
  *  @param  busno  I2C bus number of the removed bus
  */
 static void dw_drop_sys_drm_connector(int busno) {
-   if (drm_connector_removal_delete_only)         // --f30
+   if (drm_connector_removal_delete_only)
       remove_sys_drm_connector_by_busno(busno);
-   else if (drm_connector_removal_rebuild_only)   // --f34
+   else if (drm_connector_removal_rebuild_only)
       recreate_sys_drm_connectors_after_bus_removal(busno);
    else
       drop_sys_drm_connector_for_removed_bus(busno);
@@ -508,7 +509,7 @@ bool dw_hotplug_change_handler(
     * a display has left.  The snapshot has no equivalent: it is built for
     * detection and discarded, so there is nothing to refresh.
     */
-   if (refresh_connectors_on_hotplug) {   // --f40 disables
+   if (refresh_connectors_on_hotplug) {
       get_sys_drm_connectors(/*rescan=*/ true);
       extended_bus_detection();
    }

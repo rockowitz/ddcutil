@@ -80,7 +80,7 @@ GPtrArray * sys_drm_connectors = NULL;  // Sys_Drm_Connector
 GRecMutex sys_drm_connectors_mutex;
 
 /* Select one of the three ways to drop a connector whose bus has gone away.
- * Set from utility options --f30 and --f34; neither set means the hybrid.
+ * Set in ddc_common_init.c; neither set means the hybrid.
  * Delete-only wins if both are set.  See dw_drop_sys_drm_connector().
  */
 #ifdef MAINTAINED_CONNECTOR_ARRAY
@@ -88,9 +88,9 @@ bool drm_connector_removal_delete_only  = false;
 bool drm_connector_removal_rebuild_only = false;
 
 /* Rebuild the connector array at the start of each hotplug handler pass, and
- * re-derive the deduced bus numbers.  On by default; utility option --f40
- * turns it off, which restores the behavior in which the array was refreshed
- * only as a side effect of a failed EDID match.
+ * re-derive the deduced bus numbers.  On by default; turning it off restores
+ * the behavior in which the array was refreshed only as a side effect of a
+ * failed EDID match.
  */
 bool refresh_connectors_on_hotplug = true;
 #endif
