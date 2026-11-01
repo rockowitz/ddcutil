@@ -39,6 +39,9 @@ minor bug fixes for specific situations.
 
 #### Fixed
 
+- EDID read on a DisplayPort MST (DPMST) bus failed, and the display was not
+  detected, if the hub ignored a separate offset write and the display's EDID
+  offset was not left at 0x80.  Use a combined offset write and read.
 - Slow performance  Issue #634.
 - The syslog level specified on **ddca_init2()** was overridden by the
   libddcutil default (DDCA_Syslog_Notice).  Pull Request #650.
