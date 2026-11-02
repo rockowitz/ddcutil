@@ -40,6 +40,8 @@
 #include "base/rtti.h"
 #include "base/sleep.h"
 
+#include "sysfs/sysfs_simple.h"
+
 #ifdef TARGET_BSD
 #include "bsd/i2c-dev.h"
 #else
@@ -616,6 +618,49 @@ i2c_get_edid_bytes_using_single_ioctl(
 }
 
 
+/** Tries to read the EDID base block using a combined offset write and read.
+ *
+ * @param   fd       file descriptor for open /dev/i2c-n
+ * @param   rawedid  buffer in which to return bytes of the EDID
+ * @return  true if a valid EDID was read
+ */
+STATIC bool
+i2c_try_combined_edid_read(int fd, Buffer * rawedid) {
+   bool debug = false;
+   Status_Errno_DDC combined_rc =
+         i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, 128);
+   bool ok = combined_rc == 0 && is_valid_raw_edid(rawedid->bytes, rawedid->len);
+   if (ok) {
+      DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
+            "%s: EDID base block read only by combined offset write and read",
+            filename_for_fd_t(fd));
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "Combined read did not return a valid EDID, combined_rc=%s",
+            psc_desc(combined_rc));
+   }
+   return ok;
+}
+
+
+/** Tests if an open I2C device is a DisplayPort MST remote I2C adapter.
+ *
+ * @param   fd  file descriptor for open /dev/i2c-n
+ * @return  true if the adapter's sysfs name is "DPMST"
+ */
+STATIC bool
+is_dpmst_bus(int fd) {
+   int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
+   if (busno < 0)
+      return false;
+   char * name = get_i2c_device_sysfs_name(busno);
+   bool result = name && streq(name, "DPMST");
+   free(name);
+   return result;
+}
+
+
 /** Gets EDID bytes of a monitor on an open I2C device.
  *
  * @param  fd        file descriptor for open /dev/i2c-n
@@ -788,19 +833,8 @@ retry:
                //   adds that cost.
                // It is not limited because none of these is established, and the
                // cost is confined to displays that otherwise cannot be read at all.
-               Status_Errno_DDC combined_rc =
-                     i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, 128);
-               if (combined_rc == 0 && is_valid_raw_edid(rawedid->bytes, rawedid->len)) {
+               if (i2c_try_combined_edid_read(fd, rawedid))
                   rc = 0;
-                  DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
-                        "%s: EDID base block read only by combined offset write and read",
-                        filename_for_fd_t(fd));
-               }
-               else {
-                  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                        "Combined read did not return a valid EDID, combined_rc=%s",
-                        psc_desc(combined_rc));
-               }
 #ifdef RECOVER_CURRENT_ADDRESS_READ_BY_FD
                // A valid extension block where the base block belongs means the
                // read began at word offset 0x80, i.e. it was a read at the
@@ -837,6 +871,17 @@ retry:
                         psc_desc(reread_rc));
                }
 #endif
+            }
+            else if (is_dpmst_bus(fd)) {
+               // Over an MST hub a separate offset write may be ignored, so the
+               // read continues from wherever the display's offset was left.  Only
+               // when that is 0x80 is the result an extension block, the case above.
+               // The combined read is tried for any invalid data, but only on DPMST
+               // buses: the kernel registers those adapters only for ports with an
+               // end device, which limits exposure to the amdgpu slowdown when
+               // nothing answers at 0x50.
+               if (i2c_try_combined_edid_read(fd, rawedid))
+                  rc = 0;
             }
          }
          if (rawedid->len == 256) {
