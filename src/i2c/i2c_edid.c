@@ -37,6 +37,7 @@
 #include "base/parms.h"
 #include "base/core.h"
 #include "base/execution_stats.h"
+#include "base/i2c_bus_base.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
 
@@ -623,6 +624,20 @@ i2c_get_edid_bytes_using_single_ioctl(
 }
 
 
+/** Tests whether a once per bus warning is still to be issued for the bus
+ *  open on **fd**, and records it as issued.  See i2c_first_edid_warning().
+ *
+ *  @param  fd       file descriptor for open /dev/i2c-n
+ *  @param  warning  EDID_WARNED_COMBINED_READ or EDID_WARNED_DPMST_FORCED_128
+ *  @return true if the warning is to be issued
+ */
+static bool
+first_edid_warning_for_bus(int fd, Byte warning) {
+   int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
+   return i2c_first_edid_warning(busno, warning);
+}
+
+
 /** Tries to read the EDID base block using a combined offset write and read.
  *
  * @param   fd       file descriptor for open /dev/i2c-n
@@ -650,9 +665,16 @@ i2c_try_combined_edid_read(int fd, Buffer * rawedid) {
       ddcrc = DDCRC_INVALID_EDID;
       goto bye;
    }
-   DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, DDCA_TRC_NONE,
-            "%s: EDID base block successfully read only by combined offset write and read",
-            filename_for_fd_t(fd));
+   if (first_edid_warning_for_bus(fd, EDID_WARNED_COMBINED_READ)) {
+      DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, DDCA_TRC_NONE,
+               "%s: EDID base block successfully read only by combined offset write and read",
+               filename_for_fd_t(fd));
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+               "%s: EDID base block successfully read only by combined offset write and read",
+               filename_for_fd_t(fd));
+   }
 
 bye:
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "bus: %s", filename_for_fd_t(fd));
@@ -722,10 +744,18 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, Optional_True_False * x30_respo
    // bus a 256 byte read is impossible; every EDID read is 128 bytes.
    bool dpmst = is_dpmst_bus(fd);
    if (dpmst && EDID_Read_Size == 256) {
-      DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
-            "%s is a DPMST bus, which cannot read 256 bytes.  Reading EDID 128 bytes"
-            " at a time instead of the requested 256.",
-            filename_for_fd_t(fd));
+      if (first_edid_warning_for_bus(fd, EDID_WARNED_DPMST_FORCED_128)) {
+         DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
+               "%s is a DPMST bus, which cannot read 256 bytes.  Reading EDID 128 bytes"
+               " at a time instead of the requested 256.",
+               filename_for_fd_t(fd));
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "%s is a DPMST bus, which cannot read 256 bytes.  Reading EDID 128 bytes"
+               " at a time instead of the requested 256.",
+               filename_for_fd_t(fd));
+      }
    }
    // Dynamic read size: 2 tries at 128 bytes, then 2 at 256.
    int max_tries = (EDID_Read_Size == 0) ? 4 : 2;

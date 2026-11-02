@@ -40,6 +40,12 @@ void             i2c_remove_businfo_by_busno(int busno);
 I2C_Bus_Info *   i2c_get_bus_info(int busno, bool* new_info);
 void             i2c_reset_bus_info(I2C_Bus_Info * businfo);
 
+// Once per bus EDID warnings
+#define EDID_WARNED_COMBINED_READ     0x01
+#define EDID_WARNED_DPMST_FORCED_128  0x02
+bool             i2c_first_edid_warning(int busno, Byte warning);
+void             i2c_forget_edid_warnings(int busno);
+
 // Reset arrays
 // void             i2c_discard_buses0(GPtrArray* buses);
 void             i2c_discard_buses();

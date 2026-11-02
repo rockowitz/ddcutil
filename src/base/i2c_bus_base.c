@@ -35,6 +35,48 @@ GMutex all_i2c_buses_mutex;
 
 
 //
+// Once per bus EDID warnings
+//
+
+// Syslog warnings issued by the EDID read at most once per bus, recorded per bus
+// number.  Kept here rather than in i2c_edid.c so that bus removal and discard,
+// in this file, can clear them.  No lock: only one thread at a time operates on
+// a given bus, and different buses use different bytes.
+static Byte edid_warnings_issued[I2C_BUS_MAX+1];
+
+
+/** Tests whether a once per bus EDID warning is still to be issued for a bus,
+ *  and records it as issued.
+ *
+ *  @param  busno    I2C bus number
+ *  @param  warning  EDID_WARNED_COMBINED_READ or EDID_WARNED_DPMST_FORCED_128
+ *  @return true if the warning has not yet been issued for the bus, or the bus
+ *          number is outside the range recorded
+ */
+bool i2c_first_edid_warning(int busno, Byte warning) {
+   bool result = true;
+   if (busno >= 0 && busno <= I2C_BUS_MAX) {
+      result = !(edid_warnings_issued[busno] & warning);
+      edid_warnings_issued[busno] |= warning;
+   }
+   return result;
+}
+
+
+/** Forgets which once per bus EDID warnings have been issued for a bus, so
+ *  that they are issued again for whatever display appears there next.
+ *  Called when a bus or its display is removed, and when all buses are
+ *  discarded.
+ *
+ *  @param  busno  I2C bus number
+ */
+void i2c_forget_edid_warnings(int busno) {
+   if (busno >= 0 && busno <= I2C_BUS_MAX)
+      edid_warnings_issued[busno] = 0;
+}
+
+
+//
 // Generalized Bus_Info retrieval
 //
 
@@ -478,6 +520,7 @@ void i2c_remove_bus_by_busno(int busno) {
    bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d", busno);
    assert(busno);
+   i2c_forget_edid_warnings(busno);
    g_mutex_lock(&all_i2c_buses_mutex);
    int  busNdx = i2c_find_bus_info_index_by_busno(busno);
    if (busNdx < 0) {
@@ -589,6 +632,7 @@ void i2c_discard_buses() {
 
    for (int ndx = all_i2c_buses->len - 1; ndx>=0; ndx--) {
       I2C_Bus_Info * removed = g_ptr_array_remove_index(all_i2c_buses, ndx);
+      i2c_forget_edid_warnings(removed->busno);
       i2c_free_bus_info(removed);
    }
 
