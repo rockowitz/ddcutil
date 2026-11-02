@@ -623,25 +623,36 @@ i2c_get_edid_bytes_using_single_ioctl(
  *
  * @param   fd       file descriptor for open /dev/i2c-n
  * @param   rawedid  buffer in which to return bytes of the EDID
- * @return  true if a valid EDID was read
+ * @retval  0                   valid EDID read
+ * @retval  DDCRC_INVALID_EDID  bytes read but not a valid EDID
+ * @retval  -errno              ioctl() failed
  */
-STATIC bool
+STATIC Status_Errno_DDC
 i2c_try_combined_edid_read(int fd, Buffer * rawedid) {
    bool debug = false;
-   Status_Errno_DDC combined_rc =
-         i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, 128);
-   bool ok = combined_rc == 0 && is_valid_raw_edid(rawedid->bytes, rawedid->len);
-   if (ok) {
-      DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
-            "%s: EDID base block read only by combined offset write and read",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, Buffer=%p", fd, rawedid);
+
+   Status_Errno_DDC ddcrc = i2c_get_edid_bytes_using_single_ioctl(fd, rawedid, 128);
+   // bool ok = combined_rc == 0 && is_valid_raw_edid(rawedid->bytes, rawedid->len);
+   if (ddcrc != 0) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "Combined read failed, ddcrc=%s",
+            psc_desc(ddcrc));
+      goto bye;
+   }
+   if (!is_valid_raw_edid(rawedid->bytes, rawedid->len)) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "Combined read did not return a valid EDID");
+      ddcrc = DDCRC_INVALID_EDID;
+      goto bye;
+   }
+   DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, DDCA_TRC_NONE,
+            "%s: EDID base block successfully read only by combined offset write and read",
             filename_for_fd_t(fd));
-   }
-   else {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "Combined read did not return a valid EDID, combined_rc=%s",
-            psc_desc(combined_rc));
-   }
-   return ok;
+
+bye:
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "bus: %s", filename_for_fd_t(fd));
+   return ddcrc;
 }
 
 
@@ -652,11 +663,18 @@ i2c_try_combined_edid_read(int fd, Buffer * rawedid) {
  */
 STATIC bool
 is_dpmst_bus(int fd) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "fd=%d", fd);
+
+   bool result = false;
+   char * name = NULL;
    int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
-   if (busno < 0)
-      return false;
-   char * name = get_i2c_device_sysfs_name(busno);
-   bool result = name && streq(name, "DPMST");
+   if (busno >= 0) {
+      name = get_i2c_device_sysfs_name(busno);
+      result = name && streq(name, "DPMST");
+   }
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "busno=%d, name=%s", busno, name);
    free(name);
    return result;
 }
@@ -834,8 +852,8 @@ retry:
                //   adds that cost.
                // It is not limited because none of these is established, and the
                // cost is confined to displays that otherwise cannot be read at all.
-               if (i2c_try_combined_edid_read(fd, rawedid))
-                  rc = 0;
+               rc = i2c_try_combined_edid_read(fd, rawedid);
+
 #ifdef RECOVER_CURRENT_ADDRESS_READ_BY_FD
                // A valid extension block where the base block belongs means the
                // read began at word offset 0x80, i.e. it was a read at the
@@ -881,8 +899,7 @@ retry:
                // buses: the kernel registers those adapters only for ports with an
                // end device, which limits exposure to the amdgpu slowdown when
                // nothing answers at 0x50.
-               if (i2c_try_combined_edid_read(fd, rawedid))
-                  rc = 0;
+               rc = i2c_try_combined_edid_read(fd, rawedid);
             }
          }
          if (rawedid->len == 256) {
@@ -965,6 +982,8 @@ void init_i2c_edid() {
    RTTI_ADD_FUNC(i2c_get_edid_bytes_using_single_ioctl);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
    RTTI_ADD_FUNC(i2c_get_parsed_edid_by_fd);
+   RTTI_ADD_FUNC(i2c_try_combined_edid_read);
+   RTTI_ADD_FUNC(is_dpmst_bus);
 }
 
 
