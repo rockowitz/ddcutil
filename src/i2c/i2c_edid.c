@@ -64,6 +64,10 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 
+// Maximum number of EDID read attempts on a DPMST bus, where every read is 128
+// bytes.
+static const int EDID_MAX_TRIES_ALL_128_BYTE_READS = 3;
+
 
 
 /* Recovery from a read that began at the display's current word offset.
@@ -712,8 +716,23 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, Optional_True_False * x30_respo
                               fd, filename_for_fd_t(fd));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
-   int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size, max_tries);
+   // A DPMST adapter rejects any read longer than 255 bytes with EIO without
+   // passing it to the hub: the kernel's drm_dp_mst_i2c_xfer() accepts a read
+   // only if remote_i2c_read_ok(), which requires len <= 0xff.  So on a DPMST
+   // bus a 256 byte read is impossible; every EDID read is 128 bytes.
+   bool dpmst = is_dpmst_bus(fd);
+   if (dpmst && EDID_Read_Size == 256) {
+      DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
+            "%s is a DPMST bus, which cannot read 256 bytes.  Reading EDID 128 bytes"
+            " at a time instead of the requested 256.",
+            filename_for_fd_t(fd));
+   }
+   // Dynamic read size: 2 tries at 128 bytes, then 2 at 256.
+   int max_tries = (EDID_Read_Size == 0) ? 4 : 2;
+   if (dpmst)
+      max_tries = EDID_MAX_TRIES_ALL_128_BYTE_READS;
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d, dpmst=%s",
+                   EDID_Read_Size, max_tries, sbool(dpmst));
    // n. prior to gcc 11, declaration cannot immediately follow label
    I2C_IO_Strategy_Id cur_strategy_id = I2C_IO_STRATEGY_NOT_SET;
    cur_strategy_id = i2c_get_io_strategy_id();
@@ -726,7 +745,9 @@ retry:
 
    while (tryctr < max_tries && rc != 0) {
       int edid_read_size = EDID_Read_Size;
-      if (EDID_Read_Size == 0)
+      if (dpmst)
+         edid_read_size = 128;
+      else if (EDID_Read_Size == 0)
          edid_read_size = (tryctr < 2) ? 128 : 256;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                     "Trying EDID read. tryctr=%d, max_tries=%d,"
@@ -882,7 +903,9 @@ retry:
                // the helper requests 256, so
                // RECOVER_CURRENT_ADDRESS_READ_I2C_LAYER's edid_read_size < 256
                // guard declines and the 256 bytes arrive here intact.
-               if (rc != 0 && rawedid->len < 256) {
+               //
+               // Not on a DPMST bus, where a 256 byte read always fails.
+               if (rc != 0 && rawedid->len < 256 && !dpmst) {
                   Status_Errno_DDC reread_rc =
                         i2c_reread_edid_after_current_address_read(fd, rawedid, x30_responsive_loc);
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
@@ -891,7 +914,7 @@ retry:
                }
 #endif
             }
-            else if (is_dpmst_bus(fd)) {
+            else if (dpmst) {
                // Over an MST hub a separate offset write may be ignored, so the
                // read continues from wherever the display's offset was left.  Only
                // when that is 0x80 is the result an extension block, the case above.
