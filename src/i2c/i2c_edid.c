@@ -903,7 +903,15 @@ retry:
                //   adds that cost.
                // It is not limited because none of these is established, and the
                // cost is confined to displays that otherwise cannot be read at all.
-               rc = i2c_try_combined_edid_read(fd, rawedid);
+               //
+               // Not tried if a 256 byte read wrapped and returned the base block at
+               // offset 128.  The check below recovers that block without further
+               // I/O, whereas a combined read that returned invalid data would
+               // overwrite it.
+               bool base_block_at_128 = rawedid->len == 256 &&
+                                        is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128);
+               if (!base_block_at_128)
+                  rc = i2c_try_combined_edid_read(fd, rawedid);
 
 #ifdef RECOVER_CURRENT_ADDRESS_READ_BY_FD
                // A valid extension block where the base block belongs means the
