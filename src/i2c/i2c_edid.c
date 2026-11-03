@@ -945,8 +945,9 @@ retry:
                // extension block at offset 0 suffices here.  An intervenor that
                // leaves the offset elsewhere yields bytes that are neither a valid
                // base EDID nor a valid extension block, still invalid and still
-               // retried, so the ladder covers that case without this fast path.  Re-read 256 bytes so the wrap puts the base
-               // block at offset 128, where the check just below recovers it.
+               // retried, so the ladder covers that case without this fast path.
+               // Re-read 256 bytes so the wrap puts the base block at offset 128,
+               // where the check just below recovers it.
                // Only worth doing if less than 256 bytes were read; at 256 the
                // base block is already present and that check handles it.
                //
