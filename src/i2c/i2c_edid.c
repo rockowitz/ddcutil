@@ -957,8 +957,11 @@ retry:
             }
             else if (dpmst) {
                // Over an MST hub a separate offset write may be ignored, so the
-               // read continues from wherever the display's offset was left.  Only
-               // when that is 0x80 is the result an extension block, the case above.
+               // read continues from wherever the offset was left.  The offset may
+               // be kept by the hub rather than the display, and need not wrap at
+               // 0x100: on one hub (PR #660) the read continued into a third EDID
+               // block, or returned zeros past the end of the EDID.  Only when the
+               // offset is 0x80 is the result an extension block, the case above.
                // The combined read is tried for any invalid data, but only on DPMST
                // buses, where the amdgpu slowdown when nothing answers at 0x50 cannot
                // occur: drm_dp_mst_i2c_xfer() sends the transfer to the MST hub as a
