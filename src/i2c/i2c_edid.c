@@ -83,7 +83,7 @@ static const int EDID_MAX_TRIES_ALL_128_BYTE_READS = 3;
  * cross instance flock excludes other ddcutil and libddcutil instances but not the
  * kernel's own DRM EDID probing or a non-ddcutil user of the device.
  *
- * Every recovery for it, live and parked, works the same way: re-read 256 bytes so
+ * Every recovery below, live and parked, works the same way: re-read 256 bytes so
  * that the address counter's wrap from 0xff to 0x00 puts the base block at buffer
  * offset 128, then copy it down.  That wrap is verified, not assumed:
  * test_current_address_read_wrap() in test_i2c_edid.c writes 0x80 as the word offset
@@ -103,10 +103,19 @@ static const int EDID_MAX_TRIES_ALL_128_BYTE_READS = 3;
  *
  * There is one configuration the ladder cannot recover.  --edid-read-size 128 makes
  * max_tries 2 and pins every read at 128, so the 256 byte read never happens, the wrap
- * never happens, the copy-down can never fire, and the display is not detected at all.
- * The recoveries here all re-read 256 regardless of the size requested, so there they
- * are not an optimization but the only repair.  That gap, rather than the 24 ms, is why
- * RECOVER_CURRENT_ADDRESS_READ_BY_FD is now defined.
+ * never happens, and the copy-down can never fire.  The recoveries here all re-read
+ * 256 regardless of the size requested, so there they are not an optimization but a
+ * repair.  That gap, rather than the 24 ms, is why RECOVER_CURRENT_ADDRESS_READ_BY_FD
+ * was defined.
+ *
+ * Since then i2c_get_raw_edid_by_fd() has gained a different repair, tried first
+ * whenever a read returns an extension block where the base block belongs: a
+ * combined offset write and read, one transfer as the kernel reads the EDID (issue
+ * #620).  It needs no wrap and works at 128 bytes, so it also covers --edid-read-size
+ * 128, and the ladder and RECOVER_CURRENT_ADDRESS_READ_BY_FD are reached only if it
+ * fails.  On a DPMST bus every read is 128 bytes, a 256 byte read being impossible
+ * there, so neither the ladder's 256 byte tries nor the re-read below happen and the
+ * combined read is the only repair.
  *
  * Of the three it is the one worth having live.  Only one reader runs per try, so at
  * most one of the two in-function recoveries can ever fire, while this one sits in
@@ -114,7 +123,8 @@ static const int EDID_MAX_TRIES_ALL_128_BYTE_READS = 3;
  * including i2c_get_edid_bytes_directly_using_fileio(), which has no recovery of its
  * own.  It is a superset, not a third case.  Its trigger cannot false positive: a base
  * EDID begins 00 ff ff ff ff ff ff 00 and a CEA extension block begins 02, so the two
- * cannot be confused.  Its cost is one extra 256 byte read, in the failure case only.
+ * cannot be confused.  Its cost is one extra 256 byte read, only when the combined
+ * read has also failed.
  * The one behavioral note is that its helper re-reads through the i2c layer whatever
  * reader ran, so a recovery when EDID_Read_Uses_I2C_Layer is false changes transport;
  * that is defensible for a repair, and those paths are developer options.
@@ -553,8 +563,10 @@ i2c_reread_edid_after_current_address_read(
  * From user przemech, based on function drm_do_probe_ddc_edid() in kernel source
  * file drivers/gpu/drm/drm_edid.c, which uses a single ioctl() to read the EDID.
  * @remark
- * Called only by i2c_get_raw_edid_by_fd(), and only after a read has returned a
- * CEA-861 extension block where the base block belongs.  It must not be used as a
+ * Called only through i2c_try_combined_edid_read(), from i2c_get_raw_edid_by_fd(),
+ * and only after a read from 0x50 has succeeded without returning a valid base
+ * block: a CEA-861 extension block where the base block belongs on any bus, or any
+ * invalid data on a DPMST bus.  It must not be used as a
  * general reader: on amdgpu it is very slow when nothing answers at 0x50.  See the
  * comment at read_edid_using_single_ioctl.
  */
@@ -729,6 +741,14 @@ is_dpmst_bus(int fd) {
  * bus record, i2c_check_bus(), passes &businfo->x30_responsive.  libddcutil
  * admits only one thread at a time to a given bus, so the field needs no lock
  * of its own.
+ * @remark
+ * If a read succeeds without returning a valid base block, the base block is
+ * read again using a combined offset write and read, in one transfer: when the
+ * read returned a CEA-861 extension block on any bus, and for any invalid data on
+ * a DPMST bus.  See i2c_try_combined_edid_read().
+ * @remark
+ * On a DPMST bus every read is 128 bytes, whatever EDID_Read_Size requests, and
+ * at most EDID_MAX_TRIES_ALL_128_BYTE_READS reads are made.
  */
 Status_Errno_DDC
 i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, Optional_True_False * x30_responsive_loc)
@@ -879,8 +899,9 @@ retry:
                                "EDID appears to start with a CEA 861 extension block");
                // Some displays, e.g. Dell P2725DE (issue #620), ignore a word offset
                // write sent as a transaction of its own and serve the extension
-               // block on every following read, so neither a retry nor the 256 byte
-               // re-read below recovers the base block.  They answer correctly when
+               // block on every following read, so a retry does not recover the base
+               // block, and on a DPMST bus the 256 byte re-read below cannot be
+               // used.  They answer correctly when
                // the offset write and the read are one combined transaction, as the
                // kernel reads the EDID.  Try that.
                //
@@ -898,9 +919,11 @@ retry:
                // - The multi-message ioctl may have triggered an amdgpu driver
                //   crash.  Unconfirmed, but fewer attempts means less exposure.
                // - A display that answers a split read might still fail the combined
-               //   transfer, e.g. with EIO over an MST chain.  What that costs on
-               //   amdgpu has not been measured; if it is slow, each further attempt
-               //   adds that cost.
+               //   transfer.  What that costs on an amdgpu hardware I2C bus has not
+               //   been measured; if it is slow, each further attempt adds that cost.
+               //   On a DPMST bus the transfer is a sideband message to the MST hub,
+               //   not an amdgpu hardware I2C transaction, so the amdgpu timeout does
+               //   not apply.
                // It is not limited because none of these is established, and the
                // cost is confined to displays that otherwise cannot be read at all.
                //
@@ -957,9 +980,10 @@ retry:
                // read continues from wherever the display's offset was left.  Only
                // when that is 0x80 is the result an extension block, the case above.
                // The combined read is tried for any invalid data, but only on DPMST
-               // buses: the kernel registers those adapters only for ports with an
-               // end device, which limits exposure to the amdgpu slowdown when
-               // nothing answers at 0x50.
+               // buses, where the amdgpu slowdown when nothing answers at 0x50 cannot
+               // occur: drm_dp_mst_i2c_xfer() sends the transfer to the MST hub as a
+               // sideband message, never as an amdgpu hardware I2C transaction.  In
+               // any case the read just returned data, so a display is answering.
                rc = i2c_try_combined_edid_read(fd, rawedid);
             }
          }
