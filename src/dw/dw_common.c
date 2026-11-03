@@ -569,9 +569,6 @@ bool dw_hotplug_change_handler(
       if (busno < 0)
          break;
 
-      // the display, and perhaps the bus, is gone; warn afresh for the next one
-      i2c_forget_edid_warnings(busno);
-
       I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
       if (!businfo) {
          DECORATED_SYSLOG(DDCA_SYSLOG_ERROR, "Failed to find I2C_BUS_INFO for /dev/i2c-%d", busno);
@@ -616,8 +613,6 @@ bool dw_hotplug_change_handler(
           int busno = bs256_iter_next(iter2);
           if (busno < 0)
              break;
-
-          i2c_forget_edid_warnings(busno);
 
           // if already handled, nothing to do
           if (!bs256_contains(bs_buses_w_edid_removed, busno)) {
