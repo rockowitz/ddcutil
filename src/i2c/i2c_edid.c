@@ -810,7 +810,7 @@ retry:
             // earlier try failed.  tryctr is the current try's index, reset at
             // the retry label, so it counts only failures within this strategy.
             if (rc == 0 && tryctr > 0) {
-               DUAL_MSGXV(debug, DDCA_SYSLOG_WARNING, TRACE_GROUP,
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                   "%s() succeeded after %d failed attempt(s).",
                   called_func_name, tryctr);
             }
@@ -872,9 +872,8 @@ retry:
                // write sent as a transaction of its own and serve the extension
                // block on every following read, so a retry does not recover the base
                // block, and on a DPMST bus the 256 byte re-read below cannot be
-               // used.  They answer correctly when
-               // the offset write and the read are one combined transaction, as the
-               // kernel reads the EDID.  Try that.
+               // used.  They answer correctly when the offset write and the read are
+               // one combined transaction, as the kernel reads the EDID.  Try that.
                //
                // The combined read is not used generally because a failing one is
                // very slow on amdgpu when nothing answers at 0x50.  That cannot
@@ -902,6 +901,15 @@ retry:
                // offset 128.  The check below recovers that block without further
                // I/O, whereas a combined read that returned invalid data would
                // overwrite it.
+               //
+               // The combined read's status replaces DDCRC_INVALID_EDID.  If it
+               // fails with an errno, e.g. -EIO, and no later try succeeds, that
+               // errno is what this function returns, which in a trace or
+               // diagnostic report reads as nothing answering at 0x50 although a
+               // display did answer, with invalid data.  Callers test only for 0,
+               // so only diagnostic messages are misled.  Returning an Error_Info
+               // whose causes record each read's status, the split read's and the
+               // combined read's, would keep them from misleading.
                bool base_block_at_128 = rawedid->len == 256 &&
                                         is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128);
                if (!base_block_at_128)
@@ -956,6 +964,9 @@ retry:
                // occur: drm_dp_mst_i2c_xfer() sends the transfer to the MST hub as a
                // sideband message, never as an amdgpu hardware I2C transaction.  In
                // any case the read just returned data, so a display is answering.
+               //
+               // As above, the combined read's status replaces DDCRC_INVALID_EDID,
+               // so a failure here can be reported misleadingly.
                rc = i2c_try_combined_edid_read(fd, rawedid);
             }
          }
