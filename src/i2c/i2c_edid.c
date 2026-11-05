@@ -419,8 +419,11 @@ i2c_get_edid_bytes_using_i2c_layer(
       Optional_True_False * x30_responsive_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d",
-                 fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size);
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d, x30_responsive_loc=%p->%s",
+                 fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size,
+                 x30_responsive_loc,
+                 (x30_responsive_loc) ? trival_repr(*x30_responsive_loc) : "---");
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
    // Writes unless x30 is already known not to answer.  With no target recorded, which is
@@ -481,7 +484,9 @@ i2c_get_edid_bytes_using_i2c_layer(
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
    }
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "x30_responsive_loc= %p, *x30_responsive_loc=%s",
+         x30_responsive_loc,
+         (x30_responsive_loc) ? trival_repr(*x30_responsive_loc) : "---");
    return rc;
 }
 
