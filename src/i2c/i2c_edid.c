@@ -1101,11 +1101,19 @@ void init_i2c_edid() {
  * per i2c_msg and dce_i2c_submit_command_hw() breaks out of the payload loop on
  * the first failure, so the one byte word offset write submitted here as payload
  * 0 ought to fail on a silent bus and stop the transaction before the long read.
- * It does not: the measurement shows payload 1 being submitted and running its
- * timeout out, about 650 ms for a 128 byte read.  The engine evidently reports
- * the NACKed write as successful.  (650 ms is twice what the formula gives for
- * 128 bytes at speed 100, so the speed or the (len+1)<<3 term in that arithmetic
- * is off by two.  The scaling with payload length is the point, not the constant.)
+ * It does not, because the write is never sent on its own.  Payload 0 is a write
+ * with MOT (middle of transaction) set, and process_transaction() starts the
+ * engine only for the last transaction: a plain write or any read.  So the write
+ * is only loaded into the engine's transaction registers and buffer, and
+ * dce_i2c_hw_engine_submit_payload() reports success after polling an engine
+ * that is still idle.  Payload 1, the read, then starts the hardware transaction
+ * for both, with a timeout sized for the 128 byte read, and the measurement
+ * shows that timeout running out, about 650 ms.  Why the engine does not return
+ * on the NAK is not visible in the driver source; it is hardware behaviour.
+ * (The formula gives about 334,000 iterations of the wait loop for 128 bytes at
+ * speed 100.  Each iteration is a udelay(1) plus a register read, so the elapsed
+ * time exceeds the iteration count in microseconds.  The scaling with payload
+ * length is the point, not the constant.)
  *
  * The two ioctl readers are immune for a reason that has nothing to do with the
  * driver: ddcutil itself gates the read on the write's ioctl returning success,
