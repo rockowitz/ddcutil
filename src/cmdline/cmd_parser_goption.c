@@ -1390,8 +1390,8 @@ parse_command(
       {"ignore-driver", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ignored_drivers, "Ignore I2C buses using this driver", "driver name"},
 
       {"disable-ddc",   '\0', G_OPTION_FLAG_HIDDEN,
-                                 G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor","monitor model id" },
-      {"ignore-mmid",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor (Deprecated, use --disable-mmid)","monitor model id" },
+                                 G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor model (Deprecated, use --ignore-mmid)","monitor model id" },
+      {"ignore-mmid",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Ignore monitor model", "monitor model id" },
 
 #ifdef FUTURE
       {"force-slave-address",
