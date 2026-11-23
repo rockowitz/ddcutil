@@ -211,6 +211,19 @@ ddca_rc_desc(
  * If the returned status code is other than **DDCRC_OK**, a detailed
  * error report can be obtained using #ddca_get_error_detail().
  *
+ * @remark
+ * Prior to release 2.0.0, which introduced predecessor function #ddca_init(),
+ * library initialization was implicit. For backward compatibility with earlier
+ * programs, explicit initialization using an initialization function is not
+ * required.  Any function depending on library initialization, i.e. most API
+ * functions, automatically calls #ddca_init2() to perform initialization if
+ * necessary, with arguments such that initialization can never fail.  In
+ * particular, the user's ddcutil configuration file is not processed.
+ *
+ * It is expected that implicit initialization will be eliminated in a future
+ * ddcutil release. All new programs using libddcutil should start with
+ * this function.
+ *
  * @since 2.0.0
  */
 DDCA_Status
