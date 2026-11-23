@@ -57,6 +57,10 @@ static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_SYSFS;
 bool force_sysfs_unreliable = false;
 bool force_sysfs_reliable = false;
 
+// If true, sysfs_connector_directories_exist() returns false, as though the
+// video driver exposed no connectors in sysfs.  Set by --f37.
+bool force_no_sysfs_connector_directories = false;
+
 // Drivers whose DRM connector attributes are not to be read (option
 // --ignore-sysfs-drm-for-driver).  is_sysfs_reliable_for_driver() reports
 // them unreliable, and i2c_bus_collections.c excludes their connectors from
@@ -224,14 +228,22 @@ bool is_card_connector_dir1(
  *  The answer is determined once and cached in file static variables.  The set
  *  of connector directories does not change over the life of the process --
  *  individual connectors come and go, but not the driver's use of sysfs.
+ *
+ *  @remark
+ *  Always false when force_no_sysfs_connector_directories is set (--f37).
  */
 bool sysfs_connector_directories_exist() {
    bool debug = false;
    static bool executed = false;
    static bool found = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "executed = %s", sbool(executed));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "executed = %s, force_no_sysfs_connector_directories = %s",
+         sbool(executed), sbool(force_no_sysfs_connector_directories));
 
-   if (!executed) {
+   if (force_no_sysfs_connector_directories) {
+      found = false;
+      executed = true;
+   }
+   else if (!executed) {
       char * dirname = SYS"/class/drm";
       Found_Accumulator accumulator;
       accumulator.found = false;

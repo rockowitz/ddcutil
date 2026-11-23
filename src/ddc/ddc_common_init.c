@@ -533,6 +533,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 #endif
    if (parsed_cmd->flags2 & CMD_FLAG2_F39)
       drm_connector_lookup_compare = true;         // run both connector lookups, log any disagreement
+   if (parsed_cmd->flags2 & CMD_FLAG2_F37)
+      force_no_sysfs_connector_directories = true; // sysfs_connector_directories_exist() returns false
 
    if (parsed_cmd->flags2 & CMD_FLAG2_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;

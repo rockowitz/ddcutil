@@ -619,8 +619,12 @@ GPtrArray * i2c_detect_buses0() {
          buses->len, i2c_businfo_async_threshold);
    // One snapshot of the DRM connectors for the lookups below.  Why it is
    // taken here and not after the scan, and why nothing needs to maintain it,
-   // are in take_connector_snapshot().
-   take_connector_snapshot();
+   // are in take_connector_snapshot().  Not taken when there are no connector
+   // directories, or --f37 says to behave as though there were none: the
+   // per-bus checks then perform no connector lookups to serve.
+   bool use_connector_snapshot = sysfs_connector_directories_exist();
+   if (use_connector_snapshot)
+      take_connector_snapshot();
 
    if (buses->len < i2c_businfo_async_threshold) {
       i2c_non_async_scan(buses);
@@ -629,7 +633,8 @@ GPtrArray * i2c_detect_buses0() {
       i2c_async_scan(buses);
    }
 
-   discard_connector_snapshot();
+   if (use_connector_snapshot)
+      discard_connector_snapshot();
 
    if (debug) {
       for (int ndx = 0; ndx < buses->len; ndx++) {

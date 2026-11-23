@@ -498,7 +498,9 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
 
     bool is_displaylink = is_displaylink_device(busno);
 
-    bool drm_card_connector_directories_exist = directory_exists("/sys/class/drm");
+    // As in i2c_check_bus(): false when /sys/class/drm holds no connector
+    // directories, and under --f37.
+    bool drm_card_connector_directories_exist = sysfs_connector_directories_exist();
     // *** Try to find the drm connector by bus number
 
     if (drm_card_connector_directories_exist) {
