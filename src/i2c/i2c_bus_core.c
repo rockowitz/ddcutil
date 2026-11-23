@@ -1131,9 +1131,23 @@ Error_Info * i2c_check_bus(I2C_Bus_Info * businfo, I2C_Check_Bus_Mode check_mode
 
    // If there's an EDID on the bus and we don't yet have the connector name
    // based on a busno match or user busno-connector match, try EDID match
+   //
+   // Not for a bus whose driver is named by --ignore-sysfs-drm-for-driver.  Its
+   // connectors are excluded from enumeration, so the match cannot succeed: it
+   // would only read the edid attribute of every other driver's connectors,
+   // then report the failure.  businfo->driver is not set under primitive_sysfs.
 
    if (!businfo->drm_connector_name && businfo->edid && drm_card_connector_directories_exist) {
-      set_connector_for_businfo_using_edid(businfo);
+      char * driver = (businfo->driver) ? strdup(businfo->driver)
+                                        : get_driver_for_busno(businfo->busno);
+      bool sysfs_drm_ignored = is_sysfs_drm_ignored_for_driver(driver);
+      free(driver);   // safe if NULL
+      if (sysfs_drm_ignored)
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+               "Driver of bus %s is named by --ignore-sysfs-drm-for-driver, skipping EDID match",
+               dev_name);
+      else
+         set_connector_for_businfo_using_edid(businfo);
    }
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bus %s: connector_name=%s, found by: %s",

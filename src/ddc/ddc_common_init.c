@@ -778,6 +778,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    i2c_exclude_buses(parsed_cmd->ignored_i2c_buses);
    i2c_exclude_drivers(parsed_cmd->ignored_drivers);
+   i2c_exclude_sysfs_drm_for_drivers(parsed_cmd->sysfs_drm_ignored_drivers);
 #ifdef ENABLE_USB
    usb_ignore_hiddevs(parsed_cmd->ignored_hiddevs);
    Vid_Pid_Value * values = (parsed_cmd->ignored_usb_vid_pid_ct == 0) ? NULL : parsed_cmd->ignored_usb_vid_pids;

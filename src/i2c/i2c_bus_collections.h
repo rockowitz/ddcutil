@@ -39,6 +39,7 @@ int              i2c_detect_buses();            // creates internal array of Bus
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
 
 void             i2c_exclude_drivers(Null_Terminated_String_Array drivers);
+void             i2c_exclude_sysfs_drm_for_drivers(Null_Terminated_String_Array drivers);
 bool             i2c_bus_driver_is_excluded(int busno);
 
 Bit_Set_256      i2c_detect_attached_buses_as_bitset();

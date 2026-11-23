@@ -1388,6 +1388,8 @@ parse_command(
 #endif
       {"ignore-bus",    '\0', 0, G_OPTION_ARG_CALLBACK, ignored_busno_arg_func,  "I2C bus to ignore", "bus number"},
       {"ignore-driver", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ignored_drivers, "Ignore I2C buses using this driver", "driver name"},
+      {"ignore-sysfs-drm-for-driver", '\0', G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->sysfs_drm_ignored_drivers, "Do not read DRM connector attributes in sysfs for this driver", "driver name"},
 
       {"disable-ddc",   '\0', G_OPTION_FLAG_HIDDEN,
                                  G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->ddc_disabled,  "Disable DDC for monitor model (Deprecated, use --ignore-mmid)","monitor model id" },

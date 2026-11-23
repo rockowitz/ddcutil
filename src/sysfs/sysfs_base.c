@@ -57,6 +57,12 @@ static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_SYSFS;
 bool force_sysfs_unreliable = false;
 bool force_sysfs_reliable = false;
 
+// Drivers whose DRM connector attributes are not to be read (option
+// --ignore-sysfs-drm-for-driver).  is_sysfs_reliable_for_driver() reports
+// them unreliable, and i2c_bus_collections.c excludes their connectors from
+// enumeration.  Their /dev/i2c-N devices are still used.
+static Null_Terminated_String_Array sysfs_drm_ignored_drivers = NULL;
+
 //
 // Predicate Functions
 //
@@ -521,6 +527,47 @@ static const char* known_reliable_drivers[] = {
        NULL};
 
 
+/** Specify drivers whose DRM connector attributes are not to be read
+ *  (option --ignore-sysfs-drm-for-driver).
+ *
+ *  @param drivers  null terminated array of driver names, may be NULL
+ *
+ *  The array is copied.
+ */
+void set_sysfs_drm_ignored_drivers(Null_Terminated_String_Array drivers) {
+   bool debug = false;
+   ntsa_free(sysfs_drm_ignored_drivers, true);   // safe if NULL
+   sysfs_drm_ignored_drivers =
+         (drivers && ntsa_length(drivers) > 0) ? ntsa_copy(drivers, true) : NULL;
+
+   char * s = (sysfs_drm_ignored_drivers) ? g_strjoinv(", ", sysfs_drm_ignored_drivers) : NULL;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "sysfs_drm_ignored_drivers: %s", s);
+   g_free(s);
+}
+
+
+/** Reports whether any drivers were named by --ignore-sysfs-drm-for-driver.
+ *
+ *  @return true if at least one driver was named
+ */
+bool sysfs_drm_ignored_drivers_exist() {
+   return sysfs_drm_ignored_drivers != NULL;
+}
+
+
+/** Reports whether the DRM connector attributes of a driver are not to be
+ *  read (option --ignore-sysfs-drm-for-driver).
+ *
+ *  @param  driver_name  driver name, e.g. nvidia, may be NULL
+ *  @return true if the driver was named, false if not or driver_name is NULL
+ */
+bool is_sysfs_drm_ignored_for_driver(const char * driver_name) {
+   bool result = driver_name && sysfs_drm_ignored_drivers &&
+                 ntsa_find(sysfs_drm_ignored_drivers, driver_name) >= 0;
+   return result;
+}
+
+
 /** Reports whether a video driver can be relied on to keep the DRM connector
  *  attributes edid, status, and enabled current as displays are connected and
  *  disconnected.
@@ -533,6 +580,7 @@ static const char* known_reliable_drivers[] = {
  *  True for the drivers sharing the kernel's DRM implementation, and for any
  *  driver when the user has asserted --force-sysfs-reliable.  Notably false
  *  for nvidia.  See the comment block above #known_reliable_driver().
+ *  Always false for a driver named by --ignore-sysfs-drm-for-driver.
  *
  *  @remark
  *  This is the base function on which all reliability related functions
@@ -543,9 +591,14 @@ bool is_sysfs_reliable_for_driver(const char * driver_name) {
    bool debug = false;
 
    bool result = false;
-   // force_sysfs_unreliable is tested first, so it wins when both flags are
-   // set.  is_sysfs_reliable() orders them the same way.
-   if (force_sysfs_unreliable)
+   // A driver named by --ignore-sysfs-drm-for-driver is never reliable, not
+   // even under force_sysfs_reliable: reliable would send callers to read
+   // the connector attributes the user asked not to be read.
+   // force_sysfs_unreliable is tested before force_sysfs_reliable, so it wins
+   // when both flags are set.  is_sysfs_reliable() orders them the same way.
+   if (is_sysfs_drm_ignored_for_driver(driver_name))
+      result = false;
+   else if (force_sysfs_unreliable)
       result = false;
    else if (force_sysfs_reliable)
       result = true;

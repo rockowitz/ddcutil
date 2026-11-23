@@ -42,6 +42,10 @@ bool        sysfs_connector_directories_exist();
 extern bool force_sysfs_unreliable;
 extern bool force_sysfs_reliable;
 
+void        set_sysfs_drm_ignored_drivers(Null_Terminated_String_Array drivers);
+bool        sysfs_drm_ignored_drivers_exist();
+bool        is_sysfs_drm_ignored_for_driver(const char * driver_name);
+
 bool        is_driver_reliable(const char * driver_name);
 bool        is_sysfs_reliable_for_connector(const char * connector_name);
 

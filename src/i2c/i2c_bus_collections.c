@@ -341,19 +341,34 @@ static Null_Terminated_String_Array ignored_drivers = NULL;
 
 // Registered with set_card_connector_exclusion_func() while drivers are ignored,
 // so that the connector filter functions in util skip connectors using them.
+// A connector is excluded if its driver is named by --ignore-driver, which
+// ignores the driver's buses as well, or by --ignore-sysfs-drm-for-driver,
+// which ignores only its connectors.
 static bool
 card_connector_driver_is_excluded(const char * connector_name) {
    bool debug = false;
    char path[PATH_MAX];
    g_snprintf(path, PATH_MAX, "/sys/class/drm/%s", connector_name);
    char * driver = find_bound_driver(path, -1);
-   bool result = driver && ntsa_find(ignored_drivers, driver) >= 0;
+   bool result = driver &&
+                 ( (ignored_drivers && ntsa_find(ignored_drivers, driver) >= 0) ||
+                   is_sysfs_drm_ignored_for_driver(driver) );
 
    DBGTRC_EXECUTED(debug, TRACE_GROUP, "connector_name=%s, driver=%s, returning %s",
          connector_name, driver, sbool(result));
    free(driver);   // safe if NULL
    return result;
 }
+
+// Registers the connector exclusion test while either option names a driver,
+// and removes it when neither does.
+static void
+register_connector_exclusion_func() {
+   set_card_connector_exclusion_func(
+         (ignored_drivers || sysfs_drm_ignored_drivers_exist())
+               ? card_connector_driver_is_excluded : NULL);
+}
+
 
 /** Specify drivers whose /dev/i2c-N devices and DRM connectors are to be
  *  ignored (option --ignore-driver).
@@ -367,12 +382,36 @@ i2c_exclude_drivers(Null_Terminated_String_Array drivers) {
    bool debug = false;
    ntsa_free(ignored_drivers, true);   // safe if NULL
    ignored_drivers = (drivers && ntsa_length(drivers) > 0) ? ntsa_copy(drivers, true) : NULL;
-   set_card_connector_exclusion_func(
-         (ignored_drivers) ? card_connector_driver_is_excluded : NULL);
+   register_connector_exclusion_func();
 
    char * s = (ignored_drivers) ? g_strjoinv(", ", ignored_drivers) : NULL;
    DBGTRC_EXECUTED(debug, TRACE_GROUP, "ignored_drivers: %s", s);
    g_free(s);
+}
+
+
+/** Specify drivers whose DRM connectors are to be ignored, while their
+ *  /dev/i2c-N devices are still used (option --ignore-sysfs-drm-for-driver).
+ *
+ *  @param drivers  null terminated array of driver names, may be NULL
+ *
+ *  The array is copied.
+ *
+ *  @remark
+ *  The connectors are excluded from enumeration, so none of their attributes,
+ *  edid in particular, is read.  The drivers are also reported unreliable by
+ *  is_sysfs_reliable_for_driver(), so a connector named for one of their buses
+ *  by --bus-drm-connector is not used as a source of the EDID either.  Unless
+ *  --bus-drm-connector names one, a bus of such a driver has no DRM connector
+ *  name.  Either way its EDID is read over I2C.
+ */
+void
+i2c_exclude_sysfs_drm_for_drivers(Null_Terminated_String_Array drivers) {
+   bool debug = false;
+   set_sysfs_drm_ignored_drivers(drivers);
+   register_connector_exclusion_func();
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "sysfs_drm_ignored_drivers_exist() = %s",
+         sbool(sysfs_drm_ignored_drivers_exist()));
 }
 
 
