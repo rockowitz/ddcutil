@@ -247,6 +247,18 @@ static void test_is_valid_drm_connector_name(void) {
 }
 
 
+/** adapter_publishes_connector_busnos() answers per video adapter.  What it
+ *  answers depends on the hardware, so only the hardware independent part is
+ *  checked: a bus that does not exist has no adapter, and the function then
+ *  considers the connectors of every adapter, exactly as it does when given no
+ *  bus.
+ */
+static void test_adapter_publishes_connector_busnos_unknown_adapter(void) {
+   CK(adapter_publishes_connector_busnos(NONEXISTENT_BUSNO) ==
+      adapter_publishes_connector_busnos(-1));
+}
+
+
 static void test_i2c_edid_exists(void) {
    bool eacces = false;
    CK(!i2c_edid_exists(NONEXISTENT_BUSNO, &eacces));
@@ -261,6 +273,7 @@ int main(int argc, char ** argv) {
 
    RUN(test_is_valid_drm_connector_name);
    RUN(test_i2c_edid_exists);
+   RUN(test_adapter_publishes_connector_busnos_unknown_adapter);
    RUN(test_detect_x37_new_all_switches);
    // i2c_open_bus()/i2c_close_bus() use the display lock table
    init_execution_stats();

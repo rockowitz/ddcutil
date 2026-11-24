@@ -165,6 +165,34 @@ get_rpath_basename(
 }
 
 
+/** Reports whether one canonical sysfs path is another, or lies beneath it.
+ *
+ *  A plain prefix test is not enough: ".../0000:01:00.0" is a prefix of
+ *  ".../0000:01:00.01", so the character following the prefix must end a path
+ *  component.
+ *
+ *  \param  path      canonical path to test, may be NULL
+ *  \param  ancestor  canonical path of the candidate ancestor, may be NULL
+ *  \return true if **path** is **ancestor** or lies beneath it
+ */
+bool
+sysfs_path_is_at_or_below(
+      const char * path,
+      const char * ancestor)
+{
+   bool result = false;
+   if (path && ancestor) {
+      size_t len = strlen(ancestor);
+      while (len > 1 && ancestor[len-1] == '/')   // tolerate a trailing slash
+         len--;
+      result = len > 0 &&
+               strncmp(path, ancestor, len) == 0 &&
+               (path[len] == '/' || path[len] == '\0');
+   }
+   return result;
+}
+
+
 //
 // Functions for probing /sys
 //

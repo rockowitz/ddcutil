@@ -15,6 +15,7 @@
 /** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -362,56 +363,94 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
 }
 
 
-/** Reports whether any drm-connector identifies the I2C bus that serves it, i.e.
- *  whether this driver publishes the bus/connector mapping at all.
+/** Reports whether any drm-connector of the video adapter that owns an I2C bus
+ *  identifies the I2C bus that serves it, i.e. whether the driver for that
+ *  adapter publishes the bus/connector mapping at all.
  *  If this is false, then code that associates a drm-connector with a
  *  /dev/i2c bus will always fail and can be skipped.
  *
+ *  The question is asked per adapter.  On a machine with two video adapters
+ *  under different drivers the answer for one says nothing about the other.
+ *  The case that matters is an Intel or AMD iGPU beside a nouveau dGPU: the
+ *  iGPU's connectors name their buses, and no connector names a bus ddcutil
+ *  probes on nouveau (see below).  Answered for the system as a whole, the
+ *  iGPU's connectors made every nouveau bus look unmapped under a driver that
+ *  publishes the mapping, so none was opened and no display found.
+ *
+ *  A connector belongs to the adapter if its canonical sysfs path lies beneath
+ *  the adapter's, which is where the kernel puts drm/cardN/cardN-xxx.  If the
+ *  adapter that owns the bus cannot be determined, the connectors of every
+ *  adapter are considered.
+ *
+ *  Within the adapter, a connector counts only if the bus it names is one
+ *  ddcutil probes, i.e. #sysfs_is_ignorable_i2c_device() is false for it.
+ *  The question is whether the mapping is published for the buses ddcutil
+ *  uses.  nouveau is why: a DP connector's i2c-N subdirectory is its DP AUX
+ *  adapter, named after the connector, e.g. "DP-1", which ddcutil ignores.  The
+ *  buses ddcutil does probe, nvkm-*, are named by no connector.
+ *
  *  Walks the connector names from get_sysfs_drm_connector_names_only() and
- *  stops at the first connector that names a bus.  The answer usually comes
- *  from the first connector examined: a driver that publishes the mapping
- *  publishes it for every connector, so the loop rarely runs twice.
+ *  stops at the first connector of the adapter that names a bus that is not
+ *  ignorable.  The adapter test comes first, so that connector attributes of
+ *  other adapters are not read.  The answer usually comes from the first
+ *  connector of the adapter examined: a driver that publishes the mapping
+ *  publishes it for every connector.
  *
  *  Reads only the bus/connector artifacts get_connector_bus_numbers() consults
  *  -- the ddc symlink, the i2c-N subdirectory, connector_id -- and not the
  *  EDID or the status, which is what the callers of a full scan pay for and
  *  what this question does not need.
  *
- *  A connector counts only if the bus it names is one ddcutil probes, i.e.
- *  #sysfs_is_ignorable_i2c_device() is false for it.  The question is whether
- *  the mapping is published for the buses ddcutil uses.  nouveau is why: a DP
- *  connector's i2c-N subdirectory is its DP AUX adapter, named after the
- *  connector, e.g. "DP-1", which ddcutil ignores.  The buses ddcutil does
- *  probe, nvkm-*, are named by no connector.  Counting the AUX adapter made
- *  every nvkm-* bus look unmapped under a driver that publishes the mapping,
- *  so none was opened and no display found.
- *
- *  @return true if at least one connector reports a bus number that is not
- *          ignorable
+ *  @param  busno  I2C bus number whose adapter is of interest,
+ *                 < 0 to consider the connectors of all adapters
+ *  @return true if at least one connector of that adapter reports a bus number
+ *          that is not ignorable
  */
-bool any_drm_connector_has_busno() {
+bool adapter_publishes_connector_busnos(int busno) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
+
+   char * adapter_path = NULL;
+   if (busno >= 0) {
+      char bus_path[40];
+      g_snprintf(bus_path, sizeof(bus_path), "/sys/bus/i2c/devices/i2c-%d", busno);
+      adapter_path = sysfs_find_adapter(bus_path);    // NULL if it cannot be determined
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "adapter for bus %d: %s", busno, adapter_path);
+   }
 
    bool result = false;
    GPtrArray * drm_connector_names = get_sysfs_drm_connector_names_only();
    for (int ndx = 0; ndx < drm_connector_names->len && !result; ndx++) {
       char * cname = g_ptr_array_index(drm_connector_names, ndx);
-      Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
-      get_connector_bus_numbers("/sys/class/drm", cname, cbn);
-      if (cbn->i2c_busno >= 0) {
-         if (sysfs_is_ignorable_i2c_device(cbn->i2c_busno)) {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "%s names bus %d, which is ignorable, not counted", cname, cbn->i2c_busno);
-         }
-         else {
-            result = true;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s names bus %d", cname, cbn->i2c_busno);
-         }
+      bool same_adapter = true;
+      if (adapter_path) {
+         char connector_path[PATH_MAX];
+         g_snprintf(connector_path, sizeof(connector_path), "/sys/class/drm/%s", cname);
+         char * connector_realpath = realpath(connector_path, NULL);
+         same_adapter = sysfs_path_is_at_or_below(connector_realpath, adapter_path);
+         free(connector_realpath);
       }
-      free_connector_bus_numbers(cbn);
+      if (!same_adapter) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s belongs to a different adapter", cname);
+      }
+      else {
+         Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
+         get_connector_bus_numbers("/sys/class/drm", cname, cbn);
+         if (cbn->i2c_busno >= 0) {
+            if (sysfs_is_ignorable_i2c_device(cbn->i2c_busno)) {
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                     "%s names bus %d, which is ignorable, not counted", cname, cbn->i2c_busno);
+            }
+            else {
+               result = true;
+               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s names bus %d", cname, cbn->i2c_busno);
+            }
+         }
+         free_connector_bus_numbers(cbn);
+      }
    }
    g_ptr_array_free(drm_connector_names, true);
+   free(adapter_path);
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
@@ -880,7 +919,7 @@ void init_i2c_bus_sysfs() {
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_sysfs);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid_snapshot);
    RTTI_ADD_FUNC(sysfs_connectors_having_placeholder_edid);
-   RTTI_ADD_FUNC(any_drm_connector_has_busno);
+   RTTI_ADD_FUNC(adapter_publishes_connector_busnos);
    RTTI_ADD_FUNC(get_connector_edid);
    RTTI_ADD_FUNC(get_parsed_edid_for_businfo_using_sysfs);
    RTTI_ADD_FUNC(is_adapter_class_display_controller);

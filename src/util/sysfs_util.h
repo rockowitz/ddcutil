@@ -48,6 +48,11 @@ get_rpath_basename(
       const char * path);
 
 bool
+sysfs_path_is_at_or_below(
+      const char * path,
+      const char * ancestor);
+
+bool
 set_rpt_sysfs_attr_silent(bool silent);
 
 void

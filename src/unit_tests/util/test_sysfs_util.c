@@ -5,7 +5,8 @@
  *  A /sys attribute is just a one-line text file in a directory, so the readers
  *  (read_sysfs_attr, read_sysfs_attr_w_default, read_sysfs_attr_w_default_r) are
  *  exercised against a temporary directory holding synthetic attribute files.
- *  get_rpath_basename is checked against a real path.  The rpt_attr_* reporting
+ *  get_rpath_basename is checked against a real path, sysfs_path_is_at_or_below
+ *  against literal paths.  The rpt_attr_* reporting
  *  functions require a live /sys tree and are not exercised.
  *
  *  Prints one line per failing check and a summary; exit status is 0 if all
@@ -102,6 +103,33 @@ int main(int argc, char ** argv) {
    g_free(expected);
    CK(get_rpath_basename("/no/such/path/xyz") == NULL);   // realpath fails
    unlink(path);
+
+   // sysfs_path_is_at_or_below: decides whether a DRM connector belongs to the
+   // video adapter that owns an I2C bus, by comparing canonical sysfs paths.
+   // The case that matters is the sibling whose name merely extends the
+   // adapter's: a bare prefix test accepts it.
+   const char * adapter = "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0";
+   // a connector of that adapter, and the adapter itself
+   CK( sysfs_path_is_at_or_below(
+          "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0/drm/card1/card1-DP-3", adapter));
+   CK( sysfs_path_is_at_or_below(adapter, adapter));
+   // a connector of a second adapter
+   CK(!sysfs_path_is_at_or_below(
+          "/sys/devices/pci0000:00/0000:00:08.1/0000:7a:00.0/drm/card0/card0-DP-4", adapter));
+   // prefix of the name, but a different device
+   CK(!sysfs_path_is_at_or_below(
+          "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.01/drm/card2/card2-DP-1", adapter));
+   // the ancestor itself is not beneath its own child
+   CK(!sysfs_path_is_at_or_below(
+          adapter, "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0/drm"));
+   // trailing slash on the ancestor is tolerated
+   CK( sysfs_path_is_at_or_below(
+          "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0/drm",
+          "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0/"));
+   // degenerate arguments
+   CK(!sysfs_path_is_at_or_below(NULL, adapter));
+   CK(!sysfs_path_is_at_or_below(adapter, NULL));
+   CK(!sysfs_path_is_at_or_below(adapter, ""));
 
    printf("\n%s: %d checks, %d passed, %d failed\n",
           (failed == 0) ? "PASS" : "FAIL", total, total - failed, failed);
