@@ -526,10 +526,12 @@ void compare_edid_read_methods(int fd, I2C_Bus_Info * businfo) {
           //  - the driver is in known_reliable_driver(), so a connector's
           //    absence reflects hardware rather than a driver that does not
           //    maintain this part of sysfs;
-          //  - some connector does report a bus number, proving this driver on
-          //    this machine attaches DDC adapters.  Without this the rule would
-          //    skip every bus under a driver that never publishes the mapping,
-          //    nvidia being the standing example;
+          //  - some connector does report a bus number, one that is not
+          //    ignorable, proving this driver on this machine attaches the DDC
+          //    adapters ddcutil probes.  Without this the rule would skip every
+          //    bus under a driver that never publishes the mapping, nvidia
+          //    being the standing example, or that publishes it only for
+          //    adapters ddcutil ignores, nouveau's DP AUX adapters;
           //  - the bus is not DPMST.  A display behind an MST hub has no
           //    connector of its own, so its absence here says nothing.  That
           //    was issue #585.

@@ -377,7 +377,17 @@ Found_Sys_Drm_Connector find_sys_drm_connector_by_busno_or_edid_sysfs(
  *  EDID or the status, which is what the callers of a full scan pay for and
  *  what this question does not need.
  *
- *  @return true if at least one connector reports a bus number
+ *  A connector counts only if the bus it names is one ddcutil probes, i.e.
+ *  #sysfs_is_ignorable_i2c_device() is false for it.  The question is whether
+ *  the mapping is published for the buses ddcutil uses.  nouveau is why: a DP
+ *  connector's i2c-N subdirectory is its DP AUX adapter, named after the
+ *  connector, e.g. "DP-1", which ddcutil ignores.  The buses ddcutil does
+ *  probe, nvkm-*, are named by no connector.  Counting the AUX adapter made
+ *  every nvkm-* bus look unmapped under a driver that publishes the mapping,
+ *  so none was opened and no display found.
+ *
+ *  @return true if at least one connector reports a bus number that is not
+ *          ignorable
  */
 bool any_drm_connector_has_busno() {
    bool debug = false;
@@ -390,8 +400,14 @@ bool any_drm_connector_has_busno() {
       Connector_Bus_Numbers * cbn = calloc(1, sizeof(Connector_Bus_Numbers));
       get_connector_bus_numbers("/sys/class/drm", cname, cbn);
       if (cbn->i2c_busno >= 0) {
-         result = true;
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s names bus %d", cname, cbn->i2c_busno);
+         if (sysfs_is_ignorable_i2c_device(cbn->i2c_busno)) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "%s names bus %d, which is ignorable, not counted", cname, cbn->i2c_busno);
+         }
+         else {
+            result = true;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "%s names bus %d", cname, cbn->i2c_busno);
+         }
       }
       free_connector_bus_numbers(cbn);
    }
