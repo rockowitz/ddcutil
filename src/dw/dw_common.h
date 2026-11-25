@@ -150,6 +150,7 @@ int  active_callback_thread_ct();
 
 bool dw_sleep_spent_by_suspend(int millisec);
 int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms);
+bool dw_wait_while_sleep_cycle_open();
 
 
 void init_dw_common();
