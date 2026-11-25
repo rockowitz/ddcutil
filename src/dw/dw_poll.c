@@ -525,8 +525,17 @@ gpointer dw_watch_display_connections(gpointer data) {
       }
 #endif
 
+      // No scan between PrepareForSleep(true) and PrepareForSleep(false): a
+      // scan reads connector edid attributes, which can block uninterruptibly
+      // and prevent the suspend.  See dw_wait_while_sleep_cycle_open().
+      bool waited_for_sleep_cycle = dw_wait_while_sleep_cycle_open();
+      if (terminate_watch_thread)
+         continue;
+
+      // For Udev mode the pause normally occurs in dw_udev_watch(), but one
+      // taken there before the wait above may have preceded the resume.
       if (!skip_settling_pauses &&
-            wdd->watch_mode != Watch_Mode_Udev) {  // for Udev mode, pause occurs in dw_udev_watch()
+            (wdd->watch_mode != Watch_Mode_Udev || waited_for_sleep_cycle)) {
          dw_pause_if_recently_resumed_from_sleep(pause_after_resume_ms);
       }
 

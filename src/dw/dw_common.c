@@ -1051,11 +1051,66 @@ int dw_pause_if_recently_resumed_from_sleep(int min_interval_ms) {
 }
 
 
+/** Interval at which dw_wait_while_sleep_cycle_open() rechecks the sleep cycle.
+ */
+#define SLEEP_CYCLE_CHECK_INTERVAL_MS 200
+
+/** Waits while a sleep cycle is open, i.e. from logind's PrepareForSleep(true)
+ *  until the matching PrepareForSleep(false), so that the display watch thread
+ *  starts no bus scan in that interval.
+ *
+ *  A scan reads DRM connector edid attributes in sysfs.  The kernel serves
+ *  that read by taking the DRM device's mode_config.mutex with mutex_lock(),
+ *  an uninterruptible sleep the freezer cannot freeze.  If a driver holds the
+ *  mutex across suspend, a scan begun inside the cycle blocks in that read,
+ *  and the suspend fails because the thread cannot be frozen.  nvidia-drm is
+ *  the suspected case (issue #659, KDE bug 528571): its suspend hook runs when
+ *  nvidia-suspend.service writes /proc/driver/nvidia/suspend, before user
+ *  space is frozen, and a connector probe from its hotplug worker can then
+ *  hold the mutex while waiting on the suspended GPU.  PrepareForSleep(true)
+ *  precedes nvidia-suspend.service, so a thread waiting here does not reach
+ *  the read.  The wait is in dw_split_sleep(), an interruptible sleep, so it
+ *  does not keep the thread from being frozen.
+ *
+ *  Not covered: a scan already under way when PrepareForSleep(true) arrives,
+ *  and sysfs reads by other threads, e.g. API calls from the client.
+ *
+ *  The wait is bounded by ldbus_in_open_sleep_cycle(), which retires a cycle
+ *  whose PrepareForSleep(false) never arrives.
+ *
+ *  @return true if the thread waited, false if no sleep cycle was open
+ */
+bool dw_wait_while_sleep_cycle_open() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   bool waited = false;
+#ifdef USE_DBUS
+   if (ldbus_in_open_sleep_cycle(NULL)) {
+      waited = true;
+      uint64_t start_ns = cur_boot_time_nanosec();
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
+            "Sleep cycle open, deferring display scan until PrepareForSleep(false)");
+      while (!terminate_watch_thread && ldbus_in_open_sleep_cycle(NULL))
+         dw_split_sleep(SLEEP_CYCLE_CHECK_INTERVAL_MS);
+      DECORATED_SYSLOG(DDCA_SYSLOG_NOTICE,
+            "Sleep cycle %s after %"PRIu64" millisec, display scan no longer deferred",
+            (terminate_watch_thread) ? "wait ended by termination" : "closed",
+            NANOS2MILLIS(cur_boot_time_nanosec() - start_ns));
+   }
+#endif
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, waited, "");
+   return waited;
+}
+
+
 void init_dw_common() {
    RTTI_ADD_FUNC(dw_stabilized_buses_bs);
    RTTI_ADD_FUNC(dw_emit_deferred_events);
    RTTI_ADD_FUNC(dw_hotplug_change_handler);
    RTTI_ADD_FUNC(dw_pause_if_recently_resumed_from_sleep);
+   RTTI_ADD_FUNC(dw_wait_while_sleep_cycle_open);
    RTTI_ADD_FUNC(record_active_callback_thread);
    RTTI_ADD_FUNC(remove_active_callback_thread);
 
