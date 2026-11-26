@@ -460,7 +460,7 @@ i2c_bus_driver_is_not_excluded(int busno) {
 Byte_Value_Array
 i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP,
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
          "include_ignorable_devices=%s", SBOOL(include_ignorable_devices));
 
    Byte_Value_Array bva = bva_create();
@@ -469,16 +469,19 @@ i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
       for (int ndx = 0; ndx < summaries->len; ndx++) {
          Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
          int busno = udev_i2c_device_summary_busno(summary);
-         assert(busno >= 0);
-         assert(busno <= 127);
-         if ( include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno) )
-            bva_append(bva, busno);
+         if (busno >= 0) {      // -1 if parse error or bus has disappeared since the summary was created
+            assert(busno <= 127);
+            if ( include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno) )
+               bva_append(bva, busno);
+         }
       }
       free_udev_device_summaries(summaries);
    }
 
-   char * s = bva_as_string(bva, /*as_hex*/ false, ",");
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning I2C bus numbers: %s", s);
+   char * s = NULL;
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE) || trace_callstack_call_depth > 0)
+      s = bva_as_string(bva, /*as_hex*/ false, ",");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning I2C bus numbers: %s", s);
    free(s);
 
    return bva;
