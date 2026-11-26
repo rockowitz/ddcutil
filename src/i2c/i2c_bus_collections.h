@@ -24,8 +24,8 @@ extern bool force_failure_i2c_all_relevant_i2c_buses_rw;
 extern bool force_failure_i2c_all_edids_readable_using_i2c;
 
 // Bus inventory - detect and probe buses
-Byte_Value_Array i2c_get_devices_by_existence_test(bool include_ignorable_devices);
-Byte_Value_Array i2c_get_devices_using_readdir(bool include_ignorable_devices);
+Byte_Value_Array i2c_get_device_numbers_by_existence_test(bool include_ignorable_devices);
+Byte_Value_Array i2c_get_device_numbers_using_readdir(bool include_ignorable_devices);
 Byte_Value_Array i2c_get_device_numbers_using_udev(bool include_ignorable_devices);
 Byte_Value_Array i2c_detect_attached_buses();
 Bit_Set_256      i2c_buses_bitset_from_businfo_array(GPtrArray * buses, bool only_connected);   // buses: array of I2C_Bus_Info

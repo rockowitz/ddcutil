@@ -108,7 +108,7 @@ bool force_failure_i2c_all_edids_readable_using_i2c = false;  // for testing
  *  @return Byte_Value_Array containing the valid bus numbers
  */
 Byte_Value_Array
-i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
+i2c_get_device_numbers_by_existence_test(bool include_ignorable_devices) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
          "include_ignorable_devices=%s", SBOOL(include_ignorable_devices));
@@ -141,7 +141,7 @@ i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
  *          empty if /dev cannot be opened; caller is responsible for freeing
  */
 Byte_Value_Array
-i2c_get_devices_using_readdir(bool include_ignorable_devices) {
+i2c_get_device_numbers_using_readdir(bool include_ignorable_devices) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
          "include_ignorable_devices=%s", SBOOL(include_ignorable_devices));
@@ -186,7 +186,7 @@ i2c_get_devices_using_readdir(bool include_ignorable_devices) {
  */
 bool i2c_all_relevant_buses_group_i2c_rw() {
    bool debug = false;
-   Byte_Value_Array bva = i2c_get_devices_by_existence_test(false);
+   Byte_Value_Array bva = i2c_get_device_numbers_by_existence_test(false);
    bool result = true;
    for (int ndx = 0; ndx < bva_length(bva); ndx++) {
       uint8_t busno = bva_get(bva, ndx);
@@ -586,7 +586,7 @@ Byte_Value_Array i2c_detect_attached_buses() {
             i2c_get_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
 #else
    Byte_Value_Array bva0 =
-            i2c_get_devices_by_existence_test(/*include_ignorable_devices=*/ false);
+            i2c_get_device_numbers_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
 
    // filter out buses that user has indicated should be excluded using
@@ -1049,8 +1049,8 @@ void init_i2c_bus_collections(void) {
    RTTI_ADD_FUNC(i2c_threaded_initial_checks_by_businfo);
    RTTI_ADD_FUNC(i2c_async_scan);
    RTTI_ADD_FUNC(i2c_non_async_scan);
-   RTTI_ADD_FUNC(i2c_get_devices_by_existence_test);
-   RTTI_ADD_FUNC(i2c_get_devices_using_readdir);
+   RTTI_ADD_FUNC(i2c_get_device_numbers_by_existence_test);
+   RTTI_ADD_FUNC(i2c_get_device_numbers_using_readdir);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(i2c_get_device_numbers_using_udev);
 #endif
