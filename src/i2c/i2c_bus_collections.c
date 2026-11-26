@@ -186,7 +186,7 @@ i2c_get_device_numbers_using_readdir(bool include_ignorable_devices) {
  */
 bool i2c_all_relevant_buses_group_i2c_rw() {
    bool debug = false;
-   Byte_Value_Array bva = i2c_get_device_numbers_by_existence_test(false);
+   Byte_Value_Array bva = i2c_get_device_numbers_using_readdir(false);
    bool result = true;
    for (int ndx = 0; ndx < bva_length(bva); ndx++) {
       uint8_t busno = bva_get(bva, ndx);
@@ -262,7 +262,7 @@ i2c_all_relevant_i2c_buses_rw() {
 #endif
 
    Byte_Value_Array bva =
-   i2c_get_device_numbers_using_udev(/*include_ignorable_devices*/ false);
+   i2c_get_device_numbers_using_readdir(/*include_ignorable_devices*/ false);
    for (int ndx=0; ndx<bva_length(bva); ndx++) {
       int busno = bva_get(bva, ndx);
       Error_Info * err = i2c_simple_rw_test(busno);
@@ -580,6 +580,7 @@ i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
 Byte_Value_Array i2c_detect_attached_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+#ifdef OLD
 #ifdef ENABLE_UDEV    // perhaps slightly faster   TODO: perform test; actually much, much slower
    // do not include devices with ignorable name, etc.:
    Byte_Value_Array bva0 =
@@ -588,6 +589,9 @@ Byte_Value_Array i2c_detect_attached_buses() {
    Byte_Value_Array bva0 =
             i2c_get_device_numbers_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
+#endif
+   Byte_Value_Array bva0 =
+       i2c_get_device_numbers_using_readdir(/*include_ignorable_devices=*/ false);
 
    // filter out buses that user has indicated should be excluded using
    // option --ignore_bus
