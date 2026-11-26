@@ -11,6 +11,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <dirent.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <limits.h>
@@ -21,6 +22,7 @@
 #include "util/data_structures.h"
 #include "util/linux_basic_util.h"
 #include "util/error_info.h"
+#include "util/i2c_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_filter_functions.h"
@@ -75,6 +77,29 @@ int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool force_failure_i2c_all_relevant_i2c_buses_rw = false;     // for testing
 bool force_failure_i2c_all_edids_readable_using_i2c = false;  // for testing
 
+// Per Claude:
+// Timing of the three ways of getting the /dev/i2c bus numbers:
+// i2c_get_devices_by_existence_test(), i2c_get_devices_using_readdir(),
+// and i2c_get_device_numbers_using_udev().  Measured 2026-11-26, mean of
+// 200 calls in one process, microseconds.  All three returned the same
+// bus numbers on every machine.
+//
+//                            ignorable included    ignorable excluded
+//                            exist readdir  udev   exist readdir  udev
+// banner   i915 (Arc A380)     33     19   2138     562    542   2659
+//          buses 0-8
+// ritter   i915 + nvidia       39     16   3427     628    619   4042
+//          buses 0-23
+// darksand amdgpu + mgag200    95     32   8192    1619   1563   9733
+//          buses 0-11
+//
+// readdir() is the fastest way to find the device numbers, and udev the
+// slowest by 2 to 8 ms.  Excluding ignorable devices costs 0.5 to 1.5 ms,
+// the same in each method, and narrows the gap between existence test
+// and readdir to a few percent.  So the comment "perhaps slightly faster"
+// on the use of udev in i2c_detect_attached_buses() does not hold on
+// these machines.
+
 /** Gets a list of all /dev/i2c devices by checking the file system
  *  if devices named /dev/i2c-N exist.
  *
@@ -84,6 +109,10 @@ bool force_failure_i2c_all_edids_readable_using_i2c = false;  // for testing
  */
 Byte_Value_Array
 i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+         "include_ignorable_devices=%s", SBOOL(include_ignorable_devices));
+
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       if (i2c_device_exists(busno)) {
@@ -91,9 +120,62 @@ i2c_get_devices_by_existence_test(bool include_ignorable_devices) {
             bva_append(bva, busno);
       }
    }
+
+   char * s = NULL;
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE) || trace_callstack_call_depth > 0)
+      s = bva_as_string(bva, /*as_hex*/ false, ",");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning I2C bus numbers: %s", s);
+   free(s);
+
    return bva;
 }
 
+/** Gets a list of all /dev/i2c devices by reading directory /dev
+ *  for entries named i2c-N.
+ *
+ *  Bus numbers >= I2C_BUS_MAX are ignored.
+ *
+ *  @param  include_ignorable_devices  if true, include devices that are
+ *                                     unusable for DDC communication
+ *  @return sorted Byte_Value_Array containing the valid bus numbers,
+ *          empty if /dev cannot be opened; caller is responsible for freeing
+ */
+Byte_Value_Array
+i2c_get_devices_using_readdir(bool include_ignorable_devices) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+         "include_ignorable_devices=%s", SBOOL(include_ignorable_devices));
+
+   Byte_Value_Array bva = bva_create();
+   DIR * d = opendir("/dev");
+   if (d) {
+      struct dirent * dent;
+      while ( (dent = readdir(d)) ) {
+         int busno;
+         if (str_starts_with(dent->d_name, I2C"-")) {
+            busno = i2c_name_to_busno(dent->d_name);
+            if (busno >= 0) {
+               assert(busno < 256);
+               // note /dev/i2c-255 is a special case in the kernel
+               if (busno < I2C_BUS_MAX) {  // silently ignore high bus numbers
+                  if (include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno))
+                     bva_append(bva, busno);
+               }
+            }
+         }
+      }
+      closedir(d);
+      bva_sort(bva);     // readdir() order is arbitrary
+   }
+
+   char * s = NULL;
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE) || trace_callstack_call_depth > 0)
+      s = bva_as_string(bva, /*as_hex*/ false, ",");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning I2C bus numbers: %s", s);
+   free(s);
+
+   return bva;
+}
 
 /** Checks that all /dev/i2c buses that might be associated with a display
  *  are in group i2c and have the group RW permission bits set.
@@ -498,7 +580,7 @@ i2c_get_device_numbers_using_udev(bool include_ignorable_devices) {
 Byte_Value_Array i2c_detect_attached_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
-#ifdef ENABLE_UDEV    // perhaps slightly faster   TODO: perform test
+#ifdef ENABLE_UDEV    // perhaps slightly faster   TODO: perform test; actually much, much slower
    // do not include devices with ignorable name, etc.:
    Byte_Value_Array bva0 =
             i2c_get_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
@@ -520,8 +602,10 @@ Byte_Value_Array i2c_detect_attached_buses() {
       bva = bva1;
    }
 
-   char * s = bva_as_string(bva,  false,  ", ");
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
+   char * s = NULL;
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE) || trace_callstack_call_depth > 0)
+      s = bva_as_string(bva, /*as_hex*/ false, ",");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning I2C bus numbers: %s", s);
    free(s);
    return bva;
 }
@@ -965,6 +1049,8 @@ void init_i2c_bus_collections(void) {
    RTTI_ADD_FUNC(i2c_threaded_initial_checks_by_businfo);
    RTTI_ADD_FUNC(i2c_async_scan);
    RTTI_ADD_FUNC(i2c_non_async_scan);
+   RTTI_ADD_FUNC(i2c_get_devices_by_existence_test);
+   RTTI_ADD_FUNC(i2c_get_devices_using_readdir);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(i2c_get_device_numbers_using_udev);
 #endif
