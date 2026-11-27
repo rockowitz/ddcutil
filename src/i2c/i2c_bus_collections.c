@@ -79,7 +79,8 @@ bool force_failure_i2c_all_edids_readable_using_i2c = false;  // for testing
 
 // Per Claude:
 // Timing of the three ways of getting the /dev/i2c bus numbers:
-// i2c_get_devices_by_existence_test(), i2c_get_devices_using_readdir(),
+// i2c_get_device_numbers_by_existence_test(),
+// i2c_get_device_numbers_using_readdir(),
 // and i2c_get_device_numbers_using_udev().  Measured 2026-11-26, mean of
 // 200 calls in one process, microseconds.  All three returned the same
 // bus numbers on every machine.
@@ -917,6 +918,18 @@ void extended_bus_detection() {
 #endif
 
 
+/** Detects the I2C buses and checks each for a display, if not already done.
+ *
+ *  If #all_i2c_buses is empty, scans the buses using i2c_detect_buses0() and
+ *  moves the resulting #I2C_Bus_Info records into #all_i2c_buses.  If
+ *  #all_i2c_buses already has entries, nothing is rescanned.
+ *
+ *  When MAINTAINED_CONNECTOR_ARRAY is defined, a scan is followed by
+ *  extended_bus_detection() to fill in the bus numbers of DRM connectors
+ *  for which sysfs reports none.
+ *
+ *  @return number of entries in #all_i2c_buses
+ */
 int i2c_detect_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "all_i2c_buses = %p, len = %d",
@@ -968,6 +981,17 @@ int i2c_detect_buses() {
 }
 
 
+/** Detects a single I2C bus and checks it for a display.
+ *
+ *  If /dev/i2c-N exists for **busno**, creates an #I2C_Bus_Info for it,
+ *  checks it with i2c_check_bus(), and appends it to #all_i2c_buses.
+ *  An error from the check is reported, if tracing or DDC error reporting
+ *  is enabled, and freed, not returned.
+ *
+ *  @param  busno  I2C bus number
+ *  @return newly created #I2C_Bus_Info, owned by #all_i2c_buses,
+ *          NULL if /dev/i2c-N does not exist
+ */
 // used only by main.c, not shared library, does not need mutex protection
 I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    bool debug = false;
